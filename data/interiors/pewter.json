@@ -1,0 +1,91 @@
+{
+ "town": "pewter",
+ "scene": "res://scenes/interiors/pewter_city_interiors.tscn",
+ "spacing": 40.0,
+ "rooms": [
+  {
+   "node": "PokemonCenter",
+   "scene": "res://scenes/interiors/pewter/PokemonCenter.tscn",
+   "rect": [
+    -9.375,
+    -4.375,
+    18.75,
+    8.75
+   ],
+   "spawns": [
+    "pw_center_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "PokeMart",
+   "scene": "res://scenes/interiors/pewter/PokeMart.tscn",
+   "rect": [
+    33.125,
+    -3.75,
+    13.75,
+    7.5
+   ],
+   "spawns": [
+    "pw_mart_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "PewterGym",
+   "scene": "res://scenes/interiors/pewter/PewterGym.tscn",
+   "rect": [
+    65.0,
+    -13.0,
+    30.0,
+    26.0
+   ],
+   "spawns": [
+    "pw_gym_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "Museum1F",
+   "scene": "res://scenes/interiors/pewter/Museum1F.tscn",
+   "rect": [
+    101.875,
+    -6.875,
+    36.25,
+    13.75
+   ],
+   "spawns": [
+    "pw_museum_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "PewterHouse1",
+   "scene": "res://scenes/interiors/pewter/PewterHouse1.tscn",
+   "rect": [
+    154.0,
+    -3.5,
+    12,
+    7
+   ],
+   "spawns": [
+    "pw_house1_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "PewterHouse2",
+   "scene": "res://scenes/interiors/pewter/PewterHouse2.tscn",
+   "rect": [
+    194.0,
+    -3.5,
+    12,
+    7
+   ],
+   "spawns": [
+    "pw_house2_in"
+   ],
+   "next": []
+  }
+ ]
+}

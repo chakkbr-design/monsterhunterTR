@@ -1,0 +1,37 @@
+{
+ "town": "viridian_forest",
+ "scene": "res://scenes/interiors/viridian_forest_interiors.tscn",
+ "spacing": 40.0,
+ "rooms": [
+  {
+   "node": "ForestSouthGate",
+   "scene": "res://scenes/interiors/viridian_forest/ForestSouthGate.tscn",
+   "rect": [
+    -8.125,
+    -6.25,
+    16.25,
+    12.5
+   ],
+   "spawns": [
+    "vf_gate_s_in",
+    "vf_gate_s_out"
+   ],
+   "next": []
+  },
+  {
+   "node": "ForestNorthGate",
+   "scene": "res://scenes/interiors/viridian_forest/ForestNorthGate.tscn",
+   "rect": [
+    31.875,
+    -6.25,
+    16.25,
+    12.5
+   ],
+   "spawns": [
+    "vf_gate_n_in",
+    "vf_gate_n_out"
+   ],
+   "next": []
+  }
+ ]
+}

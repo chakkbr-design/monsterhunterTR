@@ -48,6 +48,15 @@ func _initialize() -> void:
 	game.player_name = ""
 	game.load_game()
 	fails += int(game.player_name != "ASH")
+	game.party = [Mon.create("pidgey", 5), Mon.create("rattata", 5)]
+	game.pc = []
+	fails += int(not game.deposit(1) or game.party.size() != 1 or game.pc.size() != 1)
+	fails += int(game.deposit(0))
+	fails += int(not game.withdraw(0) or game.party.size() != 2 or not game.release(0) == false)
+	var ev := Mon.create("charmander", 15)
+	ev.add_exp(Growth.exp_for_level(ev.growth, 16) - ev.xp)
+	game.resolve_evolution(ev, false)
+	fails += int(ev.species != "Charmander" or ev.evolution_target() != "")
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)

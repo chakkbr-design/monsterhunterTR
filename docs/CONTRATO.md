@@ -155,3 +155,24 @@ Batalha com `opts.scripted` não grava `trainer_<id>`. O menu de pausa não abre
 - `Game.flags.last_heal`: onde o jogador volta ao perder. Curar usa `Mon.heal_full` (HP, PP e status).
 - O jogador do mundo não anda enquanto `Story.is_running()`.
 - Cena principal: `res://ui/front/title.tscn`.
+
+## Rodada 4 — até Pewter, PC, evolução, som
+
+| Pasta | Dono |
+|---|---|
+| `core/`, `data/`, `project.godot`, `docs/CONTRATO.md` | Núcleo |
+| `world/`, `interiors/`, `story/`, `tests/world/`, `tests/interiors/`, `tests/story/` | Mapa (Rota 22, Rota 2, Floresta de Viridian, Pewter, ginásio) |
+| `ui/pc/`, `tests/ui_pc/` | PC |
+| `ui/evolution/`, `tests/ui_evolution/`, e também `ui/learn_move_ui.gd` (só para esperar a evolução) | Evolução |
+| `audio/`, `tests/audio/`; pode acrescentar chamadas de uma linha a `Audio` em `battle/`, `ui/front/`, `ui/pause_menu.gd`, `ui/learn_move_ui.gd` | Som |
+
+Autoloads novos que o Núcleo registra na integração: `PCStorage` (`res://ui/pc/pc_storage.gd`), `Evolution` (`res://ui/evolution/evolution_ui.gd`), `Audio` (`res://audio/audio.gd`).
+Quem chama um autoload de outra parte usa `get_node_or_null("/root/<Nome>")`, para não quebrar testes sem ele.
+
+### Núcleo (pronto)
+
+- PC: `Game.pc` (lista única, `BOX_SIZE` 30 × `BOX_COUNT` 8), `deposit(i_equipe)` (recusa deixar a equipe sem Pokémon de pé), `withdraw(i_pc)`, `release(i_pc)`, `swap_party(a, b)`, `pc_full()`. Captura com equipe cheia já vai para o PC.
+- Evolução: `Game.pending_evolutions` + `signal evolution_requested` (emitido depois de `battle_finished`). `Game.resolve_evolution(mon, aceitar)`: aceitar evolui e põe golpes que não couberam na fila de aprender; recusar cancela até o próximo nível.
+  Sem o autoload `Evolution`, o Game evolui na hora (comportamento antigo, usado nos testes headless).
+- A tela de aprender golpe deve esperar enquanto `Evolution.is_open()` ou houver evolução pendente.
+- Dados novos: `data/interiors/pewter.json`, `viridian_forest.json`. Mapas de route_22, route_2, route_2_north, viridian_forest e pewter_city já estão em `data/maps/`.

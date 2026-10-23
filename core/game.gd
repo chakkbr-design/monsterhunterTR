@@ -5,6 +5,8 @@ signal battle_started
 signal battle_finished(result: Dictionary)
 ## Há golpes esperando a tela de esquecer golpe (ver pending_learns).
 signal learn_requested
+## Há Pokémon esperando a tela de evolução (ver pending_evolutions).
+signal evolution_requested
 
 const ARENA_SCENE := "res://battle/battle_arena.tscn"
 const PARTY_MAX := 6
@@ -38,6 +40,8 @@ const TRAINER_PAYOUTS := {
 
 ## Golpes que não couberam: [{mon: Mon, move: String}]. A UI consome com resolve_learn.
 var pending_learns: Array = []
+## Pokémon que podem evoluir agora. A tela Evolution consome com resolve_evolution.
+var pending_evolutions: Array = []
 
 ## Último save carregado (posição etc.). Vazio num jogo novo.
 var last_save: Dictionary = {}
@@ -118,6 +122,51 @@ func fill_names(text: String) -> String:
 
 func has_save() -> bool:
 	return FileAccess.file_exists(save_path)
+
+
+# --- PC: caixas de BOX_SIZE, lista única em pc ---
+
+const BOX_SIZE := 30
+const BOX_COUNT := 8
+
+
+func pc_full() -> bool:
+	return pc.size() >= BOX_SIZE * BOX_COUNT
+
+
+## Guarda o Pokémon da equipe no PC. Recusa se ficaria sem Pokémon de pé na equipe.
+func deposit(party_index: int) -> bool:
+	if party_index < 0 or party_index >= party.size() or pc_full():
+		return false
+	var healthy := 0
+	for i in party.size():
+		if i != party_index and not party[i].is_fainted():
+			healthy += 1
+	if healthy == 0:
+		return false
+	pc.append(party.pop_at(party_index))
+	return true
+
+
+func withdraw(pc_index: int) -> bool:
+	if pc_index < 0 or pc_index >= pc.size() or party.size() >= PARTY_MAX:
+		return false
+	party.append(pc.pop_at(pc_index))
+	return true
+
+
+func release(pc_index: int) -> bool:
+	if pc_index < 0 or pc_index >= pc.size():
+		return false
+	pc.remove_at(pc_index)
+	return true
+
+
+func swap_party(a: int, b: int) -> void:
+	if a >= 0 and b >= 0 and a < party.size() and b < party.size():
+		var t = party[a]
+		party[a] = party[b]
+		party[b] = t
 
 
 func heal_party() -> void:
@@ -254,17 +303,37 @@ func _on_arena_finished(result: Dictionary) -> void:
 	_finish(result)
 
 
-## Evolui quem ficou pendente na batalha. Devolve [[de, para], ...].
+## Depois da batalha: com a tela de evolução (autoload Evolution) põe na fila;
+## sem ela (testes, headless), evolui na hora. Devolve [[de, para], ...] do que evoluiu na hora.
 func _evolve_pending() -> Array:
 	var out: Array = []
+	var ui := get_node_or_null("/root/Evolution") if is_inside_tree() else null
 	for m in party:
-		var into: String = m.evolution_target()
-		if into != "" and not m.is_fainted():
+		if m.evolution_target() == "" or m.is_fainted():
+			continue
+		if ui:
+			if not pending_evolutions.has(m):
+				pending_evolutions.append(m)
+		else:
 			var from: String = m.display_name
-			for mv in m.evolve(into):
-				queue_learn(m, mv)
+			resolve_evolution(m, true)
 			out.append([from, m.species])
 	return out
+
+
+## Conclui a evolução de m: aceitar evolui (golpes que não couberem vão para a fila); recusar cancela até o próximo nível.
+func resolve_evolution(m: Mon, accept: bool) -> void:
+	pending_evolutions.erase(m)
+	if not accept:
+		m.cancel_evolution()
+		return
+	var into := m.evolution_target()
+	if into == "":
+		return
+	for mv in m.evolve(into):
+		queue_learn(m, mv)
+	seen[m.species] = true
+	caught[m.species] = true
 
 
 ## Aplica as consequências da batalha e avisa o mundo. result ganha "prize" quando há dinheiro.
@@ -292,6 +361,8 @@ func _finish(result: Dictionary) -> void:
 	_opts = {}
 	_enemies = []
 	battle_finished.emit(result)
+	if not pending_evolutions.is_empty():
+		evolution_requested.emit()
 	if not pending_learns.is_empty():
 		learn_requested.emit()
 
