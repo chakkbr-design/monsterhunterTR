@@ -13,8 +13,18 @@ var pc: Array = []
 var bag: Dictionary = {"poke_ball": 10, "potion": 3}
 var money := START_MONEY
 var flags: Dictionary = {}
+## Pokédex: espécie -> true.
+var seen: Dictionary = {}
+var caught: Dictionary = {}
+
+const TRAINER_PAYOUTS := {
+	"rival": 35, "youngster": 16, "bug_catcher": 12, "lass": 16, "camper": 20,
+	"picnicker": 20, "hiker": 36, "jr_trainer": 20, "gym_leader": 99,
+}
 
 var _arena: Node = null
+var _opts := {}
+var _enemies: Array = []
 
 
 func is_busy() -> bool:
@@ -28,7 +38,13 @@ func first_healthy() -> int:
 	return -1
 
 
+func mark_seen(species: String) -> void:
+	seen[species] = true
+
+
 func add_mon(m: Mon) -> void:
+	seen[m.species] = true
+	caught[m.species] = true
 	if party.size() < PARTY_MAX:
 		party.append(m)
 	else:
@@ -71,7 +87,8 @@ const SAVE_VERSION := 1
 
 func to_dict() -> Dictionary:
 	return {"version": SAVE_VERSION, "party": party.map(func(m): return m.to_dict()),
-		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags}
+		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags,
+		"seen": seen.keys(), "caught": caught.keys()}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -80,6 +97,12 @@ func from_dict(d: Dictionary) -> void:
 	bag = d.get("bag", {})
 	money = int(d.get("money", START_MONEY))
 	flags = d.get("flags", {})
+	seen = {}
+	caught = {}
+	for sp in d.get("seen", []):
+		seen[sp] = true
+	for sp in d.get("caught", []):
+		caught[sp] = true
 
 
 func save_game(extra := {}) -> bool:
@@ -106,12 +129,24 @@ func load_game() -> Dictionary:
 	return d
 
 
+## Prêmio por vencer um treinador: reward fixo do JSON ou base da classe x nível do último Pokémon.
+func trainer_payout(trainer_id: String, last_level: int) -> int:
+	var t := Dex.trainer(trainer_id)
+	if t.has("reward"):
+		return int(t.reward)
+	return int(TRAINER_PAYOUTS.get(String(t.get("class", "")), 16)) * maxi(last_level, 1)
+
+
 func request_battle(enemies: Array, opts: Dictionary, host: Node3D, at: Vector3) -> void:
 	if is_busy():
 		return
+	_opts = opts
+	_enemies = enemies
+	for e in enemies:
+		mark_seen(e.species)
 	if not ResourceLoader.exists(ARENA_SCENE):
 		battle_started.emit()
-		battle_finished.emit({"outcome": "win"})
+		_finish({"outcome": "win"})
 		return
 	_arena = load(ARENA_SCENE).instantiate()
 	host.add_child(_arena)
@@ -122,13 +157,27 @@ func request_battle(enemies: Array, opts: Dictionary, host: Node3D, at: Vector3)
 
 
 func _on_arena_finished(result: Dictionary) -> void:
-	if result.get("outcome") == "caught" and result.get("caught_mon") is Mon:
-		add_mon(result.caught_mon)
-	if result.get("outcome") == "lose":
-		money /= 2
-		heal_party()
 	var a := _arena
 	_arena = null
 	if is_instance_valid(a):
 		a.queue_free()
+	_finish(result)
+
+
+## Aplica as consequências da batalha e avisa o mundo. result ganha "prize" quando há dinheiro.
+func _finish(result: Dictionary) -> void:
+	var outcome: String = result.get("outcome", "")
+	if outcome == "caught" and result.get("caught_mon") is Mon:
+		add_mon(result.caught_mon)
+	elif outcome == "win" and _opts.get("kind") == "trainer":
+		var id := String(_opts.get("trainer_id", ""))
+		var last: int = _enemies[-1].level if not _enemies.is_empty() else 1
+		result.prize = trainer_payout(id, last)
+		money += result.prize
+		flags["trainer_" + id] = true
+	elif outcome == "lose":
+		money /= 2
+		heal_party()
+	_opts = {}
+	_enemies = []
 	battle_finished.emit(result)

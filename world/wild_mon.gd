@@ -1,0 +1,138 @@
+class_name WildMon
+extends CharacterBody3D
+## Placeholder wild mon roaming the map (capsule + Label3D). Passive wanders, flee runs, aggressive charges.
+
+const GROUP := "ow_wild"
+const LAYER := 4
+const SPEED := 2.6
+const TOUCH := 1.1
+const CHASE := 6.0
+const FLEE := 5.0
+const PEACE_AFTER_RUN := 4.0
+
+enum Behaviour { PASSIVE, FLEE, AGGRESSIVE }
+
+var mon: Mon
+var behaviour := Behaviour.PASSIVE
+var ambusher := false  ## jumped out of tall grass: never roams, always freed after its battle
+var peace_timer := 0.0
+var home := Vector3.ZERO
+
+var _wander_t := 0.0
+var _wander_to := Vector3.ZERO
+var _engaging := false
+
+
+static func spawn(m: Mon, entry: Dictionary, parent: Node, pos: Vector3) -> WildMon:
+	var w := WildMon.new()
+	w.mon = m
+	w.behaviour = {"flee": Behaviour.FLEE, "aggressive": Behaviour.AGGRESSIVE}.get(String(entry.get("behaviour", "passive")), Behaviour.PASSIVE)
+	parent.add_child(w)
+	w.global_position = pos
+	w.home = pos
+	w._wander_to = pos
+	return w
+
+
+func _enter_tree() -> void:
+	add_to_group(GROUP)
+
+
+func _ready() -> void:
+	collision_layer = LAYER
+	collision_mask = Overworld.WALL_LAYER
+	var r := 0.25 + 0.03 * clampi(mon.level, 1, 10)
+	var col := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = r
+	cap.height = r * 3.0
+	col.shape = cap
+	col.position.y = r * 1.5
+	add_child(col)
+	var mi := MeshInstance3D.new()
+	var cm := CapsuleMesh.new()
+	cm.radius = r
+	cm.height = r * 3.0
+	var types := mon.types
+	cm.material = Overworld._mat(Dex.type_color(String(types[0])) if not types.is_empty() else Color.GRAY)
+	mi.mesh = cm
+	mi.position.y = r * 1.5
+	add_child(mi)
+	var tag := Label3D.new()
+	tag.text = "%s Lv%d" % [mon.display_name, mon.level]
+	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	tag.font_size = 72
+	tag.outline_size = 14
+	tag.modulate = {Behaviour.AGGRESSIVE: Color(1, 0.55, 0.5), Behaviour.FLEE: Color(0.7, 0.85, 1)}.get(behaviour, Color.WHITE)
+	tag.position.y = r * 3.0 + 0.35
+	add_child(tag)
+
+
+func _physics_process(delta: float) -> void:
+	if Game.is_busy() or ambusher or not visible:
+		velocity = Vector3.ZERO
+		return
+	peace_timer = maxf(peace_timer - delta, 0.0)
+	var dir := _wander_logic(delta)
+	velocity.x = dir.x * SPEED
+	velocity.z = dir.z * SPEED
+	velocity.y = -0.5 if is_on_floor() else velocity.y - OverworldPlayer.GRAVITY * delta
+	move_and_slide()
+	if dir.length() > 0.05:
+		rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 1.0 - exp(-8.0 * delta))
+
+
+func _wander_logic(delta: float) -> Vector3:
+	var p := Overworld.player_of(self)
+	if p and p.can_act() and peace_timer <= 0.0 and Game.first_healthy() >= 0:
+		var to := p.global_position - global_position
+		to.y = 0.0
+		var d := to.length()
+		if behaviour == Behaviour.AGGRESSIVE:
+			if d < TOUCH:
+				engage()
+				return Vector3.ZERO
+			if d < CHASE:
+				return to.normalized()
+		if behaviour == Behaviour.FLEE and d < FLEE:
+			return -to.normalized() * 1.3
+	_wander_t -= delta
+	if _wander_t <= 0.0:
+		_wander_t = randf_range(1.5, 3.5)
+		_wander_to = home + Vector3(randf_range(-3.0, 3.0), 0.0, randf_range(-3.0, 3.0))
+		if randf() < 0.35:
+			_wander_to = global_position
+	var v := _wander_to - global_position
+	v.y = 0.0
+	return Vector3.ZERO if v.length() < 0.2 else v.normalized() * 0.6
+
+
+## Pop-up tween for grass ambushes.
+func pop_out() -> void:
+	var at := position
+	position = at + Vector3(0, -0.8, 0)
+	var tw := create_tween()
+	tw.tween_property(self, "position", at + Vector3(0, 1.3, 0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "position", at, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await tw.finished
+
+
+## Starts a wild battle against this mon. Freed afterwards unless the player ran away.
+func engage() -> void:
+	if _engaging:
+		return
+	var ow := Overworld.of(self)
+	if ow == null:
+		return
+	_engaging = true
+	var p := Overworld.player_of(self)
+	if p:
+		p.face_toward(global_position)
+	visible = false  # the arena spawns its own body for the enemy
+	var r := await ow.battle([mon], {"kind": "wild", "can_run": true})
+	_engaging = false
+	if not ambusher and (r.is_empty() or String(r.get("outcome", "")) == "run"):
+		visible = true
+		peace_timer = PEACE_AFTER_RUN
+		return
+	queue_free()

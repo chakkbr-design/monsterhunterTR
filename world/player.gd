@@ -1,0 +1,185 @@
+class_name OverworldPlayer
+extends CharacterBody3D
+## Overworld avatar: camera-relative movement, sprint, jump, tall-grass rolls and interaction focus.
+
+const GROUP := "ow_player"
+const LAYER := 2
+const MASK := 1 | 8  # walls + NPCs
+const GRAVITY := 20.0
+const TALK_RANGE := 2.0
+const ENGAGE_RANGE := 3.5
+
+@export var walk_speed := 4.0
+@export var run_speed := 7.0
+@export var jump_velocity := 7.0
+@export var color := Color(0.85, 0.2, 0.2)
+
+var locked := false  ## scripted freeze (dialogue, ambush alert, trainer spotted)
+var facing := Vector3.FORWARD
+var enc := EncounterRate.new()
+var focus: Node3D
+
+var _grass: Array[TallGrass] = []
+var _rng := RandomNumberGenerator.new()
+var _model: Node3D
+var _alert: Label3D
+
+
+func _enter_tree() -> void:
+	add_to_group(GROUP)
+
+
+func _ready() -> void:
+	collision_layer = LAYER
+	collision_mask = MASK
+	_rng.randomize()
+	var col := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.35
+	cap.height = 1.6
+	col.shape = cap
+	col.position.y = 0.8
+	add_child(col)
+	_model = Node3D.new()
+	add_child(_model)
+	var body := MeshInstance3D.new()
+	var cm := CapsuleMesh.new()
+	cm.radius = 0.35
+	cm.height = 1.6
+	cm.material = Overworld._mat(color)
+	body.mesh = cm
+	body.position.y = 0.8
+	_model.add_child(body)
+	var nose := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.5, 0.18, 0.3)
+	bm.material = Overworld._mat(Color(0.1, 0.1, 0.1))
+	nose.mesh = bm
+	nose.position = Vector3(0, 1.45, -0.3)  # cap brim marks the facing
+	_model.add_child(nose)
+	_alert = WorldNpc.make_alert(2.3)
+	add_child(_alert)
+	Game.battle_finished.connect(_on_battle_finished)
+
+
+func _on_battle_finished(_r: Dictionary) -> void:
+	enc.battle_ended()
+
+
+func can_act() -> bool:
+	return not locked and not Game.is_busy()
+
+
+func show_alert(on: bool) -> void:
+	_alert.visible = on
+
+
+func face_toward(pos: Vector3) -> void:
+	var to := pos - global_position
+	to.y = 0.0
+	if to.length() > 0.01:
+		facing = to.normalized()
+
+
+func _physics_process(delta: float) -> void:
+	var active := can_act()
+	var dir := Vector3.ZERO
+	if active:
+		var v := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+		dir = Vector3(v.x, 0.0, v.y).rotated(Vector3.UP, _camera_yaw())
+	var speed := run_speed if Input.is_action_pressed("sprint") else walk_speed
+	velocity.x = dir.x * speed
+	velocity.z = dir.z * speed
+	if is_on_floor():
+		velocity.y = jump_velocity if active and Input.is_action_just_pressed("jump") else -0.5
+	else:
+		velocity.y -= GRAVITY * delta
+	var before := global_position
+	move_and_slide()
+	if dir.length() > 0.1:
+		facing = dir.normalized()
+	_model.rotation.y = lerp_angle(_model.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-14.0 * delta))
+	if active and not _grass.is_empty():
+		var moved := Vector2(global_position.x - before.x, global_position.z - before.z).length()
+		var patch: TallGrass = _grass[-1]
+		if enc.walk(moved, WildTable.rate(patch.table()), _rng):
+			_ambush(patch)
+	_update_focus(active)
+
+
+func _camera_yaw() -> float:
+	var rig := get_tree().get_first_node_in_group(OverworldCamera.GROUP) as OverworldCamera
+	return rig.yaw() if rig else 0.0
+
+
+func _update_focus(active: bool) -> void:
+	var cands: Array = []  # [node, reach, cone]
+	for n in get_tree().get_nodes_in_group(WorldNpc.GROUP):
+		cands.append([n, TALK_RANGE, 0.4])
+	if not Game.party.is_empty():
+		for w in get_tree().get_nodes_in_group(WildMon.GROUP):
+			if w.visible and w.peace_timer <= 0.0:
+				cands.append([w, ENGAGE_RANGE, 0.5])
+	var best: Node3D = null
+	var best_d := INF
+	for c in cands:
+		var to: Vector3 = c[0].global_position - global_position
+		to.y = 0.0
+		var d := to.length()
+		if d < c[1] and d < best_d and (d < 1.3 or facing.dot(to / maxf(d, 0.001)) > c[2]):
+			best = c[0]
+			best_d = d
+	focus = best
+	var hud := Overworld.hud_of(self)
+	if hud == null:
+		return
+	hud.set_prompt(_prompt_for(focus) if active and focus else "")
+	if active and focus and hud.can_interact() and Input.is_action_just_pressed("interact"):
+		_interact(focus)
+
+
+func _prompt_for(n: Node3D) -> String:
+	if n is WildMon:
+		return "E: Battle %s" % (n as WildMon).mon.display_name
+	if n.has_method("prompt"):
+		return n.prompt()
+	return "E: Talk"
+
+
+func _interact(n: Node3D) -> void:
+	if n is WildMon:
+		(n as WildMon).engage()
+		return
+	locked = true
+	face_toward(n.global_position)
+	await n.interact(self)
+	locked = false
+
+
+func _ambush(patch: TallGrass) -> void:
+	if Game.party.is_empty():
+		return
+	var entry := WildTable.pick(patch.table(), "grass", _rng)
+	if entry.is_empty():
+		return
+	locked = true
+	patch.shake()
+	show_alert(true)
+	await get_tree().create_timer(0.6).timeout
+	show_alert(false)
+	var w := WildMon.spawn(Overworld.mon_from_entry(entry, _rng), entry, get_parent(), global_position + facing * 2.2)
+	w.ambusher = true
+	await w.pop_out()
+	await w.engage()
+	locked = false
+
+
+func enter_grass(patch: TallGrass) -> void:
+	if not _grass.has(patch):
+		if _grass.is_empty():
+			enc.enter_grass()
+		_grass.append(patch)
+
+
+func exit_grass(patch: TallGrass) -> void:
+	_grass.erase(patch)

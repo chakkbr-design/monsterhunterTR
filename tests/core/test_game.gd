@@ -16,6 +16,12 @@ func _initialize() -> void:
 	game.party = []
 	var d: Dictionary = game.load_game()
 	fails += int(game.party.size() != 1 or game.party[0].species != "Pikachu" or d.get("version") != 1)
+	var money_before: int = game.money
+	game._opts = {"kind": "trainer", "trainer_id": "test_youngster"}
+	game._enemies = [Mon.create("rattata", 5)]
+	game.mark_seen("Rattata")
+	game._finish({"outcome": "win"})
+	fails += int(game.money != money_before + 16 * 5 or not game.flags.get("trainer_test_youngster", false) or not game.seen.has("Rattata"))
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)
