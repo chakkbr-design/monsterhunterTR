@@ -38,6 +38,8 @@ const BUILDINGS := {
 	"gym": [8.0, 5.0, 7.0, 1.87],
 	"house": [5.0, 3.6, 5.0, 1.4],
 	"house2": [4.5, 3.4, 5.0, 1.2],
+	"gatehouse": [7.0, 4.0, 5.0, 2.5],
+	"museum": [9.0, 5.0, 6.0, 2.0],
 }
 const ROOFS := {
 	"pokecenter": Color(0.85, 0.26, 0.23), "pokemart": Color(0.2, 0.42, 0.8), "gym": Color(0.3, 0.55, 0.35),
@@ -59,6 +61,7 @@ var counts: Dictionary = {}  ## what was built, for tests/debug
 var _solids: StaticBody3D
 var _water_body: StaticBody3D
 var _batches: Dictionary = {}  ## key -> Array[Transform3D]
+var _flag_walls: Array = []  ## [until_flag, StaticBody3D]
 var _count := 0
 var _rng := RandomNumberGenerator.new()
 
@@ -291,7 +294,11 @@ static func _scaled(at: Vector3, size: Vector3, yaw := 0.0) -> Transform3D:
 func _ground() -> void:
 	var g := rect.grow(1.0)
 	var c := Vector3(g.get_center().x, -0.5, g.get_center().y)
-	_box(c, Vector3(g.size.x, 1.0, g.size.y), C_GRASS, "Ground")
+	var tint := String(data.get("look", {}).get("ground", {}).get("tint_b", ""))
+	var gc := C_GRASS if tint == "" else C_GRASS.lerp(Color(tint), 0.6)
+	if zone_id == "pewter_city":
+		gc = C_GRASS.lerp(Color(0.62, 0.62, 0.58), 0.35)  # stone-grey city
+	_box(c, Vector3(g.size.x, 1.0, g.size.y), gc, "Ground")
 	_solid_box(c, Vector3(g.size.x, 1.0, g.size.y))
 	_bump("ground")
 
@@ -532,6 +539,22 @@ func _buildings() -> void:
 		add_child(door)
 		if dr.has("spawn"):
 			arrivals[String(dr.spawn)] = door.position + Vector3(0, 0, 1.2)
+		var bd: Dictionary = b.get("back_door", {})
+		if not bd.is_empty():  # gatehouses: a second door on the back (-Z) face
+			var back := WorldDoor.new()
+			back.name = "BackDoor_%s" % id
+			back.npc_name = door.npc_name
+			back.lines = door.lines
+			back.color = door.color
+			back.body_height = 2.0
+			back.target_scene = String(bd.get("target_scene", ""))
+			back.target_spawn = String(bd.get("target_spawn", ""))
+			back.position = Vector3(door.position.x, origin.y, front - d)
+			add_child(back)
+			if bd.has("spawn"):
+				var ba := back.position + Vector3(0, 0, -1.2)
+				ba.y = height_at(ba.x, ba.z)  # the gate may sit on a terrace that ends at its back wall
+				arrivals[String(bd.spawn)] = ba
 		if b.has("board"):
 			var lab := Label3D.new()
 			lab.text = String(b.board.get("text", ""))
@@ -569,11 +592,23 @@ func _walls() -> void:
 		_solid_box(Vector3(r[0] + r[2] / 2.0, wh / 2.0, r[1] + r[3] / 2.0), Vector3(r[2], wh, r[3]))
 		_bump("walls")
 	for fw in data.get("flag_walls", []):
-		if bool(Game.flags.get(String(fw.get("until_flag", "")), false)):
-			continue
 		var r: Array = fw.rect
-		_solid_box(Vector3(r[0] + r[2] / 2.0, WALL_H / 2.0, r[1] + r[3] / 2.0), Vector3(r[2], WALL_H, r[3]))
+		var body := _body("FlagWall", Overworld.WALL_LAYER)
+		_solid_box(Vector3(r[0] + r[2] / 2.0, WALL_H / 2.0, r[1] + r[3] / 2.0), Vector3(r[2], WALL_H, r[3]), body)
+		_flag_walls.append([String(fw.get("until_flag", "")), body])
 		_bump("walls")
+	refresh_flags()
+
+
+## Flag walls (Viridian's north wall until has_pokedex) follow Game.flags while the zone is loaded.
+func refresh_flags() -> void:
+	for e in _flag_walls:
+		var open := bool(Game.flags.get(e[0], false))
+		e[1].collision_layer = 0 if open else Overworld.WALL_LAYER
+
+
+func flag_wall_open(i := 0) -> bool:
+	return i < _flag_walls.size() and _flag_walls[i][1].collision_layer == 0
 
 
 ## Invisible walls along the zone rect, except where a neighbour zone (open_rects) touches it.

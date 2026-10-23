@@ -122,3 +122,9 @@ static func mom_lines(flags: Dictionary) -> PackedStringArray:
 	if not on(flags, "got_starter"):
 		return PackedStringArray(["O Prof. Carvalho, aqui do lado, estava procurando você."])
 	return PackedStringArray(["{PLAYER}! Descanse um pouco.", "Pronto, seu time está cheio de energia!"])
+
+
+## Pewter: o guia leva ao ginásio uma vez, e só antes da Insígnia da Rocha.
+## Flags: pewter_guide_done, badge_boulder (+ boulder_badge), rival2_done / rival2_won (Rota 22, via trainers.json).
+static func pewter_guide_due(flags: Dictionary) -> bool:
+	return not on(flags, "pewter_guide_done") and not on(flags, "badge_boulder")

@@ -83,6 +83,8 @@ func _ready() -> void:
 		markers[String(k)] = m
 	if def.has("exit"):
 		_build_exit(def.exit)
+	if def.has("exit_back"):
+		_build_exit(def.exit_back, true)
 	if def.has("stairs"):
 		_build_stairs(def.stairs)
 	for n in def.get("npcs", []):
@@ -114,23 +116,28 @@ func _build_shell() -> void:
 		_mesh_box(Vector3(0, 0.08, z), Vector3(w, 0.16, 0.06), C_TRIM, "Trim")
 
 
-func _build_exit(e: Dictionary) -> void:
+## Exit mat on the front wall (spawn "door"), or on the back wall (back = true, spawn "back": gatehouses).
+func _build_exit(e: Dictionary, back := false) -> void:
 	var x := float(e.get("x", 0.0))
 	var d := size.y
-	_mesh_box(Vector3(x, 0.01, d / 2.0 - 0.5), Vector3(1.6, 0.03, 0.8), Color(0.62, 0.22, 0.2), "ExitMat")
-	_mesh_box(Vector3(x, FRONT_VISIBLE_H / 2.0 + 0.01, d / 2.0 + 0.02), Vector3(1.4, FRONT_VISIBLE_H + 0.02, 0.36), Color(0.25, 0.2, 0.16), "Doorway")
+	var sg := -1.0 if back else 1.0
+	_mesh_box(Vector3(x, 0.01, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.03, 0.8), Color(0.62, 0.22, 0.2), "ExitMatBack" if back else "ExitMat")
+	if back:
+		_mesh_box(Vector3(x, 1.1, -d / 2.0 + 0.02), Vector3(1.4, 2.2, 0.36), Color(0.25, 0.2, 0.16), "DoorwayBack")
+	else:
+		_mesh_box(Vector3(x, FRONT_VISIBLE_H / 2.0 + 0.01, d / 2.0 + 0.02), Vector3(1.4, FRONT_VISIBLE_H + 0.02, 0.36), Color(0.25, 0.2, 0.16), "Doorway")
 	var tag := Label3D.new()
 	tag.text = "SAÍDA"
 	tag.font_size = 48
 	tag.outline_size = 10
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	tag.position = Vector3(x, 0.9, d / 2.0)
+	tag.position = Vector3(x, 2.5 if back else 0.9, sg * d / 2.0)
 	add_child(tag)
-	spawns["door"] = [Vector3(x, 0.0, d / 2.0 - 1.8), Vector3(0, 0, -1)]
+	spawns["back" if back else "door"] = [Vector3(x, 0.0, sg * (d / 2.0 - 1.8)), Vector3(0, 0, -sg)]
 	var trig := InteriorTrigger.new()
-	trig.name = "Exit"
+	trig.name = "ExitBack" if back else "Exit"
 	trig.target = e.get("to", {}).duplicate()
-	trig.position = Vector3(x, 0.5, d / 2.0 - 0.45)
+	trig.position = Vector3(x, 0.5, sg * (d / 2.0 - 0.45))
 	trig.extent = Vector3(1.6, 1.0, 0.9)
 	add_child(trig)
 	triggers.append(trig)
@@ -174,10 +181,13 @@ func _spawn_npc(n: Dictionary) -> void:
 			(npc as MartClerk).shop_id = String(n.get("shop", "viridian"))
 		"pc":
 			npc = PcTerminal.new()
+		"trainer":
+			npc = WorldTrainer.new()
+			(npc as WorldTrainer).trainer_id = String(n.get("trainer", ""))
 		_:
 			npc = WorldNpc.new()
 	npc.name = "Npc_%s" % n.marker
-	npc.npc_name = String(n.get("name", "Pessoa"))
+	npc.npc_name = String(n.get("name", "Pessoa"))  # trainers replace it from trainers.json
 	if n.has("lines"):
 		var ls := PackedStringArray()
 		for l in n.lines:

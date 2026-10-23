@@ -176,3 +176,10 @@ Quem chama um autoload de outra parte usa `get_node_or_null("/root/<Nome>")`, pa
   Sem o autoload `Evolution`, o Game evolui na hora (comportamento antigo, usado nos testes headless).
 - A tela de aprender golpe deve esperar enquanto `Evolution.is_open()` ou houver evolução pendente.
 - Dados novos: `data/interiors/pewter.json`, `viridian_forest.json`. Mapas de route_22, route_2, route_2_north, viridian_forest e pewter_city já estão em `data/maps/`.
+
+### Rodada 4 (pronto)
+
+- Zonas: pallet_town, route_1, viridian_city, route_22, route_2, viridian_forest, route_2_north, pewter_city. A saída leste de Pewter (Rota 3) segue fechada.
+- Salas novas: guaritas da floresta (com saída de trás), pokemon_center_pewter, mart_pewter, pewter_gym (Brock e Camper Liam), pewter_museum, pewter_house1, pewter_house2.
+- Flags novas: `badge_boulder` (e `boulder_badge`), `pewter_guide_done`, `rival2_done`, `rival2_won`.
+- Autoloads: PCStorage, Evolution e Audio registrados. Testes que precisam de uma instância própria removem o autoload antes (ver tests/ui_evolution e tests/audio).

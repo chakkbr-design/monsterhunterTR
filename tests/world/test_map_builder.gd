@@ -3,7 +3,7 @@ extends SceneTree
 ## Builds each zone of route_world with MapBuilder and checks it; then runs route_world.tscn
 ## (streaming, zone walk, LearnMove freeze).
 
-const ZONES := ["pallet_town", "route_1", "viridian_city"]
+const ZONES := ["pallet_town", "route_1", "viridian_city", "route_22", "route_2", "viridian_forest", "route_2_north", "pewter_city"]
 
 var _fails := 0
 

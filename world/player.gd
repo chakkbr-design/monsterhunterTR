@@ -72,7 +72,7 @@ func can_act() -> bool:
 
 ## True while a modal UI autoload (LearnMove, PauseMenu) is open. Both are optional.
 func ui_blocking() -> bool:
-	for path in ["/root/LearnMove", "/root/PauseMenu"]:
+	for path in ["/root/LearnMove", "/root/PauseMenu", "/root/PCStorage", "/root/Evolution"]:
 		var n := get_node_or_null(path)
 		if n and n.has_method("is_open") and n.is_open():
 			return true

@@ -17,14 +17,17 @@ var _home := Vector3.ZERO
 var _home_yaw := 0.0
 var _busy := false
 var _sight_cd := 0.0
+## Extra battle opts (tests: autoplay, seed, speed). Static so tests can set it before trainers spawn.
+static var battle_extra: Dictionary = {}
 
 
 func _ready() -> void:
 	_def = Dex.trainer(trainer_id)
 	if not _def.is_empty():
-		npc_name = "%s %s" % [String(_def.get("class", "")).replace("_", " ").to_upper(), _def.get("name", "")]
+		npc_name = Game.fill_names(TrainerText.display_name(trainer_id, _def))
 		sight = float(_def.get("sight", sight))
 	super._ready()
+	_apply_presence()
 	_home = global_position
 	_home_yaw = rotation.y
 	_alert = make_alert(body_height + 0.9)
@@ -50,12 +53,41 @@ func beaten() -> bool:
 	return bool(Game.flags.get("trainer_%s" % trainer_id, false))
 
 
+## requires_flag / hidden_by_flag from trainers.json (e.g. the Route 22 rival: after the Pokédex, once).
+func present() -> bool:
+	if _def.has("requires_flag") and not bool(Game.flags.get(String(_def.requires_flag), false)):
+		return false
+	if _def.has("hidden_by_flag") and bool(Game.flags.get(String(_def.hidden_by_flag), false)):
+		return false
+	return true
+
+
+func _apply_presence() -> void:
+	var on := present()
+	if on == visible and (on == is_in_group(GROUP)):
+		return
+	visible = on
+	collision_layer = LAYER if on else 0
+	if on:
+		add_to_group(GROUP)
+	else:
+		remove_from_group(GROUP)
+
+
+func text(key: String) -> PackedStringArray:
+	return TrainerText.lines(trainer_id, key, _def)
+
+
 func prompt() -> String:
 	return "E: Talk" if beaten() else "E: Challenge"
 
 
 func _physics_process(delta: float) -> void:
 	_sight_cd = maxf(_sight_cd - delta, 0.0)
+	if not _busy:
+		_apply_presence()
+	if not visible:
+		return
 	var p := Overworld.player_of(self)
 	if p and can_see(p):
 		_spot(p)
@@ -90,8 +122,9 @@ func _spot(p: OverworldPlayer) -> void:
 		await _walk_to(global_position + to.normalized() * (to.length() - STOP_SHORT))
 	face(p.global_position)
 	await _battle_sequence(true)
-	await _walk_to(_home)
-	rotation.y = _home_yaw
+	if is_instance_valid(self) and not is_queued_for_deletion():
+		await _walk_to(_home)
+		rotation.y = _home_yaw
 	p.locked = false
 	_busy = false
 	_sight_cd = SIGHT_COOLDOWN
@@ -109,11 +142,13 @@ func _walk_to(pos: Vector3) -> void:
 
 func interact(p: OverworldPlayer) -> void:
 	face(p.global_position)
+	if has_meta("role") and await InteriorHooks.run(self):
+		return
 	if _def.is_empty():
 		await say(lines)
 		return
 	if beaten():
-		await say(PackedStringArray(_def.get("after", ["..."])))
+		await say(text("after"))
 		return
 	_busy = true
 	await _battle_sequence(true)
@@ -124,15 +159,39 @@ func interact(p: OverworldPlayer) -> void:
 
 func _battle_sequence(intro: bool) -> void:
 	if intro:
-		await say(PackedStringArray(_def.get("intro", lines)))
+		var il := text("intro")
+		await say(il if not il.is_empty() else lines)
 	var ow := Overworld.of(self)
 	var party := build_party(_def)
 	if ow == null or party.is_empty():
 		return
-	var r := await ow.battle(party, {"kind": "trainer", "trainer_id": trainer_id, "can_run": false})
-	if String(r.get("outcome", "")) == "win":
+	var opts := {"kind": "trainer", "trainer_id": trainer_id, "can_run": false}
+	opts.merge(battle_extra, true)
+	var r := await ow.battle(party, opts)
+	var outcome := String(r.get("outcome", ""))
+	if outcome == "":
+		return
+	if _def.has("done_flag"):
+		Game.flags[String(_def.done_flag)] = true
+	if outcome == "win":
 		Game.flags["trainer_%s" % trainer_id] = true
-		await say(PackedStringArray(_def.get("defeat", ["..."])))
+		if _def.has("won_flag"):
+			Game.flags[String(_def.won_flag)] = true
+		await say(text("defeat"))
+	elif outcome == "lose" and not text("lose").is_empty():
+		await say(text("lose"))
+	if bool(_def.get("leave_after", false)):
+		await _leave()
+
+
+## Walks off to leave_to [x, z] (or 8 m back) and is freed (the Route 22 rival).
+func _leave() -> void:
+	var to: Array = _def.get("leave_to", [])
+	var dest := global_position + global_transform.basis.z * 8.0
+	if to.size() == 2:
+		dest = Vector3(float(to[0]), global_position.y, float(to[1]))
+	await _walk_to(dest)
+	queue_free()
 
 
 ## party = [[species, level], ...]; "@flag" species are read from Game.flags (skipped if unset).

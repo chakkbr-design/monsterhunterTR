@@ -14,7 +14,13 @@ signal cutscene_finished(id: String)
 const OAK := "Prof. Carvalho"
 const MOM := "Mamãe"
 const CLERK := "Vendedor"
-const HANDLED_EVENTS := ["oak_stop"]
+const HANDLED_EVENTS := ["oak_stop", "pewter_east_block"]
+const GYM := "pewter_gym"
+const BROCK := "brock"
+## Entrada sul de Pewter: o guia leva o jogador até o ginásio (uma vez, antes da insígnia).
+const PEWTER_GUIDE_TRIGGER := {"node": "PewterGuideTrigger", "event": "pewter_guide", "pos": [0.0, -391.0],
+		"size": [14, 3, 2.0], "blocks": ["pewter_guide_done", "badge_boulder"], "y": 0.0}
+const GYM_FRONT := Vector3(-18.15, 0.0, -428.6)
 const TYPE_PT := {"grass": "Planta", "fire": "Fogo", "water": "Água", "poison": "Veneno", "normal": "Normal"}
 const LAB := "oak_lab"
 const LAB_SPAWN := "door"
@@ -93,9 +99,12 @@ func attach(w: Node3D) -> void:
 		for e in MapBuilder.load_map(String(zone)).get("triggers", []):
 			if HANDLED_EVENTS.has(String(e.get("event", ""))):
 				_add_trigger(w, e)
+	if w is RouteWorld and RouteWorld.ZONES.has("pewter_city"):
+		_add_trigger(w, PEWTER_GUIDE_TRIGGER)
 	if w.has_method("set_interact_hook"):
 		w.set_interact_hook("player_house", "mom", _mom_hook)
 		w.set_interact_hook("mart_viridian", "clerk", _clerk_hook)
+		w.set_interact_hook(GYM, BROCK, _brock_hook)
 	_sync_location.call_deferred()
 
 
@@ -130,6 +139,9 @@ func _add_trigger(w: Node3D, e: Dictionary) -> void:
 		# O Oak barra sempre que não há inicial (voltar do lab sem escolher também conta).
 		t.blocks = PackedStringArray(["got_starter"])
 		t.requires = PackedStringArray()
+	elif t.event == "pewter_east_block":
+		# A Rota 3 ainda não existe: o aviso vale mesmo com a insígnia.
+		t.blocks = PackedStringArray()
 	w.add_child(t)
 	_triggers.append(t)
 
@@ -182,6 +194,11 @@ func trigger(event: String, _source: Node = null) -> void:
 		"oak_stop":
 			if StoryFlags.oak_should_stop(Game.flags):
 				await oak_stop()
+		"pewter_east_block":
+			await pewter_east_block()
+		"pewter_guide":
+			if StoryFlags.pewter_guide_due(Game.flags):
+				await pewter_guide()
 
 
 # --- API de cena --------------------------------------------------------------------------------
@@ -638,3 +655,99 @@ func door_pos(room: String, fallback: Vector3) -> Vector3:
 		if r and r.has_method("spawn_point") and r.has_spawn("door"):
 			return r.spawn_point("door")
 	return fallback
+
+
+# --- Pewter -----------------------------------------------------------------------------------------
+
+## Saída leste de Pewter: sem a Insígnia da Rocha o garoto barra; com ela, a Rota 3 está em obras.
+func pewter_east_block() -> void:
+	await begin("pewter_east_block")
+	var p := player()
+	if p:
+		p.show_alert(true)
+	if flag("badge_boulder"):
+		await say("Aviso", ["A Rota 3 está em construção.", "Volte mais tarde!"])
+	else:
+		await say("Garoto", ["Você não pode ir para o leste, até a Rota 3, sem a Insígnia da Rocha.",
+			"Vença o Líder Brock no Ginásio de Pewter e depois volte!"])
+	if p:
+		p.show_alert(false)
+		await walk(p, p.global_position + Vector3(-3.0, 0, 0))
+	end()
+
+
+## Chegada a Pewter: um garoto leva o jogador até a porta do ginásio.
+func pewter_guide() -> void:
+	await begin("pewter_guide")
+	var p := player()
+	if p == null:
+		end()
+		return
+	set_flag("pewter_guide_done")
+	var guide := spawn_npc("pewter_guide", "Garoto", p.global_position + Vector3(2.5, 0, -2.5), Color(0.85, 0.65, 0.3))
+	face_each_other(guide, p)
+	await say("Garoto", ["Ei, você! Você é um treinador?",
+		"O Líder do Ginásio de Pewter, Brock, está procurando desafiantes!", "Venha, eu levo você até lá!"])
+	# Pelo caminho central (x = 0) até a rua do ginásio, depois a oeste até a porta.
+	for wp in [Vector3(0.0, 0, -429.0), GYM_FRONT + Vector3(0, 0, 1.2)]:
+		guide.walk_to(Vector3(wp.x + 0.9, guide.global_position.y, wp.z - 0.9))
+		await walk(p, Vector3(wp.x, p.global_position.y, wp.z))
+	face_each_other(guide, p)
+	await say("Garoto", ["Aqui é o Ginásio de Pewter!", "Brock usa Pokémon do tipo Pedra. Boa sorte!"])
+	if is_instance_valid(guide):
+		await walk(guide, guide.global_position + Vector3(6.0, 0, 0))
+		guide.queue_free()
+	end()
+
+
+## Brock (WorldTrainer na sala do ginásio, papel "brock"): luta, insígnia, TM39.
+func _brock_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	await brock_battle(npc)
+	return true
+
+
+func brock_battle(npc: Node = null) -> Dictionary:
+	await begin("brock")
+	var def := Dex.trainer(BROCK)
+	var p := player()
+	if npc is Node3D and p:
+		face_each_other(npc, p)
+	if flag("badge_boulder"):
+		await say("Brock", TrainerText.lines(BROCK, "after", def))
+		end()
+		return {}
+	await say("Brock", TrainerText.lines(BROCK, "intro", def))
+	var enemies := WorldTrainer.build_party(def)
+	var opts := {"kind": "trainer", "trainer_id": BROCK, "can_run": false}
+	if auto_battle:
+		opts["autoplay"] = true
+	opts.merge(battle_extra, true)
+	var r: Dictionary = {}
+	var ow := Overworld.of(self)
+	if ow and not enemies.is_empty():
+		r = await ow.battle(enemies, opts)
+	last_battle = r
+	if String(r.get("outcome", "")) == "win":
+		await say("Brock", TrainerText.lines(BROCK, "defeat", def))
+		await award_badge("boulder", "INSÍGNIA DA ROCHA")
+		await say("Brock", TrainerText.lines(BROCK, "badge_speech", def))
+		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(0, 1))
+		await give_item(String(def.get("gift", "tm39")), 1, "o TM39 (TUMBA DE PEDRAS)")
+		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(1))
+	elif String(r.get("outcome", "")) == "lose":
+		await say("Brock", ["Volte quando estiver mais preparado."])
+	end()
+	return r
+
+
+## flags.badge_<id> (e <id>_badge, usado pelos gatilhos dos mapas) + mensagem.
+func award_badge(id: String, label: String) -> void:
+	set_flag("badge_" + id)
+	set_flag(id + "_badge")
+	var h := hud()
+	if h:
+		h.toast("%s obtida!" % label, 3.0)
+	await say("", ["{PLAYER} recebeu a %s de Brock!" % label])
+

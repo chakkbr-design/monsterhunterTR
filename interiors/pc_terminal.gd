@@ -1,6 +1,6 @@
 class_name PcTerminal
 extends WorldNpc
-## PC on a desk. Opens nothing yet (the Pokémon storage box is a later round).
+## PC on a desk: opens the storage UI (autoload PCStorage) when present, otherwise the old line.
 
 
 func _ready() -> void:
@@ -33,4 +33,11 @@ func prompt() -> String:
 func interact(_p: OverworldPlayer) -> void:
 	if await InteriorHooks.run(self):
 		return
+	var pcs := get_node_or_null("/root/PCStorage")
+	if pcs and pcs.has_method("open"):
+		await say(PackedStringArray(["{PLAYER} ligou o PC."]))
+		if pcs.open():
+			while is_inside_tree() and pcs.is_open():
+				await get_tree().process_frame
+			return
 	await say(lines)

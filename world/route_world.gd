@@ -1,6 +1,6 @@
 class_name RouteWorld
 extends Overworld
-## Pallet Town + Route 1 + Viridian City built at runtime from data/maps/*.json (MapBuilder).
+## Pallet Town .. Pewter City (Route 1, Viridian, Route 22, Route 2, Viridian Forest) built at runtime from data/maps/*.json (MapBuilder).
 ## Like the reference zone_streamer: zones within LOAD_RANGE of the player are built one at a time
 ## across frames and freed past LOAD_RANGE + UNLOAD_MARGIN. The start zone is built synchronously.
 ##
@@ -11,21 +11,21 @@ extends Overworld
 
 signal location_changed(kind: String, id: String)  ## kind: "zone" | "interior"
 
-const ZONES := ["pallet_town", "route_1", "viridian_city"]
+const ZONES := ["pallet_town", "route_1", "viridian_city", "route_22", "route_2", "viridian_forest",
+		"route_2_north", "pewter_city"]
 const LOAD_RANGE := 40.0
 const UNLOAD_MARGIN := 20.0
 const INDOOR_DISTANCE := 11.0
 const INDOOR_PITCH := 52.0
 const REARM_S := 0.5  ## walk-on triggers ignored this long after arriving
 
-## Hand-placed content the maps don't carry (none of these zones has JSON trainers).
-## Mom and the Viridian nurse live indoors now (interiors/interior_defs.gd).
+## Hand-placed content the maps don't carry. Trainers come from the map JSON (bug catchers in the forest,
+## the rival on Route 22); Brock and Liam stand inside the gym (interiors/interior_defs.gd).
+## Route 3 is not built yet: Pewter's east exit stays closed by the zone boundary plus this sign.
 const EXTRAS := {
-	"route_1": {
-		"trainers": [{"id": "bug_catcher_rick", "node": "Trainer_Rick", "pos": [2.0, -53.0], "y": 0.9, "facing": 3}],
-	},
-	"viridian_city": {
-		"trainers": [{"id": "bug_catcher_sammy", "node": "Trainer_Sammy", "pos": [6.5, -178.0], "facing": 1}],
+	"pewter_city": {
+		"signs": [{"name": "Route3Closed", "title": "Aviso", "pos": [45.6, -429.0], "facing": 1,
+				"lines": ["ROTA 3 - EM CONSTRUÇÃO", "A passagem para o Monte da Lua está fechada por enquanto."]}],
 	},
 }
 
@@ -362,6 +362,9 @@ func _process(delta: float) -> void:
 		return
 	if not traveling:
 		_track_location(p)
+	for id in builders:
+		if builders[id].is_built:
+			builders[id].refresh_flags()
 	if not stream:
 		return
 	var here := zone_at(p.global_position)
