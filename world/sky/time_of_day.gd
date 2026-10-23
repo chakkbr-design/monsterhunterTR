@@ -17,6 +17,7 @@ const DEFAULT_PERIOD := "midday"
 const START_MIN := 600.0  ## 10:00
 const DEFAULT_SUN := 1.6
 const INDOOR_SUN := 1.1
+const CAVE_SUN := 0.12  ## roofless cave rooms: the sun must not light them like a house
 const GROUND_TINTS := {"tint_a": Color(1, 1, 0.92), "tint_b": Color(0.78, 0.9, 0.78), "tint_c": Color(1.06, 1.02, 0.8)}
 
 static var forced_period := ""  ## tests / screenshots
@@ -101,7 +102,9 @@ func apply_location(zone_look: Dictionary, is_indoor: bool) -> void:
 	look = zone_look
 	indoor = is_indoor
 	if _env_node:
-		var path := "res://world/look/interior_env.tres" if indoor else WorldFx.env_path(String(look.get("env", "")))
+		var path := WorldFx.env_path(String(look.get("env", "")))
+		if indoor:
+			path = "res://world/look/cave_env.tres" if _is_cave() else "res://world/look/interior_env.tres"
 		_env = (load(path) as Environment).duplicate(true)
 		if not indoor and look.has("fog_density"):
 			_env.fog_density = float(look.fog_density)
@@ -110,6 +113,11 @@ func apply_location(zone_look: Dictionary, is_indoor: bool) -> void:
 	_capture_base()
 	_apply_camera()
 	apply_period(DEFAULT_PERIOD if indoor else _period_now(), 0.0)
+
+
+## RouteWorld passes {"cave": true} for CaveBuilder rooms (room meta "cave_dark").
+func _is_cave() -> bool:
+	return indoor and bool(look.get("cave", false))
 
 
 func _apply_camera() -> void:
@@ -131,7 +139,7 @@ func _capture_base() -> void:
 		gb[k] = Color(String(g[k])) if g.has(k) else GROUND_TINTS[k]
 	gb["desaturate"] = float(g.get("desaturate", 0.0))
 	_base = {
-		"sun_energy": INDOOR_SUN if indoor else float(look.get("sun_energy", DEFAULT_SUN)),
+		"sun_energy": (CAVE_SUN if _is_cave() else INDOOR_SUN) if indoor else float(look.get("sun_energy", DEFAULT_SUN)),
 		"sky_top": _sky(_env, "sky_top_color"),
 		"sky_horizon": _sky(_env, "sky_horizon_color"),
 		"ambient": _env.ambient_light_color,
@@ -250,6 +258,14 @@ func _current() -> Dictionary:
 	if _post:
 		d["shadow_tint"] = _post.shadow_tint
 		d["highlight_tint"] = _post.highlight_tint
+	# Ground tints too (like the original), or they snap at the start of every period blend.
+	for b in get_tree().get_nodes_in_group("map_builder"):
+		var gm: ShaderMaterial = b.ground_material
+		if gm:
+			for k in GROUND_TINTS:
+				d["ground_" + k] = gm.get_shader_parameter(k)
+			d["ground_desaturate"] = float(gm.get_shader_parameter("desaturate"))
+			break
 	return d
 
 
@@ -282,7 +298,8 @@ func _write(d: Dictionary) -> void:
 	if _post:
 		_post.shadow_tint = d.shadow_tint
 		_post.highlight_tint = d.highlight_tint
-	for b in get_tree().get_nodes_in_group("map_builder"):
+	var bs := get_tree().get_nodes_in_group("map_builder")
+	for b in bs:
 		var gm: ShaderMaterial = b.ground_material
 		if gm == null:
 			continue
@@ -291,6 +308,11 @@ func _write(d: Dictionary) -> void:
 				gm.set_shader_parameter(k, d["ground_" + k])
 		if d.has("ground_desaturate"):
 			gm.set_shader_parameter("desaturate", float(d.ground_desaturate))
+	if not bs.is_empty():  # (not MapBuilder by name: it would pull the Game autoload into --script tests)
+		# The water's fake sky sheen and night dimming read these (the original's water_reflections.gd).
+		var wm: ShaderMaterial = bs[0].water_material()
+		wm.set_shader_parameter("sky_top", d.sky_top)
+		wm.set_shader_parameter("sun_color", d.sun_color)
 	_shafts = float(d.get("shafts", _shafts))
 	_lamps = float(d.get("lamps", _lamps))
 	_windows = float(d.get("windows", _windows))

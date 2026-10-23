@@ -148,14 +148,14 @@ func _process(delta: float) -> void:
 	if p:
 		shake_at = Vector2(p.global_position.x, p.global_position.z)
 		if _near(p.global_position, here, reach):
-			_pushers[n] = Vector4(p.global_position.x, p.global_position.z, 0.0, PUSH_RADIUS)
+			_pushers[n] = Vector4(p.global_position.x, 0.0, p.global_position.z, PUSH_RADIUS)  # shader reads .xz
 			n += 1
 	for grp in [WildMon.GROUP, WorldNpc.GROUP, "ow_follower"]:
 		for w in get_tree().get_nodes_in_group(grp):
 			if n >= MAX_PUSHERS:
 				break
 			if w is Node3D and w.visible and _near(w.global_position, here, reach):
-				_pushers[n] = Vector4(w.global_position.x, w.global_position.z, 0.0, PUSH_RADIUS)
+				_pushers[n] = Vector4(w.global_position.x, 0.0, w.global_position.z, PUSH_RADIUS)
 				n += 1
 	for i in range(n, MAX_PUSHERS):
 		_pushers[i] = Vector4.ZERO

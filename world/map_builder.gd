@@ -101,12 +101,16 @@ static func mat(c: Color) -> StandardMaterial3D:
 	return _mats[c]
 
 
+static var _maps: Dictionary = {}  ## parsed map JSON per zone (re-streaming a zone skips the parse)
+
+
+## A private deep copy, so callers may mutate it freely.
 static func load_map(id: String) -> Dictionary:
-	var path := "res://data/maps/%s.json" % id
-	if not FileAccess.file_exists(path):
-		return {}
-	var d = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return d if d is Dictionary else {}
+	if not _maps.has(id):
+		var path := "res://data/maps/%s.json" % id
+		var d = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		_maps[id] = d if d is Dictionary else {}
+	return (_maps[id] as Dictionary).duplicate(true)
 
 
 static func rect_of(a: Array) -> Rect2:

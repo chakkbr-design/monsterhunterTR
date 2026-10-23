@@ -88,7 +88,7 @@ void vertex() {
 	// Push: cards part around the walkers, and shudder around the player before an ambush.
 	// Computed in world xz (the same space as the wind), then projected onto the card's axes.
 	vec2 push = vec2(0.0);
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 16; i++) {
 		if (pushers[i].w <= 0.0) {
 			continue;
 		}

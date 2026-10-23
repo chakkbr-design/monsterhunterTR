@@ -23,6 +23,7 @@ var _day := -1
 var _rain: GPUParticles3D
 var _splash: GPUParticles3D
 var _cfg: Dictionary = {}
+var _cov := Color(-1, 0, 0, 0)
 
 
 func _ready() -> void:
@@ -74,7 +75,10 @@ func _process(delta: float) -> void:
 	cloud = wet * 0.7
 	indoor = tod.indoor if tod else false
 	var rains := wet * 0.8 if not indoor else 0.0
-	WorldFx.set_weather(Color(rains, 0.0, 0.0, cloud if not indoor else 0.0))
+	var cov := Color(rains, 0.0, 0.0, cloud if not indoor else 0.0)
+	if cov != _cov:  # texture upload only when the coverage changes, not every frame
+		_cov = cov
+		WorldFx.set_weather(cov)
 	var cam := get_viewport().get_camera_3d()
 	if cam:
 		_rain.global_position = cam.global_position + Vector3(0, 6.0, 0)

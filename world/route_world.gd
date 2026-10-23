@@ -268,6 +268,8 @@ func _apply_look(kind: String, id: String) -> void:
 	if tod == null:
 		return
 	var look: Dictionary = zones.get(id, {}).get("look", {}) if kind == "zone" else {}
+	if kind == "interior" and interiors.has(id) and interiors[id].has_meta("cave_dark"):
+		look = {"cave": true}  # CaveBuilder rooms: dark cave environment, not a house's
 	if kind == "zone" and look.is_empty() and builders.has(id):
 		look = builders[id].data.get("look", {})
 	tod.apply_location(look, kind == "interior")
