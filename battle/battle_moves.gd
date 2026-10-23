@@ -325,7 +325,7 @@ func _arc(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter
 
 func _multi_arc(user: BattleFighter, mv: Dictionary, miss: BattleFighter, i: int) -> void:
 	var hits := int(mv.get("hits", 3))
-	if i >= hits or not is_instance_valid(user) or not user.can_act():
+	if i >= hits or not is_instance_valid(user) or not user.on_field or not user.can_act():
 		return
 	var d := user.aim_dir()
 	if is_instance_valid(miss):
@@ -368,7 +368,7 @@ func _whip(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 
 func _projectiles(user: BattleFighter, mv: Dictionary, dir: Vector3, homing: bool, miss: BattleFighter, i := 0) -> void:
 	var n := int(mv.get("count", 1))
-	if i >= n or not is_instance_valid(user) or not user.alive():
+	if i >= n or not is_instance_valid(user) or not user.active():
 		return
 	var spread := deg_to_rad(float(mv.get("spread", 0.0)))
 	var d := dir
@@ -405,7 +405,7 @@ func _stream(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 
 
 func _stream_tick(user: BattleFighter, mv: Dictionary, lock: BattleFighter, state: Dictionary, r: float, half: float, tick: float) -> void:
-	if state.left <= 0 or not is_instance_valid(user) or not user.can_act():
+	if state.left <= 0 or not is_instance_valid(user) or not user.on_field or not user.can_act():
 		return
 	state.left -= 1
 	if user.confusion_t <= 0.0 and is_instance_valid(lock) and lock.active():

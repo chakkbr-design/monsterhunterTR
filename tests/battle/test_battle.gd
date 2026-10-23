@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_status()
 	_capture()
 	_swap()
+	_recall_stops_combo()
 	for i in 6:
 		_full_battle(i)
 	_trainer_battle()
@@ -200,6 +201,29 @@ func _swap() -> void:
 	check(a.player.mon == party[1] and a.enemy.opponent == a.player, "novo mon em campo e alvo do inimigo")
 	check(party[0].hp == 7, "HP do mon recolhido persiste")
 	check(not a.swap(), "troca tem cooldown")
+	_done(a)
+
+
+
+## Golpe de vários acertos (multi_arc) não continua do lutador recolhido pela troca.
+func _recall_stops_combo() -> void:
+	var party := [Mon.create("charmander", 20), Mon.create("squirtle", 20)]
+	var a := _arena(party, [Mon.create("onix", 30)], {"seed": 3, "battle_size": 1})
+	_run(a, 1.3)
+	a.enemy.controller = "none"
+	a.player.position = Vector3(0, 0, 0.6)
+	a.enemy.position = Vector3(0, 0, -4.0)  # longe: o 1º golpe não acerta (sem hit-stop)
+	var old: BattleFighter = a.player
+	old.stamina = old.pp_max
+	var mv := Dex.move("fury_swipes").duplicate()
+	mv.accuracy = 0  # sem erro aleatório
+	a.moves.deliver(old, mv)
+	check(a.swap() and a.player != old, "troca no meio do Fury Swipes")
+	a.player.position = Vector3(2.5, 0, 0.6)
+	a.enemy.position = Vector3(0, 0, -0.4)  # entra no alcance do recolhido
+	var hits: int = a.hits
+	_run(a, 1.5)
+	check(a.hits == hits, "recolhido não segue acertando (%d -> %d)" % [hits, a.hits])
 	_done(a)
 
 

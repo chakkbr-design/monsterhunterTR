@@ -250,6 +250,9 @@ func play_move(mv: Dictionary, secs := -1.0) -> String:
 	if not has_pmd():
 		_bump()
 		return ""
+	# Como no original (play_move_anim): o golpe não corta a animação de dano em curso.
+	if _oneshot and _anim != "" and _anim == resolve(PokemonSprites.state_chain("hurt")):
+		return ""
 	var chains := PokemonSprites.pmd_anims()
 	var id := String(mv.get("id", ""))
 	var kind := String(mv.get("kind", ""))

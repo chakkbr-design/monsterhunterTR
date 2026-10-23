@@ -114,6 +114,7 @@ var _ring: MeshInstance3D
 var _ring_mat: StandardMaterial3D
 var _status_fx: FxSprite
 var _status_fx_id := ""
+var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
 var _spawn_t := 0.0
 
@@ -213,6 +214,7 @@ func visual_step(dt: float) -> void:
 		var k := 1.0 - _spawn_t / SPAWN_GROW
 		look.scale_mult = lerpf(0.05, 1.0, ease(k, 0.4))
 	look.velocity = velocity
+	look.move_speed = PLAYER_SPEED if controller == "player" else AI_SPEED  # muda ao trocar o controle (Tab)
 	if facing.length() > 0.01:
 		look.facing = facing
 	var st := ""
@@ -234,6 +236,7 @@ func visual_step(dt: float) -> void:
 	if alive():
 		look.tint = tint
 	_update_status_fx()
+	_place_status_fx()
 
 
 func _update_status_fx() -> void:
@@ -248,6 +251,17 @@ func _update_status_fx() -> void:
 	_status_fx_id = want
 	if want != "" and vfx:
 		_status_fx = vfx.status_look(self, want)
+		if _status_fx:
+			_status_fx_off = _status_fx.position
+
+
+## Efeito de status puxado para a câmera (como o FX_TOWARD_CAM_M do original): preso no centro do lutador,
+## o quad cortava o sprite ao meio no teste de profundidade.
+func _place_status_fx() -> void:
+	if not is_instance_valid(_status_fx) or not is_inside_tree():
+		return
+	var at := to_global(_status_fx_off)
+	_status_fx.global_position = at + PmdFx.toward_camera(at, vfx.cam())
 
 
 func alive() -> bool:
@@ -567,6 +581,7 @@ func _faint() -> void:
 	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
 	preload("res://audio/cue.gd").sfx("faint")
 	if look:
+		look.tint = _tint()  # sem isso o clarão de um acerto anterior fica preso no sprite desmaiado
 		look.faint()
 		_ring.visible = false
 	fainted.emit(self)

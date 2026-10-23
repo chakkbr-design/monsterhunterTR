@@ -77,17 +77,23 @@ static func glass_box(alpha := 0.35, radius := 14) -> StyleBoxFlat:
 
 
 static func glass(ci: CanvasItem, r: Rect2, alpha := 0.35, radius := 14) -> void:
-	ci.draw_style_box(glass_box(alpha, radius), r)
+	rounded(ci, r, Color(INK, alpha), radius, 1.0, Color(PAPER, 0.08))
+
+
+## Uma StyleBoxFlat reaproveitada: draw_style_box desenha na hora, então dá para reconfigurar a cada chamada
+## (antes era uma StyleBoxFlat nova por retângulo, dezenas por quadro no HUD da batalha).
+static var _sb: StyleBoxFlat
 
 
 static func rounded(ci: CanvasItem, r: Rect2, col: Color, radius := 6.0, border := 0.0, border_col := Color.TRANSPARENT) -> void:
-	var sb := StyleBoxFlat.new()
+	if _sb == null:
+		_sb = StyleBoxFlat.new()
+		_sb.anti_aliasing = true
+	var sb := _sb
 	sb.bg_color = col
 	sb.set_corner_radius_all(int(radius))
-	if border > 0.0:
-		sb.set_border_width_all(int(border))
-		sb.border_color = border_col
-	sb.anti_aliasing = true
+	sb.set_border_width_all(int(border) if border > 0.0 else 0)
+	sb.border_color = border_col
 	ci.draw_style_box(sb, r)
 
 

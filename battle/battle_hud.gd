@@ -347,6 +347,7 @@ class MoveButton extends Control:
 	const NAME_W := 62.0
 	var index := 0
 	var body: BattleFighter
+	var _fits := {}  # nome -> [linhas, tamanho] (o botão redesenha todo quadro)
 
 	func _wrap(nm: String, fs: int) -> Array:
 		var lines: Array = []
@@ -363,6 +364,11 @@ class MoveButton extends Control:
 		return lines
 
 	func _fit(nm: String) -> Array:
+		if not _fits.has(nm):
+			_fits[nm] = _fit_now(nm)
+		return _fits[nm]
+
+	func _fit_now(nm: String) -> Array:
 		var fs := 16
 		while fs > 10:
 			var lines := _wrap(nm, fs)

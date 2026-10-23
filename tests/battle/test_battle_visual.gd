@@ -25,6 +25,7 @@ func _main() -> void:
 	await process_frame
 	await _fight()
 	await _moves_fx()
+	await _review_fx()
 	await _capture()
 	print("battle_visual: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -110,6 +111,39 @@ func _moves_fx() -> void:
 		e.position = Vector3(0, 0, -3)
 		e.hp = e.max_hp
 	check(p.look.resolve(["Shock", "Shoot", "Attack"]) != "", "pikachu tem anim de choque/ataque")
+	a.get_parent().queue_free()
+	await process_frame
+
+
+## Efeito de status puxado para a câmera; jato do Lança-chamas some junto com quem desmaia;
+## clarão de dano não fica preso no sprite desmaiado.
+func _review_fx() -> void:
+	var a := _arena([Mon.create("charmander", 30)], [Mon.create("onix", 30)], {"seed": 4, "battle_size": 1})
+	await process_frame
+	_run(a, 1.3)
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	e.controller = "none"
+	p.apply_status("burn")
+	_run(a, 0.1)
+	var sfx: FxSprite = p._status_fx
+	check(sfx != null, "efeito de queimadura no lutador")
+	if sfx:
+		var base := p.to_global(p._status_fx_off)
+		var cam: Vector3 = a._cam.global_position
+		check(sfx.global_position.distance_to(cam) < base.distance_to(cam) - 0.2, "efeito de status à frente do sprite")
+	p.stamina = p.pp_max
+	a.moves.deliver(p, Dex.move("flamethrower"))
+	_run(a, 0.2)
+	var jets: Array = a.vfx.nodes.filter(func(n): return n is BeamFx and n.name.begins_with("FlameJet"))
+	check(jets.size() == 1, "jato do Lança-chamas")
+	p.take_damage(1, Vector3.FORWARD, 1.0, {"source": e})
+	_run(a, DT)
+	p.take_damage(p.hp, Vector3.FORWARD, 1.0, {"source": e})
+	check(p.look.tint != BattleFighter.FLASH_COL, "sprite desmaiado sem o clarão preso")
+	var jet_on := func() -> bool: return a.vfx.nodes.any(func(n): return n is BeamFx and n.name.begins_with("FlameJet"))
+	_run(a, 0.3)
+	check(not jet_on.call(), "jato some quando o usuário desmaia")
 	a.get_parent().queue_free()
 	await process_frame
 

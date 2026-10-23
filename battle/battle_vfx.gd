@@ -267,7 +267,9 @@ class StreamEmitter extends RefCounted:
 
 	func tick(dt: float) -> bool:
 		age += dt
-		if age >= dur or not is_instance_valid(user) or not user.alive():
+		if age >= dur or not is_instance_valid(user) or not user.active():
+			if age < dur and is_instance_valid(jet):
+				jet.life = minf(jet.life, jet.age + jet.fade)  # usuário caiu/saiu: o jato some junto
 			return false
 		if not vfx.arena.is_inside_tree():
 			return true

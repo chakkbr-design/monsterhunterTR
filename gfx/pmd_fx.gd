@@ -12,6 +12,7 @@ const DIR_VEC := [Vector2(0, -1), Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1
 		Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(1, -1)]
 
 static var _data := {}
+static var _tex := {}
 
 
 static func data() -> Dictionary:
@@ -27,6 +28,14 @@ static func table() -> Dictionary:
 
 static func entry(fx_id: String) -> Dictionary:
 	return table().get(fx_id, {})
+
+
+## Folha do efeito em cache: sem isso cada golpe recarregava a PNG do disco depois que o último efeito saía.
+static func _texture(fx_id: String) -> Texture2D:
+	if not _tex.has(fx_id):
+		var p := DIR + fx_id + ".png"
+		_tex[fx_id] = load(p) as Texture2D if ResourceLoader.exists(p) else null
+	return _tex[fx_id]
 
 
 static func exists(fx_id: String) -> bool:
@@ -73,9 +82,9 @@ static func content_offset(e: Dictionary, lo: int, hi: int) -> Vector2:
 ## Monta o efeito. aim = direção no mundo (orienta efeitos direcionais); cam = câmera para o giro na tela.
 static func make(fx_id: String, aim: Vector3, role_d := {}, cam: Camera3D = null) -> FxSprite:
 	var e := entry(fx_id)
-	if e.is_empty() or not ResourceLoader.exists(DIR + fx_id + ".png"):
+	if e.is_empty():
 		return null
-	var tex: Texture2D = load(DIR + fx_id + ".png")
+	var tex := _texture(fx_id)
 	if tex == null:
 		return null
 	var n := int(e.get("frames", 1))

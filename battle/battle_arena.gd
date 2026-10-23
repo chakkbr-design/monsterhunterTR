@@ -82,6 +82,12 @@ func _physics_process(delta: float) -> void:
 		step(delta)
 
 
+func _notification(what: int) -> void:
+	# Arena liberada no meio da luta: solta os efeitos (StreamEmitter <-> BattleVfx é um ciclo de RefCounted).
+	if what == NOTIFICATION_PREDELETE and vfx:
+		vfx.nodes.clear()
+
+
 func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	opts = o
 	party = player_party
@@ -132,6 +138,10 @@ func _build() -> void:
 	_prev_cam = get_viewport().get_camera_3d() if is_inside_tree() else null
 	_cam = Camera3D.new()
 	_cam.fov = 60.0
+	if _prev_cam:
+		# Mesmo alcance e atributos da câmera do mundo (far curto do streaming, exposição/DOF).
+		_cam.far = _prev_cam.far
+		_cam.attributes = _prev_cam.attributes
 	add_child(_cam)
 	_cam.make_current()
 	hud = BattleHUD.new()

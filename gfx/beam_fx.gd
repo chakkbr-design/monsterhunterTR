@@ -19,6 +19,9 @@ var _parts: Array = []   # {spr: Sprite3D, n, fps, mat, a, base_y}
 var _jets: Array = []    # {mat: ShaderMaterial, a}
 var _xf := Transform3D()
 
+static var _tex := {}         # caminho -> Texture2D (ou null)
+static var _flame_shader: Shader
+
 
 ## Põe na árvore sob parent e aplica a transformação global calculada em make()/flame_jet().
 func place_in(parent: Node) -> void:
@@ -41,9 +44,11 @@ static func axis_of(beam_id: String) -> String:
 
 static func _part(beam_id: String, part: String, frames: int) -> Dictionary:
 	var path := DIR + beam_id.to_lower() + "/" + part + ".png"
-	if not ResourceLoader.exists(path) or frames < 1:
+	if frames < 1:
 		return {}
-	var tex: Texture2D = load(path)
+	if not _tex.has(path):
+		_tex[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	var tex: Texture2D = _tex[path]
 	if tex == null:
 		return {}
 	var fw := tex.get_width() / frames
@@ -140,7 +145,9 @@ static func flame_jet(at: Vector3, dir: Vector3, length: float, cfg: Dictionary,
 	b.travel = maxf(travel_s, 0.01)
 	b.fade = 0.15
 	var tip := float(cfg.get("tip", 1.1))
-	var shader: Shader = load(FLAME_SHADER)
+	if _flame_shader == null:
+		_flame_shader = load(FLAME_SHADER)  # em cache: recarregar recompila o shader a cada Lança-chamas
+	var shader := _flame_shader
 	for layer in [{"sq": 1.0, "dim": 1.0, "a": 1.0, "z": 0.0}, {"sq": 1.3, "dim": 0.55, "a": 0.6, "z": -0.2}]:
 		var mesh := QuadMesh.new()
 		mesh.size = Vector2(length, tip * 1.3 * float(layer.sq))
