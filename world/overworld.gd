@@ -9,6 +9,7 @@ const WALL_LAYER := 1
 @export var trunk_color := Color(0.4, 0.27, 0.15)
 
 var _result: Dictionary = {}
+var seed_party := true  ## give a test Bulbasaur when the party is empty (off for a new game)
 
 
 static func of(n: Node) -> Overworld:
@@ -32,7 +33,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	if Game.party.is_empty():
+	if seed_party and Game.party.is_empty():
 		Game.add_mon(Mon.create("bulbasaur", 5))
 	var trees := get_node_or_null("Trees")
 	if trees:
@@ -65,7 +66,7 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 		for e in _result.get("evolved", []):
 			lines.append("%s evoluiu para %s!" % e)
 		hud.toast(" ".join(lines), 3.5)
-	if outcome == "lose":
+	if outcome == "lose" and not opts.get("scripted", false):
 		_white_out(p)
 	return _result
 

@@ -147,3 +147,11 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 
 `oak_stopped`, `got_starter`, `starter_chosen`, `rival_battle_done`, `rival_battle_won`, `mom_healed`, `has_parcel`, `has_pokedex`, `parcel_delivered`.
 Batalha com `opts.scripted` não grava `trainer_<id>`. O menu de pausa não abre durante uma cena da história.
+
+### Interiores (pronto)
+
+- Salas em `interiors/`, dentro da RouteWorld em x ≥ 10000: player_room, player_house, rival_house, oak_lab, pokemon_center_viridian, mart_viridian, trainer_school_viridian, viridian_house.
+- RouteWorld: `await go_to_interior(id, spawn)`, `await go_to_zone(zone, spawn)`, `location_changed(kind, id)`, `marker(id, nome)`, `save_extra()` (usado pelo menu ao salvar), `set_interact_hook(sala, papel, cb)`.
+- `Game.flags.last_heal`: onde o jogador volta ao perder. Curar usa `Mon.heal_full` (HP, PP e status).
+- O jogador do mundo não anda enquanto `Story.is_running()`.
+- Cena principal: `res://ui/front/title.tscn`.

@@ -14,7 +14,7 @@ func _build_body() -> void:
 
 
 func prompt() -> String:
-	return "E: Heal party"
+	return "E: Falar"
 
 
 func interact(_p: OverworldPlayer) -> void:

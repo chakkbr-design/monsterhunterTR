@@ -76,6 +76,9 @@ func ui_blocking() -> bool:
 		var n := get_node_or_null(path)
 		if n and n.has_method("is_open") and n.is_open():
 			return true
+	var st := get_node_or_null("/root/Story")
+	if st and st.has_method("is_running") and st.is_running():
+		return true
 	return false
 
 

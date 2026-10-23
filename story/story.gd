@@ -65,8 +65,8 @@ func _process(_delta: float) -> void:
 
 func _on_node_added(n: Node) -> void:
 	if n is RouteWorld and n != world:
-		# Overworld._ready semeia um Bulbasaur se a equipe está vazia; num jogo novo o inicial vem do Oak.
-		var seeded := Game.party.is_empty() and not flag("got_starter")
+		# Só um jogo novo (spawn_request) chega sem equipe; aí o Overworld não semeia e o inicial vem do Oak.
+		var seeded := Game.party.is_empty() and not flag("got_starter") and not Game.spawn_request.is_empty()
 		n.ready.connect(_on_world_ready.bind(n, seeded), CONNECT_ONE_SHOT)
 
 

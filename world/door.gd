@@ -1,7 +1,7 @@
 class_name WorldDoor
 extends WorldNpc
-## Building door marker. Interiors don't exist yet, so it only shows its lines ("Fechado." by default).
-## target_scene / target_spawn keep the map's link for when interiors are added.
+## Building door. If the map's target_spawn leads to a known interior (InteriorDefs.DOOR_TARGETS) and the
+## map root can travel (RouteWorld), "E: Entrar" walks in; otherwise it shows its lines ("Fechado.").
 
 var target_scene := ""
 var target_spawn := ""
@@ -24,9 +24,17 @@ func _build_body() -> void:
 	add_child(mat)
 
 
+func leads_inside() -> bool:
+	var w := Overworld.of(self)
+	return InteriorDefs.DOOR_TARGETS.has(target_spawn) and w != null and w.has_method("enter_door")
+
+
 func prompt() -> String:
-	return "E: Entrar"
+	return "E: Entrar" if leads_inside() else "E: Olhar"
 
 
 func interact(_p: OverworldPlayer) -> void:
+	if leads_inside():
+		await Overworld.of(self).enter_door(target_spawn)
+		return
 	await say(lines)

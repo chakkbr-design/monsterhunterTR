@@ -42,9 +42,11 @@ func _run() -> void:
 	game.save_path = "user://test_story_save.json"
 	game.new_game("ASH", "GARY")
 	game.spawn_request = {"interior": "player_room", "spawn": "bed"}
-	story = load("res://story/story.gd").new()
-	story.name = "Story"
-	root.add_child(story)
+	story = root.get_node_or_null("Story")
+	if story == null:
+		story = load("res://story/story.gd").new()
+		story.name = "Story"
+		root.add_child(story)
 	story.auto_advance = true
 	story.auto_answer = true
 	story.auto_battle = true

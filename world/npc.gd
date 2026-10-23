@@ -81,10 +81,19 @@ func face(pos: Vector3) -> void:
 ## Called by the player on interact; the player stays locked until this returns.
 func interact(p: OverworldPlayer) -> void:
 	face(p.global_position)
+	if has_meta("role") and await InteriorHooks.run(self):
+		return
 	await say(lines)
 
 
 func say(text: PackedStringArray) -> void:
 	var hud := Overworld.hud_of(self)
-	if hud:
-		await hud.say(npc_name, text)
+	if hud == null:
+		return
+	var g := get_node_or_null("/root/Game")
+	if g and g.has_method("fill_names"):
+		var filled := PackedStringArray()
+		for l in text:
+			filled.append(g.fill_names(l))
+		text = filled
+	await hud.say(npc_name, text)
