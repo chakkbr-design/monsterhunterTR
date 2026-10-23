@@ -12,7 +12,7 @@ extends Overworld
 signal location_changed(kind: String, id: String)  ## kind: "zone" | "interior"
 
 const ZONES := ["pallet_town", "route_1", "viridian_city", "route_22", "route_2", "viridian_forest",
-		"route_2_north", "pewter_city"]
+		"route_2_north", "pewter_city", "route_3"]
 const LOAD_RANGE := 40.0
 const UNLOAD_MARGIN := 20.0
 const INDOOR_DISTANCE := 11.0
@@ -21,13 +21,8 @@ const REARM_S := 0.5  ## walk-on triggers ignored this long after arriving
 
 ## Hand-placed content the maps don't carry. Trainers come from the map JSON (bug catchers in the forest,
 ## the rival on Route 22); Brock and Liam stand inside the gym (interiors/interior_defs.gd).
-## Route 3 is not built yet: Pewter's east exit stays closed by the zone boundary plus this sign.
-const EXTRAS := {
-	"pewter_city": {
-		"signs": [{"name": "Route3Closed", "title": "Aviso", "pos": [45.6, -429.0], "facing": 1,
-				"lines": ["ROTA 3 - EM CONSTRUÇÃO", "A passagem para o Monte da Lua está fechada por enquanto."]}],
-	},
-}
+## Route 3 (with Route 4 west and the Mt. Moon mouth) opens east of Pewter; the Story blocks it until the badge.
+const EXTRAS := {}
 
 @export var start_zone := ""  ## empty = spawn_request / save / data/world.json "start"
 @export var start_spawn := ""
@@ -63,6 +58,7 @@ func _ready() -> void:
 			zones[String(z.id)] = z
 	_build_interiors()
 	_make_fade()
+	_make_sky()
 	var rig := _rig()
 	if rig:
 		_cam_out = Vector2(rig.distance, rig.pitch_deg)
@@ -208,10 +204,7 @@ func _place_in_interior(id: String, spawn: String) -> void:
 	var r: InteriorRoom = interiors[id]
 	var sp := spawn if r.has_spawn(spawn) else "door"
 	_put_player(r.spawn_point(sp), r.spawn_facing(sp))
-	_camera_mode(true)
-	var hud := hud_of(self)
-	if hud:
-		hud.toast(r.display_name(), 2.0)
+	_camera_mode(true)  # the HUD location pill names the room (location_changed)
 
 
 func _put_player(at: Vector3, facing: Vector3) -> void:
@@ -239,6 +232,7 @@ func _ensure_zone(zone: String) -> void:
 func _set_location(kind: String, id: String) -> void:
 	location_kind = kind
 	location_id = id
+	_apply_look(kind, id)
 	if kind == "zone":
 		active_zone = id
 	_since_arrival = 0.0
@@ -258,6 +252,25 @@ func _camera_mode(indoor: bool) -> void:
 	if indoor:  # face the room's open (low) front wall
 		rig._yaw = 0.0
 		rig._yaw_target = 0.0
+
+
+## Original look: post fx, wind, time of day, weather, ambience, the following partner (world/sky/).
+func _make_sky() -> void:
+	for n: Node in [WorldPostFx.new(), WorldWind.new(), WorldTimeOfDay.new(), WorldWeather.new(), WorldAmbient.new(), WorldFollower.new()]:
+		n.name = {WorldPostFx: "PostFX", WorldWind: "Wind", WorldTimeOfDay: "TimeOfDay", WorldWeather: "Weather",
+				WorldAmbient: "Ambient", WorldFollower: "Follower"}[n.get_script()]
+		add_child(n)
+
+
+## Environment, sun, fog, ground tints and camera of the zone (its map look) or of an interior.
+func _apply_look(kind: String, id: String) -> void:
+	var tod := get_node_or_null("TimeOfDay") as WorldTimeOfDay
+	if tod == null:
+		return
+	var look: Dictionary = zones.get(id, {}).get("look", {}) if kind == "zone" else {}
+	if kind == "zone" and look.is_empty() and builders.has(id):
+		look = builders[id].data.get("look", {})
+	tod.apply_location(look, kind == "interior")
 
 
 func _make_fade() -> void:
@@ -390,12 +403,8 @@ func _track_location(p: OverworldPlayer) -> void:
 	var here := zone_at(p.global_position)
 	if here == "" or (location_kind == "zone" and here == location_id):
 		return
-	var was_inside := location_kind == "interior"
 	_camera_mode(false)
-	_set_location("zone", here)
-	var hud := hud_of(self)
-	if hud and not was_inside:
-		hud.toast(String(zones[here].get("name", here)), 2.5)
+	_set_location("zone", here)  # the HUD location pill shows the zone name
 
 
 func _stream_in(id: String) -> void:

@@ -31,13 +31,20 @@ const DOOR_TARGETS := {
 	"pw_museum_in": ["pewter_museum", "door"],
 	"pw_house1_in": ["pewter_house1", "door"],
 	"pw_house2_in": ["pewter_house2", "door"],
+	"mm_center_in": ["pokemon_center_mt_moon", "door"],
+	"mm_1f_west_in": ["mt_moon_1f", "west_in"],
 }
 
 ## Order fixes each room's slot in the world.
 const ORDER := ["player_room", "player_house", "rival_house", "oak_lab", "pokemon_center_viridian",
 		"mart_viridian", "trainer_school_viridian", "viridian_house",
 		"forest_gate_south", "forest_gate_north", "pokemon_center_pewter", "mart_pewter", "pewter_gym",
-		"pewter_museum", "pewter_house1", "pewter_house2"]
+		"pewter_museum", "pewter_house1", "pewter_house2",
+		"pokemon_center_mt_moon", "mt_moon_1f", "mt_moon_b1f", "mt_moon_b2f"]
+
+## Caves (CaveBuilder): same x slot as any room, but pushed this far south so their bigger floors never overlap.
+const CAVE_Z := 200.0
+const CAVE_GAP_Z := 60.0
 
 const ROOMS := {
 	"player_room": {
@@ -354,12 +361,50 @@ const ROOMS := {
 				"lines": ["Pokémon fortes nem sempre vencem.", "O que importa é o tipo do golpe contra o tipo do adversário!"]},
 		],
 	},
+	# --- Rota 4 / Monte da Lua ---
+	"pokemon_center_mt_moon": {
+		"name": "Centro Pokémon", "zone": "route_3", "size": [16, 8],
+		"floor": "#d8c7b8", "wall": "#f2e9e0",
+		"exit": {"x": 0.0, "to": {"zone": "route_3", "spawn": "r4_center_door"}},
+		"spawns": {"mm_center_in": [0.0, 2.2, "n"], "counter": [0.0, -1.6, "n"]},
+		"markers": {"nurse": [0.0, -3.1, "s"], "counter": [0.0, -2.45, "s"], "pc": [6.0, -3.4, "s"],
+				"salesman": [-5.6, -1.6, "e"], "visitor": [5.0, 0.6, "w"]},
+		"furniture": [
+			["Balcão", [0.0, -2.45], [5.0, 1.1, 0.5], "#e05a52"],
+			["Máquina de cura", [-1.5, -3.5], [1.4, 1.3, 0.6], "#c9cfd8"],
+			["Banco", [-6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["Banco", [6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["Mesa do PC", [6.0, -3.5], [1.6, 0.85, 0.7], "#8b929c"],
+			["Planta", [-7.4, -3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Planta", [7.4, 3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+		],
+		"npcs": [
+			{"type": "nurse", "marker": "nurse", "name": "Enfermeira", "color": "#f2a3c0",
+					"lines": ["Bem-vindo ao Centro Pokémon!", "Vou cuidar dos seus Pokémon. Um momento...",
+						"Pronto! Seus Pokémon estão totalmente recuperados.", "Esperamos vê-lo de novo!"]},
+			{"type": "pc", "marker": "pc", "name": "PC"},
+			{"type": "npc", "marker": "salesman", "name": "Vendedor", "color": "#c9a94a",
+				"lines": ["Ei, você aí! Tenho uma oferta imperdível!"]},
+			{"type": "npc", "marker": "visitor", "name": "Moça", "color": "#e39ab0",
+				"lines": ["Dizem que o Monte da Lua está cheio de Zubat.", "Leve bastante Poção, a caverna é comprida!"]},
+		],
+	},
+	# Andares do Monte da Lua: só o casco aqui; rochas, escadas, itens, treinadores e encontros vêm de
+	# CaveBuilder.decorate (data/maps/mt_moon_floors.json + mt_moon_events.json), 0,9 m por tile (48 x 40).
+	"mt_moon_1f": {"name": "Monte da Lua 1F", "zone": "route_3", "size": [43.2, 36.0], "cave": "1f",
+			"floor": "#6b5f52", "wall": "#4a4139"},
+	"mt_moon_b1f": {"name": "Monte da Lua B1F", "zone": "route_3", "size": [43.2, 36.0], "cave": "b1f",
+			"floor": "#655a4e", "wall": "#463d35"},
+	"mt_moon_b2f": {"name": "Monte da Lua B2F", "zone": "route_3", "size": [43.2, 36.0], "cave": "b2f",
+			"floor": "#5f554a", "wall": "#423a33"},
 }
 
 
 static func origin_of(id: String) -> Vector3:
 	var i := ORDER.find(id)
-	return BASE + Vector3(SPACING * maxi(i, 0), 0, 0)
+	var cave := String(ROOMS.get(id, {}).get("cave", ""))
+	var z := 0.0 if cave == "" else CAVE_Z + CAVE_GAP_Z * ["1f", "b1f", "b2f"].find(cave)
+	return BASE + Vector3(SPACING * maxi(i, 0), 0, z)
 
 
 static func dir_vec(d: String) -> Vector3:

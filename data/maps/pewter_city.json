@@ -1,6 +1,6 @@
 {
  "id": "pewter_city",
- "name": "PEWTER CITY",
+ "name": "CIDADE DE PEWTER",
  "rect": [
   -48,
   -463,
@@ -162,7 +162,7 @@
    "scale": 0.8,
    "door_dx": -1.53,
    "board": {
-    "text": "PEWTER\nMUSEUM",
+    "text": "MUSEU DE\nPEWTER",
     "color": "#7d7f86",
     "ball": false,
     "side": -1
@@ -198,7 +198,7 @@
    "scale": 0.8,
    "door_dx": -0.15,
    "board": {
-    "text": "PEWTER CITY\nPOKéMON GYM\nLEADER: BROCK",
+    "text": "GINÁSIO POKéMON\nDE PEWTER\nLÍDER: BROCK",
     "color": "#6b6f76",
     "ball": false,
     "side": 1,
@@ -241,7 +241,7 @@
    "scale": 0.8,
    "door_dx": 0.0,
    "board": {
-    "text": "POKéMON\nCENTER",
+    "text": "CENTRO\nPOKéMON",
     "color": "#d8423a",
     "ball": true,
     "side": 1
@@ -5107,7 +5107,7 @@
  ],
  "npcs": [
   {
-   "name": "Camp Coordinator",
+   "name": "Coordenador do Acampamento",
    "node": "NPC_CampCoordinator",
    "pos": [
     31.9,
@@ -5132,15 +5132,15 @@
     ]
    },
    "lines": [
-    "Welcome to the Pewter training camp! Hit a board and it gives your Pokémon real EV training — the effort points behind its stats.",
-    "Pick a board by what it trains: GEODUDE gives DEFENSE, EKANS ATTACK, ZUBAT SPEED.",
-    "The board matches your Pokémon's level and refills every time you knock it down — keep hitting it as long as you like.",
-    "When you've had enough, open the pause menu and RUN."
+    "Bem-vindo ao acampamento de treino de Pewter! Acerte um boneco e seu Pokémon ganha treino de EV de verdade, os pontos de esforço por trás dos atributos.",
+    "Escolha o boneco pelo que ele treina: Geodude dá DEFESA, Ekans ATAQUE e Zubat VELOCIDADE.",
+    "O boneco acompanha o nível do seu Pokémon e se recupera sempre que você o derruba. Pode bater quanto quiser.",
+    "Quando cansar, abra o menu de pausa e escolha FUGIR."
    ],
    "y": 0.0
   },
   {
-   "name": "Camper Ray",
+   "name": "Campista Ray",
    "node": "NPC_CampTraineeRun",
    "pos": [
     29.0,
@@ -5149,14 +5149,14 @@
    "sprite": "npc_camper.png",
    "facing": 3,
    "lines": [
-    "Caught in a wild fight you don't want? Open the pause menu with Esc and pick RUN.",
-    "TRAINER battles refuse — you have to win or lose those.",
-    "The practice boards count as wild, so RUN is how you end a session."
+    "Entrou numa luta selvagem que não queria? Abra o menu de pausa com Esc e escolha FUGIR.",
+    "Batalhas contra TREINADORES não deixam fugir: é vencer ou perder.",
+    "Os bonecos de treino contam como selvagens, então é com FUGIR que você encerra o treino."
    ],
    "y": 0.0
   },
   {
-   "name": "Lass June",
+   "name": "Moça June",
    "node": "NPC_CampTraineeJump",
    "pos": [
     33.0,
@@ -5165,14 +5165,14 @@
    "sprite": "npc_lass.png",
    "facing": 3,
    "lines": [
-    "See the disc on the ground? That's a ground move telegraphing where it will hit.",
-    "Jump while it shows and moves like EARTHQUAKE and MAGNITUDE miss you clean.",
-    "Watch for the disc, then jump — timing beats raw power."
+    "Está vendo o círculo no chão? É um golpe de terra mostrando onde vai acertar.",
+    "Pule enquanto ele aparece e golpes como TERREMOTO e MAGNITUDE erram você em cheio.",
+    "Fique de olho no círculo e pule. Na hora certa, o tempo vale mais que a força."
    ],
    "y": 0.0
   },
   {
-   "name": "Super Nerd Gil",
+   "name": "Supernerd Gil",
    "node": "NPC_CampTraineeStatus",
    "pos": [
     35.8,
@@ -5181,14 +5181,14 @@
    "sprite": "npc_super_nerd.png",
    "facing": 3,
    "lines": [
-    "A burn halves your Attack and ticks off HP every beat.",
-    "Paralysis and sleep stop you acting at all — a bad status can lose a fight on its own.",
-    "Status lingers after the battle ends. A POKéMON CENTER heals it."
+    "A queimadura corta o seu Ataque pela metade e tira HP a cada instante.",
+    "Paralisia e sono impedem você de agir. Um status ruim pode decidir uma luta sozinho.",
+    "O status continua depois da batalha. Um CENTRO POKéMON cura."
    ],
    "y": 0.0
   },
   {
-   "name": "Youngster Ned",
+   "name": "Jovem Ned",
    "node": "NPC_CampTraineeStats",
    "pos": [
     40.0,
@@ -5197,15 +5197,16 @@
    "sprite": "npc_youngster.png",
    "facing": 3,
    "lines": [
-    "Moves like GROWL lower one of the foe's stats for the rest of the fight.",
-    "They stack, so two GROWLs cut Attack twice as hard.",
-    "The drops wear off when the battle ends — hit hard while they last."
+    "Golpes como ROSNADO baixam um atributo do adversário até o fim da luta.",
+    "Eles se acumulam: dois ROSNADOS cortam o Ataque duas vezes mais.",
+    "As quedas somem quando a batalha acaba. Aproveite e bata forte enquanto duram!"
    ],
    "y": 0.0
   },
   {
-   "name": "Youngster",
+   "name": "Garoto",
    "node": "NPC_Youngster",
+   "hidden_by_flag": "boulder_badge",
    "pos": [
     41.0,
     -429.0
@@ -5213,13 +5214,13 @@
    "sprite": "npc_youngster.png",
    "facing": 2,
    "lines": [
-    "You can't go east to Route 3 without the Boulder Badge.",
-    "Beat Leader Brock at the Pewter Gym and come back!"
+    "Você não pode ir para o leste, até a Rota 3, sem a Insígnia da Rocha.",
+    "Vença o Líder Brock no Ginásio de Pewter e depois volte!"
    ],
    "y": 0.0
   },
   {
-   "name": "Gym Guide",
+   "name": "Guia do Ginásio",
    "node": "NPC_GymGuide",
    "pos": [
     -24.0,
@@ -5227,14 +5228,14 @@
    ],
    "sprite": "npc_kid.png",
    "lines": [
-    "There aren't many serious POKéMON\nTRAINERS here.",
-    "They're all like BUG CATCHERS,\nyou know, just hobbyists.",
-    "But PEWTER GYM's BROCK isn't like\nthat, not one bit."
+    "Não há muitos TREINADORES POKéMON sérios por aqui.",
+    "São todos como os CAÇADORES DE INSETOS, sabe? Só por diversão.",
+    "Mas o BROCK do GINÁSIO DE PEWTER não é assim, nem um pouco."
    ],
    "y": 0.0
   },
   {
-   "name": "Museum Goer",
+   "name": "Visitante do Museu",
    "node": "NPC_MuseumGoer",
    "pos": [
     -24.0,
@@ -5242,8 +5243,8 @@
    ],
    "sprite": "npc_scientist.png",
    "lines": [
-    "This is it, the MUSEUM.",
-    "You have to pay to get in, but it's\nworth it. See you around!"
+    "É aqui, o MUSEU.",
+    "Tem que pagar para entrar, mas vale a pena. Até mais!"
    ],
    "y": 0.0
   }
@@ -5255,10 +5256,10 @@
     4.5,
     -387.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "PEWTER CITY",
-    "A Stone Gray City"
+    "CIDADE DE PEWTER",
+    "A Cidade Cinza da Pedra"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5270,9 +5271,9 @@
     -11.0,
     -432.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "PEWTER CITY POKéMON GYM\nLEADER: BROCK\nThe Rock-Solid POKéMON TRAINER!"
+    "GINÁSIO POKéMON DE PEWTER\nLÍDER: BROCK\nO TREINADOR POKéMON firme como rocha!"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5284,9 +5285,9 @@
     11.0,
     -431.6
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "PEWTER CITY POKé MART"
+    "POKé MART DE PEWTER"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5298,9 +5299,9 @@
     -5.5,
     -418.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "POKéMON CENTER"
+    "CENTRO POKéMON"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5312,9 +5313,9 @@
     -6.5,
     -447.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "PEWTER MUSEUM OF SCIENCE"
+    "MUSEU DE CIÊNCIAS DE PEWTER"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5326,11 +5327,11 @@
     4.0,
     -438.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "NOTICE!",
-    "Thieves have been stealing POKéMON\nfossils from MT. MOON.",
-    "Please call the PEWTER POLICE if\nyou have any information."
+    "AVISO!",
+    "Ladrões andam roubando fósseis de POKéMON do MONTE DA LUA.",
+    "Se tiver qualquer informação, chame a POLÍCIA DE PEWTER."
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5342,10 +5343,10 @@
     -4.6,
     -421.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "lines": [
-    "TRAINER TIPS",
-    "All POKéMON that appear in battle, however briefly, earn EXP Points."
+    "DICAS DE TREINADOR",
+    "Todo POKéMON que aparece na batalha, mesmo que por pouco tempo, ganha Pontos de Experiência."
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5357,10 +5358,10 @@
     -16.0,
     -402.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "PEWTER CITY",
-    "A quiet green. Trainers rest here before the road to MT. MOON."
+    "CIDADE DE PEWTER",
+    "Um gramado tranquilo. Os treinadores descansam aqui antes da estrada para o MONTE DA LUA."
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5372,10 +5373,10 @@
     44.5,
     -431.5
    ],
-   "title": "Sign",
+   "title": "Placa",
    "lines": [
-    "ROUTE 3",
-    "PEWTER CITY - MT. MOON"
+    "ROTA 3",
+    "PEWTER - MONTE DA LUA"
    ],
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
@@ -5483,7 +5484,12 @@
  ],
  "cut_trees": [],
  "trainers": [],
- "flag_walls": [],
+ "flag_walls": [
+  {
+   "rect": [46.5, -431, 1.5, 4],
+   "until_flag": "boulder_badge"
+  }
+ ],
  "statics": [],
  "sun_shafts": [],
  "look": {

@@ -5,9 +5,13 @@ extends WorldNpc
 
 var target_scene := ""
 var target_spawn := ""
+var drawn := true  ## false when the building model already draws its door (MapBuilder)
 
 
 func _build_body() -> void:
+	if not drawn:
+		show_tag = false
+		return
 	var slab := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = Vector3(1.1, 2.0, 0.12)

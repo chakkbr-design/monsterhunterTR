@@ -1,6 +1,7 @@
 class_name WildMon
 extends CharacterBody3D
-## Placeholder wild mon roaming the map (capsule + Label3D). Passive wanders, flee runs, aggressive charges.
+## Wild mon roaming the map, drawn with the original art (gfx CreatureSprite: PMD Idle/Walk, capsule
+## placeholder only if gfx/ is missing). Passive wanders, flee runs, aggressive charges.
 
 const GROUP := "ow_wild"
 const LAYER := 4
@@ -22,6 +23,9 @@ var home := Vector3.ZERO
 var _wander_t := 0.0
 var _wander_to := Vector3.ZERO
 var _engaging := false
+var look: Node3D  ## CreatureSprite (null = placeholder capsule)
+
+const CREATURE_SPRITE := "res://gfx/creature_sprite.gd"
 
 
 static func spawn(m: Mon, entry: Dictionary, parent: Node, pos: Vector3) -> WildMon:
@@ -50,6 +54,12 @@ func _ready() -> void:
 	col.shape = cap
 	col.position.y = r * 1.5
 	add_child(col)
+	if ResourceLoader.exists(CREATURE_SPRITE):
+		look = load(CREATURE_SPRITE).new()
+		look.name = "Look"
+		look.species = String(mon.species)
+		add_child(look)
+		return  # the original shows no floating tags; the HUD prompt names the mon
 	var mi := MeshInstance3D.new()
 	var cm := CapsuleMesh.new()
 	cm.radius = r

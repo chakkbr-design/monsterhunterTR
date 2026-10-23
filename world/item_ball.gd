@@ -1,10 +1,16 @@
 class_name ItemBall
 extends WorldNpc
 ## Visible item on the ground (map "items"). Picking it up adds it to the bag and sets flags["item_<uid>"].
+## Drawn as the original's 3D Poké Ball (gfx/poke_ball_3d.gd) with its periodic glint.
+
+const BALL_SCRIPT := "res://gfx/poke_ball_3d.gd"
 
 var uid := ""
 var item_id := "potion"
 var count := 1
+
+var _ball: Node3D
+var _t := 0.0
 
 
 static func taken(item_uid: String) -> bool:
@@ -12,6 +18,12 @@ static func taken(item_uid: String) -> bool:
 
 
 func _build_body() -> void:
+	if ResourceLoader.exists(BALL_SCRIPT):
+		_ball = load(BALL_SCRIPT).create()
+		_ball.rotation.y = randf() * TAU
+		_ball.position.y = 0.17
+		add_child(_ball)
+		return
 	var mi := MeshInstance3D.new()
 	var sm := SphereMesh.new()
 	sm.radius = 0.22
@@ -20,6 +32,13 @@ func _build_body() -> void:
 	mi.mesh = sm
 	mi.position.y = 0.22
 	add_child(mi)
+
+
+func _process(delta: float) -> void:
+	if _ball == null or not _ball.has_method("set_glow"):
+		return
+	_t += delta
+	_ball.set_glow(Color(1, 1, 0.85), maxf(0.0, sin(_t * 2.2) - 0.85) * 12.0)
 
 
 func prompt() -> String:

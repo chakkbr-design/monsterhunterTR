@@ -1,20 +1,25 @@
 class_name MapBuilder
 extends Node3D
-## Builds one zone at runtime from res://data/maps/<zone_id>.json with placeholder geometry
-## (schema: pba-referencia/analise/03-arquitetura-mundo.md §6.4). All JSON coordinates are world
-## coordinates, so this node must stay at the origin. Work is spread over frames (items_per_frame,
-## 0 = everything in one call); `built` fires when the zone is walkable and populated.
+## Builds one zone at runtime from res://data/maps/<zone_id>.json (schema:
+## pba-referencia/analise/03-arquitetura-mundo.md §6.4) with the ORIGINAL game's look, ported from
+## scripts/world/world_builder.gd: pixel ground shader, organic path masks, earth cliffs with grass
+## lips, stepped ramps, boulder ledges, HGSS buildings/trees/bushes/fences/lamps as the map says,
+## animated HGSS flower tiles, Kenney grass scatter, the water shader, forest sun shafts.
+## Collision is the port's own (invisible boxes/cylinders, unchanged); buildings collide with their
+## model's footprint like the original ("collide": "box").
+## All JSON coordinates are world coordinates, so this node must stay at the origin. Work is spread
+## over frames (items_per_frame, 0 = everything in one call); `built` fires when the zone is
+## walkable and populated.
 
 signal built
 
+const GROUP := "map_builder"
 const WATER_LAYER := 16
 const EDGE_WALL := 1.6  ## invisible rail on plateau edges (taller than a jump)
 const RAMP_SLOPE := 2.8  ## run per metre of rise
 const WALL_H := 6.0
 
 const C_GRASS := Color(0.42, 0.66, 0.32)
-const C_TERRACE := Color(0.47, 0.69, 0.35)
-const C_CLIFF := Color(0.58, 0.49, 0.38)
 const C_RAMP := Color(0.7, 0.62, 0.5)
 const C_PATH := Color(0.8, 0.7, 0.5)
 const C_COURT := Color(0.72, 0.45, 0.32)
@@ -28,6 +33,7 @@ const C_FENCE := Color(0.88, 0.86, 0.8)
 
 ## Placeholder footprint per building model: [width, height, depth, front], where `front` is the
 ## distance from the model origin to the door facade (+Z), read off the map path that ends at each door.
+## Doors and arrivals stay on these; the collision box comes from the model when it exists.
 const BUILDINGS := {
 	"house_player": [5.6, 3.6, 5.0, 1.8],
 	"house_rival": [5.6, 3.6, 5.0, 1.8],
@@ -41,31 +47,47 @@ const BUILDINGS := {
 	"gatehouse": [7.0, 4.0, 5.0, 2.5],
 	"museum": [9.0, 5.0, 6.0, 2.0],
 }
-const ROOFS := {
-	"pokecenter": Color(0.85, 0.26, 0.23), "pokemart": Color(0.2, 0.42, 0.8), "gym": Color(0.3, 0.55, 0.35),
-	"lab": Color(0.6, 0.62, 0.68), "school": Color(0.55, 0.35, 0.25),
-}
 const FACING := [Vector3(0, 0, 1), Vector3(-1, 0, 0), Vector3(1, 0, 0), Vector3(0, 0, -1)]  ## Down, Left, Right, Up
+
+## Original world_builder constants.
+const HGSS_TREE_TINT := Color(0.74, 0.86, 0.72)
+const HGSS_SCALE := 0.8
+const HGSS_TREE := "hgss/common/tree"
+const HGSS_BUSH := "hgss/common/bush"
+const HGSS_BOULDER := "hgss/common/boulder"
+const BOARD_SCALE_HGSS := 0.6
+const HGSS_FLOWER_Y := 0.03
+const HGSS_FLOWER_SECONDS := 0.25
+const FLOWER_KINDS := ["nature/flower_redA", "nature/flower_redB", "nature/flower_yellowA", "nature/flower_yellowB",
+		"nature/flower_purpleA", "nature/flower_purpleB"]
+const COURT_LIFT := 0.02
+const SKIRT := 40.0  ## the ground runs on under neighbouring zones / past the edges
 
 @export var zone_id := "pallet_town"
 @export var items_per_frame := 80
 @export var open_rects: Array = []  ## [x,z,w,h] of neighbour zones: no boundary wall where they touch
 @export var extras: Dictionary = {}  ## extra entries appended to the map arrays (trainers, heal_spots...)
+@export var decorate := true  ## false: skip scatter grass / flowers / shafts (bare tests)
 
 var data: Dictionary = {}
 var is_built := false
 var rect := Rect2()
 var arrivals: Dictionary = {}  ## spawn name -> Vector3
 var counts: Dictionary = {}  ## what was built, for tests/debug
+var ground_material: ShaderMaterial  ## shared by the ground and terrace tops (time of day tints it)
+var leaf_points: Array[Vector3] = []  ## tree crowns, for falling leaves
 
 var _solids: StaticBody3D
 var _water_body: StaticBody3D
-var _batches: Dictionary = {}  ## key -> Array[Transform3D]
+var _batches: Dictionary = {}  ## key -> Array[Transform3D] (placeholder meshes)
+var _models: Dictionary = {}  ## "id|opts" -> {id, opts, xfs, shadow}
 var _flag_walls: Array = []  ## [until_flag, StaticBody3D]
 var _count := 0
 var _rng := RandomNumberGenerator.new()
+var _look: Dictionary = {}
 
 static var _mats: Dictionary = {}
+static var _flower_mats: Dictionary = {}
 
 
 static func mat(c: Color) -> StandardMaterial3D:
@@ -91,6 +113,15 @@ static func rect_of(a: Array) -> Rect2:
 	return Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3]))
 
 
+## Map asset path of the original ("res://assets/x") -> the extracted copy.
+static func art_path(p: String) -> String:
+	return p.replace("res://assets/", WorldFx.ART)
+
+
+func _enter_tree() -> void:
+	add_to_group(GROUP)
+
+
 func build() -> void:
 	data = load_map(zone_id)
 	if data.is_empty():
@@ -101,6 +132,7 @@ func build() -> void:
 	for k in extras:
 		data[k] = data.get(k, []) + extras[k]
 	rect = rect_of(data.get("rect", [0, 0, 10, 10]))
+	_look = data.get("look", {})
 	_rng.seed = hash(zone_id)
 	_solids = _body("Solids", Overworld.WALL_LAYER)
 	_water_body = _body("Water", WATER_LAYER)
@@ -122,7 +154,15 @@ func build() -> void:
 	await _people()
 	for a in data.get("arrivals", []):
 		arrivals[String(a.name)] = _at(a)
+	if decorate:
+		_backdrop()
+		await _scatter()
+		_sun_shafts()
 	is_built = true
+	if is_inside_tree():
+		var tod := get_tree().get_first_node_in_group(WorldTimeOfDay.GROUP)
+		if tod:
+			tod.refresh()
 	built.emit()
 
 
@@ -150,6 +190,10 @@ func _at(e: Dictionary) -> Vector3:
 	return Vector3(x, float(e.y) if e.has("y") else height_at(x, z), z)
 
 
+func _v(a: Array) -> Vector3:
+	return Vector3(float(a[0]), height_at(float(a[0]), float(a[1])), float(a[1]))
+
+
 func _tick() -> void:
 	_count += 1
 	if items_per_frame > 0 and _count % items_per_frame == 0 and is_inside_tree():
@@ -158,6 +202,15 @@ func _tick() -> void:
 
 func _bump(k: String, n := 1) -> void:
 	counts[k] = int(counts.get(k, 0)) + n
+
+
+func _group(n: String) -> Node3D:
+	var g := get_node_or_null(n) as Node3D
+	if g == null:
+		g = Node3D.new()
+		g.name = n
+		add_child(g)
+	return g
 
 
 # --- helpers -------------------------------------------------------------------------------------
@@ -208,11 +261,17 @@ func _box(center: Vector3, size: Vector3, c: Color, n := "") -> MeshInstance3D:
 	return _mesh(bm, c, center, n)
 
 
-func _plane(center: Vector3, size: Vector2, c: Color, n := "") -> MeshInstance3D:
+func _plane_mat(parent: Node, center: Vector3, size: Vector2, m: Material, n := "") -> MeshInstance3D:
 	var pm := PlaneMesh.new()
 	pm.size = size
-	var mi := _mesh(pm, c, center, n)
+	var mi := MeshInstance3D.new()
+	if n != "":
+		mi.name = n
+	mi.mesh = pm
+	mi.material_override = m
+	mi.position = center
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
 	return mi
 
 
@@ -223,13 +282,20 @@ func _add(key: String, xf: Transform3D) -> void:
 	_batches[key].append(xf)
 
 
+## Queues one instance of an original model (all instances of a model+opts share one MultiMesh).
+## Returns false when the model is missing (caller draws a placeholder).
+func _add_model(id: String, xf: Transform3D, opts := {}, shadow := true) -> bool:
+	if not WorldProps.exists(id):
+		return false
+	var key := "%s|%s" % [id, str(opts)]
+	if not _models.has(key):
+		_models[key] = {"id": id, "opts": opts, "xfs": [], "shadow": shadow}
+	_models[key].xfs.append(xf)
+	return true
+
+
 func _batch_mesh(key: String) -> Mesh:
 	match key:
-		"path", "court":
-			var pm := PlaneMesh.new()
-			pm.size = Vector2.ONE
-			pm.material = mat(C_PATH if key == "path" else C_COURT)
-			return pm
 		"trunk":
 			var cm := CylinderMesh.new()
 			cm.top_radius = 0.22
@@ -243,15 +309,6 @@ func _batch_mesh(key: String) -> Mesh:
 			sm.rings = 6
 			sm.material = mat({"crown": C_CROWN, "bush": C_BUSH, "rock": C_ROCK, "bulb": Color(1, 0.95, 0.7)}[key])
 			return sm
-		"flower":
-			var fm := CylinderMesh.new()
-			fm.top_radius = 0.5
-			fm.bottom_radius = 0.5
-			fm.height = 1.0
-			fm.radial_segments = 16
-			fm.rings = 1
-			fm.material = mat(Color(0.95, 0.55, 0.65))
-			return fm
 		"post":
 			var pc := CylinderMesh.new()
 			pc.top_radius = 0.5
@@ -278,11 +335,29 @@ func _flush() -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "Batch_%s" % key
 		mmi.multimesh = mm
-		if key == "path" or key == "court" or key == "flower":
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mmi)
 		_bump("batched", xfs.size())
 	_batches.clear()
+	for key in _models:
+		var e: Dictionary = _models[key]
+		var bm := WorldProps.batch_mesh(e.id, e.opts)
+		if bm.is_empty():
+			continue
+		var xfs: Array = e.xfs
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = bm[0]
+		mm.instance_count = xfs.size()
+		for i in xfs.size():
+			mm.set_instance_transform(i, xfs[i] * (bm[1] as Transform3D))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Batch_%s" % String(e.id).get_file()
+		mmi.multimesh = mm
+		if not e.shadow:
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mmi)
+		_bump("batched", xfs.size())
+	_models.clear()
 
 
 static func _scaled(at: Vector3, size: Vector3, yaw := 0.0) -> Transform3D:
@@ -291,33 +366,71 @@ static func _scaled(at: Vector3, size: Vector3, yaw := 0.0) -> Transform3D:
 
 # --- terrain -------------------------------------------------------------------------------------
 
+func _ground_mat() -> ShaderMaterial:
+	if ground_material == null:
+		var g: Dictionary = _look.get("ground", {})
+		ground_material = WorldFx.shader_mat("ground", {"albedo_tex": WorldFx.tex("textures/ground_grass.png")})
+		for k in WorldTimeOfDay.GROUND_TINTS:
+			ground_material.set_shader_parameter(k, Color(String(g[k])) if g.has(k) else WorldTimeOfDay.GROUND_TINTS[k])
+		ground_material.set_shader_parameter("desaturate", float(g.get("desaturate", 0.0)))
+	return ground_material
+
+
 func _ground() -> void:
 	var g := rect.grow(1.0)
 	var c := Vector3(g.get_center().x, -0.5, g.get_center().y)
-	var tint := String(data.get("look", {}).get("ground", {}).get("tint_b", ""))
-	var gc := C_GRASS if tint == "" else C_GRASS.lerp(Color(tint), 0.6)
-	if zone_id == "pewter_city":
-		gc = C_GRASS.lerp(Color(0.62, 0.62, 0.58), 0.35)  # stone-grey city
-	_box(c, Vector3(g.size.x, 1.0, g.size.y), gc, "Ground")
+	var t := _group("Terrain")
+	_plane_mat(t, Vector3(rect.get_center().x, 0.0, rect.get_center().y), rect.size, _ground_mat(), "Ground")
+	var sk := rect.grow(SKIRT)
+	_plane_mat(t, Vector3(sk.get_center().x, -0.06, sk.get_center().y), sk.size, _ground_mat(), "GroundSkirt")
 	_solid_box(c, Vector3(g.size.x, 1.0, g.size.y))
 	_bump("ground")
 
 
 func _plateaus() -> void:
+	var t := _group("Terraces")
 	for p in data.get("plateaus", []):
 		var r: Array = p.rect
 		var h := float(p.h)
 		var c := Vector3(r[0] + r[2] / 2.0, h / 2.0, r[1] + r[3] / 2.0)
-		_box(c, Vector3(r[2], h, r[3]), C_CLIFF, "Plateau_%s" % p.get("id", ""))
-		_plane(Vector3(c.x, h + 0.01, c.z), Vector2(r[2], r[3]), C_TERRACE)
+		var block := Node3D.new()
+		block.name = "Plateau_%s" % p.get("id", "")
+		t.add_child(block)
+		_plane_mat(block, Vector3(c.x, h + 0.002, c.z), Vector2(r[2], r[3]), _ground_mat(), "Top")
+		_earth_walls(block, p, h)
 		_solid_box(c, Vector3(r[2], h, r[3]))
 		_edge_walls(p, h)
 		for s in p.get("ramps", []):
-			_ramp(p, s)
+			_ramp(block, p, s)
 		for l in p.get("ledges", []):
 			_ledge(p, l)
+		var geoms := block.find_children("*", "GeometryInstance3D", true, false)
+		block.set_meta("geoms", geoms)
+		block.set_meta("height", h + 1.5)
+		block.add_to_group("fade_building")
+		block.set_meta("rect", Rect2(r[0], r[1], r[2], r[3]))
+		WorldProps.register_fader(block, Rect2(r[0], r[1], r[2], r[3]))
 		_bump("plateaus")
 		await _tick()
+
+
+## Original earth cliff faces with a lip of grass blades along the top edge.
+func _earth_walls(block: Node3D, p: Dictionary, h: float) -> void:
+	var r: Array = p.rect
+	var top_at := func(_x: float, _z: float) -> float: return h
+	var base_at := func(x: float, z: float) -> float: return _height_excluding(x, z, p)
+	var i := 0
+	for line in TerrainCliff.outline(Rect2(r[0], r[1], r[2], r[3]), _cuts(p)):
+		var seed := hash(String(p.get("id", ""))) + i
+		var mi := MeshInstance3D.new()
+		mi.name = "Wall%d" % i
+		mi.mesh = TerrainCliff.build(line.points, line.normals, line.closed, top_at, base_at, seed)
+		mi.material_override = TerrainCliff.material()
+		block.add_child(mi)
+		var lip := TerrainGrassLip.build(line.points, line.normals, top_at, seed + 100)
+		lip.remove_meta("transforms")
+		block.add_child(lip)
+		i += 1
 
 
 ## Openings on each side of a plateau: ramps, ledges and whole "open" sides.
@@ -364,7 +477,7 @@ func _edge_walls(p: Dictionary, h: float) -> void:
 			_solid_box(c, Vector3(len, EDGE_WALL, 0.2) if hz else Vector3(0.2, EDGE_WALL, len))
 
 
-func _ramp(p: Dictionary, s: Dictionary) -> void:
+func _ramp(block: Node3D, p: Dictionary, s: Dictionary) -> void:
 	var r: Array = p.rect
 	var h := float(p.h)
 	var w := float(s.width)
@@ -388,28 +501,31 @@ func _ramp(p: Dictionary, s: Dictionary) -> void:
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = PackedVector3Array([top_a, top_b, foot_a, foot_b, under_a, under_b])
 	_solid(Transform3D(), shape)
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var up := (Vector3.UP * run + out * rise).normalized()
-	_tri(st, [top_a, top_b, foot_b], up)
-	_tri(st, [top_a, foot_b, foot_a], up)
-	_tri(st, [top_a, foot_a, under_a], lat)
-	_tri(st, [top_b, foot_b, under_b], -lat)
-	var mi := MeshInstance3D.new()
-	mi.name = "Ramp"
-	mi.mesh = st.commit()
-	mi.material_override = mat(C_RAMP)
-	add_child(mi)
+	# Visual: the original's pixel steps and earth cheeks on both sides.
+	var surf := MeshInstance3D.new()
+	surf.name = "Ramp"
+	surf.mesh = TerrainSteps.build(top_a, top_b, foot_a, foot_b)
+	surf.material_override = TerrainSteps.material()
+	block.add_child(surf)
+	for cheek in [[top_a, foot_a, lat], [top_b, foot_b, -lat]]:
+		var t0: Vector3 = cheek[0]
+		var t1: Vector3 = cheek[1]
+		var nrm := Vector2(cheek[2].x, cheek[2].z)
+		var pts := PackedVector2Array()
+		var nrms := PackedVector2Array()
+		var steps := maxi(int(ceil(run / 0.25)), 1)
+		for k in steps + 1:
+			var q := t0.lerp(t1, float(k) / steps)
+			pts.append(Vector2(q.x, q.z))
+			nrms.append(nrm)
+		var cheek_top := func(x: float, z: float) -> float:
+			return TerrainSteps.height_at(rise, run, base, Vector2(x - t0.x, z - t0.z).length())
+		var cm := MeshInstance3D.new()
+		cm.name = "RampCheek"
+		cm.mesh = TerrainCliff.build(pts, nrms, false, cheek_top, func(_x: float, _z: float) -> float: return base, hash(String(p.get("id", ""))) + 7)
+		cm.material_override = TerrainCliff.material()
+		block.add_child(cm)
 	_bump("ramps")
-
-
-## Godot front faces are clockwise: flip the triangle so it faces n.
-static func _tri(st: SurfaceTool, v: Array, n: Vector3) -> void:
-	if (v[1] - v[0]).cross(v[2] - v[0]).dot(n) > 0.0:
-		v = [v[0], v[2], v[1]]
-	for q in v:
-		st.set_normal(n)
-		st.add_vertex(q)
 
 
 func _ledge(p: Dictionary, l: Dictionary) -> void:
@@ -442,53 +558,78 @@ func _ledge(p: Dictionary, l: Dictionary) -> void:
 	_bump("ledges")
 
 
-## Path rects split at plateau edges so each piece lies flat on its own terrace.
+## Organic dirt roads (original PathMask): one overlay per terrace level with its baked mask.
 func _paths() -> void:
-	var cuts_x: Array = []
-	var cuts_z: Array = []
-	for p in data.get("plateaus", []):
-		var pr: Array = p.rect
-		cuts_x.append_array([float(pr[0]), float(pr[0] + pr[2])])
-		cuts_z.append_array([float(pr[1]), float(pr[1] + pr[3])])
+	var list: Array = data.get("paths", [])
+	if list.is_empty():
+		return
+	var g := _group("Paths")
+	var lv := TerrainPathMask.levels(list, height_at)
+	var tint := Color(String(_look.get("path_tint", "#ffffff")))
+	var mix := float(_look.get("path_mix", 0.0))
 	var i := 0
-	for r in data.get("paths", []):
-		var xs := _splits(float(r[0]), float(r[0] + r[2]), cuts_x)
-		var zs := _splits(float(r[1]), float(r[1] + r[3]), cuts_z)
-		for xi in xs.size() - 1:
-			for zi in zs.size() - 1:
-				var cx: float = (xs[xi] + xs[xi + 1]) / 2.0
-				var cz: float = (zs[zi] + zs[zi + 1]) / 2.0
-				var y := height_at(cx, cz) + 0.02 + 0.002 * (i % 4)
-				_add("path", _scaled(Vector3(cx, y, cz), Vector3(xs[xi + 1] - xs[xi], 1, zs[zi + 1] - zs[zi])))
+	for level in lv:
+		var rects: Array = lv[level]
+		var area := TerrainPathMask.bounds(rects)
+		var img := TerrainPathMask.load_mask(TerrainPathMask.mask_file(zone_id, i))
+		var want := Vector2i(maxi(int(ceil(area.size.x * TerrainPathMask.PX_PER_M)), 1), maxi(int(ceil(area.size.y * TerrainPathMask.PX_PER_M)), 1))
+		if img == null or absi(img.get_width() - want.x) > 1 or absi(img.get_height() - want.y) > 1:
+			img = TerrainPathMask.generate(rects, area, hash(zone_id) + i)  # paths changed since the bake
+		g.add_child(TerrainPathMask.overlay(rects, float(level), img, tint, mix))
 		i += 1
-		_bump("paths")
 		await _tick()
-
-
-static func _splits(a: float, b: float, cuts: Array) -> Array:
-	var out := [a, b]
-	for c in cuts:
-		if c > a + 0.01 and c < b - 0.01 and not out.has(c):
-			out.append(c)
-	out.sort()
-	return out
+	_bump("paths", list.size())
 
 
 func _courts() -> void:
 	for c in data.get("courts", []):
 		var r := rect_of(c.rect)
 		var ctr := r.get_center()
-		_add("court", _scaled(Vector3(ctr.x, height_at(ctr.x, ctr.y) + 0.03, ctr.y), Vector3(r.size.x, 1, r.size.y)))
+		var m := StandardMaterial3D.new()
+		var tex := WorldFx.tex("textures/%s.png" % String(c.get("tex", "court_clay")))
+		if tex:
+			m.albedo_texture = tex
+			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+		else:
+			m.albedo_color = C_COURT
+		m.roughness = 1.0
+		_plane_mat(_group("Courts"), Vector3(ctr.x, height_at(ctr.x, ctr.y) + COURT_LIFT, ctr.y), r.size, m, "Court")
 		_bump("courts")
 
 
+static var _water_mat: ShaderMaterial
+
+
+static func water_material() -> ShaderMaterial:
+	if _water_mat == null:
+		_water_mat = WorldFx.shader_mat("water", {
+			"sea_tex": WorldFx.tex("models/hgss/common/sea_un.png"),
+			"glint_tex": WorldFx.tex("models/hgss/common/sea_on_sheet.png"),
+			"shore_tex": WorldFx.tex("models/hgss/common/pond_line.png"),
+			"foam_tex": WorldFx.tex("models/hgss/common/sea_line02.png"),
+			"shallow_width": 1.2,
+		})
+	return _water_mat
+
+
 func _water() -> void:
-	for wt in data.get("water", []):
+	var list: Array = data.get("water", [])
+	if list.is_empty():
+		return
+	var g := _group("WaterSurface")
+	var wm := water_material()
+	var margin := float(wm.get_shader_parameter("margin")) if wm.get_shader_parameter("margin") != null else 0.9
+	for wt in list:
 		var r := rect_of(wt.rect)
 		var ctr := r.get_center()
 		var y := height_at(ctr.x, ctr.y)
-		_plane(Vector3(ctr.x, y + 0.3, ctr.y), r.size, C_WATER, "Water")
-		_box(Vector3(ctr.x, y + 0.02, ctr.y), Vector3(r.size.x, 0.02, r.size.y), Color(0.12, 0.3, 0.5))
+		var mi := _plane_mat(g, Vector3(ctr.x, y + 0.04, ctr.y), r.size + Vector2.ONE * margin * 2.0, wm, "Water")
+		mi.set_instance_shader_parameter("centre", ctr)
+		mi.set_instance_shader_parameter("half_size", r.size / 2.0)
+		for k in 10:
+			var p := Vector3(ctr.x + _rng.randf_range(-r.size.x, r.size.x) * 0.5, y + 0.08, ctr.y + _rng.randf_range(-r.size.y, r.size.y) * 0.5)
+			_add_model("nature/lily_large" if k % 2 == 0 else "nature/lily_small",
+					_scaled(p, Vector3.ONE * 2.0, deg_to_rad(_rng.randi_range(0, 359))), {}, false)
 		_solid_box(Vector3(ctr.x, y + WALL_H / 2.0, ctr.y), Vector3(r.size.x, WALL_H, r.size.y), _water_body)
 		_bump("water")
 
@@ -505,27 +646,45 @@ func _is_water_rect(r: Array) -> bool:
 # --- structures ----------------------------------------------------------------------------------
 
 func _buildings() -> void:
+	var g := _group("Buildings")
 	for b in data.get("buildings", []):
-		var key := String(b.get("model", "")).get_file()
+		var model := String(b.get("model", ""))
+		var key := model.get_file()
 		var dims: Array = BUILDINGS.get(key, [6.0, 4.0, 5.0, 2.5])
 		var w: float = dims[0]
 		var h: float = dims[1]
 		var d: float = dims[2]
 		var origin := _at(b)
-		var front: float = origin.z + float(dims[3])
-		var c := Vector3(origin.x, origin.y, front - d / 2.0)
+		var rot := float(b.get("rot", 0.0))
+		var basis := Basis(Vector3.UP, deg_to_rad(rot))
+		var front_l := float(dims[3])
 		var id := String(b.get("id", key))
-		_box(c + Vector3(0, h / 2.0, 0), Vector3(w, h, d), C_WALLS, "Building_%s" % id)
-		var roof := PrismMesh.new()
-		roof.size = Vector3(w + 0.5, 1.5, d + 0.5)
-		var rc: Color = ROOFS.get(key, Color(0.75, 0.32, 0.25) if _rng.randf() < 0.5 else Color(0.35, 0.45, 0.7))
-		var rm := _mesh(roof, rc, c + Vector3(0, h + 0.75, 0))
-		rm.rotation.y = PI / 2.0 if w > d else 0.0
-		if w > d:
-			roof.size = Vector3(d + 0.5, 1.5, w + 0.5)
-		_solid_box(c + Vector3(0, h / 2.0, 0), Vector3(w, h, d))
+		var inst: Node3D = null
+		if WorldProps.exists(model) and is_inside_tree():
+			var tex: Texture2D = null
+			if b.has("tex"):
+				tex = load(art_path(String(b.tex)))
+			inst = WorldProps.place(g, model, origin, {"scale": float(b.get("scale", 5.0)), "rot": rot,
+					"windows": true, "fade": "building", "texture": tex})
+		if inst:
+			inst.name = id.to_pascal_case()
+			var bb := WorldProps.bounds(inst)
+			_solid_box(Vector3(bb.get_center().x, bb.position.y + maxf(bb.size.y, 1.0) / 2.0, bb.get_center().z),
+					Vector3(bb.size.x, maxf(bb.size.y, 1.0), bb.size.z))
+		else:
+			var c := origin + basis * Vector3(0, 0, front_l - d / 2.0)
+			var bx := _box(c + Vector3(0, h / 2.0, 0), Vector3(w, h, d), C_WALLS, "Building_%s" % id)
+			bx.rotation.y = deg_to_rad(rot)
+			var roof := PrismMesh.new()
+			roof.size = Vector3(d + 0.5, 1.5, w + 0.5) if w > d else Vector3(w + 0.5, 1.5, d + 0.5)
+			var rm := _mesh(roof, Color(0.75, 0.32, 0.25), c + Vector3(0, h + 0.75, 0))
+			rm.rotation.y = deg_to_rad(rot) + (PI / 2.0 if w > d else 0.0)
+			var s := BoxShape3D.new()
+			s.size = Vector3(w, h, d)
+			_solid(Transform3D(basis, c + Vector3(0, h / 2.0, 0)), s)
 		var door := WorldDoor.new()
 		door.name = "Door_%s" % id
+		door.drawn = inst == null
 		var msg: Dictionary = b.get("message", {})
 		door.npc_name = String(msg.get("title", id.replace("_", " ").capitalize()))
 		door.lines = PackedStringArray(msg.get("lines", ["Fechado."]))
@@ -534,37 +693,140 @@ func _buildings() -> void:
 		var dr: Dictionary = b.get("door", {})
 		door.target_scene = String(dr.get("target_scene", ""))
 		door.target_spawn = String(dr.get("target_spawn", ""))
-		door.position = Vector3(origin.x + float(b.get("door_dx", 0.0)), origin.y, front)
-		door.rotation.y = PI
+		door.position = origin + basis * Vector3(float(b.get("door_dx", 0.0)), 0, front_l)
+		door.rotation.y = PI + deg_to_rad(rot)
 		add_child(door)
 		if dr.has("spawn"):
-			arrivals[String(dr.spawn)] = door.position + Vector3(0, 0, 1.2)
+			arrivals[String(dr.spawn)] = door.position + basis * Vector3(0, 0, 1.2)
 		var bd: Dictionary = b.get("back_door", {})
 		if not bd.is_empty():  # gatehouses: a second door on the back (-Z) face
 			var back := WorldDoor.new()
 			back.name = "BackDoor_%s" % id
+			back.drawn = inst == null
 			back.npc_name = door.npc_name
 			back.lines = door.lines
 			back.color = door.color
 			back.body_height = 2.0
 			back.target_scene = String(bd.get("target_scene", ""))
 			back.target_spawn = String(bd.get("target_spawn", ""))
-			back.position = Vector3(door.position.x, origin.y, front - d)
+			back.position = origin + basis * Vector3(float(b.get("door_dx", 0.0)), 0, front_l - d)
+			back.rotation.y = deg_to_rad(rot)
 			add_child(back)
 			if bd.has("spawn"):
-				var ba := back.position + Vector3(0, 0, -1.2)
+				var ba := back.position + basis * Vector3(0, 0, -1.2)
 				ba.y = height_at(ba.x, ba.z)  # the gate may sit on a terrace that ends at its back wall
 				arrivals[String(bd.spawn)] = ba
 		if b.has("board"):
-			var lab := Label3D.new()
-			lab.text = String(b.board.get("text", ""))
-			lab.font_size = 96
-			lab.outline_size = 12
-			lab.modulate = Color(b.board.get("color", "#ffffff"))
-			lab.position = Vector3(origin.x, origin.y + h - 0.7, front + 0.05)
-			add_child(lab)
+			if inst:
+				_board(g, inst, b)
+			else:
+				var lab := Label3D.new()
+				lab.text = String(b.board.get("text", ""))
+				lab.font_size = 96
+				lab.outline_size = 12
+				lab.modulate = Color(b.board.get("color", "#ffffff"))
+				lab.position = origin + basis * Vector3(0, h - 0.7, front_l + 0.05)
+				add_child(lab)
 		_bump("buildings")
 		await _tick()
+
+
+## The original's sign stand beside a building door (Pokémon Center, Mart, Museum...).
+func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
+	var bd: Dictionary = b.board
+	var bs := float(bd.get("scale", BOARD_SCALE_HGSS if String(b.model).begins_with("hgss/") else 1.0))
+	var bb := WorldProps.bounds(inst)
+	var col := Color(String(bd.get("color", "#d84a3a")))
+	var ground := _v(b.pos).y
+	var rot := float(b.get("rot", 0.0))
+	var quarter := absi(int(rot) % 180) == 90
+	var sd := bb.size.x if quarter else bb.size.z
+	var origin := Vector2(float(b.pos[0]), float(b.pos[1]))
+	var a := deg_to_rad(rot)
+	var to_world := func(v: Vector2) -> Vector2:
+		return Vector2(origin.x + v.x * cos(a) + v.y * sin(a), origin.y - v.x * sin(a) + v.y * cos(a))
+	var door := Vector2(float(b.get("door_dx", 0.0)), sd / 2.0)
+	var step: Vector2 = to_world.call(door + Vector2(0.0, 0.6 * bs))
+	_slab(parent, Vector3(step.x, ground + 0.03 * bs, step.y), Vector3(2.8, 0.06, 1.2) * bs, col.lightened(0.55), rot)
+	_slab(parent, Vector3(step.x, ground + 0.05 * bs, step.y), Vector3(2.4, 0.06, 0.9) * bs, col, rot)
+	var text := String(bd.text)
+	var ball := bool(bd.get("ball", false))
+	var lines := text.split("\n")
+	var longest := 0
+	for l in lines:
+		longest = maxi(longest, l.length())
+	var letter := float(bd.get("letter", 0.42)) * bs
+	var w := longest * letter * 0.68 + ((0.95 if ball else 0.0) + 0.6) * bs
+	var hgt := lines.size() * letter * 1.25 + 0.35 * bs
+	var side := float(bd.get("side", 1.0))
+	var sign_at: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0), 0.7 * bs))
+	var at := Vector3(sign_at.x, ground + 0.55 * bs + hgt / 2.0, sign_at.y)
+	_slab(parent, at, Vector3(w, hgt, 0.14 * bs), col, rot)
+	_slab(parent, at + Vector3(0, hgt / 2.0 + 0.04 * bs, 0), Vector3(w + 0.12 * bs, 0.08 * bs, 0.2 * bs), col.lightened(0.55), rot)
+	for px in [-w / 2.0 + 0.25 * bs, w / 2.0 - 0.25 * bs]:
+		var post: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) + px, 0.7 * bs))
+		_slab(parent, Vector3(post.x, ground + 0.3 * bs, post.y), Vector3(0.12, 0.6, 0.12) * bs, Color(0.35, 0.33, 0.32), rot)
+	_solid_box(Vector3(at.x, ground + 0.6 * bs, at.z), Vector3(0.3 * bs, 1.2 * bs, w) if quarter else Vector3(w, 1.2 * bs, 0.3 * bs))
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 64
+	label.pixel_size = letter / 64.0 * 1.35
+	label.outline_size = 10
+	label.outline_modulate = Color(0, 0, 0, 0.5)
+	label.modulate = Color.WHITE
+	label.shaded = false
+	label.rotation_degrees.y = rot
+	var lp: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) + (0.45 * bs if ball else 0.0), 0.7 * bs + 0.08 * bs))
+	label.position = Vector3(lp.x, ground + 0.55 * bs + hgt / 2.0, lp.y)
+	parent.add_child(label)
+	if ball:
+		var spr := Sprite3D.new()
+		spr.texture = _ball_texture()
+		spr.pixel_size = 0.7 * bs / 64.0
+		spr.shaded = false
+		spr.rotation_degrees.y = rot
+		var bp: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) - w / 2.0 + 0.6 * bs, 0.7 * bs + 0.09 * bs))
+		spr.position = Vector3(bp.x, ground + 0.55 * bs + hgt / 2.0, bp.y)
+		parent.add_child(spr)
+
+
+func _slab(parent: Node3D, center: Vector3, size: Vector3, col: Color, rot_deg := 0.0) -> void:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = size
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.roughness = 0.7
+	bm.material = m
+	mi.mesh = bm
+	mi.position = center
+	mi.rotation_degrees.y = rot_deg
+	parent.add_child(mi)
+
+
+static var _ball_tex: Texture2D
+
+
+static func _ball_texture() -> Texture2D:
+	if _ball_tex:
+		return _ball_tex
+	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	var c := Vector2(31.5, 31.5)
+	for y in 64:
+		for x in 64:
+			var d := Vector2(x, y).distance_to(c)
+			var col := Color(0, 0, 0, 0)
+			if d <= 30.0:
+				col = Color(0.88, 0.16, 0.16) if y < 29 else Color(0.97, 0.97, 0.95)
+				if d > 27.5 or absf(y - 31.5) < 3.0:
+					col = Color(0.08, 0.08, 0.1)
+				if d < 9.0:
+					col = Color(0.08, 0.08, 0.1)
+				if d < 6.0:
+					col = Color(0.97, 0.97, 0.95)
+			img.set_pixel(x, y, col)
+	_ball_tex = ImageTexture.create_from_image(img)
+	return _ball_tex
 
 
 func _fences() -> void:
@@ -575,11 +837,23 @@ func _fences() -> void:
 		mid.y = height_at(mid.x, mid.z)
 		var len := a.distance_to(b)
 		var yaw := atan2(-(b - a).z, (b - a).x)
-		var xf := Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.45, 0))
-		_add("fence", xf.scaled_local(Vector3(len + 0.1, 0.9, 0.12)))
-		var s := BoxShape3D.new()
-		s.size = Vector3(len + 0.1, 1.4, 0.3)
-		_solid(Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.7, 0)), s)
+		var model := String(f.get("model", "hgss/common/fence"))
+		var s := float(f.get("scale", 0.8))
+		if WorldProps.exists(model):
+			# Original: n pieces of the model's native width, stretched to fill the run exactly.
+			var native := 2.0 * s if model == "hgss/common/fence" else 2.0 * s
+			var n := maxi(int(round(len / native)), 1)
+			for i in n:
+				var at := a.lerp(b, (i + 0.5) / n)
+				at.y = height_at(at.x, at.z)
+				var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(s * len / n / native, s, s)), at)
+				_add_model(model, xf)
+		else:
+			var xf := Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.45, 0))
+			_add("fence", xf.scaled_local(Vector3(len + 0.1, 0.9, 0.12)))
+		var sh := BoxShape3D.new()
+		sh.size = Vector3(len + 0.1, 1.4, 0.3)
+		_solid(Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.7, 0)), sh)
 		_bump("fences")
 		await _tick()
 
@@ -646,11 +920,23 @@ func _bounds() -> void:
 
 # --- vegetation & props --------------------------------------------------------------------------
 
-func _tree(at: Vector3, s: float) -> void:
-	_add("trunk", _scaled(at + Vector3(0, 0.8 * s, 0), Vector3.ONE * s))
-	_add("crown", _scaled(at + Vector3(0, 2.4 * s, 0), Vector3(2.4, 2.2, 2.4) * s, _rng.randf() * TAU))
+## A tree: the original's HGSS billboard card (batched), placeholder trunk + crown if missing.
+func _tree(at: Vector3, s: float, model := HGSS_TREE) -> void:
+	var yaw := _rng.randf() * TAU
+	if model.begins_with("hgss/"):
+		if not _add_model(model, _scaled(at, Vector3.ONE * HGSS_SCALE * s), {"billboard": true, "tint": HGSS_TREE_TINT}):
+			_placeholder_tree(at, s, yaw)
+	elif not _add_model(model, _scaled(at, Vector3.ONE * 3.2 * s, yaw), {}):
+		_placeholder_tree(at, s, yaw)
 	_solid_cyl(at, 0.45 * s, 3.0 * s)
+	if leaf_points.size() < 4000:
+		leaf_points.append(at)
 	_bump("trees")
+
+
+func _placeholder_tree(at: Vector3, s: float, yaw: float) -> void:
+	_add("trunk", _scaled(at + Vector3(0, 0.8 * s, 0), Vector3.ONE * s))
+	_add("crown", _scaled(at + Vector3(0, 2.4 * s, 0), Vector3(2.4, 2.2, 2.4) * s, yaw))
 
 
 func _trees() -> void:
@@ -659,6 +945,7 @@ func _trees() -> void:
 		var b := Vector3(float(t.to[0]), 0, float(t.to[1]))
 		var o: Array = t.get("out", [0, 0])
 		var out := Vector3(float(o[0]), 0, float(o[1]))
+		var models: Array = t.get("models", [HGSS_TREE])
 		var step := 1.9
 		var n := maxi(int(a.distance_to(b) / step), 1)
 		for row in int(t.get("rows", 2)):
@@ -666,21 +953,51 @@ func _trees() -> void:
 			for i in n + 1:
 				var p := a.lerp(b, float(i) / n) + off + Vector3(_rng.randf_range(-0.3, 0.3), 0, _rng.randf_range(-0.3, 0.3))
 				p.y = height_at(p.x, p.z)
-				_tree(p, _rng.randf_range(0.9, 1.15))
+				_tree(p, _rng.randf_range(0.9, 1.15), String(models[(i + row) % models.size()]))
 		await _tick()
 	for t in data.get("trees", []):
-		_tree(_at(t), _rng.randf_range(0.9, 1.1))
+		_tree(_at(t), _rng.randf_range(0.9, 1.1), String(t.get("model", HGSS_TREE)))
 		await _tick()
 
 
 func _props() -> void:
+	var rock_pal := _palette(_look.get("rock_palette", {}))
+	var tree_pal := _palette(_look.get("tree_palette", {}))
+	var g := _group("Props")
 	for p in data.get("props", []):
-		var model := String(p.get("model", "")).get_file()
-		var at := _at(p)
+		var mid := String(p.get("model", ""))
+		var model := mid.get_file()
+		var at := _at(p) + Vector3(0, float(p.get("dy", 0.0)), 0)
 		var s := float(p.get("scale", 1.0))
 		var yaw := deg_to_rad(float(p.get("rot", 0.0)))
 		var collide := String(p.get("collide", ""))
-		if model == "bush":
+		if bool(p.get("cave", false)):
+			_cave_mouth(g, p)
+		elif String(p.get("sprite", "")) != "":
+			_sprite_prop(g, p)
+		elif WorldProps.exists(mid):
+			var opts := {}
+			if mid == HGSS_TREE or mid == HGSS_BUSH or mid == "hgss/common/bush_tall":
+				opts = {"billboard": true, "tint": HGSS_TREE_TINT}
+			elif mid == HGSS_BOULDER:
+				opts = {"billboard": true, "sway": 0.0}
+			elif not rock_pal.is_empty() and (mid.begins_with("nature/rock") or mid.begins_with("nature/cliff")):
+				opts = {"palette": rock_pal}
+			elif not tree_pal.is_empty() and mid.begins_with("nature/"):
+				opts = {"palette": tree_pal}
+			var light := bool(p.get("light", false))
+			var small := bool(p.get("small", false))
+			if light or mid.contains("lamp") or mid.contains("camp_light") or mid.contains("fountain"):
+				var o := opts.duplicate()
+				o.merge({"scale": s, "rot": float(p.get("rot", 0.0)), "light": light})
+				if small:
+					o["shadow"] = false
+				WorldProps.place(g, mid, at, o)
+			else:
+				_add_model(mid, _scaled(at, Vector3.ONE * s, yaw), opts, not small)
+			if mid == HGSS_TREE or mid == HGSS_BUSH:
+				leaf_points.append(at)
+		elif model == "bush":
 			_add("bush", _scaled(at + Vector3(0, 0.4 * s, 0), Vector3(1.1, 0.9, 1.1) * s))
 		elif model.begins_with("rock"):
 			_add("rock", _scaled(at + Vector3(0, 0.1, 0), Vector3(0.6, 0.35, 0.5) * s, yaw))
@@ -690,30 +1007,264 @@ func _props() -> void:
 		elif model == "fountain":
 			_add("box", _scaled(at + Vector3(0, 0.3, 0), Vector3(2.6, 0.6, 2.6)))
 			_add("post", _scaled(at + Vector3(0, 0.9, 0), Vector3(0.4, 1.2, 0.4)))
-		elif model.begins_with("prop_dummy"):
-			_add("wood", _scaled(at + Vector3(0, 0.5, 0), Vector3(0.5, 1.0, 0.5), yaw))
 		elif model.begins_with("camp_"):
 			_add("wood", _scaled(at + Vector3(0, 0.3, 0), Vector3(1.2, 0.6, 0.5), yaw))
 		else:
 			_add("box", _scaled(at + Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.6), yaw))
 		match collide:
 			"round":
-				_solid_cyl(at, 0.45 * s, 1.2)
+				_solid_cyl(_at(p), 0.45 * s, 1.2)
 			"trunk":
-				_solid_cyl(at, 0.15, 2.4)
+				_solid_cyl(_at(p), 0.15, 2.4)
 			"box":
 				var size := Vector3(2.6, 1.2, 2.6) if model == "fountain" else Vector3(0.6, 1.2, 0.6)
-				_solid_box(at + Vector3(0, size.y / 2.0, 0), size)
+				_solid_box(_at(p) + Vector3(0, size.y / 2.0, 0), size)
 		_bump("props")
 		await _tick()
 
 
+## Billboard prop sprite of the original (training dummies: prop_dummy_*.png).
+func _sprite_prop(parent: Node3D, p: Dictionary) -> void:
+	var tex := WorldFx.tex("sprites/%s.png" % String(p.sprite))
+	if tex == null:
+		_add("wood", _scaled(_at(p) + Vector3(0, 0.5, 0), Vector3(0.5, 1.0, 0.5)))
+		return
+	var h := float(p.get("height", 1.3))
+	var spr := Sprite3D.new()
+	spr.name = String(p.sprite)
+	spr.texture = tex
+	spr.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	spr.shaded = true
+	spr.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	spr.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	spr.pixel_size = h / maxf(1.0, float(tex.get_height()))
+	spr.position = _at(p) + Vector3(0, h / 2.0, 0)
+	parent.add_child(spr)
+
+
+func _cave_mouth(parent: Node3D, p: Dictionary) -> void:
+	var size: Array = p.get("size", [2.4, 1.9])
+	var grad := Gradient.new()
+	grad.set_color(0, Color(String(p.get("base", "#242428"))))
+	grad.set_color(1, Color(String(p.get("top", "#060608"))))
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill_from = Vector2(0, 1)
+	gt.fill_to = Vector2(0, 0)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_texture = gt
+	var qm := QuadMesh.new()
+	qm.size = Vector2(float(size[0]), float(size[1]))
+	var mi := MeshInstance3D.new()
+	mi.name = "CaveMouth"
+	mi.mesh = qm
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = _v(p.pos) + Vector3(0, float(size[1]) / 2.0, 0)
+	mi.rotation_degrees.y = float(p.get("rot", 0.0))
+	parent.add_child(mi)
+
+
+func _palette(d: Dictionary) -> Dictionary:
+	var out := {}
+	for k in d:
+		out[k] = Color(String(d[k]))
+	return out
+
+
+static func _flower_material(kind: int) -> StandardMaterial3D:
+	if _flower_mats.has(kind):
+		return _flower_mats[kind]
+	var frames := AnimatedTexture.new()
+	frames.frames = 3
+	for f in 3:
+		frames.set_frame_texture(f, WorldFx.tex("models/hgss/common/flower%02d_%d.png" % [kind, f + 1]))
+		frames.set_frame_duration(f, HGSS_FLOWER_SECONDS)
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = frames
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	m.alpha_scissor_threshold = 0.5
+	m.roughness = 1.0
+	_flower_mats[kind] = m
+	return m
+
+
+## HGSS animated flower tiles (beds with "tile") or scattered Kenney flowers.
 func _flowers() -> void:
-	for f in data.get("flower_beds", []):
-		var at := _at(f)
-		var r := float(f.get("radius", 1.0))
-		_add("flower", _scaled(at + Vector3(0, 0.03, 0), Vector3(r * 2.0, 0.05, r * 2.0)))
+	var tiles := [[], []]
+	for bed in data.get("flower_beds", []):
+		var c := _at(bed)
+		var radius := float(bed.get("radius", 1.0))
+		if bool(bed.get("tile", false)) or not decorate:
+			var reach := int(ceil(radius))
+			for i in range(-reach, reach + 1):
+				for j in range(-reach, reach + 1):
+					if Vector2(i, j).length() <= radius:
+						tiles[_rng.randi() % 2].append(Transform3D(Basis(), Vector3(c.x + i, c.y + HGSS_FLOWER_Y, c.z + j)))
+		else:
+			for i in int(bed.get("count", 8)):
+				var r := sqrt(_rng.randf()) * radius
+				var a := _rng.randf() * TAU
+				_add_model(FLOWER_KINDS[_rng.randi() % FLOWER_KINDS.size()],
+						_scaled(c + Vector3(cos(a), 0, sin(a)) * r, Vector3.ONE * 2.0, deg_to_rad(_rng.randi_range(0, 359))), {}, false)
 		_bump("flowers")
+	var quad := PlaneMesh.new()
+	quad.size = Vector2.ONE
+	for k in 2:
+		if tiles[k].is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		var q: PlaneMesh = quad.duplicate()
+		q.material = _flower_material(k + 1)
+		mm.mesh = q
+		mm.instance_count = tiles[k].size()
+		for i in tiles[k].size():
+			mm.set_instance_transform(i, tiles[k][i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "FlowerTiles%d" % (k + 1)
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mmi)
+
+
+func _backdrop() -> void:
+	var b: Variant = data.get("backdrop", null)
+	if not (b is Dictionary):
+		return
+	var path := art_path(String(b.get("texture", "")))
+	if path == "" or not ResourceLoader.exists(path):
+		return
+	var pos: Array = b.get("pos", [0, 0])
+	var h := float(b.get("height", 0.0))
+	var w := float(b.get("width", 0.0))
+	if h <= 0.0 or w <= 0.0:
+		return
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_texture = load(path)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var qm := QuadMesh.new()
+	qm.size = Vector2(w, h)
+	var mi := MeshInstance3D.new()
+	mi.name = "Backdrop"
+	mi.mesh = qm
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var base_y: Variant = b.get("base_y", null)
+	mi.position = Vector3(float(pos[0]), (float(base_y) if base_y != null else height_at(float(pos[0]), float(pos[1]))) + h * 0.5, float(pos[1]))
+	add_child(mi)
+
+
+## Kenney grass tufts scattered over the meadows (original "scatter" layers), one MultiMesh per model.
+func _scatter() -> void:
+	for layer in data.get("scatter", []):
+		var out := {}
+		for id in layer.models:
+			out[id] = []
+		var noise := FastNoiseLite.new()
+		noise.seed = hash(String(layer.get("name", "")) + zone_id)
+		noise.frequency = 0.15
+		var clump := float(layer.get("clump", 0.0))
+		var sc: Array = layer.get("scale", [1.4, 2.4])
+		for a in layer.areas:
+			for i in int(float(a[2]) * float(a[3]) * float(layer.density)):
+				var p := Vector3(_rng.randf_range(a[0], a[0] + a[2]), 0, _rng.randf_range(a[1], a[1] + a[3]))
+				if clump > 0.0 and noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5 < clump:
+					continue
+				if _blocked(p):
+					continue
+				p.y = height_at(p.x, p.z)
+				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(float(sc[0]), float(sc[1])))
+				out[layer.models[_rng.randi() % layer.models.size()]].append(Transform3D(b, p))
+			await _tick()
+		var pal := _palette(layer.get("palette", {}))
+		for id in out:
+			var xs: Array = out[id]
+			var bm := WorldProps.batch_mesh(id, {"palette": pal, "stylize": false})
+			if xs.is_empty() or bm.is_empty():
+				continue
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.use_colors = true
+			mm.mesh = bm[0]
+			mm.instance_count = xs.size()
+			for i in xs.size():
+				mm.set_instance_transform(i, xs[i])
+				var v := _rng.randf_range(0.88, 1.08)
+				mm.set_instance_color(i, Color(v, v, v * 0.97))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.name = "%s_%s" % [String(layer.get("name", "Scatter")), String(id).get_file()]
+			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mmi.visibility_range_end = 70.0
+			add_child(mmi)
+			_bump("scatter", xs.size())
+
+
+func _blocked(p: Vector3) -> bool:
+	for r in data.get("paths", []):
+		if p.x > r[0] - 0.4 and p.x < r[0] + r[2] + 0.4 and p.z > r[1] - 0.4 and p.z < r[1] + r[3] + 0.4:
+			return true
+	for w in data.get("water", []):
+		var r: Array = w.rect
+		if p.x > r[0] - 1.0 and p.x < r[0] + r[2] + 1.0 and p.z > r[1] - 1.0 and p.z < r[1] + r[3] + 1.0:
+			return true
+	for b in data.get("buildings", []):
+		if absf(p.x - b.pos[0]) < 6.0 and absf(p.z - b.pos[1]) < 5.5:
+			return true
+	for g in data.get("tall_grass", []):
+		var gp: Array = g.pos
+		var gs: Array = g.get("size", [6, 4])
+		if absf(p.x - gp[0]) < gs[0] / 2.0 + 0.5 and absf(p.z - gp[1]) < gs[1] / 2.0 + 0.5:
+			return true
+	for c in data.get("courts", []):
+		var r: Array = c.rect
+		if p.x > r[0] and p.x < r[0] + r[2] and p.z > r[1] and p.z < r[1] + r[3]:
+			return true
+	for pl in data.get("plateaus", []):
+		var r: Array = pl.rect
+		var near_x := absf(p.x - r[0]) < 0.6 or absf(p.x - (r[0] + r[2])) < 0.6
+		var near_z := absf(p.z - r[1]) < 0.6 or absf(p.z - (r[1] + r[3])) < 0.6
+		var in_x: bool = p.x > r[0] - 0.6 and p.x < r[0] + r[2] + 0.6
+		var in_z: bool = p.z > r[1] - 0.6 and p.z < r[1] + r[3] + 0.6
+		if (near_x and in_z) or (near_z and in_x):
+			return true
+		for s in pl.get("ramps", []):
+			var run := float(pl.h) * RAMP_SLOPE + 0.5
+			var half := float(s.width) / 2.0 + 0.6
+			match String(s.side):
+				"e":
+					if p.x > r[0] + r[2] - 0.5 and p.x < r[0] + r[2] + run and absf(p.z - s.at) < half:
+						return true
+				"w":
+					if p.x < r[0] + 0.5 and p.x > r[0] - run and absf(p.z - s.at) < half:
+						return true
+				"n":
+					if p.z < r[1] + 0.5 and p.z > r[1] - run and absf(p.x - s.at) < half:
+						return true
+				"s":
+					if p.z > r[1] + r[3] - 0.5 and p.z < r[1] + r[3] + run and absf(p.x - s.at) < half:
+						return true
+	return false
+
+
+func _sun_shafts() -> void:
+	for s in data.get("sun_shafts", []):
+		var n := WorldSunShaft.new()
+		n.radius = float(s.get("radius", 2.2))
+		n.height = float(s.get("height", 9.0))
+		n.tilt_deg = float(s.get("tilt", 10.0))
+		n.opacity = float(s.get("opacity", 0.2))
+		n.shaft_seed = int(s.get("seed", 0))
+		n.position = _v(s.pos)
+		_group("SunShafts").add_child(n)
+		_bump("sun_shafts")
 
 
 # --- encounters & people -------------------------------------------------------------------------
@@ -769,6 +1320,9 @@ func _people() -> void:
 		sp.lines = fill_names(s.get("lines", []))
 		sp.color = Color(0.55, 0.4, 0.25)
 		sp.body_height = 1.2
+		sp.model = String(s.get("model", "hgss/common/sign_a"))
+		sp.model_scale = float(s.get("model_scale", 0.8))
+		sp.model_rot = float(s.get("rot", 180.0))
 		sp.position = _at(s)
 		sp.rotation.y = facing_yaw(s.get("facing", 0))
 		add_child(sp)
@@ -784,6 +1338,7 @@ func _people() -> void:
 		npc.npc_name = String(n.get("name", "Villager"))
 		npc.lines = fill_names(n.get("lines", ["..."]))
 		npc.color = Color.from_hsv(_rng.randf(), 0.45, 0.85)
+		npc.sprite_sheet = String(n.get("sprite", ""))
 		npc.position = _at(n)
 		npc.rotation.y = facing_yaw(n.get("facing", 0))
 		add_child(npc)
@@ -794,6 +1349,7 @@ func _people() -> void:
 		tr.name = String(t.get("node", "Trainer_%s" % t.id))
 		tr.trainer_id = String(t.id)
 		tr.color = Color(0.85, 0.55, 0.15)
+		tr.sprite_sheet = String(t.get("sprite", ""))
 		tr.position = _at(t)
 		tr.rotation.y = facing_yaw(t.get("facing", 0))
 		add_child(tr)

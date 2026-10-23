@@ -1,6 +1,6 @@
 {
  "id": "viridian_forest",
- "name": "VIRIDIAN FOREST",
+ "name": "FLORESTA DE VIRIDIAN",
  "rect": [
   -60,
   -353,
@@ -17262,7 +17262,7 @@
  ],
  "npcs": [
   {
-   "name": "Youngster",
+   "name": "Garoto",
    "node": "NPC_Youngster",
    "pos": [
     -6.0,
@@ -17271,13 +17271,13 @@
    "facing": 3,
    "sprite": "npc_youngster.png",
    "lines": [
-    "I came here with some friends to\ncatch us some BUG POKéMON!",
-    "They're all itching to get into\nsome POKéMON battles!"
+    "Vim aqui com uns amigos pegar POKéMON INSETO!",
+    "Eles estão doidos para entrar numas batalhas POKéMON!"
    ],
    "y": 0.0
   },
   {
-   "name": "Boy",
+   "name": "Menino",
    "node": "NPC_Boy",
    "pos": [
     10.0,
@@ -17286,13 +17286,13 @@
    "facing": 1,
    "sprite": "npc_kid.png",
    "lines": [
-    "I was throwing POKé BALLS to\ncatch POKéMON, and I ran out.",
-    "That's why you can never have too\nmany POKé BALLS."
+    "Eu estava jogando POKé BALLS para capturar POKéMON e elas acabaram.",
+    "Por isso nunca é demais ter POKé BALLS."
    ],
    "y": 0.0
   },
   {
-   "name": "Lass Ivy",
+   "name": "Moça Ivy",
    "node": "NPC_LassIvy",
    "pos": [
     -6.0,
@@ -17301,13 +17301,13 @@
    "facing": 0,
    "sprite": "npc_lass.png",
    "lines": [
-    "A Butterfree drifted past me by the old dead-end…",
-    "It was huge! Bigger than the ones in the grass. Where does a thing that size hide?"
+    "Um Butterfree passou voando por mim lá perto do velho beco sem saída...",
+    "Era enorme! Maior que os do mato. Onde se esconde um bicho desse tamanho?"
    ],
    "y": 0.0
   },
   {
-   "name": "Camper Ned",
+   "name": "Campista Ned",
    "node": "NPC_CamperNed",
    "pos": [
     -30.0,
@@ -17316,8 +17316,8 @@
    "facing": 0,
    "sprite": "npc_camper.png",
    "lines": [
-    "I keep hearing a buzzing deep in the trees west of here.",
-    "Bug Catchers say something with big stingers lives back there. Nobody's ever caught it."
+    "Fico ouvindo um zumbido no meio das árvores a oeste daqui.",
+    "Os Caçadores de Insetos dizem que lá vive um bicho de ferrões enormes. Ninguém nunca pegou."
    ],
    "y": 0.0
   }
@@ -17329,12 +17329,12 @@
     -2.0,
     -266.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "lines": [
-    "TRAINER TIPS",
-    "If your POKéMON are weak and you want to avoid battles, stay away from grassy areas!"
+    "DICAS DE TREINADOR",
+    "Se seus POKéMON estão fracos e você quer evitar batalhas, fique longe do mato!"
    ],
    "y": 0.0
   },
@@ -17344,12 +17344,12 @@
     7.0,
     -266.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "lines": [
-    "TRAINER TIPS",
-    "Weaken POKéMON before attempting capture! When healthy, they may escape!"
+    "DICAS DE TREINADOR",
+    "Enfraqueça o POKéMON antes de tentar capturar! Com saúde, ele pode escapar!"
    ],
    "y": 0.0
   },
@@ -17359,12 +17359,12 @@
     -21.0,
     -313.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "lines": [
-    "TRAINER TIPS",
-    "For poison, use ANTIDOTE! Get it at POKéMON MARTS!"
+    "DICAS DE TREINADOR",
+    "Contra veneno, use ANTÍDOTO! Compre no POKé MART!"
    ],
    "y": 0.0
   },
@@ -17374,12 +17374,12 @@
     14.0,
     -296.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "lines": [
-    "TRAINER TIPS",
-    "Contact PROF. OAK via a PC to get your POKéDEX evaluated!"
+    "DICAS DE TREINADOR",
+    "Fale com o PROF. CARVALHO por um PC para avaliar a sua POKéDEX!"
    ],
    "y": 0.0
   },
@@ -17389,12 +17389,12 @@
     -45.0,
     -313.0
    ],
-   "title": "Trainer Tips",
+   "title": "Dicas de Treinador",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "lines": [
-    "TRAINER TIPS",
-    "You can't catch a POKéMON that belongs to someone else. Throw POKé BALLS only at wild POKéMON to catch them!"
+    "DICAS DE TREINADOR",
+    "Não dá para capturar o POKéMON de outra pessoa. Jogue POKé BALLS só em POKéMON selvagens!"
    ],
    "y": 0.0
   },
@@ -17404,12 +17404,12 @@
     -5.0,
     -345.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_2/sign",
    "model_scale": 0.8,
    "lines": [
-    "LEAVING VIRIDIAN FOREST",
-    "PEWTER CITY AHEAD"
+    "SAÍDA DA FLORESTA DE VIRIDIAN",
+    "PEWTER À FRENTE"
    ],
    "y": 0.0
   }

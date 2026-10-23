@@ -1,9 +1,20 @@
 class_name SignPost
 extends WorldNpc
-## Readable sign (post + board). Built by MapBuilder from a map's "signs" entries.
+## Readable sign. Built by MapBuilder from a map's "signs" entries with the original's HGSS model
+## (map "model", default hgss/common/sign_a at 0.8); a post + board only if the model is missing.
+
+var model := "hgss/common/sign_a"
+var model_scale := 0.8
+var model_rot := 180.0  ## world yaw of the model (deg), the map's "rot"
 
 
 func _build_body() -> void:
+	var inst := WorldProps.place(self, model if model != "" else "hgss/common/sign_a", global_position if is_inside_tree() else position, {"scale": model_scale})
+	if inst:
+		show_tag = false
+		inst.position = Vector3.ZERO
+		inst.global_rotation.y = deg_to_rad(model_rot)
+		return
 	var post := MeshInstance3D.new()
 	var pm := BoxMesh.new()
 	pm.size = Vector3(0.12, 1.0, 0.12)

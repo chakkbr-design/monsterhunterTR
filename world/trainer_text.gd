@@ -82,4 +82,6 @@ static func display_name(id: String, def: Dictionary) -> String:
 	var cls := String(def.get("class", ""))
 	if cls == "rival":
 		return "{RIVAL}"
+	if String(def.get("display_name", "")) != "":
+		return String(def.display_name)
 	return ("%s %s" % [CLASS_PT.get(cls, cls.replace("_", " ").capitalize()), def.get("name", "")]).strip_edges()

@@ -1,6 +1,6 @@
 {
  "id": "route_22",
- "name": "ROUTE 22",
+ "name": "ROTA 22",
  "rect": [
   -136,
   -152,
@@ -93,11 +93,11 @@
    ],
    "scale": 0.8,
    "message": {
-    "title": "Indigo Plateau",
+    "title": "Platô Índigo",
     "lines": [
-     "POKéMON LEAGUE",
-     "Front Gate",
-     "The gate is closed… for now!"
+     "LIGA POKéMON",
+     "Portão",
+     "O portão está fechado... por enquanto!"
     ]
    }
   }
@@ -3091,7 +3091,7 @@
  ],
  "npcs": [
   {
-   "name": "Worried Hiker",
+   "name": "Alpinista Preocupado",
    "node": "NPC_Hiker",
    "pos": [
     -50.0,
@@ -3100,8 +3100,8 @@
    "sprite": "npc_youngster.png",
    "facing": 0,
    "lines": [
-    "Something big and angry is holed up in the trees north of the loop.",
-    "I heard it punch a trunk clean in two. Nope. Not today."
+    "Tem alguma coisa grande e brava escondida nas árvores ao norte do contorno.",
+    "Ouvi ela partir um tronco ao meio com um soco. Nem pensar. Hoje não."
    ],
    "y": 0.0
   }
@@ -3113,12 +3113,12 @@
     -46,
     -124
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_22/sign",
    "model_scale": 0.8,
    "lines": [
-    "ROUTE 22",
-    "VIRIDIAN CITY - POKÉMON LEAGUE"
+    "ROTA 22",
+    "VIRIDIAN - LIGA POKÉMON"
    ],
    "y": 0.0
   },
@@ -3128,13 +3128,13 @@
     -105.5,
     -131.3
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "LAKESIDE REST STOP",
-    "The water is calm here.",
-    "Wild Pokémon like the flowers."
+    "PARADA DE DESCANSO DO LAGO",
+    "A água é calma aqui.",
+    "Os Pokémon selvagens gostam das flores."
    ],
    "y": 0.9
   }

@@ -1,6 +1,6 @@
 {
  "id": "route_1",
- "name": "ROUTE 1",
+ "name": "ROTA 1",
  "rect": [
   -33,
   -105,
@@ -2861,7 +2861,7 @@
  ],
  "npcs": [
   {
-   "name": "Youngster Tom",
+   "name": "Jovem Tom",
    "node": "NPC_Kid",
    "pos": [
     -4,
@@ -2870,16 +2870,16 @@
    "sprite": "npc_kid.png",
    "wander": 1.5,
    "lines": [
-    "I saw a Rattata in the grass! It charged straight at me!",
-    "See those ledges along the road?",
-    "It's a bit scary, but you can jump\nfrom them.",
-    "You can get back to PALLET TOWN\nquicker that way.",
-    "Tip: if a battle goes badly, press Esc to run away."
+    "Vi um Rattata no mato! Ele veio direto para cima de mim!",
+    "Está vendo aqueles barrancos ao longo da estrada?",
+    "Dá um pouco de medo, mas dá para pular deles.",
+    "Assim você volta mais rápido para PALLET.",
+    "Dica: se a batalha estiver ruim, aperte Esc para fugir."
    ],
    "y": 0.9
   },
   {
-   "name": "Camper Ray",
+   "name": "Campista Ray",
    "node": "NPC_Camper",
    "pos": [
     4.0,
@@ -2888,8 +2888,8 @@
    "sprite": "npc_camper.png",
    "facing": 1,
    "lines": [
-    "Something big rustled up the hill west of here.",
-    "It had a long tail and a nasty set of teeth. I'm not going back for my sandwich!"
+    "Alguma coisa grande se mexeu no morro a oeste daqui.",
+    "Tinha um rabo comprido e dentes horríveis. Não volto lá nem pelo meu sanduíche!"
    ],
    "y": 1.8
   }
@@ -2901,12 +2901,12 @@
     3,
     -21
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "lines": [
-    "ROUTE 1",
-    "PALLET TOWN - VIRIDIAN CITY"
+    "ROTA 1",
+    "PALLET - VIRIDIAN"
    ],
    "y": 0.0
   },
@@ -2916,11 +2916,11 @@
     3,
     -99
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "lines": [
-    "VIRIDIAN CITY ahead."
+    "VIRIDIAN logo à frente."
    ],
    "y": 2.7
   },
@@ -2930,14 +2930,14 @@
     11.5,
     -71.5
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "lines": [
-    "ROUTE 1 REST STOP",
-    "Rest here before the climb north.",
-    "Pokemon slowly regain PP while you walk.",
-    "Let them rest if a move runs dry."
+    "PARADA DE DESCANSO DA ROTA 1",
+    "Descanse aqui antes da subida para o norte.",
+    "Os Pokémon recuperam PP aos poucos enquanto você anda.",
+    "Deixe-os descansar se um golpe ficar sem PP."
    ],
    "y": 1.8
   }

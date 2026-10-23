@@ -8,7 +8,7 @@ const WALK_SPEED := 4.0
 const SIGHT_COOLDOWN := 2.0
 
 @export var trainer_id := "test_youngster"
-@export var show_sight := true
+@export var show_sight := false  ## debug strip showing the sight corridor
 
 var sight := 5.0
 var _def: Dictionary = {}
@@ -26,6 +26,8 @@ func _ready() -> void:
 	if not _def.is_empty():
 		npc_name = Game.fill_names(TrainerText.display_name(trainer_id, _def))
 		sight = float(_def.get("sight", sight))
+		if sprite_sheet == "":
+			sprite_sheet = String(_def.get("sprite", ""))
 	super._ready()
 	_apply_presence()
 	_home = global_position
@@ -79,7 +81,7 @@ func text(key: String) -> PackedStringArray:
 
 
 func prompt() -> String:
-	return "E: Talk" if beaten() else "E: Challenge"
+	return "E: Falar" if beaten() else "E: Desafiar"
 
 
 func _physics_process(delta: float) -> void:

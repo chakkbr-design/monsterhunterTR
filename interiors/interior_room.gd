@@ -1,7 +1,9 @@
 class_name InteriorRoom
 extends Node3D
 ## One indoor room built in code from an InteriorDefs.ROOMS entry: floor, walls (the front wall is
-## low so the camera sees in), furniture boxes, exit mat, stairs, named markers, spawns and NPCs.
+## low so the camera sees in), furniture, exit mat, stairs, named markers, spawns and NPCs.
+## Look: the original's textured interior surfaces and Kenney furniture (InteriorLook); collision
+## stays the furniture boxes of InteriorDefs.
 ## Placed by RouteWorld at InteriorDefs.origin_of(id); everything below is in local coordinates.
 
 const C_TRIM := Color(0.42, 0.33, 0.25)
@@ -68,7 +70,12 @@ func _ready() -> void:
 	for f in def.get("furniture", []):
 		var at := Vector3(float(f[1][0]), 0.0, float(f[1][1]))
 		var sz := Vector3(float(f[2][0]), float(f[2][1]), float(f[2][2]))
-		_box(at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3])), String(f[0]), f.size() < 5 or bool(f[4]))
+		var solid: bool = f.size() < 5 or bool(f[4])
+		if InteriorLook.furniture(self, String(f[0]), at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3]))):
+			if solid:
+				_solid(at + Vector3(0, sz.y / 2.0, 0), sz)
+		else:
+			_box(at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3])), String(f[0]), solid)
 	for k in def.get("spawns", {}):
 		var e: Array = def.spawns[k]
 		spawns[String(k)] = [Vector3(float(e[0]), 0.0, float(e[1])), InteriorDefs.dir_vec(String(e[2]))]
@@ -104,6 +111,7 @@ func _build_shell() -> void:
 	var void_floor := _mesh_box(Vector3(0, -0.12, 0), Vector3(w + 30, 0.1, d + 30), C_VOID, "Void")
 	void_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_box(Vector3(0, -0.1, 0), Vector3(w, 0.2, d), Color(String(def.get("floor", "#c4a77c"))), "Floor", true)
+	_skin("Floor", InteriorLook.surface(InteriorLook.floor_tex(id), Color(String(def.get("floor", "#c4a77c")))))
 	var wc := Color(String(def.get("wall", "#efe4cf")))
 	var t := 0.3
 	_box(Vector3(0, h / 2.0, -d / 2.0 - t / 2.0), Vector3(w + 2 * t, h, t), wc, "WallBack", true)
@@ -111,6 +119,9 @@ func _build_shell() -> void:
 	_box(Vector3(w / 2.0 + t / 2.0, h / 2.0, 0), Vector3(t, h, d), wc, "WallRight", true)
 	# Front wall: low visible strip + full-height invisible collision, so the camera sees in.
 	_mesh_box(Vector3(0, FRONT_VISIBLE_H / 2.0, d / 2.0 + t / 2.0), Vector3(w + 2 * t, FRONT_VISIBLE_H, t), wc.darkened(0.1), "WallFront")
+	var wall_mat := InteriorLook.surface(InteriorLook.wall_tex(id), wc)
+	for wn in ["WallBack", "WallLeft", "WallRight", "WallFront"]:
+		_skin(wn, wall_mat)
 	_solid(Vector3(0, h / 2.0, d / 2.0 + t / 2.0), Vector3(w + 2 * t, h, t))
 	for z in [-d / 2.0 + 0.03]:
 		_mesh_box(Vector3(0, 0.08, z), Vector3(w, 0.16, 0.06), C_TRIM, "Trim")
@@ -121,7 +132,8 @@ func _build_exit(e: Dictionary, back := false) -> void:
 	var x := float(e.get("x", 0.0))
 	var d := size.y
 	var sg := -1.0 if back else 1.0
-	_mesh_box(Vector3(x, 0.01, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.03, 0.8), Color(0.62, 0.22, 0.2), "ExitMatBack" if back else "ExitMat")
+	if InteriorLook.furniture(self, "Tapete", Vector3(x, 0.02, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.04, 0.8), Color(0.62, 0.22, 0.2)) == null:
+		_mesh_box(Vector3(x, 0.01, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.03, 0.8), Color(0.62, 0.22, 0.2), "ExitMatBack" if back else "ExitMat")
 	if back:
 		_mesh_box(Vector3(x, 1.1, -d / 2.0 + 0.02), Vector3(1.4, 2.2, 0.36), Color(0.25, 0.2, 0.16), "DoorwayBack")
 	else:
@@ -195,11 +207,20 @@ func _spawn_npc(n: Dictionary) -> void:
 		npc.lines = ls
 	if n.has("color"):
 		npc.color = Color(String(n.color))
+	if n.has("sprite"):
+		npc.sprite_sheet = String(n.sprite)  # original sheet ("npc_oak.png"); else guessed from role/name
 	npc.set_meta("interior", id)
 	npc.set_meta("role", String(n.get("marker", "")))
 	npc.transform = m.transform
 	add_child(npc)
 	npcs[String(n.marker)] = npc
+
+
+## Replaces a shell box's flat colour with an original surface material.
+func _skin(node_name: String, m: Material) -> void:
+	var mi := get_node_or_null(node_name) as MeshInstance3D
+	if mi:
+		mi.material_override = m
 
 
 func _mesh_box(center: Vector3, sz: Vector3, c: Color, n := "") -> MeshInstance3D:

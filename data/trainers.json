@@ -1,5 +1,5 @@
 {
-  "_doc": "Overworld trainers. party = [[species, level], ...]; a species '@flag' is read from Game.flags at battle time (the Route 22 rival's starter). class = a GameState.TRAINER_PAYOUTS key; sight = metres (0 = never spots you, talk to fight); sprite is a sheet in assets/sprites/ in the 3x4 npc_*.png layout. Display name on banners = '<CLASS> <NAME>' (see Trainers.display_name). Real trainers: FRLG data from the Bulbapedia references only. Optional fields: reward (exact FRLG prize, overrides base x level), intro/defeat/after/lose lines, requires_flag / hidden_by_flag, scripted (loss does not white-out), arena [w, d] + center (a scene marker name) for gym battles, arena_color (the ground decal tint, stone grey in the gym), ai_think_scale, badge (awarded on win + '<badge>_badge' flag), done_flag / won_flag (set after any/winning battle), leave_after + leave_to [x, z] (the trainer walks off and is freed).",
+  "_doc": "Overworld trainers. party = [[species, level], ...]; a species '@flag' is read from Game.flags at battle time (the Route 22 rival's starter). class = a GameState.TRAINER_PAYOUTS key; sight = metres (0 = never spots you, talk to fight); sprite is a sheet in assets/sprites/ in the 3x4 npc_*.png layout. Display name on banners = '<CLASS> <NAME>' (see Trainers.display_name). Real trainers: FRLG data from the Bulbapedia references only. Optional fields: display_name (full banner name, overrides <CLASS> <NAME>), reward (exact FRLG prize, overrides base x level), intro/defeat/after/lose lines, requires_flag / hidden_by_flag, scripted (loss does not white-out), arena [w, d] + center (a scene marker name) for gym battles, arena_color (the ground decal tint, stone grey in the gym), ai_think_scale, badge (awarded on win + '<badge>_badge' flag), done_flag / won_flag (set after any/winning battle), leave_after + leave_to [x, z] (the trainer walks off and is freed).",
   "test_youngster": {
     "class": "youngster",
     "name": "TEST",
@@ -16,13 +16,13 @@
     ],
     "sight": 5,
     "intro": [
-      "(test) Let's battle!"
+      "(teste) Vamos batalhar!"
     ],
     "defeat": [
-      "(test) I lost!"
+      "(teste) Perdi!"
     ],
     "after": [
-      "(test) Already beaten."
+      "(teste) Já fui vencido."
     ]
   },
   "bug_catcher_rick": {
@@ -42,13 +42,13 @@
     "sight": 5,
     "reward": 72,
     "intro": [
-      "Hey! You have POKéMON!\nCome on!\nLet's battle 'em!"
+      "Ei! Você tem POKéMON! Vamos lá, vamos batalhar!"
     ],
     "defeat": [
-      "No!\nCATERPIE can't hack it!"
+      "Não! O CATERPIE não aguentou!"
     ],
     "after": [
-      "Ssh! You'll scare the bugs away.\nAnother time, okay?"
+      "Psiu! Você vai espantar os insetos. Fica para outra vez, tá?"
     ],
     "ai_think_scale": 1.3
   },
@@ -73,13 +73,13 @@
     "sight": 5,
     "reward": 84,
     "intro": [
-      "Yo!\nYou can't jam out if you're a\nPOKéMON TRAINER!"
+      "Ei! TREINADOR POKéMON não foge de batalha!"
     ],
     "defeat": [
-      "Huh?\nI ran out of POKéMON!"
+      "Hã? Acabaram os meus POKéMON!"
     ],
     "after": [
-      "That totally stinks! I'm going to\ncatch some stronger ones!"
+      "Que droga! Vou capturar uns mais fortes!"
     ],
     "ai_think_scale": 1.3
   },
@@ -100,13 +100,13 @@
     "sight": 5,
     "reward": 96,
     "intro": [
-      "I might be little, but I won't like\nit if you go easy on me!"
+      "Posso ser pequeno, mas não quero que você pegue leve comigo!"
     ],
     "defeat": [
-      "Oh, boo.\nNothing went right."
+      "Ah, poxa. Nada deu certo."
     ],
     "after": [
-      "I lost some of my allowance…"
+      "Perdi parte da minha mesada..."
     ],
     "ai_think_scale": 1.3
   },
@@ -131,13 +131,13 @@
     "sight": 5,
     "reward": 84,
     "intro": [
-      "Did you know that POKéMON evolve?"
+      "Sabia que os POKéMON evoluem?"
     ],
     "defeat": [
-      "Oh!\nI lost!"
+      "Ah! Eu perdi!"
     ],
     "after": [
-      "BUG POKéMON evolve quickly.\nThey're a lot of fun!"
+      "POKéMON INSETO evoluem rápido. São muito divertidos!"
     ],
     "ai_think_scale": 1.3
   },
@@ -154,14 +154,14 @@
     "sight": 5,
     "reward": 108,
     "intro": [
-      "Hey, wait up!\nWhat's the hurry? Why the rush?"
+      "Ei, espere aí! Qual é a pressa?"
     ],
     "defeat": [
-      "I give!\nYou're good at this!"
+      "Desisto! Você é bom nisso!"
     ],
     "after": [
-      "Sometimes, you can find stuff on\nthe ground.",
-      "I'm looking for the stuff I\ndropped. Can you help me?"
+      "Às vezes dá para achar coisas no chão.",
+      "Estou procurando o que eu deixei cair. Me ajuda?"
     ],
     "ai_think_scale": 1.3
   },
@@ -188,15 +188,15 @@
     ],
     "arena_color": "#c8ccd2b3",
     "intro": [
-      "Stop right there, kid!",
-      "You're ten thousand light-years \nfrom facing BROCK!"
+      "Pare aí, garoto!",
+      "Você está a dez mil anos-luz de enfrentar o BROCK!"
     ],
     "defeat": [
-      "Darn!",
-      "Light-years isn't time…\nIt measures distance!"
+      "Droga!",
+      "Ano-luz não mede tempo... Mede distância!"
     ],
     "after": [
-      "You're pretty hot.\n…But not as hot as BROCK!"
+      "Você é bom... Mas não tão bom quanto o BROCK!"
     ]
   },
   "brock": {
@@ -224,36 +224,36 @@
     "ai_think_scale": 0.8,
     "badge": "boulder",
     "intro": [
-      "So, you're here. I'm BROCK.\nI'm PEWTER's GYM LEADER.",
-      "My rock-hard willpower is evident\neven in my POKéMON.",
-      "My POKéMON are all rock hard, and\nhave true-grit determination.",
-      "That's right - my POKéMON are all\nthe ROCK type!",
-      "Fuhaha! You're going to challenge\nme knowing that you'll lose?",
-      "That's the TRAINER's honor that\ncompels you to challenge me.",
-      "Fine, then!\nShow me your best!"
+      "Então você veio. Eu sou BROCK, o LÍDER DO GINÁSIO DE PEWTER.",
+      "Minha força de vontade dura como pedra aparece até nos meus POKéMON.",
+      "Meus POKéMON são duros como rocha e têm determinação de sobra.",
+      "Isso mesmo: meus POKéMON são todos do tipo PEDRA!",
+      "Ha, ha! Vai me desafiar mesmo sabendo que vai perder?",
+      "É a honra de TREINADOR que obriga você a me desafiar.",
+      "Muito bem! Mostre o seu melhor!"
     ],
     "defeat": [
-      "I took you for granted, and so\nI lost.",
-      "As proof of your victory, I confer\non you this…the official POKéMON\nLEAGUE BOULDERBADGE."
+      "Subestimei você, e por isso perdi.",
+      "Como prova da sua vitória, entrego a você a INSÍGNIA DA ROCHA oficial da LIGA POKéMON."
     ],
     "after": [
-      "There are all kinds of TRAINERS in\nthis huge world of ours.",
-      "You appear to be very gifted as a\nPOKéMON TRAINER.",
-      "So let me make a suggestion.",
-      "Go to the GYM in CERULEAN and test\nyour abilities."
+      "Há todo tipo de TREINADOR neste nosso mundo enorme.",
+      "Você parece ter muito talento como TREINADOR POKéMON.",
+      "Então deixe eu lhe dar uma sugestão.",
+      "Vá ao GINÁSIO de CERULEAN e teste as suas habilidades."
     ],
     "badge_speech": [
-      "Just having the BOULDERBADGE makes\nyour POKéMON more powerful.",
-      "It also enables the use of the\nmove FLASH outside of battle.",
-      "Of course, a POKéMON must know the\nmove FLASH to use it."
+      "Só de ter a INSÍGNIA DA ROCHA, seus POKéMON ficam mais fortes.",
+      "Ela também permite usar o golpe FLASH fora das batalhas.",
+      "Claro, o POKéMON precisa conhecer o golpe FLASH para usá-lo."
     ],
     "gift": "tm39",
     "gift_speech": [
-      "Wait! Take this with you.",
-      "A TM, TECHNICAL MACHINE, contains a\ntechnique for POKéMON.",
-      "Using a TM teaches the move it\ncontains to a POKéMON.",
-      "Anyways... TM39 contains ROCK TOMB.",
-      "It hurls boulders at the foe and\nlowers its SPEED."
+      "Espere! Leve isto também.",
+      "Um TM, MÁQUINA TÉCNICA, guarda uma técnica para POKéMON.",
+      "Usar um TM ensina o golpe que ele contém a um POKéMON.",
+      "Enfim... O TM39 contém TUMBA DE PEDRAS.",
+      "Ele lança rochas no adversário e reduz a VELOCIDADE dele."
     ],
     "item": "super_potion"
   },
@@ -286,29 +286,29 @@
       "trainer_picnicker_diana"
     ],
     "gate_line": [
-      "Not so fast! You don't get to\nchallenge me yet.",
-      "Beat BOTH of my trainers first,\nthen come back and show me what\nyou've got."
+      "Calma lá! Você ainda não pode me desafiar.",
+      "Vença os MEUS DOIS treinadores primeiro e depois volte para mostrar do que é capaz."
     ],
     "intro": [
-      "Hi, you're a new face!",
-      "Only those TRAINERS who have a\npolicy about POKéMON can turn pro.",
-      "What is your approach when you\ncatch and train POKéMON?",
-      "My policy is an all-out offensive\nwith WATER-type POKéMON!"
+      "Oi, você é novo por aqui!",
+      "Só os TREINADORES que têm uma estratégia com POKéMON conseguem virar profissionais.",
+      "Qual é a sua estratégia para capturar e treinar POKéMON?",
+      "A minha é ataque total com POKéMON do tipo ÁGUA!"
     ],
     "defeat": [
-      "Wow!\nYou're too much!",
-      "All right!",
-      "You can have the CASCADEBADGE to\nshow you beat me."
+      "Uau! Você é demais!",
+      "Muito bem!",
+      "Pode ficar com a INSÍGNIA DA CASCATA, como prova de que me venceu."
     ],
     "after": [
-      "Those who train with water learn\nto go with the flow.",
-      "Keep at it — you've got real\ntalent."
+      "Quem treina com a água aprende a seguir a correnteza.",
+      "Continue assim. Você tem talento de verdade."
     ],
     "badge_speech": [
-      "The CASCADEBADGE makes all\nPOKéMON up to Lv. 30 obey.",
-      "That includes even outsiders you\ngot in trades.",
-      "There's more. You can now use CUT\nanytime, even out of battle.",
-      "You can CUT down small trees to\nopen new pathways."
+      "A INSÍGNIA DA CASCATA faz todos os POKéMON até o Nv. 30 obedecerem.",
+      "Isso vale até para os que você recebeu em trocas.",
+      "E tem mais: agora você pode usar CORTE quando quiser, mesmo fora das batalhas.",
+      "Com CORTE você derruba arvorezinhas e abre caminhos novos."
     ],
     "item": "super_potion"
   },
@@ -338,22 +338,22 @@
       -122
     ],
     "intro": [
-      "{RIVAL}: Hey! {PLAYER}!",
-      "You're off to the POKéMON LEAGUE?\nForget about it!",
-      "You probably don't have any\nBADGES, do you?",
-      "The guard won't let you through\nwithout them.",
-      "By the way, did your POKéMON get\nany stronger?"
+      "{RIVAL}: Ei! {PLAYER}!",
+      "Vai para a LIGA POKéMON? Pode esquecer!",
+      "Aposto que você nem tem INSÍGNIAS, tem?",
+      "O guarda não deixa passar sem elas.",
+      "Aliás, seus POKéMON ficaram mais fortes?"
     ],
     "defeat": [
-      "Awww!\nYou just lucked out!"
+      "Ahh! Você só teve sorte!"
     ],
     "lose": [
-      "{RIVAL}: Yeah!\nAm I great or what?"
+      "{RIVAL}: Isso! Eu sou demais ou não sou?"
     ],
     "after": [
-      "I heard the POKéMON LEAGUE is\ncrawling with tough TRAINERS.",
-      "I have to figure out how to get\npast them.",
-      "You should quit dawdling and get a\nmove on!"
+      "Ouvi dizer que a LIGA POKéMON está cheia de TREINADORES fortes.",
+      "Preciso descobrir como passar por eles.",
+      "E você, pare de enrolar e siga em frente!"
     ],
     "ai_think_scale": 0.9,
     "item": "potion"
@@ -375,13 +375,13 @@
     "sight": 5,
     "reward": 144,
     "intro": [
-      "Excuse me!\nYou looked at me, didn't you?"
+      "Com licença! Você olhou para mim, não olhou?"
     ],
     "defeat": [
-      "You're mean!"
+      "Que maldade!"
     ],
     "after": [
-      "You shouldn't be staring if you\ndon't want to battle!"
+      "Se não quer batalhar, não fique me encarando!"
     ]
   },
   "bug_catcher_colton": {
@@ -405,13 +405,13 @@
     "sight": 5,
     "reward": 120,
     "intro": [
-      "Hey!\nI saw you in VIRIDIAN FOREST!"
+      "Ei! Eu vi você na FLORESTA DE VIRIDIAN!"
     ],
     "defeat": [
-      "You beat me again!"
+      "Você me venceu de novo!"
     ],
     "after": [
-      "There are other kinds of POKéMON\nthan the ones you find in forests."
+      "Existem outros tipos de POKéMON além dos que vivem nas florestas."
     ],
     "ai_think_scale": 1.3
   },
@@ -432,15 +432,15 @@
     "sight": 5,
     "reward": 176,
     "intro": [
-      "Hi!\nI like shorts!",
-      "They're delightfully comfy and\neasy to wear!"
+      "Oi! Eu adoro bermuda!",
+      "É confortável demais e fácil de usar!"
     ],
     "defeat": [
-      "I don't believe it!"
+      "Não acredito!"
     ],
     "after": [
-      "Are you using a POKéMON CENTER's\nPC for storing your POKéMON?",
-      "Each BOX can hold up to\n30 POKéMON."
+      "Você usa o PC do CENTRO POKéMON para guardar seus POKéMON?",
+      "Cada CAIXA guarda até 30 POKéMON."
     ]
   },
   "bug_catcher_greg": {
@@ -468,13 +468,13 @@
     "sight": 5,
     "reward": 108,
     "intro": [
-      "Are you a TRAINER?\nLet's get with it right away!"
+      "Você é TREINADOR? Então vamos logo com isso!"
     ],
     "defeat": [
-      "If I had new POKéMON, I would've\nwon!"
+      "Se eu tivesse POKéMON novos, teria vencido!"
     ],
     "after": [
-      "If a POKéMON BOX on the PC gets\nfull, just switch to another BOX."
+      "Se uma CAIXA do PC encher, é só trocar para outra."
     ],
     "ai_think_scale": 1.3
   },
@@ -491,13 +491,13 @@
     "sight": 5,
     "reward": 224,
     "intro": [
-      "Hey! You're not wearing shorts!\nWhat's wrong with you?"
+      "Ei! Você não está de bermuda! O que há de errado com você?"
     ],
     "defeat": [
-      "Lost!\nLost! Lost!"
+      "Perdi! Perdi! Perdi!"
     ],
     "after": [
-      "I always wear shorts, even in\nwinter. That's my policy."
+      "Eu sempre uso bermuda, até no inverno. É a minha regra."
     ]
   },
   "lass_sally": {
@@ -517,13 +517,13 @@
     "sight": 5,
     "reward": 160,
     "intro": [
-      "That look you gave me…\nIt's so intriguing!"
+      "Esse olhar que você me deu... É tão intrigante!"
     ],
     "defeat": [
-      "Be nice!"
+      "Seja gentil!"
     ],
     "after": [
-      "You can avoid battles by not\nletting TRAINERS see you."
+      "Dá para evitar batalhas não deixando os TREINADORES verem você."
     ]
   },
   "bug_catcher_james": {
@@ -543,13 +543,13 @@
     "sight": 5,
     "reward": 132,
     "intro": [
-      "I'll battle you with the POKéMON\nI just caught."
+      "Vou batalhar com os POKéMON que acabei de capturar."
     ],
     "defeat": [
-      "Done like dinner!"
+      "Acabou para mim!"
     ],
     "after": [
-      "Trained POKéMON are stronger than\nthe wild ones."
+      "POKéMON treinados são mais fortes que os selvagens."
     ],
     "ai_think_scale": 1.3
   },
@@ -566,13 +566,13 @@
     "sight": 5,
     "reward": 224,
     "intro": [
-      "Eek!\nDid you touch me?"
+      "Ai! Você encostou em mim?"
     ],
     "defeat": [
-      "That's it?"
+      "Só isso?"
     ],
     "after": [
-      "ROUTE 4 is at the foot of\nMT. MOON."
+      "A ROTA 4 fica no pé do MONTE DA LUA."
     ]
   },
   "lass_iris": {
@@ -588,13 +588,13 @@
     "sight": 5,
     "reward": 224,
     "intro": [
-      "What?\nI'm waiting for my friends to find\nme here."
+      "O quê? Estou esperando meus amigos me acharem aqui."
     ],
     "defeat": [
-      "I lost?"
+      "Eu perdi?"
     ],
     "after": [
-      "I came because I heard there are\nsome very rare fossils here."
+      "Vim porque ouvi dizer que aqui tem fósseis muito raros."
     ],
     "ai_think_scale": 1.3
   },
@@ -619,19 +619,20 @@
     "sight": 5,
     "reward": 120,
     "intro": [
-      "You need to go through this cave\nto get to CERULEAN CITY."
+      "Para chegar a CERULEAN, você precisa atravessar esta caverna."
     ],
     "defeat": [
-      "I lost."
+      "Eu perdi."
     ],
     "after": [
-      "ZUBAT is tough!\nBut if you can catch one, you'll\nbe able to count on it."
+      "O ZUBAT é duro na queda! Mas, se você capturar um, vai poder contar com ele."
     ],
     "ai_think_scale": 1.3
   },
   "super_nerd_jovan": {
     "class": "super_nerd",
     "name": "Jovan",
+    "display_name": "Supernerd Jovan",
     "sprite": "npc_super_nerd.png",
     "party": [
       [
@@ -646,13 +647,13 @@
     "sight": 5,
     "reward": 264,
     "intro": [
-      "What!\nDon't sneak up on me!"
+      "O quê?! Não chegue assim de fininho!"
     ],
     "defeat": [
-      "My POKéMON won't do!"
+      "Meus POKéMON não dão conta!"
     ],
     "after": [
-      "I have to find stronger POKéMON.\nWhere might they be?"
+      "Preciso achar POKéMON mais fortes. Onde será que eles estão?"
     ],
     "ai_think_scale": 1.1
   },
@@ -673,13 +674,13 @@
     "sight": 5,
     "reward": 176,
     "intro": [
-      "Wow! It's way bigger in here than\nI thought!"
+      "Uau! Aqui dentro é muito maior do que eu pensava!"
     ],
     "defeat": [
-      "Oh!\nI lost it!"
+      "Ah! Eu perdi!"
     ],
     "after": [
-      "How do you get out of here?\nIt's so big, I may get lost."
+      "Como se sai daqui? É tão grande que eu posso me perder."
     ]
   },
   "bug_catcher_kent": {
@@ -699,13 +700,13 @@
     "sight": 5,
     "reward": 132,
     "intro": [
-      "Suspicious men are in the cave.\nWhat about you?"
+      "Tem uns homens suspeitos na caverna. E você, quem é?"
     ],
     "defeat": [
-      "You got me!"
+      "Você me pegou!"
     ],
     "after": [
-      "I saw them!\nI'm sure they're from TEAM ROCKET!"
+      "Eu vi! Tenho certeza de que são da EQUIPE ROCKET!"
     ],
     "ai_think_scale": 1.3
   },
@@ -730,13 +731,13 @@
     "sight": 5,
     "reward": 160,
     "intro": [
-      "Did you come to explore the cave,\ntoo?"
+      "Você também veio explorar a caverna?"
     ],
     "defeat": [
-      "Losing stinks!\nIt's so uncool."
+      "Perder é um saco! Que mico."
     ],
     "after": [
-      "I came all the way down here to\nshow off to girls."
+      "Vim até aqui embaixo só para me exibir para as meninas."
     ]
   },
   "hiker_marcos": {
@@ -760,19 +761,20 @@
     "sight": 5,
     "reward": 360,
     "intro": [
-      "WHOA!\nYou shocked me!\n…Oh, you're just a kid!"
+      "OPA! Que susto! ... Ah, é só uma criança!"
     ],
     "defeat": [
-      "Wow!\nShocked again!"
+      "Uau! Outro susto!"
     ],
     "after": [
-      "Kids like you shouldn't be\nwandering around here in the dark."
+      "Crianças como você não deviam andar por aqui no escuro."
     ],
     "ai_think_scale": 0.9
   },
   "rocket_1": {
     "class": "team_rocket",
-    "name": "Grunt",
+    "name": "Recruta",
+    "display_name": "Recruta da Equipe Rocket",
     "sprite": "npc_rocket_m.png",
     "party": [
       [
@@ -787,19 +789,20 @@
     "sight": 5,
     "reward": 352,
     "intro": [
-      "We, TEAM ROCKET, shall find the\nfossils!\nReviving POKéMON from them will\nearn us huge riches!"
+      "Nós, da EQUIPE ROCKET, vamos achar os fósseis! Reviver POKéMON a partir deles vai nos deixar ricos!"
     ],
     "defeat": [
-      "Urgh!\nNow I'm mad!"
+      "Argh! Agora fiquei bravo!"
     ],
     "after": [
-      "You made me mad!\nTEAM ROCKET will blacklist you!"
+      "Você me deixou furioso! A EQUIPE ROCKET vai colocar você na lista negra!"
     ],
     "ai_think_scale": 1.1
   },
   "rocket_2": {
     "class": "team_rocket",
-    "name": "Grunt",
+    "name": "Recruta",
+    "display_name": "Recruta da Equipe Rocket",
     "sprite": "npc_rocket_m.png",
     "party": [
       [
@@ -818,19 +821,20 @@
     "sight": 5,
     "reward": 352,
     "intro": [
-      "We, TEAM ROCKET, are POKéMON\ngangsters!\nWe strike fear with our strength!"
+      "Nós, da EQUIPE ROCKET, somos os gângsteres dos POKéMON! Espalhamos medo com a nossa força!"
     ],
     "defeat": [
-      "I blew it!"
+      "Estraguei tudo!"
     ],
     "after": [
-      "Darn it all!\nMy associates won't stand for this!"
+      "Que droga! Meus comparsas não vão deixar barato!"
     ],
     "ai_think_scale": 1.1
   },
   "rocket_3": {
     "class": "team_rocket",
-    "name": "Grunt",
+    "name": "Recruta",
+    "display_name": "Recruta da Equipe Rocket",
     "sprite": "npc_rocket_m.png",
     "party": [
       [
@@ -845,19 +849,20 @@
     "sight": 5,
     "reward": 416,
     "intro": [
-      "We're pulling a big job here!\nGet lost, kid!"
+      "Estamos num trabalho grande aqui! Some daqui, garoto!"
     ],
     "defeat": [
-      "So, you are good…"
+      "Então você é bom..."
     ],
     "after": [
-      "If you find a fossil, give it to me\nand scram!"
+      "Se achar um fóssil, me entregue e suma!"
     ],
     "ai_think_scale": 1.1
   },
   "rocket_4": {
     "class": "team_rocket",
-    "name": "Grunt",
+    "name": "Recruta",
+    "display_name": "Recruta da Equipe Rocket",
     "sprite": "npc_rocket_m.png",
     "party": [
       [
@@ -872,19 +877,20 @@
     "sight": 5,
     "reward": 416,
     "intro": [
-      "Little kids shouldn't be messing\naround with grown-ups!\nIt could be bad news!"
+      "Criança não devia se meter com gente grande! Pode dar problema!"
     ],
     "defeat": [
-      "I'm steamed!"
+      "Estou fervendo de raiva!"
     ],
     "after": [
-      "POKéMON lived here long before\npeople came."
+      "Os POKéMON viviam aqui muito antes das pessoas chegarem."
     ],
     "ai_think_scale": 1.1
   },
   "super_nerd_miguel": {
     "class": "super_nerd",
     "name": "Miguel",
+    "display_name": "Supernerd Miguel",
     "sprite": "npc_super_nerd.png",
     "party": [
       [
@@ -900,23 +906,24 @@
         14
       ]
     ],
-    "sight": 5,
+    "sight": 0,
     "reward": 288,
     "intro": [
-      "Hey, stop!\nI found these fossils!\nThey're both mine!"
+      "Ei, pare! Eu achei estes fósseis! Os dois são meus!"
     ],
     "defeat": [
-      "Okay!\nI'll share!"
+      "Tá bom! Eu divido!"
     ],
     "after": [
-      "Far away, on CINNABAR ISLAND,\nthere's a POKéMON LAB.",
-      "They do research on regenerating\nfossils."
+      "Bem longe daqui, na ILHA CINNABAR, existe um LABORATÓRIO POKéMON.",
+      "Lá pesquisam como regenerar fósseis."
     ],
     "ai_think_scale": 1
   },
   "swimmer_luis": {
     "class": "swimmer",
     "name": "Luis",
+    "display_name": "Nadador Luis",
     "sprite": "npc_worker.png",
     "party": [
       [
@@ -937,18 +944,19 @@
     ],
     "arena_color": "#6fb6d9b3",
     "intro": [
-      "Splash!\nI'm first up!\nLet's do it!"
+      "Splash! Eu sou o primeiro! Vamos nessa!"
     ],
     "defeat": [
-      "That can't be!"
+      "Não pode ser!"
     ],
     "after": [
-      "MISTY is a TRAINER who's going to\nkeep improving.\nShe won't lose to someone like you!"
+      "A MISTY é uma TREINADORA que só melhora. Ela não vai perder para alguém como você!"
     ]
   },
   "picnicker_diana": {
     "class": "picnicker",
     "name": "Diana",
+    "display_name": "Piqueniqueira Diana",
     "sprite": "npc_lass.png",
     "party": [
       [
@@ -965,14 +973,14 @@
     ],
     "arena_color": "#c9a7d6b3",
     "intro": [
-      "What? You?\nI'm more than good enough for you!",
-      "MISTY won't have to be bothered."
+      "O quê? Você? Eu sou mais do que suficiente para você!",
+      "A MISTY nem vai precisar se incomodar."
     ],
     "defeat": [
-      "You overwhelmed me!"
+      "Você me arrasou!"
     ],
     "after": [
-      "You have to face other TRAINERS\nto see how good you really are."
+      "Você tem que enfrentar outros TREINADORES para ver se é bom de verdade."
     ]
   }
 }

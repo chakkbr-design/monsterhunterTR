@@ -23,6 +23,10 @@ const PEWTER_GUIDE_TRIGGER := {"node": "PewterGuideTrigger", "event": "pewter_gu
 const GYM_FRONT := Vector3(-18.15, 0.0, -428.6)
 const TYPE_PT := {"grass": "Planta", "fire": "Fogo", "water": "Água", "poison": "Veneno", "normal": "Normal"}
 const LAB := "oak_lab"
+const MT_MOON_B2F := "mt_moon_b2f"
+const MOON_CENTER := "pokemon_center_mt_moon"
+const MAGIKARP_PRICE := 500
+const SALESMAN := "Vendedor"
 const LAB_SPAWN := "door"
 
 ## Testes e demo: avança o diálogo sozinho, responde perguntas (null = pergunta ao jogador),
@@ -70,6 +74,11 @@ func _process(_delta: float) -> void:
 # --- Ligação com o mundo ------------------------------------------------------------------------
 
 func _on_node_added(n: Node) -> void:
+	# Conteúdo que o MapBuilder/InteriorRoom não constroem: cavernas, porta do Monte da Lua, estáticos.
+	if n is InteriorRoom and n.def.has("cave"):
+		n.ready.connect(CaveBuilder.decorate.bind(n), CONNECT_ONE_SHOT)
+	elif n is MapBuilder:
+		n.built.connect(CaveBuilder.decorate_zone.bind(n), CONNECT_ONE_SHOT)
 	if n is RouteWorld and n != world:
 		# Só um jogo novo (spawn_request) chega sem equipe; aí o Overworld não semeia e o inicial vem do Oak.
 		var seeded := Game.party.is_empty() and not flag("got_starter") and not Game.spawn_request.is_empty()
@@ -105,6 +114,10 @@ func attach(w: Node3D) -> void:
 		w.set_interact_hook("player_house", "mom", _mom_hook)
 		w.set_interact_hook("mart_viridian", "clerk", _clerk_hook)
 		w.set_interact_hook(GYM, BROCK, _brock_hook)
+		w.set_interact_hook(MT_MOON_B2F, "miguel", _fossil_hook)
+		w.set_interact_hook(MT_MOON_B2F, "dome_fossil", _fossil_hook)
+		w.set_interact_hook(MT_MOON_B2F, "helix_fossil", _fossil_hook)
+		w.set_interact_hook(MOON_CENTER, "salesman", _salesman_hook)
 	_sync_location.call_deferred()
 
 
@@ -140,8 +153,8 @@ func _add_trigger(w: Node3D, e: Dictionary) -> void:
 		t.blocks = PackedStringArray(["got_starter"])
 		t.requires = PackedStringArray()
 	elif t.event == "pewter_east_block":
-		# A Rota 3 ainda não existe: o aviso vale mesmo com a insígnia.
-		t.blocks = PackedStringArray()
+		# Com a insígnia (qualquer um dos dois nomes de flag) a Rota 3 está aberta.
+		t.blocks = PackedStringArray(["boulder_badge", "badge_boulder"])
 	w.add_child(t)
 	_triggers.append(t)
 
@@ -199,6 +212,11 @@ func trigger(event: String, _source: Node = null) -> void:
 		"pewter_guide":
 			if StoryFlags.pewter_guide_due(Game.flags):
 				await pewter_guide()
+		"mt_moon_fossils":
+			if not flag(CaveBuilder.FOSSIL_FLAG):
+				await mt_moon_fossils()
+		"mt_moon_exit":
+			await mt_moon_exit()
 
 
 # --- API de cena --------------------------------------------------------------------------------
@@ -659,17 +677,16 @@ func door_pos(room: String, fallback: Vector3) -> Vector3:
 
 # --- Pewter -----------------------------------------------------------------------------------------
 
-## Saída leste de Pewter: sem a Insígnia da Rocha o garoto barra; com ela, a Rota 3 está em obras.
+## Saída leste de Pewter: sem a Insígnia da Rocha o garoto barra; com ela, a Rota 3 está aberta.
 func pewter_east_block() -> void:
+	if flag("badge_boulder") or flag("boulder_badge"):
+		return
 	await begin("pewter_east_block")
 	var p := player()
 	if p:
 		p.show_alert(true)
-	if flag("badge_boulder"):
-		await say("Aviso", ["A Rota 3 está em construção.", "Volte mais tarde!"])
-	else:
-		await say("Garoto", ["Você não pode ir para o leste, até a Rota 3, sem a Insígnia da Rocha.",
-			"Vença o Líder Brock no Ginásio de Pewter e depois volte!"])
+	await say("Garoto", ["Você não pode ir para o leste, até a Rota 3, sem a Insígnia da Rocha.",
+		"Vença o Líder Brock no Ginásio de Pewter e depois volte!"])
 	if p:
 		p.show_alert(false)
 		await walk(p, p.global_position + Vector3(-3.0, 0, 0))
@@ -751,3 +768,150 @@ func award_badge(id: String, label: String) -> void:
 		h.toast("%s obtida!" % label, 3.0)
 	await say("", ["{PLAYER} recebeu a %s de Brock!" % label])
 
+
+
+# --- Monte da Lua ------------------------------------------------------------------------------------
+
+## Nome de banner de um treinador (display_name do trainers.json, senão "<Classe> <Nome>").
+static func trainer_name(id: String, def: Dictionary) -> String:
+	return String(def.get("display_name", TrainerText.display_name(id, def)))
+
+
+## Luta de treinador conduzida pela história (Miguel). Vitória grava trainer_<id>.
+func _trainer_fight(id: String, def: Dictionary) -> Dictionary:
+	var enemies := WorldTrainer.build_party(def)
+	var opts := {"kind": "trainer", "trainer_id": id, "can_run": false}
+	if auto_battle:
+		opts["autoplay"] = true
+	opts.merge(battle_extra, true)
+	var r: Dictionary = {}
+	var ow := Overworld.of(self)
+	if ow and not enemies.is_empty():
+		r = await ow.battle(enemies, opts)
+	last_battle = r
+	if String(r.get("outcome", "")) == "win":
+		set_flag("trainer_" + id)
+	return r
+
+
+func b2f_npc(role: String) -> Node3D:
+	if world == null or not world.has_method("interior"):
+		return null
+	var room = world.interior(MT_MOON_B2F)
+	if room == null:
+		return null
+	var n = room.npcs.get(role)
+	return n if n is Node3D and is_instance_valid(n) else null
+
+
+## Miguel ou um dos fósseis (gancho dos Interiores): a cena dos fósseis; depois dela, a fala de sempre.
+func _fossil_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	if flag(CaveBuilder.FOSSIL_FLAG):
+		if String(npc.get_meta("role", "")) == "miguel":
+			await begin("talk_miguel")
+			var def := Dex.trainer(CaveBuilder.MIGUEL)
+			await say(trainer_name(CaveBuilder.MIGUEL, def), TrainerText.lines(CaveBuilder.MIGUEL, "after", def))
+			end()
+		return true
+	await mt_moon_fossils()
+	return true
+
+
+## Monte da Lua B2F: o Supernerd Miguel guarda dois fósseis. Vencido, ele divide: o jogador escolhe
+## Domo ou Hélice (flags FLAG_GOT_<DOME|HELIX>_FOSSIL, FLAG_GOT_FOSSIL_FROM_MT_MOON, mt_moon_fossil).
+func mt_moon_fossils() -> Dictionary:
+	await begin("mt_moon_fossils")
+	var id := CaveBuilder.MIGUEL
+	var def := Dex.trainer(id)
+	var who := trainer_name(id, def)
+	var p := player()
+	var miguel := b2f_npc("miguel")
+	if miguel and p:
+		face_each_other(miguel, p)
+	var r: Dictionary = {}
+	if not flag("trainer_" + id):
+		await say(who, TrainerText.lines(id, "intro", def))
+		r = await _trainer_fight(id, def)
+		if String(r.get("outcome", "")) != "win":
+			end()
+			return r
+		await say(who, TrainerText.lines(id, "defeat", def))
+	await say(who, ["Vamos dividir: um fóssil para cada um!", "Nada de ganância!"])
+	var took := ""
+	for i in 8:
+		if await ask("Você quer o FÓSSIL DOMO?"):
+			took = "dome"
+		elif await ask("Você quer o FÓSSIL HÉLICE?"):
+			took = "helix"
+		if took != "":
+			break
+	if took == "":
+		took = "dome"
+	var label := "FÓSSIL DOMO" if took == "dome" else "FÓSSIL HÉLICE"
+	Game.add_item(took + "_fossil", 1)
+	set_flag("FLAG_GOT_%s_FOSSIL" % took.to_upper())
+	set_flag(CaveBuilder.FOSSIL_FLAG)
+	set_flag("mt_moon_fossil", took)
+	for role in ["dome_fossil", "helix_fossil"]:
+		var f := b2f_npc(role)
+		if f:
+			f.queue_free()
+	await say("", ["{PLAYER} recebeu o %s!" % label])
+	await say(who, ["Tá bom. Então este fóssil aqui é meu!"])
+	await say(who, TrainerText.lines(id, "after", def))
+	end()
+	return r
+
+
+## Saída leste do B1F (Rota 4): a demo para aqui.
+func mt_moon_exit() -> void:
+	await begin("mt_moon_exit")
+	var first := not flag("mt_moon_cleared")
+	set_flag("mt_moon_cleared")
+	var h := hud()
+	if h and first:
+		h.toast("Monte da Lua atravessado!", 3.0)
+	await say("", ["Lá fora, a Rota 4 desce em direção a Cerulean...",
+		"A estrada ainda está bloqueada. Esta parte da aventura termina aqui.", "Continua..."])
+	var p := player()
+	if p and world and world.has_method("interior"):
+		var room = world.interior("mt_moon_b1f")
+		if room and room.has_spawn("warp_7"):
+			# Um passo de volta para dentro, fora do gatilho.
+			var back: Vector3 = room.spawn_point("warp_7")
+			var at := p.global_position
+			await walk(p, at + (back - at).normalized() * 1.6)
+	end()
+
+
+## Vendedor de Magikarp do Centro Pokémon do Monte da Lua (P500, uma vez).
+func _salesman_hook(_npc: Node) -> bool:
+	if is_running():
+		return true
+	await magikarp_sale()
+	return true
+
+
+func magikarp_sale() -> void:
+	await begin("magikarp_sale")
+	if flag("bought_magikarp"):
+		await say(SALESMAN, ["Eu já vendi um MAGIKARP para você!", "Cuide bem dele!"])
+		end()
+		return
+	if Game.money < MAGIKARP_PRICE:
+		await say(SALESMAN, ["Desculpe, garoto. Você não tem P%d." % MAGIKARP_PRICE])
+		end()
+		return
+	await say(SALESMAN, ["Ei, você aí! Tenho uma oferta imperdível!"])
+	if not await ask("Vendo um MAGIKARP por apenas P%d. Fechado?" % MAGIKARP_PRICE, "Magikarp"):
+		await say(SALESMAN, ["Que pena. É uma pechincha de verdade!"])
+		end()
+		return
+	Game.money -= MAGIKARP_PRICE
+	Game.add_mon(Mon.create("magikarp", 5))
+	set_flag("bought_magikarp")
+	await say(SALESMAN, ["Aqui está!"])
+	await say("", ["{PLAYER} recebeu o MAGIKARP!" + ("" if Game.party.size() <= Game.PARTY_MAX and Game.party.back().species.to_lower() == "magikarp" else " Ele foi para o PC.")])
+	end()

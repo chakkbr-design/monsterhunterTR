@@ -202,3 +202,12 @@ Dados novos em `data/`: `pmd_anims.json`, `move_fx.json`, `time_of_day.json`, `t
 
 - `gfx/creature_sprite.gd` (dono: Visual da batalha) é o porte do `pokemon_sprites.gd` + animação PMD do original: um nó 3D billboard que mostra a espécie e toca as animações (Idle, Walk, Attack, Hurt, Faint...). O mundo usa o mesmo nó para os selvagens e para o Pokémon que segue o jogador. Entrega primeiro uma versão simples (Idle/Walk) para o mundo poder usar cedo.
 - Conflito em `route_world.gd`: o Conteúdo só mexe na lista de zonas/ligações; o resto é do Visual do mundo. Releia o arquivo antes de cada edição e mantenha as edições pequenas.
+
+### Rodada 5 (pronto)
+
+- Arte do original: `gfx/` (CreatureSprite, PokemonSprites, efeitos), batalha, UI e mundo usam `res://original/assets`.
+- Arena: `opts.floor = true` quando não há chão (o mundo passa sozinho). Mundo: Pokémon da frente segue o jogador; hora do dia e chuva.
+- Zonas: + `route_3` (abre com `boulder_badge`). Salas: `pokemon_center_mt_moon`, `mt_moon_1f`, `mt_moon_b1f`, `mt_moon_b2f` (cavernas por `world/cave_builder.gd`).
+- Flags novas: `bought_magikarp`, `mt_moon_cleared`, `mt_moon_fossil`, `FLAG_GOT_DOME_FOSSIL` / `FLAG_GOT_HELIX_FOSSIL`, `FLAG_GOT_FOSSIL_FROM_MT_MOON`, `static_<uid>`.
+- `trainers.json`: campo `display_name` em português. Textos de mapas e treinadores traduzidos.
+- `Game.trainer_id` (número do Cartão de Treinador).

@@ -24,7 +24,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var before := _alive.size()
-	_alive = _alive.filter(func(c: WildMon) -> bool: return is_instance_valid(c))
+	_alive.assign(_alive.filter(func(c) -> bool: return is_instance_valid(c)))
 	for i in before - _alive.size():
 		_pending.append(_rng.randf_range(respawn_min, respawn_max))
 	if not _filled:

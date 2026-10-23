@@ -53,6 +53,9 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	if Game.is_busy() or Game.first_healthy() < 0 or enemies.is_empty() or p == null:
 		return {}
 	_result = {}
+	if not opts.has("floor") and not _ground_under(p.global_position):
+		opts = opts.duplicate()
+		opts["floor"] = true  # the arena draws no floor of its own: give it one over empty space
 	Game.battle_finished.connect(_capture, CONNECT_ONE_SHOT)
 	Game.request_battle(enemies, opts, self, p.global_position)
 	if _result.is_empty():
@@ -78,6 +81,12 @@ func _white_out(p: OverworldPlayer) -> void:
 			p.global_position = n.global_transform * Vector3(0, 0.2, -1.5)
 			p.velocity = Vector3.ZERO
 			return
+
+
+## True when solid world geometry lies within 3 m below `at` (ground, terrace, interior floor).
+func _ground_under(at: Vector3) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP, at + Vector3.DOWN * 3.0, WALL_LAYER)
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
 func _capture(r: Dictionary) -> void:

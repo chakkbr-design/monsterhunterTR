@@ -165,14 +165,12 @@ func _pewter_east() -> void:
 		st.auto_advance = true
 	await w.go_to_zone("pewter_city", "pw_east")
 	await frames(10)
-	check(not w.zones.has("route_3"), "Route 3 not built (blocked)")
+	check(w.zones.has("route_3"), "Route 3 is a zone now (Rodada 5, conteúdo)")
 	Input.action_press("move_right")
 	await frames(240)
 	Input.action_release("move_right")
 	await until(func(): return st == null or not st.is_running(), 10.0)
 	check(p.global_position.x < 47.0 and w.zone_at(p.global_position) == "pewter_city", "east exit stays closed (x %.1f)" % p.global_position.x)
-	var sign: Node = w.builders.pewter_city.get_node_or_null("Route3Closed")
-	check(sign != null and String(sign.lines[0]).contains("CONSTRUÇÃO"), "'Em construção' sign at the east exit")
 	if st:
 		st.auto_advance = false
 

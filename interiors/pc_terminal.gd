@@ -10,6 +10,9 @@ func _ready() -> void:
 
 
 func _build_body() -> void:
+	if InteriorLook.furniture(self, "Computador", Vector3(0, 1.15, 0), Vector3(0.8, 0.6, 0.5), Color(0.82, 0.84, 0.88)):
+		show_tag = false
+		return
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = Vector3(0.8, 0.6, 0.5)

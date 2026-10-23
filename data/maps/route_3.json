@@ -1,6 +1,6 @@
 {
  "id": "route_3",
- "name": "ROUTE 3",
+ "name": "ROTA 3",
  "rect": [
   48,
   -447,
@@ -110,7 +110,7 @@
    "rot": 180.0,
    "door_dx": 0.0,
    "board": {
-    "text": "POKé\nMON\nCENTER",
+    "text": "CENTRO\nPOKéMON",
     "color": "#d8423a",
     "ball": true,
     "side": 1
@@ -6222,7 +6222,7 @@
  ],
  "npcs": [
   {
-   "name": "Rockfall Worker",
+   "name": "Operário",
    "node": "NPC_RockfallWorker",
    "pos": [
     242.0,
@@ -6231,14 +6231,14 @@
    "sprite": "npc_hiker.png",
    "facing": 2,
    "lines": [
-    "Whoa there! The road east is buried.",
-    "A rockfall came down in the night. CERULEAN CITY's cut off for now.",
-    "Head through MT. MOON if you're going that way."
+    "Opa, calma aí! A estrada para o leste está soterrada.",
+    "Desabaram pedras durante a noite. CERULEAN está isolada por enquanto.",
+    "Se vai para lá, passe pelo MONTE DA LUA."
    ],
    "y": 0.0
   },
   {
-   "name": "Tired Youngster",
+   "name": "Jovem Cansado",
    "node": "NPC_TiredYoungster",
    "pos": [
     206.0,
@@ -6247,14 +6247,14 @@
    "sprite": "npc_youngster.png",
    "facing": 2,
    "lines": [
-    "Whew… I better take a rest…",
-    "Groan…",
-    "That tunnel from CERULEAN takes a\nlot out of you!"
+    "Ufa... Melhor eu descansar um pouco...",
+    "Ai, ai...",
+    "Aquele túnel de CERULEAN acaba com qualquer um!"
    ],
    "y": 0.0
   },
   {
-   "name": "Badge Woman",
+   "name": "Moça da Insígnia",
    "node": "NPC_BadgeWoman",
    "pos": [
     198.0,
@@ -6263,13 +6263,13 @@
    "sprite": "npc_woman.png",
    "facing": 2,
    "lines": [
-    "Oh, wow, that's the BOULDERBADGE!",
-    "I want to become a GYM LEADER like him."
+    "Nossa, é a INSÍGNIA DA ROCHA!",
+    "Quero ser LÍDER DE GINÁSIO como ele."
    ],
    "y": 0.0
   },
   {
-   "name": "Tripped Kid",
+   "name": "Menino Tropeçado",
    "node": "NPC_TrippedKid",
    "pos": [
     252.0,
@@ -6278,7 +6278,7 @@
    "sprite": "npc_kid.png",
    "facing": 2,
    "lines": [
-    "Ouch! I tripped over a rocky POKéMON,\nGEODUDE!"
+    "Ai! Tropecei num POKéMON de pedra, o GEODUDE!"
    ],
    "y": 0.0
   }
@@ -6290,13 +6290,13 @@
     200.0,
     -436.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "rot": 90.0,
    "lines": [
-    "ROUTE 3",
-    "MT. MOON AHEAD"
+    "ROTA 3",
+    "MONTE DA LUA À FRENTE"
    ],
    "y": 0.0
   },
@@ -6306,13 +6306,13 @@
     214.0,
     -442.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "rot": 90.0,
    "lines": [
-    "MT. MOON",
-    "Tunnel entrance up ahead."
+    "MONTE DA LUA",
+    "Entrada do túnel logo adiante."
    ],
    "y": 0.0
   },
@@ -6322,12 +6322,12 @@
     194.0,
     -436.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/route_1/sign_route",
    "model_scale": 0.8,
    "rot": 90.0,
    "lines": [
-    "POKéMON CENTER"
+    "CENTRO POKéMON"
    ],
    "y": 0.9
   },
@@ -6337,13 +6337,13 @@
     170.0,
     -437.5
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/viridian_forest/tips_sign",
    "model_scale": 0.8,
    "rot": 90.0,
    "lines": [
-    "TRAINER TIPS",
-    "A ledge is a one-way drop."
+    "DICAS DE TREINADOR",
+    "Barranco só se desce, não se sobe."
    ],
    "y": 0.9
   }

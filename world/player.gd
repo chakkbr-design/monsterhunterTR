@@ -23,6 +23,7 @@ var _grass: Array[TallGrass] = []
 var _rng := RandomNumberGenerator.new()
 var _model: Node3D
 var _alert: Label3D
+var sprite: CharSprite  ## the original trainer sheet (walk / run), null = capsule placeholder
 
 
 func _enter_tree() -> void:
@@ -42,6 +43,21 @@ func _ready() -> void:
 	add_child(col)
 	_model = Node3D.new()
 	add_child(_model)
+	_build_look()
+	_alert = WorldNpc.make_alert(2.3)
+	add_child(_alert)
+	Game.battle_finished.connect(_on_battle_finished)
+
+
+## Original trainer sheet (red, or green for a girl) with its run sheet; capsule if missing.
+func _build_look() -> void:
+	var girl := String(Game.get("player_gender")) in ["female", "girl", "f", "menina"]
+	var walk := CharSprite.sheet("trainer_green.png" if girl else "trainer.png")
+	if walk:
+		sprite = CharSprite.make(walk, CharSprite.sheet("trainer_green_run.png" if girl else "trainer_run.png"))
+		sprite.follow_parent = false
+		add_child(sprite)
+		return
 	var body := MeshInstance3D.new()
 	var cm := CapsuleMesh.new()
 	cm.radius = 0.35
@@ -57,9 +73,6 @@ func _ready() -> void:
 	nose.mesh = bm
 	nose.position = Vector3(0, 1.45, -0.3)  # cap brim marks the facing
 	_model.add_child(nose)
-	_alert = WorldNpc.make_alert(2.3)
-	add_child(_alert)
-	Game.battle_finished.connect(_on_battle_finished)
 
 
 func _on_battle_finished(_r: Dictionary) -> void:
@@ -115,6 +128,12 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if dir.length() > 0.1:
 		facing = dir.normalized()
+	if sprite:
+		var run := Input.is_action_pressed("sprint") and dir.length() > 0.1
+		sprite.facing = facing
+		sprite.moving = dir.length() > 0.1 and is_on_floor()
+		sprite.speed = run_speed if run else walk_speed
+		sprite.set_running(run)
 	_model.rotation.y = lerp_angle(_model.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-14.0 * delta))
 	if active and not _grass.is_empty():
 		var moved := Vector2(global_position.x - before.x, global_position.z - before.z).length()
@@ -157,10 +176,10 @@ func _update_focus(active: bool) -> void:
 
 func _prompt_for(n: Node3D) -> String:
 	if n is WildMon:
-		return "E: Battle %s" % (n as WildMon).mon.display_name
+		return "E: Batalhar com %s" % (n as WildMon).mon.display_name
 	if n.has_method("prompt"):
 		return n.prompt()
-	return "E: Talk"
+	return "E: Falar"
 
 
 func _interact(n: Node3D) -> void:

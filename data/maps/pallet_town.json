@@ -1,6 +1,6 @@
 {
  "id": "pallet_town",
- "name": "PALLET TOWN",
+ "name": "CIDADE DE PALLET",
  "rect": [
   -22,
   -19.5,
@@ -1091,13 +1091,13 @@
    "sprite": "npc_girl.png",
    "wander": 3.0,
    "lines": [
-    "The Pokémon in town are so calm. They never pick a fight!",
-    "Route 1 is just north of here. The tall grass there is full of surprises."
+    "Os Pokémon da cidade são tão calmos. Nunca arranjam briga!",
+    "A Rota 1 fica logo ao norte. O mato alto de lá está cheio de surpresas."
    ],
    "y": 0.0
   },
   {
-   "name": "Lab Aide",
+   "name": "Assistente do Laboratório",
    "node": "NPC_Scientist",
    "pos": [
     3.2,
@@ -1105,14 +1105,14 @@
    ],
    "sprite": "npc_scientist.png",
    "lines": [
-    "Ah, welcome! I study how Pokémon behave in the wild.",
-    "Have you noticed? Some Pokémon run away from you, others charge right at you!",
-    "Press 1 to 6 to let your partners out of their balls. They love walking with you."
+    "Ah, bem-vindo! Eu estudo como os Pokémon se comportam na natureza.",
+    "Já reparou? Alguns Pokémon fogem de você, outros vêm direto para cima!",
+    "Aperte de 1 a 6 para soltar seus parceiros das Poké Balls. Eles adoram passear com você."
    ],
    "y": 0.0
   },
   {
-   "name": "Old Man",
+   "name": "Velhinho",
    "node": "NPC_OldMan",
    "pos": [
     4,
@@ -1120,9 +1120,9 @@
    ],
    "sprite": "npc_oldman.png",
    "lines": [
-    "Heading out to Route 1, are you?",
-    "The longer you wander in tall grass, the more likely something jumps out at you.",
-    "Stick to the path if you'd rather avoid trouble. Ho ho!"
+    "Vai para a Rota 1, é?",
+    "Quanto mais tempo você anda pelo mato alto, mais chance de algo pular em você.",
+    "Fique na trilha se quiser evitar encrenca. Ho, ho!"
    ],
    "y": 0.0
   }
@@ -1134,12 +1134,12 @@
     -3.6,
     1.0
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "PALLET TOWN",
-    "Shades of your journey await!"
+    "CIDADE DE PALLET",
+    "Cores da sua jornada esperam por você!"
    ],
    "y": 0.0
   },
@@ -1149,11 +1149,11 @@
     5.6,
     4.9
    ],
-   "title": "Sign",
+   "title": "Placa",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "OAK POKéMON RESEARCH LAB"
+    "LABORATÓRIO DE PESQUISA POKéMON DO PROF. CARVALHO"
    ],
    "y": 0.0
   },
@@ -1163,11 +1163,11 @@
     -9.9,
     -5.2
    ],
-   "title": "Mailbox",
+   "title": "Caixa de correio",
    "model": "hgss/common/mailbox",
    "model_scale": 0.8,
    "lines": [
-    "{PLAYER}'s house"
+    "Casa de {PLAYER}"
    ],
    "y": 0.0
   },
@@ -1177,11 +1177,11 @@
     8.3,
     -5.2
    ],
-   "title": "Mailbox",
+   "title": "Caixa de correio",
    "model": "hgss/common/mailbox",
    "model_scale": 0.8,
    "lines": [
-    "{RIVAL}'s house"
+    "Casa de {RIVAL}"
    ],
    "y": 0.0
   }
