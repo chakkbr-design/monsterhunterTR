@@ -415,7 +415,12 @@ func _process(delta: float) -> void:
 			if _loading == "" and d < LOAD_RANGE:
 				_stream_in(id)
 		elif (
-			d > LOAD_RANGE + UNLOAD_MARGIN and id != here and id != _loading and not Game.is_busy()
+			d > LOAD_RANGE + UNLOAD_MARGIN
+			and id != here
+			and id != _loading
+			and id != active_zone  # the zone of the room the player is in: its door awaits the trip
+			and not traveling
+			and not Game.is_busy()
 		):
 			builders[id].queue_free()
 			builders.erase(id)
