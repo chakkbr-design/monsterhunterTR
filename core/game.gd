@@ -277,7 +277,8 @@ func _finish(result: Dictionary) -> void:
 		var last: int = _enemies[-1].level if not _enemies.is_empty() else 1
 		result.prize = trainer_payout(id, last)
 		money += result.prize
-		flags["trainer_" + id] = true
+		if not _opts.get("scripted", false):
+			flags["trainer_" + id] = true
 	elif outcome == "lose":
 		# Batalha de roteiro (opts.scripted): perder não custa dinheiro.
 		if not _opts.get("scripted", false):

@@ -142,3 +142,8 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - Novo jogo: fala do Oak, escolha de gênero, nome do jogador, nome do rival → `Game.new_game(...)` →
   `Game.spawn_request = {"interior": "player_room", "spawn": "bed"}` → `change_scene_to_file("res://world/route_world.tscn")`.
 - Continuar: `Game.load_game()` (o `last_save` é preenchido) → muda para a RouteWorld.
+
+### Flags da história (dono: História)
+
+`oak_stopped`, `got_starter`, `starter_chosen`, `rival_battle_done`, `rival_battle_won`, `mom_healed`, `has_parcel`, `has_pokedex`, `parcel_delivered`.
+Batalha com `opts.scripted` não grava `trainer_<id>`. O menu de pausa não abre durante uma cena da história.

@@ -50,7 +50,7 @@ func _learn_open() -> bool:
 
 
 func open() -> bool:
-	if screen != "" or game == null or game.is_busy() or _learn_open():
+	if screen != "" or game == null or game.is_busy() or _learn_open() or _story_running():
 		return false
 	_root.visible = true
 	_main_cur = 0
@@ -63,6 +63,11 @@ func close() -> void:
 	_closed_at = Engine.get_process_frames()
 	_root.visible = false
 	Kit.clear(_box)
+
+
+func _story_running() -> bool:
+	var st := get_node_or_null("/root/Story")
+	return st != null and st.is_running()
 
 
 func _unhandled_input(ev: InputEvent) -> void:
@@ -188,9 +193,13 @@ func _cursor() -> int:
 func _save() -> void:
 	var extra := {}
 	var p: Node3D = null
+	var world: Node = null
 	if is_inside_tree():
 		p = get_tree().get_first_node_in_group("ow_player") as Node3D
-	if p:
+		world = get_tree().get_first_node_in_group("ow_root")
+	if world and world.has_method("save_extra"):
+		extra = world.save_extra()  # {"pos": [x, y, z], "zone" | "interior": id}
+	elif p:
 		var v := p.global_position
 		extra = {"pos": [v.x, v.y, v.z]}
 	_msg("Jogo salvo." if game.save_game(extra) else "Não foi possível salvar.", "main")

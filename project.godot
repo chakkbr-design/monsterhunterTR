@@ -21,6 +21,7 @@ Controls="*res://core/controls.gd"
 Game="*res://core/game.gd"
 LearnMove="*res://ui/learn_move_ui.gd"
 PauseMenu="*res://ui/pause_menu.gd"
+Story="*res://story/story.gd"
 
 [display]
 
