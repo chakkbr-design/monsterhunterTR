@@ -1,6 +1,7 @@
 extends Node3D
 ## Arena de batalha em tempo real. Contrato: start(player_party, enemies, opts) e signal finished(result).
-## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?}.
+## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?,
+##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada)}.
 ## Com `manual = true` nada anda sozinho: quem chama step(dt) (testes headless).
 
 signal finished(result: Dictionary)
@@ -20,6 +21,14 @@ const BALL_FLIGHT := 0.5
 const BALL_SHAKE := 0.6
 const BALL_ORDER := ["poke_ball", "great_ball", "ultra_ball"]
 const LOG_MAX := 400
+const BATTLE_SIZE := 2
+const ITEM_CD := 3.0
+const SUPPORT_HEAL_AT := 0.5
+const MODAL_SLOW := 0.2
+const CONTROL_SWAP_CD := 0.3
+const ALLY_MODE_NAMES := ["ATTACK", "DEFEND", "SUPPORT"]
+const ALLY_MODE_COLORS := [Color(1.0, 0.5, 0.4), Color(0.5, 0.75, 1.0), Color(0.55, 1.0, 0.6)]
+const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 
 var manual := false
 var rng := RandomNumberGenerator.new()
@@ -31,7 +40,13 @@ var kind := "wild"
 var party: Array = []
 var enemies: Array = []
 var enemy_index := 0
-var player: BattleFighter
+var player: BattleFighter  # o mon que o jogador controla
+var ally: BattleFighter    # 2º mon do jogador (IA), só em batalha selvagem
+var ally_mode := 0         # BattleAI.ATTACK / DEFEND / SUPPORT
+var item_cd := 0.0         # cooldown global de itens (bolsa rápida e cura do SUPPORT)
+var menu := ""             # "" | "bag" | "party" (abre com interact; a luta fica a MODAL_SLOW)
+var menu_sel := 0
+var menu_target := 0
 var enemy: BattleFighter
 var fighters: Array = []
 var projectiles: Array = []
@@ -54,6 +69,9 @@ var _yaw := 0.0
 var _swap_cd := 0.0
 var _capture := {}
 var _think_scale := 1.0
+var _trainer_item := ""
+var _battle_size := 1
+var _f_was_down := false
 var _built := false
 
 
@@ -74,7 +92,11 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		rng.randomize()
 	moves = BattleMoves.new(self, rng)
 	if kind == "trainer":
-		_think_scale = float(Dex.trainer(String(o.get("trainer_id", ""))).get("ai_think_scale", 1.0))
+		var tr := Dex.trainer(String(o.get("trainer_id", "")))
+		_think_scale = float(tr.get("ai_think_scale", 1.0))
+		_trainer_item = String(o.get("trainer_item", tr.get("item", "")))
+	# Selvagem: até BATTLE_SIZE mons do jogador (2x1). Treinador: sempre 1x1.
+	_battle_size = 1 if kind != "wild" else clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
 	if not InputMap.has_action("move_1"):
 		load("res://core/controls.gd").register()
 	_build()
@@ -84,6 +106,10 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		_end("lose" if pi < 0 else "win", 0.0)
 		return
 	_send_player(pi, Vector3(0, 0, START_GAP / 2.0))
+	if _battle_size >= 2:
+		var ai_i := _next_healthy(pi)
+		if ai_i >= 0:
+			_send_ally(ai_i, Vector3(1.6, 0, START_GAP / 2.0 + 0.4))
 	_send_enemy(ei)
 	var e: Mon = enemies[ei]
 	hud.banner(("A wild %s appeared!" % e.display_name) if kind == "wild" else ("Trainer sent out %s!" % e.display_name), INTRO_TIME)
@@ -136,12 +162,27 @@ func _build() -> void:
 	add_child(hud)
 
 
+## Próximo mon da party com HP que ainda não está em campo.
 func _next_healthy(after: int) -> int:
+	var busy := _field_mons()
 	for k in party.size():
 		var i := (after + 1 + k) % party.size()
-		if i != after and not party[i].is_fainted():
+		if i != after and not party[i].is_fainted() and not busy.has(party[i]):
 			return i
 	return -1
+
+
+## Mons do jogador vivos em campo (controlado e aliado).
+func _field_mons() -> Array:
+	var out: Array = []
+	for f in [player, ally]:
+		if is_instance_valid(f) and f.active():
+			out.append(f.mon)
+	return out
+
+
+func _player_ctrl() -> String:
+	return "ai" if opts.get("autoplay", false) else "player"
 
 
 func _next_enemy(after: int) -> int:
@@ -164,11 +205,17 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 
 
 func _send_player(i: int, at: Vector3) -> void:
-	var ctrl := "ai" if opts.get("autoplay", false) else "player"
-	player = _spawn(party[i], 0, ctrl, at)
+	player = _spawn(party[i], 0, _player_ctrl(), at)
 	player.set_meta("party_index", i)
 	_bind()
 	player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+
+
+func _send_ally(i: int, at: Vector3) -> void:
+	ally = _spawn(party[i], 0, "ai", at)
+	ally.set_meta("party_index", i)
+	_bind()
+	ally.popup("Go, %s!" % ally.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 
 
 func _send_enemy(i: int) -> void:
@@ -176,16 +223,24 @@ func _send_enemy(i: int) -> void:
 	enemy = _spawn(enemies[i], 1, "ai", Vector3(0, 0, -START_GAP / 2.0))
 	enemy.ai.think_scale = _think_scale
 	enemy.ai.think = WILD_OPENING_DELAY if kind == "wild" else TRAINER_SWAP_HOLD
+	enemy.trainer_item = _trainer_item if kind == "trainer" else ""
 	_participants.clear()
 	_bind()
 
 
+## Reaponta oponentes: os mons do jogador miram o inimigo; o inimigo mira o controlado
+## (o selvagem reavalia sozinho entre os dois em BattleAI.pick_target).
 func _bind() -> void:
-	if is_instance_valid(player) and is_instance_valid(enemy):
-		player.opponent = enemy
-		enemy.opponent = player
-		if player.alive() and enemy.alive():
-			_participants[player.mon.get_instance_id()] = player.mon
+	if not is_instance_valid(enemy):
+		return
+	for f in [player, ally]:
+		if is_instance_valid(f) and f.active():
+			f.opponent = enemy
+			if enemy.alive():
+				_participants[f.mon.get_instance_id()] = f.mon
+	var cur := enemy.opponent
+	if kind != "wild" or not (is_instance_valid(cur) and cur.active() and cur.side == 0):
+		enemy.opponent = player if is_instance_valid(player) and player.active() else ally
 
 
 func targets_of(user: BattleFighter) -> Array:
@@ -224,7 +279,7 @@ func step(dt: float) -> void:
 	if state == "idle" or state == "done":
 		return
 	var raw := dt
-	dt *= fight_speed
+	dt *= fight_speed * (MODAL_SLOW if menu != "" else 1.0)
 	_state_t += dt
 	_tick_fx(raw)
 	match state:
@@ -243,7 +298,8 @@ func step(dt: float) -> void:
 	if not manual:
 		_camera_input(raw)
 	_update_camera(raw)
-	hud.refresh(player, enemy, raw)
+	hud.refresh(player, enemy, raw, ally, {"ally_mode": ALLY_MODE_NAMES[ally_mode], "item_cd": item_cd,
+		"menu": _menu_text() if menu != "" else ""})
 
 
 func _fight_step(dt: float) -> void:
@@ -258,6 +314,8 @@ func _fight_step(dt: float) -> void:
 	if state != "fight":
 		return
 	_swap_cd = maxf(_swap_cd - dt, 0.0)
+	item_cd = maxf(item_cd - dt, 0.0)
+	_support_heal()
 	for f in fighters:
 		if f.on_field:
 			f.tick(dt)
@@ -285,23 +343,43 @@ func _fight_step(dt: float) -> void:
 
 
 func _separate() -> void:
-	if not (is_instance_valid(player) and is_instance_valid(enemy) and player.active() and enemy.active()):
-		return
-	if player.dash_t > 0.0 or enemy.dash_t > 0.0 or player.is_airborne() or enemy.is_airborne():
-		return
-	var d := enemy.position - player.position
-	d.y = 0.0
-	var min_d := 0.8
-	if d.length() < min_d:
-		var n := d.normalized() if d.length() > 0.001 else Vector3.FORWARD
-		var push := (min_d - d.length()) * 0.5
-		player.position -= n * push
-		enemy.position += n * push
+	var live: Array = fighters.filter(func(f): return f.active() and f.dash_t <= 0.0 and not f.is_airborne())
+	for i in live.size():
+		for j in range(i + 1, live.size()):
+			var a: BattleFighter = live[i]
+			var b: BattleFighter = live[j]
+			var d := b.position - a.position
+			d.y = 0.0
+			var min_d := 0.8
+			if d.length() < min_d:
+				var n := d.normalized() if d.length() > 0.001 else Vector3.FORWARD
+				var push := (min_d - d.length()) * 0.5
+				a.position -= n * push
+				b.position += n * push
+
+
+## `ally_mode` (F) vem do núcleo; sem a ação, lê a tecla F direto.
+func _ally_mode_pressed() -> bool:
+	if InputMap.has_action("ally_mode"):
+		return Input.is_action_just_pressed("ally_mode")
+	var down := Input.is_physical_key_pressed(KEY_F)
+	var hit := down and not _f_was_down
+	_f_was_down = down
+	return hit
 
 
 func _player_input(f: BattleFighter) -> Vector3:
 	if manual:
 		return Vector3.ZERO
+	if menu != "":
+		f.sprinting = false
+		_menu_input()
+		return Vector3.ZERO
+	if Input.is_action_just_pressed("interact"):
+		open_menu("bag")
+		return Vector3.ZERO
+	if _ally_mode_pressed():
+		cycle_ally_mode()
 	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if Input.is_action_just_pressed("jump"):
 		f.start_jump()
@@ -323,21 +401,267 @@ func _player_input(f: BattleFighter) -> Vector3:
 
 # --- Ações do jogador ---
 
+## Tab: com aliado em campo troca qual dos dois o jogador controla (instantâneo);
+## sem aliado, recolhe o controlado e manda o próximo mon saudável da party.
 func swap() -> bool:
-	if state != "fight" or _swap_cd > 0.0 or not is_instance_valid(player) or not player.alive():
+	if is_instance_valid(ally) and ally.active():
+		return swap_control()
+	if not is_instance_valid(player):
 		return false
-	if player.dash_t > 0.0 or player.lunge_t > 0.0 or player.root_t > 0.0:
+	var nxt := _next_healthy(int(player.get_meta("party_index", 0)))
+	return nxt >= 0 and send_in(nxt)
+
+
+func swap_control() -> bool:
+	if state != "fight" or _swap_cd > 0.0 or not is_instance_valid(player) or not player.active() \
+			or not is_instance_valid(ally) or not ally.active():
 		return false
-	var cur := int(player.get_meta("party_index", 0))
-	var nxt := _next_healthy(cur)
-	if nxt < 0 or nxt == cur:
+	var old := player
+	player = ally
+	ally = old
+	for f in [player, ally]:
+		f.sprinting = false
+		f.velocity = Vector3.ZERO
+	player.controller = _player_ctrl()
+	ally.controller = "ai"
+	ally.ai.think = maxf(ally.ai.think, 0.3)
+	_swap_cd = CONTROL_SWAP_CD
+	player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	return true
+
+
+## Manda o mon `i` da party para campo. as_ally = no lugar do aliado (só selvagem 2x1);
+## senão substitui o controlado. Respeita o cooldown de troca.
+func send_in(i: int, as_ally := false) -> bool:
+	if state != "fight" or _swap_cd > 0.0 or i < 0 or i >= party.size():
 		return false
-	var at := player.position
-	at.y = 0.0
-	_recall(player)
-	_send_player(nxt, at)
+	var m: Mon = party[i]
+	if m.is_fainted() or _field_mons().has(m):
+		return false
+	if as_ally:
+		if _battle_size < 2 or not is_instance_valid(player) or not player.active():
+			return false
+		var at := player.position + Vector3(1.6, 0, 0.4)
+		if is_instance_valid(ally) and ally.active():
+			at = ally.position
+			_recall(ally)
+		at.y = 0.0
+		_send_ally(i, at)
+	else:
+		if not is_instance_valid(player) or not player.alive():
+			return false
+		if player.dash_t > 0.0 or player.lunge_t > 0.0 or player.root_t > 0.0:
+			return false
+		var at := player.position
+		at.y = 0.0
+		_recall(player)
+		_send_player(i, at)
 	_swap_cd = SWAP_CD
 	return true
+
+
+func cycle_ally_mode() -> int:
+	ally_mode = (ally_mode + 1) % ALLY_MODE_NAMES.size()
+	if is_instance_valid(ally) and ally.active():
+		ally.popup(ALLY_MODE_NAMES[ally_mode], ALLY_MODE_COLORS[ally_mode], 1.0, 0.9)
+	hud.banner("Ally mode: %s" % ALLY_MODE_NAMES[ally_mode], 1.0)
+	return ally_mode
+
+
+# --- Itens na batalha ---
+
+## Itens de batalha (remédios e frutas com efeito de HP/cura/revive) que existem na bolsa.
+func battle_items() -> Array:
+	var g := _game()
+	var out: Array = []
+	if g == null:
+		return out
+	var ids: Array = g.bag.keys()
+	ids.sort()
+	for id in ids:
+		var it := Dex.item(String(id))
+		var fx: Dictionary = it.get("effect", {})
+		if int(g.bag[id]) > 0 and String(it.get("category", "")) in BATTLE_ITEM_CATEGORIES \
+				and (fx.has("hp") or fx.has("cure") or fx.has("revive")):
+			out.append(String(id))
+	return out
+
+
+## Lutador vivo em campo para este Mon (null se está na party ou desmaiado).
+func _active_fighter_of(m: Mon) -> BattleFighter:
+	for f in fighters:
+		if is_instance_valid(f) and f.mon == m and f.active():
+			return f
+	return null
+
+
+## Usa `id` da bolsa no mon `m` (padrão: o controlado). Custa o cooldown global de itens (3 s)
+## e trava os golpes do controlado por 1 GCD. Bloqueado com o controlado exausto (stagger).
+func use_item(id: String, m: Mon = null) -> bool:
+	if state != "fight" or not is_instance_valid(player):
+		return false
+	if m == null:
+		m = player.mon
+	var g := _game()
+	if g == null or int(g.bag.get(id, 0)) <= 0:
+		hud.banner("You don't have any %s left!" % Dex.item(id).get("name", id), 1.2)
+		return false
+	if item_cd > 0.0:
+		return false
+	if player.stagger_t > 0.0:
+		hud.banner("Too exhausted to use an item!", 1.2)
+		return false
+	var f := _active_fighter_of(m)
+	var fx: Dictionary = Dex.item(id).get("effect", {})
+	var text := ""
+	var before := m.hp
+	if f and String(fx.get("cure", "")) == "confusion" and f.confusion_t > 0.0:
+		f.confusion_t = 0.0  # confusão só existe na luta: o núcleo não a vê no Mon
+		g.take_item(id)
+		text = "%s snapped out of confusion!" % m.display_name
+	else:
+		if f:
+			m.hp = f.hp
+		text = g.use_item(id, m)
+		if text == "":
+			hud.banner("It won't have any effect.", 1.2)
+			return false
+		if f:
+			f.sync_after_item()
+	item_cd = ITEM_CD
+	player.gcd_t = maxf(player.gcd_t, Dex.GLOBAL_COOLDOWN)
+	close_menu()
+	hud.banner("Used %s! %s" % [Dex.item(id).get("name", id), text], 1.8)
+	if f:
+		if m.hp > before:
+			f.popup("+%d HP" % (m.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
+		fx_disc(f.position, 0.9, Color(0.6, 1.0, 0.65), 0.5)
+	return true
+
+
+## Melhor item de HP da bolsa para `missing` de HP (o menor que cobre tudo; senão o maior).
+func best_heal_item(missing: int) -> String:
+	var g := _game()
+	if g == null:
+		return ""
+	var best := ""
+	var best_amt := 0
+	for id in g.bag:
+		if int(g.bag[id]) <= 0:
+			continue
+		var e: Dictionary = Dex.item(String(id)).get("effect", {})
+		if not e.has("hp"):
+			continue
+		var amt: int = 9999 if str(e.hp) == "full" else int(e.hp)
+		if best == "" or (amt >= missing and (best_amt < missing or amt < best_amt)) or (best_amt < missing and amt > best_amt):
+			best = String(id)
+			best_amt = amt
+	return best
+
+
+## SUPPORT: o aliado usa o melhor item de cura no controlado quando ele cai abaixo de 50% de HP.
+func _support_heal() -> void:
+	if ally_mode != BattleAI.SUPPORT or item_cd > 0.0:
+		return
+	if not (is_instance_valid(ally) and ally.active() and ally.can_act() and is_instance_valid(player) and player.active()):
+		return
+	if float(player.hp) / maxf(player.max_hp, 1) >= SUPPORT_HEAL_AT:
+		return
+	var id := best_heal_item(player.max_hp - player.hp)
+	if id == "":
+		return
+	var before := player.hp
+	player.mon.hp = player.hp
+	var text: String = _game().use_item(id, player.mon)
+	if text == "":
+		return
+	player.sync_after_item()
+	item_cd = ITEM_CD
+	hud.banner("%s used a %s! %s" % [ally.mon.display_name, Dex.item(id).get("name", id), text], 1.8)
+	player.popup("+%d HP" % (player.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
+	fx_disc(player.position, 0.9, Color(0.6, 1.0, 0.65), 0.5)
+
+
+func item_used_by_trainer(f: BattleFighter, item_name: String) -> void:
+	hud.banner("The trainer used a %s on %s!" % [item_name, f.mon.display_name], 1.4)
+
+
+# --- Menu rápido (bolsa / party) ---
+
+func open_menu(page: String) -> void:
+	if state != "fight":
+		return
+	menu = page
+	menu_sel = 0
+	menu_target = int(player.get_meta("party_index", 0)) if is_instance_valid(player) else 0
+
+
+func close_menu() -> void:
+	menu = ""
+
+
+func _menu_input() -> void:
+	if Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("pause"):
+		close_menu()
+		return
+	if Input.is_action_just_pressed("swap_mon"):
+		open_menu("party" if menu == "bag" else "bag")
+		return
+	var n := battle_items().size() if menu == "bag" else party.size()
+	if Input.is_action_just_pressed("move_forward"):
+		menu_sel = wrapi(menu_sel - 1, 0, maxi(n, 1))
+	if Input.is_action_just_pressed("move_back"):
+		menu_sel = wrapi(menu_sel + 1, 0, maxi(n, 1))
+	if menu == "bag":
+		if Input.is_action_just_pressed("move_left"):
+			menu_target = wrapi(menu_target - 1, 0, maxi(party.size(), 1))
+		if Input.is_action_just_pressed("move_right"):
+			menu_target = wrapi(menu_target + 1, 0, maxi(party.size(), 1))
+		var items := battle_items()
+		for k in mini(items.size(), 4):
+			if Input.is_action_just_pressed("move_%d" % (k + 1)):
+				use_item(items[k], party[menu_target])
+				return
+		if Input.is_action_just_pressed("jump") and menu_sel < items.size():
+			use_item(items[menu_sel], party[menu_target])
+	else:
+		if Input.is_action_just_pressed("jump") and send_in(menu_sel):
+			close_menu()
+		elif _ally_mode_pressed() and send_in(menu_sel, true):
+			close_menu()
+
+
+func _menu_text() -> String:
+	var g := _game()
+	var lines: Array = []
+	if menu == "bag":
+		var items := battle_items()
+		menu_sel = clampi(menu_sel, 0, maxi(items.size() - 1, 0))
+		var tgt: Mon = party[clampi(menu_target, 0, party.size() - 1)]
+		lines.append("BAG   (Tab: party)   target < %s %d/%d >" % [tgt.display_name, tgt.hp, tgt.max_hp])
+		if items.is_empty():
+			lines.append("  (no battle items)")
+		for k in items.size():
+			var id: String = items[k]
+			lines.append("%s %s%s x%d" % [">" if k == menu_sel else " ", ("%d " % (k + 1)) if k < 4 else "  ",
+				Dex.item(id).get("name", id), int(g.bag[id])])
+		lines.append("W/S select  A/D target  Space/1-4 use  E close")
+		if item_cd > 0.0:
+			lines.append("Item cooldown %.1fs" % item_cd)
+	else:
+		lines.append("PARTY   (Tab: bag)")
+		for k in party.size():
+			var m: Mon = party[k]
+			var tag := ""
+			if is_instance_valid(player) and player.mon == m and player.active():
+				tag = " [control]"
+			elif is_instance_valid(ally) and ally.mon == m and ally.active():
+				tag = " [ally]"
+			elif m.is_fainted():
+				tag = " [fainted]"
+			lines.append("%s %s Lv%d %d/%d%s" % [">" if k == menu_sel else " ", m.display_name, m.level, m.hp, m.max_hp, tag])
+		lines.append("W/S select  Space send in" + ("  F send as ally" if _battle_size >= 2 else "") + "  E close")
+	return "\n".join(lines)
 
 
 ## Tira o lutador de campo (fica escondido até a arena ser liberada; callbacks pendentes seguem válidos).
@@ -359,7 +683,11 @@ func run_away() -> bool:
 	return true
 
 
+## Estado do jogador (bolsa). opts.game permite injetar uma instância de core/game.gd nos testes.
 func _game() -> Node:
+	var g = opts.get("game")
+	if g is Node and is_instance_valid(g):
+		return g
 	return get_node_or_null("/root/Game") if is_inside_tree() else null
 
 
@@ -491,10 +819,7 @@ func _award_exp(defeated: Mon) -> void:
 
 
 func _fighter_of(m: Mon) -> BattleFighter:
-	for f in fighters:
-		if f.mon == m:
-			return f
-	return null
+	return _active_fighter_of(m)
 
 
 ## Depois de XP/EV o Mon recalcula stats; o lutador em campo acompanha.
@@ -508,6 +833,21 @@ func _sync_from_mon(f: BattleFighter) -> void:
 
 
 func _player_fainted(f: BattleFighter) -> void:
+	if f == ally or (f == player and is_instance_valid(ally) and ally.active()):
+		# Ainda sobra um mon em campo: se era o controlado, o controle passa para o aliado. Ninguém novo entra.
+		if f == player:
+			player = ally
+			player.controller = _player_ctrl()
+			player.sprinting = false
+			player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+		ally = null
+		if menu != "" and not is_instance_valid(player):
+			close_menu()
+		_bind()
+		later(FAINT_CLEAR, func() -> void:
+			if is_instance_valid(f) and fighters.has(f):
+				_recall(f))
+		return
 	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
 	if nxt < 0:
 		hud.banner("You have no more Pokémon that can fight!", 2.0)

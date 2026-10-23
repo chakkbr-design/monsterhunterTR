@@ -98,3 +98,4 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 
 - `data/maps/*.json` (geometria das rotas do original) e `data/world.json` (zonas). Esquema documentado em
   `pba-referencia/analise/03-arquitetura-mundo.md`.
+- Rodada 2 da arena (pronto): bolsa rápida na batalha (E), item de treinador (campo `item` do trainers.json ou `opts.trainer_item`), 2x1 com aliado em batalha selvagem (Tab troca o controle, F muda o modo ATAQUE/DEFESA/SUPORTE). Opts novos: `battle_size` (1 desliga o aliado), `trainer_item`, `game` (injeção em testes).

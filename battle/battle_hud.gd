@@ -3,10 +3,13 @@ extends CanvasLayer
 ## HUD placeholder: barras de HP e PP de 3 camadas (pool base, PP restante, stamina), golpes com cooldown e banner.
 
 const BAR_W := 260.0
-const HELP := "WASD move  Shift sprint  Space jump  1-4 moves  Tab swap  Q ball  R run  Z/C camera"
+const HELP := "WASD move  Shift sprint  Space jump  1-4 moves  E bag  Tab swap  F ally mode  Q ball  R run  Z/C camera"
 
 var _player := {}
 var _enemy := {}
+var _ally := {}
+var _menu: Label
+var _menu_bg: PanelContainer
 var _moves: Array = []
 var _banner: Label
 var _banner_t := 0.0
@@ -60,6 +63,20 @@ func _init() -> void:
 	_help.modulate = Color(1, 1, 1, 0.75)
 	_help.text = HELP
 	add_child(_help)
+	_ally = _panel(Vector2(16, 112), false)
+	_menu_bg = PanelContainer.new()
+	_menu_bg.offset_left = 16
+	_menu_bg.offset_top = 190
+	var msb := StyleBoxFlat.new()
+	msb.bg_color = Color(0, 0, 0, 0.7)
+	msb.set_corner_radius_all(6)
+	msb.set_content_margin_all(10)
+	_menu_bg.add_theme_stylebox_override("panel", msb)
+	_menu = Label.new()
+	_menu.add_theme_font_size_override("font_size", 15)
+	_menu_bg.add_child(_menu)
+	_menu_bg.visible = false
+	add_child(_menu_bg)
 
 
 func _rect(parent: Control, pos: Vector2, size: Vector2, col: Color) -> ColorRect:
@@ -104,12 +121,22 @@ func banner(text: String, secs := 1.6) -> void:
 	_banner.modulate.a = 1.0
 
 
-func refresh(player: BattleFighter, enemy: BattleFighter, dt: float) -> void:
+## info: {ally_mode: String, item_cd: float, menu: String (texto do menu rápido, "" = fechado)}.
+func refresh(player: BattleFighter, enemy: BattleFighter, dt: float, ally: BattleFighter = null, info := {}) -> void:
 	if _banner_t > 0.0:
 		_banner_t -= dt
 		_banner.modulate.a = clampf(_banner_t / 0.4, 0.0, 1.0)
 	_fill(_player, player)
 	_fill(_enemy, enemy)
+	var has_ally := is_instance_valid(ally) and ally.active()
+	_fill(_ally, ally if has_ally else null)
+	if has_ally:
+		_ally.name.text += "  [%s]" % info.get("ally_mode", "")
+	var icd := float(info.get("item_cd", 0.0))
+	_help.text = HELP + ("   item %.1fs" % icd if icd > 0.0 else "")
+	var mt := String(info.get("menu", ""))
+	_menu_bg.visible = mt != ""
+	_menu.text = mt
 	for i in 4:
 		var slot: Dictionary = _moves[i]
 		var has := is_instance_valid(player) and i < player.moves.size()

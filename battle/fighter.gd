@@ -42,6 +42,8 @@ var ai: BattleAI
 var opponent: BattleFighter
 var last_hit_by: BattleFighter
 var on_field := true
+var trainer_item := ""
+var item_used := false
 
 var moves: Array = []
 var types: Array = []
@@ -676,8 +678,18 @@ func _check_lunge_hit() -> void:
 		popup("Recoil", Color(0.9, 0.6, 0.6), 0.8)
 
 
+## Depois de um item aplicado ao Mon: copia HP e status persistente de volta para o lutador.
+func sync_after_item() -> void:
+	hp = clampi(mon.hp, 0, max_hp)
+	if mon.status == "" and status in Mon.PERSIST_STATUS:
+		clear_status()
+	refresh_label()
+
+
 ## Zera estágios e efeitos temporários e grava HP/PP/status persistentes no Mon.
 func write_back() -> void:
+	if not alive() and mon.hp > 0:
+		return  # desmaiou em campo e foi revivido por item depois: não desfaz o Revive
 	mon.hp = hp
 	mon.pp = pp_max
 	mon.status = status if status in Mon.PERSIST_STATUS else ""

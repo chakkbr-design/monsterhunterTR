@@ -17,5 +17,21 @@ Nada aqui bloqueia a arena: ela já contorna localmente. São ajustes de contrat
    A arena só usa `trainer_id` para ler `ai_think_scale`.
 5. **Prêmio em dinheiro de treinador** não é pago pela arena (o contrato não pede). Sugestão: o `Game._on_arena_finished` paga
    `reward` do trainers.json quando `outcome == "win"` e `opts.kind == "trainer"` (precisaria guardar o `trainer_id` do pedido).
-6. **Itens na batalha** (poção/cura rápida, item de treinador usado pela IA): fora do MVP. Quando existir uma API
-   `Items.use(id, mon)` estável, a arena pode chamar e ressincronizar o lutador. Hoje a arena só consome bolas com `Game.take_item`.
+6. ~~Itens na batalha~~ **feito (rodada 2)**: bolsa rápida (E) chama `Game.use_item(id, mon)` e ressincroniza o lutador;
+   item do treinador usado pela IA uma vez com HP <= 35%. Pode tirar "itens durante a batalha" dos pendentes do CONTRATO.
+
+## Rodada 2 (itens + 2x1)
+
+7. **Atualizar o CONTRATO.md**: "itens durante a batalha" e "batalha 2x1 com aliado" estão prontos. Novos `opts` lidos só pela arena:
+   - `battle_size: int` (padrão 2 em selvagem; 1 força 1x1; treinador é sempre 1x1).
+   - `trainer_item: String` (sobrepõe o `item` do trainers.json; usado nos testes).
+   - `game: Node` (instância de `core/game.gd` para a bolsa nos testes headless; sem isso usa `/root/Game`).
+8. **`item` no trainers.json**: nenhum treinador tem o campo hoje (o `_doc` também não o lista). A arena já lê
+   `Dex.trainer(id).item` (ex.: `"item": "super_potion"` para líderes). Pedido: adicionar o campo onde fizer sentido e documentar no `_doc`.
+9. **Ação `ally_mode` (F)**: o CONTRATO já lista e `core/controls.gd` já registra. A arena mantém o fallback
+   (`InputMap.has_action("ally_mode")` senão lê `KEY_F`), então nada a fazer.
+10. **Texto de `Game.use_item`/`Items.use`** vem em português; os banners da arena estão em inglês. Sem bloqueio:
+    se o Núcleo padronizar o idioma, a arena só repassa o texto.
+11. **Ether / itens de PP**: `Items.can_use` não trata efeito de PP, então a bolsa rápida só lista itens com `hp`, `cure` ou `revive`.
+    Se o Núcleo suportar PP (`mon.pp = pp_base`), a arena precisa só ressincronizar `pp_max` (avisar).
+12. **Confusão** só existe dentro da luta: a Persim Berry é tratada localmente pela arena (zera a confusão e chama `Game.take_item`).

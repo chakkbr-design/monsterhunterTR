@@ -36,8 +36,17 @@ const SLOP_KNEE_VALUE := 0.8
 const KIT_LOW_HP := 0.5
 const KIT_STAT_DEPTH := 2
 const KIT_STAT_SLOP := 0.4
+const TRAINER_ITEM_HP := 0.35
+const TARGET_FINISH_HP := 0.35
+const TARGET_STICKY := 0.5
+const GUARD_DIST := 1.5
+const ATTACK_THINK := 0.75
+const DEFEND_BUFF_CHANCE := 0.5
+## Modos do aliado (iguais aos da arena).
+enum { ATTACK, DEFEND, SUPPORT }
 
 var f: BattleFighter
+var retarget_t := 0.0
 var think_scale := 1.0
 var think := 0.0
 var recover_t := 0.0
@@ -134,8 +143,14 @@ func move_ready(d: float) -> bool:
 ## Um passo de IA: devolve a direção desejada e ajusta f.sprinting; pode disparar golpes.
 func step(dt: float) -> Vector3:
 	f.sprinting = false
+	if f.side == 1 and f.arena.kind == "wild":
+		pick_target(dt)
 	var opp := f.opponent
 	if not is_instance_valid(opp) or not opp.active():
+		return Vector3.ZERO
+	if want_trainer_item():
+		use_trainer_item()
+		recover_t = RECOVER
 		return Vector3.ZERO
 	if recover_t > 0.0:
 		recover_t -= dt
@@ -156,13 +171,20 @@ func step(dt: float) -> Vector3:
 		if fire and f.can_act():
 			tactic_on = _tactic_ok()
 			var used := _use_best_move(d)
-			think = (_rng().randf_range(THINK_MIN, THINK_MAX) if used else THINK_RETRY) * think_scale
+			think = (_rng().randf_range(THINK_MIN, THINK_MAX) if used else THINK_RETRY) * think_scale \
+					* (ATTACK_THINK if ally_mode() == ATTACK else 1.0)
 	if f.out_of_pp() and d > 1.4:
 		return dir
+	if ally_mode() == DEFEND:
+		var guard := guard_steer()
+		if guard != Vector3.INF:
+			return guard
 	if _rng().randf() < 0.002:
 		strafe *= -1.0
 	var side_v := Vector3(-dir.z, 0.0, dir.x) * strafe
 	var b := band()
+	if ally_mode() == SUPPORT:
+		b = Vector2(b.y * 0.9, b.y * 1.25)
 	var r := reach()
 	var low := float(f.hp) <= float(f.max_hp) * LOW_HP
 	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low else b
@@ -195,6 +217,108 @@ func step(dt: float) -> Vector3:
 		return want
 	f.sprinting = _sprint(dt, reason) and f.can_sprint(want.length() > 0.1)
 	return want
+
+
+## Modo do aliado (ATTACK/DEFEND/SUPPORT) se este lutador é o aliado IA do jogador; senão -1.
+func ally_mode() -> int:
+	if f.side != 0 or f.arena == null or f.arena.get("ally") != f:
+		return -1
+	return int(f.arena.ally_mode)
+
+
+func is_support_move(id: String) -> bool:
+	var mv := Dex.move(id)
+	return mv.get("category", "") == "status" or mv.get("effect") is Dictionary
+
+
+func _stat_move_maxed(id: String) -> bool:
+	var mv := Dex.move(id)
+	match String(mv.get("kind", "")):
+		"self_buff":
+			return int(f.stages.get(String(mv.get("stat", "")), 0)) >= 6
+		"debuff_aoe":
+			return is_instance_valid(f.opponent) and int(f.opponent.stages.get(String(mv.get("stat", "")), 0)) <= -6
+	return false
+
+
+## DEFEND: ponto entre o líder (mon controlado) e o inimigo, a até 1,5 m do líder. INF = sem líder.
+func guard_spot() -> Vector3:
+	var lead: BattleFighter = f.arena.get("player")
+	if not is_instance_valid(lead) or lead == f or not lead.active() or not is_instance_valid(f.opponent):
+		return Vector3.INF
+	var to_f := lead.flat_to(f.opponent)
+	return lead.pos2(lead.position) + to_f.normalized() * minf(GUARD_DIST, to_f.length() * 0.5)
+
+
+func guard_steer() -> Vector3:
+	var spot := guard_spot()
+	if spot == Vector3.INF:
+		return Vector3.INF
+	var v := spot - f.pos2(f.position)
+	if v.length() < 0.4:
+		return Vector3.ZERO
+	return v.normalized() * minf(1.0, v.length())
+
+
+## Selvagem em 2x1: reavalia o alvo a cada 2-4 s (distância, último a acertar, HP baixo, alvo atual, tanque DEFEND).
+func pick_target(dt: float) -> void:
+	var cands: Array = f.arena.targets_of(f)
+	var cur := f.opponent
+	var cur_ok := is_instance_valid(cur) and cur.active()
+	retarget_t -= dt
+	if cands.size() <= 1:
+		if not cur_ok and cands.size() == 1:
+			f.opponent = cands[0]
+		return
+	if cur_ok and retarget_t > 0.0:
+		return
+	var rng := _rng()
+	retarget_t = rng.randf_range(2.0, 4.0)
+	var best: BattleFighter = null
+	var best_w := -INF
+	for t in cands:
+		var w := 2.0 / maxf(f.flat_to(t).length(), 1.0)
+		if t == f.last_hit_by:
+			w += 1.5
+		if float(t.hp) / maxf(t.max_hp, 1) <= TARGET_FINISH_HP:
+			w += 1.0
+		if t == cur:
+			w += TARGET_STICKY
+		if t == f.arena.get("ally") and int(f.arena.ally_mode) == DEFEND:
+			w += 2.0
+		w += rng.randf() * 0.2
+		if w > best_w:
+			best_w = w
+			best = t
+	if best:
+		f.opponent = best
+
+
+## Mon de treinador: usa o item do treinador uma vez (HP <= 35% para cura de HP, ou status que o item cura).
+func want_trainer_item() -> bool:
+	if f.trainer_item == "" or f.item_used or not f.alive():
+		return false
+	var e: Dictionary = Dex.item(f.trainer_item).get("effect", {})
+	if e.has("hp"):
+		return float(f.hp) / maxf(f.max_hp, 1) <= TRAINER_ITEM_HP
+	if e.has("cure"):
+		return f.status != "" and (String(e.cure) == "all" or f.status == String(e.cure))
+	return false
+
+
+func use_trainer_item() -> void:
+	f.item_used = true
+	var it := Dex.item(f.trainer_item)
+	var e: Dictionary = it.get("effect", {})
+	if e.has("hp"):
+		var amount: int = f.max_hp if str(e.hp) == "full" else int(e.hp)
+		var before := f.hp
+		f.heal(mini(amount, f.max_hp - f.hp))
+		f.popup("+%d HP" % (f.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
+	elif e.has("cure"):
+		f.clear_status()
+	if f.arena.has_method("item_used_by_trainer"):
+		f.arena.item_used_by_trainer(f, String(it.get("name", f.trainer_item)))
 
 
 func _punish(d: float) -> bool:
@@ -243,6 +367,22 @@ func _has_connecting_move() -> bool:
 
 
 func pick(avail: Array) -> String:
+	var mode := ally_mode()
+	if mode >= 0:
+		var useful: Array = avail.filter(func(id): return not _stat_move_maxed(id))
+		if not useful.is_empty():
+			avail = useful
+	var pref: Array = []
+	match mode:
+		ATTACK:
+			pref = avail.filter(func(id): return float(Dex.move(id).get("power", 0)) > 0.0)
+		DEFEND:
+			if _rng().randf() < DEFEND_BUFF_CHANCE:
+				pref = avail.filter(func(id): return Dex.move(id).get("kind", "") == "self_buff")
+		SUPPORT:
+			pref = avail.filter(func(id): return is_support_move(id))
+	if not pref.is_empty():
+		avail = pref
 	var dmg := {}
 	for id in avail:
 		if float(Dex.move(id).get("power", 0)) > 0.0:
