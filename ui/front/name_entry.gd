@@ -111,6 +111,7 @@ func handle(ev: InputEvent) -> bool:
 
 
 func move(dx: int, dy: int) -> void:
+	preload("res://audio/cue.gd").sfx("ui_move")
 	if dy != 0:
 		var old: int = ROWS[row].size()
 		row = posmod(row + dy, ROWS.size())
@@ -126,6 +127,7 @@ func current_key() -> String:
 
 
 func activate() -> void:
+	preload("res://audio/cue.gd").sfx("ui_confirm")
 	var k := current_key()
 	match k:
 		"Aa":
@@ -162,6 +164,7 @@ func type_char(ch: String) -> bool:
 
 
 func erase() -> void:
+	preload("res://audio/cue.gd").sfx("ui_back")
 	if value != "":
 		value = value.left(value.length() - 1)
 		_auto_caps()

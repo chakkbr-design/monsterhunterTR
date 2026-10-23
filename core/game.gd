@@ -65,6 +65,11 @@ var _opts := {}
 var _enemies: Array = []
 
 
+## Tipo da batalha em andamento ("wild", "trainer" ou "").
+func battle_kind() -> String:
+	return String(_opts.get("kind", ""))
+
+
 func is_busy() -> bool:
 	return _arena != null
 

@@ -93,6 +93,7 @@ func _input(ev: InputEvent) -> void:
 func press(a: String) -> void:
 	if screen == "" or _learn_open():
 		return
+	preload("res://audio/cue.gd").ui(a)
 	match screen:
 		"main":
 			_main_cur = _step(_main_cur, a, ENTRIES.size())

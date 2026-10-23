@@ -506,6 +506,7 @@ func _faint() -> void:
 	root_t = 0.0
 	sprinting = false
 	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
+	preload("res://audio/cue.gd").sfx("faint")
 	if _body:
 		var cap := _body.mesh as CapsuleMesh
 		_body.rotation.x = PI / 2.0

@@ -532,6 +532,7 @@ func use_item(id: String, m: Mon = null) -> bool:
 	player.gcd_t = maxf(player.gcd_t, Dex.GLOBAL_COOLDOWN)
 	close_menu()
 	hud.banner("Usou %s! %s" % [Dex.item(id).get("name", id), text], 1.8)
+	preload("res://audio/cue.gd").sfx("heal")
 	if f:
 		if m.hp > before:
 			f.popup("+%d HP" % (m.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
@@ -679,6 +680,7 @@ func run_away() -> bool:
 		hud.banner("Não! Não dá para fugir de batalha de treinador!" if kind != "wild" else "Não dá para fugir!")
 		return false
 	hud.banner("Fugiu em segurança!", 1.0)
+	preload("res://audio/cue.gd").sfx("run_away")
 	_end("run", 0.6)
 	return true
 
@@ -732,6 +734,7 @@ func throw_ball() -> bool:
 	_capture = {"ball": ball, "id": ball_id, "res": res, "from": from,
 		"to": enemy.position + Vector3(0, 0.16, 0), "shown": mini(int(res.shakes), 3)}
 	hud.banner("Vai, %s!" % Dex.item(ball_id).get("name", "Ball"), 0.8)
+	preload("res://audio/cue.gd").sfx("ball_throw")
 	state = "capture"
 	_state_t = 0.0
 	return true
@@ -750,17 +753,20 @@ func _capture_step(_dt: float) -> void:
 	var shown: int = _capture.shown
 	if shake_t < shown * BALL_SHAKE:
 		var ph := fmod(shake_t, BALL_SHAKE) / BALL_SHAKE
+		if ph * BALL_SHAKE < _dt: preload("res://audio/cue.gd").sfx("ball_shake")
 		ball.rotation.z = sin(ph * TAU) * 0.45 if ph < 0.5 else 0.0
 		return
 	ball.rotation.z = 0.0
 	if _capture.res.caught:
 		enemy.mon.ball = _capture.id
 		hud.banner("Peguei! %s foi capturado!" % enemy.mon.display_name, 2.0)
+		preload("res://audio/cue.gd").sfx("catch_ok")
 		_end("caught", 1.6, {"caught_mon": enemy.mon})
 		return
 	ball.queue_free()
 	enemy.visible = true
 	hud.banner(Capture.fail_line(int(_capture.res.shakes)), 1.4)
+	preload("res://audio/cue.gd").sfx("catch_fail")
 	_capture = {}
 	state = "fight"
 	_state_t = 0.0
@@ -813,6 +819,7 @@ func _award_exp(defeated: Mon) -> void:
 			for e in events:
 				if e.type == "level":
 					f.popup("Subiu para o Nv %d!" % e.level, Color(1, 1, 0.5), 1.2, 1.3)
+					preload("res://audio/cue.gd").sfx("level_up")
 				elif e.type == "move" and e.learned:
 					f.popup("Aprendeu %s!" % Dex.move(e.move).get("name", e.move), Color(0.7, 0.9, 1.0), 1.0, 1.5)
 			_sync_from_mon(f)

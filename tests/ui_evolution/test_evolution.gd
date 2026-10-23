@@ -45,6 +45,11 @@ func finish_anim() -> void:
 func _run() -> void:
 	game = load("res://core/game.gd").new()
 	game.save_path = "user://test_save_evo.json"
+	# O autoload Evolution usa o Game de verdade; o teste troca por uma instância com Game injetado.
+	var auto := root.get_node_or_null("Evolution")
+	if auto:
+		root.remove_child(auto)
+		auto.free()
 	evo = load("res://ui/evolution/evolution_ui.gd").new()
 	evo.game = game
 	evo.name = "Evolution"

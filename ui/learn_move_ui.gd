@@ -47,10 +47,16 @@ func _process(_dt: float) -> void:
 
 
 func _try_open() -> void:
-	if state != "" or game == null or game.pending_learns.is_empty() or game.is_busy():
+	if state != "" or game == null or game.pending_learns.is_empty() or game.is_busy() or _evolving():
 		return
 	_root.visible = true
 	_begin()
+
+
+## Espera a tela de evolução (autoload Evolution) terminar a fila antes de abrir.
+func _evolving() -> bool:
+	var evo := get_node_or_null("/root/Evolution")
+	return not game.pending_evolutions.is_empty() or (evo != null and evo.is_open())
 
 
 func _begin() -> void:
@@ -75,6 +81,7 @@ func _input(ev: InputEvent) -> void:
 
 ## Aplica uma ação de navegação ("up" "down" "left" "right" "ok" "back"). Usado pelo _input e pelos testes.
 func press(a: String) -> void:
+	preload("res://audio/cue.gd").ui(a)
 	match state:
 		"pick":
 			var n: int = _current().mon.moves.size() + 1

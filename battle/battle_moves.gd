@@ -248,6 +248,7 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 			user.heal(maxi(1, int(float(dmg) * float(mv.drain))))
 		var col := Color(1, 0.75, 0.15) if eff > 1.0 else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
 		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35)
+		preload("res://audio/cue.gd").sfx("crit" if res.crit else ("hit_super" if eff > 1.0 else ("hit_weak" if eff < 1.0 else "hit")))
 		if res.crit:
 			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6)
 		if eff > 1.0:

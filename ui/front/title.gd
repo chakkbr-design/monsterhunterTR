@@ -527,6 +527,7 @@ func _input(ev: InputEvent) -> void:
 
 ## Aplica uma ação ("up" "down" "left" "right" "ok" "back"). Usado pelo _input e pelos testes.
 func press(a: String) -> void:
+	preload("res://audio/cue.gd").ui(a)
 	match state:
 		"splash":
 			if a in ["ok", "back"]:

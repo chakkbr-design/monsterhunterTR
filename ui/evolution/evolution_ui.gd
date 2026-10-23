@@ -132,6 +132,7 @@ func _set_state(s: String, msg: String) -> void:
 			_hint.text = "E/Enter: continuar · Esc/Q: parar a evolução"
 		"anim":
 			_hint.text = "Esc/Q: parar a evolução"
+			preload("res://audio/cue.gd").sfx("evolution")
 		_:
 			_hint.text = "E/Enter: continuar"
 	_stage.queue_redraw()
@@ -185,6 +186,7 @@ func _input(ev: InputEvent) -> void:
 
 ## Aplica uma ação ("ok" "back"; setas são ignoradas). Usado pelo _input e pelos testes.
 func press(a: String) -> void:
+	preload("res://audio/cue.gd").ui(a)
 	match state:
 		"intro":
 			if a == "back":
@@ -204,6 +206,7 @@ func _complete() -> void:
 	game.resolve_evolution(mon, true)
 	into = mon.species
 	_set_state("done", "Parabéns! %s evoluiu para %s!" % [old_name, into])
+	preload("res://audio/cue.gd").sfx("item_get")
 	for i in 70:
 		var a := _rng.randf() * TAU
 		var sp := _rng.randf_range(120.0, 420.0)
