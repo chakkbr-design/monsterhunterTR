@@ -47,6 +47,7 @@ var _current := ""
 var _actors: Dictionary = {}  ## papel -> StoryNpc (salas)
 var _balls: Dictionary = {}  ## espécie -> StarterBall
 var _triggers: Array = []
+static var _trigger_cache: Dictionary = {}  ## zona -> entradas de triggers tratadas
 
 
 func is_running() -> bool:
@@ -97,6 +98,9 @@ func attach(w: Node3D) -> void:
 	if world == w:
 		return
 	world = w
+	# Uma cena presa no mundo anterior (já liberado) não pode travar o jogador no novo.
+	_running = 0
+	_current = ""
 	_triggers.clear()
 	_actors.clear()
 	_balls.clear()
@@ -105,9 +109,8 @@ func attach(w: Node3D) -> void:
 	if w.has_signal("location_changed"):
 		w.location_changed.connect(_on_location_changed)
 	for zone in (RouteWorld.ZONES if w is RouteWorld else []):
-		for e in MapBuilder.load_map(String(zone)).get("triggers", []):
-			if HANDLED_EVENTS.has(String(e.get("event", ""))):
-				_add_trigger(w, e)
+		for e in _zone_triggers(String(zone)):
+			_add_trigger(w, e)
 	if w is RouteWorld and RouteWorld.ZONES.has("pewter_city"):
 		_add_trigger(w, PEWTER_GUIDE_TRIGGER)
 	if w.has_method("set_interact_hook"):
@@ -144,6 +147,14 @@ func _clerk_hook(_npc: Node) -> bool:
 		await mart_parcel()
 		return true
 	return false
+
+
+## Gatilhos tratados de uma zona; o JSON do mapa (até 230 KB) é lido uma vez só por sessão.
+static func _zone_triggers(zone: String) -> Array:
+	if not _trigger_cache.has(zone):
+		_trigger_cache[zone] = MapBuilder.load_map(zone).get("triggers", []).filter(
+				func(e): return HANDLED_EVENTS.has(String(e.get("event", ""))))
+	return _trigger_cache[zone]
 
 
 func _add_trigger(w: Node3D, e: Dictionary) -> void:

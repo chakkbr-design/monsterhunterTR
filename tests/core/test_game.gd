@@ -57,6 +57,22 @@ func _initialize() -> void:
 	ev.add_exp(Growth.exp_for_level(ev.growth, 16) - ev.xp)
 	game.resolve_evolution(ev, false)
 	fails += int(ev.species != "Charmander" or ev.evolution_target() != "")
+	# Pedra com 4 golpes: o golpe da evolução vai para a fila, a Pokédex marca a evolução e o texto usa o nome antigo.
+	var c2 := Mon.create("clefairy", 20)
+	c2.moves = ["pound", "growl", "sing", "double_slap"]
+	game.pending_learns = []
+	game.add_item("moon_stone")
+	var stone_msg: String = game.use_item("moon_stone", c2)
+	fails += int(not stone_msg.begins_with("Clefairy") or not game.caught.has("Clefable") or game.pending_learns.size() != 1 or game.pending_learns[0].move != "minimize")
+	game.pending_learns = []
+	# Rare Candy até o nível de evolução: evolui na hora (sem a tela Evolution).
+	var rc := Mon.create("bulbasaur", 15)
+	game.party = [rc]
+	game.add_item("rare_candy")
+	game.use_item("rare_candy", rc)
+	fails += int(rc.level != 16 or rc.species != "Ivysaur")
+	game.new_game("A", "B")
+	fails += int(not game.pending_evolutions.is_empty() or not game.pending_learns.is_empty())
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)

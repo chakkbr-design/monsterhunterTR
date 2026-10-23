@@ -47,6 +47,7 @@ const EXIT_SIGN := ["ROTA 4 - CERULEAN", "A estrada para Cerulean ainda está em
 static var _floors: Dictionary = {}
 static var _events: Dictionary = {}
 static var _trainers: Dictionary = {}
+static var _rows: Dictionary = {}
 
 
 # --- data ----------------------------------------------------------------------------------------
@@ -70,8 +71,11 @@ static func events(floor_id: String) -> Dictionary:
 	return _events.get(floor_id, {})
 
 
+## Cached: is_rock() calls this for every tile it checks while a floor is built.
 static func rows(floor_id: String) -> PackedStringArray:
-	return PackedStringArray(floors().get(floor_id, {}).get("rows", []))
+	if not _rows.has(floor_id):
+		_rows[floor_id] = PackedStringArray(floors().get(floor_id, {}).get("rows", []))
+	return _rows[floor_id]
 
 
 static func room_id(floor_id: String) -> String:

@@ -106,6 +106,7 @@ func new_game(p_name: String, r_name: String, gender := "male") -> void:
 	seen = {}
 	caught = {}
 	pending_learns = []
+	pending_evolutions = []
 	last_save = {}
 	player_name = p_name if p_name != "" else "RED"
 	rival_name = r_name if r_name != "" else "BLUE"
@@ -210,8 +211,21 @@ func use_item(id: String, m: Mon) -> String:
 			if int(e[0]) > m.level and int(e[0]) <= m.level + int(fx.level):
 				wanted.append(e[1])
 	var msg := Items.use(id, m)
+	if fx.has("evolve") and msg != "":
+		# Pedra: Pokédex e golpes da evolução que não couberam (como resolve_evolution).
+		seen[m.species] = true
+		caught[m.species] = true
+		for e in Dex.species(m.species).get("learnset", []):
+			if int(e[0]) == m.level:
+				wanted.append(e[1])
+		wanted.append_array(Dex.species(m.species).get("evo_moves", []))
 	for mv in wanted:
 		queue_learn(m, mv)
+	# Rare Candy até o nível de evolução: evolui antes da fila de golpes (na batalha, o _finish cuida).
+	if fx.has("level") and msg != "" and not is_busy():
+		_evolve_pending()
+		if not pending_evolutions.is_empty():
+			evolution_requested.emit()
 	if not pending_learns.is_empty():
 		learn_requested.emit()
 	if Dex.item(id).get("category", "") != "tm":
@@ -246,6 +260,8 @@ func from_dict(d: Dictionary) -> void:
 	trainer_id = int(d.get("trainer_id", 0))
 	seen = {}
 	caught = {}
+	pending_learns = []
+	pending_evolutions = []
 	for sp in d.get("seen", []):
 		seen[sp] = true
 	for sp in d.get("caught", []):

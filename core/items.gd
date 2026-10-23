@@ -47,8 +47,9 @@ static func use(id: String, m: Mon) -> String:
 			return "%s aprendeu %s!" % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
 		return ""
 	if fx.has("evolve"):
+		var from := m.display_name
 		m.evolve(evolution_by_item(m, id))
-		return "%s evoluiu para %s!" % [m.display_name, m.species]
+		return "%s evoluiu para %s!" % [from, m.species]
 	return ""
 
 
