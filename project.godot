@@ -22,6 +22,7 @@ Game="*res://core/game.gd"
 LearnMove="*res://ui/learn_move_ui.gd"
 PauseMenu="*res://ui/pause_menu.gd"
 Story="*res://story/story.gd"
+PCStorage="*res://ui/pc/pc_storage.gd"
 
 [display]
 
