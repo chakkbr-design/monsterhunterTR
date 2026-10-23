@@ -41,6 +41,7 @@ func _process(_dt: float) -> bool:
 
 func _run() -> void:
 	var game = load("res://core/game.gd").new()
+	game.save_path = "user://test_save.json"
 	var learn = load("res://ui/learn_move_ui.gd").new()
 	learn.game = game
 	root.add_child(learn)

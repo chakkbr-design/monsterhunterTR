@@ -27,7 +27,16 @@ const TRAINER_PAYOUTS := {
 ## Golpes que não couberam: [{mon: Mon, move: String}]. A UI consome com resolve_learn.
 var pending_learns: Array = []
 
+## Último save carregado (posição etc.). Vazio num jogo novo.
+var last_save: Dictionary = {}
+
 var _arena: Node = null
+
+
+func _ready() -> void:
+	# Testes headless começam sempre de um jogo novo.
+	if DisplayServer.get_name() != "headless":
+		last_save = load_game()
 var _opts := {}
 var _enemies: Array = []
 
@@ -100,7 +109,8 @@ func use_item(id: String, m: Mon) -> String:
 
 # --- Save: user://save.json, gravado num temporário e renomeado ---
 
-const SAVE_PATH := "user://save.json"
+## Testes trocam para não sobrescrever o save de verdade.
+var save_path := "user://save.json"
 const SAVE_VERSION := 1
 
 
@@ -127,18 +137,18 @@ func from_dict(d: Dictionary) -> void:
 func save_game(extra := {}) -> bool:
 	var d := to_dict()
 	d.merge(extra)
-	var tmp := SAVE_PATH + ".tmp"
+	var tmp := save_path + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return false
 	f.store_string(JSON.stringify(d, "\t"))
 	f.close()
-	return DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(SAVE_PATH)) == OK
+	return DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(save_path)) == OK
 
 
 ## Carrega o save e devolve o dicionário inteiro (vazio se não houver save).
 func load_game() -> Dictionary:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var f := FileAccess.open(save_path, FileAccess.READ)
 	if f == null:
 		return {}
 	var d = JSON.parse_string(f.get_as_text())

@@ -41,6 +41,11 @@ func _ready() -> void:
 				_build_tree(m)
 
 
+## Overridden by maps that stream terrain: true while the ground under the player is still loading.
+func blocks_player() -> bool:
+	return false
+
+
 ## Runs one battle through Game and returns its result ({} if a battle could not start).
 func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	var p := player_of(self)

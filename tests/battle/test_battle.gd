@@ -254,6 +254,7 @@ func _trainer_battle() -> void:
 
 func _game_with(bag: Dictionary) -> Node:
 	var g: Node = load("res://core/game.gd").new()
+	g.save_path = "user://test_save.json"
 	g.bag = bag.duplicate()
 	return g
 

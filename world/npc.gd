@@ -6,7 +6,7 @@ const GROUP := "ow_interact"
 const LAYER := 8
 
 @export var npc_name := "Villager"
-@export var lines: PackedStringArray = ["Hello there!"]
+@export var lines: PackedStringArray = ["Olá!"]
 @export var color := Color(0.3, 0.45, 0.85)
 @export var body_height := 1.6
 

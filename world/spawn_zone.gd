@@ -8,7 +8,9 @@ extends Node3D
 @export var respawn_min := 20.0
 @export var respawn_max := 30.0
 @export var min_player_dist := 14.0
-@export var mode := "visible"
+@export var mode := "visible"  ## "swim" spawns only inside water rects (layer WATER_LAYER)
+
+const WATER_LAYER := 16  ## same as MapBuilder.WATER_LAYER
 
 var _alive: Array[WildMon] = []
 var _pending: Array[float] = []
@@ -50,7 +52,10 @@ func _spawn(away_from_player: bool) -> bool:
 	var pos := _free_point(away_from_player)
 	if pos == Vector3.INF:
 		return false
-	_alive.append(WildMon.spawn(Overworld.mon_from_entry(e, _rng), e, get_parent(), pos))
+	var w := WildMon.spawn(Overworld.mon_from_entry(e, _rng), e, get_parent(), pos)
+	if mode == "swim":
+		w.roams = false  # bobs in place on the pond; engage it from the shore
+	_alive.append(w)
 	return true
 
 
@@ -60,6 +65,8 @@ func _free_point(away_from_player: bool) -> Vector3:
 	shape.radius = 0.6
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = shape
+	var swim := mode == "swim"
+	q.collision_mask = Overworld.WALL_LAYER | OverworldPlayer.LAYER | WildMon.LAYER | WorldNpc.LAYER | (0 if swim else WATER_LAYER)
 	var player := Overworld.player_of(self)
 	for attempt in 24:
 		var a := _rng.randf() * TAU
@@ -69,9 +76,18 @@ func _free_point(away_from_player: bool) -> Vector3:
 		if hit.is_empty() or absf(hit.position.y - global_position.y) > 0.6:
 			continue
 		p.y = hit.position.y
+		if swim != _in_water(space, p):
+			continue
 		if away_from_player and player and p.distance_to(player.global_position) < min_player_dist:
 			continue
 		q.transform = Transform3D(Basis(), p + Vector3(0, 0.8, 0))
 		if space.intersect_shape(q, 1).is_empty():
 			return p
 	return Vector3.INF
+
+
+func _in_water(space: PhysicsDirectSpaceState3D, p: Vector3) -> bool:
+	var pq := PhysicsPointQueryParameters3D.new()
+	pq.position = p + Vector3(0, 0.5, 0)
+	pq.collision_mask = WATER_LAYER
+	return not space.intersect_point(pq, 1).is_empty()

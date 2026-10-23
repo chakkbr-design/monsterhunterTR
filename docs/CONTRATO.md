@@ -75,7 +75,8 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - Depois da batalha o `Game` evolui quem ficou com evolução por nível pendente.
 - A arena grava em cada `Mon` o HP, o pool de PP e o status persistente.
 - Pendentes: tela de esquecer golpe (eventos `learned: false`), itens durante a batalha, batalha 2x1 com aliado.
-- Cena principal: `res://world/overworld.tscn`.
+- Cena principal: `res://world/route_world.tscn` (Pallet, Rota 1 e Viridian). O mapa de teste continua em `res://world/overworld.tscn`.
+- Continuar: o `Game` carrega `user://save.json` no início (`Game.last_save`) e a `RouteWorld` põe o jogador em `last_save.pos`.
 
 ## Rodada 2 (pendentes) — donos de pasta
 

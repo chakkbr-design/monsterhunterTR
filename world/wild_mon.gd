@@ -14,6 +14,7 @@ enum Behaviour { PASSIVE, FLEE, AGGRESSIVE }
 
 var mon: Mon
 var behaviour := Behaviour.PASSIVE
+var roams := true  ## false: stays put (pond swimmers)
 var ambusher := false  ## jumped out of tall grass: never roams, always freed after its battle
 var peace_timer := 0.0
 var home := Vector3.ZERO
@@ -40,7 +41,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	collision_layer = LAYER
-	collision_mask = Overworld.WALL_LAYER
+	collision_mask = Overworld.WALL_LAYER | SpawnZone.WATER_LAYER
 	var r := 0.25 + 0.03 * clampi(mon.level, 1, 10)
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
@@ -59,7 +60,7 @@ func _ready() -> void:
 	mi.position.y = r * 1.5
 	add_child(mi)
 	var tag := Label3D.new()
-	tag.text = "%s Lv%d" % [mon.display_name, mon.level]
+	tag.text = "%s Nv%d" % [mon.display_name, mon.level]
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.font_size = 72
 	tag.outline_size = 14
@@ -69,7 +70,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if Game.is_busy() or ambusher or not visible:
+	if Game.is_busy() or ambusher or not roams or not visible:
 		velocity = Vector3.ZERO
 		return
 	peace_timer = maxf(peace_timer - delta, 0.0)

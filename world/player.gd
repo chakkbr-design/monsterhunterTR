@@ -4,7 +4,7 @@ extends CharacterBody3D
 
 const GROUP := "ow_player"
 const LAYER := 2
-const MASK := 1 | 8  # walls + NPCs
+const MASK := 1 | 8 | 16  # walls + NPCs + water (MapBuilder.WATER_LAYER)
 const GRAVITY := 20.0
 const TALK_RANGE := 2.0
 const ENGAGE_RANGE := 3.5
@@ -67,7 +67,21 @@ func _on_battle_finished(_r: Dictionary) -> void:
 
 
 func can_act() -> bool:
-	return not locked and not Game.is_busy()
+	return not locked and not Game.is_busy() and not ui_blocking() and not _world_blocks()
+
+
+## True while a modal UI autoload (LearnMove, PauseMenu) is open. Both are optional.
+func ui_blocking() -> bool:
+	for path in ["/root/LearnMove", "/root/PauseMenu"]:
+		var n := get_node_or_null(path)
+		if n and n.has_method("is_open") and n.is_open():
+			return true
+	return false
+
+
+func _world_blocks() -> bool:
+	var ow := Overworld.of(self)
+	return ow != null and ow.blocks_player()
 
 
 func show_alert(on: bool) -> void:

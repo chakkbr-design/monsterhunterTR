@@ -48,7 +48,7 @@ func _ready() -> void:
 	_money = Label.new()
 	v.add_child(_money)
 	var help := Label.new()
-	help.text = "WASD move  Shift run  Space jump  E interact  Z/C camera"
+	help.text = "WASD anda  Shift corre  Espaço pula  E interage  Z/C câmera  Esc menu"
 	help.modulate = Color(1, 1, 1, 0.6)
 	help.add_theme_font_size_override("font_size", 12)
 	v.add_child(help)
@@ -101,13 +101,13 @@ func _process(delta: float) -> void:
 
 
 func _refresh_stats() -> void:
-	_money.text = "$%d" % Game.money
+	_money.text = "P$%d" % Game.money
 	if Game.party.is_empty():
-		_lead.text = "(no party)"
+		_lead.text = "(sem equipe)"
 		_hp.value = 0
 		return
 	var m: Mon = Game.party[0]
-	_lead.text = "%s  Lv%d   HP %d/%d   [%d in party]" % [m.display_name, m.level, m.hp, m.max_hp, Game.party.size()]
+	_lead.text = "%s  Nv%d   HP %d/%d   [%d na equipe]" % [m.display_name, m.level, m.hp, m.max_hp, Game.party.size()]
 	_hp.max_value = maxi(m.max_hp, 1)
 	_hp.value = m.hp
 

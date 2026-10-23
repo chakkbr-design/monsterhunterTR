@@ -3,6 +3,7 @@ extends SceneTree
 
 func _initialize() -> void:
 	var game = load("res://core/game.gd").new()
+	game.save_path = "user://test_save.json"
 	var fails := 0
 	var m := Mon.create("pikachu", 10)
 	game.party = [m]
