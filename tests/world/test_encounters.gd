@@ -103,12 +103,16 @@ func _test_walk_distance() -> void:
 func _test_weighted_pick() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 99
-	var t := {"rate": 15, "entries": [
-		{"species": "A", "weight": 70, "mode": "both"},
-		{"species": "B", "weight": 30, "mode": "grass"},
-		{"species": "C", "weight": 50, "mode": "visible"},
-		{"species": "D", "mode": "swim"},
-	]}
+	var t := {
+		"rate": 15,
+		"entries":
+		[
+			{"species": "A", "weight": 70, "mode": "both"},
+			{"species": "B", "weight": 30, "mode": "grass"},
+			{"species": "C", "weight": 50, "mode": "visible"},
+			{"species": "D", "mode": "swim"},
+		]
+	}
 	check(WildTable.rate(t) == 15, "table rate")
 	check(WildTable.rate({}) == 21, "default rate 21")
 	var n := 50000
@@ -123,7 +127,27 @@ func _test_weighted_pick() -> void:
 	near(float(vis.A) / n, 70.0 / 120.0, 0.01, "visible picks A 70/120")
 	near(float(vis.C) / n, 50.0 / 120.0, 0.01, "visible picks C 50/120")
 	check(vis.B == 0, "visible excludes grass-only")
-	check(WildTable.pick({"entries": [{"species": "D", "mode": "swim"}, {"species": "C", "weight": 50, "mode": "visible"}]}, "swim", rng).species == "D", "swim pool only")
+	check(
+		(
+			(
+				WildTable
+				. pick(
+					{
+						"entries":
+						[
+							{"species": "D", "mode": "swim"},
+							{"species": "C", "weight": 50, "mode": "visible"}
+						]
+					},
+					"swim",
+					rng
+				)
+				. species
+			)
+			== "D"
+		),
+		"swim pool only"
+	)
 	check(WildTable.pick({"entries": []}, "grass", rng).is_empty(), "empty table -> {}")
 	# The real Route 1 table loads through Dex and splits 50/50.
 	var r1 := Dex.encounter_table("route_1")

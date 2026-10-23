@@ -104,7 +104,10 @@ func _run() -> void:
 	await key(KEY_BACKSPACE)
 	await key(KEY_BACKSPACE)
 	await type_text("Ana")
-	check(t._entry.value == "WAna", "Backspace apaga e continua digitando (valor: %s)" % t._entry.value)
+	check(
+		t._entry.value == "WAna",
+		"Backspace apaga e continua digitando (valor: %s)" % t._entry.value
+	)
 	await type_text("1234567890")
 	check(t._entry.value.length() == 10, "máximo de 10 letras")
 	for i in 10:
@@ -126,10 +129,14 @@ func _run() -> void:
 	check(t._entry.value == "Ab", "teclado na tela digita Ab (valor: %s)" % t._entry.value)
 	for i in 4:
 		await key(KEY_DOWN)
-	check(t._entry.current_key() == "Espaço", "linha de baixo: Espaço (%s)" % t._entry.current_key())
+	check(
+		t._entry.current_key() == "Espaço", "linha de baixo: Espaço (%s)" % t._entry.current_key()
+	)
 	await key(KEY_RIGHT)
 	await key(KEY_ENTER)
-	check(t._entry.value == "Gael", "Sugerir preenche o primeiro nome sugerido (%s)" % t._entry.value)
+	check(
+		t._entry.value == "Gael", "Sugerir preenche o primeiro nome sugerido (%s)" % t._entry.value
+	)
 	await key(KEY_RIGHT)
 	await key(KEY_RIGHT)
 	check(t._entry.current_key() == "OK", "cursor em OK")
@@ -141,9 +148,16 @@ func _run() -> void:
 	check(await enter_until(t, "leaving"), "fala final termina e sai")
 	await wait_scene()
 	check(scene_to == "res://world/route_world.tscn", "trocou para a RouteWorld (%s)" % scene_to)
-	check(game.player_name == "Ana" and game.rival_name == "Gael" and game.player_gender == "female",
-		"Game com nomes e gênero (%s, %s, %s)" % [game.player_name, game.rival_name, game.player_gender])
-	check(game.spawn_request == {"interior": "player_room", "spawn": "bed"}, "spawn_request no quarto")
+	check(
+		game.player_name == "Ana" and game.rival_name == "Gael" and game.player_gender == "female",
+		(
+			"Game com nomes e gênero (%s, %s, %s)"
+			% [game.player_name, game.rival_name, game.player_gender]
+		)
+	)
+	check(
+		game.spawn_request == {"interior": "player_room", "spawn": "bed"}, "spawn_request no quarto"
+	)
 	check(game.party.is_empty() and game.flags.is_empty(), "jogo novo zerado")
 	t.queue_free()
 	await frames(2)
@@ -164,7 +178,10 @@ func _run() -> void:
 	await key(KEY_DOWN)
 	await key(KEY_ENTER)
 	var cfg := Settings.load_cfg(CFG)
-	check(cfg.volume == 60 and cfg.fullscreen == true, "settings.cfg: volume 60, tela cheia (%s)" % cfg)
+	check(
+		cfg.volume == 60 and cfg.fullscreen == true,
+		"settings.cfg: volume 60, tela cheia (%s)" % cfg
+	)
 	await key(KEY_ESCAPE)
 	check(t.state == "menu", "Esc volta ao menu")
 	t.queue_free()
@@ -190,8 +207,10 @@ func _run() -> void:
 	t.press("ok")
 	check(t.menu_items[0] == "continue" and t.cursor == 0, "com save: Continuar primeiro")
 	var s: Dictionary = t.save_summary()
-	check(s.get("name") == "Ana" and s.get("money") == 1234 and String(s.get("lead")).contains("5"),
-		"resumo do save: %s" % s)
+	check(
+		s.get("name") == "Ana" and s.get("money") == 1234 and String(s.get("lead")).contains("5"),
+		"resumo do save: %s" % s
+	)
 	check(t._card.visible, "cartão do save visível")
 	# Novo jogo com save pede confirmação; Não volta ao menu.
 	await key(KEY_DOWN)
@@ -203,7 +222,10 @@ func _run() -> void:
 	await key(KEY_ENTER)
 	await wait_scene()
 	check(scene_to == "res://world/route_world.tscn", "Continuar troca para a RouteWorld")
-	check(game.player_name == "Ana" and game.money == 1234 and game.party.size() == 1, "Game carregado do save")
+	check(
+		game.player_name == "Ana" and game.money == 1234 and game.party.size() == 1,
+		"Game carregado do save"
+	)
 	check(game.last_save.get("pos", []) == [1.0, 2.0, 3.0], "last_save com a posição")
 	check(game.spawn_request.is_empty(), "Continuar não pede spawn")
 	t.queue_free()

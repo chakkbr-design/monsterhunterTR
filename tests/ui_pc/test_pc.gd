@@ -49,9 +49,9 @@ func _run() -> void:
 	pc.open()
 
 	# 2. Guardar pela equipe.
-	send(KEY_E)                     # Guardar Pokémon
+	send(KEY_E)  # Guardar Pokémon
 	check(pc.screen == "party" and pc.party_mode == "deposit", "tela de guardar")
-	send(KEY_S)                     # pidgey
+	send(KEY_S)  # pidgey
 	send(KEY_E)
 	check(game.party == [a] and game.pc == [c, b], "pidgey guardado no PC")
 	check(pc.screen == "msg" and "Caixa 1" in pc.message, "mensagem de guardado: " + pc.message)
@@ -59,15 +59,21 @@ func _run() -> void:
 	check(pc.screen == "party", "volta para a equipe")
 
 	# 3. Último Pokémon de pé: recusado.
-	send(KEY_E)                     # tenta guardar bulbasaur (único)
-	check(game.party == [a] and pc.screen == "msg" and "último" in pc.message, "recusa o único: " + pc.message)
+	send(KEY_E)  # tenta guardar bulbasaur (único)
+	check(
+		game.party == [a] and pc.screen == "msg" and "último" in pc.message,
+		"recusa o único: " + pc.message
+	)
 	send(KEY_E)
 	game.party = [a, b]
 	game.pc = [c]
 	b.hp = 0
 	pc._party_cur = 0
 	send(KEY_E)
-	check(game.party.size() == 2 and "de pé" in pc.message, "recusa deixar só desmaiados: " + pc.message)
+	check(
+		game.party.size() == 2 and "de pé" in pc.message,
+		"recusa deixar só desmaiados: " + pc.message
+	)
 	send(KEY_E)
 	b.hp = b.max_hp
 
@@ -75,12 +81,12 @@ func _run() -> void:
 	send(KEY_ESCAPE)
 	check(pc.screen == "menu", "Esc volta ao menu")
 	send(KEY_S)
-	send(KEY_E)                     # Retirar Pokémon
+	send(KEY_E)  # Retirar Pokémon
 	check(pc.screen == "box" and pc.box == 0 and pc.slot == 0, "caixa 1, espaço 1")
 	check(pc.selected_mon() == c, "rattata sob o cursor")
 	send(KEY_E)
 	check(pc.screen == "action", "menu de ações")
-	send(KEY_E)                     # Retirar
+	send(KEY_E)  # Retirar
 	check(game.party == [a, b, c] and game.pc.is_empty(), "rattata retirado")
 	send(KEY_E)
 	check(pc.screen == "box", "volta à caixa")
@@ -92,18 +98,21 @@ func _run() -> void:
 		game.party.append(Mon.create("Weedle", 2))
 	send(KEY_E)
 	send(KEY_E)
-	check(game.party.size() == 6 and pc.screen == "msg" and "cheia" in pc.message, "equipe cheia: " + pc.message)
+	check(
+		game.party.size() == 6 and pc.screen == "msg" and "cheia" in pc.message,
+		"equipe cheia: " + pc.message
+	)
 	send(KEY_E)
 
 	# 6. Soltar com confirmação (Não é o padrão).
-	send(KEY_E)                     # ações
-	send(KEY_S)                     # Soltar
+	send(KEY_E)  # ações
+	send(KEY_S)  # Soltar
 	send(KEY_E)
 	check(pc.screen == "confirm", "pede confirmação")
-	send(KEY_E)                     # Não
+	send(KEY_E)  # Não
 	check(pc.screen == "action" and game.pc.size() == 1, "Não mantém")
-	send(KEY_E)                     # Soltar de novo (cursor ficou em Soltar)
-	send(KEY_LEFT)                  # Sim
+	send(KEY_E)  # Soltar de novo (cursor ficou em Soltar)
+	send(KEY_LEFT)  # Sim
 	send(KEY_ENTER)
 	check(game.pc.is_empty() and pc.screen == "msg", "soltou")
 	send(KEY_E)
@@ -113,9 +122,9 @@ func _run() -> void:
 	for i in 35:
 		many.append(Mon.create("Magikarp", 5 + i % 10))
 	game.pc = many
-	send(KEY_RIGHT, 5)              # coluna 6
+	send(KEY_RIGHT, 5)  # coluna 6
 	check(pc.box == 0 and pc.slot == 5, "coluna 6 da caixa 1")
-	send(KEY_RIGHT)                 # passa da borda
+	send(KEY_RIGHT)  # passa da borda
 	check(pc.box == 1 and pc.slot == 0, "borda direita vai para a caixa 2")
 	check(pc.pc_index() == 30 and pc.selected_mon() == many[30], "índice 30 na caixa 2")
 	send(KEY_LEFT)
@@ -124,7 +133,7 @@ func _run() -> void:
 	check(pc.box == 7, "PgUp da caixa 1 vai para a 8")
 	send(KEY_PAGEDOWN, 2)
 	check(pc.box == 1, "PgDn avança")
-	send(KEY_DOWN)                  # espaço 7 da caixa 2 = índice 36, vazio
+	send(KEY_DOWN)  # espaço 7 da caixa 2 = índice 36, vazio
 	check(pc.selected_mon() == null, "espaço vazio")
 	send(KEY_E)
 	check(pc.screen == "box", "espaço vazio não abre ações")
@@ -136,7 +145,7 @@ func _run() -> void:
 	game.pc = full
 	game.party = [a, b]
 	send(KEY_ESCAPE)
-	send(KEY_W)                     # Guardar (cursor estava em Retirar)
+	send(KEY_W)  # Guardar (cursor estava em Retirar)
 	send(KEY_E)
 	send(KEY_S)
 	send(KEY_E)
@@ -146,15 +155,15 @@ func _run() -> void:
 	# 9. Organizar a equipe.
 	game.pc = []
 	send(KEY_ESCAPE)
-	send(KEY_S, 2)                  # Mover/organizar
+	send(KEY_S, 2)  # Mover/organizar
 	send(KEY_E)
 	check(pc.screen == "party" and pc.party_mode == "organize", "tela de organizar")
-	send(KEY_E)                     # pega bulbasaur
+	send(KEY_E)  # pega bulbasaur
 	send(KEY_S)
-	send(KEY_E)                     # troca com pidgey
+	send(KEY_E)  # troca com pidgey
 	check(game.party == [b, a], "trocou a ordem")
 	send(KEY_ESCAPE)
-	send(KEY_S)                     # Sair
+	send(KEY_S)  # Sair
 	send(KEY_E)
 	check(pc.screen == "", "Sair fecha")
 

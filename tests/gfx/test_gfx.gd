@@ -42,10 +42,19 @@ func _species_specs() -> void:
 				var a: Dictionary = s.pmd[anim]
 				check(a.texture is Texture2D, "%s/%s: textura" % [sp, anim])
 				var tex: Texture2D = a.texture
-				check(tex.get_width() == int(a.w) * int(a.frames), "%s/%s: largura = w*frames" % [sp, anim])
-				check(tex.get_height() == int(a.h) * int(a.dirs), "%s/%s: altura = h*dirs" % [sp, anim])
+				check(
+					tex.get_width() == int(a.w) * int(a.frames),
+					"%s/%s: largura = w*frames" % [sp, anim]
+				)
+				check(
+					tex.get_height() == int(a.h) * int(a.dirs),
+					"%s/%s: altura = h*dirs" % [sp, anim]
+				)
 				var anchors: Array = a.anchor
-				check(anchors.is_empty() or anchors.size() == int(a.dirs), "%s/%s: âncoras por direção" % [sp, anim])
+				check(
+					anchors.is_empty() or anchors.size() == int(a.dirs),
+					"%s/%s: âncoras por direção" % [sp, anim]
+				)
 		# visível: altura em metros coerente com a espécie
 		var vis := float(s.get("visible_m", 0.0))
 		check(vis > 0.1 and vis < 12.0, "%s: visible_m %.2f" % [sp, vis])
@@ -141,7 +150,12 @@ func _sprite_node() -> void:
 
 
 func _extra() -> void:
-	check(PS.asset_path("res://assets/sprites/x.png") == "res://original/assets/sprites/x.png", "asset_path")
+	check(
+		PS.asset_path("res://assets/sprites/x.png") == "res://original/assets/sprites/x.png",
+		"asset_path"
+	)
 	check(PS.icon_fitted("Pikachu", 32) is Texture2D, "icon_fitted")
-	for fnt in ["res://original/assets/fonts/Nunito.ttf", "res://original/assets/fonts/PixelifySans.ttf"]:
+	for fnt in [
+		"res://original/assets/fonts/Nunito.ttf", "res://original/assets/fonts/PixelifySans.ttf"
+	]:
 		check(ResourceLoader.exists(fnt), "fonte " + fnt)

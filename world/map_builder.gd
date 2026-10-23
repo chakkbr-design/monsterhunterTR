@@ -58,8 +58,14 @@ const HGSS_BOULDER := "hgss/common/boulder"
 const BOARD_SCALE_HGSS := 0.6
 const HGSS_FLOWER_Y := 0.03
 const HGSS_FLOWER_SECONDS := 0.25
-const FLOWER_KINDS := ["nature/flower_redA", "nature/flower_redB", "nature/flower_yellowA", "nature/flower_yellowB",
-		"nature/flower_purpleA", "nature/flower_purpleB"]
+const FLOWER_KINDS := [
+	"nature/flower_redA",
+	"nature/flower_redB",
+	"nature/flower_yellowA",
+	"nature/flower_yellowB",
+	"nature/flower_purpleA",
+	"nature/flower_purpleB"
+]
 const COURT_LIFT := 0.02
 const SKIRT := 40.0  ## the ground runs on under neighbouring zones / past the edges
 
@@ -108,7 +114,11 @@ static var _maps: Dictionary = {}  ## parsed map JSON per zone (re-streaming a z
 static func load_map(id: String) -> Dictionary:
 	if not _maps.has(id):
 		var path := "res://data/maps/%s.json" % id
-		var d = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		var d = (
+			JSON.parse_string(FileAccess.get_file_as_string(path))
+			if FileAccess.file_exists(path)
+			else null
+		)
 		_maps[id] = d if d is Dictionary else {}
 	return (_maps[id] as Dictionary).duplicate(true)
 
@@ -219,6 +229,7 @@ func _group(n: String) -> Node3D:
 
 # --- helpers -------------------------------------------------------------------------------------
 
+
 func _body(n: String, layer: int) -> StaticBody3D:
 	var b := StaticBody3D.new()
 	b.name = n
@@ -265,7 +276,9 @@ func _box(center: Vector3, size: Vector3, c: Color, n := "") -> MeshInstance3D:
 	return _mesh(bm, c, center, n)
 
 
-func _plane_mat(parent: Node, center: Vector3, size: Vector2, m: Material, n := "") -> MeshInstance3D:
+func _plane_mat(
+	parent: Node, center: Vector3, size: Vector2, m: Material, n := ""
+) -> MeshInstance3D:
 	var pm := PlaneMesh.new()
 	pm.size = size
 	var mi := MeshInstance3D.new()
@@ -311,7 +324,9 @@ func _batch_mesh(key: String) -> Mesh:
 			var sm := SphereMesh.new()
 			sm.radial_segments = 12
 			sm.rings = 6
-			sm.material = mat({"crown": C_CROWN, "bush": C_BUSH, "rock": C_ROCK, "bulb": Color(1, 0.95, 0.7)}[key])
+			sm.material = mat(
+				{"crown": C_CROWN, "bush": C_BUSH, "rock": C_ROCK, "bulb": Color(1, 0.95, 0.7)}[key]
+			)
 			return sm
 		"post":
 			var pc := CylinderMesh.new()
@@ -370,12 +385,17 @@ static func _scaled(at: Vector3, size: Vector3, yaw := 0.0) -> Transform3D:
 
 # --- terrain -------------------------------------------------------------------------------------
 
+
 func _ground_mat() -> ShaderMaterial:
 	if ground_material == null:
 		var g: Dictionary = _look.get("ground", {})
-		ground_material = WorldFx.shader_mat("ground", {"albedo_tex": WorldFx.tex("textures/ground_grass.png")})
+		ground_material = WorldFx.shader_mat(
+			"ground", {"albedo_tex": WorldFx.tex("textures/ground_grass.png")}
+		)
 		for k in WorldTimeOfDay.GROUND_TINTS:
-			ground_material.set_shader_parameter(k, Color(String(g[k])) if g.has(k) else WorldTimeOfDay.GROUND_TINTS[k])
+			ground_material.set_shader_parameter(
+				k, Color(String(g[k])) if g.has(k) else WorldTimeOfDay.GROUND_TINTS[k]
+			)
 		ground_material.set_shader_parameter("desaturate", float(g.get("desaturate", 0.0)))
 	return ground_material
 
@@ -384,9 +404,21 @@ func _ground() -> void:
 	var g := rect.grow(1.0)
 	var c := Vector3(g.get_center().x, -0.5, g.get_center().y)
 	var t := _group("Terrain")
-	_plane_mat(t, Vector3(rect.get_center().x, 0.0, rect.get_center().y), rect.size, _ground_mat(), "Ground")
+	_plane_mat(
+		t,
+		Vector3(rect.get_center().x, 0.0, rect.get_center().y),
+		rect.size,
+		_ground_mat(),
+		"Ground"
+	)
 	var sk := rect.grow(SKIRT)
-	_plane_mat(t, Vector3(sk.get_center().x, -0.06, sk.get_center().y), sk.size, _ground_mat(), "GroundSkirt")
+	_plane_mat(
+		t,
+		Vector3(sk.get_center().x, -0.06, sk.get_center().y),
+		sk.size,
+		_ground_mat(),
+		"GroundSkirt"
+	)
 	_solid_box(c, Vector3(g.size.x, 1.0, g.size.y))
 	_bump("ground")
 
@@ -441,13 +473,19 @@ func _earth_walls(block: Node3D, p: Dictionary, h: float) -> void:
 func _cuts(p: Dictionary) -> Dictionary:
 	var cuts := {}
 	for s in p.get("ramps", []):
-		cuts[s.side] = cuts.get(s.side, []) + [[float(s.at) - float(s.width) / 2.0, float(s.at) + float(s.width) / 2.0]]
+		cuts[s.side] = (
+			cuts.get(s.side, [])
+			+ [[float(s.at) - float(s.width) / 2.0, float(s.at) + float(s.width) / 2.0]]
+		)
 	for l in p.get("ledges", []):
 		cuts[l.side] = cuts.get(l.side, []) + [[float(l.from), float(l.to)]]
 	var r: Array = p.rect
 	for side in p.get("open", []):
 		var hz: bool = side == "n" or side == "s"
-		cuts[side] = cuts.get(side, []) + [[float(r[0] if hz else r[1]), float(r[0] + r[2] if hz else r[1] + r[3])]]
+		cuts[side] = (
+			cuts.get(side, [])
+			+ [[float(r[0] if hz else r[1]), float(r[0] + r[2] if hz else r[1] + r[3])]]
+		)
 	return cuts
 
 
@@ -473,11 +511,17 @@ func _edge_walls(p: Dictionary, h: float) -> void:
 		var hz: bool = side == "n" or side == "s"
 		var a: float = r[0] if hz else r[1]
 		var b: float = r[0] + r[2] if hz else r[1] + r[3]
-		var fixed: float = (r[1] if side == "n" else r[1] + r[3]) if hz else (r[0] if side == "w" else r[0] + r[2])
+		var fixed: float = (
+			(r[1] if side == "n" else r[1] + r[3]) if hz else (r[0] if side == "w" else r[0] + r[2])
+		)
 		for sg in _subtract(a, b, cuts.get(side, [])):
 			var mid: float = (sg[0] + sg[1]) / 2.0
 			var len: float = sg[1] - sg[0]
-			var c := Vector3(mid, h + EDGE_WALL / 2.0, fixed) if hz else Vector3(fixed, h + EDGE_WALL / 2.0, mid)
+			var c := (
+				Vector3(mid, h + EDGE_WALL / 2.0, fixed)
+				if hz
+				else Vector3(fixed, h + EDGE_WALL / 2.0, mid)
+			)
 			_solid_box(c, Vector3(len, EDGE_WALL, 0.2) if hz else Vector3(0.2, EDGE_WALL, len))
 
 
@@ -486,9 +530,15 @@ func _ramp(block: Node3D, p: Dictionary, s: Dictionary) -> void:
 	var h := float(p.h)
 	var w := float(s.width)
 	var at := float(s.at)
-	var out: Vector3 = {"n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0)}[s.side]
-	var edge: Vector3 = {"n": Vector3(at, 0, r[1]), "s": Vector3(at, 0, r[1] + r[3]),
-			"w": Vector3(r[0], 0, at), "e": Vector3(r[0] + r[2], 0, at)}[s.side]
+	var out: Vector3 = {
+		"n": Vector3(0, 0, -1), "s": Vector3(0, 0, 1), "w": Vector3(-1, 0, 0), "e": Vector3(1, 0, 0)
+	}[s.side]
+	var edge: Vector3 = {
+		"n": Vector3(at, 0, r[1]),
+		"s": Vector3(at, 0, r[1] + r[3]),
+		"w": Vector3(r[0], 0, at),
+		"e": Vector3(r[0] + r[2], 0, at)
+	}[s.side]
 	var probe := edge + out * 0.5
 	var base := _height_excluding(probe.x, probe.z, p)
 	var rise := h - base
@@ -526,7 +576,14 @@ func _ramp(block: Node3D, p: Dictionary, s: Dictionary) -> void:
 			return TerrainSteps.height_at(rise, run, base, Vector2(x - t0.x, z - t0.z).length())
 		var cm := MeshInstance3D.new()
 		cm.name = "RampCheek"
-		cm.mesh = TerrainCliff.build(pts, nrms, false, cheek_top, func(_x: float, _z: float) -> float: return base, hash(String(p.get("id", ""))) + 7)
+		cm.mesh = TerrainCliff.build(
+			pts,
+			nrms,
+			false,
+			cheek_top,
+			func(_x: float, _z: float) -> float: return base,
+			hash(String(p.get("id", ""))) + 7
+		)
 		cm.material_override = TerrainCliff.material()
 		block.add_child(cm)
 	_bump("ramps")
@@ -576,7 +633,10 @@ func _paths() -> void:
 		var rects: Array = lv[level]
 		var area := TerrainPathMask.bounds(rects)
 		var img := TerrainPathMask.load_mask(TerrainPathMask.mask_file(zone_id, i))
-		var want := Vector2i(maxi(int(ceil(area.size.x * TerrainPathMask.PX_PER_M)), 1), maxi(int(ceil(area.size.y * TerrainPathMask.PX_PER_M)), 1))
+		var want := Vector2i(
+			maxi(int(ceil(area.size.x * TerrainPathMask.PX_PER_M)), 1),
+			maxi(int(ceil(area.size.y * TerrainPathMask.PX_PER_M)), 1)
+		)
 		if img == null or absi(img.get_width() - want.x) > 1 or absi(img.get_height() - want.y) > 1:
 			img = TerrainPathMask.generate(rects, area, hash(zone_id) + i)  # paths changed since the bake
 		g.add_child(TerrainPathMask.overlay(rects, float(level), img, tint, mix))
@@ -597,7 +657,13 @@ func _courts() -> void:
 		else:
 			m.albedo_color = C_COURT
 		m.roughness = 1.0
-		_plane_mat(_group("Courts"), Vector3(ctr.x, height_at(ctr.x, ctr.y) + COURT_LIFT, ctr.y), r.size, m, "Court")
+		_plane_mat(
+			_group("Courts"),
+			Vector3(ctr.x, height_at(ctr.x, ctr.y) + COURT_LIFT, ctr.y),
+			r.size,
+			m,
+			"Court"
+		)
 		_bump("courts")
 
 
@@ -606,13 +672,19 @@ static var _water_mat: ShaderMaterial
 
 static func water_material() -> ShaderMaterial:
 	if _water_mat == null:
-		_water_mat = WorldFx.shader_mat("water", {
-			"sea_tex": WorldFx.tex("models/hgss/common/sea_un.png"),
-			"glint_tex": WorldFx.tex("models/hgss/common/sea_on_sheet.png"),
-			"shore_tex": WorldFx.tex("models/hgss/common/pond_line.png"),
-			"foam_tex": WorldFx.tex("models/hgss/common/sea_line02.png"),
-			"shallow_width": 1.2,
-		})
+		_water_mat = (
+			WorldFx
+			. shader_mat(
+				"water",
+				{
+					"sea_tex": WorldFx.tex("models/hgss/common/sea_un.png"),
+					"glint_tex": WorldFx.tex("models/hgss/common/sea_on_sheet.png"),
+					"shore_tex": WorldFx.tex("models/hgss/common/pond_line.png"),
+					"foam_tex": WorldFx.tex("models/hgss/common/sea_line02.png"),
+					"shallow_width": 1.2,
+				}
+			)
+		)
 	return _water_mat
 
 
@@ -622,32 +694,55 @@ func _water() -> void:
 		return
 	var g := _group("WaterSurface")
 	var wm := water_material()
-	var margin := float(wm.get_shader_parameter("margin")) if wm.get_shader_parameter("margin") != null else 0.9
+	var margin := (
+		float(wm.get_shader_parameter("margin"))
+		if wm.get_shader_parameter("margin") != null
+		else 0.9
+	)
 	for wt in list:
 		var r := rect_of(wt.rect)
 		var ctr := r.get_center()
 		var y := height_at(ctr.x, ctr.y)
-		var mi := _plane_mat(g, Vector3(ctr.x, y + 0.04, ctr.y), r.size + Vector2.ONE * margin * 2.0, wm, "Water")
+		var mi := _plane_mat(
+			g, Vector3(ctr.x, y + 0.04, ctr.y), r.size + Vector2.ONE * margin * 2.0, wm, "Water"
+		)
 		mi.set_instance_shader_parameter("centre", ctr)
 		mi.set_instance_shader_parameter("half_size", r.size / 2.0)
 		for k in 10:
-			var p := Vector3(ctr.x + _rng.randf_range(-r.size.x, r.size.x) * 0.5, y + 0.08, ctr.y + _rng.randf_range(-r.size.y, r.size.y) * 0.5)
-			_add_model("nature/lily_large" if k % 2 == 0 else "nature/lily_small",
-					_scaled(p, Vector3.ONE * 2.0, deg_to_rad(_rng.randi_range(0, 359))), {}, false)
-		_solid_box(Vector3(ctr.x, y + WALL_H / 2.0, ctr.y), Vector3(r.size.x, WALL_H, r.size.y), _water_body)
+			var p := Vector3(
+				ctr.x + _rng.randf_range(-r.size.x, r.size.x) * 0.5,
+				y + 0.08,
+				ctr.y + _rng.randf_range(-r.size.y, r.size.y) * 0.5
+			)
+			_add_model(
+				"nature/lily_large" if k % 2 == 0 else "nature/lily_small",
+				_scaled(p, Vector3.ONE * 2.0, deg_to_rad(_rng.randi_range(0, 359))),
+				{},
+				false
+			)
+		_solid_box(
+			Vector3(ctr.x, y + WALL_H / 2.0, ctr.y),
+			Vector3(r.size.x, WALL_H, r.size.y),
+			_water_body
+		)
 		_bump("water")
 
 
 func _is_water_rect(r: Array) -> bool:
 	for wt in data.get("water", []):
 		var w: Array = wt.rect
-		if absf(float(w[0]) - r[0]) < 0.01 and absf(float(w[1]) - r[1]) < 0.01 \
-				and absf(float(w[2]) - r[2]) < 0.01 and absf(float(w[3]) - r[3]) < 0.01:
+		if (
+			absf(float(w[0]) - r[0]) < 0.01
+			and absf(float(w[1]) - r[1]) < 0.01
+			and absf(float(w[2]) - r[2]) < 0.01
+			and absf(float(w[3]) - r[3]) < 0.01
+		):
 			return true
 	return false
 
 
 # --- structures ----------------------------------------------------------------------------------
+
 
 func _buildings() -> void:
 	var g := _group("Buildings")
@@ -668,16 +763,32 @@ func _buildings() -> void:
 			var tex: Texture2D = null
 			if b.has("tex"):
 				tex = load(art_path(String(b.tex)))
-			inst = WorldProps.place(g, model, origin, {"scale": float(b.get("scale", 5.0)), "rot": rot,
-					"windows": true, "fade": "building", "texture": tex})
+			inst = WorldProps.place(
+				g,
+				model,
+				origin,
+				{
+					"scale": float(b.get("scale", 5.0)),
+					"rot": rot,
+					"windows": true,
+					"fade": "building",
+					"texture": tex
+				}
+			)
 		if inst:
 			inst.name = id.to_pascal_case()
 			var bb := WorldProps.bounds(inst)
-			_solid_box(Vector3(bb.get_center().x, bb.position.y + maxf(bb.size.y, 1.0) / 2.0, bb.get_center().z),
-					Vector3(bb.size.x, maxf(bb.size.y, 1.0), bb.size.z))
+			_solid_box(
+				Vector3(
+					bb.get_center().x, bb.position.y + maxf(bb.size.y, 1.0) / 2.0, bb.get_center().z
+				),
+				Vector3(bb.size.x, maxf(bb.size.y, 1.0), bb.size.z)
+			)
 		else:
 			var c := origin + basis * Vector3(0, 0, front_l - d / 2.0)
-			var bx := _box(c + Vector3(0, h / 2.0, 0), Vector3(w, h, d), C_WALLS, "Building_%s" % id)
+			var bx := _box(
+				c + Vector3(0, h / 2.0, 0), Vector3(w, h, d), C_WALLS, "Building_%s" % id
+			)
 			bx.rotation.y = deg_to_rad(rot)
 			var roof := PrismMesh.new()
 			roof.size = Vector3(d + 0.5, 1.5, w + 0.5) if w > d else Vector3(w + 0.5, 1.5, d + 0.5)
@@ -738,7 +849,9 @@ func _buildings() -> void:
 ## The original's sign stand beside a building door (Pokémon Center, Mart, Museum...).
 func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
 	var bd: Dictionary = b.board
-	var bs := float(bd.get("scale", BOARD_SCALE_HGSS if String(b.model).begins_with("hgss/") else 1.0))
+	var bs := float(
+		bd.get("scale", BOARD_SCALE_HGSS if String(b.model).begins_with("hgss/") else 1.0)
+	)
 	var bb := WorldProps.bounds(inst)
 	var col := Color(String(bd.get("color", "#d84a3a")))
 	var ground := _v(b.pos).y
@@ -748,11 +861,21 @@ func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
 	var origin := Vector2(float(b.pos[0]), float(b.pos[1]))
 	var a := deg_to_rad(rot)
 	var to_world := func(v: Vector2) -> Vector2:
-		return Vector2(origin.x + v.x * cos(a) + v.y * sin(a), origin.y - v.x * sin(a) + v.y * cos(a))
+		return Vector2(
+			origin.x + v.x * cos(a) + v.y * sin(a), origin.y - v.x * sin(a) + v.y * cos(a)
+		)
 	var door := Vector2(float(b.get("door_dx", 0.0)), sd / 2.0)
 	var step: Vector2 = to_world.call(door + Vector2(0.0, 0.6 * bs))
-	_slab(parent, Vector3(step.x, ground + 0.03 * bs, step.y), Vector3(2.8, 0.06, 1.2) * bs, col.lightened(0.55), rot)
-	_slab(parent, Vector3(step.x, ground + 0.05 * bs, step.y), Vector3(2.4, 0.06, 0.9) * bs, col, rot)
+	_slab(
+		parent,
+		Vector3(step.x, ground + 0.03 * bs, step.y),
+		Vector3(2.8, 0.06, 1.2) * bs,
+		col.lightened(0.55),
+		rot
+	)
+	_slab(
+		parent, Vector3(step.x, ground + 0.05 * bs, step.y), Vector3(2.4, 0.06, 0.9) * bs, col, rot
+	)
 	var text := String(bd.text)
 	var ball := bool(bd.get("ball", false))
 	var lines := text.split("\n")
@@ -766,11 +889,28 @@ func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
 	var sign_at: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0), 0.7 * bs))
 	var at := Vector3(sign_at.x, ground + 0.55 * bs + hgt / 2.0, sign_at.y)
 	_slab(parent, at, Vector3(w, hgt, 0.14 * bs), col, rot)
-	_slab(parent, at + Vector3(0, hgt / 2.0 + 0.04 * bs, 0), Vector3(w + 0.12 * bs, 0.08 * bs, 0.2 * bs), col.lightened(0.55), rot)
+	_slab(
+		parent,
+		at + Vector3(0, hgt / 2.0 + 0.04 * bs, 0),
+		Vector3(w + 0.12 * bs, 0.08 * bs, 0.2 * bs),
+		col.lightened(0.55),
+		rot
+	)
 	for px in [-w / 2.0 + 0.25 * bs, w / 2.0 - 0.25 * bs]:
-		var post: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) + px, 0.7 * bs))
-		_slab(parent, Vector3(post.x, ground + 0.3 * bs, post.y), Vector3(0.12, 0.6, 0.12) * bs, Color(0.35, 0.33, 0.32), rot)
-	_solid_box(Vector3(at.x, ground + 0.6 * bs, at.z), Vector3(0.3 * bs, 1.2 * bs, w) if quarter else Vector3(w, 1.2 * bs, 0.3 * bs))
+		var post: Vector2 = to_world.call(
+			door + Vector2(side * (1.9 * bs + w / 2.0) + px, 0.7 * bs)
+		)
+		_slab(
+			parent,
+			Vector3(post.x, ground + 0.3 * bs, post.y),
+			Vector3(0.12, 0.6, 0.12) * bs,
+			Color(0.35, 0.33, 0.32),
+			rot
+		)
+	_solid_box(
+		Vector3(at.x, ground + 0.6 * bs, at.z),
+		Vector3(0.3 * bs, 1.2 * bs, w) if quarter else Vector3(w, 1.2 * bs, 0.3 * bs)
+	)
 	var label := Label3D.new()
 	label.text = text
 	label.font_size = 64
@@ -780,7 +920,14 @@ func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
 	label.modulate = Color.WHITE
 	label.shaded = false
 	label.rotation_degrees.y = rot
-	var lp: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) + (0.45 * bs if ball else 0.0), 0.7 * bs + 0.08 * bs))
+	var lp: Vector2 = to_world.call(
+		(
+			door
+			+ Vector2(
+				side * (1.9 * bs + w / 2.0) + (0.45 * bs if ball else 0.0), 0.7 * bs + 0.08 * bs
+			)
+		)
+	)
 	label.position = Vector3(lp.x, ground + 0.55 * bs + hgt / 2.0, lp.y)
 	parent.add_child(label)
 	if ball:
@@ -789,7 +936,9 @@ func _board(parent: Node3D, inst: Node3D, b: Dictionary) -> void:
 		spr.pixel_size = 0.7 * bs / 64.0
 		spr.shaded = false
 		spr.rotation_degrees.y = rot
-		var bp: Vector2 = to_world.call(door + Vector2(side * (1.9 * bs + w / 2.0) - w / 2.0 + 0.6 * bs, 0.7 * bs + 0.09 * bs))
+		var bp: Vector2 = to_world.call(
+			door + Vector2(side * (1.9 * bs + w / 2.0) - w / 2.0 + 0.6 * bs, 0.7 * bs + 0.09 * bs)
+		)
 		spr.position = Vector3(bp.x, ground + 0.55 * bs + hgt / 2.0, bp.y)
 		parent.add_child(spr)
 
@@ -850,7 +999,10 @@ func _fences() -> void:
 			for i in n:
 				var at := a.lerp(b, (i + 0.5) / n)
 				at.y = height_at(at.x, at.z)
-				var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(s * len / n / native, s, s)), at)
+				var xf := Transform3D(
+					Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(s * len / n / native, s, s)),
+					at
+				)
 				_add_model(model, xf)
 		else:
 			var xf := Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.45, 0))
@@ -872,7 +1024,11 @@ func _walls() -> void:
 	for fw in data.get("flag_walls", []):
 		var r: Array = fw.rect
 		var body := _body("FlagWall", Overworld.WALL_LAYER)
-		_solid_box(Vector3(r[0] + r[2] / 2.0, WALL_H / 2.0, r[1] + r[3] / 2.0), Vector3(r[2], WALL_H, r[3]), body)
+		_solid_box(
+			Vector3(r[0] + r[2] / 2.0, WALL_H / 2.0, r[1] + r[3] / 2.0),
+			Vector3(r[2], WALL_H, r[3]),
+			body
+		)
 		_flag_walls.append([String(fw.get("until_flag", "")), body])
 		_bump("walls")
 	refresh_flags()
@@ -917,18 +1073,27 @@ func _bounds() -> void:
 		for sg in _subtract(sides[side][1], sides[side][2], cuts):
 			var mid: float = (sg[0] + sg[1]) / 2.0
 			var len: float = sg[1] - sg[0]
-			var c := Vector3(mid, WALL_H / 2.0, fixed + outward) if hz else Vector3(fixed + outward, WALL_H / 2.0, mid)
+			var c := (
+				Vector3(mid, WALL_H / 2.0, fixed + outward)
+				if hz
+				else Vector3(fixed + outward, WALL_H / 2.0, mid)
+			)
 			_solid_box(c, Vector3(len, WALL_H, 1.0) if hz else Vector3(1.0, WALL_H, len))
 			_bump("bounds")
 
 
 # --- vegetation & props --------------------------------------------------------------------------
 
+
 ## A tree: the original's HGSS billboard card (batched), placeholder trunk + crown if missing.
 func _tree(at: Vector3, s: float, model := HGSS_TREE) -> void:
 	var yaw := _rng.randf() * TAU
 	if model.begins_with("hgss/"):
-		if not _add_model(model, _scaled(at, Vector3.ONE * HGSS_SCALE * s), {"billboard": true, "tint": HGSS_TREE_TINT}):
+		if not _add_model(
+			model,
+			_scaled(at, Vector3.ONE * HGSS_SCALE * s),
+			{"billboard": true, "tint": HGSS_TREE_TINT}
+		):
 			_placeholder_tree(at, s, yaw)
 	elif not _add_model(model, _scaled(at, Vector3.ONE * 3.2 * s, yaw), {}):
 		_placeholder_tree(at, s, yaw)
@@ -953,9 +1118,15 @@ func _trees() -> void:
 		var step := 1.9
 		var n := maxi(int(a.distance_to(b) / step), 1)
 		for row in int(t.get("rows", 2)):
-			var off := out * (row * 1.9) + (Vector3.ZERO if row % 2 == 0 else (b - a).normalized() * 0.95)
+			var off := (
+				out * (row * 1.9) + (Vector3.ZERO if row % 2 == 0 else (b - a).normalized() * 0.95)
+			)
 			for i in n + 1:
-				var p := a.lerp(b, float(i) / n) + off + Vector3(_rng.randf_range(-0.3, 0.3), 0, _rng.randf_range(-0.3, 0.3))
+				var p := (
+					a.lerp(b, float(i) / n)
+					+ off
+					+ Vector3(_rng.randf_range(-0.3, 0.3), 0, _rng.randf_range(-0.3, 0.3))
+				)
 				p.y = height_at(p.x, p.z)
 				_tree(p, _rng.randf_range(0.9, 1.15), String(models[(i + row) % models.size()]))
 		await _tick()
@@ -985,13 +1156,21 @@ func _props() -> void:
 				opts = {"billboard": true, "tint": HGSS_TREE_TINT}
 			elif mid == HGSS_BOULDER:
 				opts = {"billboard": true, "sway": 0.0}
-			elif not rock_pal.is_empty() and (mid.begins_with("nature/rock") or mid.begins_with("nature/cliff")):
+			elif (
+				not rock_pal.is_empty()
+				and (mid.begins_with("nature/rock") or mid.begins_with("nature/cliff"))
+			):
 				opts = {"palette": rock_pal}
 			elif not tree_pal.is_empty() and mid.begins_with("nature/"):
 				opts = {"palette": tree_pal}
 			var light := bool(p.get("light", false))
 			var small := bool(p.get("small", false))
-			if light or mid.contains("lamp") or mid.contains("camp_light") or mid.contains("fountain"):
+			if (
+				light
+				or mid.contains("lamp")
+				or mid.contains("camp_light")
+				or mid.contains("fountain")
+			):
 				var o := opts.duplicate()
 				o.merge({"scale": s, "rot": float(p.get("rot", 0.0)), "light": light})
 				if small:
@@ -1021,7 +1200,9 @@ func _props() -> void:
 			"trunk":
 				_solid_cyl(_at(p), 0.15, 2.4)
 			"box":
-				var size := Vector3(2.6, 1.2, 2.6) if model == "fountain" else Vector3(0.6, 1.2, 0.6)
+				var size := (
+					Vector3(2.6, 1.2, 2.6) if model == "fountain" else Vector3(0.6, 1.2, 0.6)
+				)
 				_solid_box(_at(p) + Vector3(0, size.y / 2.0, 0), size)
 		_bump("props")
 		await _tick()
@@ -1083,7 +1264,9 @@ static func _flower_material(kind: int) -> StandardMaterial3D:
 	var frames := AnimatedTexture.new()
 	frames.frames = 3
 	for f in 3:
-		frames.set_frame_texture(f, WorldFx.tex("models/hgss/common/flower%02d_%d.png" % [kind, f + 1]))
+		frames.set_frame_texture(
+			f, WorldFx.tex("models/hgss/common/flower%02d_%d.png" % [kind, f + 1])
+		)
 		frames.set_frame_duration(f, HGSS_FLOWER_SECONDS)
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = frames
@@ -1106,13 +1289,23 @@ func _flowers() -> void:
 			for i in range(-reach, reach + 1):
 				for j in range(-reach, reach + 1):
 					if Vector2(i, j).length() <= radius:
-						tiles[_rng.randi() % 2].append(Transform3D(Basis(), Vector3(c.x + i, c.y + HGSS_FLOWER_Y, c.z + j)))
+						tiles[_rng.randi() % 2].append(
+							Transform3D(Basis(), Vector3(c.x + i, c.y + HGSS_FLOWER_Y, c.z + j))
+						)
 		else:
 			for i in int(bed.get("count", 8)):
 				var r := sqrt(_rng.randf()) * radius
 				var a := _rng.randf() * TAU
-				_add_model(FLOWER_KINDS[_rng.randi() % FLOWER_KINDS.size()],
-						_scaled(c + Vector3(cos(a), 0, sin(a)) * r, Vector3.ONE * 2.0, deg_to_rad(_rng.randi_range(0, 359))), {}, false)
+				_add_model(
+					FLOWER_KINDS[_rng.randi() % FLOWER_KINDS.size()],
+					_scaled(
+						c + Vector3(cos(a), 0, sin(a)) * r,
+						Vector3.ONE * 2.0,
+						deg_to_rad(_rng.randi_range(0, 359))
+					),
+					{},
+					false
+				)
 		_bump("flowers")
 	var quad := PlaneMesh.new()
 	quad.size = Vector2.ONE
@@ -1161,7 +1354,11 @@ func _backdrop() -> void:
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var base_y: Variant = b.get("base_y", null)
-	mi.position = Vector3(float(pos[0]), (float(base_y) if base_y != null else height_at(float(pos[0]), float(pos[1]))) + h * 0.5, float(pos[1]))
+	mi.position = Vector3(
+		float(pos[0]),
+		(float(base_y) if base_y != null else height_at(float(pos[0]), float(pos[1]))) + h * 0.5,
+		float(pos[1])
+	)
 	add_child(mi)
 
 
@@ -1178,13 +1375,17 @@ func _scatter() -> void:
 		var sc: Array = layer.get("scale", [1.4, 2.4])
 		for a in layer.areas:
 			for i in int(float(a[2]) * float(a[3]) * float(layer.density)):
-				var p := Vector3(_rng.randf_range(a[0], a[0] + a[2]), 0, _rng.randf_range(a[1], a[1] + a[3]))
+				var p := Vector3(
+					_rng.randf_range(a[0], a[0] + a[2]), 0, _rng.randf_range(a[1], a[1] + a[3])
+				)
 				if clump > 0.0 and noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5 < clump:
 					continue
 				if _blocked(p):
 					continue
 				p.y = height_at(p.x, p.z)
-				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3.ONE * _rng.randf_range(float(sc[0]), float(sc[1])))
+				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(
+					Vector3.ONE * _rng.randf_range(float(sc[0]), float(sc[1]))
+				)
 				out[layer.models[_rng.randi() % layer.models.size()]].append(Transform3D(b, p))
 			await _tick()
 		var pal := _palette(layer.get("palette", {}))
@@ -1213,11 +1414,21 @@ func _scatter() -> void:
 
 func _blocked(p: Vector3) -> bool:
 	for r in data.get("paths", []):
-		if p.x > r[0] - 0.4 and p.x < r[0] + r[2] + 0.4 and p.z > r[1] - 0.4 and p.z < r[1] + r[3] + 0.4:
+		if (
+			p.x > r[0] - 0.4
+			and p.x < r[0] + r[2] + 0.4
+			and p.z > r[1] - 0.4
+			and p.z < r[1] + r[3] + 0.4
+		):
 			return true
 	for w in data.get("water", []):
 		var r: Array = w.rect
-		if p.x > r[0] - 1.0 and p.x < r[0] + r[2] + 1.0 and p.z > r[1] - 1.0 and p.z < r[1] + r[3] + 1.0:
+		if (
+			p.x > r[0] - 1.0
+			and p.x < r[0] + r[2] + 1.0
+			and p.z > r[1] - 1.0
+			and p.z < r[1] + r[3] + 1.0
+		):
 			return true
 	for b in data.get("buildings", []):
 		if absf(p.x - b.pos[0]) < 6.0 and absf(p.z - b.pos[1]) < 5.5:
@@ -1244,7 +1455,11 @@ func _blocked(p: Vector3) -> bool:
 			var half := float(s.width) / 2.0 + 0.6
 			match String(s.side):
 				"e":
-					if p.x > r[0] + r[2] - 0.5 and p.x < r[0] + r[2] + run and absf(p.z - s.at) < half:
+					if (
+						p.x > r[0] + r[2] - 0.5
+						and p.x < r[0] + r[2] + run
+						and absf(p.z - s.at) < half
+					):
 						return true
 				"w":
 					if p.x < r[0] + 0.5 and p.x > r[0] - run and absf(p.z - s.at) < half:
@@ -1253,7 +1468,11 @@ func _blocked(p: Vector3) -> bool:
 					if p.z < r[1] + 0.5 and p.z > r[1] - run and absf(p.x - s.at) < half:
 						return true
 				"s":
-					if p.z > r[1] + r[3] - 0.5 and p.z < r[1] + r[3] + run and absf(p.x - s.at) < half:
+					if (
+						p.z > r[1] + r[3] - 0.5
+						and p.z < r[1] + r[3] + run
+						and absf(p.x - s.at) < half
+					):
 						return true
 	return false
 
@@ -1272,6 +1491,7 @@ func _sun_shafts() -> void:
 
 
 # --- encounters & people -------------------------------------------------------------------------
+
 
 func _grass() -> void:
 	var i := 0
@@ -1312,7 +1532,11 @@ static func fill_names(lines: Array) -> PackedStringArray:
 	var pn = Game.get("player_name")
 	var rn = Game.get("rival_name")
 	for l in lines:
-		out.append(String(l).replace("{PLAYER}", String(pn) if pn else "RED").replace("{RIVAL}", String(rn) if rn else "BLUE"))
+		out.append(
+			String(l).replace("{PLAYER}", String(pn) if pn else "RED").replace(
+				"{RIVAL}", String(rn) if rn else "BLUE"
+			)
+		)
 	return out
 
 

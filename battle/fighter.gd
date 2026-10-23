@@ -30,9 +30,18 @@ const STATUS_TIME := {"burn": 6.0, "poison": 6.0, "paralysis": 6.0, "sleep": 3.0
 const CONFUSION_TIME := 4.0
 const FLINCH_TIME := 0.5
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
-const STRUGGLE := {"id": "struggle", "name": "Struggle", "type": "none", "category": "physical",
-	"kind": "lunge", "power": 50, "knockback": 5}
-const STATUS_SHORT := {"burn": "BRN", "poison": "PSN", "paralysis": "PAR", "sleep": "SLP", "leech": "SEED"}
+const STRUGGLE := {
+	"id": "struggle",
+	"name": "Struggle",
+	"type": "none",
+	"category": "physical",
+	"kind": "lunge",
+	"power": 50,
+	"knockback": 5
+}
+const STATUS_SHORT := {
+	"burn": "BRN", "poison": "PSN", "paralysis": "PAR", "sleep": "SLP", "leech": "SEED"
+}
 
 var arena: Node
 var mon: Mon
@@ -107,7 +116,7 @@ var cast_move := {}
 var cast_n := 0
 var look_h := 1.0
 
-var look: CreatureSprite   # arte do original (gfx/creature_sprite.gd)
+var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
 var vfx: BattleVfx
 var _shadow: MeshInstance3D
 var _ring: MeshInstance3D
@@ -183,7 +192,9 @@ func _build_visual() -> void:
 	_ring_mat = StandardMaterial3D.new()
 	_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_ring_mat.albedo_color = Color(0.35, 0.65, 1.0, 0.75) if side == 0 else Color(1.0, 0.35, 0.3, 0.75)
+	_ring_mat.albedo_color = (
+		Color(0.35, 0.65, 1.0, 0.75) if side == 0 else Color(1.0, 0.35, 0.3, 0.75)
+	)
 	rm.material = _ring_mat
 	_ring.mesh = rm
 	_ring.scale = Vector3(1, 0.15, 1)
@@ -288,6 +299,7 @@ func flat_to(t: Node3D) -> Vector3:
 
 # --- Stats ---
 
+
 func stat(k: String) -> float:
 	return float(stats.get(k, 10)) * StatCalc.stage_mult(int(stages.get(k, 0)))
 
@@ -300,7 +312,13 @@ func crit_stat(k: String, attacking: bool) -> float:
 
 ## Dicionário no formato de Damage.compute (stats com estágios, burn à parte).
 func damage_profile() -> Dictionary:
-	var d := {"level": level, "types": types, "crit_stage": crit_stage, "burned": status == "burn", "terrain_mult": 1.0}
+	var d := {
+		"level": level,
+		"types": types,
+		"crit_stage": crit_stage,
+		"burned": status == "burn",
+		"terrain_mult": 1.0
+	}
 	for k in ["atk", "def", "spa", "spd"]:
 		d[k] = stat(k)
 	d["crit_atk"] = crit_stat("atk", true)
@@ -360,6 +378,7 @@ func aim_dir() -> Vector3:
 
 # --- Recursos ---
 
+
 func spend(cost: float, tired: float) -> bool:
 	pp_max -= cost
 	stamina = minf(stamina - tired, pp_max)
@@ -376,8 +395,17 @@ func stagger() -> void:
 
 
 func can_jump() -> bool:
-	return jump_height > 0.0 and root_t <= 0.0 and can_act() and trap_t <= 0.0 and stamina > 0.0 \
-			and air_t <= 0.0 and land_t <= 0.0 and dash_t <= 0.0 and lunge_t <= 0.0
+	return (
+		jump_height > 0.0
+		and root_t <= 0.0
+		and can_act()
+		and trap_t <= 0.0
+		and stamina > 0.0
+		and air_t <= 0.0
+		and land_t <= 0.0
+		and dash_t <= 0.0
+		and lunge_t <= 0.0
+	)
 
 
 func start_jump() -> bool:
@@ -394,6 +422,7 @@ func can_sprint(moving: bool) -> bool:
 
 
 # --- Preparação (windup enraizado antes de soltar o golpe) ---
+
 
 func begin_prepare(id: String, secs: float, cb: Callable) -> void:
 	prepare_id = id
@@ -442,20 +471,32 @@ func start_arc_step(dir: Vector3) -> void:
 
 ## Sem PP: lunge com recuo de max_hp/4.
 func struggle() -> bool:
-	if struggle_cd > 0.0 or lunge_t > 0.0 or gcd_t > 0.0 or root_t > 0.0 or not can_act() or not may_start(STRUGGLE):
+	if (
+		struggle_cd > 0.0
+		or lunge_t > 0.0
+		or gcd_t > 0.0
+		or root_t > 0.0
+		or not can_act()
+		or not may_start(STRUGGLE)
+	):
 		return false
 	struggle_cd = STRUGGLE_CD
 	gcd_t = Dex.GLOBAL_COOLDOWN / speed_factor()
 	var dir := aim_dir()
 	popup("Desespero", Color(0.9, 0.9, 0.9), 1.0, 0.9)
-	begin_prepare("", LUNGE_PREPARE, func() -> void:
-		lunge_dir = dir
-		lunge_t = LUNGE_TIME
-		lunge_done = false)
+	begin_prepare(
+		"",
+		LUNGE_PREPARE,
+		func() -> void:
+			lunge_dir = dir
+			lunge_t = LUNGE_TIME
+			lunge_done = false
+	)
 	return true
 
 
 # --- Status ---
+
 
 func apply_status(s: String, source: BattleFighter = null) -> bool:
 	if not alive():
@@ -525,6 +566,7 @@ func heal(n: int) -> void:
 
 # --- Dano ---
 
+
 static func impact_secs(hp_pct: float, crit: bool, eff: float, ko: bool, final_hit: bool) -> float:
 	if not final_hit:
 		return 0.05
@@ -548,8 +590,13 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 	var imp := 0.0
 	var src: BattleFighter = opts.get("source")
 	if has_dir and is_instance_valid(src):
-		imp = impact_secs(float(amount) / float(maxi(max_hp, 1)), bool(opts.get("crit", false)),
-				float(opts.get("eff", 1.0)), amount >= hp_before, bool(opts.get("final", true)))
+		imp = impact_secs(
+			float(amount) / float(maxi(max_hp, 1)),
+			bool(opts.get("crit", false)),
+			float(opts.get("eff", 1.0)),
+			amount >= hp_before,
+			bool(opts.get("final", true))
+		)
 		if imp > 0.0:
 			impact_t = maxf(impact_t, imp)
 			src.impact_t = maxf(src.impact_t, imp)
@@ -590,10 +637,17 @@ func _faint() -> void:
 ## style: "" = adivinhado pelo texto (damage, crit, super, weak, miss, dodge, stat_up, stat_down, status, heal, move, callout, info).
 func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15, style := "") -> void:
 	if arena:
-		arena.popup(position + Vector3(0, visual_height() + 0.1 + extra * 0.25, 0), text, col, scale_k, style)
+		arena.popup(
+			position + Vector3(0, visual_height() + 0.1 + extra * 0.25, 0),
+			text,
+			col,
+			scale_k,
+			style
+		)
 
 
 # --- Por frame ---
+
 
 ## Avança timers, status e stamina. dt já escalado pela velocidade da luta.
 func tick(dt: float) -> void:

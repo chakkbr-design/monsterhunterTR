@@ -15,11 +15,11 @@ var fade := 0.06
 var auto := false
 var pulse := 0.0
 var travel := 0.0
-var _parts: Array = []   # {spr: Sprite3D, n, fps, mat, a, base_y}
-var _jets: Array = []    # {mat: ShaderMaterial, a}
+var _parts: Array = []  # {spr: Sprite3D, n, fps, mat, a, base_y}
+var _jets: Array = []  # {mat: ShaderMaterial, a}
 var _xf := Transform3D()
 
-static var _tex := {}         # caminho -> Texture2D (ou null)
+static var _tex := {}  # caminho -> Texture2D (ou null)
 static var _flame_shader: Shader
 
 
@@ -78,7 +78,9 @@ static func _basis(dir: Vector3, axis: int, pos: Vector3, cam: Vector3) -> Basis
 ## Monta o raio (sem pôr na árvore). at/dir em coordenadas globais; cam_pos = posição da câmera.
 ## Coloque como filho de um nó na origem do mundo (ou ajuste com global_transform) — as peças usam
 ## posições relativas ao próprio BeamFx, que fica em `at`.
-static func make(beam_id: String, at: Vector3, dir: Vector3, length: float, dur: float, cam_pos: Vector3) -> BeamFx:
+static func make(
+	beam_id: String, at: Vector3, dir: Vector3, length: float, dur: float, cam_pos: Vector3
+) -> BeamFx:
 	var def: Dictionary = beams().get(beam_id, {})
 	if def.is_empty():
 		return null
@@ -101,44 +103,147 @@ static func make(beam_id: String, at: Vector3, dir: Vector3, length: float, dur:
 	var k := thick / (dia_px * FX_PIXEL_M) if thick > 0.0 else 1.0
 	var end_k := k * float(def.get("head_scale", 1.0))
 	if axis_of(beam_id) == "sky":
-		b._quad(head, n, fps, Vector3(0, float(head.fh) * FX_PIXEL_M * end_k * 0.5, 0), Vector3.ONE * end_k, tint, add)
+		b._quad(
+			head,
+			n,
+			fps,
+			Vector3(0, float(head.fh) * FX_PIXEL_M * end_k * 0.5, 0),
+			Vector3.ONE * end_k,
+			tint,
+			add
+		)
 		var tile := float(body.fh) * FX_PIXEL_M
 		for i in int(ceil(length / tile)):
 			var t := minf(tile, length - float(i) * tile)
-			b._quad(body, n, fps, Vector3(0, float(i) * tile + t * 0.5, 0),
-					Vector3(dia_px / float(body.fw) * k, t / tile, 1), tint, add)
+			b._quad(
+				body,
+				n,
+				fps,
+				Vector3(0, float(i) * tile + t * 0.5, 0),
+				Vector3(dia_px / float(body.fw) * k, t / tile, 1),
+				tint,
+				add
+			)
 	else:
 		var aim := dir.normalized()
 		var tail := _part(beam_id, "tail", n)
 		var thick_k := 1.0
 		if String(def.get("style", "")) == "water":
 			thick_k = 1.0
-		b._aim(head, n, fps, at, Vector3.ZERO, Vector3.AXIS_Y, aim, cam_pos, Vector3.ONE * end_k, tint, add)
+		b._aim(
+			head,
+			n,
+			fps,
+			at,
+			Vector3.ZERO,
+			Vector3.AXIS_Y,
+			aim,
+			cam_pos,
+			Vector3.ONE * end_k,
+			tint,
+			add
+		)
 		var tile2 := float(body.fw) * FX_PIXEL_M
 		var stretch := dia_px / float(body.fh) * k * thick_k
 		var body_len := length / tile2
-		b._aim(body, 1, fps, at, aim * (length * 0.5), Vector3.AXIS_X, aim, cam_pos, Vector3(body_len, stretch, 1), tint, add)
+		b._aim(
+			body,
+			1,
+			fps,
+			at,
+			aim * (length * 0.5),
+			Vector3.AXIS_X,
+			aim,
+			cam_pos,
+			Vector3(body_len, stretch, 1),
+			tint,
+			add
+		)
 		var glow_v = def.get("glow", 0.0)
 		if glow_v is Array:
-			b._aim(body, 1, fps, at, aim * (length * 0.5), Vector3.AXIS_X, aim, cam_pos,
-					Vector3(body_len, stretch * 2.0, 1), Color(_tint(glow_v), 0.45), true)
+			b._aim(
+				body,
+				1,
+				fps,
+				at,
+				aim * (length * 0.5),
+				Vector3.AXIS_X,
+				aim,
+				cam_pos,
+				Vector3(body_len, stretch * 2.0, 1),
+				Color(_tint(glow_v), 0.45),
+				true
+			)
 		elif float(glow_v) > 0.0:
-			b._aim(body, 1, fps, at, aim * (length * 0.5), Vector3.AXIS_X, aim, cam_pos,
-					Vector3(body_len, stretch * float(glow_v), 1), _tint(def.get("glow_tint", [])), true)
+			b._aim(
+				body,
+				1,
+				fps,
+				at,
+				aim * (length * 0.5),
+				Vector3.AXIS_X,
+				aim,
+				cam_pos,
+				Vector3(body_len, stretch * float(glow_v), 1),
+				_tint(def.get("glow_tint", [])),
+				true
+			)
 		var core_v = def.get("core", 0.0)
 		if core_v is Array:
-			b._aim(body, 1, fps, at, aim * (length * 0.5), Vector3.AXIS_X, aim, cam_pos,
-					Vector3(body_len, stretch * 0.35, 1), _tint(core_v), true)
+			b._aim(
+				body,
+				1,
+				fps,
+				at,
+				aim * (length * 0.5),
+				Vector3.AXIS_X,
+				aim,
+				cam_pos,
+				Vector3(body_len, stretch * 0.35, 1),
+				_tint(core_v),
+				true
+			)
 		elif float(core_v) > 0.0:
-			b._aim(body, 1, fps, at, aim * (length * 0.5), Vector3.AXIS_X, aim, cam_pos,
-					Vector3(body_len, stretch * float(core_v), 1), _tint(def.get("core_tint", [])), true)
+			b._aim(
+				body,
+				1,
+				fps,
+				at,
+				aim * (length * 0.5),
+				Vector3.AXIS_X,
+				aim,
+				cam_pos,
+				Vector3(body_len, stretch * float(core_v), 1),
+				_tint(def.get("core_tint", [])),
+				true
+			)
 		if not tail.is_empty():
-			b._aim(tail, n, fps, at, aim * length, Vector3.AXIS_Y, aim, cam_pos, Vector3.ONE * end_k, tint, add)
+			b._aim(
+				tail,
+				n,
+				fps,
+				at,
+				aim * length,
+				Vector3.AXIS_Y,
+				aim,
+				cam_pos,
+				Vector3.ONE * end_k,
+				tint,
+				add
+			)
 	return b
 
 
 ## Jato de fogo (flamethrower): quad orientado com o shader flame_jet portado do original.
-static func flame_jet(at: Vector3, dir: Vector3, length: float, cfg: Dictionary, travel_s: float, dur: float, cam_pos: Vector3) -> BeamFx:
+static func flame_jet(
+	at: Vector3,
+	dir: Vector3,
+	length: float,
+	cfg: Dictionary,
+	travel_s: float,
+	dur: float,
+	cam_pos: Vector3
+) -> BeamFx:
 	var b := BeamFx.new()
 	b.name = "FlameJet"
 	b.life = dur
@@ -148,7 +253,9 @@ static func flame_jet(at: Vector3, dir: Vector3, length: float, cfg: Dictionary,
 	if _flame_shader == null:
 		_flame_shader = load(FLAME_SHADER)  # em cache: recarregar recompila o shader a cada Lança-chamas
 	var shader := _flame_shader
-	for layer in [{"sq": 1.0, "dim": 1.0, "a": 1.0, "z": 0.0}, {"sq": 1.3, "dim": 0.55, "a": 0.6, "z": -0.2}]:
+	for layer in [
+		{"sq": 1.0, "dim": 1.0, "a": 1.0, "z": 0.0}, {"sq": 1.3, "dim": 0.55, "a": 0.6, "z": -0.2}
+	]:
 		var mesh := QuadMesh.new()
 		mesh.size = Vector2(length, tip * 1.3 * float(layer.sq))
 		var mi := MeshInstance3D.new()
@@ -199,7 +306,9 @@ func _sprite(part: Dictionary, n: int, tint: Color, add: bool) -> Sprite3D:
 	return spr
 
 
-func _quad(part: Dictionary, n: int, fps: float, off: Vector3, sc: Vector3, tint: Color, add: bool) -> void:
+func _quad(
+	part: Dictionary, n: int, fps: float, off: Vector3, sc: Vector3, tint: Color, add: bool
+) -> void:
 	var spr := _sprite(part, n, tint, add)
 	spr.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	(spr.material_override as StandardMaterial3D).billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
@@ -209,8 +318,19 @@ func _quad(part: Dictionary, n: int, fps: float, off: Vector3, sc: Vector3, tint
 
 
 ## at = posição global da origem do raio; as peças ficam relativas a este nó (que deve ficar em `at`).
-func _aim(part: Dictionary, n: int, fps: float, at: Vector3, off: Vector3, axis: int, dir: Vector3, cam: Vector3,
-		sc: Vector3, tint: Color, add: bool) -> void:
+func _aim(
+	part: Dictionary,
+	n: int,
+	fps: float,
+	at: Vector3,
+	off: Vector3,
+	axis: int,
+	dir: Vector3,
+	cam: Vector3,
+	sc: Vector3,
+	tint: Color,
+	add: bool
+) -> void:
 	var spr := _sprite(part, n, tint, add)
 	spr.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	var pos := at + off
@@ -233,7 +353,10 @@ func tick(dt: float) -> bool:
 	age += dt
 	if age >= life:
 		return false
-	var a := clampf(age / maxf(fade, 0.001), 0.0, 1.0) * clampf((life - age) / maxf(fade, 0.001), 0.0, 1.0)
+	var a := (
+		clampf(age / maxf(fade, 0.001), 0.0, 1.0)
+		* clampf((life - age) / maxf(fade, 0.001), 0.0, 1.0)
+	)
 	var fps := float(get_meta("fps", 15.0))
 	for p in _parts:
 		var spr: Sprite3D = p.spr

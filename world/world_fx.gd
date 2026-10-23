@@ -39,7 +39,9 @@ static func ensure_globals() -> void:
 	weather_image.fill(Color(0, 0, 0, 0))
 	weather_texture = ImageTexture.create_from_image(weather_image)
 	if not ProjectSettings.has_setting("shader_globals/weather_map"):
-		RenderingServer.global_shader_parameter_add("weather_map", RenderingServer.GLOBAL_VAR_TYPE_SAMPLER2D, weather_texture)
+		RenderingServer.global_shader_parameter_add(
+			"weather_map", RenderingServer.GLOBAL_VAR_TYPE_SAMPLER2D, weather_texture
+		)
 	else:
 		RenderingServer.global_shader_parameter_set("weather_map", weather_texture)
 
@@ -77,4 +79,6 @@ static func tex(rel: String) -> Texture2D:
 ## Map JSON look.env ("res://resources/look/x.tres") -> the converted copy in world/look/.
 static func env_path(original: String) -> String:
 	var p := "res://world/look/%s" % original.get_file()
-	return p if original != "" and ResourceLoader.exists(p) else "res://world/look/overworld_env.tres"
+	return (
+		p if original != "" and ResourceLoader.exists(p) else "res://world/look/overworld_env.tres"
+	)

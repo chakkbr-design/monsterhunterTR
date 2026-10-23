@@ -7,10 +7,17 @@ extends RefCounted
 ## Visual only: callers keep their own collision (MapBuilder keeps the placeholder colliders).
 
 const NATURE_PALETTE := {
-	"leafsGreen": Color(0.33, 0.62, 0.27), "leafsDark": Color(0.2, 0.45, 0.2), "leafsFall": Color(0.85, 0.55, 0.25),
-	"grass": Color(0.45, 0.72, 0.3), "woodBark": Color(0.45, 0.31, 0.22), "woodBarkDark": Color(0.35, 0.24, 0.17),
-	"wood": Color(0.82, 0.62, 0.42), "woodDark": Color(0.62, 0.45, 0.31), "dirt": Color(0.6, 0.47, 0.33),
-	"stone": Color(0.62, 0.63, 0.66), "stoneDark": Color(0.45, 0.46, 0.5),
+	"leafsGreen": Color(0.33, 0.62, 0.27),
+	"leafsDark": Color(0.2, 0.45, 0.2),
+	"leafsFall": Color(0.85, 0.55, 0.25),
+	"grass": Color(0.45, 0.72, 0.3),
+	"woodBark": Color(0.45, 0.31, 0.22),
+	"woodBarkDark": Color(0.35, 0.24, 0.17),
+	"wood": Color(0.82, 0.62, 0.42),
+	"woodDark": Color(0.62, 0.45, 0.31),
+	"dirt": Color(0.6, 0.47, 0.33),
+	"stone": Color(0.62, 0.63, 0.66),
+	"stoneDark": Color(0.45, 0.46, 0.5),
 }
 const GLOW_ALPHA := 0.35
 const WINDOW_COLOR := Color(1.0, 0.5, 0.15)
@@ -24,7 +31,11 @@ static var _cells := {}
 
 
 static func path_of(id: String) -> String:
-	return WorldFx.MODELS + (id if id.begins_with("hgss/") or id.begins_with("kenney/") else "kenney/" + id) + ".scn"
+	return (
+		WorldFx.MODELS
+		+ (id if id.begins_with("hgss/") or id.begins_with("kenney/") else "kenney/" + id)
+		+ ".scn"
+	)
 
 
 static func exists(id: String) -> bool:
@@ -71,6 +82,7 @@ static func bounds(n: Node3D, local := false) -> AABB:
 
 # --- faders (camera_rig fades buildings / terraces that hide the player) -------------------------
 
+
 static func register_fader(n: Node3D, rect: Rect2) -> void:
 	var a := Vector2i(floori(rect.position.x / CELL), floori(rect.position.y / CELL))
 	var b := Vector2i(floori(rect.end.x / CELL), floori(rect.end.y / CELL))
@@ -99,7 +111,10 @@ static func faders_near(p: Vector3, radius: float) -> Array:
 
 # --- materials -----------------------------------------------------------------------------------
 
-static func hgss_material(m: Material, billboard := false, tint := Color.WHITE, windows := false, sway := 0.04) -> Material:
+
+static func hgss_material(
+	m: Material, billboard := false, tint := Color.WHITE, windows := false, sway := 0.04
+) -> Material:
 	var sm := m as StandardMaterial3D
 	if sm == null:
 		return m
@@ -109,11 +124,15 @@ static func hgss_material(m: Material, billboard := false, tint := Color.WHITE, 
 	var res: Material
 	var nm := String(sm.resource_name).to_lower()
 	if nm.contains("_sl3"):  # lamp glow card
-		var gm := WorldFx.shader_mat("hgss_lamp_glow", {"glow_tex": sm.albedo_texture, "glow_alpha": GLOW_ALPHA})
+		var gm := WorldFx.shader_mat(
+			"hgss_lamp_glow", {"glow_tex": sm.albedo_texture, "glow_alpha": GLOW_ALPHA}
+		)
 		gm.resource_name = sm.resource_name
 		res = gm
 	elif billboard and not nm.contains("_un"):
-		res = WorldFx.shader_mat("hgss_foliage", {"albedo_tex": sm.albedo_texture, "tint": tint, "sway": sway})
+		res = WorldFx.shader_mat(
+			"hgss_foliage", {"albedo_tex": sm.albedo_texture, "tint": tint, "sway": sway}
+		)
 	else:
 		var out := sm.duplicate() as StandardMaterial3D
 		out.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
@@ -150,7 +169,9 @@ static func kenney_material(m: Material, palette := {}, stylize := true) -> Mate
 		out.roughness = 0.9
 	var res: Material = out
 	if stylize:
-		var s := WorldFx.shader_mat("prop_stylize", {"albedo": out.albedo_color, "is_foliage": nm.begins_with("leafs")})
+		var s := WorldFx.shader_mat(
+			"prop_stylize", {"albedo": out.albedo_color, "is_foliage": nm.begins_with("leafs")}
+		)
 		s.resource_name = nm
 		if out.albedo_texture:
 			s.set_shader_parameter("use_tex", true)
@@ -179,7 +200,12 @@ static func _window_mask(tex: Texture2D) -> ImageTexture:
 	for y in h:
 		for x in w:
 			var c := img.get_pixel(x, y)
-			if c.a >= 0.5 and c.b - c.r >= 0.078 and c.b - c.g >= 0.059 and maxf(c.r, maxf(c.g, c.b)) >= 0.55:
+			if (
+				c.a >= 0.5
+				and c.b - c.r >= 0.078
+				and c.b - c.g >= 0.059
+				and maxf(c.r, maxf(c.g, c.b)) >= 0.55
+			):
 				seed = true
 				break
 		if seed:
@@ -211,6 +237,7 @@ static func _window_mask(tex: Texture2D) -> ImageTexture:
 
 # --- placement -----------------------------------------------------------------------------------
 
+
 ## Instances model `id` under parent at pos. opts: scale, rot (deg), billboard, tint, sway, windows,
 ## palette, stylize, shadow (bool), vis_range, light (lamp OmniLight), fade ("building").
 static func place(parent: Node, id: String, pos: Vector3, opts := {}) -> Node3D:
@@ -231,8 +258,13 @@ static func place(parent: Node, id: String, pos: Vector3, opts := {}) -> Node3D:
 			var m := mi.get_active_material(i)
 			var r: Material
 			if hgss:
-				r = hgss_material(m, bool(opts.get("billboard", false)), opts.get("tint", Color.WHITE),
-						bool(opts.get("windows", false)), float(opts.get("sway", 0.04)))
+				r = hgss_material(
+					m,
+					bool(opts.get("billboard", false)),
+					opts.get("tint", Color.WHITE),
+					bool(opts.get("windows", false)),
+					float(opts.get("sway", 0.04))
+				)
 			else:
 				r = kenney_material(m, opts.get("palette", {}), bool(opts.get("stylize", true)))
 			if r != m:
@@ -273,7 +305,9 @@ static func lantern_light(parent: Node, inst: Node3D) -> void:
 	light.omni_attenuation = 0.8
 	light.shadow_enabled = false
 	parent.add_child(light)
-	light.global_position = Vector3(bb.get_center().x, bb.position.y + bb.size.y * 0.88, bb.get_center().z)
+	light.global_position = Vector3(
+		bb.get_center().x, bb.position.y + bb.size.y * 0.88, bb.get_center().z
+	)
 	var nl := NightLights.new()
 	nl.light = light
 	parent.add_child(nl)
@@ -304,7 +338,13 @@ static func batch_mesh(id: String, opts := {}) -> Array:
 		var m := mi.get_active_material(s)
 		var r: Material
 		if id.begins_with("hgss/"):
-			r = hgss_material(m, bool(opts.get("billboard", false)), opts.get("tint", Color.WHITE), false, float(opts.get("sway", 0.04)))
+			r = hgss_material(
+				m,
+				bool(opts.get("billboard", false)),
+				opts.get("tint", Color.WHITE),
+				false,
+				float(opts.get("sway", 0.04))
+			)
 		else:
 			r = kenney_material(m, opts.get("palette", {}), bool(opts.get("stylize", true)))
 		mesh.surface_set_material(s, r)

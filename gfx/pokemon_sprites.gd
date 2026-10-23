@@ -69,28 +69,59 @@ static func spec(species: String) -> Dictionary:
 				vf = 1
 		var fh := float(h) / vf
 		var height_m := float(cfg.get("height_m", sp.get("height_m", 1.4)))
-		s = {"texture": tex, "hframes": hf, "vframes": vf, "rows": cfg.get("rows", DEFAULT_ROWS),
-				"frames_per_row": hf, "pixel_size": height_m / fh, "offset_y": fh / 2.0,
-				"visible_m": float(cfg.get("visible_m", height_m * 0.6)),
-				"tint": Color.WHITE, "static": hf * vf == 1, "faces": cfg.get("faces", "left"), "real": true}
+		s = {
+			"texture": tex,
+			"hframes": hf,
+			"vframes": vf,
+			"rows": cfg.get("rows", DEFAULT_ROWS),
+			"frames_per_row": hf,
+			"pixel_size": height_m / fh,
+			"offset_y": fh / 2.0,
+			"visible_m": float(cfg.get("visible_m", height_m * 0.6)),
+			"tint": Color.WHITE,
+			"static": hf * vf == 1,
+			"faces": cfg.get("faces", "left"),
+			"real": true
+		}
 	elif ResourceLoader.exists(dir + "front.png"):
 		# Sem overworld: o primeiro quadro do front.png como carta parada (altura da espécie).
 		var strip := _strip(dir + "front.png")
 		var fr: Texture2D = strip.frame
 		var fh2 := maxf(float(fr.get_height()), 1.0)
 		var hm := float(sp.get("height_m", 1.0))
-		s = {"texture": fr, "hframes": 1, "vframes": 1, "rows": {}, "frames_per_row": 1,
-				"pixel_size": clampf(hm, 0.5, 2.0) / fh2, "offset_y": fh2 / 2.0, "tint": Color.WHITE,
-				"static": true, "faces": "left", "real": true, "visible_m": clampf(hm, 0.5, 2.0)}
+		s = {
+			"texture": fr,
+			"hframes": 1,
+			"vframes": 1,
+			"rows": {},
+			"frames_per_row": 1,
+			"pixel_size": clampf(hm, 0.5, 2.0) / fh2,
+			"offset_y": fh2 / 2.0,
+			"tint": Color.WHITE,
+			"static": true,
+			"faces": "left",
+			"real": true,
+			"visible_m": clampf(hm, 0.5, 2.0)
+		}
 	else:
 		var path := asset_path(String(sp.get("sprite", FALLBACK_SPRITE)))
 		if not ResourceLoader.exists(path):
 			path = FALLBACK_SPRITE
 		var tex2: Texture2D = load(path)
-		s = {"texture": tex2, "hframes": 2, "vframes": 4, "rows": DEFAULT_ROWS, "frames_per_row": 2,
-				"pixel_size": PLACEHOLDER_PIXEL * float(sp.get("placeholder_scale", 1.0)), "offset_y": 16.0,
-				"static": false, "faces": "left", "real": false, "visible_m": 1.0,
-				"tint": Color(String(sp.get("placeholder_tint", "#ffffff")))}
+		s = {
+			"texture": tex2,
+			"hframes": 2,
+			"vframes": 4,
+			"rows": DEFAULT_ROWS,
+			"frames_per_row": 2,
+			"pixel_size": PLACEHOLDER_PIXEL * float(sp.get("placeholder_scale", 1.0)),
+			"offset_y": 16.0,
+			"static": false,
+			"faces": "left",
+			"real": false,
+			"visible_m": 1.0,
+			"tint": Color(String(sp.get("placeholder_tint", "#ffffff")))
+		}
 	_pack_sprites(s, dir)
 	_pack_pmd(s, dir + "pmd/")
 	_cache[key] = s
@@ -119,9 +150,18 @@ static func _pack_pmd(s: Dictionary, pmd_dir: String) -> void:
 		var secs: Array = []
 		for t in a.durations:
 			secs.append(float(t) / 60.0)
-		pmd[name] = {"texture": tex, "w": int(a.w), "h": int(a.h), "dirs": int(a.dirs),
-				"frames": secs.size(), "durations": secs, "anchor": a.get("anchor", []),
-				"rush": int(a.get("rush", -1)), "hit": int(a.get("hit", -1)), "return": int(a.get("return", -1))}
+		pmd[name] = {
+			"texture": tex,
+			"w": int(a.w),
+			"h": int(a.h),
+			"dirs": int(a.dirs),
+			"frames": secs.size(),
+			"durations": secs,
+			"anchor": a.get("anchor", []),
+			"rush": int(a.get("rush", -1)),
+			"hit": int(a.get("hit", -1)),
+			"return": int(a.get("return", -1))
+		}
 	if not pmd.has("Idle"):
 		return
 	s["pmd"] = pmd
@@ -180,7 +220,10 @@ static func footprint_m(species: String) -> float:
 		var fh := int(tex.get_height() / maxi(1, int(s.vframes)))
 		var img := tex.get_image()
 		if img != null and fw > 0 and fh > 0:
-			w = float(img.get_region(Rect2i(0, 0, fw, fh)).get_used_rect().size.x) * float(s.pixel_size)
+			w = (
+				float(img.get_region(Rect2i(0, 0, fw, fh)).get_used_rect().size.x)
+				* float(s.pixel_size)
+			)
 	if w <= 0.0:
 		w = float(s.get("visible_m", 1.0)) * 0.9
 	_footprint_cache[key] = w
@@ -188,7 +231,9 @@ static func footprint_m(species: String) -> float:
 
 
 static func _pack_sprites(s: Dictionary, dir: String) -> void:
-	var icon_tex: Texture2D = load(dir + "icon.png") if ResourceLoader.exists(dir + "icon.png") else _frame0(s)
+	var icon_tex: Texture2D = (
+		load(dir + "icon.png") if ResourceLoader.exists(dir + "icon.png") else _frame0(s)
+	)
 	var fr := _strip(dir + "front.png")
 	var bk := _strip(dir + "back.png")
 	var party := _strip(dir + "party_icon.png")
@@ -198,7 +243,9 @@ static func _pack_sprites(s: Dictionary, dir: String) -> void:
 	s["party_icon"] = party.get("frame", icon_tex)
 	s["front_frames"] = {"texture": fr.get("texture", s["front"]), "frames": fr.get("frames", 1)}
 	s["back_frames"] = {"texture": bk.get("texture", s["back"]), "frames": bk.get("frames", 1)}
-	s["party_icon_frames"] = {"texture": party.get("texture", s["party_icon"]), "frames": party.get("frames", 1)}
+	s["party_icon_frames"] = {
+		"texture": party.get("texture", s["party_icon"]), "frames": party.get("frames", 1)
+	}
 
 
 static func _strip(path: String) -> Dictionary:
@@ -290,13 +337,22 @@ static func _fit_icon(species: String, size_px: int, fill: float, circle: bool) 
 		img.decompress()
 	img.convert(Image.FORMAT_RGBA8)
 	var used := img.get_used_rect()
-	var crop: Image = img.get_region(used) if used.size.x > 0 and used.size.y > 0 else img.duplicate()
+	var crop: Image = (
+		img.get_region(used) if used.size.x > 0 and used.size.y > 0 else img.duplicate()
+	)
 	var k := (size_px * fill) / maxf(float(crop.get_width()), float(crop.get_height()))
-	crop.resize(maxi(1, int(round(crop.get_width() * k))), maxi(1, int(round(crop.get_height() * k))), Image.INTERPOLATE_NEAREST)
+	crop.resize(
+		maxi(1, int(round(crop.get_width() * k))),
+		maxi(1, int(round(crop.get_height() * k))),
+		Image.INTERPOLATE_NEAREST
+	)
 	var canvas := Image.create(size_px, size_px, false, Image.FORMAT_RGBA8)
 	canvas.fill(Color(0, 0, 0, 0))
-	canvas.blit_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()),
-			Vector2i((size_px - crop.get_width()) / 2, (size_px - crop.get_height()) / 2))
+	canvas.blit_rect(
+		crop,
+		Rect2i(Vector2i.ZERO, crop.get_size()),
+		Vector2i((size_px - crop.get_width()) / 2, (size_px - crop.get_height()) / 2)
+	)
 	if circle:
 		var r := size_px * 0.5
 		var rr := r * r
@@ -314,9 +370,19 @@ static func _fit_icon(species: String, size_px: int, fill: float, circle: bool) 
 ## Spec de "carta" (textura avulsa, sem animação) com altura fixa.
 static func card(tex: Texture2D) -> Dictionary:
 	var h := maxf(float(tex.get_height()), 1.0) if tex != null else 1.0
-	return {"texture": tex, "hframes": 1, "vframes": 1, "rows": {}, "frames_per_row": 1,
-			"pixel_size": CARD_H / h, "offset_y": h / 2.0, "tint": Color.WHITE,
-			"static": true, "faces": "left", "visible_m": CARD_H}
+	return {
+		"texture": tex,
+		"hframes": 1,
+		"vframes": 1,
+		"rows": {},
+		"frames_per_row": 1,
+		"pixel_size": CARD_H / h,
+		"offset_y": h / 2.0,
+		"tint": Color.WHITE,
+		"static": true,
+		"faces": "left",
+		"visible_m": CARD_H
+	}
 
 
 static func reload() -> void:

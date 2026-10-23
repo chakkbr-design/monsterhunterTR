@@ -3,7 +3,14 @@ extends RefCounted
 ##   preload("res://audio/cue.gd").sfx("hit")
 ##   preload("res://audio/cue.gd").ui(a)   # a = "up" "down" "left" "right" "ok" "back"
 
-const UI := {"ok": "ui_confirm", "back": "ui_back", "up": "ui_move", "down": "ui_move", "left": "ui_move", "right": "ui_move"}
+const UI := {
+	"ok": "ui_confirm",
+	"back": "ui_back",
+	"up": "ui_move",
+	"down": "ui_move",
+	"left": "ui_move",
+	"right": "ui_move"
+}
 
 
 static func audio() -> Node:

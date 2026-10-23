@@ -44,10 +44,10 @@ var party: Array = []
 var enemies: Array = []
 var enemy_index := 0
 var player: BattleFighter  # o mon que o jogador controla
-var ally: BattleFighter    # 2º mon do jogador (IA), só em batalha selvagem
-var ally_mode := 0         # BattleAI.ATTACK / DEFEND / SUPPORT
-var item_cd := 0.0         # cooldown global de itens (bolsa rápida e cura do SUPPORT)
-var menu := ""             # "" | "bag" | "party" (abre com interact; a luta fica a MODAL_SLOW)
+var ally: BattleFighter  # 2º mon do jogador (IA), só em batalha selvagem
+var ally_mode := 0  # BattleAI.ATTACK / DEFEND / SUPPORT
+var item_cd := 0.0  # cooldown global de itens (bolsa rápida e cura do SUPPORT)
+var menu := ""  # "" | "bag" | "party" (abre com interact; a luta fica a MODAL_SLOW)
 var menu_sel := 0
 var menu_target := 0
 var enemy: BattleFighter
@@ -104,7 +104,9 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		_think_scale = float(tr.get("ai_think_scale", 1.0))
 		_trainer_item = String(o.get("trainer_item", tr.get("item", "")))
 	# Selvagem: até BATTLE_SIZE mons do jogador (2x1). Treinador: sempre 1x1.
-	_battle_size = 1 if kind != "wild" else clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
+	_battle_size = (
+		1 if kind != "wild" else clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
+	)
 	if not InputMap.has_action("move_1"):
 		load("res://core/controls.gd").register()
 	_build()
@@ -120,7 +122,14 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 			_send_ally(ai_i, Vector3(1.6, 0, START_GAP / 2.0 + 0.4))
 	_send_enemy(ei)
 	var e: Mon = enemies[ei]
-	hud.banner(("Um %s selvagem apareceu!" % e.display_name) if kind == "wild" else ("O treinador mandou %s!" % e.display_name), INTRO_TIME)
+	hud.banner(
+		(
+			("Um %s selvagem apareceu!" % e.display_name)
+			if kind == "wild"
+			else ("O treinador mandou %s!" % e.display_name)
+		),
+		INTRO_TIME
+	)
 	state = "intro"
 	_state_t = 0.0
 	hud.intro_bars(true)
@@ -128,6 +137,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 
 
 # --- Montagem ---
+
 
 func _build() -> void:
 	if _built:
@@ -198,7 +208,10 @@ static func _court_texture() -> ImageTexture:
 				a = 0.85
 			var cu := minf(u, 1.0 - u)
 			var cv := minf(v, 1.0 - v)
-			if (cu < 0.14 and cv < inset + line * 2.6 and cv >= inset) or (cv < 0.14 and cu < inset + line * 2.6 and cu >= inset):
+			if (
+				(cu < 0.14 and cv < inset + line * 2.6 and cv >= inset)
+				or (cv < 0.14 and cu < inset + line * 2.6 and cu >= inset)
+			):
 				a = 1.0
 			if edge >= inset + line * 2.2 and edge < inset + line * 3.0:
 				var along := u if (minf(v, 1.0 - v) < minf(u, 1.0 - u)) else v
@@ -320,11 +333,14 @@ func edge_push(f: BattleFighter) -> Vector3:
 	return p
 
 
-func note_hit(_user: BattleFighter, _target: BattleFighter, _mv: Dictionary, _dmg: int, _hp_before: int) -> void:
+func note_hit(
+	_user: BattleFighter, _target: BattleFighter, _mv: Dictionary, _dmg: int, _hp_before: int
+) -> void:
 	hits += 1
 
 
 # --- Laço ---
+
 
 func step(dt: float) -> void:
 	if state == "idle" or state == "done":
@@ -353,9 +369,19 @@ func step(dt: float) -> void:
 	if not manual:
 		_camera_input(raw)
 	_update_camera(raw)
-	hud.refresh(player, enemy, raw, ally, {"ally_mode": ALLY_MODE_NAMES[ally_mode], "item_cd": item_cd,
-		"menu": _menu_text() if menu != "" else "", "foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
-		"foe_balls": _foe_balls()})
+	hud.refresh(
+		player,
+		enemy,
+		raw,
+		ally,
+		{
+			"ally_mode": ALLY_MODE_NAMES[ally_mode],
+			"item_cd": item_cd,
+			"menu": _menu_text() if menu != "" else "",
+			"foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
+			"foe_balls": _foe_balls()
+		}
+	)
 
 
 ## Animação dos sprites e efeitos (só visual).
@@ -417,7 +443,9 @@ func _fight_step(dt: float) -> void:
 
 
 func _separate() -> void:
-	var live: Array = fighters.filter(func(f): return f.active() and f.dash_t <= 0.0 and not f.is_airborne())
+	var live: Array = fighters.filter(
+		func(f): return f.active() and f.dash_t <= 0.0 and not f.is_airborne()
+	)
 	for i in live.size():
 		for j in range(i + 1, live.size()):
 			var a: BattleFighter = live[i]
@@ -475,6 +503,7 @@ func _player_input(f: BattleFighter) -> Vector3:
 
 # --- Ações do jogador ---
 
+
 ## Tab: com aliado em campo troca qual dos dois o jogador controla (instantâneo);
 ## sem aliado, recolhe o controlado e manda o próximo mon saudável da party.
 func swap() -> bool:
@@ -487,8 +516,14 @@ func swap() -> bool:
 
 
 func swap_control() -> bool:
-	if state != "fight" or _swap_cd > 0.0 or not is_instance_valid(player) or not player.active() \
-			or not is_instance_valid(ally) or not ally.active():
+	if (
+		state != "fight"
+		or _swap_cd > 0.0
+		or not is_instance_valid(player)
+		or not player.active()
+		or not is_instance_valid(ally)
+		or not ally.active()
+	):
 		return false
 	var old := player
 	player = ally
@@ -544,6 +579,7 @@ func cycle_ally_mode() -> int:
 
 # --- Itens na batalha ---
 
+
 ## Itens de batalha (remédios e frutas com efeito de HP/cura/revive) que existem na bolsa.
 func battle_items() -> Array:
 	var g := _game()
@@ -555,8 +591,11 @@ func battle_items() -> Array:
 	for id in ids:
 		var it := Dex.item(String(id))
 		var fx: Dictionary = it.get("effect", {})
-		if int(g.bag[id]) > 0 and String(it.get("category", "")) in BATTLE_ITEM_CATEGORIES \
-				and (fx.has("hp") or fx.has("cure") or fx.has("revive")):
+		if (
+			int(g.bag[id]) > 0
+			and String(it.get("category", "")) in BATTLE_ITEM_CATEGORIES
+			and (fx.has("hp") or fx.has("cure") or fx.has("revive"))
+		):
 			out.append(String(id))
 	return out
 
@@ -628,7 +667,11 @@ func best_heal_item(missing: int) -> String:
 		if not e.has("hp"):
 			continue
 		var amt: int = 9999 if str(e.hp) == "full" else int(e.hp)
-		if best == "" or (amt >= missing and (best_amt < missing or amt < best_amt)) or (best_amt < missing and amt > best_amt):
+		if (
+			best == ""
+			or (amt >= missing and (best_amt < missing or amt < best_amt))
+			or (best_amt < missing and amt > best_amt)
+		):
 			best = String(id)
 			best_amt = amt
 	return best
@@ -638,7 +681,13 @@ func best_heal_item(missing: int) -> String:
 func _support_heal() -> void:
 	if ally_mode != BattleAI.SUPPORT or item_cd > 0.0:
 		return
-	if not (is_instance_valid(ally) and ally.active() and ally.can_act() and is_instance_valid(player) and player.active()):
+	if not (
+		is_instance_valid(ally)
+		and ally.active()
+		and ally.can_act()
+		and is_instance_valid(player)
+		and player.active()
+	):
 		return
 	if float(player.hp) / maxf(player.max_hp, 1) >= SUPPORT_HEAL_AT:
 		return
@@ -652,7 +701,9 @@ func _support_heal() -> void:
 		return
 	player.sync_after_item()
 	item_cd = ITEM_CD
-	hud.banner("%s used a %s! %s" % [ally.mon.display_name, Dex.item(id).get("name", id), text], 1.8)
+	hud.banner(
+		"%s used a %s! %s" % [ally.mon.display_name, Dex.item(id).get("name", id), text], 1.8
+	)
 	player.popup("+%d HP" % (player.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
 	fx_disc(player.position, 0.9, Color(0.6, 1.0, 0.65), 0.5)
 
@@ -662,6 +713,7 @@ func item_used_by_trainer(f: BattleFighter, item_name: String) -> void:
 
 
 # --- Menu rápido (bolsa / party) ---
+
 
 func open_menu(page: String) -> void:
 	if state != "fight":
@@ -713,13 +765,24 @@ func _menu_text() -> String:
 		var items := battle_items()
 		menu_sel = clampi(menu_sel, 0, maxi(items.size() - 1, 0))
 		var tgt: Mon = party[clampi(menu_target, 0, party.size() - 1)]
-		lines.append("BOLSA   (Tab: equipe)   alvo < %s %d/%d >" % [tgt.display_name, tgt.hp, tgt.max_hp])
+		lines.append(
+			"BOLSA   (Tab: equipe)   alvo < %s %d/%d >" % [tgt.display_name, tgt.hp, tgt.max_hp]
+		)
 		if items.is_empty():
 			lines.append("  (no battle items)")
 		for k in items.size():
 			var id: String = items[k]
-			lines.append("%s %s%s x%d" % [">" if k == menu_sel else " ", ("%d " % (k + 1)) if k < 4 else "  ",
-				Dex.item(id).get("name", id), int(g.bag[id])])
+			lines.append(
+				(
+					"%s %s%s x%d"
+					% [
+						">" if k == menu_sel else " ",
+						("%d " % (k + 1)) if k < 4 else "  ",
+						Dex.item(id).get("name", id),
+						int(g.bag[id])
+					]
+				)
+			)
 		lines.append("W/S escolhe  A/D alvo  Espaço/1-4 usa  E fecha")
 		if item_cd > 0.0:
 			lines.append("Item em %.1fs" % item_cd)
@@ -734,8 +797,19 @@ func _menu_text() -> String:
 				tag = " [ally]"
 			elif m.is_fainted():
 				tag = " [fainted]"
-			lines.append("%s %s Lv%d %d/%d%s" % [">" if k == menu_sel else " ", m.display_name, m.level, m.hp, m.max_hp, tag])
-		lines.append("W/S escolhe  Espaço manda" + ("  F send as ally" if _battle_size >= 2 else "") + "  E close")
+			lines.append(
+				(
+					"%s %s Lv%d %d/%d%s"
+					% [">" if k == menu_sel else " ", m.display_name, m.level, m.hp, m.max_hp, tag]
+				)
+			)
+		lines.append(
+			(
+				"W/S escolhe  Espaço manda"
+				+ ("  F send as ally" if _battle_size >= 2 else "")
+				+ "  E close"
+			)
+		)
 	return "\n".join(lines)
 
 
@@ -753,7 +827,13 @@ func run_away() -> bool:
 	if state != "fight":
 		return false
 	if kind != "wild" or not opts.get("can_run", true):
-		hud.banner("Não! Não dá para fugir de batalha de treinador!" if kind != "wild" else "Não dá para fugir!")
+		hud.banner(
+			(
+				"Não! Não dá para fugir de batalha de treinador!"
+				if kind != "wild"
+				else "Não dá para fugir!"
+			)
+		)
 		return false
 	hud.banner("Fugiu em segurança!", 1.0)
 	preload("res://audio/cue.gd").sfx("run_away")
@@ -784,7 +864,13 @@ func _pick_ball() -> String:
 
 
 func throw_ball() -> bool:
-	if state != "fight" or kind != "wild" or not is_instance_valid(enemy) or not enemy.active() or not player.alive():
+	if (
+		state != "fight"
+		or kind != "wild"
+		or not is_instance_valid(enemy)
+		or not enemy.active()
+		or not player.alive()
+	):
 		if kind != "wild" and state == "fight":
 			hud.banner("Não dá para capturar Pokémon de treinador!")
 		return false
@@ -795,13 +881,21 @@ func throw_ball() -> bool:
 	var g := _game()
 	if g:
 		g.take_item(ball_id)
-	var res := Capture.throw_ball(enemy.max_hp, enemy.hp, enemy.mon.catch_rate(), ball_id, enemy.status, enemy.level)
+	var res := Capture.throw_ball(
+		enemy.max_hp, enemy.hp, enemy.mon.catch_rate(), ball_id, enemy.status, enemy.level
+	)
 	var ball := PokeBall3D.for_item(Dex.item(ball_id))
 	add_child(ball)
 	var from := player.position + Vector3(0, player.look_h, 0)
 	ball.position = from
-	_capture = {"ball": ball, "id": ball_id, "res": res, "from": from,
-		"to": enemy.position + Vector3(0, 0.16, 0), "shown": mini(int(res.shakes), 3)}
+	_capture = {
+		"ball": ball,
+		"id": ball_id,
+		"res": res,
+		"from": from,
+		"to": enemy.position + Vector3(0, 0.16, 0),
+		"shown": mini(int(res.shakes), 3)
+	}
 	hud.banner("Vai, %s!" % Dex.item(ball_id).get("name", "Ball"), 0.8)
 	preload("res://audio/cue.gd").sfx("ball_throw")
 	state = "capture"
@@ -814,7 +908,9 @@ func _capture_step(_dt: float) -> void:
 	var t := _state_t
 	if t < BALL_FLIGHT:
 		var s := t / BALL_FLIGHT
-		ball.position = _capture.from.lerp(_capture.to, s) + Vector3(0, 1.2 * 4.0 * s * (1.0 - s), 0)
+		ball.position = (
+			_capture.from.lerp(_capture.to, s) + Vector3(0, 1.2 * 4.0 * s * (1.0 - s), 0)
+		)
 		ball.set_spin(-s * TAU * 2.0)
 		return
 	ball.set_spin(0.0)
@@ -837,7 +933,8 @@ func _capture_step(_dt: float) -> void:
 	ball.set_lid(0.0)
 	if shake_t < shown * BALL_SHAKE:
 		var ph := fmod(shake_t, BALL_SHAKE) / BALL_SHAKE
-		if ph * BALL_SHAKE < _dt: preload("res://audio/cue.gd").sfx("ball_shake")
+		if ph * BALL_SHAKE < _dt:
+			preload("res://audio/cue.gd").sfx("ball_shake")
 		ball.set_wobble(sin(ph * TAU) * 0.45 if ph < 0.5 else 0.0)
 		ball.set_glow(Color(1, 0.2, 0.15), 2.5 if ph < 0.5 else 0.0)
 		return
@@ -869,13 +966,17 @@ func _capture_step(_dt: float) -> void:
 
 # --- Desmaio, XP e fim ---
 
+
 func _on_fainted(f: BattleFighter) -> void:
 	if state == "ending" or state == "done":
 		return
-	later(FAINT_CLEAR, func() -> void:
-		if is_instance_valid(f) and not f.alive():
-			f.on_field = false
-			f.visible = false)
+	later(
+		FAINT_CLEAR,
+		func() -> void:
+			if is_instance_valid(f) and not f.alive():
+				f.on_field = false
+				f.visible = false
+	)
 	if f.side == 1:
 		_enemy_fainted(f)
 	else:
@@ -892,11 +993,21 @@ func _enemy_fainted(f: BattleFighter) -> void:
 	var nxt := _next_enemy(enemy_index)
 	if kind == "trainer" and nxt >= 0:
 		hud.banner("O treinador vai mandar %s!" % enemies[nxt].display_name, NEXT_TRAINER_MON)
-		later(NEXT_TRAINER_MON, func() -> void:
-			_recall(f)
-			_send_enemy(nxt))
+		later(
+			NEXT_TRAINER_MON,
+			func() -> void:
+				_recall(f)
+				_send_enemy(nxt)
+		)
 		return
-	hud.banner(("%s selvagem desmaiou! Você venceu!" % f.mon.display_name) if kind == "wild" else "Você venceu o treinador!", 2.0)
+	hud.banner(
+		(
+			("%s selvagem desmaiou! Você venceu!" % f.mon.display_name)
+			if kind == "wild"
+			else "Você venceu o treinador!"
+		),
+		2.0
+	)
 	_end("win", 2.0)
 
 
@@ -905,7 +1016,9 @@ func _award_exp(defeated: Mon) -> void:
 	if receivers.is_empty():
 		return
 	for m in receivers:
-		var amount := maxi(1, int(defeated.exp_yield(m.level, kind == "trainer") / float(receivers.size())))
+		var amount := maxi(
+			1, int(defeated.exp_yield(m.level, kind == "trainer") / float(receivers.size()))
+		)
 		var events: Array = m.add_exp(amount)
 		exp_log.append({"mon": m, "amount": amount, "events": events})
 		var f := _fighter_of(m)
@@ -916,7 +1029,12 @@ func _award_exp(defeated: Mon) -> void:
 					f.popup("Subiu para o Nv %d!" % e.level, Color(1, 1, 0.5), 1.2, 1.3)
 					preload("res://audio/cue.gd").sfx("level_up")
 				elif e.type == "move" and e.learned:
-					f.popup("Aprendeu %s!" % Dex.move(e.move).get("name", e.move), Color(0.7, 0.9, 1.0), 1.0, 1.5)
+					f.popup(
+						"Aprendeu %s!" % Dex.move(e.move).get("name", e.move),
+						Color(0.7, 0.9, 1.0),
+						1.0,
+						1.5
+					)
 			_sync_from_mon(f)
 
 
@@ -946,9 +1064,12 @@ func _player_fainted(f: BattleFighter) -> void:
 		if menu != "" and not is_instance_valid(player):
 			close_menu()
 		_bind()
-		later(FAINT_CLEAR, func() -> void:
-			if is_instance_valid(f) and fighters.has(f):
-				_recall(f))
+		later(
+			FAINT_CLEAR,
+			func() -> void:
+				if is_instance_valid(f) and fighters.has(f):
+					_recall(f)
+		)
 		return
 	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
 	if nxt < 0:
@@ -957,9 +1078,12 @@ func _player_fainted(f: BattleFighter) -> void:
 		return
 	var at := f.position
 	at.y = 0.0
-	later(FAINT_CLEAR, func() -> void:
-		_recall(f)
-		_send_player(nxt, at))
+	later(
+		FAINT_CLEAR,
+		func() -> void:
+			_recall(f)
+			_send_player(nxt, at)
+	)
 
 
 func _end(outcome: String, delay: float, extra := {}) -> void:
@@ -995,6 +1119,7 @@ func _finish() -> void:
 
 # --- Câmera ---
 
+
 func _camera_input(dt: float) -> void:
 	if Input.is_action_pressed("cam_left"):
 		_yaw -= CAM_TURN * dt
@@ -1017,6 +1142,7 @@ func _update_camera(dt: float) -> void:
 
 # --- Efeitos placeholder ---
 
+
 ## Popup de batalha: vai para o log e para o HUD (em tela, ancorado em `at`, local da arena).
 func popup(at: Vector3, text: String, col: Color, scale_k := 1.0, style := "") -> void:
 	log_lines.append(text)
@@ -1038,7 +1164,9 @@ func _fx_node(mesh: Mesh, xf: Transform3D, col: Color, life: float) -> void:
 	mi.material_override = mat
 	mi.transform = xf
 	add_child(mi)
-	_fx.append({"node": mi, "t": maxf(life, 0.05), "life": maxf(life, 0.05), "mat": mat, "a": col.a})
+	_fx.append(
+		{"node": mi, "t": maxf(life, 0.05), "life": maxf(life, 0.05), "mat": mat, "a": col.a}
+	)
 
 
 func fx_disc(center: Vector3, radius: float, col: Color, life: float) -> void:
@@ -1065,16 +1193,29 @@ func fx_cone(origin: Vector3, dir: Vector3, r: float, half: float, col: Color, l
 	_fx_node(cm, Transform3D(b, origin + dir * r * 0.5), col, life)
 
 
-func fx_beam(origin: Vector3, dir: Vector3, length: float, width: float, col: Color, life: float) -> void:
+func fx_beam(
+	origin: Vector3, dir: Vector3, length: float, width: float, col: Color, life: float
+) -> void:
 	if length <= 0.01:
 		return
 	var bm := BoxMesh.new()
 	bm.size = Vector3(width, 0.15, length)
-	var b := Basis.looking_at(dir.normalized(), Vector3.UP) if absf(dir.normalized().y) < 0.99 else Basis()
+	var b := (
+		Basis.looking_at(dir.normalized(), Vector3.UP)
+		if absf(dir.normalized().y) < 0.99
+		else Basis()
+	)
 	_fx_node(bm, Transform3D(b, origin + dir.normalized() * length * 0.5), col, life)
 
 
-func spawn_projectile(user: BattleFighter, mv: Dictionary, dir: Vector3, homing: bool, miss: BattleFighter, target: BattleFighter) -> void:
+func spawn_projectile(
+	user: BattleFighter,
+	mv: Dictionary,
+	dir: Vector3,
+	homing: bool,
+	miss: BattleFighter,
+	target: BattleFighter
+) -> void:
 	var p := BattleProjectile.new()
 	add_child(p)
 	p.setup(user, mv, dir, homing, miss, target)

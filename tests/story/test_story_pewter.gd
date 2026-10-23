@@ -38,7 +38,15 @@ func _run() -> void:
 	game = root.get_node("Game")
 	game.save_path = "user://test_story_pewter_save.json"
 	game.new_game("ASH", "GARY")
-	for f in ["oak_stopped", "got_starter", "starter_chosen", "rival_battle_done", "mom_healed", "has_pokedex", "parcel_delivered"]:
+	for f in [
+		"oak_stopped",
+		"got_starter",
+		"starter_chosen",
+		"rival_battle_done",
+		"mom_healed",
+		"has_pokedex",
+		"parcel_delivered"
+	]:
 		game.flags[f] = true
 	game.flags["rival_starter"] = "Charmander"
 	game.add_mon(load("res://core/mon.gd").create("squirtle", 28))
@@ -67,8 +75,14 @@ func _run() -> void:
 func _guide() -> void:
 	var seen: Array = []
 	story.cutscene_started.connect(func(id): seen.append(id))
-	check(story.triggers().any(func(t): return t.event == "pewter_guide"), "gatilho do guia de Pewter criado")
-	check(story.triggers().any(func(t): return t.event == "pewter_east_block"), "gatilho da saída leste (pewter_city.json)")
+	check(
+		story.triggers().any(func(t): return t.event == "pewter_guide"),
+		"gatilho do guia de Pewter criado"
+	)
+	check(
+		story.triggers().any(func(t): return t.event == "pewter_east_block"),
+		"gatilho da saída leste (pewter_city.json)"
+	)
 	Input.action_press("move_forward")
 	var started := await until(func(): return seen.has("pewter_guide"), 10.0)
 	Input.action_release("move_forward")
@@ -76,7 +90,10 @@ func _guide() -> void:
 	check(await until(func(): return not story.is_running(), 60.0), "cena do guia termina")
 	check(game.flags.get("pewter_guide_done", false), "flag pewter_guide_done")
 	var front: Vector3 = w.builders.pewter_city.arrivals.pw_gym_front
-	check(Vector2(p.global_position.x - front.x, p.global_position.z - front.z).length() < 2.5, "guia deixa o jogador na porta do ginásio (%s)" % p.global_position)
+	check(
+		Vector2(p.global_position.x - front.x, p.global_position.z - front.z).length() < 2.5,
+		"guia deixa o jogador na porta do ginásio (%s)" % p.global_position
+	)
 	await w.go_to_zone("pewter_city", "pw_south")
 	await frames(30)
 	Input.action_press("move_forward")
@@ -91,7 +108,10 @@ func _east_block() -> void:
 	await w.go_to_zone("pewter_city", "pw_east")
 	await frames(10)
 	p.global_position = Vector3(43.5, 0.3, -428.4)
-	check(await until(func(): return seen.has("pewter_east_block"), 5.0), "saída leste dispara o aviso")
+	check(
+		await until(func(): return seen.has("pewter_east_block"), 5.0),
+		"saída leste dispara o aviso"
+	)
 	check(await until(func(): return not story.is_running(), 20.0), "aviso termina")
 	check(p.global_position.x < 41.0, "jogador volta para oeste (x %.1f)" % p.global_position.x)
 
@@ -108,8 +128,14 @@ func _gym() -> void:
 	var spotted := await until(func(): return game.is_busy(), 10.0)
 	Input.action_release("move_forward")
 	check(spotted, "Campista Liam vê o jogador no corredor")
-	check(await until(func(): return game.flags.get("trainer_camper_liam", false), 180.0), "vence o Liam (autoplay)")
-	check(await until(func(): return not p.locked and not game.is_busy(), 20.0), "jogador livre depois do Liam")
+	check(
+		await until(func(): return game.flags.get("trainer_camper_liam", false), 180.0),
+		"vence o Liam (autoplay)"
+	)
+	check(
+		await until(func(): return not p.locked and not game.is_busy(), 20.0),
+		"jogador livre depois do Liam"
+	)
 	game.heal_party()
 	# Brock: interagir passa pelo gancho da história.
 	await w.go_to_interior("pewter_gym", "front_of_brock")
@@ -123,8 +149,14 @@ func _gym() -> void:
 	check(await until(func(): return story.current() == "brock", 5.0), "cena do Brock começa")
 	check(await until(func(): return game.is_busy(), 20.0), "batalha com o Brock começa")
 	check(await until(func(): return done[0], 300.0), "batalha com o Brock termina")
-	check(String(story.last_battle.get("outcome", "")) == "win", "venceu o Brock (%s)" % story.last_battle.get("outcome", "?"))
-	check(game.flags.get("badge_boulder", false) and game.flags.get("boulder_badge", false), "flags.badge_boulder (+ boulder_badge)")
+	check(
+		String(story.last_battle.get("outcome", "")) == "win",
+		"venceu o Brock (%s)" % story.last_battle.get("outcome", "?")
+	)
+	check(
+		game.flags.get("badge_boulder", false) and game.flags.get("boulder_badge", false),
+		"flags.badge_boulder (+ boulder_badge)"
+	)
 	check(game.flags.get("trainer_brock", false), "flags.trainer_brock")
 	check(int(game.bag.get("tm39", 0)) == 1, "TM39 (Tumba de Pedras) na bolsa")
 	check(game.money >= money0 + 1400, "prêmio do Brock pago (%d -> %d)" % [money0, game.money])
@@ -135,4 +167,7 @@ func _gym() -> void:
 	check(await until(func(): return done[0], 20.0), "falar de novo termina")
 	check(not game.is_busy() and int(game.bag.get("tm39", 0)) == 1, "sem revanche nem TM repetido")
 	# Com a insígnia o guia não volta e o aviso leste vira "em construção".
-	check(not load("res://story/story_flags.gd").pewter_guide_due(game.flags), "guia não volta depois da insígnia")
+	check(
+		not load("res://story/story_flags.gd").pewter_guide_due(game.flags),
+		"guia não volta depois da insígnia"
+	)

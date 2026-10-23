@@ -107,4 +107,6 @@ func _apply_frame(t: float) -> void:
 		i = posmod(i, n)
 	else:
 		i = mini(i, n - 1)
-	sprite.frame = clampi(row, 0, sprite.vframes - 1) * sprite.hframes + clampi(lo + i, 0, sprite.hframes - 1)
+	sprite.frame = (
+		clampi(row, 0, sprite.vframes - 1) * sprite.hframes + clampi(lo + i, 0, sprite.hframes - 1)
+	)

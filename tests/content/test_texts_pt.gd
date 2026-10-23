@@ -4,12 +4,77 @@ extends SceneTree
 ## godot --headless --path . --script res://tests/content/test_texts_pt.gd
 
 ## Palavras que só existem em inglês (nada que também seja português, como "a", "me", "no", "do").
-const ENGLISH := ["the", "you", "your", "you're", "i'm", "don't", "can't", "won't", "it's", "that's", "with",
-	"and", "this", "that", "is", "are", "have", "has", "what", "there", "here", "my", "of", "to", "it", "be",
-	"for", "not", "just", "if", "get", "was", "were", "will", "would", "i", "from", "at", "by", "an", "or",
-	"out", "up", "let's", "they", "we", "he", "she", "his", "her", "go", "come", "back", "ahead", "city", "town",
-	"route", "sign", "center", "house", "welcome", "trainer", "tips", "gym", "leader", "badge"]
-const TEXT_KEYS := ["lines", "intro", "defeat", "after", "lose", "badge_speech", "gift_speech", "gate_line"]
+const ENGLISH := [
+	"the",
+	"you",
+	"your",
+	"you're",
+	"i'm",
+	"don't",
+	"can't",
+	"won't",
+	"it's",
+	"that's",
+	"with",
+	"and",
+	"this",
+	"that",
+	"is",
+	"are",
+	"have",
+	"has",
+	"what",
+	"there",
+	"here",
+	"my",
+	"of",
+	"to",
+	"it",
+	"be",
+	"for",
+	"not",
+	"just",
+	"if",
+	"get",
+	"was",
+	"were",
+	"will",
+	"would",
+	"i",
+	"from",
+	"at",
+	"by",
+	"an",
+	"or",
+	"out",
+	"up",
+	"let's",
+	"they",
+	"we",
+	"he",
+	"she",
+	"his",
+	"her",
+	"go",
+	"come",
+	"back",
+	"ahead",
+	"city",
+	"town",
+	"route",
+	"sign",
+	"center",
+	"house",
+	"welcome",
+	"trainer",
+	"tips",
+	"gym",
+	"leader",
+	"badge"
+]
+const TEXT_KEYS := [
+	"lines", "intro", "defeat", "after", "lose", "badge_speech", "gift_speech", "gate_line"
+]
 
 var _fails := 0
 var _hits: Array = []
@@ -47,8 +112,18 @@ func _initialize() -> void:
 	for h in _hits.slice(0, 30):
 		print("  inglês? ", h)
 	check(_hits.is_empty(), "nenhuma palavra inglesa nos textos (%d suspeitos)" % _hits.size())
-	check(t.has("rocket_1") and t.has("super_nerd_miguel") and t.rocket_1.get("display_name", "") == "Recruta da Equipe Rocket", "ids dos treinadores mantidos")
-	check(int(t.super_nerd_miguel.get("sight", -1)) == 0, "Miguel só luta pela cena dos fósseis (sight 0)")
+	check(
+		(
+			t.has("rocket_1")
+			and t.has("super_nerd_miguel")
+			and t.rocket_1.get("display_name", "") == "Recruta da Equipe Rocket"
+		),
+		"ids dos treinadores mantidos"
+	)
+	check(
+		int(t.super_nerd_miguel.get("sight", -1)) == 0,
+		"Miguel só luta pela cena dos fósseis (sight 0)"
+	)
 	print("PASSOU (0 falhas)" if _fails == 0 else "FALHOU (%d falhas)" % _fails)
 	quit(1 if _fails > 0 else 0)
 
@@ -71,5 +146,5 @@ func _text(re: RegEx, where: String, s) -> void:
 	_count += 1
 	for m in re.search_all(String(s).to_lower().replace("pokémon", "").replace("poké", "")):
 		if ENGLISH.has(m.get_string()):
-			_hits.append("%s: \"%s\" (%s)" % [where, String(s).replace("\n", " "), m.get_string()])
+			_hits.append('%s: "%s" (%s)' % [where, String(s).replace("\n", " "), m.get_string()])
 			return

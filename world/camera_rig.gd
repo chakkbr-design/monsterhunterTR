@@ -69,7 +69,9 @@ func set_zone_look(look: Dictionary) -> void:
 	_zone_pitch = float(look.get("camera_pitch", 0.0))
 	_zone_pitch_near = float(look.get("camera_pitch_near", 0.0))
 	var rc: Array = look.get("camera_pitch_range", [])
-	_near_rect = Rect2(float(rc[0]), float(rc[1]), float(rc[2]), float(rc[3])) if rc.size() == 4 else Rect2()
+	_near_rect = (
+		Rect2(float(rc[0]), float(rc[1]), float(rc[2]), float(rc[3])) if rc.size() == 4 else Rect2()
+	)
 	var far := float(look.get("camera_far", 0.0))
 	if camera:
 		camera.far = far if far > 0.0 else _far
@@ -94,7 +96,9 @@ func _process(delta: float) -> void:
 			_yaw_target += deg_to_rad(yaw_step_deg)
 	_yaw = lerpf(_yaw, _yaw_target, 1.0 - exp(-yaw_sharpness * delta))
 	if t:
-		global_position = global_position.lerp(t.visual_position(), 1.0 - exp(-follow_sharpness * delta))
+		global_position = global_position.lerp(
+			t.visual_position(), 1.0 - exp(-follow_sharpness * delta)
+		)
 	_dist = lerpf(_dist, _base_dist(), 1.0 - exp(-3.0 * delta))
 	_yaw_off = lerpf(_yaw_off, _zone_yaw, 1.0 - exp(-1.1 * delta))
 	var pt := _zone_pitch
@@ -130,6 +134,7 @@ func _apply() -> void:
 
 
 # --- see-through buildings (original _fade_buildings) ---------------------------------------------
+
 
 func _cam_axes() -> Array:
 	var b := global_transform.basis

@@ -58,7 +58,9 @@ func _build_look() -> void:
 	var girl := String(Game.get("player_gender")) in ["female", "girl", "f", "menina"]
 	var walk := CharSprite.sheet("trainer_green.png" if girl else "trainer.png")
 	if walk:
-		sprite = CharSprite.make(walk, CharSprite.sheet("trainer_green_run.png" if girl else "trainer_run.png"))
+		sprite = CharSprite.make(
+			walk, CharSprite.sheet("trainer_green_run.png" if girl else "trainer_run.png")
+		)
 		sprite.follow_parent = false
 		add_child(sprite)
 		return
@@ -140,7 +142,9 @@ func _physics_process(delta: float) -> void:
 		sprite.moving = dir.length() > 0.1 and is_on_floor()
 		sprite.speed = run_speed if run else walk_speed
 		sprite.set_running(run)
-	_model.rotation.y = lerp_angle(_model.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-14.0 * delta))
+	_model.rotation.y = lerp_angle(
+		_model.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-14.0 * delta)
+	)
 	if active and not _grass.is_empty():
 		var moved := Vector2(global_position.x - before.x, global_position.z - before.z).length()
 		var patch: TallGrass = _grass[-1]
@@ -225,7 +229,9 @@ func _ambush(patch: TallGrass) -> void:
 	show_alert(true)
 	await get_tree().create_timer(0.6).timeout
 	show_alert(false)
-	var w := WildMon.spawn(Overworld.mon_from_entry(entry, _rng), entry, get_parent(), global_position + facing * 2.2)
+	var w := WildMon.spawn(
+		Overworld.mon_from_entry(entry, _rng), entry, get_parent(), global_position + facing * 2.2
+	)
 	w.ambusher = true
 	await w.pop_out()
 	await w.engage()

@@ -46,13 +46,29 @@ func _init() -> void:
 	_pops.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_foe_card = FighterCard.new()
 	_foe_card.foe = true
-	_place(_foe_card, Vector2(1, 0), Vector2(CARD_W, CARD_H), Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 0.5))
+	_place(
+		_foe_card,
+		Vector2(1, 0),
+		Vector2(CARD_W, CARD_H),
+		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
+	)
 	_player_card = FighterCard.new()
-	_place(_player_card, Vector2(0, 0), Vector2(CARD_W, CARD_H), Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 0.5))
+	_place(
+		_player_card,
+		Vector2(0, 0),
+		Vector2(CARD_W, CARD_H),
+		Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
+	)
 	_ally_card = AllyCard.new()
-	_place(_ally_card, Vector2(0, 0), Vector2(ALLY_W, ALLY_H),
-			Vector2(CARD_MARGIN + ALLY_W * 0.5, CARD_TOP + CARD_H + 6.0 + ALLY_H * 0.5))
-	var offs := [Vector2(0, MOVE_DY), Vector2(MOVE_DX, 0), Vector2(-MOVE_DX, 0), Vector2(0, -MOVE_DY)]
+	_place(
+		_ally_card,
+		Vector2(0, 0),
+		Vector2(ALLY_W, ALLY_H),
+		Vector2(CARD_MARGIN + ALLY_W * 0.5, CARD_TOP + CARD_H + 6.0 + ALLY_H * 0.5)
+	)
+	var offs := [
+		Vector2(0, MOVE_DY), Vector2(MOVE_DX, 0), Vector2(-MOVE_DX, 0), Vector2(0, -MOVE_DY)
+	]
 	for i in 4:
 		var b := MoveButton.new()
 		b.index = i
@@ -165,7 +181,9 @@ static func guess_style(text: String) -> String:
 
 
 ## info: {ally_mode, item_cd, menu, foe_tag, foe_balls: Array[bool]}.
-func refresh(player: BattleFighter, enemy: BattleFighter, dt: float, ally: BattleFighter = null, info := {}) -> void:
+func refresh(
+	player: BattleFighter, enemy: BattleFighter, dt: float, ally: BattleFighter = null, info := {}
+) -> void:
 	_banner.step(dt)
 	_intro.step(dt)
 	for p in _pops.get_children():
@@ -201,7 +219,9 @@ func card_text(which := "player") -> String:
 
 # ---------------------------------------------------------------------------
 
-class FighterCard extends Control:
+
+class FighterCard:
+	extends Control
 	const PORTRAIT_R := 37.0
 	const HP_W := 392.0
 	const HP_H := 12.0
@@ -269,7 +289,12 @@ class FighterCard extends Control:
 			var t := PokemonSprites.tint(sp)
 			if not body.alive():
 				t = Color(0.35, 0.35, 0.35)
-			draw_texture_rect(icon, Rect2(pc - Vector2(PORTRAIT_R, PORTRAIT_R), Vector2(PORTRAIT_R, PORTRAIT_R) * 2.0), false, t)
+			draw_texture_rect(
+				icon,
+				Rect2(pc - Vector2(PORTRAIT_R, PORTRAIT_R), Vector2(PORTRAIT_R, PORTRAIT_R) * 2.0),
+				false,
+				t
+			)
 		var x0 := 16.0 if foe else 98.0
 		var x1 := size.x - 98.0 if foe else size.x - 16.0
 		var tf := UiDraw.title_font()
@@ -277,22 +302,91 @@ class FighterCard extends Control:
 		var lv := "Lv %d" % body.level
 		var lvw := UiDraw.text_width(lv, 18, tf)
 		if foe:
-			UiDraw.text(self, Vector2(x0, NAME_Y), drawn_name, 24, UiDraw.COL_WHITE, 4, HORIZONTAL_ALIGNMENT_RIGHT, x1 - x0, tf)
-			UiDraw.text(self, Vector2(x0, NAME_Y), lv, 18, UiDraw.AMBER, 4, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tf)
+			UiDraw.text(
+				self,
+				Vector2(x0, NAME_Y),
+				drawn_name,
+				24,
+				UiDraw.COL_WHITE,
+				4,
+				HORIZONTAL_ALIGNMENT_RIGHT,
+				x1 - x0,
+				tf
+			)
+			UiDraw.text(
+				self,
+				Vector2(x0, NAME_Y),
+				lv,
+				18,
+				UiDraw.AMBER,
+				4,
+				HORIZONTAL_ALIGNMENT_LEFT,
+				-1.0,
+				tf
+			)
 		else:
-			UiDraw.text(self, Vector2(x0, NAME_Y), drawn_name, 24, UiDraw.COL_WHITE, 4, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tf)
-			UiDraw.text(self, Vector2(x1 - lvw, NAME_Y), lv, 18, UiDraw.AMBER, 4, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tf)
+			UiDraw.text(
+				self,
+				Vector2(x0, NAME_Y),
+				drawn_name,
+				24,
+				UiDraw.COL_WHITE,
+				4,
+				HORIZONTAL_ALIGNMENT_LEFT,
+				-1.0,
+				tf
+			)
+			UiDraw.text(
+				self,
+				Vector2(x1 - lvw, NAME_Y),
+				lv,
+				18,
+				UiDraw.AMBER,
+				4,
+				HORIZONTAL_ALIGNMENT_LEFT,
+				-1.0,
+				tf
+			)
 		_draw_chips(x0, x1, types)
-		UiDraw.bar(self, Rect2(x0, HP_ROW_Y, HP_W, HP_H), _hp_ratio, UiDraw.hp_color(_hp_ratio), _ghost, Color(1, 1, 1, 0.75), foe)
+		UiDraw.bar(
+			self,
+			Rect2(x0, HP_ROW_Y, HP_W, HP_H),
+			_hp_ratio,
+			UiDraw.hp_color(_hp_ratio),
+			_ghost,
+			Color(1, 1, 1, 0.75),
+			foe
+		)
 		if foe:
 			return
 		var hp_s := "%d / %d" % [body.hp, body.max_hp]
-		UiDraw.text(self, Vector2(x1 - UiDraw.text_width(hp_s, 13), CHIP_Y + 14.0), hp_s, 13, Color(1, 1, 1, 0.85), 3)
+		UiDraw.text(
+			self,
+			Vector2(x1 - UiDraw.text_width(hp_s, 13), CHIP_Y + 14.0),
+			hp_s,
+			13,
+			Color(1, 1, 1, 0.85),
+			3
+		)
 		var base := maxf(body.pp_base, 1.0)
-		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), maxf(body.stamina, 0.0) / base,
-				UiDraw.PP_BLUE if body.stagger_t <= 0.0 else Color(1.0, 0.6, 0.2), body.pp_max / base, Color(0.2, 0.3, 0.55))
-		UiDraw.bar(self, Rect2(x0 + PP_W + 6.0, PP_ROW_Y, EXP_W, 6), _exp_ratio(), UiDraw.AMBER, -1.0,
-				Color(1, 1, 1, 0.75), false, UiDraw.EXP_TRACK)
+		UiDraw.bar(
+			self,
+			Rect2(x0, PP_ROW_Y, PP_W, 6),
+			maxf(body.stamina, 0.0) / base,
+			UiDraw.PP_BLUE if body.stagger_t <= 0.0 else Color(1.0, 0.6, 0.2),
+			body.pp_max / base,
+			Color(0.2, 0.3, 0.55)
+		)
+		UiDraw.bar(
+			self,
+			Rect2(x0 + PP_W + 6.0, PP_ROW_Y, EXP_W, 6),
+			_exp_ratio(),
+			UiDraw.AMBER,
+			-1.0,
+			Color(1, 1, 1, 0.75),
+			false,
+			UiDraw.EXP_TRACK
+		)
 
 	func _draw_chips(x0: float, x1: float, types: Array) -> void:
 		var gap := 5.0
@@ -305,23 +399,44 @@ class FighterCard extends Control:
 			w += UiDraw.status_pill_width(st, 10) + gap
 			tx = maxf(x1 - w - 60.0, x0 + UiDraw.text_width(tag, 10) + 8.0)
 		for t in types:
-			tx += UiDraw.type_pill(self, Vector2(tx, CHIP_Y), String(t), Dex.type_color(String(t)), 10) + gap
+			tx += (
+				UiDraw.type_pill(
+					self, Vector2(tx, CHIP_Y), String(t), Dex.type_color(String(t)), 10
+				)
+				+ gap
+			)
 		var sw := UiDraw.status_pill(self, Vector2(tx, CHIP_Y), st, 10)
 		if sw > 0.0:
 			tx += sw + gap
 		if body.confusion_t > 0.0:
 			tx += UiDraw.status_pill(self, Vector2(tx, CHIP_Y), "confusion", 10) + gap
-		tx += UiDraw.mod_chips(self, Vector2(tx, CHIP_Y), body.stages, body.evasion_t > 0.0, 10, x1 if foe else x1 - 60.0)
+		tx += UiDraw.mod_chips(
+			self,
+			Vector2(tx, CHIP_Y),
+			body.stages,
+			body.evasion_t > 0.0,
+			10,
+			x1 if foe else x1 - 60.0
+		)
 		if body.stagger_t > 0.0:
-			UiDraw.text(self, Vector2(tx + 2, CHIP_Y + 14.0), "EXAUSTO", 11, Color(1, 0.55, 0.35), 3)
+			UiDraw.text(
+				self, Vector2(tx + 2, CHIP_Y + 14.0), "EXAUSTO", 11, Color(1, 0.55, 0.35), 3
+			)
 		if foe:
 			UiDraw.text(self, Vector2(x0, CHIP_Y + 13.0), tag, 10, Color(1, 1, 1, 0.45), 0)
 			var bx := x0 + UiDraw.text_width(tag, 10) + 8.0
 			for i in balls.size():
-				UiDraw.ball(self, Vector2(bx + 5 + i * 13.0, CHIP_Y + 8.0), 5.0, Color(0.89, 0.21, 0.17), not bool(balls[i]))
+				UiDraw.ball(
+					self,
+					Vector2(bx + 5 + i * 13.0, CHIP_Y + 8.0),
+					5.0,
+					Color(0.89, 0.21, 0.17),
+					not bool(balls[i])
+				)
 
 
-class AllyCard extends Control:
+class AllyCard:
+	extends Control
 	var body: BattleFighter
 	var mode := ""
 
@@ -335,15 +450,36 @@ class AllyCard extends Control:
 		if icon:
 			draw_texture_rect(icon, Rect2(6, 4, 32, 32), false)
 		var tf := UiDraw.title_font()
-		UiDraw.text(self, Vector2(44, 18), body.mon.display_name, 16, UiDraw.COL_WHITE, 3, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tf)
-		UiDraw.text(self, Vector2(size.x - 12 - UiDraw.text_width("Lv %d" % body.level, 13, tf), 18), "Lv %d" % body.level, 13, UiDraw.AMBER, 3, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tf)
+		UiDraw.text(
+			self,
+			Vector2(44, 18),
+			body.mon.display_name,
+			16,
+			UiDraw.COL_WHITE,
+			3,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			tf
+		)
+		UiDraw.text(
+			self,
+			Vector2(size.x - 12 - UiDraw.text_width("Lv %d" % body.level, 13, tf), 18),
+			"Lv %d" % body.level,
+			13,
+			UiDraw.AMBER,
+			3,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			tf
+		)
 		if mode != "":
 			UiDraw.text(self, Vector2(160, 18), mode, 11, Color(1, 1, 1, 0.6), 2)
 		var ratio := float(body.hp) / maxf(body.max_hp, 1)
 		UiDraw.bar(self, Rect2(44, 26, size.x - 58, 7), ratio, UiDraw.hp_color(ratio))
 
 
-class MoveButton extends Control:
+class MoveButton:
+	extends Control
 	const NAME_W := 62.0
 	var index := 0
 	var body: BattleFighter
@@ -405,7 +541,9 @@ class MoveButton extends Control:
 		if use_gcd:
 			cd = body.gcd_t
 		var nm := String(mv.get("name", id))
-		var name_col := Color(1, 1, 1, 0.35) if cd > 0.0 else (Color.WHITE if afford else Color(1, 1, 1, 0.4))
+		var name_col := (
+			Color(1, 1, 1, 0.35) if cd > 0.0 else (Color.WHITE if afford else Color(1, 1, 1, 0.4))
+		)
 		var tf := UiDraw.title_font()
 		if cd > 0.0:
 			var s := nm
@@ -428,18 +566,26 @@ class MoveButton extends Control:
 			cost_col = Color(1, 0.4, 0.35)
 		elif tired:
 			cost_col = Color(1, 0.7, 0.3)
-		UiDraw.text_center(self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 12, cost_col, 3)
+		UiDraw.text_center(
+			self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 12, cost_col, 3
+		)
 		UiDraw.key_pill(self, c + Vector2(-r + 6.0, -r + 6.0), str(index + 1), 22, not afford)
 		if cd > 0.0:
-			var total := (Dex.GLOBAL_COOLDOWN if use_gcd else Dex.cooldown(mv)) / maxf(body.speed_factor(), 0.01)
+			var total := (
+				(Dex.GLOBAL_COOLDOWN if use_gcd else Dex.cooldown(mv))
+				/ maxf(body.speed_factor(), 0.01)
+			)
 			draw_circle(c, r - 2.0, Color(0, 0, 0, 0.55 * clampf(cd / maxf(total, 0.01), 0.0, 1.0)))
-			UiDraw.text_center(self, Vector2(c.x, c.y + 6.0), "%.1f" % cd, 20, Color(1, 1, 1, 0.95), 4)
+			UiDraw.text_center(
+				self, Vector2(c.x, c.y + 6.0), "%.1f" % cd, 20, Color(1, 1, 1, 0.95), 4
+			)
 		if body.prepare_id == id and body.prepare_t > 0.0:
 			var pf := 1.0 - clampf(body.prepare_t / maxf(Dex.prepare_time(mv), 0.01), 0.0, 1.0)
 			draw_circle(c, r - 2.0, Color(1, 1, 1, 0.2 * pf))
 
 
-class BannerPill extends Control:
+class BannerPill:
+	extends Control
 	var text := ""
 	var t := 0.0
 	var _a := 0.0
@@ -463,12 +609,23 @@ class BannerPill extends Control:
 		var fs := 30
 		var w := minf(UiDraw.text_width(text, fs, tf) + 56.0, size.x)
 		var r := Rect2(Vector2(size.x * 0.5 - w * 0.5, size.y * 0.5 - 24.0), Vector2(w, 48.0))
-		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35 * a), 16)
+		UiDraw.rounded(
+			self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35 * a), 16
+		)
 		UiDraw.rounded(self, r, Color(UiDraw.INK, 0.82 * a), 16)
-		UiDraw.text_center(self, Vector2(size.x * 0.5, size.y * 0.5 + fs * 0.34), text, fs, Color(UiDraw.PAPER, a), 4, tf)
+		UiDraw.text_center(
+			self,
+			Vector2(size.x * 0.5, size.y * 0.5 + fs * 0.34),
+			text,
+			fs,
+			Color(UiDraw.PAPER, a),
+			4,
+			tf
+		)
 
 
-class IntroLayer extends Control:
+class IntroLayer:
+	extends Control
 	const BAR_H := 72.0
 	var want := 0.0
 	var h := 0.0
@@ -504,17 +661,48 @@ class IntroLayer extends Control:
 		var fs := 110
 		var w := UiDraw.text_width(_flash_text, fs, tf)
 		draw_set_transform(size * 0.5, 0.0, Vector2(sc, sc))
-		draw_string_outline(tf, Vector2(-w * 0.5, fs * 0.35), _flash_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 18, Color(0, 0, 0, 0.9 * a))
-		draw_string(tf, Vector2(-w * 0.5, fs * 0.35), _flash_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.82, 0.25, a))
+		draw_string_outline(
+			tf,
+			Vector2(-w * 0.5, fs * 0.35),
+			_flash_text,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			fs,
+			18,
+			Color(0, 0, 0, 0.9 * a)
+		)
+		draw_string(
+			tf,
+			Vector2(-w * 0.5, fs * 0.35),
+			_flash_text,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			fs,
+			Color(1.0, 0.82, 0.25, a)
+		)
 		draw_set_transform(Vector2.ZERO)
 
 
 ## Popup de batalha (porte do Pop do fx_popups.gd): número de dano creme, CRÍTICO/SUPEREFETIVO,
 ## estágios com setas, "Errou!" com riscos de velocidade, chamadas com pílula.
-class Pop extends Control:
-	const LIFE := {"damage": 0.75, "crit": 0.8, "super": 0.8, "weak": 0.7, "stat_up": 0.85, "stat_down": 0.85,
-			"status": 0.85, "move": 0.6, "callout": 1.0, "miss": 0.65, "dodge": 0.8, "interrupted": 0.8,
-			"heal": 0.75, "info": 0.8}
+class Pop:
+	extends Control
+	const LIFE := {
+		"damage": 0.75,
+		"crit": 0.8,
+		"super": 0.8,
+		"weak": 0.7,
+		"stat_up": 0.85,
+		"stat_down": 0.85,
+		"status": 0.85,
+		"move": 0.6,
+		"callout": 1.0,
+		"miss": 0.65,
+		"dodge": 0.8,
+		"interrupted": 0.8,
+		"heal": 0.75,
+		"info": 0.8
+	}
 	const SKEW := -0.2
 	const CREAM := Color(0.957, 0.922, 0.765)
 	const CRIT_TXT := Color(1.0, 0.95, 0.65)
@@ -566,7 +754,10 @@ class Pop extends Control:
 		return 24
 
 	func text_height() -> float:
-		return UiDraw.heavy_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs()).y * minf(scale_k, 1.5)
+		return (
+			UiDraw.heavy_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs()).y
+			* minf(scale_k, 1.5)
+		)
 
 	func _scale() -> float:
 		if age < 0.07:
@@ -604,9 +795,22 @@ class Pop extends Control:
 
 	func _line(pos: Vector2, t: String, fs: int, c: Color, outline := 8) -> void:
 		var f := UiDraw.heavy_font()
-		draw_string_outline(f, pos + Vector2(0, 4), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, outline, Color(0, 0, 0, 0.85))
-		draw_string(f, pos + Vector2(0, 4), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0, 0, 0, 0.85))
-		draw_string_outline(f, pos, t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, outline, Color(0, 0, 0, 0.92))
+		draw_string_outline(
+			f,
+			pos + Vector2(0, 4),
+			t,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			fs,
+			outline,
+			Color(0, 0, 0, 0.85)
+		)
+		draw_string(
+			f, pos + Vector2(0, 4), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0, 0, 0, 0.85)
+		)
+		draw_string_outline(
+			f, pos, t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, outline, Color(0, 0, 0, 0.92)
+		)
 		draw_string(f, pos, t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c)
 
 	func _text(t: String, fs: int, c: Color, outline := 8) -> void:
@@ -620,8 +824,23 @@ class Pop extends Control:
 		var x := -(tw + tri + 6.0) * 0.5
 		_line(Vector2(x, fs * 0.36), text, fs, c)
 		var p := Vector2(x + tw + 6.0, 0)
-		var pts := PackedVector2Array([p + Vector2(0, tri * 0.45), p + Vector2(tri, tri * 0.45), p + Vector2(tri * 0.5, -tri * 0.45)]) if up \
-				else PackedVector2Array([p + Vector2(0, -tri * 0.45), p + Vector2(tri, -tri * 0.45), p + Vector2(tri * 0.5, tri * 0.45)])
+		var pts := (
+			PackedVector2Array(
+				[
+					p + Vector2(0, tri * 0.45),
+					p + Vector2(tri, tri * 0.45),
+					p + Vector2(tri * 0.5, -tri * 0.45)
+				]
+			)
+			if up
+			else PackedVector2Array(
+				[
+					p + Vector2(0, -tri * 0.45),
+					p + Vector2(tri, -tri * 0.45),
+					p + Vector2(tri * 0.5, tri * 0.45)
+				]
+			)
+		)
 		draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0, 0, 0, 0.92), 5.0, true)
 		draw_colored_polygon(pts, c)
 
@@ -630,7 +849,12 @@ class Pop extends Control:
 		var w := UiDraw.heavy_font().get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		for i in 3:
 			var y := -8.0 + i * 8.0
-			draw_line(Vector2(-w * 0.5 - 26, y), Vector2(-w * 0.5 - 6 - i * 3, y), Color(0.85, 0.92, 1.0, 0.9), 3.0)
+			draw_line(
+				Vector2(-w * 0.5 - 26, y),
+				Vector2(-w * 0.5 - 6 - i * 3, y),
+				Color(0.85, 0.92, 1.0, 0.9),
+				3.0
+			)
 		_text(t, fs, Color.WHITE)
 
 	func _pill(t: String, c: Color) -> void:
@@ -638,6 +862,18 @@ class Pop extends Control:
 		var w := UiDraw.text_width(t, fs, UiDraw.title_font()) + 26.0
 		var h := fs + 12.0
 		var r := Rect2(-w * 0.5, -h * 0.5, w, h)
-		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.4), h * 0.5)
+		UiDraw.rounded(
+			self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.4), h * 0.5
+		)
 		UiDraw.rounded(self, r, Color(UiDraw.INK, 0.86), h * 0.5, 2.0, Color(c, 0.9))
-		UiDraw.text(self, Vector2(-w * 0.5 + 13, fs * 0.36), t, fs, c.lightened(0.2), 3, HORIZONTAL_ALIGNMENT_LEFT, -1.0, UiDraw.title_font())
+		UiDraw.text(
+			self,
+			Vector2(-w * 0.5 + 13, fs * 0.36),
+			t,
+			fs,
+			c.lightened(0.2),
+			3,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			UiDraw.title_font()
+		)

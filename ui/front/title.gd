@@ -106,6 +106,7 @@ func _ready() -> void:
 
 # --- Montagem ---
 
+
 func _full(c: Control) -> Control:
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -234,6 +235,7 @@ func _build() -> void:
 
 # --- Estados ---
 
+
 func _show(title_parts: bool, intro: bool) -> void:
 	_title_box.visible = title_parts
 	_intro.visible = intro
@@ -276,7 +278,9 @@ func _go_options() -> void:
 	_render()
 
 
-const MENU_TEXT := {"continue": "CONTINUAR", "new": "NOVO JOGO", "options": "OPÇÕES", "quit": "SAIR"}
+const MENU_TEXT := {
+	"continue": "CONTINUAR", "new": "NOVO JOGO", "options": "OPÇÕES", "quit": "SAIR"
+}
 
 
 func _render() -> void:
@@ -293,8 +297,18 @@ func _render() -> void:
 				_fill_card()
 		"options":
 			_menu_box.add_child(Kit.header("OPÇÕES", Kit.BLUE, 20))
-			_menu_box.add_child(Kit.option_row("VOLUME %d%%" % settings.volume, "volume", int(settings.volume) / 10, "", cursor == 0))
-			_menu_box.add_child(Kit.option_row("TELA CHEIA", "toggle", settings.fullscreen, "", cursor == 1))
+			_menu_box.add_child(
+				Kit.option_row(
+					"VOLUME %d%%" % settings.volume,
+					"volume",
+					int(settings.volume) / 10,
+					"",
+					cursor == 0
+				)
+			)
+			_menu_box.add_child(
+				Kit.option_row("TELA CHEIA", "toggle", settings.fullscreen, "", cursor == 1)
+			)
 			_menu_box.add_child(Kit.option_row("VOLTAR", "action", 0, "", cursor == 2))
 			_menu_box.add_child(Kit.hint("Esquerda/direita ajustam · Esc volta"))
 
@@ -309,7 +323,12 @@ func save_summary() -> Dictionary:
 	var d = JSON.parse_string(f.get_as_text())
 	if not d is Dictionary:
 		return {}
-	var out := {"name": String(d.get("player_name", "?")), "money": int(d.get("money", 0)), "lead": "", "when": ""}
+	var out := {
+		"name": String(d.get("player_name", "?")),
+		"money": int(d.get("money", 0)),
+		"lead": "",
+		"when": ""
+	}
 	var party: Array = d.get("party", [])
 	if not party.is_empty() and party[0] is Dictionary:
 		var m: Dictionary = party[0]
@@ -320,7 +339,9 @@ func save_summary() -> Dictionary:
 		out.lead = "%s  Nv. %d" % [nm, int(m.get("level", 1))]
 	var mt := FileAccess.get_modified_time(game.save_path)
 	if mt > 0:
-		var dt := Time.get_datetime_dict_from_unix_time(mt + int(Time.get_time_zone_from_system().get("bias", 0)) * 60)
+		var dt := Time.get_datetime_dict_from_unix_time(
+			mt + int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+		)
 		out.when = "%02d/%02d/%d %02d:%02d" % [dt.day, dt.month, dt.year, dt.hour, dt.minute]
 	return out
 
@@ -330,13 +351,18 @@ func _fill_card() -> void:
 	if s.is_empty():
 		return
 	_card.visible = true
-	var rows := [["JOGADOR", s.name], ["PARCEIRO", s.lead if s.lead != "" else "nenhum"], ["DINHEIRO", Kit.format_money(int(s.money))]]
+	var rows := [
+		["JOGADOR", s.name],
+		["PARCEIRO", s.lead if s.lead != "" else "nenhum"],
+		["DINHEIRO", Kit.format_money(int(s.money))]
+	]
 	if s.when != "":
 		rows.append(["SALVO EM", s.when])
 	_card_box.add_child(Kit.info_grid(rows, 24))
 
 
 # --- Introdução ---
+
 
 func _intro_view(prof: bool, rival: bool, pick: bool, dialog: bool) -> void:
 	_show(false, true)
@@ -365,7 +391,10 @@ func _show_line() -> void:
 
 
 func _talk_ok() -> void:
-	if _text.visible_characters >= 0 and _text.visible_characters < _text.get_total_character_count():
+	if (
+		_text.visible_characters >= 0
+		and _text.visible_characters < _text.get_total_character_count()
+	):
 		_text.visible_characters = -1
 		_more.visible = true
 		return
@@ -380,7 +409,10 @@ func _start_new() -> void:
 	if game != null and game.has_save():
 		state = "overwrite"
 		cursor = 1
-		_render_ask("Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)", ["Sim", "Não"])
+		_render_ask(
+			"Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)",
+			["Sim", "Não"]
+		)
 		return
 	_begin_intro()
 
@@ -417,7 +449,9 @@ func _render_pick() -> void:
 		f.kind = "boy" if i == 0 else "girl"
 		p.add_child(f)
 		v.add_child(p)
-		var l := Kit.header("MENINO" if i == 0 else "MENINA", Kit.RED if i == cursor else Kit.PAPER, 24)
+		var l := Kit.header(
+			"MENINO" if i == 0 else "MENINA", Kit.RED if i == cursor else Kit.PAPER, 24
+		)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)
 		_pick.add_child(v)
@@ -460,8 +494,13 @@ func _go_confirm() -> void:
 	state = "confirm"
 	cursor = 0
 	_intro_view(true, false, false, false)
-	_render_ask("Você: %s (%s)\nRival: %s\n\nEstá tudo certo?" % [player_name, "menino" if gender == "male" else "menina", rival_name],
-		["Sim, vamos lá!", "Não, mudar os nomes"])
+	_render_ask(
+		(
+			"Você: %s (%s)\nRival: %s\n\nEstá tudo certo?"
+			% [player_name, "menino" if gender == "male" else "menina", rival_name]
+		),
+		["Sim, vamos lá!", "Não, mudar os nomes"]
+	)
 
 
 func _render_ask(question: String, options: Array) -> void:
@@ -503,6 +542,7 @@ func _leave() -> void:
 
 
 # --- Entrada ---
+
 
 func _process(dt: float) -> void:
 	match state:
@@ -555,10 +595,14 @@ func press(a: String) -> void:
 				_render()
 			elif a == "ok":
 				match menu_items[cursor]:
-					"continue": _continue()
-					"new": _start_new()
-					"options": _go_options()
-					"quit": get_tree().quit()
+					"continue":
+						_continue()
+					"new":
+						_start_new()
+					"options":
+						_go_options()
+					"quit":
+						get_tree().quit()
 			elif a == "back":
 				_go_press()
 		"options":
@@ -568,7 +612,9 @@ func press(a: String) -> void:
 				_go_menu("options")
 				return
 			elif cursor == 0 and (a == "left" or a == "right"):
-				settings.volume = clampi(int(settings.volume) + (10 if a == "right" else -10), 0, 100)
+				settings.volume = clampi(
+					int(settings.volume) + (10 if a == "right" else -10), 0, 100
+				)
 				_apply_settings()
 			elif cursor == 1 and a in ["left", "right", "ok"]:
 				settings.fullscreen = not settings.fullscreen
@@ -577,7 +623,10 @@ func press(a: String) -> void:
 		"overwrite":
 			if a == "up" or a == "down" or a == "left" or a == "right":
 				cursor = 1 - cursor
-				_render_ask("Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)", ["Sim", "Não"])
+				_render_ask(
+					"Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)",
+					["Sim", "Não"]
+				)
 			elif a == "back" or (a == "ok" and cursor == 1):
 				_ask.visible = false
 				_go_menu("new")
@@ -602,8 +651,13 @@ func press(a: String) -> void:
 		"confirm":
 			if a == "up" or a == "down":
 				cursor = 1 - cursor
-				_render_ask("Você: %s (%s)\nRival: %s\n\nEstá tudo certo?" % [player_name, "menino" if gender == "male" else "menina", rival_name],
-					["Sim, vamos lá!", "Não, mudar os nomes"])
+				_render_ask(
+					(
+						"Você: %s (%s)\nRival: %s\n\nEstá tudo certo?"
+						% [player_name, "menino" if gender == "male" else "menina", rival_name]
+					),
+					["Sim, vamos lá!", "Não, mudar os nomes"]
+				)
 			elif a == "ok" and cursor == 0:
 				_ask.visible = false
 				talk(FINALE, _finish_new_game, Callable(), true)

@@ -80,7 +80,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	_sprite.shaded = shaded
-	_sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadow_on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_sprite.cast_shadow = (
+		GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		if cast_shadow_on
+		else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	)
 	if _look.is_empty() and species != "":
 		apply_species()
 	set_process(not manual)
@@ -176,6 +180,7 @@ func set_alpha(a: float) -> void:
 
 # --- direção -----------------------------------------------------------------
 
+
 func face(dir: Vector3) -> void:
 	dir.y = 0.0
 	if dir.length_squared() > 0.0001:
@@ -218,6 +223,7 @@ static func facing_row(dir: Vector2, prev_row: int) -> int:
 
 
 # --- one-shots ---------------------------------------------------------------
+
 
 ## Toca uma animação PMD pelo nome. Retorna false se a espécie não tiver.
 func play(anim: String, oneshot := true, hold := -1, hold_t := 0.0) -> bool:
@@ -324,6 +330,7 @@ func _bump() -> void:
 
 
 # --- laço ----------------------------------------------------------------------
+
 
 func tick(delta: float) -> void:
 	if _look.is_empty():

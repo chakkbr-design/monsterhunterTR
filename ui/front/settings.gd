@@ -30,7 +30,10 @@ static func apply(d: Dictionary) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var mode := DisplayServer.window_get_mode()
-	var full := mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+	var full := (
+		mode == DisplayServer.WINDOW_MODE_FULLSCREEN
+		or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+	)
 	if d.get("fullscreen", false) and not full:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	elif not d.get("fullscreen", false) and full:

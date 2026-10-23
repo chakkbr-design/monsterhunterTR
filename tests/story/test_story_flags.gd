@@ -34,7 +34,9 @@ func _pure() -> void:
 	check(StoryFlags.balls_left(f, S) == S, "três bolas na mesa")
 	check(StoryFlags.first_rival_party(f).is_empty(), "sem rival_starter, sem party")
 	f.oak_stopped = true
-	check(StoryFlags.step(f) == "pick_starter" and StoryFlags.can_pick(f), "Oak trouxe: pode escolher")
+	check(
+		StoryFlags.step(f) == "pick_starter" and StoryFlags.can_pick(f), "Oak trouxe: pode escolher"
+	)
 	check(StoryFlags.oak_should_stop(f), "oak_stopped sem inicial ainda barra")
 	f.got_starter = true
 	f.starter = "Charmander"
@@ -44,10 +46,16 @@ func _pure() -> void:
 	check(StoryFlags.balls_left(f, S) == ["Bulbasaur"], "sobra só Bulbasaur")
 	check(StoryFlags.first_rival_party(f) == [["Squirtle", 5]], "rival: Squirtle Nv5")
 	check(StoryFlags.step(f) == "rival_battle", "passo: luta com rival")
-	check(StoryFlags.interior_event(f, "mart_viridian") == "mart_parcel", "loja com inicial: encomenda")
+	check(
+		StoryFlags.interior_event(f, "mart_viridian") == "mart_parcel",
+		"loja com inicial: encomenda"
+	)
 	f.rival_battle_done = true
 	check(not StoryFlags.lab_has_rival(f), "rival saiu do lab")
-	check(StoryFlags.interior_event(f, "player_house") == "mom_heal", "casa depois da luta: Mamãe cura")
+	check(
+		StoryFlags.interior_event(f, "player_house") == "mom_heal",
+		"casa depois da luta: Mamãe cura"
+	)
 	f.mom_healed = true
 	check(StoryFlags.interior_event(f, "player_house") == "", "Mamãe cura uma vez só (cena)")
 	check(StoryFlags.step(f) == "get_parcel", "passo: buscar encomenda")
@@ -59,19 +67,32 @@ func _pure() -> void:
 	check(StoryFlags.step(f) == "done", "Pokédex: fim do roteiro")
 	check(StoryFlags.interior_event(f, "oak_lab") == "", "lab depois da Pokédex: nada")
 	check(StoryFlags.interior_event(f, "mart_viridian") == "", "loja depois da Pokédex: nada")
-	check(StoryFlags.can_fire({"a": true}, ["a"], ["b"]) and not StoryFlags.can_fire({"a": true, "b": true}, ["a"], ["b"]) \
-		and not StoryFlags.can_fire({}, ["a"], []), "can_fire requires/blocks")
+	check(
+		(
+			StoryFlags.can_fire({"a": true}, ["a"], ["b"])
+			and not StoryFlags.can_fire({"a": true, "b": true}, ["a"], ["b"])
+			and not StoryFlags.can_fire({}, ["a"], [])
+		),
+		"can_fire requires/blocks"
+	)
 
 
 func _trigger_entry() -> void:
-	var trig: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/pallet_town.json")).get("triggers", [])
+	var trig: Array = (
+		JSON
+		. parse_string(FileAccess.get_file_as_string("res://data/maps/pallet_town.json"))
+		. get("triggers", [])
+	)
 	var e: Dictionary = {}
 	for t in trig:
 		if t.get("event") == "oak_stop":
 			e = t
 	check(not e.is_empty(), "pallet_town.json tem gatilho oak_stop")
 	var st: Node = load("res://story/story_trigger.gd").from_entry(e)
-	check(st.event == "oak_stop" and st.size.x > 40.0 and st.position.z < -15.0, "gatilho no norte de Pallet (%s)" % st.position)
+	check(
+		st.event == "oak_stop" and st.size.x > 40.0 and st.position.z < -15.0,
+		"gatilho no norte de Pallet (%s)" % st.position
+	)
 	st.free()
 
 
@@ -96,8 +117,14 @@ func _story_without_world() -> void:
 	await story.pick_starter(b)
 	check(running_seen[0], "is_running() verdadeiro durante a cena")
 	check(not story.is_running(), "is_running() falso depois")
-	check(game.party.size() == 1 and game.party[0].species == "Charmander", "inicial Charmander na equipe")
-	check(game.flags.get("got_starter") == true and game.flags.get("rival_starter") == "Squirtle", "flags got_starter / rival Squirtle")
+	check(
+		game.party.size() == 1 and game.party[0].species == "Charmander",
+		"inicial Charmander na equipe"
+	)
+	check(
+		game.flags.get("got_starter") == true and game.flags.get("rival_starter") == "Squirtle",
+		"flags got_starter / rival Squirtle"
+	)
 	check(game.flags.get("rival_battle_done") == true, "luta resolvida sem mundo (vitória padrão)")
 	check(not game.flags.has("trainer_rival_blue_route22"), "rival da Rota 22 continua não vencido")
 
@@ -113,7 +140,10 @@ func _story_without_world() -> void:
 	b2.free()
 
 	await story.mart_parcel()
-	check(game.flags.get("has_parcel") == true and int(game.bag.get("oaks_parcel", 0)) == 1, "loja entrega oaks_parcel")
+	check(
+		game.flags.get("has_parcel") == true and int(game.bag.get("oaks_parcel", 0)) == 1,
+		"loja entrega oaks_parcel"
+	)
 	var balls := int(game.bag.get("poke_ball", 0))
 	await story.parcel_deliver()
 	check(game.flags.get("has_pokedex") == true, "has_pokedex ligado")

@@ -49,14 +49,36 @@ func _run() -> void:
 	game.play_time = 5025.0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
-	game.party = [Mon.create("Charmander", 14, rng), Mon.create("Pidgey", 9, rng), Mon.create("Pikachu", 11, rng),
-		Mon.create("Bulbasaur", 8, rng)]
+	game.party = [
+		Mon.create("Charmander", 14, rng),
+		Mon.create("Pidgey", 9, rng),
+		Mon.create("Pikachu", 11, rng),
+		Mon.create("Bulbasaur", 8, rng)
+	]
 	game.party[1].hp = int(game.party[1].max_hp * 0.4)
 	game.party[2].status = "paralysis"
 	game.party[3].hp = 0
-	game.bag = {"potion": 3, "super_potion": 1, "antidote": 2, "poke_ball": 8, "great_ball": 2, "rare_candy": 1}
+	game.bag = {
+		"potion": 3,
+		"super_potion": 1,
+		"antidote": 2,
+		"poke_ball": 8,
+		"great_ball": 2,
+		"rare_candy": 1
+	}
 	game.flags = {"has_pokedex": true, "badge_boulder": true, "boulder_badge": true}
-	for s in ["Bulbasaur", "Charmander", "Squirtle", "Pidgey", "Rattata", "Caterpie", "Weedle", "Pikachu", "Spearow", "Nidoran F"]:
+	for s in [
+		"Bulbasaur",
+		"Charmander",
+		"Squirtle",
+		"Pidgey",
+		"Rattata",
+		"Caterpie",
+		"Weedle",
+		"Pikachu",
+		"Spearow",
+		"Nidoran F"
+	]:
 		game.seen[s] = true
 	for s in ["Charmander", "Pidgey", "Pikachu", "Bulbasaur"]:
 		game.caught[s] = true
@@ -72,7 +94,7 @@ func _run() -> void:
 	await process_frame
 	menu.open()
 	await _shot("ui_pause")
-	menu.press("ok")   # POKéMON
+	menu.press("ok")  # POKéMON
 	await _shot("ui_party")
 	menu.press("ok")
 	await _shot("ui_summary")
@@ -83,7 +105,7 @@ func _run() -> void:
 	menu.press("back")
 	menu.press("back")
 	menu.press("up")
-	menu.press("ok")   # POKéDEX
+	menu.press("ok")  # POKéDEX
 	await _shot("ui_pokedex")
 	for i in 3:
 		menu.press("down")
@@ -93,18 +115,18 @@ func _run() -> void:
 	menu.press("back")
 	menu.press("down")
 	menu.press("down")
-	menu.press("ok")   # BOLSA
+	menu.press("ok")  # BOLSA
 	await _shot("ui_bag")
 	menu.press("back")
 	menu.press("down")
-	menu.press("ok")   # cartão
+	menu.press("ok")  # cartão
 	await _shot("ui_card")
 	menu.press("right")
 	await _shot("ui_badges")
 	menu.press("back")
 	menu.press("down")
 	menu.press("down")
-	menu.press("ok")   # opções
+	menu.press("ok")  # opções
 	await _shot("ui_options")
 	menu.press("down")
 	menu.press("down")
@@ -113,7 +135,7 @@ func _run() -> void:
 	menu.press("back")
 	menu.press("back")
 	menu.press("up")
-	menu.press("ok")   # salvar
+	menu.press("ok")  # salvar
 	await _shot("ui_save_msg")
 	menu.close()
 	var m: Mon = game.party[0]

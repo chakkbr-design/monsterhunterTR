@@ -19,7 +19,11 @@ var _phase := 0.0
 func _ready() -> void:
 	add_to_group("sun_shafts")
 	var rng := RandomNumberGenerator.new()
-	rng.seed = shaft_seed if shaft_seed != 0 else int(absf(global_position.x * 13.0 + global_position.z * 7.0)) + 1
+	rng.seed = (
+		shaft_seed
+		if shaft_seed != 0
+		else int(absf(global_position.x * 13.0 + global_position.z * 7.0)) + 1
+	)
 	_phase = rng.randf() * TAU
 	var beam := Node3D.new()
 	beam.rotation_degrees = Vector3(0, -40.0, tilt_deg)
@@ -48,8 +52,15 @@ func _ready() -> void:
 
 
 func _mat(pool: bool, s: float) -> ShaderMaterial:
-	var m := WorldFx.shader_mat("sun_shaft", {"tint": Color(1.0, 0.82, 0.48), "strength": pool_opacity if pool else opacity,
-			"seed": s, "ground_pool": pool})
+	var m := WorldFx.shader_mat(
+		"sun_shaft",
+		{
+			"tint": Color(1.0, 0.82, 0.48),
+			"strength": pool_opacity if pool else opacity,
+			"seed": s,
+			"ground_pool": pool
+		}
+	)
 	_mats.append(m)
 	return m
 

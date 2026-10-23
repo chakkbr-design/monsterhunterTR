@@ -8,8 +8,16 @@ const DIR := "res://original/assets/vfx/pmd/"
 const DATA := "res://data/move_fx.json"
 const FX_PIXEL_M := 0.03
 const FX_TOWARD_CAM_M := 0.35
-const DIR_VEC := [Vector2(0, -1), Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1),
-		Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(1, -1)]
+const DIR_VEC := [
+	Vector2(0, -1),
+	Vector2(-1, -1),
+	Vector2(-1, 0),
+	Vector2(-1, 1),
+	Vector2(0, 1),
+	Vector2(1, 1),
+	Vector2(1, 0),
+	Vector2(1, -1)
+]
 
 static var _data := {}
 static var _tex := {}
@@ -76,7 +84,9 @@ static func content_offset(e: Dictionary, lo: int, hi: int) -> Vector2:
 		y1 = maxf(y1, float(b[3]))
 	if x1 < 0.0:
 		return Vector2.ZERO
-	return Vector2((x0 + x1) * 0.5 - float(e.frame[0]) * 0.5, (y0 + y1) * 0.5 - float(e.frame[1]) * 0.5)
+	return Vector2(
+		(x0 + x1) * 0.5 - float(e.frame[0]) * 0.5, (y0 + y1) * 0.5 - float(e.frame[1]) * 0.5
+	)
 
 
 ## Monta o efeito. aim = direção no mundo (orienta efeitos direcionais); cam = câmera para o giro na tela.

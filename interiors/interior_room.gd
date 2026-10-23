@@ -55,7 +55,12 @@ func has_spawn(spawn: String) -> bool:
 ## True if a global position lies inside this room's footprint (with a small margin).
 func contains(p: Vector3) -> bool:
 	var l := p - global_position
-	return absf(l.x) <= size.x / 2.0 + 1.0 and absf(l.z) <= size.y / 2.0 + 1.0 and l.y > -5.0 and l.y < 10.0
+	return (
+		absf(l.x) <= size.x / 2.0 + 1.0
+		and absf(l.z) <= size.y / 2.0 + 1.0
+		and l.y > -5.0
+		and l.y < 10.0
+	)
 
 
 func _ready() -> void:
@@ -71,14 +76,18 @@ func _ready() -> void:
 		var at := Vector3(float(f[1][0]), 0.0, float(f[1][1]))
 		var sz := Vector3(float(f[2][0]), float(f[2][1]), float(f[2][2]))
 		var solid: bool = f.size() < 5 or bool(f[4])
-		if InteriorLook.furniture(self, String(f[0]), at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3]))):
+		if InteriorLook.furniture(
+			self, String(f[0]), at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3]))
+		):
 			if solid:
 				_solid(at + Vector3(0, sz.y / 2.0, 0), sz)
 		else:
 			_box(at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3])), String(f[0]), solid)
 	for k in def.get("spawns", {}):
 		var e: Array = def.spawns[k]
-		spawns[String(k)] = [Vector3(float(e[0]), 0.0, float(e[1])), InteriorDefs.dir_vec(String(e[2]))]
+		spawns[String(k)] = [
+			Vector3(float(e[0]), 0.0, float(e[1])), InteriorDefs.dir_vec(String(e[2]))
+		]
 	for k in def.get("markers", {}):
 		var e: Array = def.markers[k]
 		var m := Node3D.new()
@@ -110,15 +119,29 @@ func _build_shell() -> void:
 	var h := InteriorDefs.WALL_H
 	var void_floor := _mesh_box(Vector3(0, -0.12, 0), Vector3(w + 30, 0.1, d + 30), C_VOID, "Void")
 	void_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_box(Vector3(0, -0.1, 0), Vector3(w, 0.2, d), Color(String(def.get("floor", "#c4a77c"))), "Floor", true)
-	_skin("Floor", InteriorLook.surface(InteriorLook.floor_tex(id), Color(String(def.get("floor", "#c4a77c")))))
+	_box(
+		Vector3(0, -0.1, 0),
+		Vector3(w, 0.2, d),
+		Color(String(def.get("floor", "#c4a77c"))),
+		"Floor",
+		true
+	)
+	_skin(
+		"Floor",
+		InteriorLook.surface(InteriorLook.floor_tex(id), Color(String(def.get("floor", "#c4a77c"))))
+	)
 	var wc := Color(String(def.get("wall", "#efe4cf")))
 	var t := 0.3
 	_box(Vector3(0, h / 2.0, -d / 2.0 - t / 2.0), Vector3(w + 2 * t, h, t), wc, "WallBack", true)
 	_box(Vector3(-w / 2.0 - t / 2.0, h / 2.0, 0), Vector3(t, h, d), wc, "WallLeft", true)
 	_box(Vector3(w / 2.0 + t / 2.0, h / 2.0, 0), Vector3(t, h, d), wc, "WallRight", true)
 	# Front wall: low visible strip + full-height invisible collision, so the camera sees in.
-	_mesh_box(Vector3(0, FRONT_VISIBLE_H / 2.0, d / 2.0 + t / 2.0), Vector3(w + 2 * t, FRONT_VISIBLE_H, t), wc.darkened(0.1), "WallFront")
+	_mesh_box(
+		Vector3(0, FRONT_VISIBLE_H / 2.0, d / 2.0 + t / 2.0),
+		Vector3(w + 2 * t, FRONT_VISIBLE_H, t),
+		wc.darkened(0.1),
+		"WallFront"
+	)
 	var wall_mat := InteriorLook.surface(InteriorLook.wall_tex(id), wc)
 	for wn in ["WallBack", "WallLeft", "WallRight", "WallFront"]:
 		_skin(wn, wall_mat)
@@ -132,12 +155,36 @@ func _build_exit(e: Dictionary, back := false) -> void:
 	var x := float(e.get("x", 0.0))
 	var d := size.y
 	var sg := -1.0 if back else 1.0
-	if InteriorLook.furniture(self, "Tapete", Vector3(x, 0.02, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.04, 0.8), Color(0.62, 0.22, 0.2)) == null:
-		_mesh_box(Vector3(x, 0.01, sg * (d / 2.0 - 0.5)), Vector3(1.6, 0.03, 0.8), Color(0.62, 0.22, 0.2), "ExitMatBack" if back else "ExitMat")
+	if (
+		InteriorLook.furniture(
+			self,
+			"Tapete",
+			Vector3(x, 0.02, sg * (d / 2.0 - 0.5)),
+			Vector3(1.6, 0.04, 0.8),
+			Color(0.62, 0.22, 0.2)
+		)
+		== null
+	):
+		_mesh_box(
+			Vector3(x, 0.01, sg * (d / 2.0 - 0.5)),
+			Vector3(1.6, 0.03, 0.8),
+			Color(0.62, 0.22, 0.2),
+			"ExitMatBack" if back else "ExitMat"
+		)
 	if back:
-		_mesh_box(Vector3(x, 1.1, -d / 2.0 + 0.02), Vector3(1.4, 2.2, 0.36), Color(0.25, 0.2, 0.16), "DoorwayBack")
+		_mesh_box(
+			Vector3(x, 1.1, -d / 2.0 + 0.02),
+			Vector3(1.4, 2.2, 0.36),
+			Color(0.25, 0.2, 0.16),
+			"DoorwayBack"
+		)
 	else:
-		_mesh_box(Vector3(x, FRONT_VISIBLE_H / 2.0 + 0.01, d / 2.0 + 0.02), Vector3(1.4, FRONT_VISIBLE_H + 0.02, 0.36), Color(0.25, 0.2, 0.16), "Doorway")
+		_mesh_box(
+			Vector3(x, FRONT_VISIBLE_H / 2.0 + 0.01, d / 2.0 + 0.02),
+			Vector3(1.4, FRONT_VISIBLE_H + 0.02, 0.36),
+			Color(0.25, 0.2, 0.16),
+			"Doorway"
+		)
 	var tag := Label3D.new()
 	tag.text = "SAÍDA"
 	tag.font_size = 48
@@ -160,7 +207,12 @@ func _build_stairs(s: Dictionary) -> void:
 	var going_up: bool = String(s.to[0]) == "player_room" or bool(s.get("up", false))
 	for i in 4:
 		var hgt := 0.12 * (i + 1) if going_up else 0.12 * (4 - i)
-		_mesh_box(at + Vector3(-0.45 + i * 0.3, hgt / 2.0, 0), Vector3(0.3, hgt, 1.3), Color(0.55, 0.42, 0.3).lightened(0.05 * i), "Step%d" % i)
+		_mesh_box(
+			at + Vector3(-0.45 + i * 0.3, hgt / 2.0, 0),
+			Vector3(0.3, hgt, 1.3),
+			Color(0.55, 0.42, 0.3).lightened(0.05 * i),
+			"Step%d" % i
+		)
 	var tag := Label3D.new()
 	tag.text = "SOBE" if going_up else "DESCE"
 	tag.font_size = 40

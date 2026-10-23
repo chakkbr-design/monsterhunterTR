@@ -11,8 +11,17 @@ extends Overworld
 
 signal location_changed(kind: String, id: String)  ## kind: "zone" | "interior"
 
-const ZONES := ["pallet_town", "route_1", "viridian_city", "route_22", "route_2", "viridian_forest",
-		"route_2_north", "pewter_city", "route_3"]
+const ZONES := [
+	"pallet_town",
+	"route_1",
+	"viridian_city",
+	"route_22",
+	"route_2",
+	"viridian_forest",
+	"route_2_north",
+	"pewter_city",
+	"route_3"
+]
 const LOAD_RANGE := 40.0
 const UNLOAD_MARGIN := 20.0
 const INDOOR_DISTANCE := 11.0
@@ -53,7 +62,7 @@ func _ready() -> void:
 	super._ready()
 	var w = JSON.parse_string(FileAccess.get_file_as_string("res://data/world.json"))
 	var start: Dictionary = w.get("start", {}) if w is Dictionary else {}
-	for z in (w.get("zones", []) if w is Dictionary else []):
+	for z in w.get("zones", []) if w is Dictionary else []:
 		if ZONES.has(String(z.id)):
 			zones[String(z.id)] = z
 	_build_interiors()
@@ -82,7 +91,7 @@ func _ready() -> void:
 
 
 func _start_zone(zone: String, spawn: String, exact: Vector3) -> void:
-	for id in (ZONES if not stream else [zone]):
+	for id in ZONES if not stream else [zone]:
 		if not builders.has(id):
 			_make_builder(id, 0).build()  # items_per_frame 0: finishes synchronously
 	place_player(zone, spawn)
@@ -104,6 +113,7 @@ func _start_interior(id: String, spawn: String, exact: Vector3) -> void:
 
 
 # --- public API ----------------------------------------------------------------------------------
+
 
 ## Fades out, puts the player on `spawn` of the interior (unknown spawn -> "door") and fades in.
 func go_to_interior(interior_id: String, spawn: String = "door") -> void:
@@ -186,6 +196,7 @@ func save_extra() -> Dictionary:
 
 # --- interiors -----------------------------------------------------------------------------------
 
+
 func _build_interiors() -> void:
 	for id in InteriorDefs.ORDER:
 		var r := InteriorRoom.new().setup(id, InteriorDefs.ROOMS[id])
@@ -256,9 +267,22 @@ func _camera_mode(indoor: bool) -> void:
 
 ## Original look: post fx, wind, time of day, weather, ambience, the following partner (world/sky/).
 func _make_sky() -> void:
-	for n: Node in [WorldPostFx.new(), WorldWind.new(), WorldTimeOfDay.new(), WorldWeather.new(), WorldAmbient.new(), WorldFollower.new()]:
-		n.name = {WorldPostFx: "PostFX", WorldWind: "Wind", WorldTimeOfDay: "TimeOfDay", WorldWeather: "Weather",
-				WorldAmbient: "Ambient", WorldFollower: "Follower"}[n.get_script()]
+	for n: Node in [
+		WorldPostFx.new(),
+		WorldWind.new(),
+		WorldTimeOfDay.new(),
+		WorldWeather.new(),
+		WorldAmbient.new(),
+		WorldFollower.new()
+	]:
+		n.name = {
+			WorldPostFx: "PostFX",
+			WorldWind: "Wind",
+			WorldTimeOfDay: "TimeOfDay",
+			WorldWeather: "Weather",
+			WorldAmbient: "Ambient",
+			WorldFollower: "Follower"
+		}[n.get_script()]
 		add_child(n)
 
 
@@ -307,6 +331,7 @@ func _white_out(_p: OverworldPlayer) -> void:
 
 
 # --- outdoor zones -------------------------------------------------------------------------------
+
 
 static func _vec(a) -> Vector3:
 	if a is Array and a.size() == 3:
@@ -389,7 +414,9 @@ func _process(delta: float) -> void:
 		if not builders.has(id):
 			if _loading == "" and d < LOAD_RANGE:
 				_stream_in(id)
-		elif d > LOAD_RANGE + UNLOAD_MARGIN and id != here and id != _loading and not Game.is_busy():
+		elif (
+			d > LOAD_RANGE + UNLOAD_MARGIN and id != here and id != _loading and not Game.is_busy()
+		):
 			builders[id].queue_free()
 			builders.erase(id)
 

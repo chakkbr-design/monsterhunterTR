@@ -4,9 +4,9 @@ extends RefCounted
 ## Tudo avança em tick(dt) chamado pela arena (velocidade da luta, testes headless). Não mexe em gameplay.
 
 var arena: Node3D
-var nodes: Array = []      # FxSprite / BeamFx / emissores com tick(dt) -> bool
+var nodes: Array = []  # FxSprite / BeamFx / emissores com tick(dt) -> bool
 var enabled := true
-var spawned := 0          # total de efeitos criados (testes)
+var spawned := 0  # total de efeitos criados (testes)
 
 
 func _init(a: Node3D) -> void:
@@ -50,6 +50,7 @@ func _track(n: Object) -> Object:
 
 # --- Blocos ---
 
+
 ## Efeito PMD solto no mundo (global). Volta o FxSprite (ou null).
 func pmd(fx_id: String, at: Vector3, aim: Vector3, role := {}) -> FxSprite:
 	if not enabled or not arena.is_inside_tree():
@@ -65,7 +66,9 @@ func pmd(fx_id: String, at: Vector3, aim: Vector3, role := {}) -> FxSprite:
 
 
 ## Efeito PMD preso a um nó (projétil, lutador). Em laço por padrão.
-func attach(parent: Node3D, fx_id: String, aim: Vector3, role := {}, offset := Vector3.ZERO) -> FxSprite:
+func attach(
+	parent: Node3D, fx_id: String, aim: Vector3, role := {}, offset := Vector3.ZERO
+) -> FxSprite:
 	if not enabled or not is_instance_valid(parent) or not parent.is_inside_tree():
 		return null
 	var r := role.duplicate()
@@ -82,10 +85,15 @@ func attach(parent: Node3D, fx_id: String, aim: Vector3, role := {}, offset := V
 
 
 func _center(f: BattleFighter, k := 0.5) -> Vector3:
-	return f.to_global(Vector3(0, f.visual_height() * k, 0)) if is_instance_valid(f) and f.is_inside_tree() else Vector3.ZERO
+	return (
+		f.to_global(Vector3(0, f.visual_height() * k, 0))
+		if is_instance_valid(f) and f.is_inside_tree()
+		else Vector3.ZERO
+	)
 
 
 # --- Golpes ---
+
 
 ## Ao soltar o golpe: papel "user" do move_fx.json.
 func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
@@ -95,7 +103,14 @@ func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 
 
 ## Ao acertar: papel "hit" ou um impacto padrão (tingido pelo tipo nos especiais).
-func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector3, crit := false, eff := 1.0) -> void:
+func on_hit(
+	user: BattleFighter,
+	target: BattleFighter,
+	mv: Dictionary,
+	dir: Vector3,
+	crit := false,
+	eff := 1.0
+) -> void:
 	if not is_instance_valid(target):
 		return
 	var roles := PmdFx.move_roles(String(mv.get("id", "")))
@@ -161,12 +176,21 @@ func stream(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, du
 	var s := PmdFx.role(roles, "stream")
 	var col := Dex.type_color(String(mv.get("type", "normal")))
 	if s.is_empty():
-		s = {"fx": "hit_neutral", "every": 0.06, "travel": 0.4, "scale": 0.5, "spread": 0.4, "tint": col.lightened(0.3)}
+		s = {
+			"fx": "hit_neutral",
+			"every": 0.06,
+			"travel": 0.4,
+			"scale": 0.5,
+			"spread": 0.4,
+			"tint": col.lightened(0.3)
+		}
 	var em := StreamEmitter.new(self, user, s, dir, length, dur)
 	if String(s.get("style", "")) == "jet":
 		var at := _center(user, 0.45)
 		var gdir := (arena.global_basis * dir).normalized()
-		var jet := BeamFx.flame_jet(at, gdir, length, s, float(s.get("travel", 0.45)), dur, _cam_pos(at))
+		var jet := BeamFx.flame_jet(
+			at, gdir, length, s, float(s.get("travel", 0.45)), dur, _cam_pos(at)
+		)
 		jet.place_in(arena)
 		_track(jet)
 		em.jet = jet
@@ -244,7 +268,8 @@ func sparkle(at: Vector3, scale := 1.0) -> void:
 
 
 ## Emissor de um golpe "stream": solta partículas PMD que viajam pelo cone enquanto dura.
-class StreamEmitter extends RefCounted:
+class StreamEmitter:
+	extends RefCounted
 	var vfx: BattleVfx
 	var user: BattleFighter
 	var role: Dictionary
@@ -257,7 +282,9 @@ class StreamEmitter extends RefCounted:
 	var jet: BeamFx
 	var _smoke := 0.0
 
-	func _init(v: BattleVfx, u: BattleFighter, r: Dictionary, d: Vector3, l: float, du: float) -> void:
+	func _init(
+		v: BattleVfx, u: BattleFighter, r: Dictionary, d: Vector3, l: float, du: float
+	) -> void:
 		vfx = v
 		user = u
 		role = r
@@ -280,14 +307,20 @@ class StreamEmitter extends RefCounted:
 			var at: Vector3 = vfx.arena.to_global(mouth)
 			var gdir: Vector3 = (vfx.arena.global_basis * dir).normalized()
 			var pos := at + gdir * length * 0.5
-			jet.global_transform = Transform3D(BeamFx._basis(gdir, Vector3.AXIS_X, pos, vfx._cam_pos(at)), pos)
+			jet.global_transform = Transform3D(
+				BeamFx._basis(gdir, Vector3.AXIS_X, pos, vfx._cam_pos(at)), pos
+			)
 			var smoke := String(role.get("smoke", ""))
 			if smoke != "":
 				_smoke += dt
 				if _smoke >= float(role.get("smoke_every", 0.08)):
 					_smoke = 0.0
-					var sp := vfx.pmd(smoke, at + gdir * length * randf_range(0.5, 1.0), gdir,
-							{"scale": float(role.get("smoke_scale", 2.0)) * 0.5, "billboard": true})
+					var sp := vfx.pmd(
+						smoke,
+						at + gdir * length * randf_range(0.5, 1.0),
+						gdir,
+						{"scale": float(role.get("smoke_scale", 2.0)) * 0.5, "billboard": true}
+					)
 					if sp:
 						sp.velocity = Vector3(0, float(role.get("smoke_rise", 2.0)) * 0.5, 0)
 			return true

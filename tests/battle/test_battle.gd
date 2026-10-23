@@ -75,7 +75,10 @@ func _stamina() -> void:
 	var sf := p.speed_factor()
 	p.stamina = 0.0
 	_run(a, 1.0)
-	check(near(p.stamina, p.pp_max * 0.2 * sf, 0.6), "stamina regenera 20%%/s x fator (%.2f)" % p.stamina)
+	check(
+		near(p.stamina, p.pp_max * 0.2 * sf, 0.6),
+		"stamina regenera 20%%/s x fator (%.2f)" % p.stamina
+	)
 	p.stamina = p.pp_max
 	p.sprinting = true
 	_run(a, 1.0)
@@ -166,20 +169,33 @@ func _status() -> void:
 	e.controller = "ai"
 	e.drive(0.5, Vector3.RIGHT, 2.0)
 	var moved := (e.position - pos).length()
-	check(near(moved, 2.0 * 0.5 * 0.5 * e.speed_factor(), 0.05), "paralisia corta velocidade pela metade")
+	check(
+		near(moved, 2.0 * 0.5 * 0.5 * e.speed_factor(), 0.05),
+		"paralisia corta velocidade pela metade"
+	)
 	_done(a)
 
 
 func _capture() -> void:
-	var a := _arena([Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"seed": 3, "ball": "master_ball"})
+	var a := _arena(
+		[Mon.create("charmander", 10)],
+		[Mon.create("pidgey", 3)],
+		{"seed": 3, "ball": "master_ball"}
+	)
 	_run(a, 1.3)
 	check(a.throw_ball(), "joga a bola")
 	_run(a, 5.0)
 	var got: Dictionary = a.get_meta("got")
-	check(got.get("outcome") == "caught" and got.get("caught_mon") is Mon, "captura com master ball")
-	check(got.get("caught_mon") is Mon and got.caught_mon.ball == "master_ball", "bola gravada no Mon")
+	check(
+		got.get("outcome") == "caught" and got.get("caught_mon") is Mon, "captura com master ball"
+	)
+	check(
+		got.get("caught_mon") is Mon and got.caught_mon.ball == "master_ball", "bola gravada no Mon"
+	)
 	_done(a)
-	var t := _arena([Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"kind": "trainer", "seed": 3})
+	var t := _arena(
+		[Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"kind": "trainer", "seed": 3}
+	)
 	_run(t, 1.3)
 	check(not t.throw_ball() and not t.run_away(), "treinador: sem bola nem fuga")
 	_done(t)
@@ -198,11 +214,13 @@ func _swap() -> void:
 	a.player.hp = 7
 	a.player.mon.hp = 7
 	check(a.swap(), "troca de mon")
-	check(a.player.mon == party[1] and a.enemy.opponent == a.player, "novo mon em campo e alvo do inimigo")
+	check(
+		a.player.mon == party[1] and a.enemy.opponent == a.player,
+		"novo mon em campo e alvo do inimigo"
+	)
 	check(party[0].hp == 7, "HP do mon recolhido persiste")
 	check(not a.swap(), "troca tem cooldown")
 	_done(a)
-
 
 
 ## Golpe de vários acertos (multi_arc) não continua do lutador recolhido pela troca.
@@ -228,8 +246,12 @@ func _recall_stops_combo() -> void:
 
 
 const MATCHUPS := [
-	["charmander", 8, "pidgey", 6], ["squirtle", 8, "rattata", 7], ["bulbasaur", 9, "caterpie", 8],
-	["pikachu", 8, "spearow", 8], ["geodude", 10, "charmander", 10], ["pidgey", 6, "weedle", 6],
+	["charmander", 8, "pidgey", 6],
+	["squirtle", 8, "rattata", 7],
+	["bulbasaur", 9, "caterpie", 8],
+	["pikachu", 8, "spearow", 8],
+	["geodude", 10, "charmander", 10],
+	["pidgey", 6, "weedle", 6],
 ]
 
 
@@ -244,8 +266,12 @@ func _full_battle(i: int) -> void:
 		t += DT
 	var got: Dictionary = a.get_meta("got")
 	var outcome := String(got.get("outcome", "none"))
-	print("  AI x AI %s Lv%d vs %s Lv%d -> %s em %.1f s, %d acertos, HP %d/%d, PP %.0f" % [m[0], m[1], m[2], m[3],
-		outcome, t, a.hits, mine.hp, mine.max_hp, mine.pp])
+	print(
+		(
+			"  AI x AI %s Lv%d vs %s Lv%d -> %s em %.1f s, %d acertos, HP %d/%d, PP %.0f"
+			% [m[0], m[1], m[2], m[3], outcome, t, a.hits, mine.hp, mine.max_hp, mine.pp]
+		)
+	)
 	check(outcome in ["win", "lose"], "batalha IA x IA termina com vencedor (%s)" % m[0])
 	check(a.hits > 0, "houve acertos")
 	if outcome == "win":
@@ -259,7 +285,9 @@ func _full_battle(i: int) -> void:
 func _trainer_battle() -> void:
 	var party := [Mon.create("charmander", 12), Mon.create("squirtle", 12)]
 	var foes := [Mon.create("geodude", 9), Mon.create("onix", 10)]
-	var a := _arena(party, foes, {"kind": "trainer", "trainer_id": "brock", "seed": 42, "autoplay": true})
+	var a := _arena(
+		party, foes, {"kind": "trainer", "trainer_id": "brock", "seed": 42, "autoplay": true}
+	)
 	var t := 0.0
 	while a.state != "done" and t < 900.0:
 		a.step(DT)
@@ -276,6 +304,7 @@ func _trainer_battle() -> void:
 
 # --- Itens, item do treinador, 2x1 com aliado ---
 
+
 func _game_with(bag: Dictionary) -> Node:
 	var g: Node = load("res://core/game.gd").new()
 	g.save_path = "user://test_save.json"
@@ -285,24 +314,38 @@ func _game_with(bag: Dictionary) -> Node:
 
 func _items() -> void:
 	var g := _game_with({"potion": 2, "antidote": 1, "revive": 1, "poke_ball": 3})
-	var party := [Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("bulbasaur", 12)]
+	var party := [
+		Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("bulbasaur", 12)
+	]
 	party[2].hp = 0
 	var a := _arena(party, [Mon.create("pidgey", 5)], {"seed": 11, "game": g})
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.ally.controller = "none"
 	var p: BattleFighter = a.player
-	check(a.battle_items() == ["antidote", "potion", "revive"], "bolsa rápida lista só itens de batalha (%s)" % [a.battle_items()])
+	check(
+		a.battle_items() == ["antidote", "potion", "revive"],
+		"bolsa rápida lista só itens de batalha (%s)" % [a.battle_items()]
+	)
 	p.take_damage(15, Vector3.ZERO, 0.0)
 	var hp0 := p.hp
 	check(a.use_item("potion"), "usa poção no controlado")
-	check(p.hp == mini(hp0 + 20, p.max_hp) and p.mon.hp == p.hp, "poção cura 20 e ressincroniza o lutador (%d -> %d)" % [hp0, p.hp])
+	check(
+		p.hp == mini(hp0 + 20, p.max_hp) and p.mon.hp == p.hp,
+		"poção cura 20 e ressincroniza o lutador (%d -> %d)" % [hp0, p.hp]
+	)
 	check(int(g.bag.get("potion", 0)) == 1, "poção sai da bolsa")
-	check(near(a.item_cd, 3.0, 0.001) and p.gcd_t >= 1.0, "item custa cooldown global de 3 s e trava 1 GCD")
+	check(
+		near(a.item_cd, 3.0, 0.001) and p.gcd_t >= 1.0,
+		"item custa cooldown global de 3 s e trava 1 GCD"
+	)
 	check(not a.use_item("potion"), "cooldown de item bloqueia outro uso")
 	_run(a, 3.1)
 	p.stagger()
-	check(not a.use_item("potion") and int(g.bag.get("potion", 0)) == 1, "exausto (stagger) não usa item")
+	check(
+		not a.use_item("potion") and int(g.bag.get("potion", 0)) == 1,
+		"exausto (stagger) não usa item"
+	)
 	_run(a, 2.1)
 	var al: BattleFighter = a.ally
 	al.apply_status("poison")
@@ -310,7 +353,10 @@ func _items() -> void:
 	check(al.status == "" and al.mon.status == "", "status do aliado curado e ressincronizado")
 	_run(a, 3.1)
 	check(not a.use_item("potion", party[2]), "poção não funciona em desmaiado")
-	check(a.use_item("revive", party[2]) and party[2].hp == party[2].max_hp / 2, "revive no desmaiado da party")
+	check(
+		a.use_item("revive", party[2]) and party[2].hp == party[2].max_hp / 2,
+		"revive no desmaiado da party"
+	)
 	check(not g.bag.has("revive"), "revive consumido")
 	_done(a)
 	g.free()
@@ -319,7 +365,11 @@ func _items() -> void:
 func _trainer_item() -> void:
 	var party := [Mon.create("charmander", 10)]
 	var foes := [Mon.create("geodude", 10)]
-	var a := _arena(party, foes, {"kind": "trainer", "trainer_id": "brock", "seed": 9, "trainer_item": "super_potion"})
+	var a := _arena(
+		party,
+		foes,
+		{"kind": "trainer", "trainer_id": "brock", "seed": 9, "trainer_item": "super_potion"}
+	)
 	check(a.ally == null, "batalha de treinador é 1x1 (sem aliado)")
 	_run(a, 1.3)
 	var e: BattleFighter = a.enemy
@@ -329,7 +379,10 @@ func _trainer_item() -> void:
 	var low := int(e.max_hp * 0.3)
 	e.hp = low
 	_run(a, 0.1)
-	check(e.item_used and e.hp == mini(low + 60, e.max_hp), "treinador usa super poção com HP <= 35%% (%d)" % e.hp)
+	check(
+		e.item_used and e.hp == mini(low + 60, e.max_hp),
+		"treinador usa super poção com HP <= 35%% (%d)" % e.hp
+	)
 	e.hp = low
 	_run(a, 1.0)
 	check(e.hp <= low, "item do treinador é usado só uma vez")
@@ -350,7 +403,10 @@ func _ally_arena(g: Node = null) -> Node:
 
 func _ally_modes() -> void:
 	var a := _ally_arena()
-	check(is_instance_valid(a.ally) and a.ally.mon != a.player.mon and a.ally.controller == "ai", "selvagem 2x1: aliado IA entra")
+	check(
+		is_instance_valid(a.ally) and a.ally.mon != a.player.mon and a.ally.controller == "ai",
+		"selvagem 2x1: aliado IA entra"
+	)
 	check(a.cycle_ally_mode() == BattleAI.DEFEND, "F alterna ATTACK -> DEFEND")
 	a.ally.moves = []  # só posicionamento
 	a.ally.position = Vector3(4, 0, 4)
@@ -361,7 +417,10 @@ func _ally_modes() -> void:
 	var to_a := p.flat_to(al)
 	var along := to_a.dot(to_e.normalized())
 	var off := (to_a - to_e.normalized() * along).length()
-	check(along > 0.5 and along < to_e.length() and off < 0.6, "DEFEND: aliado fica entre o controlado e o inimigo (along %.2f, off %.2f)" % [along, off])
+	check(
+		along > 0.5 and along < to_e.length() and off < 0.6,
+		"DEFEND: aliado fica entre o controlado e o inimigo (along %.2f, off %.2f)" % [along, off]
+	)
 	check(al.flat_to(p).length() <= 1.5 + 0.45, "DEFEND: a até 1,5 m do controlado")
 	# Selvagem foca o tanque em DEFEND (+2 de peso).
 	a.enemy.controller = "ai"
@@ -383,8 +442,14 @@ func _ally_modes() -> void:
 	bp.hp = low
 	bp.mon.hp = low
 	_run(b, 0.1)
-	check(bp.hp > low and bp.mon.hp == bp.hp, "SUPPORT: aliado cura o controlado (%d -> %d)" % [low, bp.hp])
-	check(not g.bag.has("super_potion") and g.bag.has("potion"), "SUPPORT escolhe o melhor item para o HP que falta")
+	check(
+		bp.hp > low and bp.mon.hp == bp.hp,
+		"SUPPORT: aliado cura o controlado (%d -> %d)" % [low, bp.hp]
+	)
+	check(
+		not g.bag.has("super_potion") and g.bag.has("potion"),
+		"SUPPORT escolhe o melhor item para o HP que falta"
+	)
 	bp.hp = low
 	_run(b, 1.0)
 	check(bp.hp == low and g.bag.has("potion"), "SUPPORT respeita o cooldown de item")
@@ -399,24 +464,39 @@ func _control_swap() -> void:
 	var m0: Mon = a.player.mon
 	var m1: Mon = a.ally.mon
 	check(a.swap(), "Tab troca o controle entre os dois")
-	check(a.player.mon == m1 and a.ally.mon == m0 and a.player.controller == "player" and a.ally.controller == "ai",
-		"controle passou para o aliado e o outro virou IA")
+	check(
+		(
+			a.player.mon == m1
+			and a.ally.mon == m0
+			and a.player.controller == "player"
+			and a.ally.controller == "ai"
+		),
+		"controle passou para o aliado e o outro virou IA"
+	)
 	a.player.take_damage(a.player.hp, Vector3.ZERO, 0.0)
-	check(a.player.mon == m0 and a.ally == null, "controlado desmaia: controle volta para quem sobrou")
+	check(
+		a.player.mon == m0 and a.ally == null, "controlado desmaia: controle volta para quem sobrou"
+	)
 	_run(a, 1.2)
 	check(a.state == "fight" and a.player.active(), "luta segue com um só mon")
 	_done(a)
-	var party := [Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("pidgey", 12)]
+	var party := [
+		Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("pidgey", 12)
+	]
 	var b := _arena(party, [Mon.create("rattata", 12)], {"seed": 4})
 	_run(b, 1.3)
 	check(b.send_in(2, true) and b.ally.mon == party[2], "escolhe da party quem entra como aliado")
 	_run(b, 1.1)
-	check(b.send_in(1) and b.player.mon == party[1] and b.ally.mon == party[2], "escolhe da party quem entra como controlado")
+	check(
+		b.send_in(1) and b.player.mon == party[1] and b.ally.mon == party[2],
+		"escolhe da party quem entra como controlado"
+	)
 	_done(b)
 
 
 const DUOS := [
-	["charmander", 9, "bulbasaur", 9, "rattata", 11], ["squirtle", 9, "pidgey", 9, "spearow", 11],
+	["charmander", 9, "bulbasaur", 9, "rattata", 11],
+	["squirtle", 9, "pidgey", 9, "spearow", 11],
 	["pikachu", 9, "geodude", 9, "pidgey", 12],
 ]
 
@@ -434,8 +514,27 @@ func _two_vs_one(i: int) -> void:
 		t += DT
 	var got: Dictionary = a.get_meta("got")
 	var outcome := String(got.get("outcome", "none"))
-	print("  2x1 %s+%s vs %s Lv%d [%s] -> %s em %.1f s, %d acertos, HP %d/%d e %d/%d, PP %.0f e %.0f" % [m[0], m[2], m[4], m[5],
-		a.ALLY_MODE_NAMES[i], outcome, t, a.hits, party[0].hp, party[0].max_hp, party[1].hp, party[1].max_hp, party[0].pp, party[1].pp])
+	print(
+		(
+			"  2x1 %s+%s vs %s Lv%d [%s] -> %s em %.1f s, %d acertos, HP %d/%d e %d/%d, PP %.0f e %.0f"
+			% [
+				m[0],
+				m[2],
+				m[4],
+				m[5],
+				a.ALLY_MODE_NAMES[i],
+				outcome,
+				t,
+				a.hits,
+				party[0].hp,
+				party[0].max_hp,
+				party[1].hp,
+				party[1].max_hp,
+				party[0].pp,
+				party[1].pp
+			]
+		)
+	)
 	check(outcome in ["win", "lose"], "2x1 IA termina (%s)" % m[0])
 	check(party[1].pp < party[1].pp_base or party[0].pp < party[0].pp_base, "PP persistido nos Mon")
 	if outcome == "win":
@@ -444,7 +543,10 @@ func _two_vs_one(i: int) -> void:
 		for k in 2:
 			if party[k].xp > xp0[k]:
 				gained.append(party[k])
-		check(gained.size() == alive.size() and got.get("exp", []).size() == alive.size(), "XP dividida entre os participantes vivos (%d)" % gained.size())
+		check(
+			gained.size() == alive.size() and got.get("exp", []).size() == alive.size(),
+			"XP dividida entre os participantes vivos (%d)" % gained.size()
+		)
 	else:
 		check(party[0].is_fainted() and party[1].is_fainted(), "2x1 perdido com os dois desmaiados")
 	_done(a)

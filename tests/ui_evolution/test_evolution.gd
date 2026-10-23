@@ -84,13 +84,16 @@ func _run() -> void:
 	var c := Mon.create("Charmander", 16)
 	game.party = [c]
 	request([c])
-	send(KEY_ENTER)             # pula a intro
+	send(KEY_ENTER)  # pula a intro
 	check(evo.state == "anim", "Enter pula a intro")
 	evo.advance(2.5)
 	send(KEY_ESCAPE)
 	check(evo.state == "cancelled" and c.species == "Charmander", "Esc cancelou")
 	check(evo.message == "Charmander parou de evoluir.", "texto do cancelamento: " + evo.message)
-	check(c.evolution_target() == "" and game.pending_evolutions.is_empty(), "cancelado até o próximo nível")
+	check(
+		c.evolution_target() == "" and game.pending_evolutions.is_empty(),
+		"cancelado até o próximo nível"
+	)
 	send(KEY_E)
 	check(evo.state == "cancelled", "mensagem segura a tecla por um instante")
 	evo.advance(evo.MSG_MIN + 0.05)
@@ -125,7 +128,7 @@ func _run() -> void:
 		if not m.moves.has(id):
 			wanted = id
 			break
-	while m.moves.size() < Mon.MAX_MOVES:     # garante a tela de esquecer
+	while m.moves.size() < Mon.MAX_MOVES:  # garante a tela de esquecer
 		for id in Dex.all_moves():
 			if not m.moves.has(id) and id != wanted:
 				m.moves.append(id)
@@ -133,7 +136,7 @@ func _run() -> void:
 	game.pending_evolutions = [m]
 	game.queue_learn(m, wanted)
 	check(game.pending_learns.size() == 1, "golpe na fila")
-	game.learn_requested.emit()       # o Game emite os dois depois da batalha, nessa ordem não importa
+	game.learn_requested.emit()  # o Game emite os dois depois da batalha, nessa ordem não importa
 	check(learn.state == "", "LearnMove não abre com evolução pendente")
 	game.evolution_requested.emit()
 	check(evo.state == "intro", "Evolution abriu")

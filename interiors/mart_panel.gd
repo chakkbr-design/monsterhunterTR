@@ -123,9 +123,13 @@ func press(act: String) -> void:
 	match state:
 		"menu":
 			match act:
-				"up": cursor = posmod(cursor - 1, 3)
-				"down": cursor = posmod(cursor + 1, 3)
-				"back": close(); return
+				"up":
+					cursor = posmod(cursor - 1, 3)
+				"down":
+					cursor = posmod(cursor + 1, 3)
+				"back":
+					close()
+					return
 				"ok":
 					if cursor == 2:
 						close()
@@ -134,9 +138,12 @@ func press(act: String) -> void:
 		"list":
 			var n := items.size() + 1  # last row = Voltar
 			match act:
-				"up": cursor = posmod(cursor - 1, n)
-				"down": cursor = posmod(cursor + 1, n)
-				"back": _back_to_menu()
+				"up":
+					cursor = posmod(cursor - 1, n)
+				"down":
+					cursor = posmod(cursor + 1, n)
+				"back":
+					_back_to_menu()
 				"ok":
 					if cursor >= items.size():
 						_back_to_menu()
@@ -144,24 +151,39 @@ func press(act: String) -> void:
 						qty = 1
 						state = "qty"
 					else:
-						_info.text = "Dinheiro insuficiente." if not selling else "Você não tem esse item."
+						_info.text = (
+							"Dinheiro insuficiente." if not selling else "Você não tem esse item."
+						)
 						return
 		"qty":
 			var id: String = items[cursor]
 			var mx := maxi(_max_for(id), 1)
 			match act:
-				"left": qty = clampi(qty - 1, 1, mx)
-				"right": qty = clampi(qty + 1, 1, mx)
-				"up": qty = clampi(qty + 10, 1, mx)
-				"down": qty = clampi(qty - 10, 1, mx)
-				"back": state = "list"
+				"left":
+					qty = clampi(qty - 1, 1, mx)
+				"right":
+					qty = clampi(qty + 1, 1, mx)
+				"up":
+					qty = clampi(qty + 10, 1, mx)
+				"down":
+					qty = clampi(qty - 10, 1, mx)
+				"back":
+					state = "list"
 				"ok":
-					var ok := MartShop.sell(id, qty, game) if selling else MartShop.buy(id, qty, game)
+					var ok := (
+						MartShop.sell(id, qty, game) if selling else MartShop.buy(id, qty, game)
+					)
 					var msg := ""
 					if ok and selling:
-						msg = "Vendeu %d %s por P$%d." % [qty, MartShop.item_name(id), MartShop.sell_price(id) * qty]
+						msg = (
+							"Vendeu %d %s por P$%d."
+							% [qty, MartShop.item_name(id), MartShop.sell_price(id) * qty]
+						)
 					elif ok:
-						msg = "Comprou %d %s por P$%d." % [qty, MartShop.item_name(id), MartShop.price(id) * qty]
+						msg = (
+							"Comprou %d %s por P$%d."
+							% [qty, MartShop.item_name(id), MartShop.price(id) * qty]
+						)
 						if id == MartShop.BONUS_FOR and qty >= MartShop.BONUS_AT:
 							msg += " Ganhou também uma Premier Ball!"
 					else:

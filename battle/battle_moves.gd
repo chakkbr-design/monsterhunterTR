@@ -3,10 +3,26 @@ extends RefCounted
 ## Uso e entrega dos golpes (por `kind`), acerto geométrico, dano e efeitos secundários.
 
 const MISSABLE := ["dash", "arc", "multi_arc", "whip", "projectile", "beam", "aoe_target", "zone"]
-const STATUS_IMMUNE := {"burn": "fire", "poison": "poison", "paralysis": "electric", "leech": "grass"}
-const STAT_NAMES := {"atk": "Ataque", "def": "Defesa", "spa": "At. Esp.", "spd": "Def. Esp.", "spe": "Velocidade", "acc": "Precisão"}
-const STATUS_WORDS := {"burn": "QUEIMADO!", "poison": "ENVENENADO!", "paralysis": "PARALISADO!", "sleep": "DORMINDO!",
-	"leech": "SEMEADO!", "flinch": "HESITOU!", "confusion": "CONFUSO!"}
+const STATUS_IMMUNE := {
+	"burn": "fire", "poison": "poison", "paralysis": "electric", "leech": "grass"
+}
+const STAT_NAMES := {
+	"atk": "Ataque",
+	"def": "Defesa",
+	"spa": "At. Esp.",
+	"spd": "Def. Esp.",
+	"spe": "Velocidade",
+	"acc": "Precisão"
+}
+const STATUS_WORDS := {
+	"burn": "QUEIMADO!",
+	"poison": "ENVENENADO!",
+	"paralysis": "PARALISADO!",
+	"sleep": "DORMINDO!",
+	"leech": "SEMEADO!",
+	"flinch": "HESITOU!",
+	"confusion": "CONFUSO!"
+}
 const PARALYSIS_FAIL := 0.2
 const CONFUSION_CHANCE := 0.33
 const AI_ROLL_MEAN := 0.925
@@ -32,8 +48,14 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	var mv := Dex.move(id)
 	if mv.is_empty() or not user.can_act():
 		return false
-	if float(user.move_cd.get(id, 0.0)) > 0.0 or user.gcd_t > 0.0 or user.root_t > 0.0 or user.dash_t > 0.0 \
-			or user.lunge_t > 0.0 or not user.may_start(mv):
+	if (
+		float(user.move_cd.get(id, 0.0)) > 0.0
+		or user.gcd_t > 0.0
+		or user.root_t > 0.0
+		or user.dash_t > 0.0
+		or user.lunge_t > 0.0
+		or not user.may_start(mv)
+	):
 		return false
 	var cost := Dex.pp_cost(mv)
 	if user.pp_max < cost:
@@ -61,9 +83,12 @@ func _stagger_after(user: BattleFighter, mv: Dictionary, prepare: float) -> void
 	var delay := prepare + float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + 0.25
 	if mv.get("kind", "") == "dash":
 		delay = prepare + float(mv.get("range", 3.0)) / float(mv.get("speed", 12.0)) + 0.1
-	arena.later(delay, func() -> void:
-		if is_instance_valid(user) and user.alive():
-			user.stagger())
+	arena.later(
+		delay,
+		func() -> void:
+			if is_instance_valid(user) and user.alive():
+				user.stagger()
+	)
 
 
 func acc_mult(stage: int) -> float:
@@ -85,12 +110,20 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 	if not is_instance_valid(user) or not user.alive():
 		return
 	var dir := user.aim_dir()
-	var aimed: BattleFighter = user.opponent if is_instance_valid(user.opponent) and user.opponent.active() else null
+	var aimed: BattleFighter = (
+		user.opponent if is_instance_valid(user.opponent) and user.opponent.active() else null
+	)
 	var miss: BattleFighter = null
 	var kind := String(mv.get("kind", ""))
 	var acc := float(mv.get("accuracy", 0.0))
 	var eff_acc := acc * acc_mult(int(user.stages.get("acc", 0)))
-	if aimed and acc > 0.0 and kind in MISSABLE and eff_acc < 100.0 and rng.randf() * 100.0 >= eff_acc:
+	if (
+		aimed
+		and acc > 0.0
+		and kind in MISSABLE
+		and eff_acc < 100.0
+		and rng.randf() * 100.0 >= eff_acc
+	):
 		miss = aimed
 		if kind != "multi_arc":
 			dir = _miss_dir(user, aimed, mv, dir)
@@ -100,7 +133,13 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	user.facing = dir
-	user.popup(String(mv.get("name", mv.get("id", "?"))), Dex.type_color(String(mv.get("type", "normal"))).lightened(0.3), 1.0, 0.75, "move")
+	user.popup(
+		String(mv.get("name", mv.get("id", "?"))),
+		Dex.type_color(String(mv.get("type", "normal"))).lightened(0.3),
+		1.0,
+		0.75,
+		"move"
+	)
 	if kind == "arc" or kind == "multi_arc":
 		user.start_arc_step(dir)
 	if mv.has("magnitude"):
@@ -188,9 +227,12 @@ func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 			delay = minf(dist, float(mv.get("range", 3.0))) / float(mv.get("speed", 12.0))
 		"beam", "aoe_target":
 			delay = float(mv.get("windup", 0.6)) + 0.1
-	arena.later(delay, func() -> void:
-		if is_instance_valid(target) and target.active():
-			target.popup("Errou!", Color(0.75, 0.85, 1.0)))
+	arena.later(
+		delay,
+		func() -> void:
+			if is_instance_valid(target) and target.active():
+				target.popup("Errou!", Color(0.75, 0.85, 1.0))
+	)
 
 
 func _roll_magnitude(table: Array) -> Array:
@@ -207,6 +249,7 @@ func _roll_magnitude(table: Array) -> Array:
 
 # --- Dano esperado (IA) ---
 
+
 func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	if not is_instance_valid(target) or not target.alive():
 		return 0.0
@@ -221,7 +264,11 @@ func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 		var lift := user.jump_height if user.jump_height > 0.0 else 0.0
 		if target.air_h - lift >= user.dash_reach():
 			return 0.0
-	if kind in ["aoe_self", "aoe_target"] and String(mv.get("type", "")) == "ground" and target.is_airborne():
+	if (
+		kind in ["aoe_self", "aoe_target"]
+		and String(mv.get("type", "")) == "ground"
+		and target.is_airborne()
+	):
 		return 0.0
 	var physical: bool = mv.get("category", "") == "physical"
 	var a := user.stat("atk" if physical else "spa")
@@ -239,7 +286,15 @@ func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 
 # --- Acerto ---
 
-func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector3, power_scale := 1.0, final := true) -> void:
+
+func hit(
+	user: BattleFighter,
+	target: BattleFighter,
+	mv: Dictionary,
+	dir: Vector3,
+	power_scale := 1.0,
+	final := true
+) -> void:
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
@@ -259,13 +314,27 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 		var dmg := int(res.damage)
 		var hp_before := target.hp
 		target.last_hit_by = user
-		target.take_damage(dmg, dir, float(mv.get("knockback", 4.0)),
-				{"source": user, "crit": res.crit, "eff": eff, "final": final})
+		target.take_damage(
+			dmg,
+			dir,
+			float(mv.get("knockback", 4.0)),
+			{"source": user, "crit": res.crit, "eff": eff, "final": final}
+		)
 		if mv.has("drain") and user.alive():
 			user.heal(maxi(1, int(float(dmg) * float(mv.drain))))
-		var col := Color(1, 0.75, 0.15) if eff > 1.0 else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
+		var col := (
+			Color(1, 0.75, 0.15)
+			if eff > 1.0
+			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
+		)
 		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")
-		preload("res://audio/cue.gd").sfx("crit" if res.crit else ("hit_super" if eff > 1.0 else ("hit_weak" if eff < 1.0 else "hit")))
+		preload("res://audio/cue.gd").sfx(
+			(
+				"crit"
+				if res.crit
+				else ("hit_super" if eff > 1.0 else ("hit_weak" if eff < 1.0 else "hit"))
+			)
+		)
 		if res.crit:
 			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6, "crit")
 		if eff > 1.0:
@@ -284,7 +353,13 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 			if STATUS_IMMUNE.get(st, "-") in target.types:
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
 			elif target.apply_status(st, user):
-				target.popup(String(STATUS_WORDS.get(st, st.to_upper() + "!")), Color(1, 0.9, 0.6), 1.0, 0.15, "status")
+				target.popup(
+					String(STATUS_WORDS.get(st, st.to_upper() + "!")),
+					Color(1, 0.9, 0.6),
+					1.0,
+					0.15,
+					"status"
+				)
 
 
 func change_stage(c: BattleFighter, k: String, delta: int) -> void:
@@ -297,13 +372,24 @@ func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 		c.popup("%s não %s mais!" % [name, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
 		return
 	c.stages[k] = nv
-	var word := ("subiu" if absi(delta) == 1 else "subiu muito") if delta > 0 else ("caiu" if absi(delta) == 1 else "caiu muito")
-	c.popup("%s %s!" % [name, word], Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6), 1.0, 0.15, "stat_up" if delta > 0 else "stat_down")
+	var word := (
+		("subiu" if absi(delta) == 1 else "subiu muito")
+		if delta > 0
+		else ("caiu" if absi(delta) == 1 else "caiu muito")
+	)
+	c.popup(
+		"%s %s!" % [name, word],
+		Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6),
+		1.0,
+		0.15,
+		"stat_up" if delta > 0 else "stat_down"
+	)
 	if arena.vfx:
 		arena.vfx.stat_change(c, k, delta > 0)
 
 
 # --- Entregas ---
+
 
 func in_cone(user: BattleFighter, t: BattleFighter, dir: Vector3, r: float, half: float) -> bool:
 	var to := user.flat_to(t)
@@ -313,10 +399,19 @@ func in_cone(user: BattleFighter, t: BattleFighter, dir: Vector3, r: float, half
 	return d < 0.6 or dir.angle_to(to / d) <= half
 
 
-func _arc(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter, final := true) -> void:
+func _arc(
+	user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter, final := true
+) -> void:
 	var r := float(mv.get("range", 1.8))
 	var half := deg_to_rad(float(mv.get("angle", 90))) / 2.0
-	arena.fx_cone(user.position + Vector3(0, user.look_h * 0.4, 0), dir, r, half, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5), 0.15)
+	arena.fx_cone(
+		user.position + Vector3(0, user.look_h * 0.4, 0),
+		dir,
+		r,
+		half,
+		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5),
+		0.15
+	)
 	for t in targets_of(user):
 		if t != miss and in_cone(user, t, dir, r, half):
 			var to := user.flat_to(t)
@@ -357,7 +452,14 @@ func _whip(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 			if victim == null or along < stop:
 				stop = along
 				victim = t
-		arena.fx_beam(user.position + Vector3(0, user.look_h * 0.4, 0), tipdir, stop, 0.08, Dex.type_color(String(mv.type)), 0.2)
+		arena.fx_beam(
+			user.position + Vector3(0, user.look_h * 0.4, 0),
+			tipdir,
+			stop,
+			0.08,
+			Dex.type_color(String(mv.type)),
+			0.2
+		)
 		if arena.vfx:
 			arena.vfx.tip(user, mv, user.position + tipdir * stop, tipdir)
 		if victim != null:
@@ -366,7 +468,9 @@ func _whip(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 			hit(user, victim, mv, to.normalized() if to.length() > 0.01 else dir)
 
 
-func _projectiles(user: BattleFighter, mv: Dictionary, dir: Vector3, homing: bool, miss: BattleFighter, i := 0) -> void:
+func _projectiles(
+	user: BattleFighter, mv: Dictionary, dir: Vector3, homing: bool, miss: BattleFighter, i := 0
+) -> void:
 	var n := int(mv.get("count", 1))
 	if i >= n or not is_instance_valid(user) or not user.active():
 		return
@@ -404,7 +508,15 @@ func _stream(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 	_stream_tick(user, mv, lock, state, r, half, tick)
 
 
-func _stream_tick(user: BattleFighter, mv: Dictionary, lock: BattleFighter, state: Dictionary, r: float, half: float, tick: float) -> void:
+func _stream_tick(
+	user: BattleFighter,
+	mv: Dictionary,
+	lock: BattleFighter,
+	state: Dictionary,
+	r: float,
+	half: float,
+	tick: float
+) -> void:
 	if state.left <= 0 or not is_instance_valid(user) or not user.on_field or not user.can_act():
 		return
 	state.left -= 1
@@ -415,7 +527,14 @@ func _stream_tick(user: BattleFighter, mv: Dictionary, lock: BattleFighter, stat
 	var dir: Vector3 = state.dir
 	user.facing = dir
 	if not arena.vfx:
-		arena.fx_cone(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, half, Dex.type_color(String(mv.type)), tick)
+		arena.fx_cone(
+			user.position + Vector3(0, user.look_h * 0.5, 0),
+			dir,
+			r,
+			half,
+			Dex.type_color(String(mv.type)),
+			tick
+		)
 	for t in targets_of(user):
 		if mv.get("once", false) and state.hit.has(t.get_instance_id()):
 			continue
@@ -432,21 +551,28 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	var w := float(mv.get("width", 0.8))
 	user.root_t = maxf(user.root_t, windup + 0.25 + float(mv.get("root", 1.0)))
 	var col := Dex.type_color(String(mv.type))
-	arena.fx_beam(user.position + Vector3(0, 0.05, 0), dir, r, w, col * Color(1, 1, 1, 0.35), windup)
-	arena.later(windup, func() -> void:
-		if not is_instance_valid(user) or not user.alive():
-			return
-		if arena.vfx:
-			arena.vfx.beam(user, mv, dir, r, 0.45)
-		else:
-			arena.fx_beam(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, w, col, 0.25)
-		for t in targets_of(user):
-			if t == miss:
-				continue
-			var to := user.flat_to(t)
-			var along := to.dot(dir)
-			if along > -0.5 and along < r and (to - dir * along).length() < w / 2.0 + 0.5:
-				hit(user, t, mv, dir))
+	arena.fx_beam(
+		user.position + Vector3(0, 0.05, 0), dir, r, w, col * Color(1, 1, 1, 0.35), windup
+	)
+	arena.later(
+		windup,
+		func() -> void:
+			if not is_instance_valid(user) or not user.alive():
+				return
+			if arena.vfx:
+				arena.vfx.beam(user, mv, dir, r, 0.45)
+			else:
+				arena.fx_beam(
+					user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, w, col, 0.25
+				)
+			for t in targets_of(user):
+				if t == miss:
+					continue
+				var to := user.flat_to(t)
+				var along := to.dot(dir)
+				if along > -0.5 and along < r and (to - dir * along).length() < w / 2.0 + 0.5:
+					hit(user, t, mv, dir)
+	)
 
 
 func _ground_immune(mv: Dictionary, t: BattleFighter) -> bool:
@@ -459,18 +585,24 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 	user.root_t = maxf(user.root_t, windup + 0.1)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_disc(user.position, radius, col * Color(1, 1, 1, 0.3), windup)
-	arena.later(windup, func() -> void:
-		if not is_instance_valid(user) or not user.alive():
-			return
-		arena.fx_disc(user.position, radius, col, 0.25)
-		for t in targets_of(user):
-			var to := user.flat_to(t)
-			if to.length() <= radius and not _ground_immune(mv, t):
-				hit(user, t, mv, to.normalized() if to.length() > 0.01 else user.facing)
-		if mv.get("self_destruct", false):
-			arena.later(0.3, func() -> void:
-				if is_instance_valid(user) and user.alive():
-					user.take_damage(user.hp, Vector3.ZERO, 0.0)))
+	arena.later(
+		windup,
+		func() -> void:
+			if not is_instance_valid(user) or not user.alive():
+				return
+			arena.fx_disc(user.position, radius, col, 0.25)
+			for t in targets_of(user):
+				var to := user.flat_to(t)
+				if to.length() <= radius and not _ground_immune(mv, t):
+					hit(user, t, mv, to.normalized() if to.length() > 0.01 else user.facing)
+			if mv.get("self_destruct", false):
+				arena.later(
+					0.3,
+					func() -> void:
+						if is_instance_valid(user) and user.alive():
+							user.take_damage(user.hp, Vector3.ZERO, 0.0)
+				)
+	)
 
 
 func _area_point(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter) -> Vector3:
@@ -492,20 +624,23 @@ func _aoe_target(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	var at := _area_point(user, mv, dir, miss)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_disc(at, radius, col * Color(1, 1, 1, 0.3), windup)
-	arena.later(windup, func() -> void:
-		if not is_instance_valid(user) or not user.alive():
-			return
-		arena.fx_disc(at, radius, col, 0.25)
-		if arena.vfx and arena.is_inside_tree():
-			arena.vfx.sky_bolt(String(mv.get("id", "")), arena.to_global(at))
-		for t in targets_of(user):
-			if t == miss or _ground_immune(mv, t):
-				continue
-			var to: Vector3 = t.pos2(t.position) - at
-			if to.length() <= radius:
-				hit(user, t, mv, to.normalized() if to.length() > 0.05 else dir)
-				if mv.has("trap") and t.alive():
-					t.trap_t = maxf(t.trap_t, float(mv.trap)))
+	arena.later(
+		windup,
+		func() -> void:
+			if not is_instance_valid(user) or not user.alive():
+				return
+			arena.fx_disc(at, radius, col, 0.25)
+			if arena.vfx and arena.is_inside_tree():
+				arena.vfx.sky_bolt(String(mv.get("id", "")), arena.to_global(at))
+			for t in targets_of(user):
+				if t == miss or _ground_immune(mv, t):
+					continue
+				var to: Vector3 = t.pos2(t.position) - at
+				if to.length() <= radius:
+					hit(user, t, mv, to.normalized() if to.length() > 0.05 else dir)
+					if mv.has("trap") and t.alive():
+						t.trap_t = maxf(t.trap_t, float(mv.trap))
+	)
 
 
 func _zone(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
@@ -517,7 +652,9 @@ func _zone(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	_zone_tick(user, mv, at, radius, tick, int(ceil(dur / tick)))
 
 
-func _zone_tick(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float, tick: float, left: int) -> void:
+func _zone_tick(
+	user: BattleFighter, mv: Dictionary, at: Vector3, radius: float, tick: float, left: int
+) -> void:
 	if left <= 0 or not is_instance_valid(user) or not user.alive():
 		return
 	for t in targets_of(user):
@@ -532,7 +669,10 @@ func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
 	if st == "crit":
 		var before := user.crit_stage
 		user.crit_stage = mini(user.crit_stage + int(mv.get("stages", 1)), 4)
-		user.popup("Está se concentrando!" if user.crit_stage != before else "Já está concentrado!", Color(1, 0.8, 0.4))
+		user.popup(
+			"Está se concentrando!" if user.crit_stage != before else "Já está concentrado!",
+			Color(1, 0.8, 0.4)
+		)
 	elif st == "evasion":
 		user.evasion_t = float(mv.get("duration", 5.0))
 		user.evasion = float(mv.get("evasion", 0.4))
@@ -543,7 +683,9 @@ func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
 
 func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 	var radius := float(mv.get("radius", 6.0))
-	arena.fx_disc(user.position, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), 0.3)
+	arena.fx_disc(
+		user.position, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), 0.3
+	)
 	for t in targets_of(user):
 		if user.flat_to(t).length() <= radius:
 			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)))

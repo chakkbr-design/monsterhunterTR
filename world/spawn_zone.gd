@@ -66,13 +66,23 @@ func _free_point(away_from_player: bool) -> Vector3:
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = shape
 	var swim := mode == "swim"
-	q.collision_mask = Overworld.WALL_LAYER | OverworldPlayer.LAYER | WildMon.LAYER | WorldNpc.LAYER | (0 if swim else WATER_LAYER)
+	q.collision_mask = (
+		Overworld.WALL_LAYER
+		| OverworldPlayer.LAYER
+		| WildMon.LAYER
+		| WorldNpc.LAYER
+		| (0 if swim else WATER_LAYER)
+	)
 	var player := Overworld.player_of(self)
 	for attempt in 24:
 		var a := _rng.randf() * TAU
 		var rad := sqrt(_rng.randf()) * radius
 		var p := global_position + Vector3(cos(a) * rad, 0.0, sin(a) * rad)
-		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 3.0, p + Vector3.DOWN * 3.0, Overworld.WALL_LAYER))
+		var hit := space.intersect_ray(
+			PhysicsRayQueryParameters3D.create(
+				p + Vector3.UP * 3.0, p + Vector3.DOWN * 3.0, Overworld.WALL_LAYER
+			)
+		)
 		if hit.is_empty() or absf(hit.position.y - global_position.y) > 0.6:
 			continue
 		p.y = hit.position.y

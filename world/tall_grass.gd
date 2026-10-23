@@ -85,17 +85,34 @@ func _build_hgss() -> void:
 	for iz in nz + 1:
 		for ix in nx + 1:
 			for row in TUFT_PER_TILE:
-				var p := Vector3(-size.x / 2.0 + (ix + rng.randf_range(-0.25, 0.25)) * TILE, GROUND_Y,
-						-size.z / 2.0 + (iz + (0.5 if row == 1 else 0.0) + rng.randf_range(-0.25, 0.25)) * TILE)
+				var p := Vector3(
+					-size.x / 2.0 + (ix + rng.randf_range(-0.25, 0.25)) * TILE,
+					GROUND_Y,
+					(
+						-size.z / 2.0
+						+ (iz + (0.5 if row == 1 else 0.0) + rng.randf_range(-0.25, 0.25)) * TILE
+					)
+				)
 				p.x = clampf(p.x, -size.x / 2.0, size.x / 2.0)
 				p.z = clampf(p.z, -size.z / 2.0, size.z / 2.0)
 				var s := rng.randf_range(0.9, 1.15)
 				mm.set_instance_transform(n, Transform3D(Basis().scaled(Vector3(s, s, s)), p))
 				n += 1
 	_pushers.resize(MAX_PUSHERS)
-	_mat = WorldFx.shader_mat("hgss_foliage", {"albedo_tex": WorldFx.tex("models/hgss/common/egrass_u.png"),
-			"uv_rect": TUFT_UV, "tint": TINT, "sway": 0.05, "push_scale": PUSH_SCALE, "pushers": _pushers,
-			"shake": Vector4.ZERO, "hide_rect": Vector4.ZERO, "hide_amount": 0.0})
+	_mat = WorldFx.shader_mat(
+		"hgss_foliage",
+		{
+			"albedo_tex": WorldFx.tex("models/hgss/common/egrass_u.png"),
+			"uv_rect": TUFT_UV,
+			"tint": TINT,
+			"sway": 0.05,
+			"push_scale": PUSH_SCALE,
+			"pushers": _pushers,
+			"shake": Vector4.ZERO,
+			"hide_rect": Vector4.ZERO,
+			"hide_amount": 0.0
+		}
+	)
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "Tufts"
 	mmi.multimesh = mm
@@ -116,8 +133,12 @@ func _build_blades() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(name)
 	for i in mm.instance_count:
-		var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.7, 1.3))
-		var o := Vector3(rng.randf_range(-0.5, 0.5) * size.x, 0.35, rng.randf_range(-0.5, 0.5) * size.z)
+		var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(
+			Vector3.ONE * rng.randf_range(0.7, 1.3)
+		)
+		var o := Vector3(
+			rng.randf_range(-0.5, 0.5) * size.x, 0.35, rng.randf_range(-0.5, 0.5) * size.z
+		)
 		mm.set_instance_transform(i, Transform3D(b, o))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm

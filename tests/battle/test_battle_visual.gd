@@ -49,11 +49,18 @@ func _run(a: Node, secs: float) -> void:
 
 
 func _fight() -> void:
-	var a := _arena([Mon.create("charmander", 12)], [Mon.create("pidgey", 8)], {"seed": 3, "autoplay": true, "battle_size": 1})
+	var a := _arena(
+		[Mon.create("charmander", 12)],
+		[Mon.create("pidgey", 8)],
+		{"seed": 3, "autoplay": true, "battle_size": 1}
+	)
 	await process_frame
 	var p: BattleFighter = a.player
 	var e: BattleFighter = a.enemy
-	check(p.look is CreatureSprite and p.look.sprite().texture != null, "jogador com sprite do original")
+	check(
+		p.look is CreatureSprite and p.look.sprite().texture != null,
+		"jogador com sprite do original"
+	)
 	check(e.look is CreatureSprite and e.look.has_pmd(), "inimigo com PMD")
 	check(p.look.visible_height() > 0.2, "altura visível")
 	check(a.hud.card_text("player") == "" or true, "hud existe")
@@ -61,7 +68,10 @@ func _fight() -> void:
 	check(a.hud._intro.want == 1.0, "faixas de introdução durante a intro")
 	_run(a, 1.0)
 	check(a.state == "fight" and a.hud._intro.want == 0.0, "faixas recolhem na luta")
-	check(a.hud.card_text("player") == p.mon.display_name, "cartão do jogador: %s" % a.hud.card_text("player"))
+	check(
+		a.hud.card_text("player") == p.mon.display_name,
+		"cartão do jogador: %s" % a.hud.card_text("player")
+	)
 	check(a.hud.card_text("foe") == e.mon.display_name, "cartão do inimigo")
 	var anims := {}
 	var max_fx := 0
@@ -86,14 +96,30 @@ func _fight() -> void:
 
 
 func _moves_fx() -> void:
-	var a := _arena([Mon.create("pikachu", 30)], [Mon.create("onix", 30)], {"seed": 5, "battle_size": 1})
+	var a := _arena(
+		[Mon.create("pikachu", 30)], [Mon.create("onix", 30)], {"seed": 5, "battle_size": 1}
+	)
 	await process_frame
 	_run(a, 1.3)
 	var p: BattleFighter = a.player
 	var e: BattleFighter = a.enemy
 	e.controller = "none"
-	for id in ["thunder_shock", "thunder", "flamethrower", "hyper_beam", "hydro_pump", "solar_beam", "vine_whip",
-			"ember", "gust", "growl", "tackle", "scratch", "earthquake", "petal_dance"]:
+	for id in [
+		"thunder_shock",
+		"thunder",
+		"flamethrower",
+		"hyper_beam",
+		"hydro_pump",
+		"solar_beam",
+		"vine_whip",
+		"ember",
+		"gust",
+		"growl",
+		"tackle",
+		"scratch",
+		"earthquake",
+		"petal_dance"
+	]:
 		var mv := Dex.move(id)
 		if mv.is_empty():
 			continue
@@ -106,7 +132,10 @@ func _moves_fx() -> void:
 		for i in 90:
 			a.step(DT)
 			peak = a.vfx.spawned
-		check(peak > before or id in ["tackle", "scratch"], "%s: efeito (%d -> %d)" % [id, before, peak])
+		check(
+			peak > before or id in ["tackle", "scratch"],
+			"%s: efeito (%d -> %d)" % [id, before, peak]
+		)
 		p.position = Vector3(0, 0, 3)
 		e.position = Vector3(0, 0, -3)
 		e.hp = e.max_hp
@@ -118,7 +147,9 @@ func _moves_fx() -> void:
 ## Efeito de status puxado para a câmera; jato do Lança-chamas some junto com quem desmaia;
 ## clarão de dano não fica preso no sprite desmaiado.
 func _review_fx() -> void:
-	var a := _arena([Mon.create("charmander", 30)], [Mon.create("onix", 30)], {"seed": 4, "battle_size": 1})
+	var a := _arena(
+		[Mon.create("charmander", 30)], [Mon.create("onix", 30)], {"seed": 4, "battle_size": 1}
+	)
 	await process_frame
 	_run(a, 1.3)
 	var p: BattleFighter = a.player
@@ -131,17 +162,23 @@ func _review_fx() -> void:
 	if sfx:
 		var base := p.to_global(p._status_fx_off)
 		var cam: Vector3 = a._cam.global_position
-		check(sfx.global_position.distance_to(cam) < base.distance_to(cam) - 0.2, "efeito de status à frente do sprite")
+		check(
+			sfx.global_position.distance_to(cam) < base.distance_to(cam) - 0.2,
+			"efeito de status à frente do sprite"
+		)
 	p.stamina = p.pp_max
 	a.moves.deliver(p, Dex.move("flamethrower"))
 	_run(a, 0.2)
-	var jets: Array = a.vfx.nodes.filter(func(n): return n is BeamFx and n.name.begins_with("FlameJet"))
+	var jets: Array = a.vfx.nodes.filter(
+		func(n): return n is BeamFx and n.name.begins_with("FlameJet")
+	)
 	check(jets.size() == 1, "jato do Lança-chamas")
 	p.take_damage(1, Vector3.FORWARD, 1.0, {"source": e})
 	_run(a, DT)
 	p.take_damage(p.hp, Vector3.FORWARD, 1.0, {"source": e})
 	check(p.look.tint != BattleFighter.FLASH_COL, "sprite desmaiado sem o clarão preso")
-	var jet_on := func() -> bool: return a.vfx.nodes.any(func(n): return n is BeamFx and n.name.begins_with("FlameJet"))
+	var jet_on := func() -> bool:
+		return a.vfx.nodes.any(func(n): return n is BeamFx and n.name.begins_with("FlameJet"))
 	_run(a, 0.3)
 	check(not jet_on.call(), "jato some quando o usuário desmaia")
 	a.get_parent().queue_free()
@@ -151,7 +188,11 @@ func _review_fx() -> void:
 func _capture() -> void:
 	var g = load("res://core/game.gd").new()
 	g.bag = {"master_ball": 2}
-	var a := _arena([Mon.create("bulbasaur", 10)], [Mon.create("rattata", 3)], {"seed": 9, "game": g, "battle_size": 1})
+	var a := _arena(
+		[Mon.create("bulbasaur", 10)],
+		[Mon.create("rattata", 3)],
+		{"seed": 9, "game": g, "battle_size": 1}
+	)
 	await process_frame
 	_run(a, 1.3)
 	a.enemy.controller = "none"
@@ -160,7 +201,10 @@ func _capture() -> void:
 	_run(a, 0.6)
 	check(a.enemy.look.scale_mult < 1.0, "pokémon encolhe para dentro da bola")
 	_run(a, 3.0)
-	check(a.result.get("outcome", "") == "caught" or a.state == "done", "capturou (%s)" % str(a.result))
+	check(
+		a.result.get("outcome", "") == "caught" or a.state == "done",
+		"capturou (%s)" % str(a.result)
+	)
 	a.get_parent().queue_free()
 	g.free()
 	await process_frame

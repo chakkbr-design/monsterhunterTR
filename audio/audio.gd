@@ -84,6 +84,7 @@ func bind_game(g: Node) -> void:
 
 # --- Efeitos ---
 
+
 func has_sfx(sfx_name: String) -> bool:
 	return _sfx.has(sfx_name)
 
@@ -115,6 +116,7 @@ func sfx(sfx_name: String, volume_db := 0.0) -> void:
 
 
 # --- Música ---
+
 
 func music_stream(track: String) -> AudioStreamWAV:
 	_mutex.lock()
@@ -219,6 +221,7 @@ func _resume_zone() -> void:
 
 # --- Ligações automáticas ---
 
+
 ## Faixa para um lugar da RouteWorld.
 static func music_for(kind: String, id: String) -> String:
 	if kind == "interior":
@@ -242,7 +245,10 @@ func _on_node_added(n: Node) -> void:
 	if n.scene_file_path == TITLE_SCENE:
 		zone_music = "title"
 		music("title", 0.3)
-	if n.has_signal("location_changed") and not n.is_connected("location_changed", on_location_changed):
+	if (
+		n.has_signal("location_changed")
+		and not n.is_connected("location_changed", on_location_changed)
+	):
 		n.connect("location_changed", on_location_changed)
 	if n.name == "Game" and n.get_parent() == get_tree().root:
 		bind_game(n)

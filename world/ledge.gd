@@ -20,7 +20,9 @@ func _ready() -> void:
 	# Sits just inside the edge so a player who dropped down never overlaps it.
 	_shape.position = Vector3(0, (MapBuilder.EDGE_WALL - drop) * 0.5, -0.1)
 	add_child(_shape)
-	TerrainBoulders.row(self, length, drop, hash(global_position) if is_inside_tree() else hash(position))  # original's boulder face
+	TerrainBoulders.row(
+		self, length, drop, hash(global_position) if is_inside_tree() else hash(position)
+	)  # original's boulder face
 
 
 func _physics_process(_d: float) -> void:

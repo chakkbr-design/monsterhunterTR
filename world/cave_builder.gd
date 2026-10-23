@@ -36,21 +36,26 @@ const FOSSIL_FLAG := "FLAG_GOT_FOSSIL_FROM_MT_MOON"
 const MIGUEL := "super_nerd_miguel"
 ## Map scripts that are not trainers or items.
 const NPC_LINES := {
-	"BaldingMan": ["Ouvi dizer que existem fósseis raros aqui no Monte da Lua.",
-		"E também caem PEDRAS DA LUA do céu... Dizem que fazem certos Pokémon evoluir!"],
+	"BaldingMan":
+	[
+		"Ouvi dizer que existem fósseis raros aqui no Monte da Lua.",
+		"E também caem PEDRAS DA LUA do céu... Dizem que fazem certos Pokémon evoluir!"
+	],
 }
 const SIGN_LINES := {
 	"ZubatSign": ["Cuidado! O ZUBAT suga sangue!"],
 }
-const EXIT_SIGN := ["ROTA 4 - CERULEAN", "A estrada para Cerulean ainda está em obras.", "Continua..."]
+const EXIT_SIGN := [
+	"ROTA 4 - CERULEAN", "A estrada para Cerulean ainda está em obras.", "Continua..."
+]
 
 static var _floors: Dictionary = {}
 static var _events: Dictionary = {}
 static var _trainers: Dictionary = {}
 static var _rows: Dictionary = {}
 
-
 # --- data ----------------------------------------------------------------------------------------
+
 
 static func _json(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
@@ -137,8 +142,17 @@ static func arrival_tile(floor_id: String, c: int, r: int) -> Vector2i:
 	var warps: Dictionary = {}
 	for w in events(floor_id).get("warps", []):
 		warps[Vector2i(int(w.x), int(w.y))] = true
-	for dv in [open_dir(floor_id, c, r), Vector2i(0, 1), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1),
-			Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]:
+	for dv in [
+		open_dir(floor_id, c, r),
+		Vector2i(0, 1),
+		Vector2i(1, 0),
+		Vector2i(-1, 0),
+		Vector2i(0, -1),
+		Vector2i(1, 1),
+		Vector2i(-1, 1),
+		Vector2i(1, -1),
+		Vector2i(-1, -1)
+	]:
 		var t: Vector2i = Vector2i(c, r) + dv
 		if not is_rock(floor_id, t.x, t.y) and not warps.has(t):
 			return t
@@ -169,7 +183,13 @@ static func snake(s: String) -> String:
 	var out := ""
 	for i in s.length():
 		var ch := s[i]
-		if i > 0 and ch == ch.to_upper() and ch != ch.to_lower() and s[i - 1] == s[i - 1].to_lower() and s[i - 1] != s[i - 1].to_upper():
+		if (
+			i > 0
+			and ch == ch.to_upper()
+			and ch != ch.to_lower()
+			and s[i - 1] == s[i - 1].to_lower()
+			and s[i - 1] != s[i - 1].to_upper()
+		):
 			out += "_"
 		out += ch.to_lower()
 	return out
@@ -203,7 +223,10 @@ static func objects(floor_id: String) -> Array:
 		elif gfx == "OBJ_EVENT_GFX_FOSSIL":
 			e.kind = "fossil"
 			e.id = snake(tail)  # dome_fossil / helix_fossil
-		elif String(o.get("trainer_type", "")) != "TRAINER_TYPE_NONE" or trainer_for(script) == MIGUEL:
+		elif (
+			String(o.get("trainer_type", "")) != "TRAINER_TYPE_NONE"
+			or trainer_for(script) == MIGUEL
+		):
 			e.kind = "trainer"
 			e.id = trainer_for(script)
 		else:
@@ -225,6 +248,7 @@ static func warp_target(floor_id: String, i: int) -> Dictionary:
 
 
 # --- building ------------------------------------------------------------------------------------
+
 
 static func decorate(room: InteriorRoom) -> void:
 	if room == null or room.has_meta("cave_built"):
@@ -281,7 +305,9 @@ static func _warps(room: InteriorRoom, fl: String) -> void:
 		var t := arrival_tile(fl, c, r)
 		var sp := tile_local(fl, t.x, t.y)
 		var away := sp - at
-		room.spawns["warp_%d" % i] = [sp, away.normalized() if away.length() > 0.01 else Vector3(0, 0, 1)]
+		room.spawns["warp_%d" % i] = [
+			sp, away.normalized() if away.length() > 0.01 else Vector3(0, 0, 1)
+		]
 		var target := warp_target(fl, i)
 		if target.has("interior"):
 			var dest := String(target.interior).trim_prefix(ROOM_PREFIX)
@@ -315,11 +341,20 @@ static func _warps(room: InteriorRoom, fl: String) -> void:
 			room.add_child(st)
 			room.triggers.append(st)
 			var sign_tile := arrival_tile(fl, t.x, t.y)
-			_sign(room, "Route4Sign", "Placa", PackedStringArray(EXIT_SIGN), tile_local(fl, sign_tile.x, sign_tile.y))
+			_sign(
+				room,
+				"Route4Sign",
+				"Placa",
+				PackedStringArray(EXIT_SIGN),
+				tile_local(fl, sign_tile.x, sign_tile.y)
+			)
 	# Arrival from outside (or a save without a spawn): the Route 4 mouth on 1F, else the first warp.
 	if room.spawns.has("west_in"):
 		room.spawns["door"] = room.spawns["west_in"]
-	elif room.spawns.has("warp_%d" % (warps.size() - 1)) and String(warp_target(fl, warps.size() - 1).get("event", "")) != "":
+	elif (
+		room.spawns.has("warp_%d" % (warps.size() - 1))
+		and String(warp_target(fl, warps.size() - 1).get("event", "")) != ""
+	):
 		room.spawns["door"] = room.spawns["warp_%d" % (warps.size() - 1)]
 	elif room.spawns.has("warp_0"):
 		room.spawns["door"] = room.spawns["warp_0"]
@@ -330,7 +365,12 @@ static func _ladder(room: InteriorRoom, at: Vector3, up: bool, i: int) -> void:
 	root.name = "LadderMesh%d" % i
 	root.position = at
 	room.add_child(root)
-	_box(root, Vector3(0, 0.02, 0), Vector3(TILE * 0.9, 0.04, TILE * 0.9), Color(0.15, 0.12, 0.1) if not up else C_ROCK_DARK)
+	_box(
+		root,
+		Vector3(0, 0.02, 0),
+		Vector3(TILE * 0.9, 0.04, TILE * 0.9),
+		Color(0.15, 0.12, 0.1) if not up else C_ROCK_DARK
+	)
 	var h := 2.2 if up else 0.9
 	for sx in [-0.3, 0.3]:
 		_box(root, Vector3(sx, h / 2.0, 0), Vector3(0.07, h, 0.07), C_LADDER)
@@ -397,7 +437,11 @@ static func _objects(room: InteriorRoom, fl: String) -> void:
 					role = String(e.id)
 				tr.name = "Trainer_%s" % e.id
 				tr.trainer_id = String(e.id)
-				tr.color = Color(0.25, 0.25, 0.3) if String(e.id).begins_with("rocket_") else Color(0.85, 0.55, 0.15)
+				tr.color = (
+					Color(0.25, 0.25, 0.3)
+					if String(e.id).begins_with("rocket_")
+					else Color(0.85, 0.55, 0.15)
+				)
 				tr.position = at
 				var dv := open_dir(fl, e.tile.x, e.tile.y)
 				tr.rotation.y = atan2(-float(dv.x), -float(dv.y))
@@ -422,7 +466,9 @@ static func _objects(room: InteriorRoom, fl: String) -> void:
 				f.name = "Fossil_%s" % role
 				f.npc_name = "Fóssil Domo" if role.begins_with("dome") else "Fóssil Hélice"
 				f.lines = PackedStringArray(["Um fóssil de Pokémon pré-histórico!"])
-				f.color = Color(0.82, 0.74, 0.58) if role.begins_with("dome") else Color(0.7, 0.62, 0.5)
+				f.color = (
+					Color(0.82, 0.74, 0.58) if role.begins_with("dome") else Color(0.7, 0.62, 0.5)
+				)
 				f.body_height = 0.5
 				f.position = at
 				f.set_meta("interior", room.id)
@@ -458,10 +504,18 @@ static func _bg(room: InteriorRoom, fl: String) -> void:
 		if String(b.get("type", "")) != "sign":
 			continue  # hidden items: not built (like MapBuilder's hidden items)
 		var tail := script_tail(String(b.get("script", "")))
-		_sign(room, tail, "Placa", PackedStringArray(SIGN_LINES.get(tail, ["..."])), tile_local(fl, int(b.x), int(b.y)))
+		_sign(
+			room,
+			tail,
+			"Placa",
+			PackedStringArray(SIGN_LINES.get(tail, ["..."])),
+			tile_local(fl, int(b.x), int(b.y))
+		)
 
 
-static func _sign(room: InteriorRoom, nm: String, title: String, lines: PackedStringArray, at: Vector3) -> void:
+static func _sign(
+	room: InteriorRoom, nm: String, title: String, lines: PackedStringArray, at: Vector3
+) -> void:
 	var sp := SignPost.new()
 	sp.name = nm
 	sp.npc_name = title
@@ -541,6 +595,7 @@ static func set_flash(room: InteriorRoom, on: bool) -> void:
 
 
 # --- outdoor zones -------------------------------------------------------------------------------
+
 
 ## Mt. Moon mouth ("doors") and static mons ("statics") of a built zone.
 static func decorate_zone(b: MapBuilder) -> void:

@@ -91,7 +91,9 @@ func recalc() -> void:
 	var old_max := int(stats.get("hp", 0))
 	var base: Dictionary = _sp().get("base", {})
 	for s in StatCalc.STATS:
-		stats[s] = StatCalc.stat(s, int(base.get(s, 50)), int(ivs.get(s, 0)), int(evs.get(s, 0)), level, nature)
+		stats[s] = StatCalc.stat(
+			s, int(base.get(s, 50)), int(ivs.get(s, 0)), int(evs.get(s, 0)), level, nature
+		)
 	if old_max > 0:
 		hp = clampi(hp + (max_hp - old_max), 0, max_hp)
 
@@ -128,7 +130,9 @@ func ev_total() -> int:
 func add_evs(gain: Dictionary) -> Dictionary:
 	var got := {}
 	for s in gain:
-		var room := mini(StatCalc.EV_MAX_STAT - int(evs.get(s, 0)), StatCalc.EV_MAX_TOTAL - ev_total())
+		var room := mini(
+			StatCalc.EV_MAX_STAT - int(evs.get(s, 0)), StatCalc.EV_MAX_TOTAL - ev_total()
+		)
 		var add := clampi(int(gain[s]), 0, maxi(room, 0))
 		if add > 0:
 			evs[s] = int(evs.get(s, 0)) + add
@@ -209,11 +213,25 @@ func replace_move(k: int, id: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"species": species, "nickname": nickname, "level": level, "nature": nature,
-		"ivs": ivs.duplicate(), "evs": evs.duplicate(), "hp": hp, "pp": pp,
-		"status": status if status in PERSIST_STATUS else "", "gender": gender, "ability_slot": ability_slot,
-		"moves": moves.duplicate(), "xp": xp, "ball": ball, "friend": friend,
-		"evo_pending": evo_pending, "evo_cancelled_level": evo_cancelled_level}
+	return {
+		"species": species,
+		"nickname": nickname,
+		"level": level,
+		"nature": nature,
+		"ivs": ivs.duplicate(),
+		"evs": evs.duplicate(),
+		"hp": hp,
+		"pp": pp,
+		"status": status if status in PERSIST_STATUS else "",
+		"gender": gender,
+		"ability_slot": ability_slot,
+		"moves": moves.duplicate(),
+		"xp": xp,
+		"ball": ball,
+		"friend": friend,
+		"evo_pending": evo_pending,
+		"evo_cancelled_level": evo_cancelled_level
+	}
 
 
 static func from_dict(d: Dictionary) -> Mon:

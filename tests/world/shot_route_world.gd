@@ -3,6 +3,7 @@ extends SceneTree
 ## godot --path . --resolution 1280x720 --script res://tests/world/shot_route_world.gd
 ## Saves docs/screens/route_world.png (Pallet start) and route_world_r1.png (Route 1 ledges).
 
+
 func _initialize() -> void:
 	_run.call_deferred()
 

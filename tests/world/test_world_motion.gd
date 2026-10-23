@@ -12,8 +12,10 @@ var rel: Array = []
 var anims: Array = []
 
 
-class Probe extends Node:  # runs after every other _process: samples what gets drawn
+class Probe:
+	extends Node  # runs after every other _process: samples what gets drawn
 	var cb: Callable
+
 	func _process(_d: float) -> void:
 		cb.call()
 
@@ -49,7 +51,10 @@ func _run() -> void:
 	p.global_position = Vector3(-15, 0.2, 10)  # 3 s east (12 m) stays clear of the east wall
 	for i in 30:
 		await process_frame
-	check(p.visual_position().is_equal_approx(p.global_position), "teleport: visual position snaps to the body")
+	check(
+		p.visual_position().is_equal_approx(p.global_position),
+		"teleport: visual position snaps to the body"
+	)
 	Input.action_press("move_right")
 	var probe := Probe.new()
 	probe.process_priority = 10000
@@ -64,15 +69,23 @@ func _run() -> void:
 	var worst := 0.0
 	for i in range(rel.size() / 2, rel.size()):
 		worst = maxf(worst, absf(rel[i] - rel[i - 1]))
-	check(worst < 0.005, "player sprite steady against the camera while walking (worst %.4f m/frame)" % worst)
+	check(
+		worst < 0.005,
+		"player sprite steady against the camera while walking (worst %.4f m/frame)" % worst
+	)
 	var flips := 0
 	for i in range(1, anims.size()):
 		if anims[i] != anims[i - 1]:
 			flips += 1
-	check(anims.size() > 60 and flips <= 2, "walking wild mon keeps its Walk animation (%d flips)" % flips)
+	check(
+		anims.size() > 60 and flips <= 2,
+		"walking wild mon keeps its Walk animation (%d flips)" % flips
+	)
 
 	# Pond swimmer (roams = false): the peace timer after running away must still run out.
-	var sw: Node3D = load("res://world/wild_mon.gd").spawn(load("res://core/mon.gd").create("magikarp", 5), {}, scene, Vector3(-5, 0.2, 5))
+	var sw: Node3D = load("res://world/wild_mon.gd").spawn(
+		load("res://core/mon.gd").create("magikarp", 5), {}, scene, Vector3(-5, 0.2, 5)
+	)
 	sw.roams = false
 	sw.peace_timer = 0.5
 	for i in 60:

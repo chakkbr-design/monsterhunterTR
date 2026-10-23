@@ -54,5 +54,7 @@ func _process(_d: float) -> void:
 	_mat.set_shader_parameter("softness", vignette_softness)
 	_mat.set_shader_parameter("grain", grain)
 	_mat.set_shader_parameter("shadow_tint", Vector3(shadow_tint.r, shadow_tint.g, shadow_tint.b))
-	_mat.set_shader_parameter("highlight_tint", Vector3(highlight_tint.r, highlight_tint.g, highlight_tint.b))
+	_mat.set_shader_parameter(
+		"highlight_tint", Vector3(highlight_tint.r, highlight_tint.g, highlight_tint.b)
+	)
 	_mat.set_shader_parameter("toning", toning)

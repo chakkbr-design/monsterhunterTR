@@ -31,7 +31,8 @@ var _location := ""
 
 
 ## Coluna de orbes da equipe (party_orbs do original).
-class PartyOrbs extends Control:
+class PartyOrbs:
+	extends Control
 	const SLOT_GAP := 58.0
 	const CX := 34.0
 	const CY0 := 34.0
@@ -75,7 +76,9 @@ class PartyOrbs extends Control:
 
 	func _draw() -> void:
 		var K = preload("res://ui/ui_kit.gd")
-		draw_style_box(K.pill(Color(K.INK, 0.8), Color(K.PAPER, 0.12), 16), Rect2(Vector2.ZERO, panel_size()))
+		draw_style_box(
+			K.pill(Color(K.INK, 0.8), Color(K.PAPER, 0.12), 16), Rect2(Vector2.ZERO, panel_size())
+		)
 		for i in 6:
 			var c := Vector2(CX, CY0 + i * SLOT_GAP)
 			if i >= party.size():
@@ -86,23 +89,45 @@ class PartyOrbs extends Control:
 			draw_circle(c, R_DISC, Color(K.INK, 0.7))
 			var ic: Texture2D = K.mon_disc(m.species, 64)
 			if ic:
-				draw_texture_rect(ic, Rect2(c - Vector2(22, 22), Vector2(44, 44)), false, Color(0.4, 0.4, 0.4) if fainted else Color.WHITE)
+				draw_texture_rect(
+					ic,
+					Rect2(c - Vector2(22, 22), Vector2(44, 44)),
+					false,
+					Color(0.4, 0.4, 0.4) if fainted else Color.WHITE
+				)
 			var hp := float(_shown.get(i, 1.0))
 			var col: Color = K.DIM if fainted else K.hp_color(hp)
 			if float(_flash.get(i, 0.0)) > 0.0:
 				col = K.PAPER
 			K.draw_ring(self, c, R_DISC, 4.0, 0.0 if fainted else hp, col, Color(K.INK, 0.55))
 			var ppr := clampf(m.pp / maxf(m.pp_base, 1.0), 0.0, 1.0)
-			K.draw_ring(self, c, R_DISC - 4.0, 3.0, 0.0 if fainted else ppr, K.PP_BLUE, Color(K.INK, 0.45))
+			K.draw_ring(
+				self, c, R_DISC - 4.0, 3.0, 0.0 if fainted else ppr, K.PP_BLUE, Color(K.INK, 0.45)
+			)
 			if fainted:
-				draw_line(c + Vector2(-R_DISC * 0.8, R_DISC * 0.8), c + Vector2(R_DISC * 0.8, -R_DISC * 0.8), K.RED, 3.0, true)
+				draw_line(
+					c + Vector2(-R_DISC * 0.8, R_DISC * 0.8),
+					c + Vector2(R_DISC * 0.8, -R_DISC * 0.8),
+					K.RED,
+					3.0,
+					true
+				)
 			elif m.status != "":
-				draw_circle(c + Vector2(19, -19), 6.0, K.STATUS_TAGS.get(m.status, ["", K.AMBER])[1])
+				draw_circle(
+					c + Vector2(19, -19), 6.0, K.STATUS_TAGS.get(m.status, ["", K.AMBER])[1]
+				)
 			var f: Font = K.body_font()
 			var r := Rect2(c + Vector2(18, 20) - Vector2(13, 8), Vector2(26, 16))
 			draw_style_box(K.pill(Color(K.INK, 0.9), Color.TRANSPARENT, 7), r)
-			draw_string(f, Vector2(r.position.x, r.get_center().y + 4), "L%d" % m.level, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11,
-				K.DIM if fainted else K.PAPER)
+			draw_string(
+				f,
+				Vector2(r.position.x, r.get_center().y + 4),
+				"L%d" % m.level,
+				HORIZONTAL_ALIGNMENT_CENTER,
+				r.size.x,
+				11,
+				K.DIM if fainted else K.PAPER
+			)
 
 
 func _enter_tree() -> void:
@@ -216,8 +241,12 @@ func _process(delta: float) -> void:
 	_loc.visible = _location != "" and not busy
 	_hint.visible = not _open and not busy
 	_layout()
-	if _open and _clock - _line_at > 0.2 and not _overlay_open() \
-			and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("jump")):
+	if (
+		_open
+		and _clock - _line_at > 0.2
+		and not _overlay_open()
+		and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("jump"))
+	):
 		if not _dlg.complete():
 			_dlg.finish()
 		else:
@@ -250,7 +279,12 @@ func _on_location_changed(kind: String, id: String) -> void:
 	var name := id.capitalize()
 	if kind == "zone" and "zones" in _world:
 		name = String(_world.zones.get(id, {}).get("name", name))
-	elif kind == "interior" and "interiors" in _world and _world.interiors.has(id) and _world.interiors[id].has_method("display_name"):
+	elif (
+		kind == "interior"
+		and "interiors" in _world
+		and _world.interiors.has(id)
+		and _world.interiors[id].has_method("display_name")
+	):
 		name = String(_world.interiors[id].display_name())
 	set_location(name)
 

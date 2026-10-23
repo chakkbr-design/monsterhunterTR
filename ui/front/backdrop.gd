@@ -22,7 +22,15 @@ func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in 60:
-		_embers.append([rng.randf(), rng.randf(), rng.randf_range(0.04, 0.1), rng.randf_range(2.0, 5.0), rng.randf() * TAU])
+		_embers.append(
+			[
+				rng.randf(),
+				rng.randf(),
+				rng.randf_range(0.04, 0.1),
+				rng.randf_range(2.0, 5.0),
+				rng.randf() * TAU
+			]
+		)
 
 
 func _process(dt: float) -> void:
@@ -36,17 +44,25 @@ func _draw() -> void:
 	if w <= 0.0 or h <= 0.0:
 		return
 	var y1 := h * 0.62
-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, y1), Vector2(0, y1)]),
-		PackedColorArray([SKY[0], SKY[0], SKY[1], SKY[1]]))
-	draw_polygon(PackedVector2Array([Vector2(0, y1), Vector2(w, y1), Vector2(w, h), Vector2(0, h)]),
-		PackedColorArray([SKY[1], SKY[1], SKY[2], SKY[2]]))
+	draw_polygon(
+		PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, y1), Vector2(0, y1)]),
+		PackedColorArray([SKY[0], SKY[0], SKY[1], SKY[1]])
+	)
+	draw_polygon(
+		PackedVector2Array([Vector2(0, y1), Vector2(w, y1), Vector2(w, h), Vector2(0, h)]),
+		PackedColorArray([SKY[1], SKY[1], SKY[2], SKY[2]])
+	)
 	# Brasas: sobem, derivam para a direita e somem no alto.
 	for e in _embers:
 		var life := fposmod(e[1] + t * e[2], 1.0)
 		var x: float = fposmod(e[0] + life * 0.12 + sin(t + e[4]) * 0.01, 1.0) * w
 		var y := h + 10.0 - life * (h + 20.0)
 		var a := (1.0 - life) * 0.9
-		draw_circle(Vector2(x, y), e[3] * (1.0 - life * 0.5), Color(1.0, 0.75 - life * 0.35, 0.35 - life * 0.15, a))
+		draw_circle(
+			Vector2(x, y),
+			e[3] * (1.0 - life * 0.5),
+			Color(1.0, 0.75 - life * 0.35, 0.35 - life * 0.15, a)
+		)
 	if _tex == null:
 		return
 	var scale := floorf(h / 92.0)
@@ -59,4 +75,6 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, s.x * 0.4, Color(0, 0, 0, 0.28))
 	draw_set_transform(Vector2.ZERO)
 	var fr := int(t * 6.0) % 4
-	draw_texture_rect_region(_tex, Rect2(base + Vector2(0, hover), s), Rect2(fr * FRAME, 0, FRAME, FRAME))
+	draw_texture_rect_region(
+		_tex, Rect2(base + Vector2(0, hover), s), Rect2(fr * FRAME, 0, FRAME, FRAME)
+	)

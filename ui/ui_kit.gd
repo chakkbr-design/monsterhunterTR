@@ -38,19 +38,52 @@ const SPRITES_PATH := "res://gfx/pokemon_sprites.gd"
 const BADGE_DIR := "res://original/assets/ui/badges/"
 
 const TYPES := {
-	"normal": "Normal", "fire": "Fogo", "water": "Água", "grass": "Planta", "electric": "Elétrico",
-	"ice": "Gelo", "fighting": "Lutador", "poison": "Venenoso", "ground": "Terrestre", "flying": "Voador",
-	"psychic": "Psíquico", "bug": "Inseto", "rock": "Pedra", "ghost": "Fantasma", "dragon": "Dragão",
-	"dark": "Sombrio", "steel": "Aço", "fairy": "Fada",
+	"normal": "Normal",
+	"fire": "Fogo",
+	"water": "Água",
+	"grass": "Planta",
+	"electric": "Elétrico",
+	"ice": "Gelo",
+	"fighting": "Lutador",
+	"poison": "Venenoso",
+	"ground": "Terrestre",
+	"flying": "Voador",
+	"psychic": "Psíquico",
+	"bug": "Inseto",
+	"rock": "Pedra",
+	"ghost": "Fantasma",
+	"dragon": "Dragão",
+	"dark": "Sombrio",
+	"steel": "Aço",
+	"fairy": "Fada",
 }
 const CATEGORIES := {"physical": "Físico", "special": "Especial", "status": "Status"}
-const STATS := {"hp": "HP", "atk": "Ataque", "def": "Defesa", "spa": "At. Esp.", "spd": "Def. Esp.", "spe": "Velocidade"}
-const STATUS := {"burn": "QUE", "poison": "ENV", "paralysis": "PAR", "sleep": "DOR", "freeze": "CON", "toxic": "ENV"}
+const STATS := {
+	"hp": "HP",
+	"atk": "Ataque",
+	"def": "Defesa",
+	"spa": "At. Esp.",
+	"spd": "Def. Esp.",
+	"spe": "Velocidade"
+}
+const STATUS := {
+	"burn": "QUE",
+	"poison": "ENV",
+	"paralysis": "PAR",
+	"sleep": "DOR",
+	"freeze": "CON",
+	"toxic": "ENV"
+}
 ## Pílulas de status (texto, cor), como o STATUS_TAGS do original.
-const STATUS_TAGS := {"burn": ["QUE", Color(0.93, 0.45, 0.2)], "poison": ["ENV", Color(0.65, 0.3, 0.75)],
-	"toxic": ["ENV", Color(0.65, 0.3, 0.75)], "paralysis": ["PAR", Color(0.95, 0.8, 0.2)],
-	"sleep": ["DOR", Color(0.55, 0.6, 0.7)], "freeze": ["CON", Color(0.55, 0.85, 0.9)],
-	"faint": ["DES", Color(0.45, 0.45, 0.5)]}
+const STATUS_TAGS := {
+	"burn": ["QUE", Color(0.93, 0.45, 0.2)],
+	"poison": ["ENV", Color(0.65, 0.3, 0.75)],
+	"toxic": ["ENV", Color(0.65, 0.3, 0.75)],
+	"paralysis": ["PAR", Color(0.95, 0.8, 0.2)],
+	"sleep": ["DOR", Color(0.55, 0.6, 0.7)],
+	"freeze": ["CON", Color(0.55, 0.85, 0.9)],
+	"faint": ["DES", Color(0.45, 0.45, 0.5)]
+}
 
 static var _theme: Theme
 static var _fonts := {}
@@ -58,8 +91,8 @@ static var _tex := {}
 static var _sprites: GDScript
 static var _sprites_tried := false
 
-
 # --- Fontes e tema ---
+
 
 static func title_font() -> Font:
 	return _font(TITLE_FONT_PATH, 600)
@@ -77,7 +110,9 @@ static func _font(p: String, weight: int) -> Font:
 	if base:
 		var fv := FontVariation.new()
 		fv.base_font = base
-		fv.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
+		fv.variation_opentype = {
+			TextServerManager.get_primary_interface().name_to_tag("wght"): weight
+		}
 		f = fv
 	_fonts[p] = f
 	return f
@@ -161,8 +196,10 @@ static func pop_in(c: Control, secs := 0.12) -> void:
 
 # --- Janela (PkWindow) ---
 
+
 ## Janela de papel com borda de tinta, aro interno e aba de título azul (como o PkWindow).
-class Win extends PanelContainer:
+class Win:
+	extends PanelContainer
 	const RIM_INSET := 6.0
 	var title := "":
 		set(v):
@@ -198,7 +235,9 @@ class Win extends PanelContainer:
 		var w := f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 28.0
 		var tab := Rect2(Vector2(20, -fs * 0.8), Vector2(w, fs + 12))
 		draw_style_box(K.pill(K.BLUE, K.INK, 8), tab)
-		draw_string(f, tab.position + Vector2(14, fs + 3), title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, K.PAPER)
+		draw_string(
+			f, tab.position + Vector2(14, fs + 3), title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, K.PAPER
+		)
 
 
 ## Raiz em tela cheia com fundo escurecido e uma janela central. Devolve [raiz, conteúdo VBox].
@@ -260,8 +299,10 @@ static func header(text: String, color := INK, size := SIZE_HEADER) -> Label:
 
 # --- Linha selecionável (PkMenuList) ---
 
+
 ## Linha com a pílula vermelha e a setinha do original quando selecionada.
-class Row extends PanelContainer:
+class Row:
+	extends PanelContainer
 	var selected := false
 	var _t := 0.0
 
@@ -273,8 +314,10 @@ class Row extends PanelContainer:
 		if not selected:
 			return
 		var c := Vector2(14.0 + sin(_t * TAU * 1.5) * 2.0, size.y * 0.5)
-		draw_colored_polygon(PackedVector2Array([c + Vector2(-6, -8), c + Vector2(7, 0), c + Vector2(-6, 8)]),
-			preload("res://ui/ui_kit.gd").INK)
+		draw_colored_polygon(
+			PackedVector2Array([c + Vector2(-6, -8), c + Vector2(7, 0), c + Vector2(-6, 8)]),
+			preload("res://ui/ui_kit.gd").INK
+		)
 
 
 ## Uma linha selecionável. cols = [texto, ...], [[texto, cor], ...], [texto, cor, "pill"] (pílula colorida)
@@ -339,25 +382,44 @@ static func tag(text: String, col: Color, fs := 14) -> Control:
 
 # --- Barra de dicas (PkHintBar) ---
 
-class KeyCap extends Control:
+
+class KeyCap:
+	extends Control
 	var cap := ""
 
 	func _init(text: String) -> void:
 		cap = text
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var w: float = preload("res://ui/ui_kit.gd").body_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		var w: float = (
+			preload("res://ui/ui_kit.gd")
+			. body_font()
+			. get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
+			. x
+		)
 		custom_minimum_size = Vector2(maxf(26.0, w + 14.0), 26)
 
 	func _draw() -> void:
 		var K = preload("res://ui/ui_kit.gd")
 		var r := Rect2(Vector2(0, 2), size - Vector2(0, 4))
-		draw_style_box(K.pill(Color(0, 0, 0, 0.45), Color.TRANSPARENT, 6), Rect2(r.position + Vector2(0, 2), r.size))
+		draw_style_box(
+			K.pill(Color(0, 0, 0, 0.45), Color.TRANSPARENT, 6),
+			Rect2(r.position + Vector2(0, 2), r.size)
+		)
 		draw_style_box(K.pill(K.PAPER, K.RIM, 6), r)
-		draw_string(K.body_font(), Vector2(0, r.get_center().y + 5), cap, HORIZONTAL_ALIGNMENT_CENTER, size.x, 14, K.INK)
+		draw_string(
+			K.body_font(),
+			Vector2(0, r.get_center().y + 5),
+			cap,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			size.x,
+			14,
+			K.INK
+		)
 
 
 ## Faixa escura com teclas e legendas. `text` aceita "E/Enter confirma · Esc volta".
-class HintBar extends HBoxContainer:
+class HintBar:
+	extends HBoxContainer
 	var text := "":
 		set(v):
 			text = v
@@ -387,8 +449,14 @@ class HintBar extends HBoxContainer:
 
 	func _draw() -> void:
 		if get_child_count() > 0:
-			draw_style_box(preload("res://ui/ui_kit.gd").pill(Color(preload("res://ui/ui_kit.gd").INK, 0.78),
-				Color.TRANSPARENT, size.y * 0.5 + 6), Rect2(Vector2.ZERO, size).grow_individual(10, 4, 4, 4))
+			draw_style_box(
+				preload("res://ui/ui_kit.gd").pill(
+					Color(preload("res://ui/ui_kit.gd").INK, 0.78),
+					Color.TRANSPARENT,
+					size.y * 0.5 + 6
+				),
+				Rect2(Vector2.ZERO, size).grow_individual(10, 4, 4, 4)
+			)
 
 
 ## "E/Enter confirma · Esc volta" -> [["E/Enter", "confirma"], ["Esc", "volta"]].
@@ -420,6 +488,7 @@ static func hint(text: String) -> HintBar:
 
 # --- Entrada ---
 
+
 ## Traduz um evento em "up" "down" "left" "right" "ok" "back" (ou "").
 ## Teclas: setas/WASD, E/Enter/Espaço confirma, Esc/Q/Backspace volta. Também aceita ui_* (controle).
 static func nav(ev: InputEvent) -> String:
@@ -428,15 +497,27 @@ static func nav(ev: InputEvent) -> String:
 			return ""
 		var k: int = ev.physical_keycode if ev.physical_keycode != 0 else ev.keycode
 		match k:
-			KEY_UP, KEY_W: return "up"
-			KEY_DOWN, KEY_S: return "down"
-			KEY_LEFT, KEY_A: return "left"
-			KEY_RIGHT, KEY_D: return "right"
-			KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE: return "" if ev.echo else "ok"
-			KEY_ESCAPE, KEY_Q, KEY_BACKSPACE: return "" if ev.echo else "back"
+			KEY_UP, KEY_W:
+				return "up"
+			KEY_DOWN, KEY_S:
+				return "down"
+			KEY_LEFT, KEY_A:
+				return "left"
+			KEY_RIGHT, KEY_D:
+				return "right"
+			KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+				return "" if ev.echo else "ok"
+			KEY_ESCAPE, KEY_Q, KEY_BACKSPACE:
+				return "" if ev.echo else "back"
 		return ""
-	for a in [["ui_up", "up"], ["ui_down", "down"], ["ui_left", "left"], ["ui_right", "right"],
-			["ui_accept", "ok"], ["ui_cancel", "back"]]:
+	for a in [
+		["ui_up", "up"],
+		["ui_down", "down"],
+		["ui_left", "left"],
+		["ui_right", "right"],
+		["ui_accept", "ok"],
+		["ui_cancel", "back"]
+	]:
 		if ev.is_action_pressed(a[0]):
 			return a[1]
 	return ""
@@ -452,6 +533,7 @@ static func key(k: int) -> InputEventKey:
 
 
 # --- Textos ---
+
 
 static func type_name(t: String) -> String:
 	return TYPES.get(t, t.capitalize())
@@ -476,8 +558,13 @@ static func move_cols(id: String) -> Array:
 	var t := String(mv.get("type", "normal"))
 	var power := int(mv.get("power", 0))
 	var acc := int(mv.get("accuracy", 0))
-	return [move_name(id), [type_name(t), type_col(t), "pill"], CATEGORIES.get(mv.get("category", ""), "?"),
-		str(power) if power > 0 else "—", str(acc) if acc > 0 else "—"]
+	return [
+		move_name(id),
+		[type_name(t), type_col(t), "pill"],
+		CATEGORIES.get(mv.get("category", ""), "?"),
+		str(power) if power > 0 else "—",
+		str(acc) if acc > 0 else "—"
+	]
 
 
 static func status_text(m: Mon) -> String:
@@ -521,7 +608,15 @@ static func format_time(secs: float) -> String:
 
 # --- Desenho (ui_draw) ---
 
-static func rounded(ci: CanvasItem, r: Rect2, col: Color, radius := 6.0, border := 0.0, border_col := Color.TRANSPARENT) -> void:
+
+static func rounded(
+	ci: CanvasItem,
+	r: Rect2,
+	col: Color,
+	radius := 6.0,
+	border := 0.0,
+	border_col := Color.TRANSPARENT
+) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = col
 	sb.set_corner_radius_all(int(radius))
@@ -533,14 +628,20 @@ static func rounded(ci: CanvasItem, r: Rect2, col: Color, radius := 6.0, border 
 
 
 ## Texto com contorno escuro (HUD sobre o mundo).
-static func draw_text(ci: CanvasItem, pos: Vector2, s: String, size: int, col := PAPER, outline := 4, f: Font = null) -> void:
+static func draw_text(
+	ci: CanvasItem, pos: Vector2, s: String, size: int, col := PAPER, outline := 4, f: Font = null
+) -> void:
 	var fnt := f if f != null else body_font()
 	if outline > 0:
-		ci.draw_string_outline(fnt, pos, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, outline, Color(0, 0, 0, 0.85 * col.a))
+		ci.draw_string_outline(
+			fnt, pos, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, outline, Color(0, 0, 0, 0.85 * col.a)
+		)
 	ci.draw_string(fnt, pos, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
 
 
-static func draw_ring(ci: CanvasItem, center: Vector2, r: float, width: float, ratio: float, col: Color, bg: Color) -> void:
+static func draw_ring(
+	ci: CanvasItem, center: Vector2, r: float, width: float, ratio: float, col: Color, bg: Color
+) -> void:
 	ci.draw_arc(center, r, 0.0, TAU, 64, bg, width, true)
 	var f := clampf(ratio, 0.0, 1.0)
 	if f <= 0.0:
@@ -553,7 +654,9 @@ static func draw_ring(ci: CanvasItem, center: Vector2, r: float, width: float, r
 
 
 ## Barra arredondada (HP/EXP) com brilho, como a ui_draw.bar.
-static func bar(ci: CanvasItem, r: Rect2, fill: float, col: Color, track := Color(0.16, 0.18, 0.22)) -> void:
+static func bar(
+	ci: CanvasItem, r: Rect2, fill: float, col: Color, track := Color(0.16, 0.18, 0.22)
+) -> void:
 	var rad := r.size.y * 0.5
 	rounded(ci, r.grow(1.5), Color(0, 0, 0, 0.45), rad + 1.5)
 	rounded(ci, r, track, rad)
@@ -571,7 +674,9 @@ static func status_pill(ci: CanvasItem, pos: Vector2, status: String, fs := 12) 
 	var w := body_font().get_string_size(t[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 12.0
 	var h := fs + 6.0
 	rounded(ci, Rect2(pos, Vector2(w, h)), t[1], 4)
-	ci.draw_string(body_font(), pos + Vector2(6, h - 4.5), t[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, PAPER)
+	ci.draw_string(
+		body_font(), pos + Vector2(6, h - 4.5), t[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, PAPER
+	)
 	return w
 
 
@@ -584,7 +689,13 @@ static func item_icon(ci: CanvasItem, id: String, r: Rect2, dim := false) -> voi
 	var it := Dex.item(id)
 	var mod := Color(1, 1, 1, 0.35) if dim else Color.WHITE
 	if String(it.get("category", "")) == "balls" or id.ends_with("_ball"):
-		ball(ci, r, _hex(String(it.get("top", "")), RED) * mod, _hex(String(it.get("accent", "")), Color.TRANSPARENT) * mod, mod)
+		ball(
+			ci,
+			r,
+			_hex(String(it.get("top", "")), RED) * mod,
+			_hex(String(it.get("accent", "")), Color.TRANSPARENT) * mod,
+			mod
+		)
 		return
 	var ic: Dictionary = it.get("icon", {}) if it.get("icon", {}) is Dictionary else {}
 	var col := _hex(String(ic.get("color", "")), Color(0.6, 0.6, 0.65)) * mod
@@ -593,52 +704,157 @@ static func item_icon(ci: CanvasItem, id: String, r: Rect2, dim := false) -> voi
 	match String(ic.get("shape", "")):
 		"spray":
 			var body := Rect2(o + Vector2(s * 0.24, s * 0.36), Vector2(s * 0.52, s * 0.56))
-			rounded(ci, Rect2(body.position + Vector2(0, s * 0.03), body.size), Color(0, 0, 0, 0.35 * mod.a), s * 0.12)
+			rounded(
+				ci,
+				Rect2(body.position + Vector2(0, s * 0.03), body.size),
+				Color(0, 0, 0, 0.35 * mod.a),
+				s * 0.12
+			)
 			rounded(ci, body, col, s * 0.12, maxf(1.0, s * 0.03), col.darkened(0.45))
-			rounded(ci, Rect2(body.position + Vector2(s * 0.06, s * 0.17), Vector2(s * 0.4, s * 0.2)), PAPER * mod, s * 0.04)
-			rounded(ci, Rect2(o + Vector2(s * 0.38, s * 0.24), Vector2(s * 0.24, s * 0.13)), Color(0.55, 0.57, 0.62) * mod, s * 0.03)
-			rounded(ci, Rect2(o + Vector2(s * 0.3, s * 0.1), Vector2(s * 0.42, s * 0.15)), Color(0.72, 0.74, 0.78) * mod, s * 0.05, 1.0, Color(0.3, 0.32, 0.36) * mod)
+			rounded(
+				ci,
+				Rect2(body.position + Vector2(s * 0.06, s * 0.17), Vector2(s * 0.4, s * 0.2)),
+				PAPER * mod,
+				s * 0.04
+			)
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.38, s * 0.24), Vector2(s * 0.24, s * 0.13)),
+				Color(0.55, 0.57, 0.62) * mod,
+				s * 0.03
+			)
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.3, s * 0.1), Vector2(s * 0.42, s * 0.15)),
+				Color(0.72, 0.74, 0.78) * mod,
+				s * 0.05,
+				1.0,
+				Color(0.3, 0.32, 0.36) * mod
+			)
 		"vial":
 			var body := Rect2(o + Vector2(s * 0.27, s * 0.3), Vector2(s * 0.46, s * 0.6))
-			rounded(ci, body, Color(0.85, 0.92, 0.96, 0.9) * mod, s * 0.14, maxf(1.0, s * 0.03), Color(0.3, 0.35, 0.4) * mod)
-			rounded(ci, Rect2(body.position + Vector2(s * 0.04, s * 0.2), body.size - Vector2(s * 0.08, s * 0.24)), col, s * 0.11)
-			rounded(ci, Rect2(o + Vector2(s * 0.33, s * 0.12), Vector2(s * 0.34, s * 0.2)), col.darkened(0.35), s * 0.05, 1.0, col.darkened(0.6))
+			rounded(
+				ci,
+				body,
+				Color(0.85, 0.92, 0.96, 0.9) * mod,
+				s * 0.14,
+				maxf(1.0, s * 0.03),
+				Color(0.3, 0.35, 0.4) * mod
+			)
+			rounded(
+				ci,
+				Rect2(
+					body.position + Vector2(s * 0.04, s * 0.2),
+					body.size - Vector2(s * 0.08, s * 0.24)
+				),
+				col,
+				s * 0.11
+			)
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.33, s * 0.12), Vector2(s * 0.34, s * 0.2)),
+				col.darkened(0.35),
+				s * 0.05,
+				1.0,
+				col.darkened(0.6)
+			)
 		"berry":
 			var c := r.get_center() + Vector2(0, s * 0.06)
 			ci.draw_circle(c + Vector2(-s * 0.1, 0), s * 0.26, col)
 			ci.draw_circle(c + Vector2(s * 0.1, 0), s * 0.26, col)
 			ci.draw_circle(c + Vector2(0, s * 0.06), s * 0.26, col.darkened(0.08))
-			ci.draw_circle(c + Vector2(-s * 0.14, -s * 0.08), s * 0.07, Color(1, 1, 1, 0.55 * mod.a))
-			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -s * 0.22), c + Vector2(s * 0.2, -s * 0.42),
-				c + Vector2(s * 0.3, -s * 0.3), c + Vector2(s * 0.06, -s * 0.18)]), Color(0.3, 0.7, 0.3) * mod)
+			ci.draw_circle(
+				c + Vector2(-s * 0.14, -s * 0.08), s * 0.07, Color(1, 1, 1, 0.55 * mod.a)
+			)
+			ci.draw_colored_polygon(
+				PackedVector2Array(
+					[
+						c + Vector2(0, -s * 0.22),
+						c + Vector2(s * 0.2, -s * 0.42),
+						c + Vector2(s * 0.3, -s * 0.3),
+						c + Vector2(s * 0.06, -s * 0.18)
+					]
+				),
+				Color(0.3, 0.7, 0.3) * mod
+			)
 		"candy":
 			var c := r.get_center()
 			var wrap := col.lightened(0.25)
-			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.2, 0), c + Vector2(-s * 0.46, -s * 0.18), c + Vector2(-s * 0.46, s * 0.18)]), wrap)
-			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(s * 0.2, 0), c + Vector2(s * 0.46, -s * 0.18), c + Vector2(s * 0.46, s * 0.18)]), wrap)
+			ci.draw_colored_polygon(
+				PackedVector2Array(
+					[
+						c + Vector2(-s * 0.2, 0),
+						c + Vector2(-s * 0.46, -s * 0.18),
+						c + Vector2(-s * 0.46, s * 0.18)
+					]
+				),
+				wrap
+			)
+			ci.draw_colored_polygon(
+				PackedVector2Array(
+					[
+						c + Vector2(s * 0.2, 0),
+						c + Vector2(s * 0.46, -s * 0.18),
+						c + Vector2(s * 0.46, s * 0.18)
+					]
+				),
+				wrap
+			)
 			ci.draw_circle(c, s * 0.24, col)
 			ci.draw_arc(c, s * 0.24, 0, TAU, 24, col.darkened(0.45), maxf(1.0, s * 0.03), true)
 		"parcel":
 			var box := Rect2(o + Vector2(s * 0.16, s * 0.22), Vector2(s * 0.68, s * 0.6))
 			rounded(ci, box, col, s * 0.06, maxf(1.0, s * 0.03), col.darkened(0.45))
-			rounded(ci, Rect2(o + Vector2(s * 0.47, s * 0.22), Vector2(s * 0.06, s * 0.6)), col.lightened(0.25), s * 0.02)
-			rounded(ci, Rect2(o + Vector2(s * 0.16, s * 0.47), Vector2(s * 0.68, s * 0.06)), col.lightened(0.25), s * 0.02)
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.47, s * 0.22), Vector2(s * 0.06, s * 0.6)),
+				col.lightened(0.25),
+				s * 0.02
+			)
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.16, s * 0.47), Vector2(s * 0.68, s * 0.06)),
+				col.lightened(0.25),
+				s * 0.02
+			)
 		"device":
 			var body := Rect2(o + Vector2(s * 0.22, s * 0.12), Vector2(s * 0.56, s * 0.76))
 			rounded(ci, body, col, s * 0.08, maxf(1.0, s * 0.03), col.darkened(0.4))
-			rounded(ci, Rect2(o + Vector2(s * 0.29, s * 0.2), Vector2(s * 0.42, s * 0.3)), Color(0.55, 0.9, 0.75) * mod, s * 0.03, 1.0, col.darkened(0.5))
+			rounded(
+				ci,
+				Rect2(o + Vector2(s * 0.29, s * 0.2), Vector2(s * 0.42, s * 0.3)),
+				Color(0.55, 0.9, 0.75) * mod,
+				s * 0.03,
+				1.0,
+				col.darkened(0.5)
+			)
 			ci.draw_circle(o + Vector2(s * 0.5, s * 0.66), s * 0.09, Color(0.3, 0.5, 0.9) * mod)
 		_:
 			if String(it.get("category", "")) == "tm":
 				var disc := r.get_center()
-				ci.draw_circle(disc, s * 0.36, Dex.type_color(String(Dex.move(String(it.get("effect", {}).get("teach", ""))).get("type", "normal"))) * mod)
+				ci.draw_circle(
+					disc,
+					s * 0.36,
+					(
+						Dex.type_color(
+							String(
+								Dex.move(String(it.get("effect", {}).get("teach", ""))).get(
+									"type", "normal"
+								)
+							)
+						)
+						* mod
+					)
+				)
 				ci.draw_circle(disc, s * 0.12, PAPER * mod)
 				ci.draw_arc(disc, s * 0.36, 0, TAU, 24, INK * mod, 1.5, true)
 			else:
 				rounded(ci, r.grow(-r.size.x * 0.2), col, 6, 1.5, col.darkened(0.45))
 
 
-static func ball(ci: CanvasItem, r: Rect2, top: Color, accent := Color.TRANSPARENT, mod := Color.WHITE) -> void:
+static func ball(
+	ci: CanvasItem, r: Rect2, top: Color, accent := Color.TRANSPARENT, mod := Color.WHITE
+) -> void:
 	var c := r.get_center()
 	var rad := minf(r.size.x, r.size.y) * 0.42
 	ci.draw_circle(c + Vector2(0, rad * 0.08), rad, Color(0, 0, 0, 0.35 * mod.a))
@@ -659,7 +875,8 @@ static func ball(ci: CanvasItem, r: Rect2, top: Color, accent := Color.TRANSPARE
 
 
 ## Nó que desenha o ícone de um item (para linhas de lista).
-class ItemIcon extends Control:
+class ItemIcon:
+	extends Control
 	var id := ""
 	var dim := false
 
@@ -673,6 +890,7 @@ class ItemIcon extends Control:
 
 
 # --- Sprites de Pokémon (helpers do gfx/pokemon_sprites.gd) ---
+
 
 static func _ps() -> GDScript:
 	if not _sprites_tried:
@@ -757,8 +975,10 @@ static func badge_texture(id: String) -> Texture2D:
 
 # --- Peças compostas ---
 
+
 ## Linha de Pokémon da equipe (party_row do original): ícone, nome, nível, status, barra de HP.
-class PartyRow extends Control:
+class PartyRow:
+	extends Control
 	var mon: Mon
 	var selected := false
 	var source := false
@@ -796,9 +1016,24 @@ class PartyRow extends Control:
 		var x := x0 + f.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, K.SIZE_BODY).x
 		if m.gender == "male" or m.gender == "female":
 			x += 8.0
-			draw_string(f, Vector2(x, y1), "♂" if m.gender == "male" else "♀", HORIZONTAL_ALIGNMENT_LEFT, -1, K.SIZE_BODY,
-				K.BLUE if m.gender == "male" else K.RED)
-		draw_string(f, Vector2(size.x - 116, y1), "Nv %d" % m.level, HORIZONTAL_ALIGNMENT_RIGHT, 100, K.SIZE_BODY, ink)
+			draw_string(
+				f,
+				Vector2(x, y1),
+				"♂" if m.gender == "male" else "♀",
+				HORIZONTAL_ALIGNMENT_LEFT,
+				-1,
+				K.SIZE_BODY,
+				K.BLUE if m.gender == "male" else K.RED
+			)
+		draw_string(
+			f,
+			Vector2(size.x - 116, y1),
+			"Nv %d" % m.level,
+			HORIZONTAL_ALIGNMENT_RIGHT,
+			100,
+			K.SIZE_BODY,
+			ink
+		)
 		var bar_x := x0
 		var st: String = K.status_key(m)
 		if st != "":
@@ -807,14 +1042,31 @@ class PartyRow extends Control:
 		var bw := size.x - 150.0 - bar_x
 		if note != "":
 			bw -= 110.0
-		K.bar(self, Rect2(Vector2(bar_x, y1 + 12), Vector2(maxf(bw, 40.0), 10)), hp_r, K.hp_color(hp_r), Color(K.DIM, 0.5))
-		draw_string(f, Vector2(size.x - 136, y1 + 23), "HP %d/%d" % [maxi(m.hp, 0), m.max_hp], HORIZONTAL_ALIGNMENT_RIGHT, 120, K.SIZE_SMALL, ink)
+		K.bar(
+			self,
+			Rect2(Vector2(bar_x, y1 + 12), Vector2(maxf(bw, 40.0), 10)),
+			hp_r,
+			K.hp_color(hp_r),
+			Color(K.DIM, 0.5)
+		)
+		draw_string(
+			f,
+			Vector2(size.x - 136, y1 + 23),
+			"HP %d/%d" % [maxi(m.hp, 0), m.max_hp],
+			HORIZONTAL_ALIGNMENT_RIGHT,
+			120,
+			K.SIZE_SMALL,
+			ink
+		)
 		if note != "":
-			draw_string(f, Vector2(size.x - 262, y1 + 23), note, HORIZONTAL_ALIGNMENT_RIGHT, 110, 14, K.DIM)
+			draw_string(
+				f, Vector2(size.x - 262, y1 + 23), note, HORIZONTAL_ALIGNMENT_RIGHT, 110, 14, K.DIM
+			)
 
 
 ## Caixa de diálogo (PkDialogBox): janela com o nome na aba, texto com letreiro e setinha vermelha.
-class Dialog extends Win:
+class Dialog:
+	extends Win
 	var label: Label
 	var cps := 50.0
 	var _chars := 0.0
@@ -839,7 +1091,10 @@ class Dialog extends Win:
 		visible = true
 
 	func complete() -> bool:
-		return label.visible_characters < 0 or label.visible_characters >= label.get_total_character_count()
+		return (
+			label.visible_characters < 0
+			or label.visible_characters >= label.get_total_character_count()
+		)
 
 	func finish() -> void:
 		label.visible_characters = -1
@@ -859,12 +1114,15 @@ class Dialog extends Win:
 		super()
 		if visible and complete():
 			var c := Vector2(size.x - 34, size.y - 24 + sin(_t * TAU * 1.5) * 3.0)
-			draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -5), c + Vector2(8, -5), c + Vector2(0, 6)]),
-				preload("res://ui/ui_kit.gd").RED)
+			draw_colored_polygon(
+				PackedVector2Array([c + Vector2(-8, -5), c + Vector2(8, -5), c + Vector2(0, 6)]),
+				preload("res://ui/ui_kit.gd").RED
+			)
 
 
 ## Valor de uma linha de opção (PkOptionRow.ValueView): "choice", "toggle", "volume" (0..10) ou "action".
-class OptionValue extends Control:
+class OptionValue:
+	extends Control
 	var kind := "choice"
 	var value = 0
 	var text := ""
@@ -885,26 +1143,67 @@ class OptionValue extends Control:
 		var arrow: Color = K.RED if selected else K.DIM
 		match kind:
 			"choice":
-				draw_string(f, Vector2(0, cy + 7), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, K.SIZE_BODY, K.INK)
-				draw_colored_polygon(PackedVector2Array([Vector2(8, cy), Vector2(18, cy - 8), Vector2(18, cy + 8)]), arrow)
-				draw_colored_polygon(PackedVector2Array([Vector2(size.x - 8, cy), Vector2(size.x - 18, cy - 8), Vector2(size.x - 18, cy + 8)]), arrow)
+				draw_string(
+					f,
+					Vector2(0, cy + 7),
+					text,
+					HORIZONTAL_ALIGNMENT_CENTER,
+					size.x,
+					K.SIZE_BODY,
+					K.INK
+				)
+				draw_colored_polygon(
+					PackedVector2Array([Vector2(8, cy), Vector2(18, cy - 8), Vector2(18, cy + 8)]),
+					arrow
+				)
+				draw_colored_polygon(
+					PackedVector2Array(
+						[
+							Vector2(size.x - 8, cy),
+							Vector2(size.x - 18, cy - 8),
+							Vector2(size.x - 18, cy + 8)
+						]
+					),
+					arrow
+				)
 			"toggle":
 				var on := bool(value)
 				var r := Rect2(Vector2(size.x * 0.5 - 40, cy - 14), Vector2(80, 28))
 				draw_style_box(K.pill(K.GREEN if on else K.DIM, K.INK, 14), r)
-				draw_string(f, Vector2(r.position.x, cy + 6), "SIM" if on else "NÃO", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 16, K.PAPER)
+				draw_string(
+					f,
+					Vector2(r.position.x, cy + 6),
+					"SIM" if on else "NÃO",
+					HORIZONTAL_ALIGNMENT_CENTER,
+					r.size.x,
+					16,
+					K.PAPER
+				)
 			"volume":
 				var w := (size.x - 9 * 4.0) / 10.0
 				for i in 10:
 					var seg := Rect2(Vector2(i * (w + 4.0), cy - 10), Vector2(w, 20))
 					var filled := i < int(value)
-					draw_style_box(K.pill(K.RED if filled else K.RED_SOFT, K.INK if filled else K.RIM, 4), seg)
+					draw_style_box(
+						K.pill(K.RED if filled else K.RED_SOFT, K.INK if filled else K.RIM, 4), seg
+					)
 			"action":
-				draw_colored_polygon(PackedVector2Array([Vector2(size.x - 8, cy), Vector2(size.x - 18, cy - 8), Vector2(size.x - 18, cy + 8)]), arrow)
+				draw_colored_polygon(
+					PackedVector2Array(
+						[
+							Vector2(size.x - 8, cy),
+							Vector2(size.x - 18, cy - 8),
+							Vector2(size.x - 18, cy + 8)
+						]
+					),
+					arrow
+				)
 
 
 ## Linha de opção completa: rótulo à esquerda e o valor desenhado à direita, pílula quando selecionada.
-static func option_row(text: String, kind: String, value, choice_text := "", selected := false) -> PanelContainer:
+static func option_row(
+	text: String, kind: String, value, choice_text := "", selected := false
+) -> PanelContainer:
 	var p := PanelContainer.new()
 	var sb: StyleBox = pill(RED_SOFT, RED, 20) if selected else StyleBoxEmpty.new()
 	sb.content_margin_left = 16

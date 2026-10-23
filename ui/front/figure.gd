@@ -29,7 +29,9 @@ func _process(dt: float) -> void:
 
 
 func _draw() -> void:
-	var tex: Texture2D = preload("res://ui/ui_kit.gd").sheet_frame(SHEETS.get(kind, SHEETS.prof), FRAME)
+	var tex: Texture2D = preload("res://ui/ui_kit.gd").sheet_frame(
+		SHEETS.get(kind, SHEETS.prof), FRAME
+	)
 	var k := floorf(minf(size.x / FRAME.size.x, (size.y - 16.0) / FRAME.size.y))
 	var s := FRAME.size * k
 	var bob := absf(sin(t * 2.5)) * -4.0

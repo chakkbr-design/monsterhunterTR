@@ -9,7 +9,12 @@ var model_rot := 180.0  ## world yaw of the model (deg), the map's "rot"
 
 
 func _build_body() -> void:
-	var inst := WorldProps.place(self, model if model != "" else "hgss/common/sign_a", global_position if is_inside_tree() else position, {"scale": model_scale})
+	var inst := WorldProps.place(
+		self,
+		model if model != "" else "hgss/common/sign_a",
+		global_position if is_inside_tree() else position,
+		{"scale": model_scale}
+	)
 	if inst:
 		show_tag = false
 		inst.position = Vector3.ZERO

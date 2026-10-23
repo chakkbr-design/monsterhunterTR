@@ -7,6 +7,7 @@ const LINE2 := "BATTLE ADVANCED"
 const GOLD := Color("ffd84a")
 const BLUE := Color("2a3a8a")
 
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(560, 170)
@@ -20,6 +21,8 @@ func _draw() -> void:
 
 
 func _text(f: Font, s: String, fs: int, p: Vector2, col: Color, outline: Color) -> void:
-	draw_string_outline(f, p + Vector2(4, 6), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 14, Color(0, 0, 0, 0.35))
+	draw_string_outline(
+		f, p + Vector2(4, 6), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 14, Color(0, 0, 0, 0.35)
+	)
 	draw_string_outline(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 14, outline)
 	draw_string(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)

@@ -31,7 +31,10 @@ static func load_mask(path: String) -> Image:
 static func levels(paths: Array, height_at: Callable) -> Dictionary:
 	var out := {}
 	for r in paths:
-		var h := snappedf(float(height_at.call(float(r[0]) + float(r[2]) / 2.0, float(r[1]) + float(r[3]) / 2.0)), 0.01)
+		var h := snappedf(
+			float(height_at.call(float(r[0]) + float(r[2]) / 2.0, float(r[1]) + float(r[3]) / 2.0)),
+			0.01
+		)
 		if not out.has(h):
 			out[h] = []
 		out[h].append(r)
@@ -81,10 +84,20 @@ static func _sd_rect(x: float, z: float, r: Array) -> float:
 	return Vector2(maxf(qx, 0.0), maxf(qz, 0.0)).length() + minf(maxf(qx, qz), 0.0)
 
 
-static func overlay(rects: Array, level: float, image: Image, tint := Color.WHITE, mix := 0.0) -> MeshInstance3D:
+static func overlay(
+	rects: Array, level: float, image: Image, tint := Color.WHITE, mix := 0.0
+) -> MeshInstance3D:
 	var area := bounds(rects)
-	var mat := WorldFx.shader_mat("path_organic", {"mask_tex": ImageTexture.create_from_image(image),
-			"mask_origin": area.position, "mask_size": area.size, "path_tint": tint, "path_mix": mix})
+	var mat := WorldFx.shader_mat(
+		"path_organic",
+		{
+			"mask_tex": ImageTexture.create_from_image(image),
+			"mask_origin": area.position,
+			"mask_size": area.size,
+			"path_tint": tint,
+			"path_mix": mix
+		}
+	)
 	var pm := PlaneMesh.new()
 	pm.size = area.size
 	var mi := MeshInstance3D.new()

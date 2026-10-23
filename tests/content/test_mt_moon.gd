@@ -3,7 +3,6 @@ extends SceneTree
 ## Equipe Rocket, escolha do fóssil, estáticos que lutam uma vez.
 ## godot --headless --fixed-fps 60 --path . --script res://tests/content/test_mt_moon.gd
 
-
 var _fails := 0
 var game: Node
 var story: Node
@@ -62,14 +61,37 @@ func _run() -> void:
 	Cave = load("res://world/cave_builder.gd")
 	game.save_path = "user://test_content_mt_moon_save.json"
 	game.new_game("ASH", "GARY")
-	for f in ["oak_stopped", "got_starter", "starter_chosen", "rival_battle_done", "mom_healed", "has_pokedex",
-			"parcel_delivered", "pewter_guide_done", "rival2_done"]:
+	for f in [
+		"oak_stopped",
+		"got_starter",
+		"starter_chosen",
+		"rival_battle_done",
+		"mom_healed",
+		"has_pokedex",
+		"parcel_delivered",
+		"pewter_guide_done",
+		"rival2_done"
+	]:
 		game.flags[f] = true
 	game.flags["rival_starter"] = "Charmander"
 	# Treinadores da Rota 3 e do 1F já vencidos: o teste cuida da Equipe Rocket e do Miguel.
-	for id in ["bug_catcher_james", "bug_catcher_colton", "youngster_ben", "bug_catcher_greg", "lass_sally",
-			"youngster_calvin", "lass_robin", "lass_janice", "lass_iris", "bug_catcher_robby", "super_nerd_jovan",
-			"lass_miriam", "bug_catcher_kent", "youngster_josh", "hiker_marcos"]:
+	for id in [
+		"bug_catcher_james",
+		"bug_catcher_colton",
+		"youngster_ben",
+		"bug_catcher_greg",
+		"lass_sally",
+		"youngster_calvin",
+		"lass_robin",
+		"lass_janice",
+		"lass_iris",
+		"bug_catcher_robby",
+		"super_nerd_jovan",
+		"lass_miriam",
+		"bug_catcher_kent",
+		"youngster_josh",
+		"hiker_marcos"
+	]:
 		game.flags["trainer_" + id] = true
 	game.add_mon(load("res://core/mon.gd").create("blastoise", 50))  # já evoluído: a tela de evolução esperaria o jogador
 	story = root.get_node("Story")
@@ -121,14 +143,20 @@ func _route3_gate() -> void:
 	p.global_position = Vector3(44.5, 0.3, -430.0)
 	await _walk("move_right", 120)
 	await until(_free, 20.0)
-	check(w.zone_at(p.global_position) == "pewter_city", "sem insígnia não passa para a Rota 3 (x %.1f)" % p.global_position.x)
+	check(
+		w.zone_at(p.global_position) == "pewter_city",
+		"sem insígnia não passa para a Rota 3 (x %.1f)" % p.global_position.x
+	)
 	game.flags["badge_boulder"] = true
 	game.flags["boulder_badge"] = true
 	await frames(20)
 	check(pw.flag_wall_open(0), "com insígnia a parede abre")
 	p.global_position = Vector3(45.0, 0.3, -430.0)
 	await _walk("move_right", 150)
-	check(await until(func(): return w.location_id == "route_3", 10.0), "com insígnia chega à Rota 3 (%s, x %.1f)" % [w.location_id, p.global_position.x])
+	check(
+		await until(func(): return w.location_id == "route_3", 10.0),
+		"com insígnia chega à Rota 3 (%s, x %.1f)" % [w.location_id, p.global_position.x]
+	)
 	check(not story.is_running(), "aviso do garoto não dispara com a insígnia")
 
 
@@ -158,15 +186,31 @@ func _floors() -> void:
 		if r == null:
 			continue
 		var rocks: Node = r.get_node_or_null("CaveRocks")
-		check(rocks != null and rocks.get_child_count() > 20, "%s: paredes de rocha (%d)" % [fl, rocks.get_child_count() if rocks else 0])
-		check(r.has_spawn("door") and r.triggers.size() > 0, "%s: spawn door + gatilhos (%d)" % [fl, r.triggers.size()])
+		check(
+			rocks != null and rocks.get_child_count() > 20,
+			"%s: paredes de rocha (%d)" % [fl, rocks.get_child_count() if rocks else 0]
+		)
+		check(
+			r.has_spawn("door") and r.triggers.size() > 0,
+			"%s: spawn door + gatilhos (%d)" % [fl, r.triggers.size()]
+		)
 		var warps: Array = Cave.events(fl).get("warps", [])
 		for i in warps.size():
 			var at: Vector3 = r.spawn_point("warp_%d" % i)
-			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.5, at + Vector3.DOWN, 1))
-			check(not hit.is_empty() and absf(hit.position.y - at.y) < 0.05, "%s/warp_%d: chegada no chão livre" % [fl, i])
-		check(r.find_children("CaveSpawn*", "", false, false).size() > 0, "%s: zonas de encontro" % fl)
-		check(not r.get_tree().get_nodes_in_group(Cave.LIGHT_GROUP).is_empty(), "%s: luzes da caverna" % fl)
+			var hit := space.intersect_ray(
+				PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.5, at + Vector3.DOWN, 1)
+			)
+			check(
+				not hit.is_empty() and absf(hit.position.y - at.y) < 0.05,
+				"%s/warp_%d: chegada no chão livre" % [fl, i]
+			)
+		check(
+			r.find_children("CaveSpawn*", "", false, false).size() > 0, "%s: zonas de encontro" % fl
+		)
+		check(
+			not r.get_tree().get_nodes_in_group(Cave.LIGHT_GROUP).is_empty(),
+			"%s: luzes da caverna" % fl
+		)
 	for t in ["mt_moon_1f", "mt_moon_b1f", "mt_moon_b2f"]:
 		check(not load("res://core/dex.gd").encounter_table(t).is_empty(), "tabela %s" % t)
 	var items: Array = w.interior("mt_moon_1f").find_children("Item_*", "", false, false)
@@ -186,7 +230,10 @@ func _ladders() -> void:
 			var dest := String(t.interior).trim_prefix("mt_moon_")
 			var j := int(String(t.spawn).trim_prefix("warp_"))
 			var back: Dictionary = Cave.warp_target(dest, j)
-			if back.get("interior", "") != "mt_moon_" + fl or back.get("spawn", "") != "warp_%d" % i:
+			if (
+				back.get("interior", "") != "mt_moon_" + fl
+				or back.get("spawn", "") != "warp_%d" % i
+			):
 				ok = false
 				print("  escada sem volta: %s/%d -> %s/%d" % [fl, i, dest, j])
 			pairs += 1
@@ -196,13 +243,25 @@ func _ladders() -> void:
 	var r1 = w.interior("mt_moon_1f")
 	var ladder: Node3D = r1.get_node("Ladder0")
 	p.global_position = ladder.global_position + Vector3(0, -0.3, 0)
-	check(await until(func(): return w.location_id == "mt_moon_b1f", 5.0), "escada 1F -> B1F (%s)" % w.location_id)
+	check(
+		await until(func(): return w.location_id == "mt_moon_b1f", 5.0),
+		"escada 1F -> B1F (%s)" % w.location_id
+	)
 	await frames(45)
 	var rb = w.interior("mt_moon_b1f")
-	check(p.global_position.distance_to(rb.spawn_point("warp_0")) < 0.8, "chega ao lado da escada certa no B1F")
+	check(
+		p.global_position.distance_to(rb.spawn_point("warp_0")) < 0.8,
+		"chega ao lado da escada certa no B1F"
+	)
 	p.global_position = rb.get_node("Ladder0").global_position + Vector3(0, -0.3, 0)
-	check(await until(func(): return w.location_id == "mt_moon_1f", 5.0), "escada B1F -> 1F (%s)" % w.location_id)
-	check(p.global_position.distance_to(r1.spawn_point("warp_0")) < 0.8, "volta ao lado da escada de partida")
+	check(
+		await until(func(): return w.location_id == "mt_moon_1f", 5.0),
+		"escada B1F -> 1F (%s)" % w.location_id
+	)
+	check(
+		p.global_position.distance_to(r1.spawn_point("warp_0")) < 0.8,
+		"volta ao lado da escada de partida"
+	)
 
 
 func _rockets() -> void:
@@ -215,34 +274,64 @@ func _rockets() -> void:
 		check(tr != null and tr.trainer_id == id, "%s no B2F" % id)
 		if tr == null:
 			continue
-		check(String(tr.npc_name) == "Recruta da Equipe Rocket", "%s: nome em português (%s)" % [id, tr.npc_name])
+		check(
+			String(tr.npc_name) == "Recruta da Equipe Rocket",
+			"%s: nome em português (%s)" % [id, tr.npc_name]
+		)
 		game.heal_party()
 		if not game.flags.get("trainer_" + id, false):
 			await until(_free, 30.0)
 			await tr.interact(p)
-		check(await until(func(): return game.flags.get("trainer_" + id, false), 240.0), "vence o %s (autoplay)" % id)
+		check(
+			await until(func(): return game.flags.get("trainer_" + id, false), 240.0),
+			"vence o %s (autoplay)" % id
+		)
 		await until(_free, 30.0)
 
 
 func _fossils() -> void:
 	game.heal_party()
 	var r = w.interior("mt_moon_b2f")
-	check(r.npcs.has("miguel") and r.npcs.has("dome_fossil") and r.npcs.has("helix_fossil"), "Miguel e os dois fósseis no B2F")
+	check(
+		r.npcs.has("miguel") and r.npcs.has("dome_fossil") and r.npcs.has("helix_fossil"),
+		"Miguel e os dois fósseis no B2F"
+	)
 	var trig: Node3D = r.get_node_or_null("FossilTrigger")
 	check(trig != null, "gatilho da cena dos fósseis")
 	var seen: Array = []
 	story.cutscene_started.connect(func(id): seen.append(id))
 	await until(_free, 30.0)
 	p.global_position = trig.global_position + Vector3(0, 0.3, 0)
-	check(await until(func(): return seen.has("mt_moon_fossils"), 5.0), "chegar perto do Miguel começa a cena")
-	check(await until(func(): return game.flags.get("FLAG_GOT_FOSSIL_FROM_MT_MOON", false), 300.0), "cena termina com um fóssil")
+	check(
+		await until(func(): return seen.has("mt_moon_fossils"), 5.0),
+		"chegar perto do Miguel começa a cena"
+	)
+	check(
+		await until(func(): return game.flags.get("FLAG_GOT_FOSSIL_FROM_MT_MOON", false), 300.0),
+		"cena termina com um fóssil"
+	)
 	await until(_free, 30.0)
 	check(game.flags.get("trainer_super_nerd_miguel", false), "venceu o Miguel")
-	check(game.flags.get("FLAG_GOT_DOME_FOSSIL", false) and game.flags.get("mt_moon_fossil", "") == "dome", "escolheu o Fóssil Domo (auto_answer sim)")
+	check(
+		(
+			game.flags.get("FLAG_GOT_DOME_FOSSIL", false)
+			and game.flags.get("mt_moon_fossil", "") == "dome"
+		),
+		"escolheu o Fóssil Domo (auto_answer sim)"
+	)
 	check(not game.flags.get("FLAG_GOT_HELIX_FOSSIL", false), "não levou os dois")
-	check(int(game.bag.get("dome_fossil", 0)) == 1 and int(game.bag.get("helix_fossil", 0)) == 0, "Fóssil Domo na bolsa")
+	check(
+		int(game.bag.get("dome_fossil", 0)) == 1 and int(game.bag.get("helix_fossil", 0)) == 0,
+		"Fóssil Domo na bolsa"
+	)
 	await frames(2)
-	check(not is_instance_valid(r.npcs.get("dome_fossil")) and not is_instance_valid(r.npcs.get("helix_fossil")), "fósseis somem do chão")
+	check(
+		(
+			not is_instance_valid(r.npcs.get("dome_fossil"))
+			and not is_instance_valid(r.npcs.get("helix_fossil"))
+		),
+		"fósseis somem do chão"
+	)
 	var n := seen.size()
 	p.global_position = trig.global_position + Vector3(3, 0.3, 0)
 	await frames(10)
@@ -256,13 +345,24 @@ func _exit() -> void:
 	await frames(45)
 	var r = w.interior("mt_moon_b1f")
 	var trig: Node3D = r.get_node_or_null("ExitRoute4East")
-	check(trig != null and r.get_node_or_null("Route4Sign") != null, "saída para a Rota 4 com placa 'Continua...'")
+	check(
+		trig != null and r.get_node_or_null("Route4Sign") != null,
+		"saída para a Rota 4 com placa 'Continua...'"
+	)
 	if trig:
 		p.global_position = trig.global_position + Vector3(0, 0.3, 0)
-	check(await until(func(): return game.flags.get("mt_moon_cleared", false), 10.0), "sair pelo B1F marca mt_moon_cleared")
+	check(
+		await until(func(): return game.flags.get("mt_moon_cleared", false), 10.0),
+		"sair pelo B1F marca mt_moon_cleared"
+	)
 	var fin := await until(_free, 20.0)
 	if not fin:
-		print("  dbg: story=%s busy=%s locked=%s ui=%s" % [story.current(), game.is_busy(), p.locked, p.ui_blocking()])
+		print(
+			(
+				"  dbg: story=%s busy=%s locked=%s ui=%s"
+				% [story.current(), game.is_busy(), p.locked, p.ui_blocking()]
+			)
+		)
 	check(fin, "cena do fim termina")
 	check(w.location_id == "mt_moon_b1f", "continua dentro da caverna")
 	# 1F -> Rota 3 pela boca oeste.
@@ -271,7 +371,10 @@ func _exit() -> void:
 	var ex: Node3D = w.interior("mt_moon_1f").get_node_or_null("ExitRoute4West")
 	if ex:
 		p.global_position = ex.global_position + Vector3(0, -0.3, 0)
-	check(await until(func(): return w.location_id == "route_3", 5.0), "1F -> Rota 3 pela boca do monte (%s)" % w.location_id)
+	check(
+		await until(func(): return w.location_id == "route_3", 5.0),
+		"1F -> Rota 3 pela boca do monte (%s)" % w.location_id
+	)
 
 
 func _center() -> void:
@@ -285,7 +388,10 @@ func _center() -> void:
 	if sales:
 		await sales.interact(p)
 	await until(_free, 10.0)
-	check(game.flags.get("bought_magikarp", false) and game.money == money0 - 500, "comprou o Magikarp por P500")
+	check(
+		game.flags.get("bought_magikarp", false) and game.money == money0 - 500,
+		"comprou o Magikarp por P500"
+	)
 	check(game.party.size() + game.pc.size() == n0 + 1, "Magikarp entrou no time")
 	if sales:
 		await sales.interact(p)
@@ -301,7 +407,10 @@ func _statics() -> void:
 	check(s != null and s.visible, "Pidgeotto estático na Rota 2")
 	if s:
 		var r: Dictionary = await s.fight()
-		check(["win", "caught"].has(String(r.get("outcome", ""))), "luta com o Pidgeotto (%s)" % r.get("outcome", "?"))
+		check(
+			["win", "caught"].has(String(r.get("outcome", ""))),
+			"luta com o Pidgeotto (%s)" % r.get("outcome", "?")
+		)
 	await frames(2)
 	check(game.flags.get("static_r2_pidgeotto", false), "flag static_r2_pidgeotto")
 	check(not is_instance_valid(s), "Pidgeotto some depois da luta")
@@ -316,5 +425,8 @@ func _statics() -> void:
 		await until(_free, 10.0)
 		p.global_position = rat.global_position + Vector3(0, 0.3, 0)
 		check(await until(func(): return game.is_busy(), 10.0), "Raticate pula e a batalha começa")
-		check(await until(func(): return game.flags.get("static_r1_raticate", false), 240.0), "flag static_r1_raticate")
+		check(
+			await until(func(): return game.flags.get("static_r1_raticate", false), 240.0),
+			"flag static_r1_raticate"
+		)
 	await until(_free, 30.0)

@@ -29,19 +29,34 @@ func _stats() -> void:
 	check(StatCalc.stat("atk", 49, 31, 0, 50, "adamant") == int(69 * 1.1), "atk com natureza +")
 	check(StatCalc.stage_mult(2) == 2.0 and StatCalc.stage_mult(-2) == 0.5, "estágios")
 	check(is_equal_approx(StatCalc.acc_stage_mult(-3), 0.5), "estágio de precisão")
-	check(StatCalc.battle_speed_factor(100, 50) <= 1.2 and StatCalc.battle_speed_factor(50, 100) >= 0.8, "fator de speed limitado")
+	check(
+		(
+			StatCalc.battle_speed_factor(100, 50) <= 1.2
+			and StatCalc.battle_speed_factor(50, 100) >= 0.8
+		),
+		"fator de speed limitado"
+	)
 	check(StatCalc.battle_speed_factor(80, 80) == 1.0, "speed igual = 1")
 
 
 func _growth() -> void:
 	check(Growth.exp_for_level("medium_fast", 10) == 1000, "medium_fast é n³")
 	check(Growth.exp_for_level("medium_slow", 5) == 135, "medium_slow nível 5")
-	check(Growth.level_for_exp("medium_fast", 1000) == 10 and Growth.level_for_exp("medium_fast", 999) == 9, "nível pela XP")
+	check(
+		(
+			Growth.level_for_exp("medium_fast", 1000) == 10
+			and Growth.level_for_exp("medium_fast", 999) == 9
+		),
+		"nível pela XP"
+	)
 	check(Growth.exp_gain(64, 5, 5, true) > Growth.exp_gain(64, 5, 5, false), "treinador dá 1,5x")
 
 
 func _capture() -> void:
-	check(is_equal_approx(Capture.level_mult(5), 2.5) and Capture.level_mult(20) == 1.0, "bônus de nível baixo")
+	check(
+		is_equal_approx(Capture.level_mult(5), 2.5) and Capture.level_mult(20) == 1.0,
+		"bônus de nível baixo"
+	)
 	var full := Capture.modified_rate(20, 20, 45, 1.0, "", 25)
 	var low := Capture.modified_rate(20, 1, 45, 1.0, "", 25)
 	check(low > full, "HP baixo ajuda")
@@ -62,7 +77,9 @@ func _damage() -> void:
 	var b := Damage.compute(atk, water, ember, rng)
 	check(a.eff == 2.0 and b.eff == 0.5, "efetividade fogo")
 	check(a.damage > b.damage and a.stab, "dano e STAB")
-	check(Damage.compute(atk, grass, Dex.move("growl"), rng).damage == 0, "golpe de status sem dano")
+	check(
+		Damage.compute(atk, grass, Dex.move("growl"), rng).damage == 0, "golpe de status sem dano"
+	)
 	# Faixa exata: base = ((2*10/5+2)*40*25/20)/50+2 = 8; *1.5*2*[0.85..1]
 	var lo := 999
 	var hi := 0
@@ -87,7 +104,9 @@ func _mon() -> void:
 	m.evolve(m.evolution_target())
 	check(m.species == "Ivysaur", "evoluiu")
 	var copy := Mon.from_dict(m.to_dict())
-	check(copy.species == m.species and copy.stats == m.stats and copy.moves == m.moves, "save/load")
+	check(
+		copy.species == m.species and copy.stats == m.stats and copy.moves == m.moves, "save/load"
+	)
 	check(m.add_evs({"spa": 300}).get("spa") == 252, "limite de EV")
 
 

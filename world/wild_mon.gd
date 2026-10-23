@@ -33,7 +33,9 @@ const CREATURE_SPRITE := "res://gfx/creature_sprite.gd"
 static func spawn(m: Mon, entry: Dictionary, parent: Node, pos: Vector3) -> WildMon:
 	var w := WildMon.new()
 	w.mon = m
-	w.behaviour = {"flee": Behaviour.FLEE, "aggressive": Behaviour.AGGRESSIVE}.get(String(entry.get("behaviour", "passive")), Behaviour.PASSIVE)
+	w.behaviour = {"flee": Behaviour.FLEE, "aggressive": Behaviour.AGGRESSIVE}.get(
+		String(entry.get("behaviour", "passive")), Behaviour.PASSIVE
+	)
 	parent.add_child(w)
 	w.global_position = pos
 	w.home = pos
@@ -67,7 +69,9 @@ func _ready() -> void:
 	cm.radius = r
 	cm.height = r * 3.0
 	var types := mon.types
-	cm.material = Overworld._mat(Dex.type_color(String(types[0])) if not types.is_empty() else Color.GRAY)
+	cm.material = Overworld._mat(
+		Dex.type_color(String(types[0])) if not types.is_empty() else Color.GRAY
+	)
 	mi.mesh = cm
 	mi.position.y = r * 1.5
 	add_child(mi)
@@ -76,7 +80,10 @@ func _ready() -> void:
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.font_size = 72
 	tag.outline_size = 14
-	tag.modulate = {Behaviour.AGGRESSIVE: Color(1, 0.55, 0.5), Behaviour.FLEE: Color(0.7, 0.85, 1)}.get(behaviour, Color.WHITE)
+	tag.modulate = (
+		{Behaviour.AGGRESSIVE: Color(1, 0.55, 0.5), Behaviour.FLEE: Color(0.7, 0.85, 1)}
+		. get(behaviour, Color.WHITE)
+	)
 	tag.position.y = r * 3.0 + 0.35
 	add_child(tag)
 
@@ -104,7 +111,9 @@ func _process(_delta: float) -> void:
 	if not global_position.is_equal_approx(_phys_cur):  # moved outside physics (spawn, pop-out tween)
 		_phys_prev = global_position
 		_phys_cur = global_position
-	look.position = to_local(_phys_prev.lerp(_phys_cur, Engine.get_physics_interpolation_fraction()))
+	look.position = to_local(
+		_phys_prev.lerp(_phys_cur, Engine.get_physics_interpolation_fraction())
+	)
 
 
 func _wander_logic(delta: float) -> Vector3:
@@ -113,7 +122,13 @@ func _wander_logic(delta: float) -> Vector3:
 	to.y = 0.0
 	var d := to.length()
 	# Distance before can_act(): it walks the modal autoloads, too costly for every mon every tick.
-	if behaviour != Behaviour.PASSIVE and d < maxf(CHASE, FLEE) and peace_timer <= 0.0 and p.can_act() and Game.first_healthy() >= 0:
+	if (
+		behaviour != Behaviour.PASSIVE
+		and d < maxf(CHASE, FLEE)
+		and peace_timer <= 0.0
+		and p.can_act()
+		and Game.first_healthy() >= 0
+	):
 		if behaviour == Behaviour.AGGRESSIVE:
 			if d < TOUCH:
 				engage()
@@ -138,8 +153,15 @@ func pop_out() -> void:
 	var at := position
 	position = at + Vector3(0, -0.8, 0)
 	var tw := create_tween()
-	tw.tween_property(self, "position", at + Vector3(0, 1.3, 0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(self, "position", at, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	(
+		tw
+		. tween_property(self, "position", at + Vector3(0, 1.3, 0), 0.2)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
+	tw.tween_property(self, "position", at, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(
+		Tween.EASE_IN
+	)
 	await tw.finished
 
 

@@ -56,7 +56,9 @@ func _process(_delta: float) -> void:
 	var target := _trail[0]
 	var to_player := Vector2(at.x - global_position.x, at.z - global_position.z).length()
 	if to_player > GAP + 0.1 and global_position.distance_to(target) > 0.05:
-		global_position = global_position.move_toward(target, maxf(p.velocity.length(), 2.0) * get_process_delta_time() * 1.2)
+		global_position = global_position.move_toward(
+			target, maxf(p.velocity.length(), 2.0) * get_process_delta_time() * 1.2
+		)
 
 
 func _lead() -> Mon:

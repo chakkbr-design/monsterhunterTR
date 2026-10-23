@@ -5,7 +5,13 @@ extends SceneTree
 ## spawns, forest trainers, the Route 22 rival (once, after the Pokédex, autoplay) and Pewter's east exit closed.
 
 const NEW_ZONES := ["route_22", "route_2", "viridian_forest", "route_2_north", "pewter_city"]
-const FOREST_TRAINERS := ["bug_catcher_rick", "bug_catcher_doug", "bug_catcher_anthony", "bug_catcher_charlie", "bug_catcher_sammy"]
+const FOREST_TRAINERS := [
+	"bug_catcher_rick",
+	"bug_catcher_doug",
+	"bug_catcher_anthony",
+	"bug_catcher_charlie",
+	"bug_catcher_sammy"
+]
 
 var _fails := 0
 var Trainer
@@ -101,7 +107,10 @@ func _arrivals() -> void:
 			await w.go_to_zone(z, sp)
 			await frames(8)
 			var at: Vector3 = b.arrivals[sp]
-			check(p.is_on_floor() and absf(p.global_position.y - at.y) < 0.4, "%s/%s: lands on the ground (%s)" % [z, sp, p.global_position])
+			check(
+				p.is_on_floor() and absf(p.global_position.y - at.y) < 0.4,
+				"%s/%s: lands on the ground (%s)" % [z, sp, p.global_position]
+			)
 
 
 func _streaming_north() -> void:
@@ -109,13 +118,27 @@ func _streaming_north() -> void:
 	await w.go_to_zone("viridian_city", "vc_north")
 	await frames(10)
 	p.global_position = Vector3(0, 0.3, -200)
-	check(await until(func(): return w.active_zone == "route_2", 10.0), "walks into Route 2 (%s)" % w.active_zone)
+	check(
+		await until(func(): return w.active_zone == "route_2", 10.0),
+		"walks into Route 2 (%s)" % w.active_zone
+	)
 	p.global_position = Vector3(5, 0.3, -232)
-	check(await until(func(): return w.builders.has("viridian_forest") and w.builders.viridian_forest.is_built, 30.0),
-			"Viridian Forest streams in near the gate")
+	check(
+		await until(
+			func():
+				return w.builders.has("viridian_forest") and w.builders.viridian_forest.is_built,
+			30.0
+		),
+		"Viridian Forest streams in near the gate"
+	)
 	var b = w.builders.route_2
-	check(b.get_node_or_null("Door_forest_gate") != null and b.get_node_or_null("BackDoor_forest_gate") != null,
-			"Route 2 gatehouse has front and back doors")
+	check(
+		(
+			b.get_node_or_null("Door_forest_gate") != null
+			and b.get_node_or_null("BackDoor_forest_gate") != null
+		),
+		"Route 2 gatehouse has front and back doors"
+	)
 
 
 func _forest() -> void:
@@ -125,7 +148,10 @@ func _forest() -> void:
 	await frames(20)
 	var b = w.builders.viridian_forest
 	var c: Dictionary = b.counts
-	check(int(c.get("trees", 0)) > 1000 and int(c.get("tall_grass", 0)) >= 30, "forest is dense (%d trees, %d grass)" % [c.get("trees", 0), c.get("tall_grass", 0)])
+	check(
+		int(c.get("trees", 0)) > 1000 and int(c.get("tall_grass", 0)) >= 30,
+		"forest is dense (%d trees, %d grass)" % [c.get("trees", 0), c.get("tall_grass", 0)]
+	)
 	var mm := 0
 	for n in b.get_children():
 		if n is MultiMeshInstance3D:
@@ -137,7 +163,13 @@ func _forest() -> void:
 			found.append(n.trainer_id)
 	for id in FOREST_TRAINERS:
 		check(found.has(id), "forest trainer %s placed" % id)
-	check(not w.builders.has("route_1") or not w.builders.route_1.find_children("Trainer_Rick", "", true, false).size() > 0, "Rick moved off Route 1")
+	check(
+		(
+			not w.builders.has("route_1")
+			or not w.builders.route_1.find_children("Trainer_Rick", "", true, false).size() > 0
+		),
+		"Rick moved off Route 1"
+	)
 	var tables := {}
 	for g in b.get_children():
 		if g.has_method("table"):
@@ -152,10 +184,14 @@ func _forest() -> void:
 	check(wild > 0, "visible wild mons in the forest (%d)" % wild)
 	for z in ["route_22", "route_2", "route_2_north", "pewter_city"]:
 		var tb := {}
-		for f in Builder.load_map(z).get("spawn_zones", []) + Builder.load_map(z).get("tall_grass", []):
+		for f in (
+			Builder.load_map(z).get("spawn_zones", []) + Builder.load_map(z).get("tall_grass", [])
+		):
 			tb[String(f.get("table", z))] = true
 		for t in tb:
-			check(not DexS.encounter_table(t).is_empty(), "%s: encounter table '%s' exists" % [z, t])
+			check(
+				not DexS.encounter_table(t).is_empty(), "%s: encounter table '%s' exists" % [z, t]
+			)
 
 
 func _pewter_east() -> void:
@@ -170,7 +206,10 @@ func _pewter_east() -> void:
 	await frames(240)
 	Input.action_release("move_right")
 	await until(func(): return st == null or not st.is_running(), 10.0)
-	check(p.global_position.x < 47.0 and w.zone_at(p.global_position) == "pewter_city", "east exit stays closed (x %.1f)" % p.global_position.x)
+	check(
+		p.global_position.x < 47.0 and w.zone_at(p.global_position) == "pewter_city",
+		"east exit stays closed (x %.1f)" % p.global_position.x
+	)
 	if st:
 		st.auto_advance = false
 
@@ -189,11 +228,23 @@ func _rival_route22() -> void:
 	check(rival != null and not rival.visible, "Route 22 rival hidden before the Pokédex")
 	game.flags["has_pokedex"] = true
 	await frames(5)
-	check(rival.visible and rival.npc_name == "GARY", "rival appears after the Pokédex, named {RIVAL} (%s)" % rival.npc_name)
+	check(
+		rival.visible and rival.npc_name == "GARY",
+		"rival appears after the Pokédex, named {RIVAL} (%s)" % rival.npc_name
+	)
 	p.global_position = rival.global_position + Vector3(0, 0.3, 3.0)
-	check(await until(func(): return game.is_busy(), 10.0), "rival spots the player and starts the battle")
-	check(await until(func(): return game.flags.get("rival2_done", false), 180.0), "rival battle finishes (rival2_done)")
-	check(game.flags.get("rival2_won", false) and game.flags.get("trainer_rival_blue_route22", false), "won against the rival")
+	check(
+		await until(func(): return game.is_busy(), 10.0),
+		"rival spots the player and starts the battle"
+	)
+	check(
+		await until(func(): return game.flags.get("rival2_done", false), 180.0),
+		"rival battle finishes (rival2_done)"
+	)
+	check(
+		game.flags.get("rival2_won", false) and game.flags.get("trainer_rival_blue_route22", false),
+		"won against the rival"
+	)
 	var wr: WeakRef = weakref(rival)
 	check(await until(func(): return wr.get_ref() == null, 20.0), "rival walks off and is removed")
 	await frames(5)

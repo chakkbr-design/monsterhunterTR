@@ -104,7 +104,9 @@ func can_see(p: OverworldPlayer) -> bool:
 
 
 func _sight_clear(p: OverworldPlayer) -> bool:
-	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP, p.global_position + Vector3.UP, Overworld.WALL_LAYER)
+	var q := PhysicsRayQueryParameters3D.create(
+		global_position + Vector3.UP, p.global_position + Vector3.UP, Overworld.WALL_LAYER
+	)
 	q.exclude = [get_rid(), p.get_rid()]
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 

@@ -7,20 +7,51 @@ extends CanvasLayer
 
 const Kit := preload("res://ui/ui_kit.gd")
 const Settings := preload("res://ui/front/settings.gd")
-const CATS := [["medicine", "Remédios"], ["berries", "Frutas"], ["tm", "MTs"], ["balls", "Pokébolas"], ["key", "Itens-chave"]]
+const CATS := [
+	["medicine", "Remédios"],
+	["berries", "Frutas"],
+	["tm", "MTs"],
+	["balls", "Pokébolas"],
+	["key", "Itens-chave"]
+]
 const SUMMARY_PAGES := ["INFO", "HABILIDADES", "GOLPES"]
-const BADGES := [["boulder", "ROCHA", "9aa0a8"], ["cascade", "CASCATA", "58a0e8"], ["thunder", "TROVÃO", "e8b030"],
-	["rainbow", "ARCO-ÍRIS", "68c070"], ["soul", "ALMA", "e078b0"], ["marsh", "PÂNTANO", "d8b848"],
-	["volcano", "VULCÃO", "e0503a"], ["earth", "TERRA", "70a050"]]
+const BADGES := [
+	["boulder", "ROCHA", "9aa0a8"],
+	["cascade", "CASCATA", "58a0e8"],
+	["thunder", "TROVÃO", "e8b030"],
+	["rainbow", "ARCO-ÍRIS", "68c070"],
+	["soul", "ALMA", "e078b0"],
+	["marsh", "PÂNTANO", "d8b848"],
+	["volcano", "VULCÃO", "e0503a"],
+	["earth", "TERRA", "70a050"]
+]
 const PORTRAIT := "res://original/assets/sprites/trainer.png"
 const PORTRAIT_GREEN := "res://original/assets/sprites/trainer_green.png"
 const PORTRAIT_FRAME := Rect2(8, 11, 16, 20)
 const DEX_ROWS := 11
 const CONTROLS := [
-	["MUNDO", [["Andar", "WASD/Setas"], ["Correr", "Shift"], ["Pular", "Espaço"], ["Interagir", "E"],
-		["Girar câmera", "Z/C"], ["Menu", "Esc"]]],
-	["BATALHA", [["Golpes", "1-4"], ["Jogar Pokébola", "Q"], ["Trocar Pokémon", "Tab"], ["Fugir", "R"],
-		["Modo do aliado", "F"], ["Bolsa rápida", "E"]]],
+	[
+		"MUNDO",
+		[
+			["Andar", "WASD/Setas"],
+			["Correr", "Shift"],
+			["Pular", "Espaço"],
+			["Interagir", "E"],
+			["Girar câmera", "Z/C"],
+			["Menu", "Esc"]
+		]
+	],
+	[
+		"BATALHA",
+		[
+			["Golpes", "1-4"],
+			["Jogar Pokébola", "Q"],
+			["Trocar Pokémon", "Tab"],
+			["Fugir", "R"],
+			["Modo do aliado", "F"],
+			["Bolsa rápida", "E"]
+		]
+	],
 	["MENUS", [["Navegar", "Setas/WASD"], ["Confirmar", "E/Enter"], ["Voltar", "Esc/Q"]]],
 ]
 
@@ -87,7 +118,14 @@ func _learn_open() -> bool:
 
 
 func open() -> bool:
-	if screen != "" or game == null or game.is_busy() or _learn_open() or _story_running() or _other_open():
+	if (
+		screen != ""
+		or game == null
+		or game.is_busy()
+		or _learn_open()
+		or _story_running()
+		or _other_open()
+	):
 		return false
 	_root.visible = true
 	_main_cur = maxi(0, entries().find("pokemon"))
@@ -130,19 +168,30 @@ func entries() -> Array:
 
 func _entry_label(id: String) -> String:
 	match id:
-		"pokedex": return "POKéDEX"
-		"pokemon": return "POKéMON"
-		"bag": return "BOLSA"
-		"trainer": return String(game.player_name).to_upper()
-		"save": return "SALVAR"
-		"options": return "OPÇÕES"
+		"pokedex":
+			return "POKéDEX"
+		"pokemon":
+			return "POKéMON"
+		"bag":
+			return "BOLSA"
+		"trainer":
+			return String(game.player_name).to_upper()
+		"save":
+			return "SALVAR"
+		"options":
+			return "OPÇÕES"
 	return "FECHAR"
 
 
 func _unhandled_input(ev: InputEvent) -> void:
 	if screen != "":
 		return
-	var esc: bool = ev is InputEventKey and ev.pressed and not ev.echo and (ev.physical_keycode == KEY_ESCAPE or ev.keycode == KEY_ESCAPE)
+	var esc: bool = (
+		ev is InputEventKey
+		and ev.pressed
+		and not ev.echo
+		and (ev.physical_keycode == KEY_ESCAPE or ev.keycode == KEY_ESCAPE)
+	)
 	if esc or (InputMap.has_action("pause") and ev.is_action_pressed("pause")):
 		if open():
 			get_viewport().set_input_as_handled()
@@ -265,7 +314,9 @@ func press(a: String) -> void:
 				_go("main")
 				return
 			if _opt_cur == 0 and (a == "left" or a == "right"):
-				_settings.volume = clampi(int(_settings.volume) + (10 if a == "right" else -10), 0, 100)
+				_settings.volume = clampi(
+					int(_settings.volume) + (10 if a == "right" else -10), 0, 100
+				)
 				_apply_settings()
 			elif _opt_cur == 1 and a in ["left", "right", "ok"]:
 				_settings.fullscreen = not _settings.fullscreen
@@ -305,11 +356,16 @@ func _msg(text: String, back: String) -> void:
 
 func _cursor() -> int:
 	match screen:
-		"main": return _main_cur
-		"party", "summary", "target": return _party_cur
-		"bag": return _bag_cur
-		"dex", "dex_entry": return _dex_cur
-		"options": return _opt_cur
+		"main":
+			return _main_cur
+		"party", "summary", "target":
+			return _party_cur
+		"bag":
+			return _bag_cur
+		"dex", "dex_entry":
+			return _dex_cur
+		"options":
+			return _opt_cur
 	return 0
 
 
@@ -389,6 +445,7 @@ func _items() -> Array:
 
 # --- Pokédex ---
 
+
 ## Lista do nº 1 até o maior nº visto; espécies não vistas ficam como "-----".
 func _build_dex() -> void:
 	var by_no := {}
@@ -449,7 +506,9 @@ func _area_names(species: String) -> Array:
 			for f in dir.get_files():
 				if not f.ends_with(".json"):
 					continue
-				var data = JSON.parse_string(FileAccess.get_file_as_string("res://data/encounters/" + f))
+				var data = JSON.parse_string(
+					FileAccess.get_file_as_string("res://data/encounters/" + f)
+				)
 				if not data is Dictionary:
 					continue
 				var area := String(data.get("area", f.get_basename()))
@@ -469,6 +528,7 @@ func has_badge(id: String) -> bool:
 
 
 # --- Desenho (refeito a cada tecla) ---
+
 
 func _vp() -> Vector2:
 	return get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(1152, 648)
@@ -511,16 +571,28 @@ func _render() -> void:
 	Kit.clear(_box)
 	var s := screen if screen != "msg" else _back_to
 	match s:
-		"main": _render_main()
-		"party": _render_party("Escolha um Pokémon.", "↑/↓ escolhe · E resumo · Esc volta")
-		"target": _render_party("Usar %s em qual Pokémon?" % Kit.item_name(_item), "↑/↓ escolhe · E usa · Esc volta")
-		"summary": _render_summary()
-		"bag": _render_bag()
-		"dex": _render_dex()
-		"dex_entry": _render_dex_entry()
-		"card": _render_card()
-		"options": _render_options()
-		"controls": _render_controls()
+		"main":
+			_render_main()
+		"party":
+			_render_party("Escolha um Pokémon.", "↑/↓ escolhe · E resumo · Esc volta")
+		"target":
+			_render_party(
+				"Usar %s em qual Pokémon?" % Kit.item_name(_item), "↑/↓ escolhe · E usa · Esc volta"
+			)
+		"summary":
+			_render_summary()
+		"bag":
+			_render_bag()
+		"dex":
+			_render_dex()
+		"dex_entry":
+			_render_dex_entry()
+		"card":
+			_render_card()
+		"options":
+			_render_options()
+		"controls":
+			_render_controls()
 	if screen == "msg":
 		var vp := _vp()
 		var d := Kit.Dialog.new()
@@ -537,7 +609,9 @@ func _render_main() -> void:
 	var col := _add_win("", Vector2(vp.x - 284, 20), Vector2(264, 0), 2)
 	for i in ents.size():
 		col.add_child(Kit.row([_entry_label(ents[i])], [], i == _main_cur))
-	var money := Kit.label("Dinheiro  " + Kit.format_money(int(game.money)), Kit.GREEN, Kit.SIZE_SMALL)
+	var money := Kit.label(
+		"Dinheiro  " + Kit.format_money(int(game.money)), Kit.GREEN, Kit.SIZE_SMALL
+	)
 	money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(money)
 	if screen == "main":
@@ -569,7 +643,19 @@ func _render_party(context: String, hint: String) -> void:
 		top.add_child(Kit.sprite_rect(Kit.mon_front(m.species), Vector2(110, 110)))
 		var info := VBoxContainer.new()
 		info.add_child(Kit.header(m.display_name.to_upper(), Kit.INK, 24))
-		info.add_child(Kit.label("Nv %d · %s" % [m.level, " / ".join(PackedStringArray(m.types.map(func(t): return Kit.type_name(t))))], Kit.DIM, Kit.SIZE_SMALL))
+		info.add_child(
+			Kit.label(
+				(
+					"Nv %d · %s"
+					% [
+						m.level,
+						" / ".join(PackedStringArray(m.types.map(func(t): return Kit.type_name(t))))
+					]
+				),
+				Kit.DIM,
+				Kit.SIZE_SMALL
+			)
+		)
 		info.add_child(Kit.label("HP %d / %d" % [m.hp, m.max_hp], Kit.hp_color(m), Kit.SIZE_SMALL))
 		top.add_child(info)
 		side.add_child(top)
@@ -597,7 +683,9 @@ func _render_summary() -> void:
 	col.add_child(Kit.header("%s     Nv %d" % [m.display_name, m.level]))
 	var tabs: Array = []
 	for i in SUMMARY_PAGES.size():
-		tabs.append(("▶ %s" % SUMMARY_PAGES[i]) if i == summary_page else ("   %s" % SUMMARY_PAGES[i]))
+		tabs.append(
+			("▶ %s" % SUMMARY_PAGES[i]) if i == summary_page else ("   %s" % SUMMARY_PAGES[i])
+		)
 	col.add_child(Kit.label("      ".join(PackedStringArray(tabs)), Kit.BLUE, Kit.SIZE_SMALL))
 	var types := HBoxContainer.new()
 	types.add_theme_constant_override("separation", 6)
@@ -620,10 +708,17 @@ func _render_summary() -> void:
 	body.add_theme_constant_override("separation", 6)
 	root.add_child(body)
 	match summary_page:
-		0: _summary_info(body, m, sp)
-		1: _summary_skills(body, m, sp)
-		_: _summary_moves(body, m)
-	root.add_child(Kit.hint("↑/↓ página · ←/→ Pokémon (%d/%d) · Esc volta" % [_party_cur + 1, game.party.size()]))
+		0:
+			_summary_info(body, m, sp)
+		1:
+			_summary_skills(body, m, sp)
+		_:
+			_summary_moves(body, m)
+	root.add_child(
+		Kit.hint(
+			"↑/↓ página · ←/→ Pokémon (%d/%d) · Esc volta" % [_party_cur + 1, game.party.size()]
+		)
+	)
 
 
 func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
@@ -631,16 +726,37 @@ func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	card[0].size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(card[0])
 	var ab := Dex.ability(m.ability)
-	var nxt := "nível máximo" if m.level >= Growth.MAX_LEVEL else "%d para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
-	card[1].add_child(Kit.info_grid([
-		["Nº", "%03d" % int(sp.get("dex_no", 0))],
-		["Espécie", Dex.canon(m.species)],
-		["Treinador", String(game.player_name)],
-		["Natureza", Kit.nature_text(m.nature)],
-		["Habilidade", String(ab.get("name", m.ability.capitalize())) if m.ability != "" else "—"],
-		["XP", "%d  (%s)" % [m.xp, nxt]],
-		["Pokébola", Kit.item_name(m.ball)],
-	]))
+	var nxt := (
+		"nível máximo"
+		if m.level >= Growth.MAX_LEVEL
+		else "%d para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
+	)
+	(
+		card[1]
+		. add_child(
+			(
+				Kit
+				. info_grid(
+					[
+						["Nº", "%03d" % int(sp.get("dex_no", 0))],
+						["Espécie", Dex.canon(m.species)],
+						["Treinador", String(game.player_name)],
+						["Natureza", Kit.nature_text(m.nature)],
+						[
+							"Habilidade",
+							(
+								String(ab.get("name", m.ability.capitalize()))
+								if m.ability != ""
+								else "—"
+							)
+						],
+						["XP", "%d  (%s)" % [m.xp, nxt]],
+						["Pokébola", Kit.item_name(m.ball)],
+					]
+				)
+			)
+		)
+	)
 
 
 func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
@@ -679,7 +795,17 @@ func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	var eb := Kit.progress(clampi(m.xp - m.exp_this_level, 0, span), span, Kit.PP_BLUE)
 	eb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	exp_head.add_child(eb)
-	exp_head.add_child(Kit.label("nível máximo" if m.level >= Growth.MAX_LEVEL else "%d XP para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1], Kit.DIM, Kit.SIZE_SMALL))
+	exp_head.add_child(
+		Kit.label(
+			(
+				"nível máximo"
+				if m.level >= Growth.MAX_LEVEL
+				else "%d XP para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
+			),
+			Kit.DIM,
+			Kit.SIZE_SMALL
+		)
+	)
 
 
 func _summary_moves(body: VBoxContainer, m: Mon) -> void:
@@ -708,8 +834,12 @@ func _summary_moves(body: VBoxContainer, m: Mon) -> void:
 		h.add_child(tg)
 		var power := int(mv.get("power", 0))
 		var acc := int(mv.get("accuracy", 0))
-		for kv in [["PP", "%d" % int(round(Dex.pp_cost(mv))), Kit.PP_BLUE], ["PODER", str(power) if power > 0 else "—", Kit.INK],
-				["PREC.", ("%d%%" % acc) if acc > 0 else "—", Kit.INK], ["", Kit.CATEGORIES.get(mv.get("category", ""), "?"), Kit.DIM]]:
+		for kv in [
+			["PP", "%d" % int(round(Dex.pp_cost(mv))), Kit.PP_BLUE],
+			["PODER", str(power) if power > 0 else "—", Kit.INK],
+			["PREC.", ("%d%%" % acc) if acc > 0 else "—", Kit.INK],
+			["", Kit.CATEGORIES.get(mv.get("category", ""), "?"), Kit.DIM]
+		]:
 			var l := Kit.label(("%s %s" % [kv[0], kv[1]]).strip_edges(), kv[2], Kit.SIZE_SMALL)
 			l.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
 			h.add_child(l)
@@ -727,7 +857,7 @@ func _render_bag() -> void:
 	var vp := _vp()
 	_dim(0.3)
 	var size := Vector2(minf(680.0, vp.x - 40.0), minf(560.0, vp.y - 90.0))
-	var pos := Vector2(((vp.x - size.x) * 0.5), 34).floor()
+	var pos := Vector2((vp.x - size.x) * 0.5, 34).floor()
 	var v := _add_win("BOLSA", pos, size, 10)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
@@ -749,7 +879,11 @@ func _render_bag() -> void:
 		if cats.has(e[0]):
 			var on: bool = e[0] == _cat
 			var p := PanelContainer.new()
-			var sb := Kit.pill(Kit.RED_SOFT if on else Color(Kit.INK, 0.0), Kit.RED if on else Color.TRANSPARENT, 10)
+			var sb := Kit.pill(
+				Kit.RED_SOFT if on else Color(Kit.INK, 0.0),
+				Kit.RED if on else Color.TRANSPARENT,
+				10
+			)
 			sb.content_margin_left = 12
 			sb.content_margin_right = 12
 			sb.content_margin_top = 2
@@ -768,7 +902,13 @@ func _render_bag() -> void:
 	var first := clampi(_bag_cur - 6, 0, maxi(items.size() - 8, 0))
 	for i in range(first, mini(items.size(), first + 8)):
 		var id: String = items[i]
-		list.add_child(Kit.row([Kit.ItemIcon.new(id, 30), Kit.item_name(id), ["×%d" % int(game.bag[id]), Kit.DIM]], [30, 380], i == _bag_cur))
+		list.add_child(
+			Kit.row(
+				[Kit.ItemIcon.new(id, 30), Kit.item_name(id), ["×%d" % int(game.bag[id]), Kit.DIM]],
+				[30, 380],
+				i == _bag_cur
+			)
+		)
 	var desc_box := PanelContainer.new()
 	var sb2 := Kit.pill(Kit.PAPER, Kit.RIM, 8)
 	sb2.set_border_width_all(2)
@@ -778,7 +918,15 @@ func _render_bag() -> void:
 	sb2.content_margin_bottom = 6
 	desc_box.add_theme_stylebox_override("panel", sb2)
 	desc_box.custom_minimum_size = Vector2(0, 62)
-	var d := Kit.label(String(Dex.item(items[clampi(_bag_cur, 0, items.size() - 1)]).get("description", "")) if not items.is_empty() else "", Kit.INK, Kit.SIZE_SMALL)
+	var d := Kit.label(
+		(
+			String(Dex.item(items[clampi(_bag_cur, 0, items.size() - 1)]).get("description", ""))
+			if not items.is_empty()
+			else ""
+		),
+		Kit.INK,
+		Kit.SIZE_SMALL
+	)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_box.add_child(d)
 	v.add_child(desc_box)
@@ -809,9 +957,16 @@ func _render_dex() -> void:
 			mark.custom_minimum_size = Vector2(22, 22)
 			if e.caught:
 				mark = Kit.ItemIcon.new("poke_ball", 22)
-			var ic := Kit.sprite_rect(Kit.mon_front(sp) if sp != "" else null, Vector2(30, 30), sp != "" and not e.caught)
-			var nm := [sp if sp != "" else "-----", Kit.RED if i == _dex_cur else (Kit.INK if sp != "" else Kit.DIM)]
-			list.add_child(Kit.row([["%03d" % int(e.no), Kit.DIM], mark, ic, nm], [50, 22, 30], i == _dex_cur))
+			var ic := Kit.sprite_rect(
+				Kit.mon_front(sp) if sp != "" else null, Vector2(30, 30), sp != "" and not e.caught
+			)
+			var nm := [
+				sp if sp != "" else "-----",
+				Kit.RED if i == _dex_cur else (Kit.INK if sp != "" else Kit.DIM)
+			]
+			list.add_child(
+				Kit.row([["%03d" % int(e.no), Kit.DIM], mark, ic, nm], [50, 22, 30], i == _dex_cur)
+			)
 	v.add_child(Kit.hint("↑/↓ move · E abre · Esc fecha"))
 
 
@@ -837,22 +992,55 @@ func _render_dex_entry() -> void:
 	top.add_child(info)
 	info.add_child(Kit.label("Nº %03d" % int(sp.get("dex_no", 0)), Kit.BLUE, 18))
 	info.add_child(Kit.header(sp_name.to_upper(), Kit.INK, 30))
-	info.add_child(Kit.label(String(sp.get("category", "")).replace("Pokémon", "Pokémon"), Kit.INK, 18))
+	info.add_child(
+		Kit.label(String(sp.get("category", "")).replace("Pokémon", "Pokémon"), Kit.INK, 18)
+	)
 	if caught:
 		var types := HBoxContainer.new()
 		types.add_theme_constant_override("separation", 8)
 		for t in sp.get("types", []):
 			types.add_child(Kit.tag(Kit.type_name(String(t)), Kit.type_col(String(t))))
 		info.add_child(types)
-	info.add_child(Kit.label("ALTURA   %s m" % (("%.1f" % float(sp.get("height_m", 0.0))) if caught else "??"), Kit.INK, 18))
-	info.add_child(Kit.label("PESO     %s kg" % (("%.1f" % float(sp.get("weight_kg", 0.0))) if caught else "??"), Kit.INK, 18))
-	info.add_child(Kit.label("CAPTURADO" if caught else "SÓ VISTO", Kit.GREEN if caught else Kit.DIM, Kit.SIZE_SMALL))
-	var fl := Kit.label(String(sp.get("flavor", "")) if caught else "Capture este Pokémon para ver os dados completos.", Kit.INK if caught else Kit.DIM, 18)
+	info.add_child(
+		Kit.label(
+			"ALTURA   %s m" % (("%.1f" % float(sp.get("height_m", 0.0))) if caught else "??"),
+			Kit.INK,
+			18
+		)
+	)
+	info.add_child(
+		Kit.label(
+			"PESO     %s kg" % (("%.1f" % float(sp.get("weight_kg", 0.0))) if caught else "??"),
+			Kit.INK,
+			18
+		)
+	)
+	info.add_child(
+		Kit.label(
+			"CAPTURADO" if caught else "SÓ VISTO", Kit.GREEN if caught else Kit.DIM, Kit.SIZE_SMALL
+		)
+	)
+	var fl := Kit.label(
+		(
+			String(sp.get("flavor", ""))
+			if caught
+			else "Capture este Pokémon para ver os dados completos."
+		),
+		Kit.INK if caught else Kit.DIM,
+		18
+	)
 	fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	fl.custom_minimum_size = Vector2(0, 60)
 	v.add_child(fl)
 	var areas := _area_names(sp_name)
-	var ar := Kit.label("ÁREA   %s" % ("  ·  ".join(PackedStringArray(areas)) if not areas.is_empty() else "Desconhecida"), Kit.INK, 16)
+	var ar := Kit.label(
+		(
+			"ÁREA   %s"
+			% ("  ·  ".join(PackedStringArray(areas)) if not areas.is_empty() else "Desconhecida")
+		),
+		Kit.INK,
+		16
+	)
 	ar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ar.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(ar)
@@ -860,7 +1048,8 @@ func _render_dex_entry() -> void:
 
 
 ## Insígnia: textura do original quando existir; senão o octógono desenhado (cinza se não ganha).
-class BadgeSlot extends Control:
+class BadgeSlot:
+	extends Control
 	var badge_id := ""
 	var earned := false
 	var col := Color.GRAY
@@ -877,7 +1066,12 @@ class BadgeSlot extends Control:
 		var r := minf(size.x, size.y) * 0.42
 		var tex: Texture2D = K.badge_texture(badge_id)
 		if tex:
-			draw_texture_rect(tex, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, Color.WHITE if earned else Color(0.2, 0.22, 0.26, 0.5))
+			draw_texture_rect(
+				tex,
+				Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0),
+				false,
+				Color.WHITE if earned else Color(0.2, 0.22, 0.26, 0.5)
+			)
 		else:
 			var pts := _ring(c, r)
 			if earned:
@@ -889,9 +1083,21 @@ class BadgeSlot extends Control:
 		if earned:
 			var s := r * (0.2 + 0.05 * sin(_t * 3.0))
 			var p := c + Vector2(r * 0.42, -r * 0.42)
-			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -s * 2), p + Vector2(s * 0.5, -s * 0.5), p + Vector2(s * 2, 0),
-				p + Vector2(s * 0.5, s * 0.5), p + Vector2(0, s * 2), p + Vector2(-s * 0.5, s * 0.5),
-				p + Vector2(-s * 2, 0), p + Vector2(-s * 0.5, -s * 0.5)]), Color(1, 1, 1, 0.85))
+			draw_colored_polygon(
+				PackedVector2Array(
+					[
+						p + Vector2(0, -s * 2),
+						p + Vector2(s * 0.5, -s * 0.5),
+						p + Vector2(s * 2, 0),
+						p + Vector2(s * 0.5, s * 0.5),
+						p + Vector2(0, s * 2),
+						p + Vector2(-s * 0.5, s * 0.5),
+						p + Vector2(-s * 2, 0),
+						p + Vector2(-s * 0.5, -s * 0.5)
+					]
+				),
+				Color(1, 1, 1, 0.85)
+			)
 
 	func _ring(c: Vector2, r: float) -> PackedVector2Array:
 		var pts := PackedVector2Array()
@@ -914,11 +1120,19 @@ func _render_card() -> void:
 		frame.add_theme_stylebox_override("panel", fsb)
 		frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		var green := String(game.player_gender) == "female"
-		frame.add_child(Kit.sprite_rect(Kit.sheet_frame(PORTRAIT_GREEN if green else PORTRAIT, PORTRAIT_FRAME), Vector2(96, 120)))
+		frame.add_child(
+			Kit.sprite_rect(
+				Kit.sheet_frame(PORTRAIT_GREEN if green else PORTRAIT, PORTRAIT_FRAME),
+				Vector2(96, 120)
+			)
+		)
 		h.add_child(frame)
-		var rows := [["NOME", String(game.player_name)], ["RIVAL", String(game.rival_name)],
+		var rows := [
+			["NOME", String(game.player_name)],
+			["RIVAL", String(game.rival_name)],
 			["Nº ID", "%05d" % (absi(String(game.player_name).hash()) % 100000)],
-			["DINHEIRO", Kit.format_money(int(game.money))]]
+			["DINHEIRO", Kit.format_money(int(game.money))]
+		]
 		if game.flags.get("has_pokedex", false):
 			rows.append(["POKéDEX", "%d capturados" % dex_counts().y])
 		rows.append(["TEMPO", Kit.format_time(float(game.play_time))])
@@ -958,8 +1172,14 @@ func _render_card() -> void:
 func _render_options() -> void:
 	_dim()
 	var v := _centered("OPÇÕES", Vector2(600, 0), 6)
-	v.add_child(Kit.option_row("VOLUME", "volume", int(_settings.get("volume", 80)) / 10, "", _opt_cur == 0))
-	v.add_child(Kit.option_row("TELA CHEIA", "toggle", bool(_settings.get("fullscreen", false)), "", _opt_cur == 1))
+	v.add_child(
+		Kit.option_row("VOLUME", "volume", int(_settings.get("volume", 80)) / 10, "", _opt_cur == 0)
+	)
+	v.add_child(
+		Kit.option_row(
+			"TELA CHEIA", "toggle", bool(_settings.get("fullscreen", false)), "", _opt_cur == 1
+		)
+	)
 	v.add_child(Kit.option_row("CONTROLES", "action", 0, "", _opt_cur == 2))
 	v.add_child(Kit.option_row("VOLTAR", "action", 0, "", _opt_cur == 3))
 	v.add_child(Kit.hint("↑/↓ escolhe · ←/→ muda · E abre · Esc volta"))

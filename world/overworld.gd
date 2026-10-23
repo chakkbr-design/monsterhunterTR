@@ -25,7 +25,9 @@ static func hud_of(n: Node) -> WorldHud:
 
 
 static func mon_from_entry(entry: Dictionary, rng: RandomNumberGenerator) -> Mon:
-	return Mon.create(String(entry.get("species", "Bulbasaur")), WildTable.level_for(entry, rng), rng)
+	return Mon.create(
+		String(entry.get("species", "Bulbasaur")), WildTable.level_for(entry, rng), rng
+	)
 
 
 func _enter_tree() -> void:
@@ -63,7 +65,19 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	var outcome := String(_result.get("outcome", "?"))
 	var hud := hud_of(self)
 	if hud:
-		var lines := PackedStringArray([{"win": "Vitória!", "lose": "Você perdeu...", "run": "Fugiu.", "caught": "Capturado!"}.get(outcome, outcome)])
+		var lines := PackedStringArray(
+			[
+				(
+					{
+						"win": "Vitória!",
+						"lose": "Você perdeu...",
+						"run": "Fugiu.",
+						"caught": "Capturado!"
+					}
+					. get(outcome, outcome)
+				)
+			]
+		)
 		if _result.has("prize"):
 			lines.append("Ganhou P%d." % int(_result.prize))
 		for e in _result.get("evolved", []):
@@ -85,7 +99,9 @@ func _white_out(p: OverworldPlayer) -> void:
 
 ## True when solid world geometry lies within 3 m below `at` (ground, terrace, interior floor).
 func _ground_under(at: Vector3) -> bool:
-	var q := PhysicsRayQueryParameters3D.create(at + Vector3.UP, at + Vector3.DOWN * 3.0, WALL_LAYER)
+	var q := PhysicsRayQueryParameters3D.create(
+		at + Vector3.UP, at + Vector3.DOWN * 3.0, WALL_LAYER
+	)
 	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 

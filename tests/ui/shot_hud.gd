@@ -32,7 +32,11 @@ func _run() -> void:
 	_game.player_name = "Ana"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
-	_game.party = [Mon.create("Charmander", 12, rng), Mon.create("Pidgey", 7, rng), Mon.create("Rattata", 5, rng)]
+	_game.party = [
+		Mon.create("Charmander", 12, rng),
+		Mon.create("Pidgey", 7, rng),
+		Mon.create("Rattata", 5, rng)
+	]
 	_game.party[1].hp = int(_game.party[1].max_hp * 0.35)
 	_game.party[2].hp = 0
 	_game.party[0].pp = _game.party[0].pp_base * 0.6
@@ -46,7 +50,17 @@ func _run() -> void:
 	await _wait(10)
 	await _shot("ui_hud")
 	hud.set_prompt("")
-	hud.say("Mamãe", PackedStringArray(["Bom dia, Ana! O Professor Carvalho passou aqui procurando por você. Ele disse que tem algo importante para te mostrar!"]))
+	(
+		hud
+		. say(
+			"Mamãe",
+			PackedStringArray(
+				[
+					"Bom dia, Ana! O Professor Carvalho passou aqui procurando por você. Ele disse que tem algo importante para te mostrar!"
+				]
+			)
+		)
+	)
 	await _wait(150)
 	await _shot("ui_hud_dialog")
 	quit()

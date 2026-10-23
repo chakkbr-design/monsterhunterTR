@@ -6,10 +6,10 @@ extends CanvasLayer
 ## A LearnMove espera esta tela terminar a fila (golpes que não couberam na evolução vêm depois).
 
 const Kit := preload("res://ui/ui_kit.gd")
-const INTRO := 1.4      # segundos mostrando "O quê?..." antes da animação (E/Enter pula)
-const DURATION := 5.0   # animação inteira, como no original
-const BURST := 1.2      # duração do clarão final
-const MSG_MIN := 0.4    # tempo mínimo na mensagem final antes de aceitar a tecla
+const INTRO := 1.4  # segundos mostrando "O quê?..." antes da animação (E/Enter pula)
+const DURATION := 5.0  # animação inteira, como no original
+const BURST := 1.2  # duração do clarão final
+const MSG_MIN := 0.4  # tempo mínimo na mensagem final antes de aceitar a tecla
 
 ## Instâncias injetáveis (testes). Vazias = autoloads /root/Game e /root/LearnMove.
 var game: Node = null
@@ -28,14 +28,16 @@ var _stage: Control
 var _label: Label
 var _hint: Control
 var _closed_at := -1
-var _parts: Array = []   # partículas: {p: Vector2 (polar a, r) ou pos, v, life, max, size, out}
+var _parts: Array = []  # partículas: {p: Vector2 (polar a, r) ou pos, v, life, max, size, out}
 var _rng := RandomNumberGenerator.new()
 var _spawn_acc := 0.0
 
 
 ## Desenha a cena no próprio Control (o CanvasLayer não tem _draw).
-class Stage extends Control:
+class Stage:
+	extends Control
 	var ui: Node
+
 	func _draw() -> void:
 		ui._draw_stage(self)
 
@@ -110,7 +112,7 @@ func _try_open() -> void:
 		if m.evolution_target() != "" and not m.is_fainted():
 			_begin(m)
 			return
-		game.pending_evolutions.erase(m)   # não pode mais evoluir: só sai da fila
+		game.pending_evolutions.erase(m)  # não pode mais evoluir: só sai da fila
 
 
 func _begin(m: Mon) -> void:
@@ -211,8 +213,16 @@ func _complete() -> void:
 	for i in 70:
 		var a := _rng.randf() * TAU
 		var sp := _rng.randf_range(120.0, 420.0)
-		_parts.append({"pos": Vector2.ZERO, "v": Vector2.from_angle(a) * sp, "life": 0.0,
-			"max": _rng.randf_range(0.7, 1.4), "size": _rng.randf_range(2.0, 5.0), "out": true})
+		_parts.append(
+			{
+				"pos": Vector2.ZERO,
+				"v": Vector2.from_angle(a) * sp,
+				"life": 0.0,
+				"max": _rng.randf_range(0.7, 1.4),
+				"size": _rng.randf_range(2.0, 5.0),
+				"out": true
+			}
+		)
 
 
 func _cancel() -> void:
@@ -239,11 +249,20 @@ func _close() -> void:
 
 # --- Partículas ---------------------------------------------------------------
 
+
 ## Brilhos que nascem num anel e espiralam para o Pokémon.
 func _spawn_inward() -> void:
-	_parts.append({"a": _rng.randf() * TAU, "r": _rng.randf_range(220.0, 320.0), "life": 0.0,
-		"max": _rng.randf_range(0.8, 1.4), "size": _rng.randf_range(1.5, 4.0), "out": false,
-		"spin": _rng.randf_range(1.0, 2.5)})
+	_parts.append(
+		{
+			"a": _rng.randf() * TAU,
+			"r": _rng.randf_range(220.0, 320.0),
+			"life": 0.0,
+			"max": _rng.randf_range(0.8, 1.4),
+			"size": _rng.randf_range(1.5, 4.0),
+			"out": false,
+			"spin": _rng.randf_range(1.0, 2.5)
+		}
+	)
 
 
 func _update_parts(dt: float) -> void:
@@ -263,6 +282,7 @@ func _update_parts(dt: float) -> void:
 
 # --- Desenho ------------------------------------------------------------------
 
+
 func _draw_stage(c: Control) -> void:
 	if state == "" or mon == null:
 		return
@@ -270,9 +290,9 @@ func _draw_stage(c: Control) -> void:
 	var base := minf(c.size.x, c.size.y) * 0.17
 	var old_col := _type_color(from_species)
 	var new_col := _type_color(into)
-	var glow := 0.0        # quanto a silhueta já está "acesa" (0..1)
+	var glow := 0.0  # quanto a silhueta já está "acesa" (0..1)
 	var show_new := false
-	var light := 0.0       # brilho do halo atrás
+	var light := 0.0  # brilho do halo atrás
 
 	match state:
 		"intro":
@@ -307,7 +327,11 @@ func _draw_stage(c: Control) -> void:
 	if tex:
 		# Sprite do original; o brilho (modulate acima de 1) o deixa branco como na evolução clássica.
 		var px := floorf(base * 2.6 / tex.get_height()) * tex.get_height()
-		var ts := Vector2(tex.get_width(), tex.get_height()) * (px / tex.get_height()) * (1.0 if show_new else 0.9)
+		var ts := (
+			Vector2(tex.get_width(), tex.get_height())
+			* (px / tex.get_height())
+			* (1.0 if show_new else 0.9)
+		)
 		var w := 1.0 + glow * 6.0
 		c.draw_texture_rect(tex, Rect2(center - ts * 0.5, ts), false, Color(w, w, w))
 	else:
@@ -332,7 +356,13 @@ func _draw_stage(c: Control) -> void:
 		c.draw_arc(center, ring, 0.0, TAU, 64, Color(1, 0.95, 0.7, b), 6.0 * b + 1.0, true)
 		for i in 12:
 			var dir := Vector2.from_angle(i * TAU / 12.0 + t)
-			c.draw_line(center + dir * base * 1.3, center + dir * ring * 1.4, Color(1, 1, 0.85, 0.6 * b), 3.0, true)
+			c.draw_line(
+				center + dir * base * 1.3,
+				center + dir * ring * 1.4,
+				Color(1, 1, 0.85, 0.6 * b),
+				3.0,
+				true
+			)
 
 
 func _main_type(species: String) -> String:
@@ -355,7 +385,7 @@ func _shape(species: String, center: Vector2, s: float) -> PackedVector2Array:
 	var stage := 0.0
 	var evo: Dictionary = Dex.species(species).get("evolution", {})
 	if evo.is_empty():
-		stage = 1.0   # forma final: mais detalhes
+		stage = 1.0  # forma final: mais detalhes
 	var out := PackedVector2Array()
 	var n := 120
 	for i in n:
@@ -375,26 +405,40 @@ func _bump(th: float, at: float, width: float) -> float:
 func _radius(type: String, th: float) -> float:
 	var up := -PI / 2.0
 	match type:
-		"fire":   # chama: ponta alta e duas línguas laterais
-			return 0.7 + 0.75 * _bump(th, up, 0.3) + 0.35 * _bump(th, up - 0.85, 0.18) + 0.35 * _bump(th, up + 0.85, 0.18)
+		"fire":  # chama: ponta alta e duas línguas laterais
+			return (
+				0.7
+				+ 0.75 * _bump(th, up, 0.3)
+				+ 0.35 * _bump(th, up - 0.85, 0.18)
+				+ 0.35 * _bump(th, up + 0.85, 0.18)
+			)
 		"water":  # gota
 			return 0.75 + 0.7 * _bump(th, up, 0.22)
-		"grass", "bug":   # folha inclinada
+		"grass", "bug":  # folha inclinada
 			var phi := th + PI / 4.0
-			return 1.15 / sqrt(pow(cos(phi) / 1.0, 2.0) + pow(sin(phi) / 0.5, 2.0)) * (1.0 + 0.25 * _bump(th, -PI / 4.0, 0.2))
-		"electric":   # estrela serrilhada
+			return (
+				1.15
+				/ sqrt(pow(cos(phi) / 1.0, 2.0) + pow(sin(phi) / 0.5, 2.0))
+				* (1.0 + 0.25 * _bump(th, -PI / 4.0, 0.2))
+			)
+		"electric":  # estrela serrilhada
 			var tri := absf(fmod((th + PI) * 7.0 / TAU, 1.0) - 0.5) * 2.0
 			return 0.6 + 0.55 * tri
-		"rock", "ground", "steel":   # hexágono
+		"rock", "ground", "steel":  # hexágono
 			var seg := PI / 3.0
 			return 0.95 * cos(seg / 2.0) / cos(fposmod(th, seg) - seg / 2.0)
-		"ice":   # floco de seis pontas
+		"ice":  # floco de seis pontas
 			return 0.65 + 0.45 * pow(absf(cos(3.0 * th)), 4.0)
-		"poison", "ghost", "dark", "psychic":   # fantasma: topo redondo, barra ondulada
+		"poison", "ghost", "dark", "psychic":  # fantasma: topo redondo, barra ondulada
 			return 1.0 if sin(th) < 0.0 else 0.9 + 0.18 * sin(6.0 * th)
-		"flying", "dragon":   # corpo com asas abertas
-			return 0.6 + 0.75 * _bump(th, -0.35, 0.28) + 0.75 * _bump(th, PI + 0.35, 0.28) + 0.2 * _bump(th, up, 0.3)
-		"fairy":   # estrela suave de cinco pontas
+		"flying", "dragon":  # corpo com asas abertas
+			return (
+				0.6
+				+ 0.75 * _bump(th, -0.35, 0.28)
+				+ 0.75 * _bump(th, PI + 0.35, 0.28)
+				+ 0.2 * _bump(th, up, 0.3)
+			)
+		"fairy":  # estrela suave de cinco pontas
 			return 0.7 + 0.35 * pow(absf(cos(2.5 * (th - up))), 2.0)
 	# normal, fighting e o resto: bolinha com duas orelhas
 	return 0.85 + 0.5 * _bump(th, up - 0.6, 0.13) + 0.5 * _bump(th, up + 0.6, 0.13)

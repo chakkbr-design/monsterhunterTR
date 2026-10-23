@@ -28,7 +28,11 @@ var _run_tex: Texture2D
 static func sheet(name: String) -> Texture2D:
 	if name == "":
 		return null
-	var p := name if name.begins_with("res://") else SHEETS + (name if name.ends_with(".png") else name + ".png")
+	var p := (
+		name
+		if name.begins_with("res://")
+		else SHEETS + (name if name.ends_with(".png") else name + ".png")
+	)
 	return load(p) if ResourceLoader.exists(p) else null
 
 
@@ -73,7 +77,9 @@ func _process(delta: float) -> void:
 		if f.length() > 0.01:
 			facing = f.normalized()
 		var at := p.global_position
-		moving = _last != Vector3.INF and Vector2(at.x - _last.x, at.z - _last.z).length() > 0.3 * delta
+		moving = (
+			_last != Vector3.INF and Vector2(at.x - _last.x, at.z - _last.z).length() > 0.3 * delta
+		)
 		_last = at
 	var d := Vector2(facing.x, facing.z).rotated(_cam_yaw(get_tree()))  # world -> screen (camera yaw)
 	_row = facing_row(d, _row)

@@ -22,7 +22,14 @@ var _start := Vector3.ZERO
 var _flat_dir := Vector3.ZERO
 
 
-func setup(u: BattleFighter, m: Dictionary, dir: Vector3, is_homing: bool, miss: BattleFighter, aim: BattleFighter) -> void:
+func setup(
+	u: BattleFighter,
+	m: Dictionary,
+	dir: Vector3,
+	is_homing: bool,
+	miss: BattleFighter,
+	aim: BattleFighter
+) -> void:
 	user = u
 	mv = m
 	homing = is_homing
@@ -75,7 +82,10 @@ func step(dt: float, arena: Node) -> void:
 		var close := position.distance_to(_aim_point(t)) < HIT_RADIUS
 		if lob > 0.0:
 			var p := _aim_point(t)
-			close = travelled >= lob_len * 0.7 and Vector2(p.x - position.x, p.z - position.z).length() < HIT_RADIUS
+			close = (
+				travelled >= lob_len * 0.7
+				and Vector2(p.x - position.x, p.z - position.z).length() < HIT_RADIUS
+			)
 		if close:
 			var d := Vector3(vel.x, 0.0, vel.z)
 			arena.moves.hit(user, t, mv, d.normalized() if d.length() > 0.01 else _flat_dir)

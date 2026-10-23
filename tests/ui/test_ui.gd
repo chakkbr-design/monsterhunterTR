@@ -59,14 +59,14 @@ func _run() -> void:
 	check(game.pending_learns.size() == 2, "fila tem 2")
 	game.learn_requested.emit()
 	check(learn.is_open() and learn.state == "pick", "LearnMove abriu")
-	send(KEY_S)                   # cursor 1
-	send(KEY_E)                   # esquece o golpe 1
+	send(KEY_S)  # cursor 1
+	send(KEY_E)  # esquece o golpe 1
 	check(m.moves[1] == nw[0] and learn.state == "msg", "trocou golpe 1 pelo primeiro")
-	send(KEY_ENTER)               # próximo da fila
+	send(KEY_ENTER)  # próximo da fila
 	check(learn.is_open() and learn.state == "pick" and learn.cursor == 0, "segundo da fila")
 	send(KEY_DOWN, 2)
-	send(KEY_UP)                  # cursor 1 de novo
-	send(KEY_UP)                  # cursor 0
+	send(KEY_UP)  # cursor 1 de novo
+	send(KEY_UP)  # cursor 0
 	send(KEY_ENTER)
 	check(m.moves[0] == nw[1], "trocou golpe 0 pelo segundo")
 	send(KEY_E)
@@ -81,12 +81,15 @@ func _run() -> void:
 	check(learn.state == "confirm", "Esc pede confirmação")
 	send(KEY_E)
 	check(learn.state == "pick" and game.pending_learns.size() == 1, "Não volta para a lista")
-	send(KEY_S, 4)                # linha do golpe novo
+	send(KEY_S, 4)  # linha do golpe novo
 	check(learn.cursor == 4, "cursor no golpe novo")
 	send(KEY_E)
-	send(KEY_LEFT)                # Sim
+	send(KEY_LEFT)  # Sim
 	send(KEY_E)
-	check(learn.state == "msg" and game.pending_learns.is_empty() and m.moves == before, "desistiu sem mudar golpes")
+	check(
+		learn.state == "msg" and game.pending_learns.is_empty() and m.moves == before,
+		"desistiu sem mudar golpes"
+	)
 	send(KEY_Q)
 	check(learn.state == "", "fechou depois de desistir")
 
@@ -103,13 +106,16 @@ func _run() -> void:
 	send(KEY_E)
 	check(menu.screen == "target", "escolher Pokémon")
 	send(KEY_E)
-	check(p.hp == mini(21, p.max_hp) and int(game.bag.get("potion", 0)) == 2, "poção curou e foi descontada")
+	check(
+		p.hp == mini(21, p.max_hp) and int(game.bag.get("potion", 0)) == 2,
+		"poção curou e foi descontada"
+	)
 	check(menu.screen == "msg" and "recuperou" in menu.message, "mensagem do item: " + menu.message)
 	send(KEY_E)
 	check(menu.screen == "bag", "volta para a bolsa")
-	send(KEY_E, 2)                # usar de novo: HP ainda não cheio
+	send(KEY_E, 2)  # usar de novo: HP ainda não cheio
 	send(KEY_E)
-	send(KEY_D)                   # Pokébolas
+	send(KEY_D)  # Pokébolas
 	send(KEY_E)
 	check(menu.screen == "msg" and "Não dá" in menu.message, "bola não usa fora da batalha")
 	send(KEY_E)
@@ -118,21 +124,21 @@ func _run() -> void:
 	var f := Mon.create("bulbasaur", 20)
 	game.party = [f, p]
 	game.add_item("tm09")
-	send(KEY_A)                   # MTs (fica entre Remédios e Pokébolas)
+	send(KEY_A)  # MTs (fica entre Remédios e Pokébolas)
 	check(menu._cat == "tm", "aba MTs")
 	send(KEY_E)
-	send(KEY_E)                   # usa em f
+	send(KEY_E)  # usa em f
 	check(learn.is_open() and menu.is_open(), "MT abriu LearnMove por cima do menu")
-	send(KEY_E)                   # esquece golpe 0
+	send(KEY_E)  # esquece golpe 0
 	check(f.moves[0] == "bullet_seed" and game.bag.has("tm09"), "MT ensinou e não foi gasta")
 	check(menu.screen == "msg", "menu não andou enquanto LearnMove aberta")
 	send(KEY_E)
 	check(learn.state == "", "LearnMove fechou")
 
 	# 5. Resumo e Salvar com posição do jogador.
-	send(KEY_ESCAPE, 2)           # msg -> bolsa -> main
+	send(KEY_ESCAPE, 2)  # msg -> bolsa -> main
 	check(menu.screen == "main", "voltou ao menu principal")
-	send(KEY_W)                   # Pokémon
+	send(KEY_W)  # Pokémon
 	send(KEY_E)
 	send(KEY_E)
 	check(menu.screen == "summary", "resumo aberto")
@@ -143,13 +149,13 @@ func _run() -> void:
 	pl.add_to_group("ow_player")
 	root.add_child(pl)
 	pl.global_position = Vector3(1, 2, 3)
-	send(KEY_S, 3)                # Salvar (Pokémon, Bolsa, Cartão, Salvar...)
+	send(KEY_S, 3)  # Salvar (Pokémon, Bolsa, Cartão, Salvar...)
 	send(KEY_E)
 	check(menu.screen == "msg" and menu.message == "Jogo salvo.", "salvou")
 	var d: Dictionary = game.load_game()
 	check(d.get("pos", []) == [1.0, 2.0, 3.0], "posição no save: %s" % [d.get("pos")])
 	send(KEY_E)
-	send(KEY_S, 2)                # Fechar (depois de Opções)
+	send(KEY_S, 2)  # Fechar (depois de Opções)
 	send(KEY_E)
 	check(menu.screen == "", "Fechar fecha o menu")
 	check(menu.is_open(), "is_open segura o frame em que fechou")
@@ -164,7 +170,10 @@ func _run() -> void:
 	check(menu.cursor == 1, "cursor começa em POKéMON")
 	menu.press("up")
 	menu.press("ok")
-	check(menu.screen == "dex" and menu._dex.size() == 16 and menu.cursor == 0, "Pokédex lista 1..16 (%d)" % menu._dex.size())
+	check(
+		menu.screen == "dex" and menu._dex.size() == 16 and menu.cursor == 0,
+		"Pokédex lista 1..16 (%d)" % menu._dex.size()
+	)
 	check(menu.dex_counts() == Vector2i(2, 1), "vistos 2, capturados 1")
 	menu.press("down")
 	check(menu.cursor == 15, "pula as linhas vazias até Pidgey")
@@ -179,7 +188,10 @@ func _run() -> void:
 	menu.press("ok")
 	check(menu.screen == "card" and menu.card_front, "cartão de treinador (frente)")
 	menu.press("right")
-	check(not menu.card_front and menu.has_badge("boulder") and not menu.has_badge("cascade"), "verso com insígnias")
+	check(
+		not menu.card_front and menu.has_badge("boulder") and not menu.has_badge("cascade"),
+		"verso com insígnias"
+	)
 	menu.press("back")
 	menu.press("down")
 	menu.press("down")

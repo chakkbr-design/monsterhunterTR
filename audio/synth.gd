@@ -4,14 +4,33 @@ extends RefCounted
 
 const RATE := 22050
 
-const SFX_NAMES := ["ui_move", "ui_confirm", "ui_back", "hit", "hit_super", "hit_weak", "crit", "faint",
-	"ball_throw", "ball_shake", "catch_ok", "catch_fail", "level_up", "heal", "door", "step_grass",
-	"encounter", "item_get", "evolution", "run_away"]
+const SFX_NAMES := [
+	"ui_move",
+	"ui_confirm",
+	"ui_back",
+	"hit",
+	"hit_super",
+	"hit_weak",
+	"crit",
+	"faint",
+	"ball_throw",
+	"ball_shake",
+	"catch_ok",
+	"catch_fail",
+	"level_up",
+	"heal",
+	"door",
+	"step_grass",
+	"encounter",
+	"item_get",
+	"evolution",
+	"run_away"
+]
 
 const NOTE_SEMI := {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
-
 # --- Utilidades ---
+
 
 static func midi_hz(m: float) -> float:
 	return 440.0 * pow(2.0, (m - 69.0) / 12.0)
@@ -132,7 +151,9 @@ static func _buf(secs: float) -> PackedFloat32Array:
 
 
 ## Sequência de notas curtas (arpejo) a partir de `at`, cada uma com `step` segundos.
-static func _arp(b: PackedFloat32Array, at: float, notes: Array, step: float, o: Dictionary, hold_last := 0.0) -> void:
+static func _arp(
+	b: PackedFloat32Array, at: float, notes: Array, step: float, o: Dictionary, hold_last := 0.0
+) -> void:
 	for i in notes.size():
 		var oo := o.duplicate()
 		oo.f0 = midi_hz(note_midi(notes[i]))
@@ -142,6 +163,7 @@ static func _arp(b: PackedFloat32Array, at: float, notes: Array, step: float, o:
 
 
 # --- Efeitos ---
+
 
 static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 	var b: PackedFloat32Array
@@ -157,78 +179,270 @@ static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 			_arp(b, 0, ["G5", "D5"], 0.045, {"duty": 0.5, "vol": 0.18, "r": 0.03})
 		"hit":
 			b = _buf(0.2)
-			voice(b, 0, 0.09, {"wave": "noise", "f0": 6000.0, "f1": 1500.0, "vol": 0.4, "d": 0.08, "s": 0.2, "r": 0.06})
+			voice(
+				b,
+				0,
+				0.09,
+				{
+					"wave": "noise",
+					"f0": 6000.0,
+					"f1": 1500.0,
+					"vol": 0.4,
+					"d": 0.08,
+					"s": 0.2,
+					"r": 0.06
+				}
+			)
 			voice(b, 0, 0.08, {"f0": 320.0, "f1": 90.0, "duty": 0.5, "vol": 0.25, "r": 0.03})
 		"hit_super":
 			b = _buf(0.34)
-			voice(b, 0, 0.14, {"wave": "noise", "f0": 9000.0, "f1": 1200.0, "vol": 0.5, "d": 0.12, "s": 0.3, "r": 0.08})
+			voice(
+				b,
+				0,
+				0.14,
+				{
+					"wave": "noise",
+					"f0": 9000.0,
+					"f1": 1200.0,
+					"vol": 0.5,
+					"d": 0.12,
+					"s": 0.3,
+					"r": 0.08
+				}
+			)
 			voice(b, 0, 0.12, {"f0": 700.0, "f1": 110.0, "duty": 0.5, "vol": 0.3, "r": 0.04})
-			voice(b, 0.12, 0.1, {"wave": "noise", "f0": 3000.0, "f1": 800.0, "vol": 0.35, "r": 0.08})
+			voice(
+				b, 0.12, 0.1, {"wave": "noise", "f0": 3000.0, "f1": 800.0, "vol": 0.35, "r": 0.08}
+			)
 		"hit_weak":
 			b = _buf(0.14)
-			voice(b, 0, 0.06, {"wave": "noise", "f0": 2000.0, "vol": 0.2, "d": 0.05, "s": 0.2, "r": 0.04})
-			voice(b, 0, 0.07, {"wave": "triangle", "f0": 220.0, "f1": 140.0, "vol": 0.35, "r": 0.03})
+			voice(
+				b,
+				0,
+				0.06,
+				{"wave": "noise", "f0": 2000.0, "vol": 0.2, "d": 0.05, "s": 0.2, "r": 0.04}
+			)
+			voice(
+				b, 0, 0.07, {"wave": "triangle", "f0": 220.0, "f1": 140.0, "vol": 0.35, "r": 0.03}
+			)
 		"crit":
 			b = _buf(0.32)
 			voice(b, 0, 0.08, {"f0": 1800.0, "f1": 500.0, "duty": 0.25, "vol": 0.25, "r": 0.02})
-			voice(b, 0.06, 0.14, {"wave": "noise", "f0": 10000.0, "f1": 2000.0, "vol": 0.45, "d": 0.1, "s": 0.3, "r": 0.08})
+			voice(
+				b,
+				0.06,
+				0.14,
+				{
+					"wave": "noise",
+					"f0": 10000.0,
+					"f1": 2000.0,
+					"vol": 0.45,
+					"d": 0.1,
+					"s": 0.3,
+					"r": 0.08
+				}
+			)
 			voice(b, 0.06, 0.12, {"f0": 400.0, "f1": 70.0, "duty": 0.5, "vol": 0.25, "r": 0.04})
 		"faint":
 			b = _buf(0.95)
-			voice(b, 0, 0.8, {"f0": 620.0, "f1": 55.0, "duty": 0.5, "vol": 0.25, "vib": 9.0, "vib_depth": 0.6, "s": 0.9, "r": 0.1})
+			voice(
+				b,
+				0,
+				0.8,
+				{
+					"f0": 620.0,
+					"f1": 55.0,
+					"duty": 0.5,
+					"vol": 0.25,
+					"vib": 9.0,
+					"vib_depth": 0.6,
+					"s": 0.9,
+					"r": 0.1
+				}
+			)
 		"ball_throw":
 			b = _buf(0.36)
-			voice(b, 0, 0.3, {"wave": "noise", "f0": 1500.0, "f1": 7000.0, "vol": 0.18, "a": 0.15, "d": 0.1, "s": 0.4, "r": 0.05})
+			voice(
+				b,
+				0,
+				0.3,
+				{
+					"wave": "noise",
+					"f0": 1500.0,
+					"f1": 7000.0,
+					"vol": 0.18,
+					"a": 0.15,
+					"d": 0.1,
+					"s": 0.4,
+					"r": 0.05
+				}
+			)
 			voice(b, 0, 0.25, {"f0": 300.0, "f1": 1100.0, "duty": 0.125, "vol": 0.12, "r": 0.04})
 		"ball_shake":
 			b = _buf(0.2)
 			for k in 2:
-				voice(b, k * 0.08, 0.025, {"wave": "noise", "f0": 4000.0, "vol": 0.3, "r": 0.02, "seed": 7 + k})
-				voice(b, k * 0.08, 0.04, {"wave": "triangle", "f0": 190.0, "f1": 150.0, "vol": 0.4, "r": 0.02})
+				voice(
+					b,
+					k * 0.08,
+					0.025,
+					{"wave": "noise", "f0": 4000.0, "vol": 0.3, "r": 0.02, "seed": 7 + k}
+				)
+				voice(
+					b,
+					k * 0.08,
+					0.04,
+					{"wave": "triangle", "f0": 190.0, "f1": 150.0, "vol": 0.4, "r": 0.02}
+				)
 		"catch_ok":
 			b = _buf(1.0)
-			_arp(b, 0, ["C6", "G5", "C6", "E6", "G6"], 0.08, {"duty": 0.5, "vol": 0.2, "r": 0.04}, 0.4)
-			_arp(b, 0, ["C4", "C4", "E4", "G4", "C5"], 0.08, {"wave": "triangle", "vol": 0.3, "r": 0.04}, 0.4)
+			_arp(
+				b,
+				0,
+				["C6", "G5", "C6", "E6", "G6"],
+				0.08,
+				{"duty": 0.5, "vol": 0.2, "r": 0.04},
+				0.4
+			)
+			_arp(
+				b,
+				0,
+				["C4", "C4", "E4", "G4", "C5"],
+				0.08,
+				{"wave": "triangle", "vol": 0.3, "r": 0.04},
+				0.4
+			)
 		"catch_fail":
 			b = _buf(0.45)
 			voice(b, 0, 0.05, {"wave": "noise", "f0": 8000.0, "vol": 0.4, "r": 0.04})
 			voice(b, 0.05, 0.3, {"f0": 880.0, "f1": 180.0, "duty": 0.25, "vol": 0.2, "r": 0.06})
 		"level_up":
 			b = _buf(0.8)
-			_arp(b, 0, ["D5", "A5", "D6", "F#6", "A6"], 0.06, {"duty": 0.25, "vol": 0.2, "r": 0.04}, 0.3)
-			_arp(b, 0.03, ["D5", "A5", "D6", "F#6", "A6"], 0.06, {"duty": 0.5, "vol": 0.08, "r": 0.04}, 0.3)
+			_arp(
+				b,
+				0,
+				["D5", "A5", "D6", "F#6", "A6"],
+				0.06,
+				{"duty": 0.25, "vol": 0.2, "r": 0.04},
+				0.3
+			)
+			_arp(
+				b,
+				0.03,
+				["D5", "A5", "D6", "F#6", "A6"],
+				0.06,
+				{"duty": 0.5, "vol": 0.08, "r": 0.04},
+				0.3
+			)
 		"heal":
 			b = _buf(1.3)
-			_arp(b, 0, ["E5", "G#5", "B5", "E6", "G#6", "B6"], 0.12, {"wave": "triangle", "vol": 0.35, "r": 0.15}, 0.4)
-			_arp(b, 0.06, ["E5", "G#5", "B5", "E6", "G#6", "B6"], 0.12, {"duty": 0.125, "vol": 0.08, "r": 0.15}, 0.4)
+			_arp(
+				b,
+				0,
+				["E5", "G#5", "B5", "E6", "G#6", "B6"],
+				0.12,
+				{"wave": "triangle", "vol": 0.35, "r": 0.15},
+				0.4
+			)
+			_arp(
+				b,
+				0.06,
+				["E5", "G#5", "B5", "E6", "G#6", "B6"],
+				0.12,
+				{"duty": 0.125, "vol": 0.08, "r": 0.15},
+				0.4
+			)
 		"door":
 			b = _buf(0.3)
-			voice(b, 0, 0.12, {"wave": "noise", "f0": 900.0, "f1": 300.0, "vol": 0.25, "d": 0.1, "s": 0.3, "r": 0.08})
+			voice(
+				b,
+				0,
+				0.12,
+				{
+					"wave": "noise",
+					"f0": 900.0,
+					"f1": 300.0,
+					"vol": 0.25,
+					"d": 0.1,
+					"s": 0.3,
+					"r": 0.08
+				}
+			)
 			voice(b, 0, 0.15, {"wave": "triangle", "f0": 130.0, "f1": 70.0, "vol": 0.4, "r": 0.06})
 		"step_grass":
 			b = _buf(0.1)
-			voice(b, 0, 0.04, {"wave": "noise", "f0": 5000.0, "f1": 2500.0, "vol": 0.12, "d": 0.03, "s": 0.3, "r": 0.04})
+			voice(
+				b,
+				0,
+				0.04,
+				{
+					"wave": "noise",
+					"f0": 5000.0,
+					"f1": 2500.0,
+					"vol": 0.12,
+					"d": 0.03,
+					"s": 0.3,
+					"r": 0.04
+				}
+			)
 		"encounter":
 			b = _buf(0.9)
 			for k in 12:
 				var hz := 1400.0 - k * 70.0 if k % 2 == 0 else 900.0 - k * 45.0
 				voice(b, k * 0.06, 0.05, {"f0": hz, "duty": 0.25, "vol": 0.18, "r": 0.01})
-			voice(b, 0.72, 0.1, {"wave": "noise", "f0": 3000.0, "f1": 500.0, "vol": 0.25, "r": 0.06})
+			voice(
+				b, 0.72, 0.1, {"wave": "noise", "f0": 3000.0, "f1": 500.0, "vol": 0.25, "r": 0.06}
+			)
 		"item_get":
 			b = _buf(1.1)
 			_arp(b, 0, ["G5", "G5", "G5", "C6"], 0.11, {"duty": 0.5, "vol": 0.18, "r": 0.04}, 0.45)
 			_arp(b, 0, ["E5", "E5", "F5", "E5"], 0.11, {"duty": 0.25, "vol": 0.1, "r": 0.04}, 0.45)
-			_arp(b, 0, ["C4", "C4", "D4", "C4"], 0.11, {"wave": "triangle", "vol": 0.3, "r": 0.04}, 0.45)
+			_arp(
+				b,
+				0,
+				["C4", "C4", "D4", "C4"],
+				0.11,
+				{"wave": "triangle", "vol": 0.3, "r": 0.04},
+				0.45
+			)
 		"evolution":
 			b = _buf(2.2)
-			voice(b, 0, 1.4, {"f0": 180.0, "f1": 1600.0, "duty": 0.25, "vol": 0.15, "vib": 7.0, "vib_depth": 0.8, "s": 1.0, "r": 0.05})
-			voice(b, 0, 1.4, {"wave": "triangle", "f0": 90.0, "f1": 400.0, "vol": 0.25, "s": 1.0, "r": 0.05})
+			voice(
+				b,
+				0,
+				1.4,
+				{
+					"f0": 180.0,
+					"f1": 1600.0,
+					"duty": 0.25,
+					"vol": 0.15,
+					"vib": 7.0,
+					"vib_depth": 0.8,
+					"s": 1.0,
+					"r": 0.05
+				}
+			)
+			voice(
+				b,
+				0,
+				1.4,
+				{"wave": "triangle", "f0": 90.0, "f1": 400.0, "vol": 0.25, "s": 1.0, "r": 0.05}
+			)
 			for nt in ["C5", "E5", "G5", "C6"]:
-				voice(b, 1.45, 0.5, {"f0": midi_hz(note_midi(nt)), "duty": 0.5, "vol": 0.1, "s": 0.8, "r": 0.2})
+				voice(
+					b,
+					1.45,
+					0.5,
+					{"f0": midi_hz(note_midi(nt)), "duty": 0.5, "vol": 0.1, "s": 0.8, "r": 0.2}
+				)
 		"run_away":
 			b = _buf(0.5)
 			_arp(b, 0, ["A5", "F5", "D5", "A4"], 0.06, {"duty": 0.25, "vol": 0.18, "r": 0.02})
-			voice(b, 0.15, 0.25, {"wave": "noise", "f0": 6000.0, "f1": 1000.0, "vol": 0.15, "a": 0.05, "r": 0.06})
+			voice(
+				b,
+				0.15,
+				0.25,
+				{"wave": "noise", "f0": 6000.0, "f1": 1000.0, "vol": 0.15, "a": 0.05, "r": 0.06}
+			)
 		_:
 			return null
 	return to_wav(b, false)
@@ -240,36 +454,116 @@ static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 ## arpejo (a = próxima nota do acorde) e bateria (k bumbo, s caixa, h chimbal). Composições originais.
 
 const TRACKS := {
-	"title": {"bpm": 116, "lead_duty": 0.5, "chords": ["C", "G", "Am", "F", "C", "G", "F", "G"],
-		"melody": "C5 . . . E5 . G5 . C6 . . . B5 . G5 . | D5 . . . G5 . B5 . D6 . . . C6 . B5 . | A5 . . . E5 . A5 . C6 . . . B5 . A5 . | F5 . . . A5 . C6 . A5 . G5 . F5 . E5 . | E5 . G5 . C6 . . . E6 . D6 . C6 . G5 . | B5 . . . D6 . . . G5 . . . - . G5 . | A5 . C6 . F6 . . . E6 . D6 . C6 . A5 . | B5 . . . . . . . D6 . . . . . - .",
-		"bass": "x...x.o.x...o.x.", "arp": "a.a.a.a.a.a.a.a.", "drums": "k...h...s...h.k."},
-	"town": {"bpm": 96, "lead_duty": 0.25, "chords": ["F", "C", "Dm", "Bb", "F", "C", "Bb", "C"],
-		"melody": "A4 . C5 . F5 . . . E5 . F5 . G5 . . . | E5 . . . C5 . . . G4 . . . - . C5 . | D5 . F5 . A5 . . . G5 . F5 . D5 . . . | F5 . . . . . D5 . Bb4 . . . - . . . | C5 . F5 . A5 . . . C6 . A5 . F5 . . . | G5 . . . E5 . C5 . E5 . G5 . C6 . . . | Bb5 . . . A5 . . . G5 . . . F5 . D5 . | E5 . . . . . . . C5 . . . - . . .",
-		"bass": "x...o...x...o...", "arp": "a.a.a.a.a.a.a.a.", "drums": "k...h...s...h..."},
-	"route": {"bpm": 136, "lead_duty": 0.5, "chords": ["D", "G", "A", "D", "Bm", "G", "A", "A"],
-		"melody": "F#5 . A5 . D6 . A5 . F#5 . A5 . B5 . A5 . | G5 . B5 . D6 . B5 . G5 . . . E5 . . . | E5 . A5 . C#6 . . . E6 . C#6 . A5 . . . | D6 . . . A5 . F#5 . D5 . . . - . A4 . | B4 . D5 . F#5 . . . B5 . A5 . F#5 . D5 . | G5 . . . B5 . . . D6 . . . B5 . G5 . | A5 . . . C#6 . E6 . A6 . . . G6 . E6 . | C#6 . . . . . . . A5 . . . - . . .",
-		"bass": "x.x.o.o.x.x.o.8.", "arp": "a.a.a.a.a.a.a.a.", "drums": "k.h.s.h.k.k.s.h."},
-	"forest": {"bpm": 92, "lead_duty": 0.125, "chords": ["Am", "F", "Em", "Am", "Dm", "F", "E", "E"],
-		"melody": "A4 . . . . . C5 . E5 . . . D5 . C5 . | C5 . . . A4 . . . F4 . . . - . . . | G4 . . . B4 . . . E5 . . . D5 . B4 . | A4 . . . . . . . - . . . E4 . A4 . | D5 . . . F5 . . . A5 . . . G5 . F5 . | E5 . . . C5 . . . A4 . . . C5 . . . | B4 . . . G#4 . . . E4 . . . G#4 . B4 . | E5 . . . . . . . . . . . - . . .",
-		"bass": "x.......o.......", "arp": "a.a.a.a.a.a.a.a.", "drums": "....h.......h..."},
-	"battle_wild": {"bpm": 156, "lead_duty": 0.5, "chords": ["Em", "C", "D", "B", "Em", "C", "Am", "B"],
-		"melody": "E5 . G5 . B5 . E6 . D6 . B5 . G5 . B5 . | C6 . . . G5 . E5 . C6 . D6 . E6 . . . | D6 . . . A5 . F#5 . D6 . E6 . F#6 . . . | D#6 . . . B5 . . . F#5 . . . B5 . D#6 . | E6 . . . B5 . G5 . E5 . G5 . B5 . E6 . | G6 . . . E6 . C6 . G5 . . . C6 . E6 . | A6 . . . E6 . C6 . A5 . C6 . E6 . A6 . | F#6 . . . D#6 . . . B5 . . . F#5 . . .",
-		"bass": "x.x.x.o.x.x.8.o.", "arp": "aaaaaaaaaaaaaaaa", "drums": "k.hhs.hhk.hhs.hs"},
-	"battle_trainer": {"bpm": 168, "lead_duty": 0.25, "chords": ["Am", "Dm", "E", "Am", "F", "G", "E", "E"],
-		"melody": "A5 . . . C6 . E6 . A6 . G6 . E6 . C6 . | D6 . . . F6 . . . A6 . F6 . D6 . . . | B5 . . . E6 . G#6 . B6 . . . G#6 . E6 . | A6 . . . E6 . C6 . A5 . . . - . E5 . | F5 . A5 . C6 . F6 . E6 . C6 . A5 . C6 . | D6 . . . B5 . G5 . D6 . E6 . F6 . G6 . | G#6 . . . . . E6 . B5 . . . E6 . G#6 . | B6 . . . . . . . E6 . . . - . . .",
-		"bass": "x.x.8.x.x.x.8.o.", "arp": "aaaaaaaaaaaaaaaa", "drums": "k.hsk.hsk.hsk.ss"},
-	"victory": {"bpm": 132, "lead_duty": 0.5, "chords": ["C", "F", "G", "C"],
-		"melody": "C5 . E5 . G5 . C6 . . . G5 . C6 . E6 . | F6 . . . C6 . A5 . F5 . A5 . C6 . . . | D6 . . . B5 . G5 . D6 . E6 . F6 . D6 . | E6 . . . . . C6 . . . . . - . . .",
-		"bass": "x...x.o.x...o.x.", "arp": "a.a.a.a.a.a.a.a.", "drums": "k.h.s.h.k.h.s.h."},
-	"center": {"bpm": 104, "lead_duty": 0.25, "chords": ["G", "Em", "C", "D", "G", "Em", "Am", "D"],
-		"melody": "B4 . D5 . G5 . . . F#5 . G5 . A5 . . . | G5 . . . E5 . . . B4 . . . - . . . | C5 . E5 . G5 . . . A5 . G5 . E5 . . . | F#5 . . . . . A5 . D5 . . . - . . . | D5 . G5 . B5 . . . D6 . B5 . G5 . . . | E5 . G5 . B5 . . . G5 . . . E5 . . . | C5 . E5 . A5 . . . C6 . A5 . E5 . . . | D5 . F#5 . A5 . . . F#5 . . . - . . .",
-		"bass": "x...o...x...o...", "arp": "a.a.a.a.a.a.a.a.", "drums": "k...h...s...h.h."},
-	"lab": {"bpm": 112, "lead_duty": 0.5, "chords": ["Bb", "Gm", "Eb", "F", "Bb", "Gm", "Cm", "F"],
-		"melody": "D5 . F5 . Bb5 . . . A5 . Bb5 . C6 . . . | D6 . . . Bb5 . G5 . D5 . . . G5 . . . | G5 . . . Eb5 . . . Bb4 . Eb5 . G5 . Bb5 . | A5 . . . . . F5 . C5 . . . - . . . | F5 . Bb5 . D6 . . . C6 . Bb5 . A5 . Bb5 . | G5 . . . D5 . . . Bb4 . D5 . G5 . . . | Eb5 . G5 . C6 . . . Bb5 . G5 . Eb5 . C5 . | F5 . . . . . A5 . C6 . . . - . . .",
-		"bass": "x.....o.x.....o.", "arp": "a.a.a.a.a.a.a.a.", "drums": "k...h.h.s...h..."},
-	"gym": {"bpm": 124, "lead_duty": 0.25, "chords": ["Dm", "Bb", "C", "A", "Dm", "Bb", "Gm", "A"],
-		"melody": "D5 . . . F5 . A5 . D6 . . . C6 . A5 . | Bb5 . . . F5 . D5 . Bb4 . . . D5 . F5 . | E5 . . . G5 . C6 . E6 . . . D6 . C6 . | C#6 . . . A5 . . . E5 . . . A5 . C#6 . | D6 . . . A5 . F5 . D5 . F5 . A5 . D6 . | F6 . . . D6 . Bb5 . F5 . . . Bb5 . D6 . | G6 . . . D6 . Bb5 . G5 . Bb5 . D6 . G6 . | E6 . . . C#6 . . . A5 . . . - . . .",
-		"bass": "x.x.o.x.x.x.o.x.", "arp": "a.a.a.a.a.a.a.a.", "drums": "k.h.s.h.k.k.s.h."},
+	"title":
+	{
+		"bpm": 116,
+		"lead_duty": 0.5,
+		"chords": ["C", "G", "Am", "F", "C", "G", "F", "G"],
+		"melody":
+		"C5 . . . E5 . G5 . C6 . . . B5 . G5 . | D5 . . . G5 . B5 . D6 . . . C6 . B5 . | A5 . . . E5 . A5 . C6 . . . B5 . A5 . | F5 . . . A5 . C6 . A5 . G5 . F5 . E5 . | E5 . G5 . C6 . . . E6 . D6 . C6 . G5 . | B5 . . . D6 . . . G5 . . . - . G5 . | A5 . C6 . F6 . . . E6 . D6 . C6 . A5 . | B5 . . . . . . . D6 . . . . . - .",
+		"bass": "x...x.o.x...o.x.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k...h...s...h.k."
+	},
+	"town":
+	{
+		"bpm": 96,
+		"lead_duty": 0.25,
+		"chords": ["F", "C", "Dm", "Bb", "F", "C", "Bb", "C"],
+		"melody":
+		"A4 . C5 . F5 . . . E5 . F5 . G5 . . . | E5 . . . C5 . . . G4 . . . - . C5 . | D5 . F5 . A5 . . . G5 . F5 . D5 . . . | F5 . . . . . D5 . Bb4 . . . - . . . | C5 . F5 . A5 . . . C6 . A5 . F5 . . . | G5 . . . E5 . C5 . E5 . G5 . C6 . . . | Bb5 . . . A5 . . . G5 . . . F5 . D5 . | E5 . . . . . . . C5 . . . - . . .",
+		"bass": "x...o...x...o...",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k...h...s...h..."
+	},
+	"route":
+	{
+		"bpm": 136,
+		"lead_duty": 0.5,
+		"chords": ["D", "G", "A", "D", "Bm", "G", "A", "A"],
+		"melody":
+		"F#5 . A5 . D6 . A5 . F#5 . A5 . B5 . A5 . | G5 . B5 . D6 . B5 . G5 . . . E5 . . . | E5 . A5 . C#6 . . . E6 . C#6 . A5 . . . | D6 . . . A5 . F#5 . D5 . . . - . A4 . | B4 . D5 . F#5 . . . B5 . A5 . F#5 . D5 . | G5 . . . B5 . . . D6 . . . B5 . G5 . | A5 . . . C#6 . E6 . A6 . . . G6 . E6 . | C#6 . . . . . . . A5 . . . - . . .",
+		"bass": "x.x.o.o.x.x.o.8.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k.h.s.h.k.k.s.h."
+	},
+	"forest":
+	{
+		"bpm": 92,
+		"lead_duty": 0.125,
+		"chords": ["Am", "F", "Em", "Am", "Dm", "F", "E", "E"],
+		"melody":
+		"A4 . . . . . C5 . E5 . . . D5 . C5 . | C5 . . . A4 . . . F4 . . . - . . . | G4 . . . B4 . . . E5 . . . D5 . B4 . | A4 . . . . . . . - . . . E4 . A4 . | D5 . . . F5 . . . A5 . . . G5 . F5 . | E5 . . . C5 . . . A4 . . . C5 . . . | B4 . . . G#4 . . . E4 . . . G#4 . B4 . | E5 . . . . . . . . . . . - . . .",
+		"bass": "x.......o.......",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "....h.......h..."
+	},
+	"battle_wild":
+	{
+		"bpm": 156,
+		"lead_duty": 0.5,
+		"chords": ["Em", "C", "D", "B", "Em", "C", "Am", "B"],
+		"melody":
+		"E5 . G5 . B5 . E6 . D6 . B5 . G5 . B5 . | C6 . . . G5 . E5 . C6 . D6 . E6 . . . | D6 . . . A5 . F#5 . D6 . E6 . F#6 . . . | D#6 . . . B5 . . . F#5 . . . B5 . D#6 . | E6 . . . B5 . G5 . E5 . G5 . B5 . E6 . | G6 . . . E6 . C6 . G5 . . . C6 . E6 . | A6 . . . E6 . C6 . A5 . C6 . E6 . A6 . | F#6 . . . D#6 . . . B5 . . . F#5 . . .",
+		"bass": "x.x.x.o.x.x.8.o.",
+		"arp": "aaaaaaaaaaaaaaaa",
+		"drums": "k.hhs.hhk.hhs.hs"
+	},
+	"battle_trainer":
+	{
+		"bpm": 168,
+		"lead_duty": 0.25,
+		"chords": ["Am", "Dm", "E", "Am", "F", "G", "E", "E"],
+		"melody":
+		"A5 . . . C6 . E6 . A6 . G6 . E6 . C6 . | D6 . . . F6 . . . A6 . F6 . D6 . . . | B5 . . . E6 . G#6 . B6 . . . G#6 . E6 . | A6 . . . E6 . C6 . A5 . . . - . E5 . | F5 . A5 . C6 . F6 . E6 . C6 . A5 . C6 . | D6 . . . B5 . G5 . D6 . E6 . F6 . G6 . | G#6 . . . . . E6 . B5 . . . E6 . G#6 . | B6 . . . . . . . E6 . . . - . . .",
+		"bass": "x.x.8.x.x.x.8.o.",
+		"arp": "aaaaaaaaaaaaaaaa",
+		"drums": "k.hsk.hsk.hsk.ss"
+	},
+	"victory":
+	{
+		"bpm": 132,
+		"lead_duty": 0.5,
+		"chords": ["C", "F", "G", "C"],
+		"melody":
+		"C5 . E5 . G5 . C6 . . . G5 . C6 . E6 . | F6 . . . C6 . A5 . F5 . A5 . C6 . . . | D6 . . . B5 . G5 . D6 . E6 . F6 . D6 . | E6 . . . . . C6 . . . . . - . . .",
+		"bass": "x...x.o.x...o.x.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k.h.s.h.k.h.s.h."
+	},
+	"center":
+	{
+		"bpm": 104,
+		"lead_duty": 0.25,
+		"chords": ["G", "Em", "C", "D", "G", "Em", "Am", "D"],
+		"melody":
+		"B4 . D5 . G5 . . . F#5 . G5 . A5 . . . | G5 . . . E5 . . . B4 . . . - . . . | C5 . E5 . G5 . . . A5 . G5 . E5 . . . | F#5 . . . . . A5 . D5 . . . - . . . | D5 . G5 . B5 . . . D6 . B5 . G5 . . . | E5 . G5 . B5 . . . G5 . . . E5 . . . | C5 . E5 . A5 . . . C6 . A5 . E5 . . . | D5 . F#5 . A5 . . . F#5 . . . - . . .",
+		"bass": "x...o...x...o...",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k...h...s...h.h."
+	},
+	"lab":
+	{
+		"bpm": 112,
+		"lead_duty": 0.5,
+		"chords": ["Bb", "Gm", "Eb", "F", "Bb", "Gm", "Cm", "F"],
+		"melody":
+		"D5 . F5 . Bb5 . . . A5 . Bb5 . C6 . . . | D6 . . . Bb5 . G5 . D5 . . . G5 . . . | G5 . . . Eb5 . . . Bb4 . Eb5 . G5 . Bb5 . | A5 . . . . . F5 . C5 . . . - . . . | F5 . Bb5 . D6 . . . C6 . Bb5 . A5 . Bb5 . | G5 . . . D5 . . . Bb4 . D5 . G5 . . . | Eb5 . G5 . C6 . . . Bb5 . G5 . Eb5 . C5 . | F5 . . . . . A5 . C6 . . . - . . .",
+		"bass": "x.....o.x.....o.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k...h.h.s...h..."
+	},
+	"gym":
+	{
+		"bpm": 124,
+		"lead_duty": 0.25,
+		"chords": ["Dm", "Bb", "C", "A", "Dm", "Bb", "Gm", "A"],
+		"melody":
+		"D5 . . . F5 . A5 . D6 . . . C6 . A5 . | Bb5 . . . F5 . D5 . Bb4 . . . D5 . F5 . | E5 . . . G5 . C6 . E6 . . . D6 . C6 . | C#6 . . . A5 . . . E5 . . . A5 . C#6 . | D6 . . . A5 . F5 . D5 . F5 . A5 . D6 . | F6 . . . D6 . Bb5 . F5 . . . Bb5 . D6 . | G6 . . . D6 . Bb5 . G5 . Bb5 . D6 . G6 . | E6 . . . C#6 . . . A5 . . . - . . .",
+		"bass": "x.x.o.x.x.x.o.x.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k.h.s.h.k.k.s.h."
+	},
 }
 
 
@@ -311,8 +605,21 @@ static func render_track(track_name: String) -> AudioStreamWAV:
 			j += 1
 		if m >= 0:
 			var nl := (j - i) * st
-			voice(b, i * st, nl - 0.02, {"f0": midi_hz(m), "duty": spec.get("lead_duty", 0.5), "vol": 0.13,
-				"d": 0.08, "s": 0.65, "r": 0.02, "vib": 5.5 if nl > 0.3 else 0.0, "vib_depth": 0.15})
+			voice(
+				b,
+				i * st,
+				nl - 0.02,
+				{
+					"f0": midi_hz(m),
+					"duty": spec.get("lead_duty", 0.5),
+					"vol": 0.13,
+					"d": 0.08,
+					"s": 0.65,
+					"r": 0.02,
+					"vib": 5.5 if nl > 0.3 else 0.0,
+					"vib_depth": 0.15
+				}
+			)
 		i = j
 	# Acompanhamento por compasso
 	var bass: String = spec.bass
@@ -332,17 +639,70 @@ static func render_track(track_name: String) -> AudioStreamWAV:
 				var bl := 1
 				while k + bl < 16 and bass[k + bl] == ".":
 					bl += 1
-				voice(b, t0 + k * st, bl * st - 0.01, {"wave": "triangle", "f0": midi_hz(bm), "vol": 0.32, "d": 0.05, "s": 0.8, "r": 0.01})
+				voice(
+					b,
+					t0 + k * st,
+					bl * st - 0.01,
+					{
+						"wave": "triangle",
+						"f0": midi_hz(bm),
+						"vol": 0.32,
+						"d": 0.05,
+						"s": 0.8,
+						"r": 0.01
+					}
+				)
 			if arp[k] == "a":
 				var tones := [iv[0], iv[1], iv[2], 12 + iv[0], iv[2], iv[1]]
 				var am: int = 60 + root + int(tones[ai % tones.size()])
 				ai += 1
-				voice(b, t0 + k * st, st * 0.8, {"f0": midi_hz(am), "duty": 0.125, "vol": 0.05, "d": 0.03, "s": 0.5, "r": 0.01})
+				voice(
+					b,
+					t0 + k * st,
+					st * 0.8,
+					{"f0": midi_hz(am), "duty": 0.125, "vol": 0.05, "d": 0.03, "s": 0.5, "r": 0.01}
+				)
 			match drums[k]:
 				"k":
-					voice(b, t0 + k * st, 0.05, {"wave": "triangle", "f0": 150.0, "f1": 45.0, "vol": 0.4, "s": 0.6, "r": 0.02})
+					voice(
+						b,
+						t0 + k * st,
+						0.05,
+						{
+							"wave": "triangle",
+							"f0": 150.0,
+							"f1": 45.0,
+							"vol": 0.4,
+							"s": 0.6,
+							"r": 0.02
+						}
+					)
 				"s":
-					voice(b, t0 + k * st, 0.06, {"wave": "noise", "f0": 6000.0, "vol": 0.16, "d": 0.05, "s": 0.2, "r": 0.03, "seed": bar * 16 + k})
+					voice(
+						b,
+						t0 + k * st,
+						0.06,
+						{
+							"wave": "noise",
+							"f0": 6000.0,
+							"vol": 0.16,
+							"d": 0.05,
+							"s": 0.2,
+							"r": 0.03,
+							"seed": bar * 16 + k
+						}
+					)
 				"h":
-					voice(b, t0 + k * st, 0.015, {"wave": "noise", "f0": 11000.0, "vol": 0.06, "r": 0.01, "seed": bar * 16 + k + 3})
+					voice(
+						b,
+						t0 + k * st,
+						0.015,
+						{
+							"wave": "noise",
+							"f0": 11000.0,
+							"vol": 0.06,
+							"r": 0.01,
+							"seed": bar * 16 + k + 3
+						}
+					)
 	return to_wav(b, true)

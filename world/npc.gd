@@ -13,22 +13,69 @@ const LAYER := 8
 @export var body_height := 1.6
 @export var sprite_sheet := ""  ## file in original/assets/sprites ("npc_oak.png"); "" = guess
 
-const ROLE_SHEETS := {"oak": "npc_oak", "rival": "npc_rival", "mom": "npc_mom", "clerk": "npc_clerk",
-		"nurse": "npc_nurse", "brock": "npc_brock", "daisy": "npc_daisy"}
+const ROLE_SHEETS := {
+	"oak": "npc_oak",
+	"rival": "npc_rival",
+	"mom": "npc_mom",
+	"clerk": "npc_clerk",
+	"nurse": "npc_nurse",
+	"brock": "npc_brock",
+	"daisy": "npc_daisy"
+}
 ## Name keyword -> sheet (Portuguese and English names of the port and the original).
-const NAME_SHEETS := [["enfermeira", "npc_nurse"], ["nurse", "npc_nurse"], ["joy", "npc_nurse"],
-		["vendedor", "npc_clerk"], ["clerk", "npc_clerk"], ["balconista", "npc_clerk"], ["mamãe", "npc_mom"], ["mom", "npc_mom"],
-		["carvalho", "npc_oak"], ["oak", "npc_oak"], ["margarida", "npc_daisy"], ["daisy", "npc_daisy"],
-		["brock", "npc_brock"], ["cientista", "npc_scientist"], ["scientist", "npc_scientist"], ["assistente", "npc_scientist"],
-		["aide", "npc_scientist"], ["guia", "npc_gym_guide"], ["guide", "npc_gym_guide"], ["alpinista", "npc_hiker"],
-		["hiker", "npc_hiker"], ["campista", "npc_camper"], ["camper", "npc_camper"], ["bug", "npc_bug_catcher"],
-		["inseto", "npc_bug_catcher"], ["lass", "npc_lass"], ["professora", "npc_cooltrainer_f"], ["treinador", "npc_camper"],
-		["garoto", "npc_youngster"], ["youngster", "npc_youngster"], ["menino", "npc_kid"], ["kid", "npc_kid"],
-		["menina", "npc_little_girl"], ["girl", "npc_girl"], ["moça", "npc_girl"], ["senhora", "npc_woman"],
-		["woman", "npc_woman"], ["recepcionista", "npc_woman"], ["senhor", "npc_oldman"], ["old", "npc_oldman"],
-		["velho", "npc_oldman"], ["guarda", "npc_worker"], ["guard", "npc_worker"], ["worker", "npc_worker"],
-		["nerd", "npc_super_nerd"], ["rocket", "npc_rocket_m"], ["rival", "npc_rival"], ["blue", "npc_rival"]]
-const GENERIC_SHEETS := ["npc_balding_man", "npc_woman", "npc_kid", "npc_girl", "npc_oldman", "npc_youngster", "npc_lass"]
+const NAME_SHEETS := [
+	["enfermeira", "npc_nurse"],
+	["nurse", "npc_nurse"],
+	["joy", "npc_nurse"],
+	["vendedor", "npc_clerk"],
+	["clerk", "npc_clerk"],
+	["balconista", "npc_clerk"],
+	["mamãe", "npc_mom"],
+	["mom", "npc_mom"],
+	["carvalho", "npc_oak"],
+	["oak", "npc_oak"],
+	["margarida", "npc_daisy"],
+	["daisy", "npc_daisy"],
+	["brock", "npc_brock"],
+	["cientista", "npc_scientist"],
+	["scientist", "npc_scientist"],
+	["assistente", "npc_scientist"],
+	["aide", "npc_scientist"],
+	["guia", "npc_gym_guide"],
+	["guide", "npc_gym_guide"],
+	["alpinista", "npc_hiker"],
+	["hiker", "npc_hiker"],
+	["campista", "npc_camper"],
+	["camper", "npc_camper"],
+	["bug", "npc_bug_catcher"],
+	["inseto", "npc_bug_catcher"],
+	["lass", "npc_lass"],
+	["professora", "npc_cooltrainer_f"],
+	["treinador", "npc_camper"],
+	["garoto", "npc_youngster"],
+	["youngster", "npc_youngster"],
+	["menino", "npc_kid"],
+	["kid", "npc_kid"],
+	["menina", "npc_little_girl"],
+	["girl", "npc_girl"],
+	["moça", "npc_girl"],
+	["senhora", "npc_woman"],
+	["woman", "npc_woman"],
+	["recepcionista", "npc_woman"],
+	["senhor", "npc_oldman"],
+	["old", "npc_oldman"],
+	["velho", "npc_oldman"],
+	["guarda", "npc_worker"],
+	["guard", "npc_worker"],
+	["worker", "npc_worker"],
+	["nerd", "npc_super_nerd"],
+	["rocket", "npc_rocket_m"],
+	["rival", "npc_rival"],
+	["blue", "npc_rival"]
+]
+const GENERIC_SHEETS := [
+	"npc_balding_man", "npc_woman", "npc_kid", "npc_girl", "npc_oldman", "npc_youngster", "npc_lass"
+]
 
 var char_sprite: CharSprite
 var show_tag := true  ## floating name (placeholders only; sprites and models hide it)

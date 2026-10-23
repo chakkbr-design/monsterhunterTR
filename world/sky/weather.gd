@@ -57,7 +57,9 @@ func _target(minutes: float, day: int) -> float:
 		var dr: Dictionary = _cfg.get("demo_rain", {})
 		var rng := RandomNumberGenerator.new()
 		rng.seed = day * 7919 + 13
-		_start = rng.randf_range(_min(String(dr.get("start_min", "11:30"))), _min(String(dr.get("start_max", "14:00"))))
+		_start = rng.randf_range(
+			_min(String(dr.get("start_min", "11:30"))), _min(String(dr.get("start_max", "14:00")))
+		)
 		_len = float(dr.get("life_hours", 2.0)) * 60.0
 	var t := minutes - _start
 	if t < 0.0 or t > _len:
@@ -69,7 +71,9 @@ func _process(delta: float) -> void:
 	var tod := get_tree().get_first_node_in_group(WorldTimeOfDay.GROUP) as WorldTimeOfDay
 	var minutes := tod.minutes if tod else 600.0
 	var g := get_node_or_null("/root/Game")
-	var day := int((WorldTimeOfDay.START_MIN + (float(g.play_time) if g else 0.0) * 20.0 / 60.0) / 1440.0)
+	var day := int(
+		(WorldTimeOfDay.START_MIN + (float(g.play_time) if g else 0.0) * 20.0 / 60.0) / 1440.0
+	)
 	var target := _target(minutes, day)
 	wet = move_toward(wet, target, delta * 0.25)
 	cloud = wet * 0.7

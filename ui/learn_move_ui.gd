@@ -47,7 +47,13 @@ func _process(_dt: float) -> void:
 
 
 func _try_open() -> void:
-	if state != "" or game == null or game.pending_learns.is_empty() or game.is_busy() or _evolving():
+	if (
+		state != ""
+		or game == null
+		or game.pending_learns.is_empty()
+		or game.is_busy()
+		or _evolving()
+	):
 		return
 	_root.visible = true
 	_begin()
@@ -119,7 +125,10 @@ func press(a: String) -> void:
 func _forget(slot: int) -> void:
 	var p := _current()
 	var old: String = p.mon.moves[slot]
-	message = "1, 2 e... Pronto! %s esqueceu %s e aprendeu %s!" % [p.mon.display_name, Kit.move_name(old), Kit.move_name(p.move)]
+	message = (
+		"1, 2 e... Pronto! %s esqueceu %s e aprendeu %s!"
+		% [p.mon.display_name, Kit.move_name(old), Kit.move_name(p.move)]
+	)
 	game.resolve_learn(slot)
 	state = "msg"
 
@@ -154,8 +163,12 @@ func _render() -> void:
 	var tc := VBoxContainer.new()
 	tc.add_theme_constant_override("separation", 0)
 	tc.add_child(Kit.label("%s  Nv %d" % [m.display_name, m.level], Kit.DIM, 15))
-	tc.add_child(Kit.label("%s quer aprender %s." % [m.display_name, Kit.move_name(p.move)], Kit.TEXT, 22))
-	tc.add_child(Kit.label("Mas já sabe 4 golpes. Qual golpe esquecer?" if state == "pick" else "", Kit.DIM))
+	tc.add_child(
+		Kit.label("%s quer aprender %s." % [m.display_name, Kit.move_name(p.move)], Kit.TEXT, 22)
+	)
+	tc.add_child(
+		Kit.label("Mas já sabe 4 golpes. Qual golpe esquecer?" if state == "pick" else "", Kit.DIM)
+	)
 	top.add_child(tc)
 	_box.add_child(top)
 	_box.add_child(Kit.row(["Golpe", "Tipo", "Categoria", "Poder", "Prec."], WIDTHS, false, true))

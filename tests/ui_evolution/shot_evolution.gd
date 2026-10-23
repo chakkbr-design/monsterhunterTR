@@ -26,7 +26,7 @@ func _run() -> void:
 	game.pending_evolutions = [m]
 	game.evolution_requested.emit()
 	evo.press("ok")
-	for i in 38:       # gera partículas com passos curtos, para o rastro ficar natural
+	for i in 38:  # gera partículas com passos curtos, para o rastro ficar natural
 		evo.advance(3.3 / 38.0)
 		await process_frame
 	evo.set_process(false)

@@ -10,8 +10,22 @@ func _initialize() -> void:
 	var game = load("res://core/game.gd").new()
 	game.save_path = "user://test_save_pc.json"
 	game.party = [Mon.create("Charmander", 12), Mon.create("Pidgey", 9)]
-	var names := ["Bulbasaur", "Rattata", "Caterpie", "Weedle", "Pikachu", "Magikarp", "Spearow", "Nidoran♀",
-		"Geodude", "Oddish", "Squirtle", "Zubat", "Pidgeotto", "Metapod"]
+	var names := [
+		"Bulbasaur",
+		"Rattata",
+		"Caterpie",
+		"Weedle",
+		"Pikachu",
+		"Magikarp",
+		"Spearow",
+		"Nidoran♀",
+		"Geodude",
+		"Oddish",
+		"Squirtle",
+		"Zubat",
+		"Pidgeotto",
+		"Metapod"
+	]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in 17:
@@ -30,11 +44,11 @@ func _process(_dt: float) -> bool:
 	if _frames == 2:
 		_pc.open()
 		_pc.press("down")
-		_pc.press("ok")      # Retirar Pokémon
+		_pc.press("ok")  # Retirar Pokémon
 		_pc.press("right")
 		_pc.press("right")
 		_pc.press("right")
-		_pc.press("down")    # espaço 10 da caixa 1
+		_pc.press("down")  # espaço 10 da caixa 1
 	if _frames == 30:
 		var img := root.get_texture().get_image()
 		var path := ProjectSettings.globalize_path("res://docs/screens/pc.png")

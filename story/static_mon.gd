@@ -60,7 +60,11 @@ func _ready() -> void:
 
 
 func _build_body() -> void:
-	var cs_script := load("res://gfx/creature_sprite.gd") if ResourceLoader.exists("res://gfx/creature_sprite.gd") else null
+	var cs_script := (
+		load("res://gfx/creature_sprite.gd")
+		if ResourceLoader.exists("res://gfx/creature_sprite.gd")
+		else null
+	)
 	if cs_script:
 		_sprite = cs_script.new()
 		_sprite.set("species", species)
@@ -97,7 +101,13 @@ func interact(p: OverworldPlayer) -> void:
 
 
 func _on_body_entered(b: Node) -> void:
-	if fighting or visible or not b is OverworldPlayer or not (b as OverworldPlayer).can_act() or Game.first_healthy() < 0:
+	if (
+		fighting
+		or visible
+		or not b is OverworldPlayer
+		or not (b as OverworldPlayer).can_act()
+		or Game.first_healthy() < 0
+	):
 		return
 	var p := b as OverworldPlayer
 	p.locked = true
@@ -108,7 +118,9 @@ func _on_body_entered(b: Node) -> void:
 	_set_shown(true)
 	face(p.global_position)
 	p.face_toward(global_position)
-	await say(PackedStringArray(["Um %s selvagem pulou na sua frente!" % npc_name.get_slice(" Nv", 0)]))
+	await say(
+		PackedStringArray(["Um %s selvagem pulou na sua frente!" % npc_name.get_slice(" Nv", 0)])
+	)
 	p.locked = false
 	await fight()
 

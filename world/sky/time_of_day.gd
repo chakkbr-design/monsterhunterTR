@@ -18,7 +18,9 @@ const START_MIN := 600.0  ## 10:00
 const DEFAULT_SUN := 1.6
 const INDOOR_SUN := 1.1
 const CAVE_SUN := 0.12  ## roofless cave rooms: the sun must not light them like a house
-const GROUND_TINTS := {"tint_a": Color(1, 1, 0.92), "tint_b": Color(0.78, 0.9, 0.78), "tint_c": Color(1.06, 1.02, 0.8)}
+const GROUND_TINTS := {
+	"tint_a": Color(1, 1, 0.92), "tint_b": Color(0.78, 0.9, 0.78), "tint_c": Color(1.06, 1.02, 0.8)
+}
 
 static var forced_period := ""  ## tests / screenshots
 
@@ -104,7 +106,11 @@ func apply_location(zone_look: Dictionary, is_indoor: bool) -> void:
 	if _env_node:
 		var path := WorldFx.env_path(String(look.get("env", "")))
 		if indoor:
-			path = "res://world/look/cave_env.tres" if _is_cave() else "res://world/look/interior_env.tres"
+			path = (
+				"res://world/look/cave_env.tres"
+				if _is_cave()
+				else "res://world/look/interior_env.tres"
+			)
 		_env = (load(path) as Environment).duplicate(true)
 		if not indoor and look.has("fog_density"):
 			_env.fog_density = float(look.fog_density)
@@ -139,7 +145,12 @@ func _capture_base() -> void:
 		gb[k] = Color(String(g[k])) if g.has(k) else GROUND_TINTS[k]
 	gb["desaturate"] = float(g.get("desaturate", 0.0))
 	_base = {
-		"sun_energy": (CAVE_SUN if _is_cave() else INDOOR_SUN) if indoor else float(look.get("sun_energy", DEFAULT_SUN)),
+		"sun_energy":
+		(
+			(CAVE_SUN if _is_cave() else INDOOR_SUN)
+			if indoor
+			else float(look.get("sun_energy", DEFAULT_SUN))
+		),
 		"sky_top": _sky(_env, "sky_top_color"),
 		"sky_horizon": _sky(_env, "sky_horizon_color"),
 		"ambient": _env.ambient_light_color,
@@ -219,13 +230,17 @@ func _resolve(name: String) -> Dictionary:
 		"sun_color": sun_color(el).lerp(Color(String(p.sun_color)), float(p.sun_color_weight)),
 		"sun_energy": float(b.sun_energy) * float(p.sun_energy_mult),
 		"sky_top": (b.sky_top as Color).lerp(Color(String(p.sky_top)), float(p.sky_top_weight)),
-		"sky_horizon": (b.sky_horizon as Color).lerp(Color(String(p.sky_horizon)), float(p.sky_horizon_weight)),
-		"ambient": (b.ambient as Color).lerp(Color(String(p.ambient_color)), float(p.ambient_weight)),
+		"sky_horizon":
+		(b.sky_horizon as Color).lerp(Color(String(p.sky_horizon)), float(p.sky_horizon_weight)),
+		"ambient":
+		(b.ambient as Color).lerp(Color(String(p.ambient_color)), float(p.ambient_weight)),
 		"ambient_energy": float(b.ambient_energy) * float(p.ambient_energy_mult),
 		"fog_color": (b.fog_color as Color).lerp(Color(String(p.fog_color)), float(p.fog_weight)),
 		"fog_density": float(b.fog_density) * float(p.fog_density_mult),
-		"shadow_tint": (b.shadow_tint as Color).lerp(Color(String(p.shadow_tint)), float(p.post_weight)),
-		"highlight_tint": (b.highlight_tint as Color).lerp(Color(String(p.highlight_tint)), float(p.post_weight)),
+		"shadow_tint":
+		(b.shadow_tint as Color).lerp(Color(String(p.shadow_tint)), float(p.post_weight)),
+		"highlight_tint":
+		(b.highlight_tint as Color).lerp(Color(String(p.highlight_tint)), float(p.post_weight)),
 		"shadow_blur": float(p.shadow_blur),
 		"shafts": float(p.shafts),
 		"lamps": float(p.get("lamps", 0.0)),
@@ -242,11 +257,15 @@ func _resolve(name: String) -> Dictionary:
 
 func _current() -> Dictionary:
 	var d := {
-		"sun_elevation": _elev, "sun_azimuth": _azim,
+		"sun_elevation": _elev,
+		"sun_azimuth": _azim,
 		"sun_color": _sun.light_color if _sun else Color.WHITE,
 		"sun_energy": _sun.light_energy if _sun else 1.0,
 		"shadow_blur": _sun.shadow_blur if _sun else 0.25,
-		"shafts": _shafts, "lamps": _lamps, "windows": _windows, "fireflies": _fireflies,
+		"shafts": _shafts,
+		"lamps": _lamps,
+		"windows": _windows,
+		"fireflies": _fireflies,
 	}
 	if _env:
 		d["sky_top"] = _sky(_env, "sky_top_color")
@@ -283,7 +302,9 @@ func _write(d: Dictionary) -> void:
 	_azim = float(d.sun_azimuth)
 	if _sun:
 		var dir := -to_sun(_elev, _azim)
-		_sun.global_transform.basis = Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.BACK)
+		_sun.global_transform.basis = Basis.looking_at(
+			dir, Vector3.UP if absf(dir.y) < 0.99 else Vector3.BACK
+		)
 		_sun.light_color = d.sun_color
 		_sun.light_energy = float(d.sun_energy)
 		_sun.shadow_blur = float(d.shadow_blur)

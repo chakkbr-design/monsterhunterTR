@@ -28,15 +28,24 @@ func _run() -> void:
 	root.add_child(scene)
 	await frames(10)
 	var player: CharacterBody3D = get_first_node_in_group("ow_player")
-	check(game.party.size() >= 1, "party seeded (%s)" % [game.party[0].display_name if game.party.size() else "-"])
-	check(get_nodes_in_group("ow_wild").size() == 3, "spawn zone filled to 3 (%d)" % get_nodes_in_group("ow_wild").size())
+	check(
+		game.party.size() >= 1,
+		"party seeded (%s)" % [game.party[0].display_name if game.party.size() else "-"]
+	)
+	check(
+		get_nodes_in_group("ow_wild").size() == 3,
+		"spawn zone filled to 3 (%d)" % get_nodes_in_group("ow_wild").size()
+	)
 
 	# Walk forward along the path: player should move.
 	var start := player.global_position
 	Input.action_press("move_forward")
 	await frames(60)
 	Input.action_release("move_forward")
-	check(player.global_position.z < start.z - 3.0, "moves forward (dz %.2f)" % (player.global_position.z - start.z))
+	check(
+		player.global_position.z < start.z - 3.0,
+		"moves forward (dz %.2f)" % (player.global_position.z - start.z)
+	)
 
 	# Jump.
 	await frames(10)
@@ -74,9 +83,18 @@ func _run() -> void:
 		await physics_frame
 		if not _battles.is_empty() and not player.locked and not game.is_busy():
 			break
-	check(not _battles.is_empty() and _battles[0].get("outcome") != null, "trainer spotted player and battled")
+	check(
+		not _battles.is_empty() and _battles[0].get("outcome") != null,
+		"trainer spotted player and battled"
+	)
 	var won: bool = not _battles.is_empty() and _battles[0].get("outcome") == "win"
-	check(game.flags.get("trainer_test_youngster", false) == won, "trainer flag matches outcome (%s)" % [_battles[0].get("outcome") if _battles.size() else "-"])
+	check(
+		game.flags.get("trainer_test_youngster", false) == won,
+		(
+			"trainer flag matches outcome (%s)"
+			% [_battles[0].get("outcome") if _battles.size() else "-"]
+		)
+	)
 	check(not player.locked, "player unlocked afterwards")
 
 	# Heal spot.

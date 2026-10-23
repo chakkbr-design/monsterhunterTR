@@ -135,10 +135,16 @@ const GLOBAL_COOLDOWN := 1.0
 const FATIGUE_ANCHORS := [[5.0, 50.0], [10.0, 35.0], [40.0, 10.0]]
 const PREPARE_BY_KIND := {
 	"dash": 0.18,
-	"arc": 0.15, "multi_arc": 0.15, "whip": 0.15,
-	"projectile": 0.15, "homing": 0.15,
+	"arc": 0.15,
+	"multi_arc": 0.15,
+	"whip": 0.15,
+	"projectile": 0.15,
+	"homing": 0.15,
 	"stream": 0.2,
-	"self_buff": 0.2, "debuff_aoe": 0.2, "clones": 0.2, "zone": 0.2,
+	"self_buff": 0.2,
+	"debuff_aoe": 0.2,
+	"clones": 0.2,
+	"zone": 0.2,
 }
 
 
@@ -149,7 +155,11 @@ static func pp_cost(mv: Dictionary) -> float:
 		return PP_POOL_REF / maxf(1.0, float(mv.uses))
 	if mv.get("category", "") == "status":
 		return 3.0
-	var total := float(mv.get("power", 0)) * maxf(1.0, float(mv.get("count", 1))) * maxf(1.0, float(mv.get("hits", 1)))
+	var total := (
+		float(mv.get("power", 0))
+		* maxf(1.0, float(mv.get("count", 1)))
+		* maxf(1.0, float(mv.get("hits", 1)))
+	)
 	if mv.get("kind", "") == "stream":
 		total *= maxf(1.0, float(mv.get("duration", 1.0)) / float(mv.get("tick", 0.15)))
 	return clampf(ceilf(total / 20.0), 1.0, 12.0)
@@ -190,7 +200,10 @@ static func cooldown(mv: Dictionary) -> float:
 	if mv.has("cooldown"):
 		return maxf(float(mv.cooldown), MIN_COOLDOWN)
 	var weight := float(mv.fatigue) if mv.has("fatigue") else pp_cost(mv) * 10.0
-	var cd := (float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + weight / 40.0) * COOLDOWN_SCALE
+	var cd := (
+		(float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + weight / 40.0)
+		* COOLDOWN_SCALE
+	)
 	cd = maxf(cd, MIN_STATUS_COOLDOWN if mv.get("category", "") == "status" else MIN_COOLDOWN)
 	if is_stat_move(mv):
 		cd *= STAT_MOVE_COOLDOWN_MULT

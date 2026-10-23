@@ -85,27 +85,41 @@ func handle(ev: InputEvent) -> bool:
 				if not ev.echo:
 					cancelled.emit()
 				return true
-			KEY_UP: move(0, -1); return true
-			KEY_DOWN: move(0, 1); return true
-			KEY_LEFT: move(-1, 0); return true
-			KEY_RIGHT: move(1, 0); return true
+			KEY_UP:
+				move(0, -1)
+				return true
+			KEY_DOWN:
+				move(0, 1)
+				return true
+			KEY_LEFT:
+				move(-1, 0)
+				return true
+			KEY_RIGHT:
+				move(1, 0)
+				return true
 		if ev.unicode >= 32:
 			if type_char(String.chr(ev.unicode)):
 				_jump_to_ok()
 			return true
 		return false
 	match Kit.nav(ev):
-		"up": move(0, -1)
-		"down": move(0, 1)
-		"left": move(-1, 0)
-		"right": move(1, 0)
-		"ok": activate()
+		"up":
+			move(0, -1)
+		"down":
+			move(0, 1)
+		"left":
+			move(-1, 0)
+		"right":
+			move(1, 0)
+		"ok":
+			activate()
 		"back":
 			if value == "":
 				cancelled.emit()
 			else:
 				erase()
-		_: return false
+		_:
+			return false
 	return true
 
 
@@ -154,7 +168,11 @@ static func allowed(ch: String) -> bool:
 
 ## Acrescenta um caractere. Falso se não coube ou não é permitido.
 func type_char(ch: String) -> bool:
-	if not allowed(ch) or value.length() >= MAX_LEN or (ch == " " and (value == "" or value.ends_with(" "))):
+	if (
+		not allowed(ch)
+		or value.length() >= MAX_LEN
+		or (ch == " " and (value == "" or value.ends_with(" ")))
+	):
 		return false
 	value += ch
 	_auto_caps()

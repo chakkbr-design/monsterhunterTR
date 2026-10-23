@@ -121,9 +121,20 @@ func _spawn_leaf(focus: Vector3) -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_leaves.add_child(mi)
 	var py := tree.y + 2.0 + _rng.randf_range(-0.4, 0.4)
-	mi.global_position = Vector3(tree.x + _rng.randf_range(-1.5, 1.5), py, tree.z + _rng.randf_range(-1.5, 1.5))
-	_live.append({"node": mi, "mat": mat, "age": 0.0, "life": _rng.randf_range(4.0, 7.0),
-			"phase": _rng.randf() * TAU, "spin": _rng.randf_range(4.0, 9.0), "ground": tree.y})
+	mi.global_position = Vector3(
+		tree.x + _rng.randf_range(-1.5, 1.5), py, tree.z + _rng.randf_range(-1.5, 1.5)
+	)
+	_live.append(
+		{
+			"node": mi,
+			"mat": mat,
+			"age": 0.0,
+			"life": _rng.randf_range(4.0, 7.0),
+			"phase": _rng.randf() * TAU,
+			"spin": _rng.randf_range(4.0, 9.0),
+			"ground": tree.y
+		}
+	)
 
 
 func _update_leaves(delta: float, g: float, wd: Vector2) -> void:

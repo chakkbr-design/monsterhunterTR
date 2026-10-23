@@ -81,8 +81,10 @@ func _input(ev: InputEvent) -> void:
 	if a == "" and ev is InputEventKey and ev.pressed:
 		var k: int = ev.physical_keycode if ev.physical_keycode != 0 else ev.keycode
 		match k:
-			KEY_PAGEUP, KEY_Z: a = "prev_box"
-			KEY_PAGEDOWN, KEY_C: a = "next_box"
+			KEY_PAGEUP, KEY_Z:
+				a = "prev_box"
+			KEY_PAGEDOWN, KEY_C:
+				a = "next_box"
 	if a == "":
 		return
 	get_viewport().set_input_as_handled()
@@ -102,9 +104,12 @@ func press(a: String) -> void:
 				return
 			if a == "ok":
 				match _menu_cur:
-					0: _open_party("deposit")
-					1: _go("box")
-					2: _open_party("organize")
+					0:
+						_open_party("deposit")
+					1:
+						_go("box")
+					2:
+						_open_party("organize")
 		"box":
 			_press_box(a)
 		"action":
@@ -136,8 +141,10 @@ func press(a: String) -> void:
 
 func _press_box(a: String) -> void:
 	match a:
-		"up": slot = posmod(slot - COLS, game.BOX_SIZE)
-		"down": slot = posmod(slot + COLS, game.BOX_SIZE)
+		"up":
+			slot = posmod(slot - COLS, game.BOX_SIZE)
+		"down":
+			slot = posmod(slot + COLS, game.BOX_SIZE)
 		"left":
 			if slot % COLS == 0:
 				_switch_box(-1)
@@ -150,9 +157,12 @@ func _press_box(a: String) -> void:
 				slot -= COLS - 1
 			else:
 				slot += 1
-		"prev_box": _switch_box(-1)
-		"next_box": _switch_box(1)
-		"back": _go("menu")
+		"prev_box":
+			_switch_box(-1)
+		"next_box":
+			_switch_box(1)
+		"back":
+			_go("menu")
 		"ok":
 			if selected_mon() != null:
 				_act_cur = 0
@@ -276,6 +286,7 @@ func box_count(b: int) -> int:
 
 # --- Desenho (refeito a cada tecla) ---
 
+
 func _render() -> void:
 	Kit.clear(_box)
 	if screen == "":
@@ -293,8 +304,21 @@ func _render() -> void:
 			main.add_child(Kit.label("O que você quer fazer?", Kit.DIM))
 			for i in ENTRIES.size():
 				main.add_child(Kit.row([ENTRIES[i]], [240], i == _menu_cur))
-			main.add_child(Kit.label("Equipe: %d/%d · PC: %d/%d" % [game.party.size(), game.PARTY_MAX,
-				game.pc.size(), game.BOX_SIZE * game.BOX_COUNT], Kit.DIM, 15))
+			main.add_child(
+				Kit.label(
+					(
+						"Equipe: %d/%d · PC: %d/%d"
+						% [
+							game.party.size(),
+							game.PARTY_MAX,
+							game.pc.size(),
+							game.BOX_SIZE * game.BOX_COUNT
+						]
+					),
+					Kit.DIM,
+					15
+				)
+			)
 			_box.add_child(Kit.hint("↑/↓ escolhe · E/Enter confirma · Esc/Q sai"))
 			return
 		"box", "action", "confirm":
@@ -318,12 +342,22 @@ func _render() -> void:
 	h.add_child(_summary(side_mon))
 	var hint := ""
 	match screen:
-		"box": hint = "Setas movem · ←/→ na borda ou PgUp/PgDn (Z/C) trocam de caixa · E escolhe · Esc volta"
-		"action": hint = "↑/↓ escolhe · E confirma · Esc volta"
-		"confirm": hint = "←/→ Sim/Não · E confirma · Esc cancela"
+		"box":
+			hint = "Setas movem · ←/→ na borda ou PgUp/PgDn (Z/C) trocam de caixa · E escolhe · Esc volta"
+		"action":
+			hint = "↑/↓ escolhe · E confirma · Esc volta"
+		"confirm":
+			hint = "←/→ Sim/Não · E confirma · Esc cancela"
 		"party":
-			hint = "↑/↓ escolhe · E guarda no PC · Esc volta" if party_mode == "deposit" else \
-				("↑/↓ escolhe o destino · E troca · Esc cancela" if _held >= 0 else "↑/↓ escolhe · E pega para mover · Esc volta")
+			hint = (
+				"↑/↓ escolhe · E guarda no PC · Esc volta"
+				if party_mode == "deposit"
+				else (
+					"↑/↓ escolhe o destino · E troca · Esc cancela"
+					if _held >= 0
+					else "↑/↓ escolhe · E pega para mover · Esc volta"
+				)
+			)
 	_box.add_child(Kit.hint(hint))
 
 
@@ -429,14 +463,21 @@ func _render_party(main: VBoxContainer) -> void:
 		var r := HBoxContainer.new()
 		r.add_theme_constant_override("separation", 8)
 		r.add_child(_icon(m, 28))
-		var cols := [m.display_name, "Nv %d" % m.level, ["HP %d/%d" % [m.hp, m.max_hp], Kit.hp_color(m)],
-			[Kit.status_text(m), Kit.BAD], ["◆ movendo" if i == _held else "", Kit.ACCENT]]
+		var cols := [
+			m.display_name,
+			"Nv %d" % m.level,
+			["HP %d/%d" % [m.hp, m.max_hp], Kit.hp_color(m)],
+			[Kit.status_text(m), Kit.BAD],
+			["◆ movendo" if i == _held else "", Kit.ACCENT]
+		]
 		var row := Kit.row(cols, PARTY_W, i == _party_cur)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		r.add_child(row)
 		main.add_child(r)
 	if party_mode == "deposit":
-		main.add_child(Kit.label("PC: %d/%d" % [game.pc.size(), game.BOX_SIZE * game.BOX_COUNT], Kit.DIM, 15))
+		main.add_child(
+			Kit.label("PC: %d/%d" % [game.pc.size(), game.BOX_SIZE * game.BOX_COUNT], Kit.DIM, 15)
+		)
 
 
 ## Painel lateral: nível, tipos, natureza, HP e golpes.

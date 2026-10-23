@@ -3,6 +3,7 @@ extends SceneTree
 ## godot --path . --resolution 1280x720 --script res://tests/world/shot_pewter.gd
 ## Saves docs/screens/pewter.png (Pewter, gym street), forest.png (Viridian Forest) and pewter_gym.png.
 
+
 func _initialize() -> void:
 	_run.call_deferred()
 

@@ -11,7 +11,15 @@ const POKEDEX := "pokedex"
 const DEX_BALLS := 5
 
 ## Passos do roteiro, em ordem.
-const STEPS := ["leave_house", "oak_stop", "pick_starter", "rival_battle", "get_parcel", "deliver_parcel", "done"]
+const STEPS := [
+	"leave_house",
+	"oak_stop",
+	"pick_starter",
+	"rival_battle",
+	"get_parcel",
+	"deliver_parcel",
+	"done"
+]
 
 
 static func on(flags: Dictionary, k: String) -> bool:
@@ -56,7 +64,11 @@ static func interior_event(flags: Dictionary, id: String) -> String:
 			if on(flags, "has_parcel") and not on(flags, "has_pokedex"):
 				return "parcel_deliver"
 		"mart_viridian":
-			if on(flags, "got_starter") and not on(flags, "has_parcel") and not on(flags, "has_pokedex"):
+			if (
+				on(flags, "got_starter")
+				and not on(flags, "has_parcel")
+				and not on(flags, "has_pokedex")
+			):
 				return "mart_parcel"
 		"player_house":
 			if on(flags, "rival_battle_done") and not on(flags, "mom_healed"):
@@ -97,16 +109,24 @@ static func first_rival_party(flags: Dictionary) -> Array:
 ## Falas do Oak fora de cena.
 static func oak_lines(flags: Dictionary) -> PackedStringArray:
 	if on(flags, "has_pokedex"):
-		return PackedStringArray(["Venha me visitar de vez em quando.", "Quero saber como está indo a sua Pokédex!"])
+		return PackedStringArray(
+			["Venha me visitar de vez em quando.", "Quero saber como está indo a sua Pokédex!"]
+		)
 	if on(flags, "has_parcel"):
 		return PackedStringArray(["Hm? Você tem algo para mim?"])
 	if on(flags, "rival_battle_done"):
-		return PackedStringArray(["{PLAYER}, a Cidade de Viridian fica ao norte, depois da Rota 1.",
-			"Dizem que a loja de lá recebeu uma encomenda minha."])
+		return PackedStringArray(
+			[
+				"{PLAYER}, a Cidade de Viridian fica ao norte, depois da Rota 1.",
+				"Dizem que a loja de lá recebeu uma encomenda minha."
+			]
+		)
 	if on(flags, "got_starter"):
 		return PackedStringArray(["Se um Pokémon selvagem aparecer, o seu pode lutar com ele."])
 	if on(flags, "oak_stopped"):
-		return PackedStringArray(["Nessas três Poké Balls há Pokémon.", "Pode escolher um, {PLAYER}!"])
+		return PackedStringArray(
+			["Nessas três Poké Balls há Pokémon.", "Pode escolher um, {PLAYER}!"]
+		)
 	return PackedStringArray(["Ah, {PLAYER}! Hoje é um grande dia."])
 
 
@@ -121,7 +141,9 @@ static func rival_lines(flags: Dictionary) -> PackedStringArray:
 static func mom_lines(flags: Dictionary) -> PackedStringArray:
 	if not on(flags, "got_starter"):
 		return PackedStringArray(["O Prof. Carvalho, aqui do lado, estava procurando você."])
-	return PackedStringArray(["{PLAYER}! Descanse um pouco.", "Pronto, seu time está cheio de energia!"])
+	return PackedStringArray(
+		["{PLAYER}! Descanse um pouco.", "Pronto, seu time está cheio de energia!"]
+	)
 
 
 ## Pewter: o guia leva ao ginásio uma vez, e só antes da Insígnia da Rocha.

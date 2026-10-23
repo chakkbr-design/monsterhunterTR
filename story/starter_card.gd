@@ -7,8 +7,12 @@ extends CanvasLayer
 signal answered(yes: bool)
 
 const TYPE_COLORS := {
-	"grass": Color(0.35, 0.7, 0.3), "fire": Color(0.92, 0.45, 0.2), "water": Color(0.3, 0.55, 0.92),
-	"poison": Color(0.6, 0.35, 0.7), "normal": Color(0.62, 0.62, 0.5), "flying": Color(0.55, 0.6, 0.9),
+	"grass": Color(0.35, 0.7, 0.3),
+	"fire": Color(0.92, 0.45, 0.2),
+	"water": Color(0.3, 0.55, 0.92),
+	"poison": Color(0.6, 0.35, 0.7),
+	"normal": Color(0.62, 0.62, 0.5),
+	"flying": Color(0.55, 0.6, 0.9),
 }
 const ARM_S := 0.2  ## ignora o aperto de E que abriu o cartão
 

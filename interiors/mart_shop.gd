@@ -52,7 +52,11 @@ static func sellable(game: Object = null) -> Array:
 	if g == null:
 		return out
 	for id in g.bag:
-		if sell_price(String(id)) > 0 and int(g.bag[id]) > 0 and String(Dex.item(String(id)).get("category", "")) != "key":
+		if (
+			sell_price(String(id)) > 0
+			and int(g.bag[id]) > 0
+			and String(Dex.item(String(id)).get("category", "")) != "key"
+		):
 			out.append(String(id))
 	out.sort()
 	return out
@@ -86,7 +90,12 @@ static func buy(id: String, n: int, game: Object = null) -> bool:
 ## Removes the items and pays half price each. False if there aren't enough or it can't be sold.
 static func sell(id: String, n: int, game: Object = null) -> bool:
 	var g := _game(game)
-	if g == null or n <= 0 or sell_price(id) <= 0 or String(Dex.item(id).get("category", "")) == "key":
+	if (
+		g == null
+		or n <= 0
+		or sell_price(id) <= 0
+		or String(Dex.item(id).get("category", "")) == "key"
+	):
 		return false
 	if not g.take_item(id, n):
 		return false

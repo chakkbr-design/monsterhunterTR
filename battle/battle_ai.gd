@@ -76,7 +76,9 @@ func error_chance() -> float:
 	if think_scale <= SLOP_KNEE:
 		var t := (think_scale - SLOP_BASE) / (SLOP_KNEE - SLOP_BASE)
 		return SLOP_KNEE_VALUE * t * t * (3.0 - 2.0 * t)
-	return lerpf(SLOP_KNEE_VALUE, SLOP_MAX, clampf((think_scale - SLOP_KNEE) / (1.6 - SLOP_KNEE), 0.0, 1.0))
+	return lerpf(
+		SLOP_KNEE_VALUE, SLOP_MAX, clampf((think_scale - SLOP_KNEE) / (1.6 - SLOP_KNEE), 0.0, 1.0)
+	)
 
 
 func _jump_error() -> float:
@@ -135,7 +137,11 @@ func move_ready(d: float) -> bool:
 	if f.moves.is_empty() or f.gcd_t > 0.0:
 		return false
 	for id in f.moves:
-		if float(f.move_cd.get(id, 0.0)) <= 0.0 and in_range(id, d) and f.stamina >= Dex.fatigue(Dex.move(id)):
+		if (
+			float(f.move_cd.get(id, 0.0)) <= 0.0
+			and in_range(id, d)
+			and f.stamina >= Dex.fatigue(Dex.move(id))
+		):
 			return true
 	return false
 
@@ -171,8 +177,11 @@ func step(dt: float) -> Vector3:
 		if fire and f.can_act():
 			tactic_on = _tactic_ok()
 			var used := _use_best_move(d)
-			think = (_rng().randf_range(THINK_MIN, THINK_MAX) if used else THINK_RETRY) * think_scale \
-					* (ATTACK_THINK if ally_mode() == ATTACK else 1.0)
+			think = (
+				(_rng().randf_range(THINK_MIN, THINK_MAX) if used else THINK_RETRY)
+				* think_scale
+				* (ATTACK_THINK if ally_mode() == ATTACK else 1.0)
+			)
 	if f.out_of_pp() and d > 1.4:
 		return dir
 	if ally_mode() == DEFEND:
@@ -237,14 +246,22 @@ func _stat_move_maxed(id: String) -> bool:
 		"self_buff":
 			return int(f.stages.get(String(mv.get("stat", "")), 0)) >= 6
 		"debuff_aoe":
-			return is_instance_valid(f.opponent) and int(f.opponent.stages.get(String(mv.get("stat", "")), 0)) <= -6
+			return (
+				is_instance_valid(f.opponent)
+				and int(f.opponent.stages.get(String(mv.get("stat", "")), 0)) <= -6
+			)
 	return false
 
 
 ## DEFEND: ponto entre o líder (mon controlado) e o inimigo, a até 1,5 m do líder. INF = sem líder.
 func guard_spot() -> Vector3:
 	var lead: BattleFighter = f.arena.get("player")
-	if not is_instance_valid(lead) or lead == f or not lead.active() or not is_instance_valid(f.opponent):
+	if (
+		not is_instance_valid(lead)
+		or lead == f
+		or not lead.active()
+		or not is_instance_valid(f.opponent)
+	):
 		return Vector3.INF
 	var to_f := lead.flat_to(f.opponent)
 	return lead.pos2(lead.position) + to_f.normalized() * minf(GUARD_DIST, to_f.length() * 0.5)
@@ -336,8 +353,15 @@ func _use_best_move(d: float) -> bool:
 		if d < 2.2:
 			return f.struggle()
 		return false
-	var avail: Array = f.moves.filter(func(id): return f.gcd_t <= 0.0 and float(f.move_cd.get(id, 0.0)) <= 0.0 \
-			and in_range(id, d) and f.arena.moves.can_afford(f, id))
+	var avail: Array = f.moves.filter(
+		func(id):
+			return (
+				f.gcd_t <= 0.0
+				and float(f.move_cd.get(id, 0.0)) <= 0.0
+				and in_range(id, d)
+				and f.arena.moves.can_afford(f, id)
+			)
+	)
 	if avail.is_empty():
 		return false
 	if _immune_only(avail) and _has_connecting_move():
@@ -456,6 +480,7 @@ func _worth_status(id: String, has_damage: bool) -> bool:
 
 # --- Esquiva ---
 
+
 func _aimed_at_me(dir: Vector3) -> bool:
 	var to_me := f.position - f.opponent.position
 	to_me.y = 0.0
@@ -468,7 +493,10 @@ func _incoming_body_attack(d: float) -> Vector3:
 	var o := f.opponent
 	if o.dash_t > 0.0 and d - BattleFighter.HIT_RANGE <= float(o.dash_move.get("range", 0.0)):
 		return o.dash_dir if _aimed_at_me(o.dash_dir) else Vector3.ZERO
-	if o.lunge_t > 0.0 and d - BattleFighter.HIT_RANGE <= BattleFighter.LUNGE_SPEED * BattleFighter.LUNGE_TIME:
+	if (
+		o.lunge_t > 0.0
+		and d - BattleFighter.HIT_RANGE <= BattleFighter.LUNGE_SPEED * BattleFighter.LUNGE_TIME
+	):
 		return o.lunge_dir if _aimed_at_me(o.lunge_dir) else Vector3.ZERO
 	return Vector3.ZERO
 
@@ -496,8 +524,12 @@ func _jump_threat(d: float) -> String:
 	var o := f.opponent
 	var sig := "@%d" % o.cast_n
 	var mv := o.cast_move
-	if o.root_t > 0.0 and String(mv.get("kind", "")) == "aoe_self" and String(mv.get("type", "")) == "ground" \
-			and d <= float(mv.get("radius", 0.0)):
+	if (
+		o.root_t > 0.0
+		and String(mv.get("kind", "")) == "aoe_self"
+		and String(mv.get("type", "")) == "ground"
+		and d <= float(mv.get("radius", 0.0))
+	):
 		return "quake" + sig
 	if _incoming_body_attack(d) != Vector3.ZERO and _can_clear(o):
 		return "dash" + sig

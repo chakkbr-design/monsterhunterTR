@@ -6,11 +6,15 @@ extends WorldNpc
 func _ready() -> void:
 	super._ready()
 	if lines.size() == 1 and lines[0] == "Olá!":
-		lines = PackedStringArray(["{PLAYER} ligou o PC.", "O sistema de armazenamento ainda está em manutenção."])
+		lines = PackedStringArray(
+			["{PLAYER} ligou o PC.", "O sistema de armazenamento ainda está em manutenção."]
+		)
 
 
 func _build_body() -> void:
-	if InteriorLook.furniture(self, "Computador", Vector3(0, 1.15, 0), Vector3(0.8, 0.6, 0.5), Color(0.82, 0.84, 0.88)):
+	if InteriorLook.furniture(
+		self, "Computador", Vector3(0, 1.15, 0), Vector3(0.8, 0.6, 0.5), Color(0.82, 0.84, 0.88)
+	):
 		show_tag = false
 		return
 	var mi := MeshInstance3D.new()

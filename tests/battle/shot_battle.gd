@@ -94,7 +94,9 @@ func _shot(name: String) -> void:
 func _battle_shot() -> void:
 	var p := Mon.create("charmander", 22)
 	p.moves = ["flamethrower", "scratch", "ember", "growl"]
-	var a := _arena([p], [Mon.create("pidgeotto", 24)], {"seed": 11, "battle_size": 1, "kind": "wild"})
+	var a := _arena(
+		[p], [Mon.create("pidgeotto", 24)], {"seed": 11, "battle_size": 1, "kind": "wild"}
+	)
 	await _steps(a, 1.5)
 	a.enemy.controller = "none"
 	a.player.position = Vector3(0, 0, 1.6)
@@ -113,7 +115,11 @@ func _battle_shot() -> void:
 func _capture_shot() -> void:
 	var g = load("res://core/game.gd").new()
 	g.bag = {"poke_ball": 5}
-	var a := _arena([Mon.create("squirtle", 12)], [Mon.create("pikachu", 6)], {"seed": 2, "battle_size": 1, "game": g})
+	var a := _arena(
+		[Mon.create("squirtle", 12)],
+		[Mon.create("pikachu", 6)],
+		{"seed": 2, "battle_size": 1, "game": g}
+	)
 	await _steps(a, 1.5)
 	a.enemy.controller = "none"
 	a.enemy.position = Vector3(0.4, 0, -1.6)

@@ -2,7 +2,9 @@ extends Node3D
 ## Cena de teste: monta uma party, abre uma batalha selvagem pela ponte do Game e reabre outra ao terminar.
 ## Enter = nova batalha agora; T = alterna batalha de treinador (Brock); A = alterna IA controlando o jogador.
 
-const WILD := [["pidgey", 6], ["rattata", 6], ["caterpie", 7], ["spearow", 7], ["weedle", 6], ["pikachu", 6]]
+const WILD := [
+	["pidgey", 6], ["rattata", 6], ["caterpie", 7], ["spearow", 7], ["weedle", 6], ["pikachu", 6]
+]
 
 @onready var game: Node = get_node("/root/Game")
 var _label: Label
@@ -43,7 +45,9 @@ func _ready() -> void:
 	ui.add_child(_label)
 	add_child(ui)
 	if game.party.is_empty():
-		game.party = [Mon.create("charmander", 8), Mon.create("squirtle", 8), Mon.create("bulbasaur", 8)]
+		game.party = [
+			Mon.create("charmander", 8), Mon.create("squirtle", 8), Mon.create("bulbasaur", 8)
+		]
 	game.battle_finished.connect(_on_finished)
 	_start()
 
@@ -56,10 +60,20 @@ func _start() -> void:
 		var foes: Array = []
 		for e in tr.get("party", [["geodude", 12], ["onix", 14]]):
 			foes.append(Mon.create(String(e[0]), int(e[1])))
-		game.request_battle(foes, {"kind": "trainer", "trainer_id": "brock", "can_run": false, "autoplay": _autoplay}, self, Vector3.ZERO)
+		game.request_battle(
+			foes,
+			{"kind": "trainer", "trainer_id": "brock", "can_run": false, "autoplay": _autoplay},
+			self,
+			Vector3.ZERO
+		)
 	else:
 		var w: Array = WILD.pick_random()
-		game.request_battle([Mon.create(w[0], w[1])], {"kind": "wild", "can_run": true, "autoplay": _autoplay}, self, Vector3.ZERO)
+		game.request_battle(
+			[Mon.create(w[0], w[1])],
+			{"kind": "wild", "can_run": true, "autoplay": _autoplay},
+			self,
+			Vector3.ZERO
+		)
 
 
 func _on_finished(result: Dictionary) -> void:
@@ -68,9 +82,23 @@ func _on_finished(result: Dictionary) -> void:
 	for e in result.get("exp", []):
 		lines.append("%s +%d EXP (Lv %d)" % [e.mon.display_name, e.amount, e.mon.level])
 	if result.get("caught_mon") is Mon:
-		lines.append("Capturou %s! Equipe: %d" % [result.caught_mon.display_name, game.party.size()])
-	lines.append("Equipe: " + ", ".join(game.party.map(func(m): return "%s %d/%d" % [m.display_name, m.hp, m.max_hp])))
-	lines.append("Enter: próxima batalha   T: treinador %s   A: automático %s   H: curar equipe" % ["on" if _trainer else "off", "on" if _autoplay else "off"])
+		lines.append(
+			"Capturou %s! Equipe: %d" % [result.caught_mon.display_name, game.party.size()]
+		)
+	lines.append(
+		(
+			"Equipe: "
+			+ ", ".join(
+				game.party.map(func(m): return "%s %d/%d" % [m.display_name, m.hp, m.max_hp])
+			)
+		)
+	)
+	lines.append(
+		(
+			"Enter: próxima batalha   T: treinador %s   A: automático %s   H: curar equipe"
+			% ["on" if _trainer else "off", "on" if _autoplay else "off"]
+		)
+	)
 	_label.text = "\n".join(lines)
 	_wait = 4.0
 

@@ -36,8 +36,15 @@ var seen: Dictionary = {}
 var caught: Dictionary = {}
 
 const TRAINER_PAYOUTS := {
-	"rival": 35, "youngster": 16, "bug_catcher": 12, "lass": 16, "camper": 20,
-	"picnicker": 20, "hiker": 36, "jr_trainer": 20, "gym_leader": 99,
+	"rival": 35,
+	"youngster": 16,
+	"bug_catcher": 12,
+	"lass": 16,
+	"camper": 20,
+	"picnicker": 20,
+	"hiker": 36,
+	"jr_trainer": 20,
+	"gym_leader": 99,
 }
 
 ## Golpes que não couberam: [{mon: Mon, move: String}]. A UI consome com resolve_learn.
@@ -63,6 +70,8 @@ func _ready() -> void:
 	# Testes headless começam sempre de um jogo novo.
 	if DisplayServer.get_name() != "headless":
 		last_save = load_game()
+
+
 var _opts := {}
 var _enemies: Array = []
 
@@ -241,10 +250,21 @@ const SAVE_VERSION := 1
 
 
 func to_dict() -> Dictionary:
-	return {"version": SAVE_VERSION, "party": party.map(func(m): return m.to_dict()),
-		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags,
-		"seen": seen.keys(), "caught": caught.keys(),
-		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender, "play_time": play_time, "trainer_id": trainer_id}
+	return {
+		"version": SAVE_VERSION,
+		"party": party.map(func(m): return m.to_dict()),
+		"pc": pc.map(func(m): return m.to_dict()),
+		"bag": bag,
+		"money": money,
+		"flags": flags,
+		"seen": seen.keys(),
+		"caught": caught.keys(),
+		"player_name": player_name,
+		"rival_name": rival_name,
+		"player_gender": player_gender,
+		"play_time": play_time,
+		"trainer_id": trainer_id
+	}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -277,7 +297,12 @@ func save_game(extra := {}) -> bool:
 		return false
 	f.store_string(JSON.stringify(d, "\t"))
 	f.close()
-	return DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(save_path)) == OK
+	return (
+		DirAccess.rename_absolute(
+			ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(save_path)
+		)
+		== OK
+	)
 
 
 ## Carrega o save e devolve o dicionário inteiro (vazio se não houver save).
