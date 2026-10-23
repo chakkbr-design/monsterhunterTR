@@ -19,6 +19,8 @@ var player_name := "RED"
 var rival_name := "BLUE"
 ## "male" ou "female".
 var player_gender := "male"
+## Tempo de jogo em segundos (conta fora da tela de título).
+var play_time := 0.0
 
 ## Iniciais oferecidos no laboratório, na ordem da mesa.
 const STARTERS := ["Bulbasaur", "Charmander", "Squirtle"]
@@ -43,6 +45,12 @@ var last_save: Dictionary = {}
 var spawn_request: Dictionary = {}
 
 var _arena: Node = null
+
+
+func _process(delta: float) -> void:
+	var s := get_tree().current_scene
+	if s and not s.scene_file_path.begins_with("res://ui/front/"):
+		play_time += delta
 
 
 func _ready() -> void:
@@ -91,6 +99,7 @@ func new_game(p_name: String, r_name: String, gender := "male") -> void:
 	player_name = p_name if p_name != "" else "RED"
 	rival_name = r_name if r_name != "" else "BLUE"
 	player_gender = gender
+	play_time = 0.0
 
 
 ## Escolha do inicial: entra na equipe e define o do rival (flag rival_starter, lida pelo trainers.json).
@@ -164,7 +173,7 @@ func to_dict() -> Dictionary:
 	return {"version": SAVE_VERSION, "party": party.map(func(m): return m.to_dict()),
 		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags,
 		"seen": seen.keys(), "caught": caught.keys(),
-		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender}
+		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender, "play_time": play_time}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -176,6 +185,7 @@ func from_dict(d: Dictionary) -> void:
 	player_name = d.get("player_name", "RED")
 	rival_name = d.get("rival_name", "BLUE")
 	player_gender = d.get("player_gender", "male")
+	play_time = float(d.get("play_time", 0.0))
 	seen = {}
 	caught = {}
 	for sp in d.get("seen", []):
@@ -205,6 +215,7 @@ func load_game() -> Dictionary:
 	if not d is Dictionary:
 		return {}
 	from_dict(d)
+	last_save = d
 	return d
 
 
