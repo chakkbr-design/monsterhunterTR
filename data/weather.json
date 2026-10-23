@@ -1,0 +1,25 @@
+{
+ "comment": "D76 weather cells. Cell types drift with the shared wind and fade over their lifetime. Channels map a cell onto the coverage texture: R wet, G snow, B fog, A cloud (0..1). snow_zones is the operator's rule that snow may form anywhere. D84: mode 'demo' turns random spawning off and schedules one guaranteed rain shower (demo_rain); mode 'random' is D76's behaviour, and every type still spawns through --weather=<type>.",
+ "mode": "demo",
+ "demo_rain": {"start_min": "11:30", "start_max": "14:00", "hours_on_player": 1.0,
+  "radius": 40.0, "life_hours": 2.0, "drift": 0.6, "upwind_m": 44.0},
+ "radius": {"min": 20.0, "max": 40.0},
+ "lifetime_hours": {"min": 0.5, "max": 2.0},
+ "fade_hours": 0.1,
+ "spawn_interval_hours": {"min": 0.15, "max": 0.7},
+ "max_cells": 8,
+ "spawn_near": 50.0,
+ "spawn_far": 150.0,
+ "drift_speed": 140.0,
+ "dry_hours": 0.6,
+ "snow_accum_hours": 0.5,
+ "snow_melt_hours": 1.5,
+ "snow_zones": "any",
+ "types": {
+  "overcast": {"weight": 0.0, "drift": 0.7, "channels": {"cloud": 1.0}},
+  "fog": {"weight": 0.0, "drift": 0.35, "channels": {"fog": 1.0, "cloud": 0.25}},
+  "rain": {"weight": 2.0, "drift": 1.2, "channels": {"wet": 0.8, "cloud": 0.7}},
+  "thunderstorm": {"weight": 0.0, "drift": 1.4, "channels": {"wet": 1.0, "cloud": 0.95}},
+  "snow": {"weight": 0.0, "drift": 0.8, "channels": {"snow": 1.0, "cloud": 0.6}}
+ }
+}

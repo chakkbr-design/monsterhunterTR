@@ -1,0 +1,56 @@
+{
+  "_doc": "Which PMD SpriteCollab animation a fighter plays for each game action (docs/PMD_SPRITES.md). Every value is a fallback chain: the first animation the species has wins; an empty chain end means 'keep the current loop'. 'states' are looping body states, picked by priority (first true wins). 'kinds' map a move's kind to a one-shot; 'moves' override a single move id. Hold rules: dash holds RushFrame while the dash runs; stream/beam hold HitFrame until the cast ends; Faint holds its last frame. 'pin_feet' are the anims the importer anchors on each frame's own feet (no drawn bob); every other anim anchors on its shadow point. 'rates' scale a single anim's playback speed (default 1.0).",
+  "pin_feet": ["Idle", "Walk", "Hop"],
+  "flap": {"_doc": "Wind moves: a flyer loops its wing-beat anim (first in chain it has) at rate for the move's duration (min secs) instead of the kind's one-shot; species without one use the normal chain.",
+    "moves": ["gust", "twister", "hurricane", "air_slash", "whirlwind"], "chain": ["Fly", "Hover"], "rate": 3.0, "secs": 0.7},
+  "swoop": {"_doc": "D107: dash moves that travel the body but are a wing swing, so they play their one-shot (Attack) instead of holding RushFrame for the dash's whole run.",
+    "moves": ["wing_attack", "aerial_ace"]},
+  "rates": {
+    "Idle": 0.6
+  },
+  "hop_frames": {
+    "rise": 1,
+    "fall": 5
+  },
+  "states": {
+    "faint":   ["Faint"],
+    "hurt":    ["Hurt"],
+    "stagger": ["LostBalance", "Hurt"],
+    "sleep":   ["Sleep"],
+    "prepare": ["Charge", "Idle"],
+    "fly":     ["Fly", "Hover", "Walk"],
+    "airborne": ["Hop", "Walk"],
+    "move":    ["Walk"],
+    "idle":    ["Idle", "Walk"]
+  },
+  "kinds": {
+    "dash":       ["Attack"],
+    "arc":        ["Attack"],
+    "multi_arc":  ["Double", "Attack"],
+    "whip":       ["Strike", "Attack"],
+    "projectile": ["Shoot", "Charge", "Attack"],
+    "homing":     ["Shoot", "Charge", "Attack"],
+    "stream":     ["Shoot", "Charge", "Attack"],
+    "beam":       ["Shoot", "Charge", "Attack"],
+    "aoe_self":   ["Swing", "Rotate", "Attack"],
+    "aoe_target": ["Shoot", "Charge"],
+    "zone":       ["Shoot", "Charge"],
+    "debuff_aoe": ["Pose", "Shoot", "Charge"],
+    "self_buff":  ["Charge"],
+    "clones":     ["Rotate", "Charge"]
+  },
+  "moves": {
+    "tail_whip":   ["TailWhip", "Pose", "Swing", "Charge"],
+    "whirlwind":   ["FlapAround", "Shoot", "Charge"],
+    "smokescreen": ["Shoot", "Charge"],
+    "withdraw":    ["Withdraw", "Charge"],
+    "harden":      ["Withdraw", "Shake", "Charge"],
+    "rapid_spin":  ["Swing", "Rotate"],
+    "double_kick": ["Kick", "Double", "Attack"],
+    "poison_sting": ["Jab", "Shoot"],
+    "thunder_shock": ["Shock", "Shoot", "Charge", "Attack"],
+    "thunderbolt":  ["Shock", "Shoot", "Charge", "Attack"],
+    "thunder_wave": ["Shock", "Shoot", "Charge", "Attack"],
+    "thunder":      ["Shock", "Shoot", "Charge", "Attack"]
+  }
+}

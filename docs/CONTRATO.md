@@ -183,3 +183,22 @@ Quem chama um autoload de outra parte usa `get_node_or_null("/root/<Nome>")`, pa
 - Salas novas: guaritas da floresta (com saída de trás), pokemon_center_pewter, mart_pewter, pewter_gym (Brock e Camper Liam), pewter_museum, pewter_house1, pewter_house2.
 - Flags novas: `badge_boulder` (e `boulder_badge`), `pewter_guide_done`, `rival2_done`, `rival2_won`.
 - Autoloads: PCStorage, Evolution e Audio registrados. Testes que precisam de uma instância própria removem o autoload antes (ver tests/ui_evolution e tests/audio).
+
+## Rodada 5 — arte e UI do original, Rota 3, Mt. Moon
+
+A arte do original foi extraída para `res://original/assets/...` (fora do git, só para uso pessoal; ver `original/LEIAME.md`).
+O código do original usa `res://assets/...`; aqui o caminho equivalente é `res://original/assets/...`.
+Tem: `pokemon/<espécie>/` (front, back, icon, party_icon, overworld + sprite.json, `pmd/*-Anim.png` + `pmd/anims.json`),
+`sprites/` (NPCs, treinador, props), `models/hgss|kenney|pokemon/*.scn` (modelos 3D com textura embutida), `textures/`, `ui/badges`, `vfx/`, `fonts/` (Nunito, Pixelify Sans).
+Dados novos em `data/`: `pmd_anims.json`, `move_fx.json`, `time_of_day.json`, `time.json`, `weather.json`.
+
+| Dono | Pode editar |
+|---|---|
+| Núcleo | `core/`, `project.godot`, `docs/CONTRATO.md` |
+| Visual da batalha | `gfx/` (helpers visuais compartilhados), `battle/`, `tests/battle/`, `tests/gfx/` |
+| Visual da UI | `ui/` (todas as telas), `world/hud.gd`, `tests/ui*/` |
+| Visual do mundo | `world/` (menos `hud.gd` e `cave_builder.gd`), `interiors/interior_room.gd`, `interiors/*` visuais, `tests/world/` |
+| Conteúdo do mundo | `world/route_world.gd` (só a lista de zonas e ligações), `world/cave_builder.gd` (novo), `interiors/interior_defs.gd`, `story/`, `data/maps/*.json`, `data/trainers.json` (textos), `data/encounters/`, `tests/story/`, `tests/interiors/`, `tests/content/` |
+
+- `gfx/creature_sprite.gd` (dono: Visual da batalha) é o porte do `pokemon_sprites.gd` + animação PMD do original: um nó 3D billboard que mostra a espécie e toca as animações (Idle, Walk, Attack, Hurt, Faint...). O mundo usa o mesmo nó para os selvagens e para o Pokémon que segue o jogador. Entrega primeiro uma versão simples (Idle/Walk) para o mundo poder usar cedo.
+- Conflito em `route_world.gd`: o Conteúdo só mexe na lista de zonas/ligações; o resto é do Visual do mundo. Releia o arquivo antes de cada edição e mantenha as edições pequenas.

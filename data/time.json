@@ -1,0 +1,11 @@
+{
+	"scale": 20,
+	"fast_scale": 600,
+	"periods": [
+		{"id": "morning", "start": "06:00"},
+		{"id": "midday", "start": "10:00"},
+		{"id": "afternoon", "start": "15:00"},
+		{"id": "sunset", "start": "17:30"},
+		{"id": "night", "start": "19:00"}
+	]
+}
