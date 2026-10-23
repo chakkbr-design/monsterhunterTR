@@ -23,6 +23,7 @@ LearnMove="*res://ui/learn_move_ui.gd"
 PauseMenu="*res://ui/pause_menu.gd"
 Story="*res://story/story.gd"
 PCStorage="*res://ui/pc/pc_storage.gd"
+Evolution="*res://ui/evolution/evolution_ui.gd"
 
 [display]
 
