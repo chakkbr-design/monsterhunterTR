@@ -22,6 +22,12 @@ func _initialize() -> void:
 	game.mark_seen("Rattata")
 	game._finish({"outcome": "win"})
 	fails += int(game.money != money_before + 16 * 5 or not game.flags.get("trainer_test_youngster", false) or not game.seen.has("Rattata"))
+	var b := Mon.create("bulbasaur", 15)
+	b.add_exp(Growth.exp_for_level(b.growth, 16) - b.xp)
+	game.party = [b]
+	var r := {"outcome": "win"}
+	game._finish(r)
+	fails += int(b.species != "Ivysaur" or r.evolved.size() != 1)
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)

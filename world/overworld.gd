@@ -54,7 +54,12 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	var outcome := String(_result.get("outcome", "?"))
 	var hud := hud_of(self)
 	if hud:
-		hud.toast("Battle: %s" % outcome)
+		var lines := PackedStringArray([{"win": "Vitória!", "lose": "Você perdeu...", "run": "Fugiu.", "caught": "Capturado!"}.get(outcome, outcome)])
+		if _result.has("prize"):
+			lines.append("Ganhou P%d." % int(_result.prize))
+		for e in _result.get("evolved", []):
+			lines.append("%s evoluiu para %s!" % e)
+		hud.toast(" ".join(lines), 3.5)
 	if outcome == "lose":
 		_white_out(p)
 	return _result

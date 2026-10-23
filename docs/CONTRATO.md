@@ -67,3 +67,12 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - `Game.save_game(extra := {})` / `Game.load_game() -> Dictionary` em `user://save.json`. Use `extra` para a posição do jogador.
 - `StatCalc.acc_stage_mult(stage)` está em `StatCalc` (não em `Damage`).
 - Testes: `tests/core/test_core.gd` e `tests/core/test_game.gd`. Em teste headless, não use `root.get_node("/root/Game")` no `_initialize`; instancie `load("res://core/game.gd").new()`.
+
+## Integração (estado atual)
+
+- `opts` extras lidos só pela arena: `autoplay: bool` (IA controla o seu Pokémon), `seed: int`, `speed: float`, `ball: String`.
+- `result` traz também `exp: [{mon, amount, events}]`, `prize: int` (treinador vencido) e `evolved: [[de, para]]`.
+- Depois da batalha o `Game` evolui quem ficou com evolução por nível pendente.
+- A arena grava em cada `Mon` o HP, o pool de PP e o status persistente.
+- Pendentes: tela de esquecer golpe (eventos `learned: false`), itens durante a batalha, batalha 2x1 com aliado.
+- Cena principal: `res://world/overworld.tscn`.

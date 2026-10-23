@@ -164,6 +164,18 @@ func _on_arena_finished(result: Dictionary) -> void:
 	_finish(result)
 
 
+## Evolui quem ficou pendente na batalha. Devolve [[de, para], ...].
+func _evolve_pending() -> Array:
+	var out: Array = []
+	for m in party:
+		var into: String = m.evolution_target()
+		if into != "" and not m.is_fainted():
+			var from: String = m.display_name
+			m.evolve(into)
+			out.append([from, m.species])
+	return out
+
+
 ## Aplica as consequências da batalha e avisa o mundo. result ganha "prize" quando há dinheiro.
 func _finish(result: Dictionary) -> void:
 	var outcome: String = result.get("outcome", "")
@@ -178,6 +190,7 @@ func _finish(result: Dictionary) -> void:
 	elif outcome == "lose":
 		money /= 2
 		heal_party()
+	result.evolved = _evolve_pending()
 	_opts = {}
 	_enemies = []
 	battle_finished.emit(result)

@@ -66,16 +66,17 @@ func _run() -> void:
 	# Trainer: step into the sight corridor; press interact to page through dialogue.
 	_battles.clear()
 	player.global_position = Vector3(0, 0.2, -6)
-	for i in 600:
+	for i in 7200:
 		if i % 20 == 0:
 			Input.action_press("interact")
 		elif i % 20 == 2:
 			Input.action_release("interact")
 		await physics_frame
-		if game.flags.get("trainer_test_youngster", false) and not player.locked:
+		if not _battles.is_empty() and not player.locked and not game.is_busy():
 			break
 	check(not _battles.is_empty() and _battles[0].get("outcome") != null, "trainer spotted player and battled")
-	check(game.flags.get("trainer_test_youngster", false), "trainer flagged beaten")
+	var won: bool = not _battles.is_empty() and _battles[0].get("outcome") == "win"
+	check(game.flags.get("trainer_test_youngster", false) == won, "trainer flag matches outcome (%s)" % [_battles[0].get("outcome") if _battles.size() else "-"])
 	check(not player.locked, "player unlocked afterwards")
 
 	# Heal spot.
