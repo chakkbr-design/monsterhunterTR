@@ -37,7 +37,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if game == null:
 		game = get_node_or_null("/root/Game")
-	var w := Kit.window(self, Vector2(1060, 0))
+	var w := Kit.window(self, Vector2(1060, 0), "PC DE ARMAZENAMENTO")
 	_root = w[0]
 	_box = w[1]
 	_root.visible = false
@@ -280,7 +280,6 @@ func _render() -> void:
 	Kit.clear(_box)
 	if screen == "":
 		return
-	_box.add_child(Kit.label("PC de armazenamento", Kit.TEXT, 24))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 16)
 	_box.add_child(h)
@@ -363,7 +362,7 @@ func _slot_card(m: Mon, selected: bool) -> PanelContainer:
 	p.add_child(v)
 	if m == null:
 		return p
-	var ic := _icon(m, 30)
+	var ic := _icon(m, 36)
 	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(ic)
 	var n := Kit.label(m.display_name, Kit.SEL if selected else Kit.TEXT, 13)
@@ -377,8 +376,11 @@ func _slot_card(m: Mon, selected: bool) -> PanelContainer:
 	return p
 
 
-## Ícone provisório da espécie: círculo na cor do 1º tipo, borda na cor do 2º, inicial no meio.
-func _icon(m: Mon, size: int) -> PanelContainer:
+## Ícone da espécie (arte do original); sem arte, círculo na cor do tipo com a inicial.
+func _icon(m: Mon, size: int) -> Control:
+	var tex := Kit.mon_fitted(m.species, 64)
+	if tex:
+		return Kit.sprite_rect(tex, Vector2(size, size), false)
 	var t: Array = m.types
 	var p := PanelContainer.new()
 	p.custom_minimum_size = Vector2(size, size)

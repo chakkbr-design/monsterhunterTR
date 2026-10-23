@@ -40,6 +40,7 @@ func _run() -> void:
 	t.press("ok")
 	await _wait(90)
 	await _shot("res://docs/screens/title.png")
+	await _shot("res://docs/screens/ui_title.png")
 	t.press("down")
 	t.press("ok")
 	t.press("up")
@@ -51,6 +52,7 @@ func _run() -> void:
 		await process_frame
 	t.press("right")
 	await _wait(10)
+	await _shot("res://docs/screens/title_gender.png")
 	t.press("ok")
 	for ch in "Ana":
 		t._entry.type_char(ch)

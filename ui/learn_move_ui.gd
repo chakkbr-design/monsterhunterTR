@@ -25,7 +25,7 @@ func _ready() -> void:
 		game = get_node_or_null("/root/Game")
 	if game:
 		game.learn_requested.connect(_on_learn_requested)
-	var w := Kit.window(self, Vector2(720, 0))
+	var w := Kit.window(self, Vector2(760, 0), "NOVO GOLPE")
 	_root = w[0]
 	_box = w[1]
 	_root.visible = false
@@ -142,14 +142,22 @@ func _render() -> void:
 	if state == "msg":
 		var l := Kit.label(message)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(0, 70)
 		_box.add_child(l)
-		_box.add_child(Kit.hint("E/Enter: continuar"))
+		_box.add_child(Kit.hint("E/Enter continuar"))
 		return
 	var p := _current()
 	var m: Mon = p.mon
-	_box.add_child(Kit.label("%s  Nv %d" % [m.display_name, m.level], Kit.DIM, 15))
-	_box.add_child(Kit.label("%s quer aprender %s." % [m.display_name, Kit.move_name(p.move)], Kit.TEXT, 22))
-	_box.add_child(Kit.label("Mas já sabe 4 golpes. Qual golpe esquecer?" if state == "pick" else "", Kit.DIM))
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 14)
+	top.add_child(Kit.sprite_rect(Kit.party_icon(m.species), Vector2(72, 72)))
+	var tc := VBoxContainer.new()
+	tc.add_theme_constant_override("separation", 0)
+	tc.add_child(Kit.label("%s  Nv %d" % [m.display_name, m.level], Kit.DIM, 15))
+	tc.add_child(Kit.label("%s quer aprender %s." % [m.display_name, Kit.move_name(p.move)], Kit.TEXT, 22))
+	tc.add_child(Kit.label("Mas já sabe 4 golpes. Qual golpe esquecer?" if state == "pick" else "", Kit.DIM))
+	top.add_child(tc)
+	_box.add_child(top)
 	_box.add_child(Kit.row(["Golpe", "Tipo", "Categoria", "Poder", "Prec."], WIDTHS, false, true))
 	for i in m.moves.size():
 		_box.add_child(Kit.row(Kit.move_cols(m.moves[i]), WIDTHS, state == "pick" and cursor == i))

@@ -85,7 +85,7 @@ var _entry: PanelContainer
 var _dialog: PanelContainer
 var _speaker: Label
 var _text: Label
-var _more: Label
+var _more: Control
 var _ask: PanelContainer
 var _ask_box: VBoxContainer
 var _fade: ColorRect
@@ -116,31 +116,35 @@ func _build() -> void:
 	_backdrop = Backdrop.new()
 	add_child(_backdrop)
 
-	var center := _full(CenterContainer.new())
+	var center := _full(MarginContainer.new())
+	center.add_theme_constant_override("margin_left", 80)
+	center.add_theme_constant_override("margin_top", 70)
 	add_child(center)
 	_title_box = VBoxContainer.new()
-	_title_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_title_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_title_box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_title_box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_title_box.add_theme_constant_override("separation", 18)
 	center.add_child(_title_box)
 	_logo = Logo.new()
 	_title_box.add_child(_logo)
-	_press = Kit.label("Pressione Enter", Kit.TEXT, 24)
-	_press.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_press.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
-	_press.add_theme_constant_override("outline_size", 6)
+	_press = Kit.header("PRESSIONE ENTER", Kit.PAPER, 30)
+	_press.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.4))
+	_press.add_theme_constant_override("shadow_offset_y", 3)
 	_title_box.add_child(_press)
 	_menu_row = HBoxContainer.new()
-	_menu_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_menu_row.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_menu_row.add_theme_constant_override("separation", 16)
 	_title_box.add_child(_menu_row)
-	var menu_panel := PanelContainer.new()
-	menu_panel.custom_minimum_size = Vector2(300, 0)
+	var menu_panel := Kit.Win.new()
+	menu_panel.custom_minimum_size = Vector2(320, 0)
+	menu_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_menu_row.add_child(menu_panel)
 	_menu_box = VBoxContainer.new()
 	_menu_box.add_theme_constant_override("separation", 6)
 	menu_panel.add_child(_menu_box)
-	_card = PanelContainer.new()
-	_card.custom_minimum_size = Vector2(300, 0)
+	_card = Kit.Win.new("CONTINUAR")
+	_card.custom_minimum_size = Vector2(360, 0)
 	_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_menu_row.add_child(_card)
 	_card_box = VBoxContainer.new()
@@ -160,8 +164,20 @@ func _build() -> void:
 	_intro = _full(Control.new())
 	add_child(_intro)
 	_shade = _full(ColorRect.new())
-	_shade.color = Color(0.05, 0.06, 0.12, 0.72)
+	_shade.color = Color("10162a")
 	_intro.add_child(_shade)
+	var rg := Gradient.new()
+	rg.colors = PackedColorArray([Color("33447a"), Color(0.06, 0.08, 0.16, 0)])
+	var rgt := GradientTexture2D.new()
+	rgt.gradient = rg
+	rgt.fill = GradientTexture2D.FILL_RADIAL
+	rgt.fill_from = Vector2(0.5, 0.42)
+	rgt.fill_to = Vector2(0.5, 1.05)
+	var glow := TextureRect.new()
+	glow.texture = rgt
+	glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glow.stretch_mode = TextureRect.STRETCH_SCALE
+	_intro.add_child(_full(glow))
 	var sc := _full(CenterContainer.new())
 	sc.offset_bottom = -170
 	_intro.add_child(sc)
@@ -172,8 +188,7 @@ func _build() -> void:
 	_prof.kind = "prof"
 	_stage.add_child(_prof)
 	_rival_fig = Figure.new()
-	_rival_fig.kind = "boy"
-	_rival_fig.modulate = Color(0.75, 1.0, 0.8)
+	_rival_fig.kind = "rival"
 	_stage.add_child(_rival_fig)
 	_pick = HBoxContainer.new()
 	_pick.add_theme_constant_override("separation", 40)
@@ -187,14 +202,14 @@ func _build() -> void:
 	var ac := _full(CenterContainer.new())
 	ac.offset_bottom = -170
 	_intro.add_child(ac)
-	_ask = PanelContainer.new()
+	_ask = Kit.Win.new()
 	_ask.custom_minimum_size = Vector2(420, 0)
 	ac.add_child(_ask)
 	_ask_box = VBoxContainer.new()
 	_ask_box.add_theme_constant_override("separation", 6)
 	_ask.add_child(_ask_box)
 
-	_dialog = PanelContainer.new()
+	_dialog = Kit.Win.new(PROF_NAME)
 	_dialog.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	_dialog.offset_left = 80
 	_dialog.offset_right = -80
@@ -204,11 +219,12 @@ func _build() -> void:
 	var dv := VBoxContainer.new()
 	_dialog.add_child(dv)
 	_speaker = Kit.label(PROF_NAME, Kit.ACCENT, 16)
+	_speaker.visible = false
 	dv.add_child(_speaker)
 	_text = Kit.label("", Kit.TEXT, 22)
 	_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	dv.add_child(_text)
-	_more = Kit.hint("Enter »")
+	_more = Kit.hint("Enter continuar")
 	dv.add_child(_more)
 
 	_fade = _full(ColorRect.new())
@@ -260,7 +276,7 @@ func _go_options() -> void:
 	_render()
 
 
-const MENU_TEXT := {"continue": "Continuar", "new": "Novo jogo", "options": "Opções", "quit": "Sair"}
+const MENU_TEXT := {"continue": "CONTINUAR", "new": "NOVO JOGO", "options": "OPÇÕES", "quit": "SAIR"}
 
 
 func _render() -> void:
@@ -272,15 +288,14 @@ func _render() -> void:
 			for i in menu_items.size():
 				_menu_box.add_child(Kit.row([MENU_TEXT[menu_items[i]]], [240], i == cursor))
 			_menu_box.add_child(Kit.hint("Setas escolhem · Enter confirma"))
+			_card.title = "CONTINUAR"
 			if menu_items[cursor] == "continue":
 				_fill_card()
 		"options":
-			var vol := "<  %d%%  >" % settings.volume
-			var full := "<  %s  >" % ("Sim" if settings.fullscreen else "Não")
-			var rows := [["Volume geral", vol], ["Tela cheia", full], ["Voltar", ""]]
-			_menu_box.add_child(Kit.label("Opções", Kit.ACCENT, 20))
-			for i in rows.size():
-				_menu_box.add_child(Kit.row(rows[i], [150, 110], i == cursor))
+			_menu_box.add_child(Kit.header("OPÇÕES", Kit.BLUE, 20))
+			_menu_box.add_child(Kit.option_row("VOLUME %d%%" % settings.volume, "volume", int(settings.volume) / 10, "", cursor == 0))
+			_menu_box.add_child(Kit.option_row("TELA CHEIA", "toggle", settings.fullscreen, "", cursor == 1))
+			_menu_box.add_child(Kit.option_row("VOLTAR", "action", 0, "", cursor == 2))
 			_menu_box.add_child(Kit.hint("Esquerda/direita ajustam · Esc volta"))
 
 
@@ -315,11 +330,10 @@ func _fill_card() -> void:
 	if s.is_empty():
 		return
 	_card.visible = true
-	_card_box.add_child(Kit.label(s.name, Kit.SEL, 22))
-	_card_box.add_child(Kit.label("Parceiro: " + (s.lead if s.lead != "" else "nenhum"), Kit.TEXT))
-	_card_box.add_child(Kit.label("Dinheiro: $%d" % s.money, Kit.TEXT))
+	var rows := [["JOGADOR", s.name], ["PARCEIRO", s.lead if s.lead != "" else "nenhum"], ["DINHEIRO", Kit.format_money(int(s.money))]]
 	if s.when != "":
-		_card_box.add_child(Kit.label("Salvo em " + s.when, Kit.DIM, 15))
+		rows.append(["SALVO EM", s.when])
+	_card_box.add_child(Kit.info_grid(rows, 24))
 
 
 # --- Introdução ---
@@ -392,18 +406,18 @@ func _render_pick() -> void:
 		var v := VBoxContainer.new()
 		var p := PanelContainer.new()
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Kit.SEL_BG if i == cursor else Color(0, 0, 0, 0.25)
-		sb.set_corner_radius_all(10)
+		sb.bg_color = Kit.RED_SOFT if i == cursor else Color(Kit.PAPER, 0.85)
+		sb.set_corner_radius_all(12)
 		sb.set_content_margin_all(10)
-		if i == cursor:
-			sb.border_color = Kit.SEL
-			sb.set_border_width_all(3)
+		sb.border_color = Kit.RED if i == cursor else Kit.INK
+		sb.set_border_width_all(4 if i == cursor else 3)
+		sb.anti_aliasing = true
 		p.add_theme_stylebox_override("panel", sb)
 		var f := Figure.new()
 		f.kind = "boy" if i == 0 else "girl"
 		p.add_child(f)
 		v.add_child(p)
-		var l := Kit.label("Menino" if i == 0 else "Menina", Kit.SEL if i == cursor else Kit.TEXT, 22)
+		var l := Kit.header("MENINO" if i == 0 else "MENINA", Kit.RED if i == cursor else Kit.PAPER, 24)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)
 		_pick.add_child(v)

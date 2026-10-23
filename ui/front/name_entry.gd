@@ -48,8 +48,7 @@ func _ready() -> void:
 	_grid = VBoxContainer.new()
 	_grid.add_theme_constant_override("separation", 4)
 	v.add_child(_grid)
-	var h := Kit.hint("Digite ou use as setas · Enter escolhe · Backspace apaga · Esc volta")
-	h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var h := Kit.hint("Teclado digita · Setas movem · Enter escolhe · Backspace apaga · Esc volta")
 	v.add_child(h)
 	visible = false
 

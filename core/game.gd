@@ -23,6 +23,8 @@ var rival_name := "BLUE"
 var player_gender := "male"
 ## Tempo de jogo em segundos (conta fora da tela de título).
 var play_time := 0.0
+## Número do Cartão de Treinador (sorteado no novo jogo).
+var trainer_id := 0
 
 ## Iniciais oferecidos no laboratório, na ordem da mesa.
 const STARTERS := ["Bulbasaur", "Charmander", "Squirtle"]
@@ -109,6 +111,7 @@ func new_game(p_name: String, r_name: String, gender := "male") -> void:
 	rival_name = r_name if r_name != "" else "BLUE"
 	player_gender = gender
 	play_time = 0.0
+	trainer_id = randi_range(10000, 99999)
 
 
 ## Escolha do inicial: entra na equipe e define o do rival (flag rival_starter, lida pelo trainers.json).
@@ -227,7 +230,7 @@ func to_dict() -> Dictionary:
 	return {"version": SAVE_VERSION, "party": party.map(func(m): return m.to_dict()),
 		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags,
 		"seen": seen.keys(), "caught": caught.keys(),
-		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender, "play_time": play_time}
+		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender, "play_time": play_time, "trainer_id": trainer_id}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -240,6 +243,7 @@ func from_dict(d: Dictionary) -> void:
 	rival_name = d.get("rival_name", "BLUE")
 	player_gender = d.get("player_gender", "male")
 	play_time = float(d.get("play_time", 0.0))
+	trainer_id = int(d.get("trainer_id", 0))
 	seen = {}
 	caught = {}
 	for sp in d.get("seen", []):

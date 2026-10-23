@@ -26,7 +26,7 @@ var t := 0.0
 var _root: Control
 var _stage: Control
 var _label: Label
-var _hint: Label
+var _hint: Control
 var _closed_at := -1
 var _parts: Array = []   # partículas: {p: Vector2 (polar a, r) ou pos, v, life, max, size, out}
 var _rng := RandomNumberGenerator.new()
@@ -63,6 +63,7 @@ func _build() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(bg)
 	_stage = Stage.new()
+	_stage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_stage.ui = self
 	_stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -302,11 +303,19 @@ func _draw_stage(c: Control) -> void:
 	var col := new_col if show_new else old_col
 	var sz := base * (1.18 if show_new else 1.0)
 	col = col.lerp(Color(1, 1, 0.95), glow * 0.45)
-	var pts := _shape(sp, center, sz)
-	c.draw_colored_polygon(pts, col)
-	var outline := pts.duplicate()
-	outline.append(pts[0])
-	c.draw_polyline(outline, col.lightened(0.5), 3.0, true)
+	var tex: Texture2D = Kit.mon_front(sp)
+	if tex:
+		# Sprite do original; o brilho (modulate acima de 1) o deixa branco como na evolução clássica.
+		var px := floorf(base * 2.6 / tex.get_height()) * tex.get_height()
+		var ts := Vector2(tex.get_width(), tex.get_height()) * (px / tex.get_height()) * (1.0 if show_new else 0.9)
+		var w := 1.0 + glow * 6.0
+		c.draw_texture_rect(tex, Rect2(center - ts * 0.5, ts), false, Color(w, w, w))
+	else:
+		var pts := _shape(sp, center, sz)
+		c.draw_colored_polygon(pts, col)
+		var outline := pts.duplicate()
+		outline.append(pts[0])
+		c.draw_polyline(outline, col.lightened(0.5), 3.0, true)
 
 	# Partículas.
 	for p in _parts:
