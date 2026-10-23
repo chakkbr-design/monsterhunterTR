@@ -1,0 +1,9 @@
+{
+  "area": "Viridian City (pond-side park and the north-west grove)",
+  "_doc": "Not in FireRed/LeafGreen — ours, the same woodland life Pallet Town's groves roll. The pond-side park's bushes and the cut-gated grove are the town's two bug habitats, so both roll the bugs, with the odd Pidgey in the branches. mode: visible (they roam, they never ambush); levels sit at Route 1's (Pidgey 2-5, Rattata 2-4), which is the next route north.",
+  "entries": [
+    {"species": "Caterpie", "level_range": [3, 5], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [3, 5], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Pidgey",   "level_range": [3, 5], "weight": 20, "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

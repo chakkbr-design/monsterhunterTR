@@ -1,0 +1,9 @@
+{
+  "area": "Pewter City",
+  "_doc": "Not in FireRed/LeafGreen — ours, user-approved (the FRLG city has no wild Pokémon). Gentle village life for the HGSS Pewter lawns: birds and rats, at the level a town just before Mt. Moon can hold (at or below Route 2's). mode: visible — they roam the lawns, they never ambush.",
+  "entries": [
+    {"species": "Pidgey",  "level_range": [8, 10], "weight": 40, "mode": "visible", "time": "any", "behaviour": "flee"},
+    {"species": "Rattata", "level_range": [8, 10], "weight": 35, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Spearow", "level_range": [8, 10], "weight": 25, "mode": "visible", "time": "any", "behaviour": "passive"}
+  ]
+}

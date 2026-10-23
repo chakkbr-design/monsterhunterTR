@@ -1,0 +1,9 @@
+{
+  "area": "Route 1",
+  "_doc": "FireRed/LeafGreen Route 1: Pidgey and Rattata, Lv 2-5. mode: visible (roams in the open), grass (ambush in tall grass), both. B46: rate 21 = FRLG land_mons.encounter_rate (pret src/data/wild_encounters.json sRoute1_FireRed).",
+  "rate": 21,
+  "entries": [
+    {"species": "Pidgey",  "level_range": [2, 5], "weight": 50, "mode": "both", "time": "any", "behaviour": "flee"},
+    {"species": "Rattata", "level_range": [2, 4], "weight": 50, "mode": "both", "time": "any", "behaviour": "aggressive"}
+  ]
+}

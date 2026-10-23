@@ -1,0 +1,8 @@
+{
+  "area": "Clefairy grove",
+  "_doc": "The Clefairy grove (N04, a new side chamber off B2F): Clefairy roam the moonlit chamber in the open, drawn to the moonpool. The Lv 20 alpha CLEFABLE is a one-time static (static uid mtmoon_clefable), not a table entry. Clefairy-only so the grove's 15-strong gathering fills the pool.",
+  "rate": 10,
+  "entries": [
+    {"species": "Clefairy", "level_range": [12, 16], "weight": 100, "mode": "visible", "time": "any", "behaviour": "passive"}
+  ]
+}

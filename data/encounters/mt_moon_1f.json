@@ -1,0 +1,11 @@
+{
+  "area": "Mt. Moon 1F",
+  "_doc": "FireRed/LeafGreen Mt. Moon 1F land_mons (pret src/data/wild_encounters.json sMtMoon1F): Zubat/Geodude/Paras plus Clefairy in the rare slot. 12 FRLG slots aggregated by species: Zubat 7-10 (69), Geodude 7-9 (25), Paras 8 (5), Clefairy 8 (1). Visible roamers only (a cave has no tall grass) — every entry is mode 'visible'.",
+  "rate": 10,
+  "entries": [
+    {"species": "Zubat",    "level_range": [7, 10], "weight": 69, "mode": "visible", "time": "any", "behaviour": "aggressive"},
+    {"species": "Geodude",  "level_range": [7, 9],  "weight": 25, "mode": "visible", "time": "any", "behaviour": "aggressive"},
+    {"species": "Paras",    "level_range": [8, 8],  "weight": 5,  "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Clefairy", "level_range": [8, 8],  "weight": 1,  "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

@@ -1,0 +1,5 @@
+{
+ "_doc": "Poké Mart stock per shop id (D09). Keys are shop ids referenced by the Clerk NPC's metadata. Pewter adds escape_rope/repel in D21.",
+ "viridian": ["poke_ball", "potion", "antidote", "paralyze_heal", "burn_heal"],
+ "pewter": ["poke_ball", "potion", "antidote", "paralyze_heal", "awakening", "burn_heal", "escape_rope", "repel"]
+}

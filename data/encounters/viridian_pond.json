@@ -1,0 +1,17 @@
+{
+  "area": "Viridian City pond",
+  "_doc": "FireRed/LeafGreen Viridian City water, verbatim: Surf gives Psyduck (FR) or Slowpoke (LG) at Lv 20-40, and the rod gives Magikarp (Old, Lv 5), Poliwag/Goldeen/Magikarp (Good, Lv 5-15) and Psyduck/Poliwag/Poliwhirl/Slowpoke/Gyarados (Super, Lv 15-35). We have one game, so both version exclusives are here. 'method' records the FRLG source; 'mode' decides what spawns today — the Old/Good Rod entries are 'swim': visible swimmers you challenge from the shore (D63). By operator decision (B56) those swim levels are capped to the early-route band Lv 2-4, not FRLG's Lv 5-15. Surf and Super Rod stay 'water', reserved for the fishing/Surf system.",
+  "entries": [
+    {"species": "Psyduck",   "level_range": [20, 40], "weight": 100, "mode": "water"  , "method": "Surf",       "time": "any", "behaviour": "passive"},
+    {"species": "Slowpoke",  "level_range": [20, 40], "weight": 100, "mode": "water"  , "method": "Surf",       "time": "any", "behaviour": "passive"},
+    {"species": "Poliwag",   "level_range": [2, 4],  "weight": 60,  "mode": "swim"  , "method": "Fish Good",  "time": "any", "behaviour": "passive"},
+    {"species": "Goldeen",   "level_range": [3, 4],  "weight": 20,  "mode": "swim"  , "method": "Fish Good",  "time": "any", "behaviour": "passive"},
+    {"species": "Poliwag",   "level_range": [15, 25], "weight": 40,  "mode": "water"  , "method": "Fish Super", "time": "any", "behaviour": "flee"},
+    {"species": "Poliwhirl", "level_range": [20, 30], "weight": 40,  "mode": "water"  , "method": "Fish Super", "time": "any", "behaviour": "aggressive"},
+    {"species": "Psyduck",   "level_range": [15, 35], "weight": 5,   "mode": "water"  , "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Slowpoke",  "level_range": [15, 35], "weight": 5,   "mode": "water"  , "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Magikarp",  "level_range": [2, 4],   "weight": 100, "mode": "swim",   "method": "Fish Old",   "time": "any", "behaviour": "passive"},
+    {"species": "Magikarp",  "level_range": [2, 4],  "weight": 20,  "mode": "swim",   "method": "Fish Good",  "time": "any", "behaviour": "passive"},
+    {"species": "Gyarados",  "level_range": [15, 25], "weight": 15,  "mode": "water",   "method": "Fish Super", "time": "any", "behaviour": "aggressive"}
+  ]
+}

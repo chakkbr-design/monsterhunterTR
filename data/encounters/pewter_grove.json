@@ -1,0 +1,9 @@
+{
+  "area": "Pewter City (trees and flower garden)",
+  "_doc": "Not in FireRed/LeafGreen — ours, user-approved. Pewter's trees and its fenced flower garden hold the bugs, one step below the lawns' birds; the odd Pidgey sits in the branches. mode: visible.",
+  "entries": [
+    {"species": "Caterpie", "level_range": [6, 8], "weight": 45, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [6, 8], "weight": 45, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Pidgey",   "level_range": [7, 9], "weight": 10, "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

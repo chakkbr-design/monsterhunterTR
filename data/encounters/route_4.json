@@ -1,0 +1,24 @@
+{
+  "area": "Route 4",
+  "_doc": "FireRed/LeafGreen Route 4 (N04a). The grass roster is the ticket's FRLG list — Rattata/Spearow 8-12, Ekans/Sandshrew 6-12, Mankey 10-12 (rare). Route 4's valley has no tall grass, so the five land rows are mode 'both' and spawn as visible roamers via the zone's spawn zones. FRLG's water/rod rows are kept on file as mode 'water' (Surf and fishing do not exist yet, so they never spawn): surfing here gives Psyduck (FR) or Slowpoke (LG), the rods Magikarp/Poliwag/Goldeen/Poliwhirl/Gyarados.",
+  "rate": 20,
+  "entries": [
+    {"species": "Rattata",   "level_range": [8, 12],  "weight": 30,  "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Spearow",   "level_range": [8, 12],  "weight": 30,  "mode": "both", "time": "any", "behaviour": "flee"},
+    {"species": "Ekans",     "level_range": [6, 12],  "weight": 15,  "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Sandshrew", "level_range": [6, 12],  "weight": 15,  "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Mankey",    "level_range": [10, 12], "weight": 10,  "mode": "both", "time": "any", "behaviour": "aggressive"},
+
+    {"species": "Psyduck",   "level_range": [20, 40], "weight": 100, "mode": "water", "method": "Surf",      "time": "any", "behaviour": "passive"},
+    {"species": "Slowpoke",  "level_range": [20, 40], "weight": 100, "mode": "water", "method": "Surf",      "time": "any", "behaviour": "passive"},
+    {"species": "Magikarp",  "level_range": [5, 5],   "weight": 100, "mode": "water", "method": "Fish Old",  "time": "any", "behaviour": "passive"},
+    {"species": "Poliwag",   "level_range": [5, 15],  "weight": 60,  "mode": "water", "method": "Fish Good", "time": "any", "behaviour": "passive"},
+    {"species": "Goldeen",   "level_range": [5, 15],  "weight": 20,  "mode": "water", "method": "Fish Good", "time": "any", "behaviour": "passive"},
+    {"species": "Magikarp",  "level_range": [5, 15],  "weight": 20,  "mode": "water", "method": "Fish Good", "time": "any", "behaviour": "passive"},
+    {"species": "Psyduck",   "level_range": [15, 35], "weight": 5,   "mode": "water", "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Poliwag",   "level_range": [15, 25], "weight": 40,  "mode": "water", "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Poliwhirl", "level_range": [20, 30], "weight": 40,  "mode": "water", "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Slowpoke",  "level_range": [15, 35], "weight": 5,   "mode": "water", "method": "Fish Super", "time": "any", "behaviour": "passive"},
+    {"species": "Gyarados",  "level_range": [15, 25], "weight": 15,  "mode": "water", "method": "Fish Super", "time": "any", "behaviour": "aggressive"}
+  ]
+}

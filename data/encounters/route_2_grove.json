@@ -1,0 +1,8 @@
+{
+  "area": "Route 2 (groves)",
+  "_doc": "The bug half of Route 2's FireRed/LeafGreen table, for the route's groves and tree clumps: FRLG Route 2 grass is Pidgey 45%, Rattata 45%, Caterpie 5%, Weedle 5%, so a grove is the two bugs at FRLG's own levels. mode 'both' so they roam the grove visibly as well as ambushing from its grass. The road's own table (route_2.json) keeps Pidgey/Rattata.",
+  "entries": [
+    {"species": "Caterpie", "level_range": [3, 5], "weight": 50, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [3, 5], "weight": 50, "mode": "both", "time": "any", "behaviour": "passive"}
+  ]
+}

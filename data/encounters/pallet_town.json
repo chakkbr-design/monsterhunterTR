@@ -1,0 +1,10 @@
+{
+  "area": "Pallet Town",
+  "_doc": "Not in FireRed/LeafGreen — ours. Gentle village Pokémon for the HGSS-style Pallet: the open ground around the compact core — the north verge by the gate, the shore park and Oak's field — rolls birds and rats, plus the odd Spearow or Caterpie. mode: visible (they roam the grass, they never ambush).",
+  "entries": [
+    {"species": "Pidgey",   "level_range": [2, 3], "weight": 40, "mode": "visible", "time": "any", "behaviour": "flee"},
+    {"species": "Rattata",  "level_range": [2, 3], "weight": 35, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Spearow",  "level_range": [2, 3], "weight": 15, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Caterpie", "level_range": [2, 3], "weight": 10, "mode": "visible", "time": "any", "behaviour": "passive"}
+  ]
+}

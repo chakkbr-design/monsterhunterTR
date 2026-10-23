@@ -1,0 +1,5827 @@
+{
+  "_doc": "Real species. base = base stats; learnset = [[level, move], ...] limited to moves in moves.json (Gen 3 order); evo_moves = moves taught the moment the species evolves (the Gen 7+ \"Evo.\" rule): always learned, whatever the level, on top of any learnset entry at the current level; filled from Bulbapedia/PokeAPI Gen VII plus FRLG's evolution-level repeats, limited to moves in moves.json (see docs/bugs/B41); moves = default kit for test labs. Sprites: drop files in assets/pokemon/<slug>/ (see assets/pokemon/README.md); 'sprite' + 'placeholder_tint' are the fallback until then. base_exp = experience yield; growth = experience curve (medium_fast / medium_slow / fast / slow / erratic / fluctuating); evolution = {level, into} for level-up; {method: item|trade, item?, into} for stone/trade evolutions (data only, never fire on level-up). gender_ratio = female chance 0..1 (-1 = genderless), from pret/pokefirered species_info.h. placeholder_scale enlarges the placeholder sprite. jump_height = hop height in metres computed from weight_kg/height_m by tools/gen_jump_heights.py (small and light = springy); 0 = cannot jump. jump_height_override wins for outliers. locomotion = ground|hover|fly: ground walks and jumps; hover floats a little (no jump, ground aoe misses, dashes hit); fly is always airborne (no jump, ground aoe and dashes miss). Set by tools/gen_locomotion.py, pending approval. swimmer = moves in water (all Water types, D63); fish = flops slowly on land and never leaves the water (the rod fish); pad = may take a floating battle platform (the gym buoys; Staryu yes, Goldeen no). abilities = Gen 3 ability slots in order from pret/pokefirered species_info.h (one entry = one ability, two = a 50/50 slot; ids in data/abilities.json, display only).",
+  "Bulbasaur": {
+    "abilities": [
+      "overgrow"
+    ],
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 45,
+      "atk": 49,
+      "def": 49,
+      "spa": 65,
+      "spd": 65,
+      "spe": 45
+    },
+    "ev_yield": {
+      "spa": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 100,
+    "moves": [
+      "tackle",
+      "growl",
+      "leech_seed",
+      "razor_leaf"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        4,
+        "growl"
+      ],
+      [
+        7,
+        "leech_seed"
+      ],
+      [
+        10,
+        "vine_whip"
+      ],
+      [
+        15,
+        "poison_powder"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        20,
+        "razor_leaf"
+      ],
+      [
+        25,
+        "sweet_scent"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "base_exp": 64,
+    "growth": "medium_slow",
+    "evolution": {
+      "level": 16,
+      "into": "Ivysaur"
+    },
+    "dex_no": 1,
+    "category": "Seed Pokémon",
+    "height_m": 0.7,
+    "weight_kg": 6.9,
+    "flavor": "There is a plant seed on its back right from the day this POKéMON is born. The seed slowly grows larger.",
+    "jump_height": 0.3,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "whip": {
+      "reach": 4.0,
+      "tips": 1
+    },
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Ivysaur": {
+    "abilities": [
+      "overgrow"
+    ],
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 62,
+      "def": 63,
+      "spa": 80,
+      "spd": 80,
+      "spe": 60
+    },
+    "ev_yield": {
+      "spa": 1,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 115,
+    "base_exp": 142,
+    "growth": "medium_slow",
+    "moves": [
+      "tackle",
+      "growl",
+      "leech_seed",
+      "razor_leaf"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "leech_seed"
+      ],
+      [
+        10,
+        "vine_whip"
+      ],
+      [
+        15,
+        "poison_powder"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        22,
+        "razor_leaf"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#9ad6a0",
+    "placeholder_scale": 1.25,
+    "evolution": {
+      "level": 32,
+      "into": "Venusaur"
+    },
+    "dex_no": 2,
+    "category": "Seed Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 13.0,
+    "flavor": "There is a plant bulb on its back. When it absorbs nutrients, the bulb is said to blossom into a large flower.",
+    "jump_height": 0.5,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "whip": {
+      "reach": 4.8,
+      "tips": 2
+    },
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Venusaur": {
+    "abilities": [
+      "overgrow"
+    ],
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 80,
+      "atk": 82,
+      "def": 83,
+      "spa": 100,
+      "spd": 100,
+      "spe": 80
+    },
+    "ev_yield": {
+      "spa": 2,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 130,
+    "base_exp": 236,
+    "growth": "medium_slow",
+    "moves": [
+      "razor_leaf",
+      "leech_seed",
+      "sleep_powder",
+      "poison_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "leech_seed"
+      ],
+      [
+        1,
+        "vine_whip"
+      ],
+      [
+        15,
+        "poison_powder"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        22,
+        "razor_leaf"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#6fbf8a",
+    "placeholder_scale": 1.55,
+    "dex_no": 3,
+    "category": "Seed Pokémon",
+    "height_m": 2.0,
+    "weight_kg": 100.0,
+    "flavor": "A bewitching aroma wafts from its flower. The fragrance becalms those engaged in a battle.",
+    "jump_height": 0.42,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "whip": {
+      "reach": 5.6,
+      "tips": 3
+    },
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Charmander": {
+    "abilities": [
+      "blaze"
+    ],
+    "types": [
+      "fire"
+    ],
+    "base": {
+      "hp": 39,
+      "atk": 52,
+      "def": 43,
+      "spa": 60,
+      "spd": 50,
+      "spe": 65
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 95,
+    "moves": [
+      "scratch",
+      "growl",
+      "ember",
+      "flamethrower"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        7,
+        "ember"
+      ],
+      [
+        13,
+        "metal_claw"
+      ],
+      [
+        19,
+        "smokescreen"
+      ],
+      [
+        25,
+        "scary_face"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#ff8a4a",
+    "base_exp": 62,
+    "growth": "medium_slow",
+    "evolution": {
+      "level": 16,
+      "into": "Charmeleon"
+    },
+    "dex_no": 4,
+    "category": "Lizard Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 8.5,
+    "flavor": "From the time it is born, a flame burns at the tip of its tail. Its life would end if the flame were to go out.",
+    "jump_height": 0.52,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Charmeleon": {
+    "abilities": [
+      "blaze"
+    ],
+    "types": [
+      "fire"
+    ],
+    "base": {
+      "hp": 58,
+      "atk": 64,
+      "def": 58,
+      "spa": 80,
+      "spd": 65,
+      "spe": 80
+    },
+    "ev_yield": {
+      "spa": 1,
+      "spe": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 110,
+    "base_exp": 142,
+    "growth": "medium_slow",
+    "moves": [
+      "scratch",
+      "growl",
+      "ember",
+      "flamethrower"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "ember"
+      ],
+      [
+        13,
+        "metal_claw"
+      ],
+      [
+        20,
+        "smokescreen"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#ff6a3a",
+    "placeholder_scale": 1.25,
+    "evolution": {
+      "level": 36,
+      "into": "Charizard"
+    },
+    "dex_no": 5,
+    "category": "Flame Pokémon",
+    "height_m": 1.1,
+    "weight_kg": 19.0,
+    "flavor": "It lashes about with its tail to knock down its foe. It then tears up the fallen opponent with sharp claws.",
+    "jump_height": 0.92,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Charizard": {
+    "abilities": [
+      "blaze"
+    ],
+    "types": [
+      "fire",
+      "flying"
+    ],
+    "base": {
+      "hp": 78,
+      "atk": 84,
+      "def": 78,
+      "spa": 109,
+      "spd": 85,
+      "spe": 100
+    },
+    "ev_yield": {
+      "spa": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 125,
+    "base_exp": 240,
+    "growth": "medium_slow",
+    "moves": [
+      "scratch",
+      "ember",
+      "flamethrower",
+      "gust"
+    ],
+    "learnset": [
+      [
+        1,
+        "heat_wave"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "ember"
+      ],
+      [
+        1,
+        "metal_claw"
+      ],
+      [
+        20,
+        "smokescreen"
+      ]
+    ],
+    "evo_moves": [
+      "wing_attack"
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#ff8a30",
+    "placeholder_scale": 1.6,
+    "dex_no": 6,
+    "category": "Flame Pokémon",
+    "height_m": 1.7,
+    "weight_kg": 90.5,
+    "flavor": "Its wings can carry this POKéMON close to an altitude of 4,600 feet. It blows out fire at very high temperatures.",
+    "jump_height": 0.69,
+    "shape": "upright",
+    "locomotion": "fly",
+    "fly_height": 1.6,
+    "tm": []
+  },
+  "Squirtle": {
+    "abilities": [
+      "torrent"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.34,
+    "base": {
+      "hp": 44,
+      "atk": 48,
+      "def": 65,
+      "spa": 50,
+      "spd": 64,
+      "spe": 43
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 100,
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "water_gun",
+      "harden"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        4,
+        "tail_whip"
+      ],
+      [
+        7,
+        "bubble"
+      ],
+      [
+        10,
+        "withdraw"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        18,
+        "bite"
+      ],
+      [
+        23,
+        "rapid_spin"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#6aaefc",
+    "base_exp": 63,
+    "growth": "medium_slow",
+    "evolution": {
+      "level": 16,
+      "into": "Wartortle"
+    },
+    "dex_no": 7,
+    "category": "Tiny Turtle Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 9.0,
+    "flavor": "When it retracts its long neck into its shell, it squirts out water with vigorous force.",
+    "jump_height": 0.3,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Wartortle": {
+    "abilities": [
+      "torrent"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.31,
+    "base": {
+      "hp": 59,
+      "atk": 63,
+      "def": 80,
+      "spa": 65,
+      "spd": 80,
+      "spe": 58
+    },
+    "ev_yield": {
+      "def": 1,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 115,
+    "base_exp": 142,
+    "growth": "medium_slow",
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "water_gun",
+      "harden"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "bubble"
+      ],
+      [
+        10,
+        "withdraw"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        19,
+        "bite"
+      ],
+      [
+        25,
+        "rapid_spin"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#5a96f0",
+    "placeholder_scale": 1.25,
+    "evolution": {
+      "level": 36,
+      "into": "Blastoise"
+    },
+    "dex_no": 8,
+    "category": "Turtle Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 22.5,
+    "flavor": "This POKéMON is very popular as a pet. Its fur-covered tail is a symbol of its longevity.",
+    "jump_height": 0.46,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Blastoise": {
+    "abilities": [
+      "torrent"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.37,
+    "base": {
+      "hp": 79,
+      "atk": 83,
+      "def": 100,
+      "spa": 85,
+      "spd": 105,
+      "spe": 78
+    },
+    "ev_yield": {
+      "spd": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.125,
+    "pp": 130,
+    "base_exp": 239,
+    "growth": "medium_slow",
+    "moves": [
+      "tackle",
+      "water_gun",
+      "harden",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "bubble"
+      ],
+      [
+        1,
+        "withdraw"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        19,
+        "bite"
+      ],
+      [
+        25,
+        "rapid_spin"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#3f7ee0",
+    "placeholder_scale": 1.55,
+    "dex_no": 9,
+    "category": "Shellfish Pokémon",
+    "height_m": 1.6,
+    "weight_kg": 85.5,
+    "flavor": "It crushes its foe under its heavy body to cause fainting. In a pinch, it will withdraw inside its shell.",
+    "jump_height": 0.45,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Pidgey": {
+    "abilities": [
+      "keen_eye"
+    ],
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 45,
+      "def": 40,
+      "spa": 35,
+      "spd": 35,
+      "spe": 56
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "moves": [
+      "tackle",
+      "gust",
+      "quick_attack",
+      "double_team"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        5,
+        "sand_attack"
+      ],
+      [
+        9,
+        "gust"
+      ],
+      [
+        13,
+        "quick_attack"
+      ],
+      [
+        19,
+        "whirlwind"
+      ],
+      [
+        25,
+        "wing_attack"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "base_exp": 50,
+    "growth": "medium_slow",
+    "evolution": {
+      "level": 18,
+      "into": "Pidgeotto"
+    },
+    "dex_no": 16,
+    "category": "Tiny Bird Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 1.8,
+    "flavor": "Does not like to fight. It hides in tall grass and so on, foraging for food such as small bugs.",
+    "jump_height": 0.32,
+    "shape": "wings",
+    "locomotion": "fly",
+    "fly_height": 0.67,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Pidgeotto": {
+    "abilities": [
+      "keen_eye"
+    ],
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base": {
+      "hp": 63,
+      "atk": 60,
+      "def": 55,
+      "spa": 50,
+      "spd": 50,
+      "spe": 71
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.5,
+    "pp": 120,
+    "base_exp": 122,
+    "growth": "medium_slow",
+    "moves": [
+      "tackle",
+      "gust",
+      "quick_attack",
+      "double_team"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "sand_attack"
+      ],
+      [
+        1,
+        "gust"
+      ],
+      [
+        13,
+        "quick_attack"
+      ],
+      [
+        20,
+        "whirlwind"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#e8c890",
+    "placeholder_scale": 1.25,
+    "evolution": {
+      "level": 36,
+      "into": "Pidgeot"
+    },
+    "dex_no": 17,
+    "category": "Bird Pokémon",
+    "height_m": 1.1,
+    "weight_kg": 30.0,
+    "flavor": "The claws on its feet are well developed. It can carry prey such as an EXEGGCUTE to its nest over 60 miles away.",
+    "jump_height": 0.67,
+    "shape": "wings",
+    "locomotion": "fly",
+    "fly_height": 1.21,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Pidgeot": {
+    "abilities": [
+      "keen_eye"
+    ],
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base": {
+      "hp": 83,
+      "atk": 80,
+      "def": 75,
+      "spa": 70,
+      "spd": 70,
+      "spe": 91
+    },
+    "ev_yield": {
+      "spe": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "base_exp": 216,
+    "growth": "medium_slow",
+    "moves": [
+      "gust",
+      "quick_attack",
+      "double_team",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "sand_attack"
+      ],
+      [
+        1,
+        "gust"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        20,
+        "whirlwind"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#f0c070",
+    "placeholder_scale": 1.5,
+    "dex_no": 18,
+    "category": "Bird Pokémon",
+    "height_m": 1.5,
+    "weight_kg": 39.5,
+    "flavor": "It spreads its gorgeous wings widely to intimidate enemies. It races through the skies at Mach-2 speed.",
+    "jump_height": 1.02,
+    "shape": "wings",
+    "locomotion": "fly",
+    "fly_height": 1.6,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Rattata": {
+    "abilities": [
+      "run_away",
+      "guts"
+    ],
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 30,
+      "atk": 56,
+      "def": 35,
+      "spa": 25,
+      "spd": 35,
+      "spe": 72
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 95,
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "quick_attack",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        7,
+        "quick_attack"
+      ],
+      [
+        13,
+        "hyper_fang"
+      ],
+      [
+        20,
+        "focus_energy"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#c9a0e8",
+    "base_exp": 51,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 20,
+      "into": "Raticate"
+    },
+    "dex_no": 19,
+    "category": "Mouse Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 3.5,
+    "flavor": "Its fangs are long and very sharp. They grow continuously, so it gnaws on hard things to whittle them down.",
+    "jump_height": 0.54,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Raticate": {
+    "abilities": [
+      "run_away",
+      "guts"
+    ],
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 55,
+      "atk": 81,
+      "def": 60,
+      "spa": 50,
+      "spd": 70,
+      "spe": 97
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 127,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "base_exp": 145,
+    "growth": "medium_fast",
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "quick_attack",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        13,
+        "hyper_fang"
+      ],
+      [
+        20,
+        "scary_face"
+      ]
+    ],
+    "evo_moves": [
+      "scary_face"
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#b07ad0",
+    "placeholder_scale": 1.3,
+    "dex_no": 20,
+    "category": "Mouse Pokémon",
+    "height_m": 0.7,
+    "weight_kg": 18.5,
+    "flavor": "Its rear feet have three toes each. They are webbed, enabling it to swim across rivers.",
+    "jump_height": 1.19,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Caterpie": {
+    "abilities": [
+      "shield_dust"
+    ],
+    "types": [
+      "bug"
+    ],
+    "base": {
+      "hp": 45,
+      "atk": 30,
+      "def": 35,
+      "spa": 20,
+      "spd": 20,
+      "spe": 45
+    },
+    "ev_yield": {
+      "hp": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 85,
+    "moves": [
+      "tackle",
+      "harden"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "string_shot"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#7ac74f",
+    "base_exp": 39,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 7,
+      "into": "Metapod"
+    },
+    "dex_no": 10,
+    "category": "Worm Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 2.9,
+    "flavor": "It is covered with a green skin. When it grows, it sheds the skin, covers itself with silk, and becomes a cocoon.",
+    "jump_height": 0.0,
+    "shape": "armor",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Metapod": {
+    "abilities": [
+      "shed_skin"
+    ],
+    "types": [
+      "bug"
+    ],
+    "base": {
+      "hp": 50,
+      "atk": 20,
+      "def": 55,
+      "spa": 25,
+      "spd": 25,
+      "spe": 30
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.5,
+    "pp": 85,
+    "moves": [
+      "harden",
+      "tackle"
+    ],
+    "learnset": [
+      [
+        1,
+        "harden"
+      ]
+    ],
+    "evo_moves": [
+      "harden"
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#a8d878",
+    "placeholder_scale": 1.15,
+    "base_exp": 72,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 10,
+      "into": "Butterfree"
+    },
+    "dex_no": 11,
+    "category": "Cocoon Pokémon",
+    "height_m": 0.7,
+    "weight_kg": 9.9,
+    "flavor": "Even though it is encased in a sturdy shell, the body inside is tender. It can't withstand a harsh attack.",
+    "jump_height": 0.0,
+    "shape": "squiggle",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Butterfree": {
+    "abilities": [
+      "compound_eyes"
+    ],
+    "types": [
+      "bug",
+      "flying"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 45,
+      "def": 50,
+      "spa": 80,
+      "spd": 80,
+      "spe": 70
+    },
+    "ev_yield": {
+      "spa": 2,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 120,
+    "moves": [
+      "gust",
+      "harden",
+      "sleep_powder",
+      "poison_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "confusion"
+      ],
+      [
+        13,
+        "poison_powder"
+      ],
+      [
+        14,
+        "stun_spore"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        18,
+        "supersonic"
+      ],
+      [
+        23,
+        "whirlwind"
+      ]
+    ],
+    "evo_moves": [
+      "confusion",
+      "gust"
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#a8b8f5",
+    "placeholder_scale": 1.5,
+    "base_exp": 160,
+    "growth": "medium_fast",
+    "dex_no": 12,
+    "category": "Butterfly Pokémon",
+    "height_m": 1.1,
+    "weight_kg": 32.0,
+    "flavor": "The wings are protected by rain-repellent dust. As a result, this POKéMON can fly about even in rain.",
+    "jump_height": 0.63,
+    "shape": "bug-wings",
+    "locomotion": "fly",
+    "fly_height": 1.31,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Weedle": {
+    "abilities": [
+      "shield_dust"
+    ],
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 35,
+      "def": 30,
+      "spa": 20,
+      "spd": 20,
+      "spe": 50
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 90,
+    "moves": [
+      "tackle",
+      "poison_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "poison_sting"
+      ],
+      [
+        1,
+        "string_shot"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#e0d24a",
+    "base_exp": 39,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 7,
+      "into": "Kakuna"
+    },
+    "dex_no": 13,
+    "category": "Hairy Bug Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 3.2,
+    "flavor": "Often found in forests and grasslands. It has a sharp, toxic barb of around two inches on top of its head.",
+    "jump_height": 0.0,
+    "shape": "armor",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Kakuna": {
+    "abilities": [
+      "shed_skin"
+    ],
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base": {
+      "hp": 45,
+      "atk": 25,
+      "def": 50,
+      "spa": 25,
+      "spd": 25,
+      "spe": 35
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.5,
+    "pp": 85,
+    "moves": [
+      "harden",
+      "tackle"
+    ],
+    "learnset": [
+      [
+        1,
+        "harden"
+      ]
+    ],
+    "evo_moves": [
+      "harden"
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#d8c85a",
+    "placeholder_scale": 1.15,
+    "base_exp": 72,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 10,
+      "into": "Beedrill"
+    },
+    "dex_no": 14,
+    "category": "Cocoon Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 10.0,
+    "flavor": "This POKéMON is in a temporary stage while making its body. It is almost completely unable to move on its own.",
+    "jump_height": 0.0,
+    "shape": "squiggle",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Beedrill": {
+    "abilities": [
+      "swarm"
+    ],
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base": {
+      "hp": 65,
+      "atk": 80,
+      "def": 40,
+      "spa": 45,
+      "spd": 80,
+      "spe": 75
+    },
+    "ev_yield": {
+      "atk": 2,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 115,
+    "moves": [
+      "fury_swipes",
+      "harden",
+      "poison_powder",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "fury_attack"
+      ],
+      [
+        15,
+        "focus_energy"
+      ],
+      [
+        20,
+        "twineedle"
+      ],
+      [
+        25,
+        "rage"
+      ]
+    ],
+    "evo_moves": [
+      "fury_attack",
+      "twineedle"
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#e8cf3a",
+    "placeholder_scale": 1.4,
+    "base_exp": 159,
+    "growth": "medium_fast",
+    "dex_no": 15,
+    "category": "Poison Bee Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 29.5,
+    "flavor": "May appear in a swarm. Flies at violent speeds, all the while stabbing with the toxic stinger on its rear.",
+    "jump_height": 0.73,
+    "shape": "bug-wings",
+    "locomotion": "hover",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Pikachu": {
+    "abilities": [
+      "static"
+    ],
+    "types": [
+      "electric"
+    ],
+    "base": {
+      "hp": 35,
+      "atk": 55,
+      "def": 30,
+      "spa": 50,
+      "spd": 40,
+      "spe": 90
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 190,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "moves": [
+      "thunder_shock",
+      "growl",
+      "quick_attack",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "thunder_shock"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        6,
+        "tail_whip"
+      ],
+      [
+        8,
+        "thunder_wave"
+      ],
+      [
+        11,
+        "quick_attack"
+      ],
+      [
+        15,
+        "double_team"
+      ],
+      [
+        20,
+        "slam"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#ffe94a",
+    "base_exp": 82,
+    "growth": "medium_fast",
+    "evolution": {
+      "method": "item",
+      "item": "thunder_stone",
+      "into": "Raichu"
+    },
+    "dex_no": 25,
+    "category": "Mouse Pokémon",
+    "height_m": 0.4,
+    "weight_kg": 6.0,
+    "flavor": "It has small electric sacs on both its cheeks. If threatened, it looses electric charges from the sacs.",
+    "jump_height": 0.9,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Raichu": {
+    "abilities": [
+      "static"
+    ],
+    "types": [
+      "electric"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 90,
+      "def": 55,
+      "spa": 90,
+      "spd": 80,
+      "spe": 100
+    },
+    "ev_yield": {
+      "spe": 3
+    },
+    "catch_rate": 75,
+    "gender_ratio": 0.5,
+    "pp": 125,
+    "moves": [
+      "thunder_shock",
+      "quick_attack",
+      "swift",
+      "thunder"
+    ],
+    "learnset": [
+      [
+        1,
+        "thunder_shock"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        1,
+        "thunderbolt"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f5b030",
+    "base_exp": 218,
+    "growth": "medium_fast",
+    "dex_no": 26,
+    "category": "Mouse Pokémon",
+    "height_m": 0.8,
+    "weight_kg": 30.0,
+    "flavor": "Its electric charges can reach even 100,000 volts. Careless contact can cause even an Indian elephant to faint.",
+    "jump_height": 1.2,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Spearow": {
+    "abilities": [
+      "keen_eye"
+    ],
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 60,
+      "def": 30,
+      "spa": 31,
+      "spd": 31,
+      "spe": 70
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "moves": [
+      "gust",
+      "growl",
+      "quick_attack",
+      "fury_swipes"
+    ],
+    "learnset": [
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        7,
+        "leer"
+      ],
+      [
+        13,
+        "fury_attack"
+      ],
+      [
+        19,
+        "pursuit"
+      ],
+      [
+        25,
+        "aerial_ace"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#c89060",
+    "base_exp": 58,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 20,
+      "into": "Fearow"
+    },
+    "dex_no": 21,
+    "category": "Tiny Bird Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 2.0,
+    "flavor": "It busily flits around here and there. Even if it is frail, it can be a tough foe that uses MIRROR MOVE.",
+    "jump_height": 0.51,
+    "shape": "wings",
+    "locomotion": "fly",
+    "fly_height": 0.69,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Fearow": {
+    "abilities": [
+      "keen_eye"
+    ],
+    "types": [
+      "normal",
+      "flying"
+    ],
+    "base": {
+      "hp": 65,
+      "atk": 90,
+      "def": 65,
+      "spa": 61,
+      "spd": 61,
+      "spe": 100
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 90,
+    "gender_ratio": 0.5,
+    "pp": 120,
+    "moves": [
+      "gust",
+      "growl",
+      "fury_swipes",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "fury_attack"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#b87840",
+    "placeholder_scale": 1.4,
+    "base_exp": 162,
+    "growth": "medium_fast",
+    "dex_no": 22,
+    "category": "Beak Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 38.0,
+    "flavor": "Its huge and magnificent wings can keep it aloft in the sky. It can remain flying a whole day without landing.",
+    "jump_height": 1.18,
+    "shape": "wings",
+    "locomotion": "fly",
+    "fly_height": 1.5,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Mankey": {
+    "abilities": [
+      "vital_spirit"
+    ],
+    "types": [
+      "fighting"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 80,
+      "def": 35,
+      "spa": 35,
+      "spd": 45,
+      "spe": 70
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 190,
+    "gender_ratio": 0.5,
+    "pp": 105,
+    "moves": [
+      "scratch",
+      "growl",
+      "fury_swipes",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        6,
+        "low_kick"
+      ],
+      [
+        11,
+        "karate_chop"
+      ],
+      [
+        16,
+        "fury_swipes"
+      ],
+      [
+        21,
+        "focus_energy"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f0e0c0",
+    "base_exp": 74,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 28,
+      "into": "Primeape"
+    },
+    "dex_no": 56,
+    "category": "Pig Monkey Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 28.0,
+    "flavor": "Light and agile on its feet, and ferocious in temperament. When angered, it flies into an uncontrollable frenzy.",
+    "jump_height": 0.55,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Primeape": {
+    "abilities": [
+      "vital_spirit"
+    ],
+    "types": [
+      "fighting"
+    ],
+    "base": {
+      "hp": 65,
+      "atk": 105,
+      "def": 60,
+      "spa": 60,
+      "spd": 70,
+      "spe": 95
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 75,
+    "gender_ratio": 0.5,
+    "pp": 120,
+    "moves": [
+      "scratch",
+      "growl",
+      "fury_swipes",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "low_kick"
+      ],
+      [
+        1,
+        "rage"
+      ],
+      [
+        11,
+        "karate_chop"
+      ],
+      [
+        16,
+        "fury_swipes"
+      ],
+      [
+        21,
+        "focus_energy"
+      ]
+    ],
+    "evo_moves": [
+      "rage"
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e8d0a8",
+    "placeholder_scale": 1.4,
+    "base_exp": 149,
+    "growth": "medium_fast",
+    "dex_no": 57,
+    "category": "Pig Monkey Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 32.0,
+    "flavor": "It is always outrageously furious. If it gives chase, it will tenaciously track the target no matter how far.",
+    "jump_height": 1.12,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Psyduck": {
+    "abilities": [
+      "damp",
+      "cloud_nine"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.34,
+    "base": {
+      "hp": 50,
+      "atk": 52,
+      "def": 48,
+      "spa": 65,
+      "spd": 50,
+      "spe": 55
+    },
+    "ev_yield": {
+      "spa": 1
+    },
+    "catch_rate": 190,
+    "gender_ratio": 0.5,
+    "pp": 105,
+    "moves": [
+      "scratch",
+      "tail_whip",
+      "water_gun",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "water_sport"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        5,
+        "tail_whip"
+      ],
+      [
+        10,
+        "disable"
+      ],
+      [
+        16,
+        "confusion"
+      ],
+      [
+        23,
+        "screech"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#f5d040",
+    "base_exp": 80,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 33,
+      "into": "Golduck"
+    },
+    "dex_no": 54,
+    "category": "Duck Pokémon",
+    "height_m": 0.8,
+    "weight_kg": 19.6,
+    "flavor": "It is constantly wracked by a headache. When the headache turns intense, it begins using mysterious powers.",
+    "jump_height": 0.39,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Golduck": {
+    "abilities": [
+      "damp",
+      "cloud_nine"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "base": {
+      "hp": 80,
+      "atk": 82,
+      "def": 78,
+      "spa": 95,
+      "spd": 80,
+      "spe": 85
+    },
+    "ev_yield": {
+      "spa": 2
+    },
+    "catch_rate": 75,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "moves": [
+      "scratch",
+      "tail_whip",
+      "water_gun",
+      "hyper_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "water_sport"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "disable"
+      ],
+      [
+        16,
+        "confusion"
+      ],
+      [
+        23,
+        "screech"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#6aa8e0",
+    "placeholder_scale": 1.45,
+    "base_exp": 174,
+    "growth": "medium_fast",
+    "dex_no": 55,
+    "category": "Duck Pokémon",
+    "height_m": 1.7,
+    "weight_kg": 76.6,
+    "flavor": "The forelegs are webbed, helping to make it an adept swimmer. It can be seen swimming elegantly in lakes, etc.",
+    "jump_height": 0.59,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Slowpoke": {
+    "abilities": [
+      "oblivious",
+      "own_tempo"
+    ],
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.19,
+    "base": {
+      "hp": 90,
+      "atk": 65,
+      "def": 65,
+      "spa": 40,
+      "spd": 40,
+      "spe": 15
+    },
+    "ev_yield": {
+      "hp": 1
+    },
+    "catch_rate": 190,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "moves": [
+      "tackle",
+      "growl",
+      "water_gun",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "curse"
+      ],
+      [
+        1,
+        "yawn"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        6,
+        "growl"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        17,
+        "confusion"
+      ],
+      [
+        24,
+        "disable"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f0a8c0",
+    "base_exp": 99,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 37,
+      "into": "Slowbro"
+    },
+    "dex_no": 79,
+    "category": "Dopey Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 36.0,
+    "flavor": "It is always vacantly lost in thought, but no one knows what it is thinking about. It is good at fishing with its tail.",
+    "jump_height": 0.0,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Slowbro": {
+    "abilities": [
+      "oblivious",
+      "own_tempo"
+    ],
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.25,
+    "base": {
+      "hp": 95,
+      "atk": 75,
+      "def": 110,
+      "spa": 100,
+      "spd": 80,
+      "spe": 30
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 75,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "moves": [
+      "tackle",
+      "growl",
+      "water_gun",
+      "hyper_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "curse"
+      ],
+      [
+        1,
+        "yawn"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        17,
+        "confusion"
+      ],
+      [
+        24,
+        "disable"
+      ]
+    ],
+    "evo_moves": [
+      "withdraw"
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e890b0",
+    "placeholder_scale": 1.45,
+    "base_exp": 207,
+    "growth": "medium_fast",
+    "dex_no": 80,
+    "category": "Hermit Crab Pokémon",
+    "height_m": 1.6,
+    "weight_kg": 78.5,
+    "flavor": "When a SLOWPOKE went hunting in the sea, its tail was bitten by a SHELLDER. That made it evolve into SLOWBRO.",
+    "jump_height": 0.0,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Poliwag": {
+    "abilities": [
+      "water_absorb",
+      "damp"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.35,
+    "base": {
+      "hp": 40,
+      "atk": 50,
+      "def": 40,
+      "spa": 40,
+      "spd": 40,
+      "spe": 90
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 100,
+    "moves": [
+      "tackle",
+      "water_gun",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "bubble"
+      ],
+      [
+        7,
+        "hypnosis"
+      ],
+      [
+        13,
+        "water_gun"
+      ],
+      [
+        19,
+        "double_slap"
+      ],
+      [
+        25,
+        "rain_dance"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#6ab0f0",
+    "base_exp": 77,
+    "growth": "medium_slow",
+    "evolution": {
+      "level": 25,
+      "into": "Poliwhirl"
+    },
+    "dex_no": 60,
+    "category": "Tadpole Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 12.4,
+    "flavor": "Its slick black skin is thin and damp. A part of its internal organs can be seen through the skin as a spiral pattern.",
+    "jump_height": 0.99,
+    "shape": "legs",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Poliwhirl": {
+    "abilities": [
+      "water_absorb",
+      "damp"
+    ],
+    "types": [
+      "water"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.45,
+    "base": {
+      "hp": 65,
+      "atk": 65,
+      "def": 65,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.5,
+    "pp": 125,
+    "moves": [
+      "tackle",
+      "water_gun",
+      "swift",
+      "hyper_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "bubble"
+      ],
+      [
+        1,
+        "hypnosis"
+      ],
+      [
+        1,
+        "water_gun"
+      ],
+      [
+        19,
+        "double_slap"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#5a9ce8",
+    "placeholder_scale": 1.2,
+    "base_exp": 131,
+    "growth": "medium_slow",
+    "evolution": {
+      "method": "item",
+      "item": "water_stone",
+      "into": "Poliwrath"
+    },
+    "dex_no": 61,
+    "category": "Tadpole Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 20.0,
+    "flavor": "Its two legs are well developed. Even though it can live on the ground, it prefers living in water.",
+    "jump_height": 1.13,
+    "shape": "humanoid",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Poliwrath": {
+    "abilities": [
+      "water_absorb",
+      "damp"
+    ],
+    "types": [
+      "water",
+      "fighting"
+    ],
+    "swimmer": true,
+    "base": {
+      "hp": 90,
+      "atk": 85,
+      "def": 95,
+      "spa": 70,
+      "spd": 90,
+      "spe": 70
+    },
+    "ev_yield": {
+      "def": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "moves": [
+      "tackle",
+      "water_gun",
+      "swift",
+      "hyper_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "water_gun"
+      ],
+      [
+        1,
+        "hypnosis"
+      ],
+      [
+        1,
+        "double_slap"
+      ],
+      [
+        1,
+        "submission"
+      ]
+    ],
+    "evo_moves": [
+      "submission"
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#4a80d0",
+    "placeholder_scale": 1.5,
+    "base_exp": 230,
+    "growth": "medium_slow",
+    "dex_no": 62,
+    "category": "Tadpole Pokémon",
+    "height_m": 1.3,
+    "weight_kg": 54.0,
+    "flavor": "An adept swimmer, it knows the front crawl, butterfly, and more. It is faster than the best human swimmers.",
+    "jump_height": 0.49,
+    "shape": "humanoid",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Goldeen": {
+    "abilities": [
+      "swift_swim",
+      "water_veil"
+    ],
+    "types": [
+      "water"
+    ],
+    "fish": true,
+    "swimmer": true,
+    "swim_sink": 0.12,
+    "base": {
+      "hp": 45,
+      "atk": 67,
+      "def": 60,
+      "spa": 35,
+      "spd": 50,
+      "spe": 63
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 225,
+    "gender_ratio": 0.5,
+    "pp": 105,
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "water_gun",
+      "swift"
+    ],
+    "learnset": [
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "water_sport"
+      ],
+      [
+        10,
+        "supersonic"
+      ],
+      [
+        15,
+        "horn_attack"
+      ],
+      [
+        24,
+        "flail"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#f0b080",
+    "base_exp": 111,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 33,
+      "into": "Seaking"
+    },
+    "dex_no": 118,
+    "category": "Goldfish Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 15.0,
+    "flavor": "Its dorsal and pectoral fins are strongly developed like muscles. It can swim at a speed of five knots.",
+    "jump_height": 0.0,
+    "shape": "fish",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Seaking": {
+    "abilities": [
+      "swift_swim",
+      "water_veil"
+    ],
+    "types": [
+      "water"
+    ],
+    "fish": true,
+    "swimmer": true,
+    "swim_sink": 0.15,
+    "base": {
+      "hp": 80,
+      "atk": 92,
+      "def": 65,
+      "spa": 65,
+      "spd": 80,
+      "spe": 68
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 60,
+    "gender_ratio": 0.5,
+    "pp": 115,
+    "moves": [
+      "tackle",
+      "tail_whip",
+      "water_gun",
+      "fury_swipes"
+    ],
+    "learnset": [
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "water_sport"
+      ],
+      [
+        1,
+        "supersonic"
+      ],
+      [
+        15,
+        "horn_attack"
+      ],
+      [
+        24,
+        "flail"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#f08040",
+    "placeholder_scale": 1.4,
+    "base_exp": 187,
+    "growth": "medium_fast",
+    "dex_no": 119,
+    "category": "Goldfish Pokémon",
+    "height_m": 1.3,
+    "weight_kg": 39.0,
+    "flavor": "The horn on its head is sharp like a drill. It bores a hole in a boulder to make its nest.",
+    "jump_height": 0.0,
+    "shape": "fish",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Magikarp": {
+    "abilities": [
+      "swift_swim"
+    ],
+    "types": [
+      "water"
+    ],
+    "fish": true,
+    "swimmer": true,
+    "swim_sink": 0.49,
+    "base": {
+      "hp": 20,
+      "atk": 10,
+      "def": 55,
+      "spa": 15,
+      "spd": 20,
+      "spe": 80
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 70,
+    "moves": [
+      "tackle"
+    ],
+    "learnset": [
+      [
+        1,
+        "splash"
+      ],
+      [
+        15,
+        "tackle"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f06030",
+    "base_exp": 40,
+    "growth": "slow",
+    "evolution": {
+      "level": 20,
+      "into": "Gyarados"
+    },
+    "dex_no": 129,
+    "category": "Fish Pokémon",
+    "height_m": 0.9,
+    "weight_kg": 10.0,
+    "flavor": "It is virtually worthless in terms of both power and speed. It is the most weak and pathetic POKéMON in the world.",
+    "jump_height": 0.0,
+    "shape": "fish",
+    "locomotion": "ground",
+    "tm": []
+  },
+  "Gyarados": {
+    "abilities": [
+      "intimidate"
+    ],
+    "types": [
+      "water",
+      "flying"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.65,
+    "base": {
+      "hp": 95,
+      "atk": 125,
+      "def": 79,
+      "spa": 60,
+      "spd": 100,
+      "spe": 81
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "moves": [
+      "bite",
+      "tackle",
+      "swift",
+      "hyper_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "thrash"
+      ],
+      [
+        20,
+        "bite"
+      ],
+      [
+        25,
+        "dragon_rage"
+      ]
+    ],
+    "evo_moves": [
+      "bite"
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#4878d0",
+    "placeholder_scale": 1.6,
+    "base_exp": 214,
+    "growth": "slow",
+    "dex_no": 130,
+    "category": "Atrocious Pokémon",
+    "height_m": 6.5,
+    "weight_kg": 235.0,
+    "flavor": "It has an extremely aggressive nature. The HYPER BEAM it shoots from its mouth totally incinerates all targets.",
+    "jump_height": 0.0,
+    "shape": "squiggle",
+    "locomotion": "hover",
+    "tm": []
+  },
+  "Diglett": {
+    "abilities": [
+      "sand_veil",
+      "arena_trap"
+    ],
+    "types": [
+      "ground"
+    ],
+    "base": {
+      "hp": 10,
+      "atk": 55,
+      "def": 25,
+      "spa": 35,
+      "spd": 45,
+      "spe": 95
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 100,
+    "moves": [
+      "scratch",
+      "growl",
+      "earthquake"
+    ],
+    "learnset": [
+      [
+        1,
+        "sand_attack"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        5,
+        "growl"
+      ],
+      [
+        9,
+        "magnitude"
+      ],
+      [
+        17,
+        "dig"
+      ],
+      [
+        21,
+        "fury_swipes"
+      ],
+      [
+        25,
+        "mud_slap"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#b08050",
+    "base_exp": 53,
+    "growth": "medium_fast",
+    "evolution": {
+      "level": 26,
+      "into": "Dugtrio"
+    },
+    "dex_no": 50,
+    "category": "Mole Pokémon",
+    "height_m": 0.2,
+    "weight_kg": 0.8,
+    "flavor": "It burrows through the ground at a shallow depth. It leaves raised earth in its wake, making it easy to spot.",
+    "jump_height": 0.0,
+    "shape": "blob",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Dugtrio": {
+    "abilities": [
+      "sand_veil",
+      "arena_trap"
+    ],
+    "types": [
+      "ground"
+    ],
+    "base": {
+      "hp": 35,
+      "atk": 80,
+      "def": 50,
+      "spa": 50,
+      "spd": 70,
+      "spe": 120
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 50,
+    "gender_ratio": 0.5,
+    "pp": 115,
+    "moves": [
+      "scratch",
+      "growl",
+      "fury_swipes",
+      "earthquake"
+    ],
+    "learnset": [
+      [
+        1,
+        "tri_attack"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "sand_attack"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        9,
+        "magnitude"
+      ],
+      [
+        17,
+        "dig"
+      ],
+      [
+        21,
+        "fury_swipes"
+      ],
+      [
+        25,
+        "mud_slap"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#a06840",
+    "placeholder_scale": 1.35,
+    "base_exp": 153,
+    "growth": "medium_fast",
+    "dex_no": 51,
+    "category": "Mole Pokémon",
+    "height_m": 0.7,
+    "weight_kg": 33.3,
+    "flavor": "In battle, it digs through the ground and strikes the unsuspecting foe from an unexpected direction.",
+    "jump_height": 0.0,
+    "shape": "heads",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Nidoran F": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 55,
+      "atk": 47,
+      "def": 52,
+      "spa": 40,
+      "spd": 40,
+      "spe": 41
+    },
+    "ev_yield": {
+      "hp": 1
+    },
+    "catch_rate": 235,
+    "gender_ratio": 1.0,
+    "pp": 100,
+    "base_exp": 59,
+    "growth": "medium_slow",
+    "moves": [
+      "scratch",
+      "poison_sting",
+      "bite",
+      "double_kick"
+    ],
+    "learnset": [
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        8,
+        "tail_whip"
+      ],
+      [
+        12,
+        "double_kick"
+      ],
+      [
+        17,
+        "poison_sting"
+      ],
+      [
+        20,
+        "bite"
+      ],
+      [
+        23,
+        "helping_hand"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f5b0d0",
+    "evolution": {
+      "level": 16,
+      "into": "Nidorina"
+    },
+    "dex_no": 29,
+    "category": "Poison Pin Pokémon",
+    "height_m": 0.4,
+    "weight_kg": 7.0,
+    "flavor": "Though small, it must be treated with caution because of its powerfully toxic barbs. The female has smaller horns.",
+    "jump_height": 0.3,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Nidorina": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 70,
+      "atk": 62,
+      "def": 67,
+      "spa": 55,
+      "spd": 55,
+      "spe": 56
+    },
+    "ev_yield": {
+      "hp": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 1.0,
+    "pp": 115,
+    "base_exp": 117,
+    "growth": "medium_slow",
+    "evolution": {
+      "method": "item",
+      "item": "moon_stone",
+      "into": "Nidoqueen"
+    },
+    "moves": [
+      "scratch",
+      "poison_sting",
+      "bite",
+      "double_kick"
+    ],
+    "learnset": [
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        8,
+        "tail_whip"
+      ],
+      [
+        12,
+        "double_kick"
+      ],
+      [
+        18,
+        "poison_sting"
+      ],
+      [
+        22,
+        "bite"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e890c0",
+    "placeholder_scale": 1.2,
+    "dex_no": 30,
+    "category": "Poison Pin Pokémon",
+    "height_m": 0.8,
+    "weight_kg": 20.0,
+    "flavor": "The female has a gentle temperament. It emits ultrasonic cries that have the power to befuddle foes.",
+    "jump_height": 0.41,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Nidoqueen": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison",
+      "ground"
+    ],
+    "base": {
+      "hp": 90,
+      "atk": 82,
+      "def": 87,
+      "spa": 75,
+      "spd": 85,
+      "spe": 76
+    },
+    "ev_yield": {
+      "hp": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 1.0,
+    "pp": 130,
+    "base_exp": 194,
+    "growth": "medium_slow",
+    "moves": [
+      "poison_sting",
+      "double_kick",
+      "body_slam",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "double_kick"
+      ],
+      [
+        1,
+        "poison_sting"
+      ],
+      [
+        22,
+        "body_slam"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#7ac0d8",
+    "placeholder_scale": 1.45,
+    "dex_no": 31,
+    "category": "Drill Pokémon",
+    "height_m": 1.3,
+    "weight_kg": 60.0,
+    "flavor": "The body is covered by stiff, needle-like scales. If it becomes excited, the needles bristle outwards.",
+    "jump_height": 0.54,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Nidoran M": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 46,
+      "atk": 57,
+      "def": 40,
+      "spa": 40,
+      "spd": 40,
+      "spe": 50
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 235,
+    "gender_ratio": 0.0,
+    "pp": 100,
+    "base_exp": 60,
+    "growth": "medium_slow",
+    "moves": [
+      "peck",
+      "leer",
+      "double_kick",
+      "focus_energy"
+    ],
+    "learnset": [
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "peck"
+      ],
+      [
+        8,
+        "focus_energy"
+      ],
+      [
+        12,
+        "double_kick"
+      ],
+      [
+        17,
+        "poison_sting"
+      ],
+      [
+        20,
+        "horn_attack"
+      ],
+      [
+        23,
+        "helping_hand"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#c8a0e0",
+    "evolution": {
+      "level": 16,
+      "into": "Nidorino"
+    },
+    "dex_no": 32,
+    "category": "Poison Pin Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 9.0,
+    "flavor": "Its large ears are flapped like wings when it is listening to distant sounds. It extends toxic barbs when angered.",
+    "jump_height": 0.3,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Nidorino": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 61,
+      "atk": 72,
+      "def": 57,
+      "spa": 55,
+      "spd": 55,
+      "spe": 65
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.0,
+    "pp": 115,
+    "base_exp": 118,
+    "growth": "medium_slow",
+    "evolution": {
+      "method": "item",
+      "item": "moon_stone",
+      "into": "Nidoking"
+    },
+    "moves": [
+      "peck",
+      "horn_attack",
+      "double_kick",
+      "focus_energy"
+    ],
+    "learnset": [
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "peck"
+      ],
+      [
+        8,
+        "focus_energy"
+      ],
+      [
+        12,
+        "double_kick"
+      ],
+      [
+        18,
+        "poison_sting"
+      ],
+      [
+        22,
+        "horn_attack"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#b888d8",
+    "placeholder_scale": 1.2,
+    "dex_no": 33,
+    "category": "Poison Pin Pokémon",
+    "height_m": 0.9,
+    "weight_kg": 19.5,
+    "flavor": "It is easily angered. By swinging its well-developed horn wildly, it can even punch through diamond.",
+    "jump_height": 0.57,
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "tm": [
+      "thief"
+    ]
+  },
+  "Nidoking": {
+    "abilities": [
+      "poison_point"
+    ],
+    "types": [
+      "poison",
+      "ground"
+    ],
+    "base": {
+      "hp": 81,
+      "atk": 92,
+      "def": 77,
+      "spa": 85,
+      "spd": 75,
+      "spe": 85
+    },
+    "ev_yield": {
+      "atk": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.0,
+    "pp": 130,
+    "base_exp": 195,
+    "growth": "medium_slow",
+    "moves": [
+      "peck",
+      "horn_attack",
+      "thrash",
+      "double_kick"
+    ],
+    "learnset": [
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "focus_energy"
+      ],
+      [
+        1,
+        "double_kick"
+      ],
+      [
+        1,
+        "poison_sting"
+      ],
+      [
+        22,
+        "thrash"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#a878d0",
+    "placeholder_scale": 1.45,
+    "dex_no": 34,
+    "category": "Drill Pokémon",
+    "height_m": 1.4,
+    "weight_kg": 62.0,
+    "flavor": "It is recognized by its rock-hard hide and its extended horn. Be careful with the horn as it contains venom.",
+    "jump_height": 0.66,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Geodude": {
+    "abilities": [
+      "rock_head",
+      "sturdy"
+    ],
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 80,
+      "def": 100,
+      "spa": 30,
+      "spd": 30,
+      "spe": 20
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 95,
+    "base_exp": 86,
+    "growth": "medium_slow",
+    "moves": [
+      "tackle",
+      "defense_curl",
+      "rock_throw",
+      "magnitude"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        11,
+        "rock_throw"
+      ],
+      [
+        16,
+        "magnitude"
+      ],
+      [
+        21,
+        "self_destruct"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#b8a890",
+    "evolution": {
+      "level": 25,
+      "into": "Graveler"
+    },
+    "dex_no": 74,
+    "category": "Rock Pokémon",
+    "height_m": 0.4,
+    "weight_kg": 20.0,
+    "flavor": "Its round form makes it easy to pick up. Some people have used them to hurl at each other in a snowball fight.",
+    "jump_height": 0.0,
+    "shape": "arms",
+    "locomotion": "hover",
+    "tm": [
+      "rock_tomb"
+    ]
+  },
+  "Graveler": {
+    "abilities": [
+      "rock_head",
+      "sturdy"
+    ],
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base": {
+      "hp": 55,
+      "atk": 95,
+      "def": 115,
+      "spa": 45,
+      "spd": 45,
+      "spe": 35
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 120,
+    "gender_ratio": 0.5,
+    "pp": 110,
+    "base_exp": 134,
+    "growth": "medium_slow",
+    "evolution": {
+      "method": "trade",
+      "into": "Golem"
+    },
+    "moves": [
+      "tackle",
+      "defense_curl",
+      "rock_throw",
+      "magnitude"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
+        "rock_throw"
+      ],
+      [
+        16,
+        "magnitude"
+      ],
+      [
+        21,
+        "self_destruct"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#a89880",
+    "placeholder_scale": 1.2,
+    "dex_no": 75,
+    "category": "Rock Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 105.0,
+    "flavor": "Be careful while hiking on mountain trails. GRAVELER may come rolling down the path without slowing.",
+    "jump_height": 0.0,
+    "shape": "humanoid",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb"
+    ]
+  },
+  "Golem": {
+    "abilities": [
+      "rock_head",
+      "sturdy"
+    ],
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base": {
+      "hp": 80,
+      "atk": 110,
+      "def": 130,
+      "spa": 55,
+      "spd": 65,
+      "spe": 45
+    },
+    "ev_yield": {
+      "def": 3
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 130,
+    "base_exp": 177,
+    "growth": "medium_slow",
+    "moves": [
+      "rock_throw",
+      "magnitude",
+      "tackle",
+      "defense_curl"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
+        "rock_throw"
+      ],
+      [
+        16,
+        "magnitude"
+      ],
+      [
+        21,
+        "self_destruct"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#988870",
+    "placeholder_scale": 1.45,
+    "dex_no": 76,
+    "category": "Megaton Pokémon",
+    "height_m": 1.4,
+    "weight_kg": 300.0,
+    "flavor": "It is enclosed in a hard shell that is as rugged as slabs of rock. It sheds skin once a year to grow larger.",
+    "jump_height": 0.0,
+    "shape": "humanoid",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb"
+    ]
+  },
+  "Onix": {
+    "abilities": [
+      "rock_head",
+      "sturdy"
+    ],
+    "types": [
+      "rock",
+      "ground"
+    ],
+    "base": {
+      "hp": 35,
+      "atk": 45,
+      "def": 160,
+      "spa": 30,
+      "spd": 45,
+      "spe": 70
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 45,
+    "gender_ratio": 0.5,
+    "pp": 120,
+    "base_exp": 108,
+    "growth": "medium_fast",
+    "moves": [
+      "tackle",
+      "screech",
+      "rock_throw",
+      "bind"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "screech"
+      ],
+      [
+        8,
+        "bind"
+      ],
+      [
+        12,
+        "rock_throw"
+      ],
+      [
+        19,
+        "harden"
+      ],
+      [
+        23,
+        "rage"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#a8a8b8",
+    "placeholder_scale": 1.6,
+    "dex_no": 95,
+    "category": "Rock Snake Pokémon",
+    "height_m": 8.8,
+    "weight_kg": 210.0,
+    "flavor": "It usually lives underground. It searches for food while boring its way through the ground at 50 miles per hour.",
+    "jump_height": 0.0,
+    "shape": "squiggle",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb"
+    ]
+  },
+  "Sandshrew": {
+    "abilities": [
+      "sand_veil"
+    ],
+    "types": [
+      "ground"
+    ],
+    "base": {
+      "hp": 50,
+      "atk": 75,
+      "def": 85,
+      "spa": 20,
+      "spd": 30,
+      "spe": 40
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 255,
+    "gender_ratio": 0.5,
+    "pp": 100,
+    "base_exp": 93,
+    "growth": "medium_fast",
+    "moves": [
+      "scratch",
+      "defense_curl",
+      "sand_attack",
+      "poison_sting"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        6,
+        "defense_curl"
+      ],
+      [
+        11,
+        "sand_attack"
+      ],
+      [
+        17,
+        "poison_sting"
+      ],
+      [
+        23,
+        "slash"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#e8d090",
+    "evolution": {
+      "level": 22,
+      "into": "Sandslash"
+    },
+    "dex_no": 27,
+    "category": "Mouse Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 12.0,
+    "flavor": "It burrows and lives underground. If threatened, it curls itself up into a ball for protection.",
+    "jump_height": 0.3,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Sandslash": {
+    "abilities": [
+      "sand_veil"
+    ],
+    "types": [
+      "ground"
+    ],
+    "base": {
+      "hp": 75,
+      "atk": 100,
+      "def": 110,
+      "spa": 45,
+      "spd": 55,
+      "spe": 65
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 90,
+    "gender_ratio": 0.5,
+    "pp": 115,
+    "base_exp": 163,
+    "growth": "medium_fast",
+    "moves": [
+      "scratch",
+      "sand_attack",
+      "slash",
+      "poison_sting"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
+        "sand_attack"
+      ],
+      [
+        17,
+        "poison_sting"
+      ],
+      [
+        24,
+        "slash"
+      ]
+    ],
+    "evo_moves": [],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#d8c080",
+    "placeholder_scale": 1.35,
+    "dex_no": 28,
+    "category": "Mouse Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 29.5,
+    "flavor": "It is adept at attacking with the spines on its back and its sharp claws while quickly scurrying about.",
+    "jump_height": 0.55,
+    "shape": "upright",
+    "locomotion": "ground",
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Zubat": {
+    "types": [
+      "poison",
+      "flying"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 45,
+      "def": 35,
+      "spa": 30,
+      "spd": 40,
+      "spe": 55
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 255,
+    "shape": "wings",
+    "pp": 105,
+    "base_exp": 54,
+    "growth": "medium_fast",
+    "moves": [
+      "leech_life",
+      "astonish",
+      "supersonic",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "leech_life"
+      ],
+      [
+        6,
+        "astonish"
+      ],
+      [
+        11,
+        "supersonic"
+      ],
+      [
+        16,
+        "bite"
+      ],
+      [
+        21,
+        "wing_attack"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#a878d0",
+    "evolution": {
+      "level": 22,
+      "into": "Golbat"
+    },
+    "abilities": [
+      "inner_focus"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 41,
+    "category": "Bat Pokémon",
+    "height_m": 0.8,
+    "weight_kg": 7.5,
+    "flavor": "It has no eyes. Instead, it relies on its ultrasonic cries for echo location to flit about in darkness.",
+    "locomotion": "fly",
+    "jump_height": 0.39,
+    "fly_height": 0.85,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Golbat": {
+    "types": [
+      "poison",
+      "flying"
+    ],
+    "base": {
+      "hp": 75,
+      "atk": 80,
+      "def": 70,
+      "spa": 65,
+      "spd": 75,
+      "spe": 90
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 90,
+    "shape": "wings",
+    "pp": 125,
+    "base_exp": 171,
+    "growth": "medium_fast",
+    "moves": [
+      "leech_life",
+      "astonish",
+      "wing_attack",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "screech"
+      ],
+      [
+        1,
+        "leech_life"
+      ],
+      [
+        1,
+        "astonish"
+      ],
+      [
+        1,
+        "supersonic"
+      ],
+      [
+        16,
+        "bite"
+      ],
+      [
+        21,
+        "wing_attack"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#8f5fc0",
+    "placeholder_scale": 1.3,
+    "abilities": [
+      "inner_focus"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 42,
+    "category": "Bat Pokémon",
+    "height_m": 1.6,
+    "weight_kg": 55.0,
+    "flavor": "It clamps down on its prey with needle- sharp fangs and drains over 10 ounces of blood in one gulp.",
+    "evo_moves": [
+      "screech"
+    ],
+    "locomotion": "fly",
+    "jump_height": 0.83,
+    "fly_height": 1.6,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Paras": {
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "base": {
+      "hp": 35,
+      "atk": 70,
+      "def": 55,
+      "spa": 45,
+      "spd": 55,
+      "spe": 25
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 190,
+    "shape": "armor",
+    "pp": 95,
+    "base_exp": 70,
+    "growth": "medium_fast",
+    "moves": [
+      "scratch",
+      "stun_spore",
+      "poison_powder",
+      "leech_life"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        7,
+        "stun_spore"
+      ],
+      [
+        13,
+        "poison_powder"
+      ],
+      [
+        19,
+        "leech_life"
+      ],
+      [
+        25,
+        "spore"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#e08a4a",
+    "evolution": {
+      "level": 24,
+      "into": "Parasect"
+    },
+    "abilities": [
+      "effect_spore"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 46,
+    "category": "Mushroom Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 5.4,
+    "flavor": "Growing out of the bug’s back are mushrooms called tochukaso. The mushrooms grow with the bug host.",
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "bullet_seed",
+      "thief"
+    ]
+  },
+  "Parasect": {
+    "types": [
+      "bug",
+      "grass"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 95,
+      "def": 80,
+      "spa": 60,
+      "spd": 80,
+      "spe": 30
+    },
+    "ev_yield": {
+      "atk": 2,
+      "def": 1
+    },
+    "catch_rate": 75,
+    "shape": "armor",
+    "pp": 120,
+    "base_exp": 128,
+    "growth": "medium_fast",
+    "moves": [
+      "scratch",
+      "stun_spore",
+      "leech_life",
+      "poison_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "stun_spore"
+      ],
+      [
+        1,
+        "poison_powder"
+      ],
+      [
+        19,
+        "leech_life"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#c86a3a",
+    "placeholder_scale": 1.25,
+    "abilities": [
+      "effect_spore"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 47,
+    "category": "Mushroom Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 29.5,
+    "flavor": "It scatters toxic spores from the mushroom cap. In China, the spores are used as herbal medicine.",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "bullet_seed",
+      "thief"
+    ]
+  },
+  "Clefairy": {
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 70,
+      "atk": 45,
+      "def": 48,
+      "spa": 60,
+      "spd": 65,
+      "spe": 35
+    },
+    "ev_yield": {
+      "hp": 2
+    },
+    "catch_rate": 150,
+    "shape": "upright",
+    "pp": 105,
+    "base_exp": 68,
+    "growth": "fast",
+    "moves": [
+      "pound",
+      "sing",
+      "defense_curl",
+      "minimize"
+    ],
+    "learnset": [
+      [
+        1,
+        "pound"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        5,
+        "encore"
+      ],
+      [
+        9,
+        "sing"
+      ],
+      [
+        13,
+        "double_slap"
+      ],
+      [
+        21,
+        "minimize"
+      ],
+      [
+        25,
+        "defense_curl"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f0c0d8",
+    "evolution": {
+      "method": "item",
+      "item": "moon_stone",
+      "into": "Clefable"
+    },
+    "abilities": [
+      "cute_charm"
+    ],
+    "gender_ratio": 0.75,
+    "dex_no": 35,
+    "category": "Fairy Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 7.5,
+    "flavor": "Its adorable appearance makes it popular as a pet. However, it is rare and difficult to find.",
+    "locomotion": "ground",
+    "jump_height": 0.3,
+    "tm": []
+  },
+  "Clefable": {
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 95,
+      "atk": 70,
+      "def": 73,
+      "spa": 85,
+      "spd": 90,
+      "spe": 60
+    },
+    "ev_yield": {
+      "hp": 3
+    },
+    "catch_rate": 25,
+    "shape": "upright",
+    "pp": 130,
+    "base_exp": 129,
+    "growth": "fast",
+    "moves": [
+      "double_slap",
+      "sing",
+      "minimize",
+      "defense_curl"
+    ],
+    "learnset": [
+      [
+        1,
+        "sing"
+      ],
+      [
+        1,
+        "double_slap"
+      ],
+      [
+        1,
+        "minimize"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e8a8c8",
+    "placeholder_scale": 1.4,
+    "abilities": [
+      "cute_charm"
+    ],
+    "gender_ratio": 0.75,
+    "dex_no": 36,
+    "category": "Fairy Pokémon",
+    "height_m": 1.3,
+    "weight_kg": 40.0,
+    "flavor": "It has an acute sense of hearing. It can easily hear a pin being dropped nearly 1,100 yards away.",
+    "evo_moves": [
+      "minimize"
+    ],
+    "locomotion": "ground",
+    "jump_height": 0.42,
+    "tm": []
+  },
+  "Jigglypuff": {
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 115,
+      "atk": 45,
+      "def": 20,
+      "spa": 45,
+      "spd": 25,
+      "spe": 20
+    },
+    "ev_yield": {
+      "hp": 2
+    },
+    "catch_rate": 170,
+    "shape": "humanoid",
+    "pp": 105,
+    "base_exp": 76,
+    "growth": "fast",
+    "moves": [
+      "sing",
+      "pound",
+      "disable",
+      "defense_curl"
+    ],
+    "learnset": [
+      [
+        1,
+        "sing"
+      ],
+      [
+        4,
+        "defense_curl"
+      ],
+      [
+        9,
+        "pound"
+      ],
+      [
+        14,
+        "disable"
+      ],
+      [
+        19,
+        "rollout"
+      ],
+      [
+        24,
+        "double_slap"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#f0a8c8",
+    "evolution": {
+      "method": "item",
+      "item": "moon_stone",
+      "into": "Wigglytuff"
+    },
+    "abilities": [
+      "cute_charm"
+    ],
+    "gender_ratio": 0.75,
+    "dex_no": 39,
+    "category": "Balloon Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 5.5,
+    "flavor": "It captivates foes with its huge, round eyes, then lulls them to sleep by singing a soothing melody.",
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": []
+  },
+  "Wigglytuff": {
+    "types": [
+      "normal"
+    ],
+    "base": {
+      "hp": 140,
+      "atk": 70,
+      "def": 45,
+      "spa": 75,
+      "spd": 50,
+      "spe": 45
+    },
+    "ev_yield": {
+      "hp": 3
+    },
+    "catch_rate": 50,
+    "shape": "humanoid",
+    "pp": 130,
+    "base_exp": 109,
+    "growth": "fast",
+    "moves": [
+      "double_slap",
+      "sing",
+      "disable",
+      "defense_curl"
+    ],
+    "learnset": [
+      [
+        1,
+        "sing"
+      ],
+      [
+        1,
+        "disable"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
+        "double_slap"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e890b8",
+    "placeholder_scale": 1.4,
+    "abilities": [
+      "cute_charm"
+    ],
+    "gender_ratio": 0.75,
+    "dex_no": 40,
+    "category": "Balloon Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 12.0,
+    "flavor": "Its fur is extremely fine, dense, and supple. The exquisitely pleasant fur conveys an image of luxury.",
+    "evo_moves": [
+      "double_slap"
+    ],
+    "locomotion": "ground",
+    "jump_height": 0.3,
+    "tm": []
+  },
+  "Magnemite": {
+    "types": [
+      "electric",
+      "steel"
+    ],
+    "base": {
+      "hp": 25,
+      "atk": 35,
+      "def": 70,
+      "spa": 95,
+      "spd": 55,
+      "spe": 45
+    },
+    "ev_yield": {
+      "spa": 1
+    },
+    "catch_rate": 190,
+    "shape": "arms",
+    "pp": 100,
+    "base_exp": 89,
+    "growth": "medium_fast",
+    "moves": [
+      "metal_sound",
+      "tackle",
+      "thunder_shock",
+      "sonic_boom"
+    ],
+    "learnset": [
+      [
+        1,
+        "metal_sound"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        6,
+        "thunder_shock"
+      ],
+      [
+        11,
+        "supersonic"
+      ],
+      [
+        16,
+        "sonic_boom"
+      ],
+      [
+        21,
+        "thunder_wave"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#b8c0d0",
+    "evolution": {
+      "level": 30,
+      "into": "Magneton"
+    },
+    "abilities": [
+      "magnet_pull",
+      "sturdy"
+    ],
+    "gender_ratio": -1.0,
+    "dex_no": 81,
+    "category": "Magnet Pokémon",
+    "height_m": 0.3,
+    "weight_kg": 6.0,
+    "flavor": "It moves while constantly hovering. It discharges THUNDER WAVE and so on from the units at its sides.",
+    "locomotion": "hover",
+    "jump_height": 0.3,
+    "tm": []
+  },
+  "Magneton": {
+    "types": [
+      "electric",
+      "steel"
+    ],
+    "base": {
+      "hp": 50,
+      "atk": 60,
+      "def": 95,
+      "spa": 120,
+      "spd": 70,
+      "spe": 70
+    },
+    "ev_yield": {
+      "spa": 2
+    },
+    "catch_rate": 60,
+    "shape": "heads",
+    "pp": 125,
+    "base_exp": 161,
+    "growth": "medium_fast",
+    "moves": [
+      "thunder_shock",
+      "sonic_boom",
+      "thunder_wave",
+      "metal_sound"
+    ],
+    "learnset": [
+      [
+        1,
+        "metal_sound"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "thunder_shock"
+      ],
+      [
+        1,
+        "supersonic"
+      ],
+      [
+        16,
+        "sonic_boom"
+      ],
+      [
+        21,
+        "thunder_wave"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#98a0b8",
+    "placeholder_scale": 1.35,
+    "abilities": [
+      "magnet_pull",
+      "sturdy"
+    ],
+    "gender_ratio": -1.0,
+    "dex_no": 82,
+    "category": "Magnet Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 60.0,
+    "flavor": "A linked cluster formed of several MAGNEMITE. It discharges powerful magnetic waves at high voltage.",
+    "evo_moves": [],
+    "locomotion": "hover",
+    "jump_height": 0.0,
+    "tm": []
+  },
+  "Voltorb": {
+    "types": [
+      "electric"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 30,
+      "def": 50,
+      "spa": 55,
+      "spd": 55,
+      "spe": 100
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 190,
+    "shape": "ball",
+    "pp": 100,
+    "base_exp": 103,
+    "growth": "medium_fast",
+    "moves": [
+      "charge",
+      "tackle",
+      "screech",
+      "sonic_boom"
+    ],
+    "learnset": [
+      [
+        1,
+        "charge"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        8,
+        "screech"
+      ],
+      [
+        15,
+        "sonic_boom"
+      ],
+      [
+        21,
+        "spark"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#e84a4a",
+    "evolution": {
+      "level": 30,
+      "into": "Electrode"
+    },
+    "abilities": [
+      "soundproof",
+      "static"
+    ],
+    "gender_ratio": -1.0,
+    "dex_no": 100,
+    "category": "Ball Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 10.4,
+    "flavor": "A life-form whose identity is unknown. It is said to SCREECH or suddenly SELFDESTRUCT.",
+    "locomotion": "ground",
+    "jump_height": 1.16,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Electrode": {
+    "types": [
+      "electric"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 50,
+      "def": 70,
+      "spa": 80,
+      "spd": 80,
+      "spe": 140
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 60,
+    "shape": "ball",
+    "pp": 125,
+    "base_exp": 150,
+    "growth": "medium_fast",
+    "moves": [
+      "spark",
+      "sonic_boom",
+      "screech",
+      "charge"
+    ],
+    "learnset": [
+      [
+        1,
+        "charge"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "screech"
+      ],
+      [
+        1,
+        "sonic_boom"
+      ],
+      [
+        21,
+        "spark"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#d03838",
+    "placeholder_scale": 1.35,
+    "abilities": [
+      "soundproof",
+      "static"
+    ],
+    "gender_ratio": -1.0,
+    "dex_no": 101,
+    "category": "Ball Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 66.6,
+    "flavor": "It explodes in response to even minor stimuli. It is feared, with the nickname of “The Bomb Ball.”",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 1.4,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Oddish": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 45,
+      "atk": 50,
+      "def": 55,
+      "spa": 75,
+      "spd": 65,
+      "spe": 30
+    },
+    "ev_yield": {
+      "spa": 1
+    },
+    "catch_rate": 255,
+    "shape": "legs",
+    "pp": 100,
+    "base_exp": 78,
+    "growth": "medium_slow",
+    "moves": [
+      "absorb",
+      "sweet_scent",
+      "poison_powder",
+      "stun_spore"
+    ],
+    "learnset": [
+      [
+        1,
+        "absorb"
+      ],
+      [
+        7,
+        "sweet_scent"
+      ],
+      [
+        14,
+        "poison_powder"
+      ],
+      [
+        16,
+        "stun_spore"
+      ],
+      [
+        18,
+        "sleep_powder"
+      ],
+      [
+        23,
+        "acid"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#7ac74f",
+    "evolution": {
+      "level": 21,
+      "into": "Gloom"
+    },
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 43,
+    "category": "Weed Pokémon",
+    "height_m": 0.5,
+    "weight_kg": 5.4,
+    "flavor": "Its scientific name is “Oddium Wanderus.” At night, it is said to walk nearly 1,000 feet on its two roots.",
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Gloom": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 65,
+      "def": 70,
+      "spa": 85,
+      "spd": 75,
+      "spe": 40
+    },
+    "ev_yield": {
+      "spa": 2
+    },
+    "catch_rate": 120,
+    "shape": "humanoid",
+    "pp": 115,
+    "base_exp": 132,
+    "growth": "medium_slow",
+    "moves": [
+      "absorb",
+      "acid",
+      "stun_spore",
+      "sleep_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "absorb"
+      ],
+      [
+        1,
+        "sweet_scent"
+      ],
+      [
+        1,
+        "poison_powder"
+      ],
+      [
+        16,
+        "stun_spore"
+      ],
+      [
+        18,
+        "sleep_powder"
+      ],
+      [
+        24,
+        "acid"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#a8506a",
+    "placeholder_scale": 1.2,
+    "evolution": {
+      "method": "item",
+      "item": "leaf_stone",
+      "into": "Vileplume"
+    },
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 44,
+    "category": "Weed Pokémon",
+    "height_m": 0.8,
+    "weight_kg": 8.6,
+    "flavor": "Its pistils exude an incredibly foul odor. The horrid stench can cause fainting at a distance of 1.25 miles.",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 0.3,
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Vileplume": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 75,
+      "atk": 80,
+      "def": 85,
+      "spa": 100,
+      "spd": 90,
+      "spe": 50
+    },
+    "ev_yield": {
+      "spa": 3
+    },
+    "catch_rate": 45,
+    "shape": "humanoid",
+    "pp": 130,
+    "base_exp": 184,
+    "growth": "medium_slow",
+    "moves": [
+      "absorb",
+      "mega_drain",
+      "stun_spore",
+      "acid"
+    ],
+    "learnset": [
+      [
+        1,
+        "absorb"
+      ],
+      [
+        1,
+        "stun_spore"
+      ],
+      [
+        1,
+        "mega_drain"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#d84a6a",
+    "placeholder_scale": 1.5,
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 45,
+    "category": "Flower Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 18.6,
+    "flavor": "Its petals are the largest in the world. It fiendishly scatters allergy-causing pollen from its petals.",
+    "evo_moves": [
+      "mega_drain"
+    ],
+    "locomotion": "ground",
+    "jump_height": 0.35,
+    "tm": [
+      "bullet_seed"
+    ]
+  },
+  "Bellsprout": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 50,
+      "atk": 75,
+      "def": 35,
+      "spa": 70,
+      "spd": 30,
+      "spe": 40
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 255,
+    "shape": "humanoid",
+    "pp": 100,
+    "base_exp": 84,
+    "growth": "medium_slow",
+    "moves": [
+      "vine_whip",
+      "growth",
+      "wrap",
+      "sleep_powder"
+    ],
+    "learnset": [
+      [
+        1,
+        "vine_whip"
+      ],
+      [
+        6,
+        "growth"
+      ],
+      [
+        11,
+        "wrap"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        17,
+        "poison_powder"
+      ],
+      [
+        19,
+        "stun_spore"
+      ],
+      [
+        23,
+        "acid"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#c8d84a",
+    "evolution": {
+      "level": 21,
+      "into": "Weepinbell"
+    },
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 69,
+    "category": "Flower Pokémon",
+    "height_m": 0.7,
+    "weight_kg": 4.0,
+    "flavor": "Its bud looks like a human face. Because of the bud, it is rumored to be a type of legendary mandrake plant.",
+    "locomotion": "ground",
+    "jump_height": 0.3,
+    "tm": [
+      "bullet_seed",
+      "thief"
+    ]
+  },
+  "Weepinbell": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 65,
+      "atk": 90,
+      "def": 50,
+      "spa": 85,
+      "spd": 45,
+      "spe": 55
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 120,
+    "shape": "blob",
+    "pp": 120,
+    "base_exp": 151,
+    "growth": "medium_slow",
+    "moves": [
+      "vine_whip",
+      "wrap",
+      "acid",
+      "stun_spore"
+    ],
+    "learnset": [
+      [
+        1,
+        "vine_whip"
+      ],
+      [
+        1,
+        "growth"
+      ],
+      [
+        1,
+        "wrap"
+      ],
+      [
+        15,
+        "sleep_powder"
+      ],
+      [
+        17,
+        "poison_powder"
+      ],
+      [
+        19,
+        "stun_spore"
+      ],
+      [
+        24,
+        "acid"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#b0c838",
+    "placeholder_scale": 1.25,
+    "evolution": {
+      "method": "item",
+      "item": "leaf_stone",
+      "into": "Victreebel"
+    },
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 70,
+    "category": "Flycatcher Pokémon",
+    "height_m": 1.0,
+    "weight_kg": 6.4,
+    "flavor": "The leafy parts act as cutters for slashing foes. It spits a fluid that dissolves everything.",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "bullet_seed",
+      "thief"
+    ]
+  },
+  "Victreebel": {
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "base": {
+      "hp": 80,
+      "atk": 105,
+      "def": 65,
+      "spa": 100,
+      "spd": 60,
+      "spe": 70
+    },
+    "ev_yield": {
+      "atk": 3
+    },
+    "catch_rate": 45,
+    "shape": "blob",
+    "pp": 130,
+    "base_exp": 191,
+    "growth": "medium_slow",
+    "moves": [
+      "razor_leaf",
+      "vine_whip",
+      "sleep_powder",
+      "acid"
+    ],
+    "learnset": [
+      [
+        1,
+        "vine_whip"
+      ],
+      [
+        1,
+        "sleep_powder"
+      ],
+      [
+        1,
+        "sweet_scent"
+      ],
+      [
+        1,
+        "razor_leaf"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_green.png",
+    "placeholder_tint": "#98b028",
+    "placeholder_scale": 1.5,
+    "abilities": [
+      "chlorophyll"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 71,
+    "category": "Flycatcher Pokémon",
+    "height_m": 1.7,
+    "weight_kg": 15.5,
+    "flavor": "Lures prey into its mouth with a honeylike aroma. The helpless prey is melted with a dissolving fluid.",
+    "evo_moves": [
+      "razor_leaf"
+    ],
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "bullet_seed",
+      "thief"
+    ]
+  },
+  "Grimer": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 80,
+      "atk": 80,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 25
+    },
+    "ev_yield": {
+      "hp": 1
+    },
+    "catch_rate": 190,
+    "shape": "arms",
+    "pp": 110,
+    "base_exp": 90,
+    "growth": "medium_fast",
+    "moves": [
+      "poison_gas",
+      "pound",
+      "harden",
+      "sludge"
+    ],
+    "learnset": [
+      [
+        1,
+        "poison_gas"
+      ],
+      [
+        1,
+        "pound"
+      ],
+      [
+        4,
+        "harden"
+      ],
+      [
+        8,
+        "disable"
+      ],
+      [
+        13,
+        "sludge"
+      ],
+      [
+        19,
+        "minimize"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#9a7ac8",
+    "evolution": {
+      "level": 38,
+      "into": "Muk"
+    },
+    "abilities": [
+      "stench",
+      "sticky_hold"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 88,
+    "category": "Sludge Pokémon",
+    "height_m": 0.9,
+    "weight_kg": 30.0,
+    "flavor": "Sludge exposed to X rays from the moon transformed into GRIMER. It loves feeding on filthy things.",
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Muk": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 105,
+      "atk": 105,
+      "def": 75,
+      "spa": 65,
+      "spd": 100,
+      "spe": 50
+    },
+    "ev_yield": {
+      "hp": 1,
+      "atk": 1
+    },
+    "catch_rate": 75,
+    "shape": "arms",
+    "pp": 130,
+    "base_exp": 157,
+    "growth": "medium_fast",
+    "moves": [
+      "pound",
+      "sludge",
+      "minimize",
+      "disable"
+    ],
+    "learnset": [
+      [
+        1,
+        "poison_gas"
+      ],
+      [
+        1,
+        "pound"
+      ],
+      [
+        1,
+        "harden"
+      ],
+      [
+        8,
+        "disable"
+      ],
+      [
+        13,
+        "sludge"
+      ],
+      [
+        19,
+        "minimize"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#7a5aa8",
+    "placeholder_scale": 1.4,
+    "abilities": [
+      "stench",
+      "sticky_hold"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 89,
+    "category": "Sludge Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 30.0,
+    "flavor": "It is usually undetectable because it blends in with the ground. Touching it can cause terrible poisoning.",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 0.32,
+    "tm": [
+      "rock_tomb",
+      "thief"
+    ]
+  },
+  "Koffing": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 40,
+      "atk": 65,
+      "def": 95,
+      "spa": 60,
+      "spd": 45,
+      "spe": 35
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 190,
+    "shape": "ball",
+    "pp": 105,
+    "base_exp": 114,
+    "growth": "medium_fast",
+    "moves": [
+      "poison_gas",
+      "tackle",
+      "smog",
+      "sludge"
+    ],
+    "learnset": [
+      [
+        1,
+        "poison_gas"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        9,
+        "smog"
+      ],
+      [
+        17,
+        "self_destruct"
+      ],
+      [
+        21,
+        "sludge"
+      ],
+      [
+        25,
+        "smokescreen"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#b07ad0",
+    "evolution": {
+      "level": 35,
+      "into": "Weezing"
+    },
+    "abilities": [
+      "levitate"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 109,
+    "category": "Poison Gas Pokémon",
+    "height_m": 0.6,
+    "weight_kg": 1.0,
+    "flavor": "Its thin, balloon-like body is inflated by horribly toxic gases. It reeks when it is nearby.",
+    "locomotion": "hover",
+    "jump_height": 0.3,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Weezing": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 65,
+      "atk": 90,
+      "def": 120,
+      "spa": 85,
+      "spd": 70,
+      "spe": 60
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 60,
+    "shape": "heads",
+    "pp": 130,
+    "base_exp": 173,
+    "growth": "medium_fast",
+    "moves": [
+      "smog",
+      "sludge",
+      "tackle",
+      "smokescreen"
+    ],
+    "learnset": [
+      [
+        1,
+        "poison_gas"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "smog"
+      ],
+      [
+        1,
+        "self_destruct"
+      ],
+      [
+        21,
+        "sludge"
+      ],
+      [
+        25,
+        "smokescreen"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#9060b8",
+    "placeholder_scale": 1.4,
+    "abilities": [
+      "levitate"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 110,
+    "category": "Poison Gas Pokémon",
+    "height_m": 1.2,
+    "weight_kg": 9.5,
+    "flavor": "Very rarely, a sudden mutation can result in two small KOFFING twins becoming conjoined as a WEEZING.",
+    "evo_moves": [],
+    "locomotion": "hover",
+    "jump_height": 0.0,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Ekans": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 35,
+      "atk": 60,
+      "def": 44,
+      "spa": 40,
+      "spd": 54,
+      "spe": 55
+    },
+    "ev_yield": {
+      "atk": 1
+    },
+    "catch_rate": 255,
+    "shape": "squiggle",
+    "pp": 95,
+    "base_exp": 62,
+    "growth": "medium_fast",
+    "moves": [
+      "wrap",
+      "leer",
+      "poison_sting",
+      "bite"
+    ],
+    "learnset": [
+      [
+        1,
+        "wrap"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        8,
+        "poison_sting"
+      ],
+      [
+        13,
+        "bite"
+      ],
+      [
+        20,
+        "glare"
+      ],
+      [
+        25,
+        "screech"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#a878d0",
+    "evolution": {
+      "level": 22,
+      "into": "Arbok"
+    },
+    "abilities": [
+      "intimidate",
+      "shed_skin"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 23,
+    "category": "Snake Pokémon",
+    "height_m": 2.0,
+    "weight_kg": 6.9,
+    "flavor": "A very common sight in grassland, etc. It flicks its tongue in and out to sense danger in its surroundings.",
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Arbok": {
+    "types": [
+      "poison"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 85,
+      "def": 69,
+      "spa": 65,
+      "spd": 79,
+      "spe": 80
+    },
+    "ev_yield": {
+      "atk": 2
+    },
+    "catch_rate": 90,
+    "shape": "squiggle",
+    "pp": 120,
+    "base_exp": 147,
+    "growth": "medium_fast",
+    "moves": [
+      "bite",
+      "wrap",
+      "poison_sting",
+      "glare"
+    ],
+    "learnset": [
+      [
+        1,
+        "wrap"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "poison_sting"
+      ],
+      [
+        1,
+        "bite"
+      ],
+      [
+        20,
+        "glare"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "placeholder_tint": "#8f58b8",
+    "placeholder_scale": 1.45,
+    "abilities": [
+      "intimidate",
+      "shed_skin"
+    ],
+    "gender_ratio": 0.5,
+    "dex_no": 24,
+    "category": "Cobra Pokémon",
+    "height_m": 3.5,
+    "weight_kg": 65.0,
+    "flavor": "The pattern on its belly appears to be a frightening face. Weak foes will flee just at the sight of the pattern.",
+    "evo_moves": [],
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "tm": [
+      "thief"
+    ]
+  },
+  "Staryu": {
+    "types": [
+      "water"
+    ],
+    "base": {
+      "hp": 30,
+      "atk": 45,
+      "def": 55,
+      "spa": 70,
+      "spd": 55,
+      "spe": 85
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "catch_rate": 225,
+    "shape": "blob",
+    "pp": 100,
+    "base_exp": 106,
+    "growth": "slow",
+    "moves": [
+      "tackle",
+      "water_gun",
+      "rapid_spin",
+      "harden"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "harden"
+      ],
+      [
+        6,
+        "water_gun"
+      ],
+      [
+        10,
+        "rapid_spin"
+      ],
+      [
+        24,
+        "swift"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#e0b050",
+    "dex_no": 120,
+    "category": "Star Shape Pokémon",
+    "flavor": "It appears in large numbers by seashores. At night, its central core flashes with a red light.",
+    "gender_ratio": -1.0,
+    "height_m": 0.8,
+    "weight_kg": 34.5,
+    "abilities": [
+      "illuminate",
+      "natural_cure"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.3,
+    "pad": true,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "jump_height_override": 0.5,
+    "evolution": {
+      "method": "item",
+      "item": "water_stone",
+      "into": "Starmie"
+    },
+    "tm": []
+  },
+  "Starmie": {
+    "types": [
+      "water",
+      "psychic"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 75,
+      "def": 85,
+      "spa": 100,
+      "spd": 85,
+      "spe": 115
+    },
+    "ev_yield": {
+      "spe": 2
+    },
+    "catch_rate": 60,
+    "shape": "blob",
+    "pp": 115,
+    "base_exp": 207,
+    "growth": "slow",
+    "moves": [
+      "water_gun",
+      "rapid_spin",
+      "swift",
+      "bubble_beam"
+    ],
+    "learnset": [
+      [
+        1,
+        "water_gun"
+      ],
+      [
+        1,
+        "rapid_spin"
+      ],
+      [
+        1,
+        "swift"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#b060d0",
+    "placeholder_scale": 1.3,
+    "dex_no": 121,
+    "category": "Mysterious Pokémon",
+    "flavor": "This POKéMON has a geometric body. Because of its body, the locals suspect that it is an alien creature.",
+    "gender_ratio": -1.0,
+    "height_m": 1.1,
+    "weight_kg": 80.0,
+    "abilities": [
+      "illuminate",
+      "natural_cure"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.32,
+    "pad": true,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "jump_height_override": 0.55,
+    "evo_moves": [],
+    "tm": []
+  },
+  "Horsea": {
+    "types": [
+      "water"
+    ],
+    "base": {
+      "hp": 30,
+      "atk": 40,
+      "def": 70,
+      "spa": 70,
+      "spd": 25,
+      "spe": 60
+    },
+    "ev_yield": {
+      "spa": 1
+    },
+    "catch_rate": 225,
+    "shape": "blob",
+    "pp": 100,
+    "base_exp": 59,
+    "growth": "medium_fast",
+    "moves": [
+      "bubble",
+      "smokescreen",
+      "leer",
+      "water_gun"
+    ],
+    "learnset": [
+      [
+        1,
+        "bubble"
+      ],
+      [
+        8,
+        "smokescreen"
+      ],
+      [
+        15,
+        "leer"
+      ],
+      [
+        22,
+        "water_gun"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#78c8e0",
+    "dex_no": 116,
+    "category": "Dragon Pokémon",
+    "flavor": "It maintains balance using its tail, which is wound up like a coil. It may spray ink from its mouth.",
+    "gender_ratio": 0.5,
+    "height_m": 0.4,
+    "weight_kg": 8.0,
+    "abilities": [
+      "swift_swim"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.2,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "evolution": {
+      "level": 32,
+      "into": "Seadra"
+    },
+    "tm": []
+  },
+  "Shellder": {
+    "types": [
+      "water"
+    ],
+    "base": {
+      "hp": 30,
+      "atk": 65,
+      "def": 100,
+      "spa": 45,
+      "spd": 25,
+      "spe": 40
+    },
+    "ev_yield": {
+      "def": 1
+    },
+    "catch_rate": 190,
+    "shape": "ball",
+    "pp": 100,
+    "base_exp": 97,
+    "growth": "slow",
+    "moves": [
+      "tackle",
+      "withdraw",
+      "icicle_spear",
+      "supersonic"
+    ],
+    "learnset": [
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "withdraw"
+      ],
+      [
+        8,
+        "icicle_spear"
+      ],
+      [
+        15,
+        "supersonic"
+      ],
+      [
+        22,
+        "aurora_beam"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#a890c8",
+    "dex_no": 90,
+    "category": "Bivalve Pokémon",
+    "flavor": "It is encased in a shell that is harder than diamond. Inside, however, it is surprisingly tender.",
+    "gender_ratio": 0.5,
+    "height_m": 0.3,
+    "weight_kg": 4.0,
+    "abilities": [
+      "shell_armor"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.5,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "evolution": {
+      "method": "item",
+      "item": "water_stone",
+      "into": "Cloyster"
+    },
+    "tm": []
+  },
+  "Seadra": {
+    "types": [
+      "water"
+    ],
+    "base": {
+      "hp": 55,
+      "atk": 65,
+      "def": 95,
+      "spa": 95,
+      "spd": 45,
+      "spe": 85
+    },
+    "ev_yield": {
+      "def": 1,
+      "spa": 1
+    },
+    "catch_rate": 75,
+    "shape": "blob",
+    "pp": 115,
+    "base_exp": 155,
+    "growth": "medium_fast",
+    "moves": [
+      "water_gun",
+      "bubble",
+      "smokescreen",
+      "twister"
+    ],
+    "learnset": [
+      [
+        1,
+        "bubble"
+      ],
+      [
+        1,
+        "smokescreen"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "water_gun"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#8a9fd8",
+    "placeholder_scale": 1.3,
+    "dex_no": 117,
+    "category": "Dragon Pokémon",
+    "flavor": "Its body bristles with sharp spikes. Carelessly trying to touch it could cause fainting from the spikes.",
+    "gender_ratio": 0.5,
+    "height_m": 1.2,
+    "weight_kg": 25.0,
+    "abilities": [
+      "poison_point"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.25,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "evo_moves": [],
+    "evolution": {
+      "method": "item",
+      "item": "dragon_scale",
+      "into": "Kingdra"
+    },
+    "tm": []
+  },
+  "Kingdra": {
+    "types": [
+      "water",
+      "dragon"
+    ],
+    "base": {
+      "hp": 75,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 85
+    },
+    "ev_yield": {
+      "atk": 1,
+      "spa": 1,
+      "spd": 1
+    },
+    "catch_rate": 45,
+    "shape": "blob",
+    "pp": 125,
+    "base_exp": 207,
+    "growth": "medium_fast",
+    "moves": [
+      "water_gun",
+      "bubble",
+      "twister",
+      "hydro_pump"
+    ],
+    "learnset": [
+      [
+        1,
+        "bubble"
+      ],
+      [
+        1,
+        "smokescreen"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "water_gun"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#5c7fc0",
+    "placeholder_scale": 1.5,
+    "dex_no": 230,
+    "category": "Dragon Pokémon",
+    "flavor": "It sleeps deep on the ocean floor to build its energy. It is said to cause tornadoes as it wakes.",
+    "gender_ratio": 0.5,
+    "height_m": 1.8,
+    "weight_kg": 152.0,
+    "abilities": [
+      "swift_swim"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.3,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "evo_moves": [],
+    "tm": []
+  },
+  "Cloyster": {
+    "types": [
+      "water",
+      "ice"
+    ],
+    "base": {
+      "hp": 50,
+      "atk": 95,
+      "def": 180,
+      "spa": 85,
+      "spd": 45,
+      "spe": 70
+    },
+    "ev_yield": {
+      "def": 2
+    },
+    "catch_rate": 60,
+    "shape": "ball",
+    "pp": 115,
+    "base_exp": 203,
+    "growth": "slow",
+    "moves": [
+      "icicle_spear",
+      "aurora_beam",
+      "withdraw",
+      "supersonic"
+    ],
+    "learnset": [
+      [
+        1,
+        "withdraw"
+      ],
+      [
+        1,
+        "supersonic"
+      ],
+      [
+        1,
+        "aurora_beam"
+      ]
+    ],
+    "sprite": "res://assets/sprites/critter_bird.png",
+    "placeholder_tint": "#8fb8d8",
+    "placeholder_scale": 1.35,
+    "dex_no": 91,
+    "category": "Bivalve Pokémon",
+    "flavor": "Its shell is extremely hard. It cannot be shattered, even with a bomb. The shell opens only when it is attacking.",
+    "gender_ratio": 0.5,
+    "height_m": 1.5,
+    "weight_kg": 132.5,
+    "abilities": [
+      "shell_armor"
+    ],
+    "swimmer": true,
+    "swim_sink": 0.5,
+    "locomotion": "ground",
+    "jump_height": 0.0,
+    "evo_moves": [],
+    "tm": []
+  }
+}

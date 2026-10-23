@@ -1,0 +1,151 @@
+{
+  "_doc": "Gen 3 (FireRed/LeafGreen) abilities: id -> in-game FRLG name and description (pret/pokefirered src/data/text/abilities.h). A Mon stores only its ability slot (scripts/stats/mon.gd ability_slot); names/descriptions are display only for now, no battle effects.",
+  "arena_trap": {
+    "name": "ARENA TRAP",
+    "desc": "Prevents fleeing."
+  },
+  "blaze": {
+    "name": "BLAZE",
+    "desc": "Ups FIRE moves in a pinch."
+  },
+  "chlorophyll": {
+    "name": "CHLOROPHYLL",
+    "desc": "Raises SPEED in sunshine."
+  },
+  "cloud_nine": {
+    "name": "CLOUD NINE",
+    "desc": "Negates weather effects."
+  },
+  "cute_charm": {
+    "name": "CUTE CHARM",
+    "desc": "Infatuates on contact."
+  },
+  "compound_eyes": {
+    "name": "COMPOUND EYES",
+    "desc": "Raises accuracy."
+  },
+  "damp": {
+    "name": "DAMP",
+    "desc": "Prevents self-destruction."
+  },
+  "effect_spore": {
+    "name": "EFFECT SPORE",
+    "desc": "Leaves spores on contact."
+  },
+  "guts": {
+    "name": "GUTS",
+    "desc": "Ups ATTACK if suffering."
+  },
+  "inner_focus": {
+    "name": "INNER FOCUS",
+    "desc": "Prevents flinching."
+  },
+  "intimidate": {
+    "name": "INTIMIDATE",
+    "desc": "Lowers the foe's ATTACK."
+  },
+  "keen_eye": {
+    "name": "KEEN EYE",
+    "desc": "Prevents loss of accuracy."
+  },
+  "levitate": {
+    "name": "LEVITATE",
+    "desc": "Not hit by GROUND attacks."
+  },
+  "magnet_pull": {
+    "name": "MAGNET PULL",
+    "desc": "Traps STEEL-type POKéMON."
+  },
+  "oblivious": {
+    "name": "OBLIVIOUS",
+    "desc": "Prevents attraction."
+  },
+  "overgrow": {
+    "name": "OVERGROW",
+    "desc": "Ups GRASS moves in a pinch."
+  },
+  "own_tempo": {
+    "name": "OWN TEMPO",
+    "desc": "Prevents confusion."
+  },
+  "poison_point": {
+    "name": "POISON POINT",
+    "desc": "Poisons foe on contact."
+  },
+  "rock_head": {
+    "name": "ROCK HEAD",
+    "desc": "Prevents recoil damage."
+  },
+  "run_away": {
+    "name": "RUN AWAY",
+    "desc": "Makes escaping easier."
+  },
+  "sand_veil": {
+    "name": "SAND VEIL",
+    "desc": "Ups evasion in a sandstorm."
+  },
+  "shed_skin": {
+    "name": "SHED SKIN",
+    "desc": "Heals the body by shedding."
+  },
+  "shield_dust": {
+    "name": "SHIELD DUST",
+    "desc": "Prevents added effects."
+  },
+  "shell_armor": {
+    "name": "SHELL ARMOR",
+    "desc": "Blocks critical hits."
+  },
+  "soundproof": {
+    "name": "SOUNDPROOF",
+    "desc": "Avoids sound-based moves."
+  },
+  "static": {
+    "name": "STATIC",
+    "desc": "Paralyzes on contact."
+  },
+  "stench": {
+    "name": "STENCH",
+    "desc": "Helps repel wild POKéMON."
+  },
+  "sticky_hold": {
+    "name": "STICKY HOLD",
+    "desc": "Prevents item theft."
+  },
+  "sturdy": {
+    "name": "STURDY",
+    "desc": "Negates 1-hit KO attacks."
+  },
+  "swarm": {
+    "name": "SWARM",
+    "desc": "Ups BUG moves in a pinch."
+  },
+  "swift_swim": {
+    "name": "SWIFT SWIM",
+    "desc": "Raises SPEED in rain."
+  },
+  "torrent": {
+    "name": "TORRENT",
+    "desc": "Ups WATER moves in a pinch."
+  },
+  "vital_spirit": {
+    "name": "VITAL SPIRIT",
+    "desc": "Prevents sleep."
+  },
+  "water_absorb": {
+    "name": "WATER ABSORB",
+    "desc": "Changes water into HP."
+  },
+  "water_veil": {
+    "name": "WATER VEIL",
+    "desc": "Prevents burns."
+  },
+  "illuminate": {
+    "name": "ILLUMINATE",
+    "desc": "Encounter rate increases."
+  },
+  "natural_cure": {
+    "name": "NATURAL CURE",
+    "desc": "Heals upon switching out."
+  }
+}

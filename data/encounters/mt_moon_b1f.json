@@ -1,0 +1,8 @@
+{
+  "area": "Mt. Moon B1F",
+  "_doc": "FireRed/LeafGreen Mt. Moon B1F land_mons: Paras only (levels 5-10). The pure connector floor. Visible roamers only.",
+  "rate": 10,
+  "entries": [
+    {"species": "Paras", "level_range": [5, 10], "weight": 100, "mode": "visible", "time": "any", "behaviour": "passive"}
+  ]
+}

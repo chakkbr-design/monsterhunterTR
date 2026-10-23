@@ -1,0 +1,12 @@
+{
+  "area": "Viridian Forest",
+  "_doc": "FireRed/LeafGreen Viridian Forest (FireRed rates): Caterpie 40%, Weedle 40%, Kakuna 10%, Metapod 5%, Pikachu 5%. mode 'both' so the bugs roam the forest visibly as well as ambushing from tall grass. Bugs are passive; Pikachu is skittish and flees. Unused until D19 adds the Viridian Forest zone: nothing loads this table yet, so it is safe to ship early. B46: rate 14 = FRLG land_mons.encounter_rate (pret src/data/wild_encounters.json sViridianForest_FireRed).",
+  "rate": 14,
+  "entries": [
+    {"species": "Caterpie", "level_range": [3, 5], "weight": 40, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [3, 5], "weight": 40, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Kakuna",   "level_range": [4, 6], "weight": 10, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Metapod",  "level_range": [5, 5], "weight": 5,  "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Pikachu",  "level_range": [3, 5], "weight": 5,  "mode": "both", "time": "any", "behaviour": "flee"}
+  ]
+}

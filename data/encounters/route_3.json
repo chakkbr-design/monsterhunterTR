@@ -1,0 +1,13 @@
+{
+  "area": "Route 3",
+  "_doc": "FireRed/LeafGreen Route 3 land_mons (pret src/data/wild_encounters.json sRoute3_FireRed): Pidgey/Spearow/Rattata-class field grass plus Mankey and the Nidorans, with Jigglypuff the rare slot. 12 FRLG slots (20/20/10/10/10/10/5/5/4/4/1/1) aggregated by species: Spearow 6-8 (35), Pidgey 6-7 (30), Mankey 7 (10), Nidoran M 6-7 (14), Nidoran F 6 (1, FRLG's FireRed rare Nidoran; LeafGreen makes it common and Nidoran M the rare one) and Jigglypuff 3-7 (10, the rare one). rate 20 = FRLG land_mons.encounter_rate.",
+  "rate": 20,
+  "entries": [
+    {"species": "Spearow",   "level_range": [6, 8], "weight": 35, "mode": "both", "time": "any", "behaviour": "flee"},
+    {"species": "Pidgey",    "level_range": [6, 7], "weight": 30, "mode": "both", "time": "any", "behaviour": "flee"},
+    {"species": "Nidoran M", "level_range": [6, 7], "weight": 14, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Mankey",    "level_range": [7, 7], "weight": 10, "mode": "both", "time": "any", "behaviour": "aggressive"},
+    {"species": "Jigglypuff","level_range": [3, 7], "weight": 10, "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Nidoran F", "level_range": [6, 6], "weight": 1,  "mode": "both", "time": "any", "behaviour": "passive"}
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "area": "Viridian City",
+  "_doc": "FireRed/LeafGreen Viridian City has NO land encounters — this table is ours, the same calm-street life Pallet Town has, so the city is not dead between the buildings. Low levels and passive behaviour on purpose: these are the town's residents, not a route, and they sit at or below Route 1's own (Pidgey 2-5, Rattata 2-4). The grove and the pond-side park roll the bugs instead (data/encounters/viridian_grove.json); Viridian's real wild Pokémon are the water species at the pond (data/encounters/viridian_pond.json).",
+  "entries": [
+    {"species": "Pidgey",  "level_range": [3, 5], "weight": 45, "mode": "visible", "time": "any", "behaviour": "flee"},
+    {"species": "Rattata", "level_range": [3, 5], "weight": 35, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Spearow", "level_range": [3, 5], "weight": 20, "mode": "visible", "time": "any", "behaviour": "passive"}
+  ]
+}

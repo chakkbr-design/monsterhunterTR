@@ -1,0 +1,10 @@
+{
+  "area": "Pond swimmers",
+  "_doc": "The FireRed/LeafGreen rod roster (Old/Good Rod, Lv 5-15), shared by the demo ponds that have no FRLG water table of their own (Pallet Town's shore and Route 2's pond). mode 'swim' = visible swimmers you challenge from the shore (D63); by operator decision (B56) their levels are capped to the early-route band Lv 2-4, not FRLG's rod band, so a starting-area pond never rolls a Lv 15 wall. The Surf/Super Rod entries stay in the FRLG tables as 'water', reserved.",
+  "entries": [
+    {"species": "Magikarp", "level_range": [2, 4],  "weight": 100, "mode": "swim", "method": "Fish Old",  "time": "any", "behaviour": "passive"},
+    {"species": "Poliwag",  "level_range": [2, 4], "weight": 60,  "mode": "swim", "method": "Fish Good", "time": "any", "behaviour": "passive"},
+    {"species": "Goldeen",  "level_range": [3, 4], "weight": 20,  "mode": "swim", "method": "Fish Good", "time": "any", "behaviour": "passive"},
+    {"species": "Magikarp", "level_range": [2, 4], "weight": 20,  "mode": "swim", "method": "Fish Good", "time": "any", "behaviour": "passive"}
+  ]
+}

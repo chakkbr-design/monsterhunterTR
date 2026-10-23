@@ -1,0 +1,9 @@
+{
+  "area": "Pallet Town (groves)",
+  "_doc": "Not in FireRed/LeafGreen — ours. Pallet's wooded places roll the bugs that live in them, with the occasional Pidgey in the branches: the west meadow grove, the orchard's rows and the shade trees in Oak's field. mode: visible (they roam the grove, they never ambush).",
+  "entries": [
+    {"species": "Caterpie", "level_range": [2, 4], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [2, 4], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Pidgey",   "level_range": [2, 3], "weight": 20, "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

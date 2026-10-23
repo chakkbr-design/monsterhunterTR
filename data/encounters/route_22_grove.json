@@ -1,0 +1,9 @@
+{
+  "area": "Route 22 (grove)",
+  "_doc": "Not in FireRed/LeafGreen — ours. The grove inside Route 22's south loop rolls the bugs that live under the treeline, with the odd Spearow in the branches. mode: visible (they roam the grove, they never ambush), so the grove reads as its own habitat next to the route's grass table.",
+  "entries": [
+    {"species": "Caterpie", "level_range": [3, 5], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [3, 5], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Spearow",  "level_range": [3, 5], "weight": 20, "mode": "visible", "time": "any", "behaviour": "aggressive"}
+  ]
+}

@@ -1,0 +1,634 @@
+{
+  "_doc": "Overworld trainers. party = [[species, level], ...]; a species '@flag' is read from Game.flags at battle time (the Route 22 rival's starter). class = a GameState.TRAINER_PAYOUTS key; sight = metres (0 = never spots you, talk to fight); sprite is a sheet in assets/sprites/ in the 3x4 npc_*.png layout. Display name on banners = '<CLASS> <NAME>' (see Trainers.display_name). Real trainers: FRLG data from the Bulbapedia references only. Optional fields: reward (exact FRLG prize, overrides base x level), intro/defeat/after/lose lines, requires_flag / hidden_by_flag, scripted (loss does not white-out), arena [w, d] + center (a scene marker name) for gym battles, arena_color (the ground decal tint, stone grey in the gym), ai_think_scale, badge (awarded on win + '<badge>_badge' flag), done_flag / won_flag (set after any/winning battle), leave_after + leave_to [x, z] (the trainer walks off and is freed).",
+  "test_youngster": {
+    "class": "youngster",
+    "name": "TEST",
+    "sprite": "npc_youngster.png",
+    "party": [
+      [
+        "Rattata",
+        5
+      ],
+      [
+        "Pidgey",
+        5
+      ]
+    ],
+    "sight": 5.0,
+    "intro": [
+      "(test) Let's battle!"
+    ],
+    "defeat": [
+      "(test) I lost!"
+    ],
+    "after": [
+      "(test) Already beaten."
+    ]
+  },
+  "bug_catcher_rick": {
+    "class": "bug_catcher",
+    "name": "Rick",
+    "sprite": "npc_bug_catcher.png",
+    "party": [
+      [
+        "Weedle",
+        6
+      ],
+      [
+        "Caterpie",
+        6
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 72,
+    "intro": [
+      "Hey! You have POKéMON!\nCome on!\nLet's battle 'em!"
+    ],
+    "defeat": [
+      "No!\nCATERPIE can't hack it!"
+    ],
+    "after": [
+      "Ssh! You'll scare the bugs away.\nAnother time, okay?"
+    ],
+    "ai_think_scale": 1.3
+  },
+  "bug_catcher_doug": {
+    "class": "bug_catcher",
+    "name": "Doug",
+    "sprite": "npc_bug_catcher.png",
+    "party": [
+      [
+        "Weedle",
+        7
+      ],
+      [
+        "Kakuna",
+        7
+      ],
+      [
+        "Weedle",
+        7
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 84,
+    "intro": [
+      "Yo!\nYou can't jam out if you're a\nPOKéMON TRAINER!"
+    ],
+    "defeat": [
+      "Huh?\nI ran out of POKéMON!"
+    ],
+    "after": [
+      "That totally stinks! I'm going to\ncatch some stronger ones!"
+    ],
+    "ai_think_scale": 1.3
+  },
+  "bug_catcher_anthony": {
+    "class": "bug_catcher",
+    "name": "Anthony",
+    "sprite": "npc_bug_catcher.png",
+    "party": [
+      [
+        "Caterpie",
+        7
+      ],
+      [
+        "Caterpie",
+        8
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 96,
+    "intro": [
+      "I might be little, but I won't like\nit if you go easy on me!"
+    ],
+    "defeat": [
+      "Oh, boo.\nNothing went right."
+    ],
+    "after": [
+      "I lost some of my allowance…"
+    ],
+    "ai_think_scale": 1.3
+  },
+  "bug_catcher_charlie": {
+    "class": "bug_catcher",
+    "name": "Charlie",
+    "sprite": "npc_bug_catcher.png",
+    "party": [
+      [
+        "Metapod",
+        7
+      ],
+      [
+        "Caterpie",
+        7
+      ],
+      [
+        "Metapod",
+        7
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 84,
+    "intro": [
+      "Did you know that POKéMON evolve?"
+    ],
+    "defeat": [
+      "Oh!\nI lost!"
+    ],
+    "after": [
+      "BUG POKéMON evolve quickly.\nThey're a lot of fun!"
+    ],
+    "ai_think_scale": 1.3
+  },
+  "bug_catcher_sammy": {
+    "class": "bug_catcher",
+    "name": "Sammy",
+    "sprite": "npc_bug_catcher.png",
+    "party": [
+      [
+        "Weedle",
+        9
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 108,
+    "intro": [
+      "Hey, wait up!\nWhat's the hurry? Why the rush?"
+    ],
+    "defeat": [
+      "I give!\nYou're good at this!"
+    ],
+    "after": [
+      "Sometimes, you can find stuff on\nthe ground.",
+      "I'm looking for the stuff I\ndropped. Can you help me?"
+    ],
+    "ai_think_scale": 1.3
+  },
+  "camper_liam": {
+    "class": "camper",
+    "name": "Liam",
+    "sprite": "npc_camper.png",
+    "party": [
+      [
+        "Geodude",
+        10
+      ],
+      [
+        "Sandshrew",
+        11
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 220,
+    "center": "GymArenaCenter",
+    "arena": [
+      16.0,
+      10.0
+    ],
+    "arena_color": "#c8ccd2b3",
+    "intro": [
+      "Stop right there, kid!",
+      "You're ten thousand light-years \nfrom facing BROCK!"
+    ],
+    "defeat": [
+      "Darn!",
+      "Light-years isn't time…\nIt measures distance!"
+    ],
+    "after": [
+      "You're pretty hot.\n…But not as hot as BROCK!"
+    ]
+  },
+  "brock": {
+    "class": "gym_leader",
+    "name": "Brock",
+    "sprite": "npc_brock.png",
+    "party": [
+      [
+        "Geodude",
+        12
+      ],
+      [
+        "Onix",
+        14
+      ]
+    ],
+    "sight": 0.0,
+    "reward": 1400,
+    "center": "GymArenaCenter",
+    "arena": [
+      16.0,
+      10.0
+    ],
+    "arena_color": "#c8ccd2b3",
+    "ai_think_scale": 0.8,
+    "badge": "boulder",
+    "intro": [
+      "So, you're here. I'm BROCK.\nI'm PEWTER's GYM LEADER.",
+      "My rock-hard willpower is evident\neven in my POKéMON.",
+      "My POKéMON are all rock hard, and\nhave true-grit determination.",
+      "That's right - my POKéMON are all\nthe ROCK type!",
+      "Fuhaha! You're going to challenge\nme knowing that you'll lose?",
+      "That's the TRAINER's honor that\ncompels you to challenge me.",
+      "Fine, then!\nShow me your best!"
+    ],
+    "defeat": [
+      "I took you for granted, and so\nI lost.",
+      "As proof of your victory, I confer\non you this…the official POKéMON\nLEAGUE BOULDERBADGE."
+    ],
+    "after": [
+      "There are all kinds of TRAINERS in\nthis huge world of ours.",
+      "You appear to be very gifted as a\nPOKéMON TRAINER.",
+      "So let me make a suggestion.",
+      "Go to the GYM in CERULEAN and test\nyour abilities."
+    ],
+    "badge_speech": [
+      "Just having the BOULDERBADGE makes\nyour POKéMON more powerful.",
+      "It also enables the use of the\nmove FLASH outside of battle.",
+      "Of course, a POKéMON must know the\nmove FLASH to use it."
+    ],
+    "gift": "tm39",
+    "gift_speech": [
+      "Wait! Take this with you.",
+      "A TM, TECHNICAL MACHINE, contains a\ntechnique for POKéMON.",
+      "Using a TM teaches the move it\ncontains to a POKéMON.",
+      "Anyways... TM39 contains ROCK TOMB.",
+      "It hurls boulders at the foe and\nlowers its SPEED."
+    ]
+  },
+  "misty": {
+    "class": "gym_leader",
+    "name": "Misty",
+    "sprite": "npc_cooltrainer_f.png",
+    "party": [
+      [
+        "Staryu",
+        18
+      ],
+      [
+        "Starmie",
+        21
+      ]
+    ],
+    "sight": 0.0,
+    "reward": 2100,
+    "center": "GymArenaCenter",
+    "arena": [
+      16.0,
+      10.0
+    ],
+    "arena_color": "#8fd0e0b3",
+    "ai_think_scale": 0.8,
+    "badge": "cascade",
+    "gate": [
+      "trainer_swimmer_luis",
+      "trainer_picnicker_diana"
+    ],
+    "gate_line": [
+      "Not so fast! You don't get to\nchallenge me yet.",
+      "Beat BOTH of my trainers first,\nthen come back and show me what\nyou've got."
+    ],
+    "intro": [
+      "Hi, you're a new face!",
+      "Only those TRAINERS who have a\npolicy about POKéMON can turn pro.",
+      "What is your approach when you\ncatch and train POKéMON?",
+      "My policy is an all-out offensive\nwith WATER-type POKéMON!"
+    ],
+    "defeat": [
+      "Wow!\nYou're too much!",
+      "All right!",
+      "You can have the CASCADEBADGE to\nshow you beat me."
+    ],
+    "after": [
+      "Those who train with water learn\nto go with the flow.",
+      "Keep at it — you've got real\ntalent."
+    ],
+    "badge_speech": [
+      "The CASCADEBADGE makes all\nPOKéMON up to Lv. 30 obey.",
+      "That includes even outsiders you\ngot in trades.",
+      "There's more. You can now use CUT\nanytime, even out of battle.",
+      "You can CUT down small trees to\nopen new pathways."
+    ]
+  },
+  "rival_blue_route22": {
+    "class": "rival",
+    "name": "Blue",
+    "sprite": "npc_rival.png",
+    "party": [
+      [
+        "Pidgey",
+        9
+      ],
+      [
+        "@rival_starter",
+        9
+      ]
+    ],
+    "sight": 5.0,
+    "reward": 144,
+    "requires_flag": "has_pokedex",
+    "hidden_by_flag": "rival2_done",
+    "done_flag": "rival2_done",
+    "won_flag": "rival2_won",
+    "leave_after": true,
+    "leave_to": [
+      -64.0,
+      -122.0
+    ],
+    "intro": [
+      "{RIVAL}: Hey! {PLAYER}!",
+      "You're off to the POKéMON LEAGUE?\nForget about it!",
+      "You probably don't have any\nBADGES, do you?",
+      "The guard won't let you through\nwithout them.",
+      "By the way, did your POKéMON get\nany stronger?"
+    ],
+    "defeat": [
+      "Awww!\nYou just lucked out!"
+    ],
+    "lose": [
+      "{RIVAL}: Yeah!\nAm I great or what?"
+    ],
+    "after": [
+      "I heard the POKéMON LEAGUE is\ncrawling with tough TRAINERS.",
+      "I have to figure out how to get\npast them.",
+      "You should quit dawdling and get a\nmove on!"
+    ],
+    "ai_think_scale": 0.9
+  },
+  "lass_janice": {
+    "class": "lass",
+    "name": "Janice",
+    "sprite": "npc_lass.png",
+    "party": [["Pidgey", 9], ["Pidgey", 9]],
+    "sight": 5.0,
+    "reward": 144,
+    "intro": ["Excuse me!\nYou looked at me, didn't you?"],
+    "defeat": ["You're mean!"],
+    "after": ["You shouldn't be staring if you\ndon't want to battle!"]
+  },
+  "bug_catcher_colton": {
+    "class": "bug_catcher",
+    "name": "Colton",
+    "sprite": "npc_bug_catcher.png",
+    "party": [["Caterpie", 10], ["Weedle", 10], ["Caterpie", 10]],
+    "sight": 5.0,
+    "reward": 120,
+    "intro": ["Hey!\nI saw you in VIRIDIAN FOREST!"],
+    "defeat": ["You beat me again!"],
+    "after": ["There are other kinds of POKéMON\nthan the ones you find in forests."],
+    "ai_think_scale": 1.3
+  },
+  "youngster_ben": {
+    "class": "youngster",
+    "name": "Ben",
+    "sprite": "npc_youngster.png",
+    "party": [["Rattata", 11], ["Ekans", 11]],
+    "sight": 5.0,
+    "reward": 176,
+    "intro": ["Hi!\nI like shorts!", "They're delightfully comfy and\neasy to wear!"],
+    "defeat": ["I don't believe it!"],
+    "after": ["Are you using a POKéMON CENTER's\nPC for storing your POKéMON?",
+              "Each BOX can hold up to\n30 POKéMON."]
+  },
+  "bug_catcher_greg": {
+    "class": "bug_catcher",
+    "name": "Greg",
+    "sprite": "npc_bug_catcher.png",
+    "party": [["Weedle", 9], ["Kakuna", 9], ["Caterpie", 9], ["Metapod", 9]],
+    "sight": 5.0,
+    "reward": 108,
+    "intro": ["Are you a TRAINER?\nLet's get with it right away!"],
+    "defeat": ["If I had new POKéMON, I would've\nwon!"],
+    "after": ["If a POKéMON BOX on the PC gets\nfull, just switch to another BOX."],
+    "ai_think_scale": 1.3
+  },
+  "youngster_calvin": {
+    "class": "youngster",
+    "name": "Calvin",
+    "sprite": "npc_youngster.png",
+    "party": [["Spearow", 14]],
+    "sight": 5.0,
+    "reward": 224,
+    "intro": ["Hey! You're not wearing shorts!\nWhat's wrong with you?"],
+    "defeat": ["Lost!\nLost! Lost!"],
+    "after": ["I always wear shorts, even in\nwinter. That's my policy."]
+  },
+  "lass_sally": {
+    "class": "lass",
+    "name": "Sally",
+    "sprite": "npc_lass.png",
+    "party": [["Rattata", 10], ["Nidoran F", 10]],
+    "sight": 5.0,
+    "reward": 160,
+    "intro": ["That look you gave me…\nIt's so intriguing!"],
+    "defeat": ["Be nice!"],
+    "after": ["You can avoid battles by not\nletting TRAINERS see you."]
+  },
+  "bug_catcher_james": {
+    "class": "bug_catcher",
+    "name": "James",
+    "sprite": "npc_bug_catcher.png",
+    "party": [["Caterpie", 11], ["Metapod", 11]],
+    "sight": 5.0,
+    "reward": 132,
+    "intro": ["I'll battle you with the POKéMON\nI just caught."],
+    "defeat": ["Done like dinner!"],
+    "after": ["Trained POKéMON are stronger than\nthe wild ones."],
+    "ai_think_scale": 1.3
+  },
+  "lass_robin": {
+    "class": "lass",
+    "name": "Robin",
+    "sprite": "npc_lass.png",
+    "party": [["Jigglypuff", 14]],
+    "sight": 5.0,
+    "reward": 224,
+    "intro": ["Eek!\nDid you touch me?"],
+    "defeat": ["That's it?"],
+    "after": ["ROUTE 4 is at the foot of\nMT. MOON."]
+  },
+  "lass_iris": {
+    "class": "lass",
+    "name": "Iris",
+    "sprite": "npc_lass.png",
+    "party": [["Clefairy", 14]],
+    "sight": 5.0,
+    "reward": 224,
+    "intro": ["What?\nI'm waiting for my friends to find\nme here."],
+    "defeat": ["I lost?"],
+    "after": ["I came because I heard there are\nsome very rare fossils here."],
+    "ai_think_scale": 1.3
+  },
+  "bug_catcher_robby": {
+    "class": "bug_catcher",
+    "name": "Robby",
+    "sprite": "npc_bug_catcher.png",
+    "party": [["Caterpie", 10], ["Metapod", 10], ["Caterpie", 10]],
+    "sight": 5.0,
+    "reward": 120,
+    "intro": ["You need to go through this cave\nto get to CERULEAN CITY."],
+    "defeat": ["I lost."],
+    "after": ["ZUBAT is tough!\nBut if you can catch one, you'll\nbe able to count on it."],
+    "ai_think_scale": 1.3
+  },
+  "super_nerd_jovan": {
+    "class": "super_nerd",
+    "name": "Jovan",
+    "sprite": "npc_super_nerd.png",
+    "party": [["Magnemite", 11], ["Voltorb", 11]],
+    "sight": 5.0,
+    "reward": 264,
+    "intro": ["What!\nDon't sneak up on me!"],
+    "defeat": ["My POKéMON won't do!"],
+    "after": ["I have to find stronger POKéMON.\nWhere might they be?"],
+    "ai_think_scale": 1.1
+  },
+  "lass_miriam": {
+    "class": "lass",
+    "name": "Miriam",
+    "sprite": "npc_lass.png",
+    "party": [["Oddish", 11], ["Bellsprout", 11]],
+    "sight": 5.0,
+    "reward": 176,
+    "intro": ["Wow! It's way bigger in here than\nI thought!"],
+    "defeat": ["Oh!\nI lost it!"],
+    "after": ["How do you get out of here?\nIt's so big, I may get lost."]
+  },
+  "bug_catcher_kent": {
+    "class": "bug_catcher",
+    "name": "Kent",
+    "sprite": "npc_bug_catcher.png",
+    "party": [["Weedle", 11], ["Kakuna", 11]],
+    "sight": 5.0,
+    "reward": 132,
+    "intro": ["Suspicious men are in the cave.\nWhat about you?"],
+    "defeat": ["You got me!"],
+    "after": ["I saw them!\nI'm sure they're from TEAM ROCKET!"],
+    "ai_think_scale": 1.3
+  },
+  "youngster_josh": {
+    "class": "youngster",
+    "name": "Josh",
+    "sprite": "npc_youngster.png",
+    "party": [["Rattata", 10], ["Rattata", 10], ["Zubat", 10]],
+    "sight": 5.0,
+    "reward": 160,
+    "intro": ["Did you come to explore the cave,\ntoo?"],
+    "defeat": ["Losing stinks!\nIt's so uncool."],
+    "after": ["I came all the way down here to\nshow off to girls."]
+  },
+  "hiker_marcos": {
+    "class": "hiker",
+    "name": "Marcos",
+    "sprite": "npc_hiker.png",
+    "party": [["Geodude", 10], ["Geodude", 10], ["Onix", 10]],
+    "sight": 5.0,
+    "reward": 360,
+    "intro": ["WHOA!\nYou shocked me!\n…Oh, you're just a kid!"],
+    "defeat": ["Wow!\nShocked again!"],
+    "after": ["Kids like you shouldn't be\nwandering around here in the dark."],
+    "ai_think_scale": 0.9
+  },
+  "rocket_1": {
+    "class": "team_rocket",
+    "name": "Grunt",
+    "sprite": "npc_rocket_m.png",
+    "party": [["Rattata", 13], ["Zubat", 14]],
+    "sight": 5.0,
+    "reward": 352,
+    "intro": ["We, TEAM ROCKET, shall find the\nfossils!\nReviving POKéMON from them will\nearn us huge riches!"],
+    "defeat": ["Urgh!\nNow I'm mad!"],
+    "after": ["You made me mad!\nTEAM ROCKET will blacklist you!"],
+    "ai_think_scale": 1.1
+  },
+  "rocket_2": {
+    "class": "team_rocket",
+    "name": "Grunt",
+    "sprite": "npc_rocket_m.png",
+    "party": [["Sandshrew", 12], ["Rattata", 12], ["Zubat", 12]],
+    "sight": 5.0,
+    "reward": 352,
+    "intro": ["We, TEAM ROCKET, are POKéMON\ngangsters!\nWe strike fear with our strength!"],
+    "defeat": ["I blew it!"],
+    "after": ["Darn it all!\nMy associates won't stand for this!"],
+    "ai_think_scale": 1.1
+  },
+  "rocket_3": {
+    "class": "team_rocket",
+    "name": "Grunt",
+    "sprite": "npc_rocket_m.png",
+    "party": [["Zubat", 12], ["Ekans", 13]],
+    "sight": 5.0,
+    "reward": 416,
+    "intro": ["We're pulling a big job here!\nGet lost, kid!"],
+    "defeat": ["So, you are good…"],
+    "after": ["If you find a fossil, give it to me\nand scram!"],
+    "ai_think_scale": 1.1
+  },
+  "rocket_4": {
+    "class": "team_rocket",
+    "name": "Grunt",
+    "sprite": "npc_rocket_m.png",
+    "party": [["Rattata", 14], ["Sandshrew", 14]],
+    "sight": 5.0,
+    "reward": 416,
+    "intro": ["Little kids shouldn't be messing\naround with grown-ups!\nIt could be bad news!"],
+    "defeat": ["I'm steamed!"],
+    "after": ["POKéMON lived here long before\npeople came."],
+    "ai_think_scale": 1.1
+  },
+  "super_nerd_miguel": {
+    "class": "super_nerd",
+    "name": "Miguel",
+    "sprite": "npc_super_nerd.png",
+    "party": [["Grimer", 13], ["Voltorb", 13], ["Koffing", 14]],
+    "sight": 5.0,
+    "reward": 288,
+    "intro": ["Hey, stop!\nI found these fossils!\nThey're both mine!"],
+    "defeat": ["Okay!\nI'll share!"],
+    "after": ["Far away, on CINNABAR ISLAND,\nthere's a POKéMON LAB.", "They do research on regenerating\nfossils."],
+    "ai_think_scale": 1.0
+  },
+  "swimmer_luis": {
+    "class": "swimmer",
+    "name": "Luis",
+    "sprite": "npc_worker.png",
+    "party": [
+      [
+        "Horsea",
+        16
+      ],
+      [
+        "Shellder",
+        16
+      ]
+    ],
+    "sight": 0.0,
+    "reward": 64,
+    "center": "GymArenaCenter",
+    "arena": [16.0, 10.0],
+    "arena_color": "#6fb6d9b3",
+    "intro": ["Splash!\nI'm first up!\nLet's do it!"],
+    "defeat": ["That can't be!"],
+    "after": ["MISTY is a TRAINER who's going to\nkeep improving.\nShe won't lose to someone like you!"]
+  },
+  "picnicker_diana": {
+    "class": "picnicker",
+    "name": "Diana",
+    "sprite": "npc_lass.png",
+    "party": [
+      [
+        "Goldeen",
+        19
+      ]
+    ],
+    "sight": 0.0,
+    "reward": 380,
+    "center": "GymArenaCenter",
+    "arena": [16.0, 10.0],
+    "arena_color": "#c9a7d6b3",
+    "intro": ["What? You?\nI'm more than good enough for you!", "MISTY won't have to be bothered."],
+    "defeat": ["You overwhelmed me!"],
+    "after": ["You have to face other TRAINERS\nto see how good you really are."]
+  }
+}

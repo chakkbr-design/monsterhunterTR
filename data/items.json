@@ -1,0 +1,439 @@
+{
+ "_doc": "Items. 'balls': catch_mult multiplies the species catch rate (Gen 6+), guaranteed = always catches, top/accent = ball colours. 'items': everything else — category (medicine / berries / battle / tm / key), price in Poké Dollars, effect = what using it does (hp = HP restored, 'full' = all; cure = status cured or 'all'; level = levels gained; teach = a TM move learned inline, multi-use). icon = procedural icon for the UI (shape spray | vial | berry | candy, color); balls are drawn from top/accent.",
+ "balls": [
+  {
+   "id": "poke_ball",
+   "name": "Poké Ball",
+   "catch_mult": 1.0,
+   "top": "#e3352b",
+   "description": "A device for catching wild Pokémon.",
+   "price": 200,
+   "category": "balls"
+  },
+  {
+   "id": "great_ball",
+   "name": "Great Ball",
+   "catch_mult": 1.5,
+   "top": "#2f6fe0",
+   "accent": "#e3352b",
+   "description": "A good, high-performance Poké Ball with a higher catch rate than a standard one.",
+   "price": 600,
+   "category": "balls"
+  },
+  {
+   "id": "premier_ball",
+   "name": "Premier Ball",
+   "catch_mult": 1.0,
+   "top": "#f2f2f0",
+   "description": "A rare ball made in commemoration of some event.",
+   "price": 0,
+   "category": "balls"
+  },
+  {
+   "id": "ultra_ball",
+   "name": "Ultra Ball",
+   "catch_mult": 2.0,
+   "top": "#2a2a2e",
+   "accent": "#f2c53a",
+   "description": "An ultra-high-performance ball with a higher catch rate than a Great Ball.",
+   "price": 800,
+   "category": "balls"
+  },
+  {
+   "id": "master_ball",
+   "name": "Master Ball",
+   "catch_mult": 255.0,
+   "guaranteed": true,
+   "top": "#7b3fc4",
+   "accent": "#e85aa8",
+   "description": "The best ball. It catches any wild Pokémon without fail.",
+   "price": 0,
+   "category": "balls"
+  }
+ ],
+ "items": [
+  {
+   "id": "potion",
+   "name": "Potion",
+   "category": "medicine",
+   "price": 300,
+   "effect": {
+    "hp": 20
+   },
+   "description": "Restores the HP of one Pokémon by 20 points.",
+   "icon": {
+    "shape": "spray",
+    "color": "#9b59d0"
+   }
+  },
+  {
+   "id": "super_potion",
+   "name": "Super Potion",
+   "category": "medicine",
+   "price": 700,
+   "effect": {
+    "hp": 60
+   },
+   "description": "Restores the HP of one Pokémon by 60 points.",
+   "icon": {
+    "shape": "spray",
+    "color": "#e8742c"
+   }
+  },
+  {
+   "id": "antidote",
+   "name": "Antidote",
+   "category": "medicine",
+   "price": 100,
+   "effect": {
+    "cure": "poison"
+   },
+   "description": "Cures a Pokémon of poisoning.",
+   "icon": {
+    "shape": "vial",
+    "color": "#5cbf4f"
+   }
+  },
+  {
+   "id": "paralyze_heal",
+   "name": "Paralyze Heal",
+   "category": "medicine",
+   "price": 200,
+   "effect": {
+    "cure": "paralysis"
+   },
+   "description": "Cures a Pokémon of paralysis.",
+   "icon": {
+    "shape": "vial",
+    "color": "#f2d03b"
+   }
+  },
+  {
+   "id": "burn_heal",
+   "name": "Burn Heal",
+   "category": "medicine",
+   "price": 250,
+   "effect": {
+    "cure": "burn"
+   },
+   "description": "Heals a Pokémon of a burn.",
+   "icon": {
+    "shape": "vial",
+    "color": "#e8503a"
+   }
+  },
+  {
+   "id": "awakening",
+   "name": "Awakening",
+   "category": "medicine",
+   "price": 250,
+   "effect": {
+    "cure": "sleep"
+   },
+   "description": "Wakes up a sleeping Pokémon.",
+   "icon": {
+    "shape": "vial",
+    "color": "#4f8de0"
+   }
+  },
+  {
+   "id": "escape_rope",
+   "name": "Escape Rope",
+   "category": "medicine",
+   "price": 550,
+   "effect": {
+    "escape": true
+   },
+   "description": "A long, durable rope. Use it to escape from a cave or dungeon.",
+   "icon": {
+    "shape": "vial",
+    "color": "#b58a55"
+   }
+  },
+  {
+   "id": "repel",
+   "name": "Repel",
+   "category": "medicine",
+   "price": 350,
+   "effect": {
+    "repel": 100
+   },
+   "description": "Repels weak wild Pokémon for 100 steps.",
+   "icon": {
+    "shape": "spray",
+    "color": "#6f5bd0"
+   }
+  },
+  {
+   "id": "oran_berry",
+   "name": "Oran Berry",
+   "category": "berries",
+   "price": 20,
+   "effect": {
+    "hp": 10
+   },
+   "description": "If held by a Pokémon, it heals 10 HP when its HP drops low.",
+   "icon": {
+    "shape": "berry",
+    "color": "#3f6fd8"
+   }
+  },
+  {
+   "id": "pecha_berry",
+   "name": "Pecha Berry",
+   "category": "berries",
+   "price": 20,
+   "effect": {
+    "cure": "poison"
+   },
+   "description": "If held by a Pokémon, it cures poisoning.",
+   "icon": {
+    "shape": "berry",
+    "color": "#f29ab8"
+   }
+  },
+  {
+   "id": "persim_berry",
+   "name": "Persim Berry",
+   "category": "berries",
+   "price": 20,
+   "effect": {
+    "cure": "confusion"
+   },
+   "description": "If held by a Pokémon, it snaps it out of confusion.",
+   "icon": {
+    "shape": "berry",
+    "color": "#e8a13a"
+   }
+  },
+  {
+   "id": "razz_berry",
+   "name": "Razz Berry",
+   "category": "berries",
+   "price": 20,
+   "description": "A Berry that is tart and dry. It can be ground into powder.",
+   "icon": {
+    "shape": "berry",
+    "color": "#c94f6d"
+   }
+  },
+  {
+   "id": "rare_candy",
+   "name": "Rare Candy",
+   "category": "medicine",
+   "price": 4800,
+   "effect": {
+    "level": 1
+   },
+   "description": "A candy packed with energy. It raises the level of a single Pokémon by one.",
+   "icon": {
+    "shape": "candy",
+    "color": "#4aa0e8"
+   }
+  },
+  {
+   "id": "ether",
+   "name": "Ether",
+   "category": "medicine",
+   "price": 400,
+   "effect": {},
+   "description": "Restores the PP of one move. (PP restoring is not implemented yet.)",
+   "icon": {
+    "shape": "vial",
+    "color": "#7fd0e8"
+   }
+  },
+  {
+   "id": "oaks_parcel",
+   "name": "Oak's Parcel",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "A package to be delivered to Prof. Oak.",
+   "icon": {
+    "shape": "parcel",
+    "color": "#a9763f"
+   }
+  },
+  {
+   "id": "pokedex",
+   "name": "Pokédex",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "Records the Pokémon you see and catch.",
+   "icon": {
+    "shape": "device",
+    "color": "#d8423a"
+   }
+  },
+  {
+   "id": "teachy_tv",
+   "name": "Teachy TV",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "A portable TV that teaches you how to catch and battle with Pokémon.",
+   "icon": {
+    "shape": "vial",
+    "color": "#4a6fd0"
+   }
+  },
+  {
+   "id": "hm_flash",
+   "name": "HM05 Flash",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "Lights up even the darkest of caves. (HMs are not implemented yet.)",
+   "icon": {
+    "shape": "vial",
+    "color": "#f2e06a"
+   }
+  },
+  {
+   "id": "moon_stone",
+   "name": "Moon Stone",
+   "category": "key",
+   "price": 0,
+   "effect": {"evolve": true},
+   "description": "A peculiar stone that makes certain kinds of Pokémon evolve. It is as black as the night sky.",
+   "icon": {
+    "shape": "candy",
+    "color": "#5b6ea8"
+   }
+  },
+  {
+   "id": "water_stone",
+   "name": "Water Stone",
+   "category": "key",
+   "price": 0,
+   "effect": {"evolve": true},
+   "description": "A peculiar stone that makes certain kinds of Pokémon evolve. It is as blue as a clear ocean.",
+   "icon": {
+    "shape": "candy",
+    "color": "#4aa8d8"
+   }
+  },
+  {
+   "id": "dragon_scale",
+   "name": "Dragon Scale",
+   "category": "key",
+   "price": 0,
+   "effect": {"evolve": true},
+   "description": "A strange scale that makes certain kinds of Pokémon evolve. It belonged to a dragon.",
+   "icon": {
+    "shape": "candy",
+    "color": "#6ad0c0"
+   }
+  },
+  {
+   "id": "tm09",
+   "name": "TM09 Bullet Seed",
+   "category": "tm",
+   "price": 3000,
+   "effect": {"teach": "bullet_seed"},
+   "description": "A Technical Machine that teaches a Pokémon the move Bullet Seed.",
+   "icon": {
+    "shape": "device",
+    "color": "#77c95a"
+   }
+  },
+  {
+   "id": "tm46",
+   "name": "TM46 Thief",
+   "category": "tm",
+   "price": 3000,
+   "effect": {"teach": "thief"},
+   "description": "A Technical Machine that teaches a Pokémon the move Thief.",
+   "icon": {
+    "shape": "device",
+    "color": "#b07ad0"
+   }
+  },
+  {
+   "id": "tm39",
+   "name": "TM39 Rock Tomb",
+   "category": "tm",
+   "price": 3000,
+   "effect": {"teach": "rock_tomb"},
+   "description": "A Technical Machine that teaches a Pokémon the move Rock Tomb.",
+   "icon": {
+    "shape": "device",
+    "color": "#c9a26a"
+   }
+  },
+  {
+   "id": "star_piece",
+   "name": "Star Piece",
+   "category": "key",
+   "price": 9800,
+   "effect": {},
+   "description": "A shard of a pretty gem that sparkles in a red colour.",
+   "icon": {
+    "shape": "candy",
+    "color": "#e86a8a"
+   }
+  },
+  {
+   "id": "revive",
+   "name": "Revive",
+   "category": "medicine",
+   "price": 1500,
+   "effect": {"revive": true},
+   "description": "A medicine that revives a fainted Pokémon.",
+   "icon": {
+    "shape": "spray",
+    "color": "#f2d24a"
+   }
+  },
+  {
+   "id": "tiny_mushroom",
+   "name": "Tiny Mushroom",
+   "category": "key",
+   "price": 500,
+   "effect": {},
+   "description": "A small, rare mushroom. It can be sold for a low price.",
+   "icon": {
+    "shape": "berry",
+    "color": "#d8b06a"
+   }
+  },
+  {
+   "id": "big_mushroom",
+   "name": "Big Mushroom",
+   "category": "key",
+   "price": 5000,
+   "effect": {},
+   "description": "A large, rare mushroom. It can be sold for a high price.",
+   "icon": {
+    "shape": "berry",
+    "color": "#c98a52"
+   }
+  },
+  {
+   "id": "dome_fossil",
+   "name": "Dome Fossil",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "A fossil of an ancient, seafloor-dwelling Pokémon. It appears to be part of a shell.",
+   "icon": {
+    "shape": "device",
+    "color": "#c9a26a"
+   }
+  },
+  {
+   "id": "helix_fossil",
+   "name": "Helix Fossil",
+   "category": "key",
+   "price": 0,
+   "effect": {},
+   "description": "A fossil of an ancient, seafloor-dwelling Pokémon. It appears to be part of a spiral shell.",
+   "icon": {
+    "shape": "device",
+    "color": "#9ab0d8"
+   }
+  }
+ ]
+}

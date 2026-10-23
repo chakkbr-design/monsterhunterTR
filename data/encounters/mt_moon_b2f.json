@@ -1,0 +1,11 @@
+{
+  "area": "Mt. Moon B2F",
+  "_doc": "FireRed/LeafGreen Mt. Moon B2F land_mons: Zubat/Geodude/Paras with Clefairy in the rare slot. 12 FRLG slots aggregated: Zubat 8-11 (49), Geodude 9-10 (30), Paras 10-12 (15), Clefairy 10-12 (6). Visible roamers only.",
+  "rate": 10,
+  "entries": [
+    {"species": "Zubat",    "level_range": [8, 11],  "weight": 49, "mode": "visible", "time": "any", "behaviour": "aggressive"},
+    {"species": "Geodude",  "level_range": [9, 10],  "weight": 30, "mode": "visible", "time": "any", "behaviour": "aggressive"},
+    {"species": "Paras",    "level_range": [10, 12], "weight": 15, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Clefairy", "level_range": [10, 12], "weight": 6,  "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

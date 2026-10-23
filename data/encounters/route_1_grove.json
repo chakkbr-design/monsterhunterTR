@@ -1,0 +1,9 @@
+{
+  "area": "Route 1 (groves)",
+  "_doc": "Not in FireRed/LeafGreen - ours, a gentle extra. The two bug groves flanking band 1 roll the caterpillars that live in them; mode: visible (they roam the grove, they never ambush). Levels stay at or below the route's own table (Lv 2-5).",
+  "entries": [
+    {"species": "Caterpie", "level_range": [2, 4], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [2, 4], "weight": 40, "mode": "visible", "time": "any", "behaviour": "passive"},
+    {"species": "Pidgey",   "level_range": [2, 3], "weight": 20, "mode": "visible", "time": "any", "behaviour": "flee"}
+  ]
+}

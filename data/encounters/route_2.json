@@ -1,0 +1,11 @@
+{
+  "area": "Route 2",
+  "_doc": "FireRed/LeafGreen Route 2 grass: Pidgey 45%, Rattata 45%, Caterpie 5%, Weedle 5%. mode 'both' so they roam the route visibly as well as ambushing from tall grass. Caterpie/Weedle are the bug half of the route; the rest of FRLG Route 2's table is the Mr. Mime trade, which we have no trading for. B46: rate 21 = FRLG land_mons.encounter_rate (pret src/data/wild_encounters.json sRoute2_FireRed); Route 2 North shares this table.",
+  "rate": 21,
+  "entries": [
+    {"species": "Pidgey",   "level_range": [2, 5], "weight": 45, "mode": "both", "time": "any", "behaviour": "flee"},
+    {"species": "Rattata",  "level_range": [2, 5], "weight": 45, "mode": "both", "time": "any", "behaviour": "aggressive"},
+    {"species": "Caterpie", "level_range": [4, 5], "weight": 5,  "mode": "both", "time": "any", "behaviour": "passive"},
+    {"species": "Weedle",   "level_range": [4, 5], "weight": 5,  "mode": "both", "time": "any", "behaviour": "passive"}
+  ]
+}
