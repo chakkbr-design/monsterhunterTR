@@ -107,11 +107,18 @@ var cast_move := {}
 var cast_n := 0
 var look_h := 1.0
 
-var _body: MeshInstance3D
-var _mat: StandardMaterial3D
-var _label: Label3D
-var _base_color := Color.WHITE
+var look: CreatureSprite   # arte do original (gfx/creature_sprite.gd)
+var vfx: BattleVfx
+var _shadow: MeshInstance3D
+var _ring: MeshInstance3D
+var _ring_mat: StandardMaterial3D
+var _status_fx: FxSprite
+var _status_fx_id := ""
 var _flash_t := 0.0
+var _spawn_t := 0.0
+
+const SPAWN_GROW := 0.3
+const FLASH_COL := Color(2.2, 2.2, 2.2)
 
 
 func setup(m: Mon, s: int, ctrl: String) -> void:
@@ -141,56 +148,106 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 
 
 func _build_visual() -> void:
-	_base_color = Dex.type_color(String(types[0]))
-	_mat = StandardMaterial3D.new()
-	_mat.albedo_color = _base_color
-	var cap := CapsuleMesh.new()
-	cap.radius = clampf(look_h * 0.32, 0.18, 0.5)
-	cap.height = maxf(look_h, cap.radius * 2.0)
-	cap.material = _mat
-	_body = MeshInstance3D.new()
-	_body.mesh = cap
-	_body.position.y = cap.height * 0.5
-	add_child(_body)
-	var nose := MeshInstance3D.new()
-	var nm := SphereMesh.new()
-	nm.radius = cap.radius * 0.45
-	nm.height = nm.radius * 2.0
-	var nmat := StandardMaterial3D.new()
-	nmat.albedo_color = Dex.type_color(String(types[1])) if types.size() > 1 else Color.WHITE
-	nm.material = nmat
-	nose.mesh = nm
-	_body.add_child(nose)
-	nose.position = Vector3(0, cap.height * 0.2, -cap.radius)
-	var ring := MeshInstance3D.new()
+	look = CreatureSprite.new()
+	look.name = "Look"
+	look.manual = true
+	look.auto_motion = false
+	look.auto_face = false
+	look.move_speed = PLAYER_SPEED if controller == "player" else AI_SPEED
+	look.species = mon.species
+	add_child(look)
+	look.facing = facing
+	# Sombra suave + anel do lado (azul = jogador, vermelho = inimigo), finos para não brigar com a arte.
+	var r := clampf(look.footprint() * 0.55, 0.25, 1.1)
+	_shadow = MeshInstance3D.new()
+	var sm := CylinderMesh.new()
+	sm.top_radius = r
+	sm.bottom_radius = r
+	sm.height = 0.01
+	sm.radial_segments = 24
+	var smat := StandardMaterial3D.new()
+	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smat.albedo_color = Color(0, 0, 0, 0.28)
+	sm.material = smat
+	_shadow.mesh = sm
+	_shadow.position.y = 0.02
+	_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_shadow)
+	_ring = MeshInstance3D.new()
 	var rm := TorusMesh.new()
-	rm.inner_radius = cap.radius + 0.12
-	rm.outer_radius = cap.radius + 0.2
-	var rmat := StandardMaterial3D.new()
-	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	rmat.albedo_color = Color(0.3, 0.6, 1.0) if side == 0 else Color(1.0, 0.3, 0.3)
-	rm.material = rmat
-	ring.mesh = rm
-	ring.position.y = 0.03
-	add_child(ring)
-	_label = Label3D.new()
-	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.font_size = 40
-	_label.pixel_size = 0.005
-	_label.outline_size = 8
-	_label.no_depth_test = true
-	_label.position.y = cap.height + 0.45
-	add_child(_label)
+	rm.inner_radius = r + 0.04
+	rm.outer_radius = r + 0.1
+	rm.rings = 32
+	_ring_mat = StandardMaterial3D.new()
+	_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ring_mat.albedo_color = Color(0.35, 0.65, 1.0, 0.75) if side == 0 else Color(1.0, 0.35, 0.3, 0.75)
+	rm.material = _ring_mat
+	_ring.mesh = rm
+	_ring.scale = Vector3(1, 0.15, 1)
+	_ring.position.y = 0.03
+	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_ring)
+	_spawn_t = SPAWN_GROW
 	refresh_label()
 
 
+## Altura visível da arte (m). Só visual: a jogabilidade continua usando look_h.
+func visual_height() -> float:
+	return look.visible_height() if look else look_h
+
+
+## O HUD desenha nome/HP/status; o lutador não tem mais rótulo 3D.
 func refresh_label() -> void:
-	if _label == null:
+	pass
+
+
+## Visual por frame (chamado pela arena em qualquer estado, dt já escalado; hit-stop congela a pose).
+func visual_step(dt: float) -> void:
+	if look == null:
 		return
-	var st := String(STATUS_SHORT.get(status, ""))
-	if stagger_t > 0.0:
-		st = "TIRED"
-	_label.text = "%s Lv%d%s\n%d/%d" % [mon.display_name, level, (" " + st) if st != "" else "", hp, max_hp]
+	var vdt := 0.0 if impact_t > 0.0 else dt
+	if _spawn_t > 0.0:
+		_spawn_t = maxf(_spawn_t - dt, 0.0)
+		var k := 1.0 - _spawn_t / SPAWN_GROW
+		look.scale_mult = lerpf(0.05, 1.0, ease(k, 0.4))
+	look.velocity = velocity
+	if facing.length() > 0.01:
+		look.facing = facing
+	var st := ""
+	if alive():
+		if stagger_t > 0.0:
+			st = "stagger"
+		elif status == "sleep":
+			st = "sleep"
+		elif prepare_t > 0.0:
+			st = "prepare"
+		elif air_t > 0.0:
+			st = "airborne"
+	look.state = st
+	look.tick(vdt)
+	var tint := _tint()
+	if _flash_t > 0.0:
+		_flash_t -= dt
+		tint = FLASH_COL
+	if alive():
+		look.tint = tint
+	_update_status_fx()
+
+
+func _update_status_fx() -> void:
+	var want := status if alive() and on_field else ""
+	if want == "" and confusion_t > 0.0 and alive():
+		want = "confusion"
+	if want == _status_fx_id:
+		return
+	if is_instance_valid(_status_fx):
+		_status_fx.life = maxf(_status_fx.age, 0.001)
+	_status_fx = null
+	_status_fx_id = want
+	if want != "" and vfx:
+		_status_fx = vfx.status_look(self, want)
 
 
 func alive() -> bool:
@@ -493,6 +550,8 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 		clear_status()
 	if amount > 0:
 		_flash_t = maxf(imp, 0.12)
+		if has_dir and look and hp > 0:
+			look.hurt()
 	refresh_label()
 	if hp == 0:
 		_faint()
@@ -507,18 +566,16 @@ func _faint() -> void:
 	sprinting = false
 	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
 	preload("res://audio/cue.gd").sfx("faint")
-	if _body:
-		var cap := _body.mesh as CapsuleMesh
-		_body.rotation.x = PI / 2.0
-		_body.position.y = cap.radius
-		_mat.albedo_color = _base_color.darkened(0.5)
-		_label.visible = false
+	if look:
+		look.faint()
+		_ring.visible = false
 	fainted.emit(self)
 
 
-func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15) -> void:
+## style: "" = adivinhado pelo texto (damage, crit, super, weak, miss, dodge, stat_up, stat_down, status, heal, move, callout, info).
+func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15, style := "") -> void:
 	if arena:
-		arena.popup(head_pos(extra), text, col, scale_k)
+		arena.popup(position + Vector3(0, visual_height() + 0.1 + extra * 0.25, 0), text, col, scale_k, style)
 
 
 # --- Por frame ---
@@ -569,11 +626,6 @@ func tick(dt: float) -> void:
 
 ## Move o corpo. want = direção desejada (comprimento <= 1), speed = m/s base.
 func drive(dt: float, want: Vector3, speed: float) -> void:
-	if _flash_t > 0.0:
-		_flash_t -= dt
-		_mat.albedo_color = Color.WHITE if _flash_t > 0.0 else _tint()
-	elif _mat:
-		_mat.albedo_color = _tint()
 	if impact_t > 0.0 or not alive():
 		velocity = Vector3.ZERO
 		return
@@ -631,7 +683,7 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 
 
 func _tint() -> Color:
-	var c := _base_color
+	var c := Color.WHITE
 	match status:
 		"burn":
 			c = c.lerp(Color(1, 0.3, 0.1), 0.35)

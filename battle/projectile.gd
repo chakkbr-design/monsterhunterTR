@@ -46,16 +46,8 @@ func setup(u: BattleFighter, m: Dictionary, dir: Vector3, is_homing: bool, miss:
 		var flat := Vector2(to.x, to.z).length()
 		if flat > 0.1:
 			vel.y = to.y / flat * speed
-	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.12 if homing or m.get("category", "") == "status" else 0.17
-	sm.height = sm.radius * 2.0
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Dex.type_color(String(m.get("type", "normal"))).lightened(0.3)
-	sm.material = mat
-	mi.mesh = sm
-	add_child(mi)
+	if u.arena and u.arena.get("vfx"):
+		u.arena.vfx.projectile_look(self, m, dir)
 
 
 func _aim_point(t: BattleFighter) -> Vector3:

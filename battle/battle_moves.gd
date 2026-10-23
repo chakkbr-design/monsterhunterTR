@@ -100,7 +100,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	user.facing = dir
-	user.popup(String(mv.get("name", mv.get("id", "?"))), Dex.type_color(String(mv.get("type", "normal"))), 1.0, 0.75)
+	user.popup(String(mv.get("name", mv.get("id", "?"))), Dex.type_color(String(mv.get("type", "normal"))).lightened(0.3), 1.0, 0.75, "move")
 	if kind == "arc" or kind == "multi_arc":
 		user.start_arc_step(dir)
 	if mv.has("magnitude"):
@@ -110,6 +110,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		user.popup("Magnitude %d" % int(roll[0]), Dex.type_color(String(mv.type)), 1.0, 1.0)
 	user.cast_move = mv
 	user.cast_n += 1
+	_cast_visual(user, mv, dir)
 	match kind:
 		"dash":
 			user.start_dash(mv, dir, miss)
@@ -143,6 +144,22 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 			user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
 		_:
 			_arc(user, mv, dir, miss)
+
+
+## Animação PMD do lançador + efeito "user" do move_fx.json (só visual).
+func _cast_visual(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
+	var secs := -1.0
+	match String(mv.get("kind", "")):
+		"dash":
+			secs = float(mv.get("range", 3.0)) / maxf(float(mv.get("speed", 12.0)), 0.1)
+		"stream":
+			secs = float(mv.get("duration", 1.0))
+		"beam":
+			secs = float(mv.get("windup", 0.6)) + 0.35
+	if user.look:
+		user.look.play_move(mv, secs)
+	if arena.vfx:
+		arena.vfx.on_cast(user, mv, dir)
 
 
 func _miss_dir(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector3) -> Vector3:
@@ -247,15 +264,17 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 		if mv.has("drain") and user.alive():
 			user.heal(maxi(1, int(float(dmg) * float(mv.drain))))
 		var col := Color(1, 0.75, 0.15) if eff > 1.0 else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
-		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35)
+		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")
 		preload("res://audio/cue.gd").sfx("crit" if res.crit else ("hit_super" if eff > 1.0 else ("hit_weak" if eff < 1.0 else "hit")))
 		if res.crit:
-			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6)
+			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6, "crit")
 		if eff > 1.0:
-			target.popup("SUPEREFETIVO!", Color(1, 0.8, 0.2), 1.0, 0.85)
+			target.popup("SUPEREFETIVO!", Color(1, 0.8, 0.2), 1.0, 0.85, "super")
 		elif eff < 1.0:
-			target.popup("Pouco efetivo", Color(0.7, 0.7, 0.8), 1.0, 0.85)
+			target.popup("Pouco efetivo", Color(0.7, 0.7, 0.8), 1.0, 0.85, "weak")
 		arena.note_hit(user, target, mv, dmg, hp_before)
+		if arena.vfx:
+			arena.vfx.on_hit(user, target, mv, dir, res.crit, eff)
 	var ef = mv.get("effect")
 	if ef is Dictionary and target.alive() and rng.randf() < float(ef.get("chance", 0.0)):
 		if ef.has("stat"):
@@ -265,7 +284,7 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 			if STATUS_IMMUNE.get(st, "-") in target.types:
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
 			elif target.apply_status(st, user):
-				target.popup(String(STATUS_WORDS.get(st, st.to_upper() + "!")), Color(1, 0.9, 0.6))
+				target.popup(String(STATUS_WORDS.get(st, st.to_upper() + "!")), Color(1, 0.9, 0.6), 1.0, 0.15, "status")
 
 
 func change_stage(c: BattleFighter, k: String, delta: int) -> void:
@@ -279,7 +298,9 @@ func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 		return
 	c.stages[k] = nv
 	var word := ("subiu" if absi(delta) == 1 else "subiu muito") if delta > 0 else ("caiu" if absi(delta) == 1 else "caiu muito")
-	c.popup("%s %s!" % [name, word], Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6))
+	c.popup("%s %s!" % [name, word], Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6), 1.0, 0.15, "stat_up" if delta > 0 else "stat_down")
+	if arena.vfx:
+		arena.vfx.stat_change(c, k, delta > 0)
 
 
 # --- Entregas ---
@@ -295,7 +316,7 @@ func in_cone(user: BattleFighter, t: BattleFighter, dir: Vector3, r: float, half
 func _arc(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter, final := true) -> void:
 	var r := float(mv.get("range", 1.8))
 	var half := deg_to_rad(float(mv.get("angle", 90))) / 2.0
-	arena.fx_cone(user.position + Vector3(0, user.look_h * 0.4, 0), dir, r, half, Dex.type_color(String(mv.type)), 0.15)
+	arena.fx_cone(user.position + Vector3(0, user.look_h * 0.4, 0), dir, r, half, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5), 0.15)
 	for t in targets_of(user):
 		if t != miss and in_cone(user, t, dir, r, half):
 			var to := user.flat_to(t)
@@ -337,6 +358,8 @@ func _whip(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 				stop = along
 				victim = t
 		arena.fx_beam(user.position + Vector3(0, user.look_h * 0.4, 0), tipdir, stop, 0.08, Dex.type_color(String(mv.type)), 0.2)
+		if arena.vfx:
+			arena.vfx.tip(user, mv, user.position + tipdir * stop, tipdir)
 		if victim != null:
 			already[victim.get_instance_id()] = true
 			var to := user.flat_to(victim)
@@ -376,6 +399,8 @@ func _stream(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 				best = dt
 				lock = t
 	var state := {"dir": dir, "hit": {}, "left": int(ceil(dur / tick))}
+	if arena.vfx:
+		arena.vfx.stream(user, mv, dir, r, dur)
 	_stream_tick(user, mv, lock, state, r, half, tick)
 
 
@@ -389,7 +414,8 @@ func _stream_tick(user: BattleFighter, mv: Dictionary, lock: BattleFighter, stat
 			state.dir = to.normalized()
 	var dir: Vector3 = state.dir
 	user.facing = dir
-	arena.fx_cone(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, half, Dex.type_color(String(mv.type)), tick)
+	if not arena.vfx:
+		arena.fx_cone(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, half, Dex.type_color(String(mv.type)), tick)
 	for t in targets_of(user):
 		if mv.get("once", false) and state.hit.has(t.get_instance_id()):
 			continue
@@ -410,7 +436,10 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	arena.later(windup, func() -> void:
 		if not is_instance_valid(user) or not user.alive():
 			return
-		arena.fx_beam(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, w, col, 0.25)
+		if arena.vfx:
+			arena.vfx.beam(user, mv, dir, r, 0.45)
+		else:
+			arena.fx_beam(user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, w, col, 0.25)
 		for t in targets_of(user):
 			if t == miss:
 				continue
@@ -467,6 +496,8 @@ func _aoe_target(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 		if not is_instance_valid(user) or not user.alive():
 			return
 		arena.fx_disc(at, radius, col, 0.25)
+		if arena.vfx and arena.is_inside_tree():
+			arena.vfx.sky_bolt(String(mv.get("id", "")), arena.to_global(at))
 		for t in targets_of(user):
 			if t == miss or _ground_immune(mv, t):
 				continue

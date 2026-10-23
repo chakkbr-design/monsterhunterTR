@@ -19,6 +19,8 @@ const CAM_HEIGHT := 3.4
 const CAM_TURN := deg_to_rad(110.0)
 const BALL_FLIGHT := 0.5
 const BALL_SHAKE := 0.6
+const BALL_ABSORB := 0.3
+const ARENA_LINE := Color(1.0, 0.86, 0.45, 0.9)
 const BALL_ORDER := ["poke_ball", "great_ball", "ultra_ball"]
 const LOG_MAX := 400
 const BATTLE_SIZE := 2
@@ -34,6 +36,7 @@ var manual := false
 var rng := RandomNumberGenerator.new()
 var moves: BattleMoves
 var hud: BattleHUD
+var vfx: BattleVfx
 var fight_speed := 1.0
 var opts := {}
 var kind := "wild"
@@ -61,7 +64,6 @@ var _state_t := 0.0
 var _end_delay := 0.0
 var _events: Array = []
 var _fx: Array = []
-var _popups: Array = []
 var _participants := {}
 var _cam: Camera3D
 var _prev_cam: Camera3D
@@ -115,6 +117,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	hud.banner(("Um %s selvagem apareceu!" % e.display_name) if kind == "wild" else ("O treinador mandou %s!" % e.display_name), INTRO_TIME)
 	state = "intro"
 	_state_t = 0.0
+	hud.intro_bars(true)
 	_update_camera(1.0)
 
 
@@ -124,35 +127,8 @@ func _build() -> void:
 	if _built:
 		return
 	_built = true
-	var floor_mi := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(ARENA_SIZE, ARENA_SIZE)
-	var fm := StandardMaterial3D.new()
-	fm.albedo_color = Color(0.32, 0.45, 0.3)
-	pm.material = fm
-	floor_mi.mesh = pm
-	floor_mi.position.y = 0.01
-	add_child(floor_mi)
-	var lm := StandardMaterial3D.new()
-	lm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	lm.albedo_color = Color(0.95, 0.95, 0.85)
-	for i in 4:
-		var b := MeshInstance3D.new()
-		var bm := BoxMesh.new()
-		bm.size = Vector3(ARENA_SIZE, 0.05, 0.08) if i < 2 else Vector3(0.08, 0.05, ARENA_SIZE)
-		bm.material = lm
-		b.mesh = bm
-		var h := ARENA_SIZE / 2.0
-		b.position = [Vector3(0, 0.03, -h), Vector3(0, 0.03, h), Vector3(-h, 0.03, 0), Vector3(h, 0.03, 0)][i]
-		add_child(b)
-	var mid := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 1.4
-	tm.outer_radius = 1.5
-	tm.material = lm
-	mid.mesh = tm
-	mid.position.y = 0.02
-	add_child(mid)
+	_build_court()
+	vfx = BattleVfx.new(self)
 	_prev_cam = get_viewport().get_camera_3d() if is_inside_tree() else null
 	_cam = Camera3D.new()
 	_cam.fov = 60.0
@@ -160,6 +136,68 @@ func _build() -> void:
 	_cam.make_current()
 	hud = BattleHUD.new()
 	add_child(hud)
+
+
+## Quadra do original (battle_arena.gd): quadrado dourado com cantos marcados, sobre o chão do mundo.
+## Em cena sem chão (opts.floor = true) põe também um piso.
+func _build_court() -> void:
+	if bool(opts.get("floor", false)):
+		var floor_mi := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(ARENA_SIZE + 8.0, ARENA_SIZE + 8.0)
+		var fm := StandardMaterial3D.new()
+		fm.albedo_color = Color(0.42, 0.58, 0.33)
+		pm.material = fm
+		floor_mi.mesh = pm
+		add_child(floor_mi)
+	var quad := MeshInstance3D.new()
+	quad.name = "ArenaQuad"
+	var qm := PlaneMesh.new()
+	qm.size = Vector2(ARENA_SIZE, ARENA_SIZE)
+	quad.mesh = qm
+	quad.position.y = 0.04
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = _court_texture()
+	mat.albedo_color = ARENA_LINE
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.render_priority = -1
+	quad.material_override = mat
+	add_child(quad)
+
+
+static var _court_tex: ImageTexture
+
+
+static func _court_texture() -> ImageTexture:
+	if _court_tex:
+		return _court_tex
+	var n := 256
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var line := 0.022
+	var inset := 0.012
+	for y in n:
+		for x in n:
+			var u := float(x) / (n - 1)
+			var v := float(y) / (n - 1)
+			var edge := minf(minf(u, 1.0 - u), minf(v, 1.0 - v))
+			var a := 0.0
+			if edge >= inset and edge < inset + line:
+				a = 0.85
+			var cu := minf(u, 1.0 - u)
+			var cv := minf(v, 1.0 - v)
+			if (cu < 0.14 and cv < inset + line * 2.6 and cv >= inset) or (cv < 0.14 and cu < inset + line * 2.6 and cu >= inset):
+				a = 1.0
+			if edge >= inset + line * 2.2 and edge < inset + line * 3.0:
+				var along := u if (minf(v, 1.0 - v) < minf(u, 1.0 - u)) else v
+				a = maxf(a, 0.5 if fmod(along * 24.0, 1.0) < 0.5 else 0.0)
+			if edge > inset:
+				a = maxf(a, 0.06 + 0.08 * (1.0 - smoothstep(0.0, 0.25, edge)))
+			img.set_pixel(x, y, Color(1, 1, 1, a))
+	_court_tex = ImageTexture.create_from_image(img)
+	return _court_tex
 
 
 ## Próximo mon da party com HP que ainda não está em campo.
@@ -195,12 +233,15 @@ func _next_enemy(after: int) -> int:
 func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	var f := BattleFighter.new()
 	f.arena = self
+	f.vfx = vfx
 	add_child(f)
 	f.setup(m, side, ctrl)
 	f.position = at
 	f.facing = Vector3(0, 0, -1) if side == 0 else Vector3(0, 0, 1)
 	f.fainted.connect(_on_fainted)
 	fighters.append(f)
+	if vfx and f.is_inside_tree():
+		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	return f
 
 
@@ -286,7 +327,8 @@ func step(dt: float) -> void:
 		"intro":
 			if _state_t >= INTRO_TIME:
 				state = "fight"
-				hud.banner("Lutem!", 0.8)
+				hud.intro_bars(false)
+				hud.fight_flash("Lutem!")
 		"fight":
 			_fight_step(dt)
 		"capture":
@@ -295,11 +337,33 @@ func step(dt: float) -> void:
 			if _state_t >= _end_delay:
 				_finish()
 				return
+	if state == "done":
+		return
+	_visual_step(dt)
 	if not manual:
 		_camera_input(raw)
 	_update_camera(raw)
 	hud.refresh(player, enemy, raw, ally, {"ally_mode": ALLY_MODE_NAMES[ally_mode], "item_cd": item_cd,
-		"menu": _menu_text() if menu != "" else ""})
+		"menu": _menu_text() if menu != "" else "", "foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
+		"foe_balls": _foe_balls()})
+
+
+## Animação dos sprites e efeitos (só visual).
+func _visual_step(dt: float) -> void:
+	for f in fighters:
+		if is_instance_valid(f) and f.visible and not (state == "capture" and f == enemy):
+			f.visual_step(dt)
+	if vfx:
+		vfx.tick(dt)
+
+
+func _foe_balls() -> Array:
+	if kind == "wild":
+		return []
+	var out: Array = []
+	for m in enemies:
+		out.append(not m.is_fainted())
+	return out
 
 
 func _fight_step(dt: float) -> void:
@@ -667,6 +731,8 @@ func _menu_text() -> String:
 
 ## Tira o lutador de campo (fica escondido até a arena ser liberada; callbacks pendentes seguem válidos).
 func _recall(f: BattleFighter) -> void:
+	if vfx and f.visible and f.is_inside_tree():
+		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.4)
 	f.write_back()
 	f.on_field = false
 	f.visible = false
@@ -720,14 +786,7 @@ func throw_ball() -> bool:
 	if g:
 		g.take_item(ball_id)
 	var res := Capture.throw_ball(enemy.max_hp, enemy.hp, enemy.mon.catch_rate(), ball_id, enemy.status, enemy.level)
-	var ball := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.16
-	sm.height = 0.32
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(String(Dex.item(ball_id).get("top", "#e3352b")))
-	sm.material = mat
-	ball.mesh = sm
+	var ball := PokeBall3D.for_item(Dex.item(ball_id))
 	add_child(ball)
 	var from := player.position + Vector3(0, player.look_h, 0)
 	ball.position = from
@@ -741,30 +800,56 @@ func throw_ball() -> bool:
 
 
 func _capture_step(_dt: float) -> void:
-	var ball: MeshInstance3D = _capture.ball
+	var ball: PokeBall3D = _capture.ball
 	var t := _state_t
 	if t < BALL_FLIGHT:
 		var s := t / BALL_FLIGHT
 		ball.position = _capture.from.lerp(_capture.to, s) + Vector3(0, 1.2 * 4.0 * s * (1.0 - s), 0)
+		ball.set_spin(-s * TAU * 2.0)
+		return
+	ball.set_spin(0.0)
+	var shake_t := t - BALL_FLIGHT
+	var shown: int = _capture.shown
+	if shown > 0 and shake_t < BALL_ABSORB:
+		# Só visual: a bola paira, abre e puxa o Pokémon (encolhe e fica vermelho).
+		var k := shake_t / BALL_ABSORB
+		ball.position = _capture.to + Vector3(0, 0.35 * (1.0 - k), 0)
+		ball.set_lid(1.0 - absf(k * 2.0 - 1.0))
+		ball.set_glow(Color(1, 0.3, 0.3), 3.0 * (1.0 - k))
+		if enemy.look:
+			enemy.look.scale_mult = lerpf(1.0, 0.05, k)
+			enemy.look.tint = Color(1, 1, 1).lerp(Color(3, 0.5, 0.5), k)
+		if k > 0.9:
+			enemy.visible = false
 		return
 	enemy.visible = false
 	ball.position = _capture.to
-	var shake_t := t - BALL_FLIGHT
-	var shown: int = _capture.shown
+	ball.set_lid(0.0)
 	if shake_t < shown * BALL_SHAKE:
 		var ph := fmod(shake_t, BALL_SHAKE) / BALL_SHAKE
 		if ph * BALL_SHAKE < _dt: preload("res://audio/cue.gd").sfx("ball_shake")
-		ball.rotation.z = sin(ph * TAU) * 0.45 if ph < 0.5 else 0.0
+		ball.set_wobble(sin(ph * TAU) * 0.45 if ph < 0.5 else 0.0)
+		ball.set_glow(Color(1, 0.2, 0.15), 2.5 if ph < 0.5 else 0.0)
 		return
-	ball.rotation.z = 0.0
+	ball.set_wobble(0.0)
+	ball.set_glow(Color.WHITE, 0.0)
 	if _capture.res.caught:
 		enemy.mon.ball = _capture.id
 		hud.banner("Peguei! %s foi capturado!" % enemy.mon.display_name, 2.0)
 		preload("res://audio/cue.gd").sfx("catch_ok")
+		ball.set_glow(Color(1, 1, 0.8), 4.0)
+		if vfx and ball.is_inside_tree():
+			var at := ball.global_position + Vector3(0, 0.25, 0)
+			vfx.sparkle(at, 1.6)
+			vfx.pmd("swift_star", at, Vector3.FORWARD, {"scale": 1.2, "billboard": true})
 		_end("caught", 1.6, {"caught_mon": enemy.mon})
 		return
 	ball.queue_free()
 	enemy.visible = true
+	if enemy.look:
+		enemy.look.scale_mult = 1.0
+	if vfx and enemy.is_inside_tree():
+		vfx.puff(enemy.to_global(Vector3(0, 0.5, 0)), 1.8)
 	hud.banner(Capture.fail_line(int(_capture.res.shakes)), 1.4)
 	preload("res://audio/cue.gd").sfx("catch_fail")
 	_capture = {}
@@ -886,6 +971,8 @@ func _finish() -> void:
 	_events.clear()
 	if _capture.has("ball") and is_instance_valid(_capture.ball):
 		_capture.ball.queue_free()
+	if vfx:
+		vfx.clear()
 	result["exp"] = exp_log
 	if is_instance_valid(_prev_cam) and _prev_cam.is_inside_tree():
 		_prev_cam.make_current()
@@ -920,25 +1007,13 @@ func _update_camera(dt: float) -> void:
 
 # --- Efeitos placeholder ---
 
-func popup(at: Vector3, text: String, col: Color, scale_k := 1.0) -> void:
+## Popup de batalha: vai para o log e para o HUD (em tela, ancorado em `at`, local da arena).
+func popup(at: Vector3, text: String, col: Color, scale_k := 1.0, style := "") -> void:
 	log_lines.append(text)
 	if log_lines.size() > LOG_MAX:
 		log_lines.pop_front()
-	var stack := 0
-	for p in _popups:
-		if p.t < 0.35 and p.at.distance_to(at) < 0.6:
-			stack += 1
-	var l := Label3D.new()
-	l.text = text
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true
-	l.font_size = int(44 * scale_k)
-	l.pixel_size = 0.004
-	l.outline_size = 10
-	l.modulate = col
-	l.position = at + Vector3(0, 0.28 * stack, 0)
-	add_child(l)
-	_popups.append({"node": l, "t": 0.0, "at": at, "base": l.position})
+	if hud and is_inside_tree():
+		hud.add_popup(to_global(at), text, col, scale_k, style)
 
 
 func _fx_node(mesh: Mesh, xf: Transform3D, col: Color, life: float) -> void:
@@ -1004,11 +1079,3 @@ func _tick_fx(dt: float) -> void:
 			_fx.erase(e)
 		else:
 			e.mat.albedo_color.a = e.a * clampf(e.t / minf(e.life, 0.2), 0.0, 1.0)
-	for p in _popups.duplicate():
-		p.t += dt
-		var l: Label3D = p.node
-		l.position = p.base + Vector3(0, 0.9 * p.t, 0)
-		l.modulate.a = clampf((1.1 - p.t) / 0.4, 0.0, 1.0)
-		if p.t >= 1.1:
-			l.queue_free()
-			_popups.erase(p)
