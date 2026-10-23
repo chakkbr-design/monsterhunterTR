@@ -3,6 +3,8 @@ extends Node
 
 signal battle_started
 signal battle_finished(result: Dictionary)
+## Há golpes esperando a tela de esquecer golpe (ver pending_learns).
+signal learn_requested
 
 const ARENA_SCENE := "res://battle/battle_arena.tscn"
 const PARTY_MAX := 6
@@ -21,6 +23,9 @@ const TRAINER_PAYOUTS := {
 	"rival": 35, "youngster": 16, "bug_catcher": 12, "lass": 16, "camper": 20,
 	"picnicker": 20, "hiker": 36, "jr_trainer": 20, "gym_leader": 99,
 }
+
+## Golpes que não couberam: [{mon: Mon, move: String}]. A UI consome com resolve_learn.
+var pending_learns: Array = []
 
 var _arena: Node = null
 var _opts := {}
@@ -73,7 +78,21 @@ func take_item(id: String, n := 1) -> bool:
 func use_item(id: String, m: Mon) -> String:
 	if not bag.has(id) or not Items.can_use(id, m):
 		return ""
+	var fx: Dictionary = Dex.item(id).get("effect", {})
+	if fx.has("teach") and m.moves.size() >= Mon.MAX_MOVES:
+		queue_learn(m, fx.teach)
+		learn_requested.emit()
+		return "%s quer aprender %s." % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
+	var wanted: Array = []
+	if fx.has("level"):
+		for e in Dex.species(m.species).get("learnset", []):
+			if int(e[0]) > m.level and int(e[0]) <= m.level + int(fx.level):
+				wanted.append(e[1])
 	var msg := Items.use(id, m)
+	for mv in wanted:
+		queue_learn(m, mv)
+	if not pending_learns.is_empty():
+		learn_requested.emit()
 	if Dex.item(id).get("category", "") != "tm":
 		take_item(id)
 	return msg
@@ -171,7 +190,8 @@ func _evolve_pending() -> Array:
 		var into: String = m.evolution_target()
 		if into != "" and not m.is_fainted():
 			var from: String = m.display_name
-			m.evolve(into)
+			for mv in m.evolve(into):
+				queue_learn(m, mv)
 			out.append([from, m.species])
 	return out
 
@@ -191,6 +211,31 @@ func _finish(result: Dictionary) -> void:
 		money /= 2
 		heal_party()
 	result.evolved = _evolve_pending()
+	for x in result.get("exp", []):
+		for e in x.get("events", []):
+			if e.get("type") == "move" and not e.get("learned", true):
+				queue_learn(x.mon, e.move)
 	_opts = {}
 	_enemies = []
 	battle_finished.emit(result)
+	if not pending_learns.is_empty():
+		learn_requested.emit()
+
+
+## Põe um golpe na fila da tela de esquecer golpe (se o Pokémon ainda não sabe).
+func queue_learn(m: Mon, move_id: String) -> void:
+	if m.moves.has(move_id):
+		return
+	if m.moves.size() < Mon.MAX_MOVES:
+		m.moves.append(move_id)
+		return
+	pending_learns.append({"mon": m, "move": move_id})
+
+
+## Resolve o primeiro da fila: slot 0..3 troca aquele golpe; -1 desiste de aprender.
+func resolve_learn(slot: int) -> void:
+	if pending_learns.is_empty():
+		return
+	var p: Dictionary = pending_learns.pop_front()
+	if slot >= 0:
+		p.mon.replace_move(slot, p.move)

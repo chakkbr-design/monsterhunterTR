@@ -1,0 +1,1261 @@
+{
+ "id": "pallet_town",
+ "name": "PALLET TOWN",
+ "rect": [
+  -22,
+  -19.5,
+  44,
+  40
+ ],
+ "neighbors": [
+  "route_1"
+ ],
+ "paths": [
+  [
+   -1.5,
+   -18,
+   3.0,
+   25.5
+  ],
+  [
+   -13,
+   -3.5,
+   25,
+   3.0
+  ],
+  [
+   -9.3,
+   -6.0,
+   2.0,
+   2.5
+  ],
+  [
+   5.7,
+   -6.0,
+   2.0,
+   2.5
+  ],
+  [
+   -1.5,
+   5.5,
+   13.5,
+   2.0
+  ],
+  [
+   6.2,
+   3.5,
+   1.9999999999999991,
+   2.0
+  ],
+  [
+   -10,
+   -0.5,
+   6,
+   7.5
+  ],
+  [
+   -6.5,
+   7,
+   2.0,
+   3
+  ],
+  [
+   -6.5,
+   8.5,
+   9.5,
+   2.0
+  ]
+ ],
+ "courts": [],
+ "water": [
+  {
+   "rect": [
+    -20,
+    10,
+    13,
+    8
+   ]
+  }
+ ],
+ "buildings": [
+  {
+   "id": "player_house",
+   "model": "hgss/pallet/house_player",
+   "pos": [
+    -7.5,
+    -7.8
+   ],
+   "scale": 0.8,
+   "door_dx": -0.8,
+   "door": {
+    "target_spawn": "player_house",
+    "spawn": "player_house_door"
+   }
+  },
+  {
+   "id": "rival_house",
+   "model": "hgss/pallet/house_rival",
+   "pos": [
+    7.5,
+    -7.8
+   ],
+   "scale": 0.8,
+   "door_dx": -0.8,
+   "door": {
+    "target_spawn": "rival_house",
+    "spawn": "rival_house_door"
+   }
+  },
+  {
+   "id": "lab",
+   "model": "hgss/pallet/lab",
+   "pos": [
+    7.2,
+    2.0
+   ],
+   "scale": 0.8,
+   "door": {
+    "target_spawn": "lab",
+    "spawn": "lab_door"
+   }
+  }
+ ],
+ "tree_lines": [
+  {
+   "from": [
+    -21.5,
+    -19
+   ],
+   "to": [
+    -21.5,
+    19
+   ],
+   "rows": 2,
+   "out": [
+    -1,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    21.5,
+    -19
+   ],
+   "to": [
+    21.5,
+    19
+   ],
+   "rows": 2,
+   "out": [
+    1,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -5,
+    19.5
+   ],
+   "to": [
+    21.5,
+    19.5
+   ],
+   "rows": 2,
+   "out": [
+    0,
+    1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -19,
+    -19.5
+   ],
+   "to": [
+    -4.2,
+    -19.5
+   ],
+   "rows": 2,
+   "out": [
+    0,
+    -1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    4.2,
+    -19.5
+   ],
+   "to": [
+    19,
+    -19.5
+   ],
+   "rows": 2,
+   "out": [
+    0,
+    -1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  }
+ ],
+ "trees": [
+  {
+   "pos": [
+    -19,
+    -2
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -18.5,
+    1.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -17,
+    -0.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -19.5,
+    4.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -19.5,
+    -6.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -16.5,
+    4
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -19.5,
+    7
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    14,
+    -15.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    16.5,
+    -15.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    19,
+    -15.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    14,
+    -12.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    16.5,
+    -12.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    19,
+    -12.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    14,
+    -9.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    16.5,
+    -9.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    19,
+    -9.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    14,
+    16.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    18.5,
+    5.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -5.5,
+    12.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    2.5,
+    15.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    6.5,
+    11
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  }
+ ],
+ "props": [
+  {
+   "model": "hgss/common/lamp",
+   "pos": [
+    -3.0,
+    -4.6
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/lamp",
+   "pos": [
+    3.0,
+    -4.6
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/fountain",
+   "pos": [
+    -7,
+    3.5
+   ],
+   "scale": 0.8,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.409524089298037,
+    -11.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.388045522783901,
+    -10.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.315157883195255,
+    -9.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.406869985980046,
+    -8.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.398431745387546,
+    -7.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.38252303423002,
+    -6.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.463067931229025,
+    -5.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.402381727808361,
+    -11.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.42597654404336,
+    -10.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.458595374503991,
+    -9.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.318824691245844,
+    -8.8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.360680252524906,
+    -7.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.318134107498368,
+    -6.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.461928906873435,
+    -5.800000000000001
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6,
+    13
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -1,
+    11
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.5,
+    18
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8,
+    16
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.2,
+    10
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    19,
+    8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    15.25,
+    -14
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.75,
+    -14
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    15.25,
+    -11
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.75,
+    -11
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    15.25,
+    -8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.75,
+    -8
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13,
+    3
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19,
+    -9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -14,
+    7
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10,
+    -13
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    10,
+    -13
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.5,
+    3.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -4.6,
+    0.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13.6,
+    -3.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  }
+ ],
+ "fences": [
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    -11.8,
+    -12.1
+   ],
+   "to": [
+    -5.2,
+    -12.1
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    -11.8,
+    -12.1
+   ],
+   "to": [
+    -11.8,
+    -6.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    5.2,
+    -12.1
+   ],
+   "to": [
+    11.8,
+    -12.1
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    11.8,
+    -12.1
+   ],
+   "to": [
+    11.8,
+    -6.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    12.5,
+    2
+   ],
+   "to": [
+    19.5,
+    2
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    12.5,
+    2
+   ],
+   "to": [
+    12.5,
+    5.5
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    12.5,
+    7.5
+   ],
+   "to": [
+    12.5,
+    18
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    12.5,
+    18
+   ],
+   "to": [
+    19.5,
+    18
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    19.5,
+    2
+   ],
+   "to": [
+    19.5,
+    18
+   ]
+  }
+ ],
+ "flower_beds": [
+  {
+   "center": [
+    -4.2,
+    -5.2
+   ],
+   "radius": 0.8,
+   "tile": true
+  },
+  {
+   "center": [
+    4.2,
+    -5.2
+   ],
+   "radius": 0.8,
+   "tile": true
+  },
+  {
+   "center": [
+    -9.0,
+    1.0
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    -9.0,
+    5.5
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    3.0,
+    1.5
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    -6,
+    -14
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    6,
+    -14
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    15,
+    13
+   ],
+   "radius": 1.5,
+   "tile": true
+  },
+  {
+   "center": [
+    0,
+    16.5
+   ],
+   "radius": 1.5,
+   "tile": true
+  },
+  {
+   "center": [
+    4.5,
+    17
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -2.5,
+    17.5
+   ],
+   "radius": 1.0,
+   "tile": true
+  }
+ ],
+ "ledges": [],
+ "walls": [
+  [
+   -20,
+   10,
+   13,
+   8
+  ],
+  [
+   -21,
+   -18,
+   1,
+   37
+  ],
+  [
+   20,
+   -18,
+   1,
+   37
+  ],
+  [
+   -21.5,
+   18,
+   43,
+   1
+  ],
+  [
+   -20,
+   -19,
+   17.0,
+   1
+  ],
+  [
+   3.0,
+   -19,
+   17.0,
+   1
+  ]
+ ],
+ "tall_grass": [],
+ "plateaus": [],
+ "spawn_zones": [
+  {
+   "name": "TownSpawnPondSwim",
+   "pos": [
+    -13.5,
+    14
+   ],
+   "radius": 4.0,
+   "max": 2,
+   "table": "pond_swim",
+   "mode": "swim",
+   "y": 0.0
+  },
+  {
+   "name": "TownSpawnWestMeadow",
+   "pos": [
+    -17,
+    0.5
+   ],
+   "radius": 3.0,
+   "max": 2,
+   "table": "pallet_grove",
+   "y": 0.0
+  },
+  {
+   "name": "TownSpawnMeadowNorth",
+   "pos": [
+    -17.5,
+    -10
+   ],
+   "radius": 2.5,
+   "max": 1,
+   "table": "pallet_grove",
+   "y": 0.0
+  },
+  {
+   "name": "TownSpawnOrchard",
+   "pos": [
+    16.5,
+    -11.5
+   ],
+   "radius": 3.0,
+   "max": 2,
+   "table": "pallet_grove",
+   "y": 0.0
+  },
+  {
+   "name": "TownSpawnNorthLawn",
+   "pos": [
+    -7,
+    -15
+   ],
+   "radius": 3.0,
+   "max": 1,
+   "table": "pallet_town",
+   "y": 0.0
+  },
+  {
+   "name": "TownSpawnShore",
+   "pos": [
+    -1.5,
+    14
+   ],
+   "radius": 3.5,
+   "max": 2,
+   "table": "pallet_town",
+   "y": 0.0
+  },
+  {
+   "name": "OakField",
+   "pos": [
+    16,
+    10
+   ],
+   "radius": 4.0,
+   "max": 2,
+   "table": "pallet_town",
+   "y": 0.0
+  }
+ ],
+ "npcs": [
+  {
+   "name": "Lily",
+   "node": "NPC_Girl",
+   "pos": [
+    -6,
+    5.5
+   ],
+   "sprite": "npc_girl.png",
+   "wander": 3.0,
+   "lines": [
+    "The Pokémon in town are so calm. They never pick a fight!",
+    "Route 1 is just north of here. The tall grass there is full of surprises."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Lab Aide",
+   "node": "NPC_Scientist",
+   "pos": [
+    3.2,
+    4.4
+   ],
+   "sprite": "npc_scientist.png",
+   "lines": [
+    "Ah, welcome! I study how Pokémon behave in the wild.",
+    "Have you noticed? Some Pokémon run away from you, others charge right at you!",
+    "Press 1 to 6 to let your partners out of their balls. They love walking with you."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Old Man",
+   "node": "NPC_OldMan",
+   "pos": [
+    4,
+    -16.5
+   ],
+   "sprite": "npc_oldman.png",
+   "lines": [
+    "Heading out to Route 1, are you?",
+    "The longer you wander in tall grass, the more likely something jumps out at you.",
+    "Stick to the path if you'd rather avoid trouble. Ho ho!"
+   ],
+   "y": 0.0
+  }
+ ],
+ "signs": [
+  {
+   "name": "PalletSign",
+   "pos": [
+    -3.6,
+    1.0
+   ],
+   "title": "Sign",
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "lines": [
+    "PALLET TOWN",
+    "Shades of your journey await!"
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "LabSign",
+   "pos": [
+    5.6,
+    4.9
+   ],
+   "title": "Sign",
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "lines": [
+    "OAK POKéMON RESEARCH LAB"
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "PlayerMailbox",
+   "pos": [
+    -9.9,
+    -5.2
+   ],
+   "title": "Mailbox",
+   "model": "hgss/common/mailbox",
+   "model_scale": 0.8,
+   "lines": [
+    "{PLAYER}'s house"
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "RivalMailbox",
+   "pos": [
+    8.3,
+    -5.2
+   ],
+   "title": "Mailbox",
+   "model": "hgss/common/mailbox",
+   "model_scale": 0.8,
+   "lines": [
+    "{RIVAL}'s house"
+   ],
+   "y": 0.0
+  }
+ ],
+ "arrivals": [
+  {
+   "name": "start",
+   "pos": [
+    -8.3,
+    -4.2
+   ],
+   "y": 0.0
+  }
+ ],
+ "items": [
+  {
+   "uid": "pt_hidden_potion",
+   "item": "potion",
+   "count": 1,
+   "pos": [
+    -6,
+    11.2
+   ],
+   "hidden": true,
+   "y": 0.0
+  }
+ ],
+ "triggers": [
+  {
+   "node": "OakStopTrigger",
+   "event": "oak_stop",
+   "pos": [
+    0,
+    -16.5
+   ],
+   "size": [
+    44,
+    3,
+    1.5
+   ],
+   "requires": [],
+   "blocks": [
+    "starter_chosen",
+    "oak_stopped"
+   ],
+   "y": 0.0
+  }
+ ],
+ "cut_trees": [],
+ "trainers": [],
+ "flag_walls": [],
+ "statics": [],
+ "sun_shafts": [],
+ "scatter": [
+  {
+   "name": "Grass",
+   "models": [
+    "nature/grass",
+    "nature/grass",
+    "nature/grass_large"
+   ],
+   "areas": [
+    [
+     -20,
+     -18,
+     40,
+     36
+    ]
+   ],
+   "density": 4.0,
+   "scale": [
+    0.8450000000000001,
+    1.4949999999999999
+   ]
+  }
+ ]
+}

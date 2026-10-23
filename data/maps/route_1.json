@@ -1,0 +1,3139 @@
+{
+ "id": "route_1",
+ "name": "ROUTE 1",
+ "rect": [
+  -33,
+  -105,
+  66,
+  85.5
+ ],
+ "neighbors": [
+  "pallet_town",
+  "viridian_city"
+ ],
+ "paths": [
+  [
+   -1.5,
+   -30,
+   3.0,
+   12
+  ],
+  [
+   -10,
+   -33,
+   11.5,
+   3
+  ],
+  [
+   -10,
+   -44,
+   3,
+   11
+  ],
+  [
+   -10,
+   -56,
+   3,
+   12
+  ],
+  [
+   -10,
+   -59,
+   18,
+   3
+  ],
+  [
+   5,
+   -68,
+   3,
+   9
+  ],
+  [
+   5,
+   -82,
+   3,
+   14
+  ],
+  [
+   -1.5,
+   -85,
+   9.5,
+   3
+  ],
+  [
+   -1.5,
+   -90,
+   3.0,
+   5
+  ],
+  [
+   -1.5,
+   -105,
+   3.0,
+   15
+  ]
+ ],
+ "courts": [],
+ "water": [],
+ "buildings": [],
+ "tree_lines": [
+  {
+   "from": [
+    -31.5,
+    -103
+   ],
+   "to": [
+    -31.5,
+    -20.5
+   ],
+   "rows": 3,
+   "out": [
+    -1,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    31.5,
+    -103
+   ],
+   "to": [
+    31.5,
+    -20.5
+   ],
+   "rows": 3,
+   "out": [
+    1,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -31.5,
+    -103.5
+   ],
+   "to": [
+    -14,
+    -103.5
+   ],
+   "rows": 3,
+   "out": [
+    0,
+    -1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    14,
+    -103.5
+   ],
+   "to": [
+    31.5,
+    -103.5
+   ],
+   "rows": 3,
+   "out": [
+    0,
+    -1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -30,
+    -20.5
+   ],
+   "to": [
+    -21,
+    -20.5
+   ],
+   "rows": 1,
+   "out": [
+    0,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    21,
+    -20.5
+   ],
+   "to": [
+    30,
+    -20.5
+   ],
+   "rows": 1,
+   "out": [
+    0,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  }
+ ],
+ "trees": [
+  {
+   "pos": [
+    -25,
+    -46.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -22.5,
+    -45.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -24,
+    -49.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -21.5,
+    -50.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -26.5,
+    -48.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    11,
+    -62
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    13.5,
+    -63.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    11.5,
+    -66
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    14,
+    -67.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    10.5,
+    -64.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    25.5,
+    -33
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    29,
+    -34.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    24.5,
+    -38.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    28,
+    -39
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    8.5,
+    -99.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    12,
+    -100
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    13.5,
+    -97
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    9.5,
+    -96
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    -21.94181405502099,
+    -36.525235995207936
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -26.21601387612054,
+    -38.04843170851373
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -25.998011814416632,
+    -36.76250160928569
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -25.78194375314145,
+    -40.00859083919096
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -25.022149496620166,
+    -35.64438253931965
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    24.456625988817365,
+    -41.74369836293056
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    22.1601528930882,
+    -42.79746096906421
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    25.20825495286664,
+    -45.75123010544017
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    24.637194172454176,
+    -43.89215443878385
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -24.831444024815227,
+    -60.90080818441035
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -27.693189975151274,
+    -64.05464008081712
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -26.87430108863707,
+    -62.17188556252636
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -25.13450656987033,
+    -60.8047185226494
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -28.19945952296961,
+    -62.23103597906035
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    26.42809061196109,
+    -88.160719572304
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    22.17148840106045,
+    -88.40481855605914
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    25.110143407559384,
+    -86.89780282353041
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    24.124374555034866,
+    -88.1614951410183
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    9.93505676498128,
+    -28.002683623337152
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    12.429377775842397,
+    -25.640526736492777
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    10.798329540967513,
+    -26.19574608335437
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -14.173105364991992,
+    -39.94988867001247
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    27.576940077430677,
+    -64.06739504872655
+   ],
+   "model": "hgss/common/tree",
+   "y": 3.1999999999999997
+  },
+  {
+   "pos": [
+    27.043663640786377,
+    -61.62465989954256
+   ],
+   "model": "hgss/common/tree",
+   "y": 3.1999999999999997
+  },
+  {
+   "pos": [
+    25.562922962972774,
+    -61.54241167858269
+   ],
+   "model": "hgss/common/tree",
+   "y": 3.1999999999999997
+  },
+  {
+   "pos": [
+    25.015581217965543,
+    -63.99077217977164
+   ],
+   "model": "hgss/common/tree",
+   "y": 3.1999999999999997
+  },
+  {
+   "pos": [
+    -23.056150124650145,
+    -103.11826166183538
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    -24.60287796615308,
+    -102.76647250512143
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    -26.889290609118085,
+    -98.68451608259852
+   ],
+   "model": "hgss/common/tree",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    15.720045176856917,
+    -59.148127987766685
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    11.968013788361482,
+    -62.08249353387712
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    -6.092110264030221,
+    -84.12925900164441
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    -6.004096779878932,
+    -82.44851520161241
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    -9.856327666800212,
+    -85.99486983892196
+   ],
+   "model": "hgss/common/tree",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    23.528643890013317,
+    -24.28806853510927
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    23.772172647683618,
+    -23.09967343162988
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    25.970034389461745,
+    -22.685038793960295
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -23.975621427772335,
+    -21.719766555910113
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -24.984982733178384,
+    -25.53662025690866
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -26.893807366972204,
+    -22.09824317931051
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -14.6,
+    -90.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 6.0
+  },
+  {
+   "pos": [
+    -14.6,
+    -87.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 6.0
+  },
+  {
+   "pos": [
+    -14.6,
+    -84.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 6.0
+  },
+  {
+   "pos": [
+    -14.6,
+    -81.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 6.0
+  },
+  {
+   "pos": [
+    -14.6,
+    -78.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 6.0
+  }
+ ],
+ "props": [
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26,
+    -45.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -21,
+    -45.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19,
+    -49.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -25.5,
+    -51
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.5,
+    -51
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    10.5,
+    -61
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    14.5,
+    -62
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.5,
+    -67.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    10.5,
+    -65
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    14.5,
+    -65
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    18.5,
+    -60
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    26,
+    -56
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    28.5,
+    -59.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    25.5,
+    -63.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    29,
+    -65
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.5,
+    -65.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 3.1999999999999997
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -24.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -23.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -12.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -4.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -1.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    0.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    4.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    7.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.0,
+    -45.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.0,
+    -45.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.9
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -23.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -18.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -14.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -7.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -3.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -2.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    1.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    2.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    10.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    14.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    15.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    18.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    19.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    22.0,
+    -69.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    23.0,
+    -69.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 1.8
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.0,
+    -91.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.0,
+    -91.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.0,
+    -91.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.0,
+    -91.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    4.0,
+    -91.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    5.0,
+    -91.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.0,
+    -91.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    9.0,
+    -91.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.0,
+    -91.2
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.0,
+    -91.9
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -30.961312303491752,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -30.09162393272603,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.903561315840243,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.907048443774887,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.96921549329323,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -25.976887459084285,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -25.068501180971968,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -24.09699985261008,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.994323746765904,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.08808977896623,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -21.061958347440413,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.051611397266957,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19.093983482155043,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -18.007213107755344,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -17.011893776668668,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.931514574296294,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -14.996175177047185,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13.971941658416165,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13.000045369558642,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.967510093621927,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -11.008534023680088,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.044367420067223,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -8.900468759907383,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -7.9008616716687605,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.931956890101428,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.9584380757004105,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.03694455659689,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    4.445933180321581,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    5.45780798946284,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.414044699911985,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    7.553257577282081,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.480079960983698,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    9.569316724376236,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    10.477302706341186,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.591608476663962,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.56946195466056,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.400108987411114,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    14.441943482945922,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    15.582054385620836,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    16.493997455202734,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.59607178823486,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    18.479484877615857,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    19.414607668766738,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    20.525890982446803,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    21.55570217173533,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    22.45395511737003,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    23.417428839670436,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    24.46651712509267,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    25.592815243318753,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    26.551608103398753,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    27.42359833588391,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    28.449277589778625,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    29.420209261791342,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    30.411978680588216,
+    -103.4
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 2.7
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -29.0,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.6,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.2,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.6,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -19.2,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -17.8,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.4,
+    -76.6
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -29.4,
+    -89.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -29.4,
+    -85.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -29.4,
+    -81.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.0,
+    -84.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -15.6,
+    -84.0
+   ],
+   "scale": 2.464579199184864,
+   "rot": 328,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -15.69,
+    -82.95
+   ],
+   "scale": 2.332965172483982,
+   "rot": 230,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -15.95,
+    -81.92
+   ],
+   "scale": 2.582756441494152,
+   "rot": 147,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -16.37,
+    -80.95
+   ],
+   "scale": 3.0733847585324776,
+   "rot": 315,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -16.95,
+    -80.07
+   ],
+   "scale": 2.5271405391206576,
+   "rot": 296,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -17.67,
+    -79.29
+   ],
+   "scale": 2.3099435418227188,
+   "rot": 109,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -18.5,
+    -78.64
+   ],
+   "scale": 2.9032093171682414,
+   "rot": 231,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -19.43,
+    -78.14
+   ],
+   "scale": 2.82794416766067,
+   "rot": 31,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -20.43,
+    -77.8
+   ],
+   "scale": 2.9265992323603625,
+   "rot": 68,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -23.57,
+    -77.8
+   ],
+   "scale": 2.32772354593537,
+   "rot": 150,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -24.57,
+    -78.14
+   ],
+   "scale": 2.437765929770393,
+   "rot": 309,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -25.5,
+    -78.64
+   ],
+   "scale": 2.908989874600403,
+   "rot": 38,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -26.33,
+    -79.29
+   ],
+   "scale": 2.4611344960231167,
+   "rot": 64,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -27.05,
+    -80.07
+   ],
+   "scale": 2.404969553464546,
+   "rot": 116,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -27.63,
+    -80.95
+   ],
+   "scale": 2.5107549597611034,
+   "rot": 128,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -28.05,
+    -81.92
+   ],
+   "scale": 2.682851800327947,
+   "rot": 343,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -28.31,
+    -82.95
+   ],
+   "scale": 2.769590067549306,
+   "rot": 343,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -28.4,
+    -84.0
+   ],
+   "scale": 2.7672473931308454,
+   "rot": 65,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -28.31,
+    -85.05
+   ],
+   "scale": 2.5058123660384966,
+   "rot": 236,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -28.05,
+    -86.08
+   ],
+   "scale": 2.787878663705336,
+   "rot": 232,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -27.63,
+    -87.05
+   ],
+   "scale": 2.4416907604065754,
+   "rot": 44,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -27.05,
+    -87.93
+   ],
+   "scale": 2.877003307928258,
+   "rot": 164,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -26.33,
+    -88.71
+   ],
+   "scale": 2.688939769604966,
+   "rot": 250,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -25.5,
+    -89.36
+   ],
+   "scale": 2.9214790103169053,
+   "rot": 356,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -24.57,
+    -89.86
+   ],
+   "scale": 2.4025821390416686,
+   "rot": 265,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -23.57,
+    -90.2
+   ],
+   "scale": 2.327313365261641,
+   "rot": 30,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -22.53,
+    -90.38
+   ],
+   "scale": 2.4654282306156565,
+   "rot": 35,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -21.47,
+    -90.38
+   ],
+   "scale": 3.063380128432276,
+   "rot": 251,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -20.43,
+    -90.2
+   ],
+   "scale": 2.7424682911329246,
+   "rot": 143,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -19.43,
+    -89.86
+   ],
+   "scale": 2.9620019537410602,
+   "rot": 306,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -18.5,
+    -89.36
+   ],
+   "scale": 2.5521490067790498,
+   "rot": 30,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -17.67,
+    -88.71
+   ],
+   "scale": 3.0887794498868475,
+   "rot": 66,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -16.95,
+    -87.93
+   ],
+   "scale": 2.4626334050934573,
+   "rot": 104,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallC",
+   "pos": [
+    -16.37,
+    -87.05
+   ],
+   "scale": 2.6302751666513546,
+   "rot": 249,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -15.95,
+    -86.08
+   ],
+   "scale": 2.462536315731298,
+   "rot": 293,
+   "y": 6.0
+  },
+  {
+   "model": "nature/rock_smallA",
+   "pos": [
+    -15.69,
+    -85.05
+   ],
+   "scale": 2.9065825523487367,
+   "rot": 22,
+   "y": 6.0
+  }
+ ],
+ "fences": [],
+ "flower_beds": [
+  {
+   "center": [
+    22,
+    -63
+   ],
+   "radius": 2.0,
+   "tile": true
+  },
+  {
+   "center": [
+    11.5,
+    -70
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -5,
+    -27
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    5,
+    -40
+   ],
+   "radius": 1.6,
+   "tile": true
+  },
+  {
+   "center": [
+    -12,
+    -63
+   ],
+   "radius": 1.5,
+   "tile": true
+  },
+  {
+   "center": [
+    11,
+    -88
+   ],
+   "radius": 1.4,
+   "tile": true
+  }
+ ],
+ "ledges": [],
+ "walls": [
+  [
+   -31,
+   -105,
+   1,
+   87
+  ],
+  [
+   30,
+   -105,
+   1,
+   87
+  ],
+  [
+   -31,
+   -103,
+   28,
+   1
+  ],
+  [
+   3,
+   -103,
+   28,
+   1
+  ],
+  [
+   -33,
+   -19,
+   13,
+   1
+  ],
+  [
+   20,
+   -19,
+   13,
+   1
+  ],
+  [
+   -26.0,
+   -76.6,
+   3.2,
+   0.8
+  ],
+  [
+   -21.2,
+   -76.6,
+   3.2,
+   0.8
+  ]
+ ],
+ "tall_grass": [
+  {
+   "pos": [
+    -19,
+    -27
+   ],
+   "size": [
+    12,
+    7
+   ],
+   "table": "route_1",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    17,
+    -33
+   ],
+   "size": [
+    12,
+    9
+   ],
+   "table": "route_1",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -20,
+    -56
+   ],
+   "size": [
+    14,
+    9
+   ],
+   "table": "route_1",
+   "y": 0.9
+  },
+  {
+   "pos": [
+    17,
+    -77
+   ],
+   "size": [
+    12,
+    10
+   ],
+   "table": "route_1",
+   "y": 1.8
+  },
+  {
+   "pos": [
+    -17,
+    -96
+   ],
+   "size": [
+    12,
+    8
+   ],
+   "table": "route_1",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    19,
+    -96
+   ],
+   "size": [
+    10,
+    8
+   ],
+   "table": "route_1",
+   "y": 2.7
+  },
+  {
+   "pos": [
+    -8.5,
+    -39.9
+   ],
+   "size": [
+    4.4,
+    3.0
+   ],
+   "table": "route_1",
+   "y": 0.0
+  }
+ ],
+ "plateaus": [
+  {
+   "id": "band_1",
+   "rect": [
+    -36,
+    -110,
+    72,
+    66
+   ],
+   "h": 0.9,
+   "ramps": [
+    {
+     "side": "s",
+     "at": -8.5,
+     "width": 4.0
+    }
+   ],
+   "ledges": [
+    {
+     "side": "s",
+     "from": -29,
+     "to": -11
+    },
+    {
+     "side": "s",
+     "from": -6,
+     "to": 12
+    }
+   ],
+   "open": [
+    "n"
+   ]
+  },
+  {
+   "id": "band_2",
+   "rect": [
+    -36,
+    -110,
+    72,
+    42
+   ],
+   "h": 1.8,
+   "ramps": [
+    {
+     "side": "s",
+     "at": 6.5,
+     "width": 4.0
+    }
+   ],
+   "ledges": [
+    {
+     "side": "s",
+     "from": -28,
+     "to": 4
+    },
+    {
+     "side": "s",
+     "from": 9,
+     "to": 26
+    }
+   ],
+   "open": [
+    "n"
+   ]
+  },
+  {
+   "id": "band_3",
+   "rect": [
+    -36,
+    -110,
+    72,
+    20
+   ],
+   "h": 2.7,
+   "ramps": [
+    {
+     "side": "s",
+     "at": 0.0,
+     "width": 4.0
+    }
+   ],
+   "ledges": [
+    {
+     "side": "s",
+     "from": -11,
+     "to": -3
+    },
+    {
+     "side": "s",
+     "from": 3,
+     "to": 14
+    }
+   ],
+   "open": [
+    "n"
+   ]
+  },
+  {
+   "id": "west_hill",
+   "rect": [
+    -30,
+    -92,
+    18,
+    22
+   ],
+   "h": 4.5,
+   "ramps": [
+    {
+     "side": "e",
+     "at": -78,
+     "width": 4.0
+    }
+   ],
+   "ledges": [],
+   "open": []
+  },
+  {
+   "id": "west_hill_top",
+   "rect": [
+    -30,
+    -92,
+    16,
+    16
+   ],
+   "h": 6.0,
+   "ramps": [
+    {
+     "side": "s",
+     "at": -22,
+     "width": 3.5
+    }
+   ],
+   "ledges": [],
+   "open": []
+  },
+  {
+   "id": "east_terrace",
+   "rect": [
+    16,
+    -66,
+    14,
+    16
+   ],
+   "h": 3.1999999999999997,
+   "ramps": [
+    {
+     "side": "w",
+     "at": -57,
+     "width": 4.0
+    }
+   ],
+   "ledges": [],
+   "open": []
+  }
+ ],
+ "spawn_zones": [
+  {
+   "name": "R1SpawnSouth",
+   "pos": [
+    6,
+    -36
+   ],
+   "radius": 5.0,
+   "max": 4,
+   "table": "route_1",
+   "y": 0.0
+  },
+  {
+   "name": "R1SpawnSouthWest",
+   "pos": [
+    -24,
+    -33
+   ],
+   "radius": 5.0,
+   "max": 3,
+   "table": "route_1",
+   "y": 0.0
+  },
+  {
+   "name": "R1SpawnSouthEast",
+   "pos": [
+    24,
+    -30
+   ],
+   "radius": 5.0,
+   "max": 3,
+   "table": "route_1",
+   "y": 0.0
+  },
+  {
+   "name": "R1SpawnWest",
+   "pos": [
+    -20,
+    -66
+   ],
+   "radius": 6.0,
+   "max": 4,
+   "table": "route_1",
+   "y": 0.9
+  },
+  {
+   "name": "R1SpawnEast",
+   "pos": [
+    20,
+    -52
+   ],
+   "radius": 5.0,
+   "max": 3,
+   "table": "route_1",
+   "y": 3.1999999999999997
+  },
+  {
+   "name": "R1SpawnBand2East",
+   "pos": [
+    26,
+    -76
+   ],
+   "radius": 5.0,
+   "max": 3,
+   "table": "route_1",
+   "y": 1.8
+  },
+  {
+   "name": "R1SpawnBand3West",
+   "pos": [
+    -27,
+    -98
+   ],
+   "radius": 4.5,
+   "max": 3,
+   "table": "route_1",
+   "y": 2.7
+  },
+  {
+   "name": "R1SpawnNorth",
+   "pos": [
+    12,
+    -95
+   ],
+   "radius": 5.0,
+   "max": 4,
+   "table": "route_1",
+   "y": 2.7
+  },
+  {
+   "name": "R1GroveWest",
+   "pos": [
+    -23.5,
+    -48
+   ],
+   "radius": 3.5,
+   "max": 2,
+   "table": "route_1_grove",
+   "y": 0.9
+  },
+  {
+   "name": "R1GroveEast",
+   "pos": [
+    12.5,
+    -64
+   ],
+   "radius": 3.5,
+   "max": 2,
+   "table": "route_1_grove",
+   "y": 0.9
+  }
+ ],
+ "npcs": [
+  {
+   "name": "Youngster Tom",
+   "node": "NPC_Kid",
+   "pos": [
+    -4,
+    -60
+   ],
+   "sprite": "npc_kid.png",
+   "wander": 1.5,
+   "lines": [
+    "I saw a Rattata in the grass! It charged straight at me!",
+    "See those ledges along the road?",
+    "It's a bit scary, but you can jump\nfrom them.",
+    "You can get back to PALLET TOWN\nquicker that way.",
+    "Tip: if a battle goes badly, press Esc to run away."
+   ],
+   "y": 0.9
+  },
+  {
+   "name": "Camper Ray",
+   "node": "NPC_Camper",
+   "pos": [
+    4.0,
+    -72.0
+   ],
+   "sprite": "npc_camper.png",
+   "facing": 1,
+   "lines": [
+    "Something big rustled up the hill west of here.",
+    "It had a long tail and a nasty set of teeth. I'm not going back for my sandwich!"
+   ],
+   "y": 1.8
+  }
+ ],
+ "signs": [
+  {
+   "name": "Route1Sign",
+   "pos": [
+    3,
+    -21
+   ],
+   "title": "Sign",
+   "model": "hgss/route_1/sign_route",
+   "model_scale": 0.8,
+   "lines": [
+    "ROUTE 1",
+    "PALLET TOWN - VIRIDIAN CITY"
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "ViridianSign",
+   "pos": [
+    3,
+    -99
+   ],
+   "title": "Sign",
+   "model": "hgss/route_1/sign_route",
+   "model_scale": 0.8,
+   "lines": [
+    "VIRIDIAN CITY ahead."
+   ],
+   "y": 2.7
+  },
+  {
+   "name": "RestSign",
+   "pos": [
+    11.5,
+    -71.5
+   ],
+   "title": "Sign",
+   "model": "hgss/route_1/sign_route",
+   "model_scale": 0.8,
+   "lines": [
+    "ROUTE 1 REST STOP",
+    "Rest here before the climb north.",
+    "Pokemon slowly regain PP while you walk.",
+    "Let them rest if a move runs dry."
+   ],
+   "y": 1.8
+  }
+ ],
+ "arrivals": [
+  {
+   "name": "r1_south",
+   "pos": [
+    0,
+    -24
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "r1_hill_foot",
+   "pos": [
+    -3.5,
+    -78
+   ],
+   "y": 1.8
+  },
+  {
+   "name": "r1_band1",
+   "pos": [
+    -20,
+    -48
+   ],
+   "y": 0.9
+  },
+  {
+   "name": "r1_road",
+   "pos": [
+    -8.5,
+    -38
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "r1_hill",
+   "pos": [
+    -17,
+    -74
+   ],
+   "y": 4.5
+  },
+  {
+   "name": "r1_hilltop",
+   "pos": [
+    -26,
+    -88
+   ],
+   "y": 6.0
+  }
+ ],
+ "items": [
+  {
+   "uid": "r1_potion_grass",
+   "item": "potion",
+   "count": 1,
+   "pos": [
+    -24,
+    -29
+   ],
+   "hidden": false,
+   "y": 0.0
+  },
+  {
+   "uid": "r1_poke_balls",
+   "item": "poke_ball",
+   "count": 3,
+   "pos": [
+    27,
+    -36
+   ],
+   "hidden": false,
+   "y": 0.0
+  },
+  {
+   "uid": "r1_antidote",
+   "item": "antidote",
+   "count": 1,
+   "pos": [
+    -14,
+    -50
+   ],
+   "hidden": false,
+   "y": 0.9
+  },
+  {
+   "uid": "r1_oran_berry",
+   "item": "oran_berry",
+   "count": 2,
+   "pos": [
+    19,
+    -64
+   ],
+   "hidden": false,
+   "y": 3.1999999999999997
+  },
+  {
+   "uid": "r1_rare_candy",
+   "item": "rare_candy",
+   "count": 1,
+   "pos": [
+    -28.0,
+    -78.0
+   ],
+   "hidden": false,
+   "y": 6.0
+  },
+  {
+   "uid": "r1_super_potion",
+   "item": "super_potion",
+   "count": 1,
+   "pos": [
+    10,
+    -97
+   ],
+   "hidden": false,
+   "y": 2.7
+  },
+  {
+   "uid": "r1_hidden_pecha",
+   "item": "pecha_berry",
+   "count": 1,
+   "pos": [
+    3.2,
+    -22
+   ],
+   "hidden": true,
+   "y": 0.0
+  },
+  {
+   "uid": "r1_hidden_potion",
+   "item": "potion",
+   "count": 1,
+   "pos": [
+    -13,
+    -43.2
+   ],
+   "hidden": true,
+   "y": 0.0
+  }
+ ],
+ "triggers": [],
+ "cut_trees": [],
+ "trainers": [],
+ "flag_walls": [],
+ "statics": [
+  {
+   "uid": "r1_raticate",
+   "species": "Raticate",
+   "level": 11,
+   "pos": [
+    -22.0,
+    -84.0
+   ],
+   "hidden": true,
+   "facing": 0,
+   "y": 6.0
+  }
+ ],
+ "sun_shafts": [],
+ "scatter": [
+  {
+   "name": "Grass",
+   "models": [
+    "nature/grass",
+    "nature/grass",
+    "nature/grass_large"
+   ],
+   "areas": [
+    [
+     -30,
+     -102,
+     60,
+     10
+    ],
+    [
+     -30,
+     -76,
+     60,
+     58
+    ],
+    [
+     -14,
+     -92,
+     44,
+     16
+    ]
+   ],
+   "density": 4.0,
+   "scale": [
+    0.9099999999999999,
+    1.6099999999999999
+   ]
+  }
+ ]
+}

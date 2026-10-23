@@ -1,0 +1,5556 @@
+{
+ "id": "pewter_city",
+ "name": "PEWTER CITY",
+ "rect": [
+  -48,
+  -463,
+  96,
+  80
+ ],
+ "neighbors": [
+  "route_2_north",
+  "route_3"
+ ],
+ "paths": [
+  [
+   -2,
+   -444.5,
+   4,
+   61.5
+  ],
+  [
+   -26,
+   -444.5,
+   38,
+   4.0
+  ],
+  [
+   -40,
+   -431.0,
+   85,
+   4.0
+  ],
+  [
+   -40,
+   -417.5,
+   70,
+   4.0
+  ],
+  [
+   -26,
+   -446.4,
+   28,
+   5.899999999999977
+  ],
+  [
+   -26,
+   -432.9,
+   14,
+   5.899999999999977
+  ],
+  [
+   34,
+   -427.0,
+   9,
+   9.0
+  ],
+  [
+   4.58,
+   -446.4,
+   2.0,
+   1.8999999999999773
+  ],
+  [
+   4.9,
+   -432.9,
+   2.0,
+   1.8999999999999773
+  ],
+  [
+   -11,
+   -419.4,
+   2,
+   1.8999999999999773
+  ],
+  [
+   -19.92,
+   -419.4,
+   2.0,
+   1.8999999999999773
+  ],
+  [
+   -40,
+   -440,
+   8,
+   32
+  ],
+  [
+   15.0,
+   -413.5,
+   2.0,
+   5.5
+  ],
+  [
+   14.0,
+   -408.0,
+   1.5,
+   4.0
+  ],
+  [
+   14.0,
+   -404.0,
+   7.0,
+   1.5
+  ],
+  [
+   19.5,
+   -402.5,
+   1.5,
+   4.5
+  ],
+  [
+   13.0,
+   -399.5,
+   8.0,
+   1.5
+  ],
+  [
+   13.0,
+   -399.5,
+   1.5,
+   5.0
+  ],
+  [
+   -13.5,
+   -419.4,
+   7.0,
+   3.3999999999999773
+  ],
+  [
+   3.5,
+   -432.9,
+   6.0,
+   2.8999999999999773
+  ],
+  [
+   33.5,
+   -418,
+   2.0,
+   8.0
+  ]
+ ],
+ "courts": [
+  {
+   "rect": [
+    28.0,
+    -410.0,
+    13.0,
+    10.0
+   ],
+   "tex": "court_stone"
+  }
+ ],
+ "water": [],
+ "buildings": [
+  {
+   "id": "museum",
+   "model": "hgss/pewter_city/museum",
+   "pos": [
+    -14.0,
+    -449.296
+   ],
+   "scale": 0.8,
+   "door_dx": -1.53,
+   "board": {
+    "text": "PEWTER\nMUSEUM",
+    "color": "#7d7f86",
+    "ball": false,
+    "side": -1
+   },
+   "door": {
+    "target_spawn": "pw_museum_in",
+    "spawn": "pw_museum_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  },
+  {
+   "id": "house2",
+   "model": "hgss/pewter_city/house",
+   "pos": [
+    6.0,
+    -447.676
+   ],
+   "scale": 0.8,
+   "door_dx": -0.42,
+   "door": {
+    "target_spawn": "pw_house2_in",
+    "spawn": "pw_house2_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  },
+  {
+   "id": "gym",
+   "model": "hgss/pewter_city/gym",
+   "pos": [
+    -18.0,
+    -434.896
+   ],
+   "scale": 0.8,
+   "door_dx": -0.15,
+   "board": {
+    "text": "PEWTER CITY\nPOKéMON GYM\nLEADER: BROCK",
+    "color": "#6b6f76",
+    "ball": false,
+    "side": 1,
+    "letter": 0.26
+   },
+   "door": {
+    "target_spawn": "pw_gym_in",
+    "spawn": "pw_gym_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  },
+  {
+   "id": "pokemart",
+   "model": "hgss/pewter_city/pokemart",
+   "pos": [
+    7.0,
+    -434.14
+   ],
+   "scale": 0.8,
+   "door_dx": -1.1,
+   "board": {
+    "text": "POKé\nMART",
+    "color": "#2f6cc9",
+    "ball": false,
+    "side": -1
+   },
+   "door": {
+    "target_spawn": "pw_mart_in",
+    "spawn": "pw_mart_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  },
+  {
+   "id": "pokecenter",
+   "model": "hgss/pewter_city/pokecenter",
+   "pos": [
+    -10.0,
+    -421.224
+   ],
+   "scale": 0.8,
+   "door_dx": 0.0,
+   "board": {
+    "text": "POKéMON\nCENTER",
+    "color": "#d8423a",
+    "ball": true,
+    "side": 1
+   },
+   "door": {
+    "target_spawn": "pw_center_in",
+    "spawn": "pw_center_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  },
+  {
+   "id": "house1",
+   "model": "hgss/pewter_city/house",
+   "pos": [
+    -18.5,
+    -420.676
+   ],
+   "scale": 0.8,
+   "door_dx": -0.42,
+   "door": {
+    "target_spawn": "pw_house1_in",
+    "spawn": "pw_house1_door",
+    "target_scene": "res://scenes/interiors/pewter_city_interiors.tscn"
+   }
+  }
+ ],
+ "tree_lines": [
+  {
+   "from": [
+    -48,
+    -383
+   ],
+   "to": [
+    -4.5,
+    -383
+   ],
+   "rows": 1,
+   "out": [
+    0,
+    1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    4.5,
+    -383
+   ],
+   "to": [
+    48,
+    -383
+   ],
+   "rows": 1,
+   "out": [
+    0,
+    1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -48,
+    -463
+   ],
+   "to": [
+    -48,
+    -383
+   ],
+   "rows": 1,
+   "out": [
+    -1,
+    0
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  },
+  {
+   "from": [
+    -46,
+    -460
+   ],
+   "to": [
+    46,
+    -460
+   ],
+   "rows": 2,
+   "out": [
+    0,
+    -1
+   ],
+   "models": [
+    "hgss/common/tree"
+   ]
+  }
+ ],
+ "trees": [
+  {
+   "pos": [
+    -42.0,
+    -450.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -39.5,
+    -447.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -42.5,
+    -443.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -36.0,
+    -444.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    26.0,
+    -450.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    30.5,
+    -448.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    35.0,
+    -450.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    39.5,
+    -448.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    28.0,
+    -444.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    33.0,
+    -443.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    38.0,
+    -445.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    7.5,
+    -395.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    24.5,
+    -395.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -26.0,
+    -400.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -21.5,
+    -399.5
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -16.5,
+    -401.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -24.0,
+    -390.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    -20.0,
+    -388.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    22.0,
+    -388.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  },
+  {
+   "pos": [
+    18.0,
+    -387.0
+   ],
+   "model": "hgss/common/tree",
+   "y": 0.0
+  }
+ ],
+ "props": [
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -8.91946393063037,
+    -442.54614186105704
+   ],
+   "scale": 1.140246517899192,
+   "rot": -9,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -8.9777166998094,
+    -443.4844428226449
+   ],
+   "scale": 1.2418034122955333,
+   "rot": -14,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -9.434308550509634,
+    -442.2594749892585
+   ],
+   "scale": 1.1212328962771512,
+   "rot": 11,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -32.952603293502584,
+    -446.12068045447114
+   ],
+   "scale": 1.410349854643213,
+   "rot": -15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -34.10824390916215,
+    -446.2531665900605
+   ],
+   "scale": 1.171891123381626,
+   "rot": -20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -32.35323649785587,
+    -446.9935050147873
+   ],
+   "scale": 1.2729439743111435,
+   "rot": 0,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -33.73570266348405,
+    -447.09165543291135
+   ],
+   "scale": 1.3056073873134517,
+   "rot": 22,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -33.3789001761399,
+    -445.3429894124902
+   ],
+   "scale": 1.1387725790001324,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -30.0,
+    -449.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.5,
+    -442.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -35.0,
+    -440.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.52438769751405,
+    -435.67319991080063
+   ],
+   "scale": 1.3051372435977022,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.02612553169253,
+    -434.7832915710229
+   ],
+   "scale": 1.1887036876269463,
+   "rot": 18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -41.152012075950275,
+    -435.93514484858724
+   ],
+   "scale": 1.232489683810707,
+   "rot": 0,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -41.72430717706269,
+    -436.5921171900819
+   ],
+   "scale": 1.1123127483618465,
+   "rot": 9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.76950924713272,
+    -432.70444917296936
+   ],
+   "scale": 0.8169578201415153,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -30.40482940478972,
+    -432.27898161047557
+   ],
+   "scale": 1.300345080096027,
+   "rot": 2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.761731898997954,
+    -431.78474158603683
+   ],
+   "scale": 1.1521746788739609,
+   "rot": 12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.503474941008896,
+    -423.5357403445365
+   ],
+   "scale": 1.0217093097806227,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.48093475602415,
+    -424.7406775074535
+   ],
+   "scale": 0.9681000378216942,
+   "rot": -24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -41.41338952391978,
+    -425.1153284257397
+   ],
+   "scale": 1.2074020189282293,
+   "rot": -9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.93353311918482,
+    -425.59518763502285
+   ],
+   "scale": 0.8929508393174251,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.291017518726843,
+    -417.7056658835203
+   ],
+   "scale": 1.1368250116465752,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.961484150215803,
+    -418.90498936088864
+   ],
+   "scale": 1.1320644607237578,
+   "rot": -14,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -31.386665702706214,
+    -419.3308426348562
+   ],
+   "scale": 1.2943499686640036,
+   "rot": 20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.64834586220543,
+    -412.7982466638376
+   ],
+   "scale": 0.8196478797732202,
+   "rot": -24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.20819248026962,
+    -411.9927389966174
+   ],
+   "scale": 1.427753938942155,
+   "rot": 24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.162475504868766,
+    -412.98891484480026
+   ],
+   "scale": 0.8064019345065158,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.546550059244478,
+    -435.0954461630907
+   ],
+   "scale": 0.9481911008979952,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -28.391056110294226,
+    -434.27872801391476
+   ],
+   "scale": 0.9680275453286016,
+   "rot": 13,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -28.766388735725457,
+    -434.07155769374816
+   ],
+   "scale": 0.9553384829374209,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -29.258371773925536,
+    -434.62350034379153
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.683012383278616,
+    -435.4229534710182
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.710079275292866,
+    -433.1999934628156
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    11.0,
+    -432.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.0,
+    -432.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.404394930863745,
+    -437.86500889576246
+   ],
+   "scale": 1.5190642116968391,
+   "rot": 0,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.687672473216516,
+    -437.1563638629787
+   ],
+   "scale": 1.5559320954130673,
+   "rot": -22,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    32.43339211281984,
+    -438.91464989840125
+   ],
+   "scale": 1.5959018872007094,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    39.640945006883655,
+    -440.24062214526947
+   ],
+   "scale": 1.3866273152321327,
+   "rot": 23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    39.161526619264926,
+    -439.42394841547036
+   ],
+   "scale": 1.226336080430211,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    34.876279656718324,
+    -435.8445902347054
+   ],
+   "scale": 1.1129360081759778,
+   "rot": 17,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    34.826162215844846,
+    -433.4504545798142
+   ],
+   "scale": 0.9897700313893291,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    41.09688634625399,
+    -433.1071987495036
+   ],
+   "scale": 1.1757196057515023,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    41.17123205764048,
+    -432.65761721573006
+   ],
+   "scale": 1.1184853542024833,
+   "rot": -1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    41.3135433517961,
+    -434.2510656171742
+   ],
+   "scale": 1.2887730515968734,
+   "rot": 22,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    31.0,
+    -436.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    45.0,
+    -435.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    24.5,
+    -446.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    41.5,
+    -446.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    31.0,
+    -440.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.659404302368794,
+    -406.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.535535625639673,
+    -405.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.611859028322079,
+    -404.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.589484975500204,
+    -403.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.538136883058073,
+    -402.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.64637884314287,
+    -401.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.5261934167433235,
+    -400.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.628743024742233,
+    -399.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.523301597527941,
+    -398.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.584151123449284,
+    -397.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    6.542573134601818,
+    -396.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -38.61998647266089,
+    -456.4144200581403
+   ],
+   "scale": 0.9038223040899066,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -38.99617802092508,
+    -457.5994413494394
+   ],
+   "scale": 0.8214642167222945,
+   "rot": -1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -36.539236174873345,
+    -455.5069798209003
+   ],
+   "scale": 1.0104141995068285,
+   "rot": 17,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -36.46805972088946,
+    -457.54155177927703
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -35.732768727869235,
+    -455.80892405384867
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -40.046296967061764,
+    -455.5816991762274
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    28.20348801532863,
+    -456.0291034845573
+   ],
+   "scale": 1.1071392001704123,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    29.21585397374869,
+    -456.49352230115795
+   ],
+   "scale": 0.7670730426590507,
+   "rot": 3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    26.67123835028211,
+    -457.10639744657567
+   ],
+   "scale": 0.8966047278574152,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    26.249828004064074,
+    -457.7054889582698
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    29.186144834669204,
+    -455.703909993052
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    26.575249327169935,
+    -454.76996023836824
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.16966969897813,
+    -400.9842690102928
+   ],
+   "scale": 1.0986172466912039,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -39.0291285633982,
+    -401.5577422805538
+   ],
+   "scale": 0.9408226768211474,
+   "rot": -8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.259548367955716,
+    -403.57280614689273
+   ],
+   "scale": 0.8013665246401133,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.86533453965255,
+    -402.07989201783613
+   ],
+   "scale": 0.835365338836243,
+   "rot": 3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -41.01134067101706,
+    -401.0790220005314
+   ],
+   "scale": 1.0615313624426752,
+   "rot": 0,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -38.46452461156988,
+    -401.50516854409346
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -39.24202390602975,
+    -402.40950092874203
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -38.68916684901333,
+    -401.9013424500796
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    13.827333005001824,
+    -437.83379207412804
+   ],
+   "scale": 0.796458213479206,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    13.428730796349457,
+    -437.38923989365975
+   ],
+   "scale": 0.8975273622202377,
+   "rot": -1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    15.556961254560932,
+    -438.4001496275185
+   ],
+   "scale": 0.8235130485087352,
+   "rot": -24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    15.46926366406171,
+    -436.8216548937863
+   ],
+   "scale": 1.0499532483922154,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    14.20401591269983,
+    -438.0847902852157
+   ],
+   "scale": 0.8459474222873711,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.598031288453935,
+    -436.3639382877647
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.745777525505439,
+    -436.33483044126183
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -5.329793273786235,
+    -435.74968990853773
+   ],
+   "scale": 1.0615333594650718,
+   "rot": -11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -7.242637939927343,
+    -438.22337016398643
+   ],
+   "scale": 0.8490036251365363,
+   "rot": -11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -6.264210566620015,
+    -438.55445605388553
+   ],
+   "scale": 0.8361548641054348,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -7.233710589329368,
+    -437.85175645431036
+   ],
+   "scale": 0.7721709593142689,
+   "rot": 7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -5.009452072025669,
+    -436.58334309172756
+   ],
+   "scale": 0.7320278839439318,
+   "rot": 13,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -4.152878207696816,
+    -437.900534194941
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.661798013669822,
+    -437.14670631202773
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.0,
+    -405.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -12.0,
+    -404.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.0,
+    -412.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -18.0,
+    -412.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.0,
+    -412.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    18.0,
+    -412.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -8.0,
+    -386.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.0,
+    -386.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.5539589954381197,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.6941858112437385,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.6606823006164144,
+    -433.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.360829029974198,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.476973022549794,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    8.342142044286888,
+    -433.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.62114507258559,
+    -421.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.529124619659754,
+    -420.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.57163286868191,
+    -419.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.479933449563223,
+    -421.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.302139660497964,
+    -420.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.457351326284495,
+    -419.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13.0,
+    -416.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -7.0,
+    -416.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    3.5,
+    -431.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    9.5,
+    -431.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.548344488427676,
+    -422.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.4454620620454355,
+    -421.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.534208914890454,
+    -420.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.540735047480211,
+    -419.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.085320289322315,
+    -421.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.081976565407613,
+    -420.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -14.98345304036649,
+    -419.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -15.051397415972488,
+    -418.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.979743231283614,
+    -421.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.025659190681353,
+    -420.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.00935837905523,
+    -419.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.908173065502538,
+    -418.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.00325509334749,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.98508575091401,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -25.926694866439554,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -25.063434456844263,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -24.069172936214787,
+    -434.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    12.081684746188497,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.06356038989193,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    13.94989971328585,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    14.937960133192652,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    16.04788487796333,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.088080979218976,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    17.939317959080597,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    19.090027170461727,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    20.076437950853283,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    21.020706842956688,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    21.98429144478947,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    22.92076793627299,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    23.907739294338757,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    25.092536302291123,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    25.947681438535195,
+    -435.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.959084107888325,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.048603720335938,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -7.935256430648529,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.980706738694013,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.041312930703053,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.064913320646828,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -3.9559293344956963,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -3.086244775166511,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.054320732534975,
+    -410.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.988126731435198,
+    -409.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.929520024931623,
+    -408.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.977139396855026,
+    -407.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.043956121485829,
+    -406.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.916527964301485,
+    -405.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.059204224126063,
+    -404.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.09668504138417,
+    -403.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.046161214394232,
+    -402.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.010858896003569,
+    -401.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.08790888481349,
+    -400.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.064749244925437,
+    -399.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -10.026242925925548,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.98556611541947,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.073684295874548,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -8.027570968660104,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -6.921811954006038,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -5.9039013157323526,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -4.9686135906980855,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -3.9617556817502693,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -2.983111946363964,
+    -398.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -9.0,
+    -404.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -4.0,
+    -408.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    4.0,
+    -400.0
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -28.071930562570877,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -27.092983892673868,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -26.096421160586488,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -24.917957509521436,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -23.959805996251397,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.9074457972742,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -22.09574816435818,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.9727630956846,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -20.003552855451,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -18.953900403810945,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -18.036219101940684,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.900128474723648,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -16.084947419981525,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -14.990780928182936,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/bush",
+   "pos": [
+    -13.952598901026748,
+    -408.5
+   ],
+   "scale": 1.1199999999999999,
+   "collide": "round",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.06990644258785,
+    -414.60377242695904
+   ],
+   "scale": 1.345409011949319,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    40.7778220449167,
+    -415.86083009583507
+   ],
+   "scale": 1.1200207314926878,
+   "rot": -15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    40.98508144536461,
+    -416.57381810425227
+   ],
+   "scale": 1.1783699698077805,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    41.186974269620784,
+    -414.74819970348904
+   ],
+   "scale": 1.3424110496129078,
+   "rot": -24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "sprite": "prop_dummy_geodude",
+   "model": "prop_dummy_geodude",
+   "pos": [
+    31.0,
+    -401.6
+   ],
+   "rot": 0,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "sprite": "prop_dummy_ekans",
+   "model": "prop_dummy_ekans",
+   "pos": [
+    34.5,
+    -401.6
+   ],
+   "rot": 0,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "sprite": "prop_dummy_zubat",
+   "model": "prop_dummy_zubat",
+   "pos": [
+    38.0,
+    -401.6
+   ],
+   "rot": 0,
+   "collide": "box",
+   "on_path": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_light",
+   "pos": [
+    28.7,
+    -399.6
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_light",
+   "pos": [
+    40.3,
+    -399.6
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/lamp",
+   "pos": [
+    28.8,
+    -410.3
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/lamp",
+   "pos": [
+    40.2,
+    -410.3
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_bench",
+   "pos": [
+    30.5,
+    -399.5
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_bench",
+   "pos": [
+    34.5,
+    -399.5
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_bench",
+   "pos": [
+    38.5,
+    -399.5
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/camp_board",
+   "pos": [
+    31.5,
+    -410.0
+   ],
+   "scale": 0.8,
+   "rot": 0,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.06944104687234,
+    -460.66011022026817
+   ],
+   "scale": 1.4335175959816078,
+   "rot": 11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.56592835140733,
+    -457.23179594369907
+   ],
+   "scale": 1.548597444425038,
+   "rot": -12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.91884303062842,
+    -458.9067686543288
+   ],
+   "scale": 1.20536569729757,
+   "rot": -2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -39.94286709175422,
+    -459.8285445881537
+   ],
+   "scale": 1.5575989978364868,
+   "rot": -13,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -38.914465311414304,
+    -459.8112845915974
+   ],
+   "scale": 0.9699986504375646,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -39.498062920341624,
+    -460.0576330090844
+   ],
+   "scale": 1.2116165491154196,
+   "rot": -19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -36.34070008126793,
+    -459.41482354072633
+   ],
+   "scale": 1.270857313491681,
+   "rot": -3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -38.37580348756478,
+    -458.0650679779904
+   ],
+   "scale": 1.065895917648621,
+   "rot": 3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -31.488969418441254,
+    -457.4945547404288
+   ],
+   "scale": 0.9990040870672173,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -30.884983936543875,
+    -458.91213536895305
+   ],
+   "scale": 1.429764829735225,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -31.919419858050738,
+    -457.01056304834214
+   ],
+   "scale": 1.2408961910712568,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -31.451539804564497,
+    -460.20378460599903
+   ],
+   "scale": 1.3696205360798794,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -3.444842574212283,
+    -457.3855018932336
+   ],
+   "scale": 1.145080661617736,
+   "rot": 16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -4.29897606315507,
+    -457.8441958855186
+   ],
+   "scale": 0.9782809229368926,
+   "rot": -3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -4.517501798983673,
+    -460.62707052334235
+   ],
+   "scale": 1.5919450514118516,
+   "rot": -9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    3.024704637467515,
+    -460.08121062966615
+   ],
+   "scale": 1.1101538999392855,
+   "rot": -3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    0.7381586411317227,
+    -458.4727053458081
+   ],
+   "scale": 1.0543025178507148,
+   "rot": -6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    1.0910424995343742,
+    -460.6291817126483
+   ],
+   "scale": 1.2313622136151259,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    1.1600371627986532,
+    -457.3849309511888
+   ],
+   "scale": 1.557584437029838,
+   "rot": 23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    7.199688395460976,
+    -458.776900339784
+   ],
+   "scale": 1.1228102577141261,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    7.475847047032286,
+    -458.32105074089725
+   ],
+   "scale": 1.251777822012493,
+   "rot": -23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    7.36862324878163,
+    -459.60963183063524
+   ],
+   "scale": 0.9815253314722467,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    12.036005870062485,
+    -458.12893801357205
+   ],
+   "scale": 1.042855790806073,
+   "rot": -14,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    13.641684215411004,
+    -459.73047475138515
+   ],
+   "scale": 1.1276797988701384,
+   "rot": -11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    14.743908891188175,
+    -457.1484425114781
+   ],
+   "scale": 1.0736703539752452,
+   "rot": 7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    20.80217174742238,
+    -458.5124216733088
+   ],
+   "scale": 1.0516955351336459,
+   "rot": -15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    20.781977593629016,
+    -458.76490574547375
+   ],
+   "scale": 1.4125318123609134,
+   "rot": -13,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    19.346178590275752,
+    -457.74319350770185
+   ],
+   "scale": 1.0120097513663067,
+   "rot": -8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    20.02517155670848,
+    -460.46124077019743
+   ],
+   "scale": 1.0444810030511857,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    21.929299790393436,
+    -460.1361188414519
+   ],
+   "scale": 1.2765775931833614,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    25.51848541741184,
+    -457.63302190317927
+   ],
+   "scale": 1.3295582503568928,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    26.527373778665957,
+    -459.13633982590557
+   ],
+   "scale": 1.232624474838724,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    27.03338617502891,
+    -457.7163832237835
+   ],
+   "scale": 1.3144653039460437,
+   "rot": -2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    27.283753619509085,
+    -457.66323998806394
+   ],
+   "scale": 1.537147793332496,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.980628335965356,
+    -458.10469294722486
+   ],
+   "scale": 1.1100586971879494,
+   "rot": 22,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.93885893796575,
+    -458.3688126880894
+   ],
+   "scale": 0.9773382834640197,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    31.326636235046713,
+    -459.50491109812276
+   ],
+   "scale": 1.486236572494888,
+   "rot": 2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.14365197425656,
+    -457.08136888692536
+   ],
+   "scale": 1.4192674194958688,
+   "rot": -9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    31.051734017111585,
+    -460.2958919798256
+   ],
+   "scale": 1.1851237090490185,
+   "rot": 13,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    37.1740814663174,
+    -460.8244268371487
+   ],
+   "scale": 1.5548579287781394,
+   "rot": -12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    38.921869859576546,
+    -457.3200937322223
+   ],
+   "scale": 1.0061826510476615,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    39.0301826294305,
+    -458.73454156811096
+   ],
+   "scale": 1.3578362912420872,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.32354234268855,
+    -458.39841451198106
+   ],
+   "scale": 1.1960973368750725,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.181443032730414,
+    -459.8802423037277
+   ],
+   "scale": 1.1081942928886865,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.53875842596037,
+    -459.83091008469074
+   ],
+   "scale": 1.0394203676123752,
+   "rot": 9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -40.824855873786824,
+    -455.10156853777085
+   ],
+   "scale": 1.413995367338449,
+   "rot": -14,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -39.098568442854585,
+    -454.89311909263796
+   ],
+   "scale": 1.5702246148007573,
+   "rot": -2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.929170571802864,
+    -453.21748989593414
+   ],
+   "scale": 1.4849780440344138,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.67264379693416,
+    -453.2354951539762
+   ],
+   "scale": 1.2242140916571085,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -39.56098566021988,
+    -453.83245676489975
+   ],
+   "scale": 1.2430222862776854,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -33.90323621848809,
+    -456.89363351932695
+   ],
+   "scale": 1.3425833045022055,
+   "rot": 23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -33.48812789481336,
+    -456.5589242897686
+   ],
+   "scale": 1.2244327013560832,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -33.42175826895246,
+    -454.4077148122368
+   ],
+   "scale": 1.179832055138748,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -36.16864678604274,
+    -454.9072299761088
+   ],
+   "scale": 1.5382506942042427,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -34.83262184073721,
+    -454.5609326857705
+   ],
+   "scale": 1.1815532341162687,
+   "rot": 16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -29.170451152199004,
+    -456.6016051544405
+   ],
+   "scale": 1.5136354490331112,
+   "rot": -11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -28.88897262955186,
+    -454.83591910648573
+   ],
+   "scale": 1.13130093790575,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -30.63207133598276,
+    -456.91139703150367
+   ],
+   "scale": 1.489886713804139,
+   "rot": -20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -3.0250444292339624,
+    -456.70713152427044
+   ],
+   "scale": 1.164658983310854,
+   "rot": -23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -4.596759159421785,
+    -455.79470942654274
+   ],
+   "scale": 1.2088954947763666,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -2.763920933356181,
+    -455.3986146830008
+   ],
+   "scale": 1.2297926236521977,
+   "rot": 3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -5.478240636312112,
+    -454.5947630326778
+   ],
+   "scale": 1.5780985987034641,
+   "rot": -4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -3.900427067504634,
+    -455.59157694884914
+   ],
+   "scale": 1.2736724014438376,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    2.696905673291311,
+    -453.57077533524784
+   ],
+   "scale": 1.2525160684390393,
+   "rot": 12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    1.0422056477356612,
+    -456.7635135759856
+   ],
+   "scale": 0.966649155208775,
+   "rot": -12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    1.2912928799268264,
+    -454.0807270649838
+   ],
+   "scale": 1.0371620522081926,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    6.985763991157812,
+    -454.28928077544407
+   ],
+   "scale": 1.175398850407662,
+   "rot": 17,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    6.024033732530954,
+    -456.9112314542714
+   ],
+   "scale": 1.5706236958844344,
+   "rot": 20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    7.308166321363899,
+    -453.26338157517824
+   ],
+   "scale": 1.3214945806799026,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    9.740759639882215,
+    -453.07347283580464
+   ],
+   "scale": 1.54425471277966,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    14.837374435042307,
+    -455.9800332988662
+   ],
+   "scale": 1.5797888012500216,
+   "rot": -8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    12.533247612410062,
+    -453.22552288932775
+   ],
+   "scale": 1.2584003929947485,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    14.994005400732366,
+    -453.70658966521046
+   ],
+   "scale": 1.5232134049637227,
+   "rot": -20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    21.432754206101237,
+    -455.2060086162307
+   ],
+   "scale": 1.4409598129940564,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    21.882093068926345,
+    -454.2201191126208
+   ],
+   "scale": 1.3256880223436491,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    18.646042543464905,
+    -455.31318728029737
+   ],
+   "scale": 1.0604162164823232,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    21.604477314645894,
+    -456.1019079304444
+   ],
+   "scale": 1.0018854800428254,
+   "rot": -3,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    18.230951862477305,
+    -455.6684242213837
+   ],
+   "scale": 1.1611391792920578,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    26.99335719949155,
+    -454.9464882195975
+   ],
+   "scale": 1.402998727727883,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    26.640951453407872,
+    -456.96208977115583
+   ],
+   "scale": 1.174017213410053,
+   "rot": -8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    27.969884621653087,
+    -454.1327663083077
+   ],
+   "scale": 1.4317747833764742,
+   "rot": 15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    25.507629987667674,
+    -454.66295284946483
+   ],
+   "scale": 1.2999599952979999,
+   "rot": -1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    33.03524299860599,
+    -455.84728329041695
+   ],
+   "scale": 1.3724691372936169,
+   "rot": -6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    32.36777990176534,
+    -456.03100390551566
+   ],
+   "scale": 1.169650897997979,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    31.703046198495013,
+    -456.6663108152894
+   ],
+   "scale": 1.0851278343096238,
+   "rot": 2,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    36.61779977853362,
+    -454.96505425748325
+   ],
+   "scale": 1.1481835449610818,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    38.734832707667046,
+    -456.4123248443621
+   ],
+   "scale": 1.5464948192900612,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    39.160386919476004,
+    -454.23864876773155
+   ],
+   "scale": 1.055862290601688,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    39.85978588055815,
+    -456.43170228297475
+   ],
+   "scale": 1.5789661696087771,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    46.351540778932986,
+    -454.62781819778235
+   ],
+   "scale": 1.3918391981015539,
+   "rot": -7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    42.86154933101543,
+    -454.6449289128215
+   ],
+   "scale": 1.3209280074959644,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.39944245635611,
+    -453.4212444783959
+   ],
+   "scale": 1.5893634159968333,
+   "rot": -5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.2131189278181,
+    -453.6217040036413
+   ],
+   "scale": 1.0987649349205855,
+   "rot": 15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.010926910230765,
+    -456.3468523158724
+   ],
+   "scale": 1.0660223575757566,
+   "rot": -6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.57227020612517,
+    -450.94900388690206
+   ],
+   "scale": 1.5419472295971497,
+   "rot": 9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.94175017449746,
+    -447.5861788693873
+   ],
+   "scale": 1.177057802798993,
+   "rot": -4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.06520246372551,
+    -450.35055381647396
+   ],
+   "scale": 1.0937357025043581,
+   "rot": -20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.17332362326942,
+    -441.0490906953914
+   ],
+   "scale": 1.078296068101636,
+   "rot": 9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.84907457241609,
+    -444.16593875378805
+   ],
+   "scale": 1.4959322895986888,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.338644721088194,
+    -442.0736566981926
+   ],
+   "scale": 1.0660792948114302,
+   "rot": 11,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.458433660608925,
+    -405.44177322654957
+   ],
+   "scale": 1.3723387779739566,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.512848628201525,
+    -403.6909580933237
+   ],
+   "scale": 1.2854713743269697,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.34118107139386,
+    -398.0673255287065
+   ],
+   "scale": 1.5850791897245324,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    43.71198750420575,
+    -399.27964344278473
+   ],
+   "scale": 1.4934565287347077,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    46.0961607089639,
+    -400.7492611394227
+   ],
+   "scale": 0.9853946825357336,
+   "rot": 7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.791884153452116,
+    -393.13670325479853
+   ],
+   "scale": 1.156040003986775,
+   "rot": 18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    44.952326293633924,
+    -394.8942147763295
+   ],
+   "scale": 1.381770093064947,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.85056171248562,
+    -392.0581582230135
+   ],
+   "scale": 1.501507794026143,
+   "rot": 21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    45.174807644997806,
+    -394.4082776177458
+   ],
+   "scale": 1.0925719468041415,
+   "rot": -14,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    46.07555082615032,
+    -394.8551187794275
+   ],
+   "scale": 1.0788740350443742,
+   "rot": -20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.92874933326401,
+    -453.43357512810655
+   ],
+   "scale": 1.1976810939917,
+   "rot": -23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.12585680004667,
+    -456.68817472871586
+   ],
+   "scale": 1.3059307856906415,
+   "rot": -24,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.7790655602864,
+    -455.9374176973567
+   ],
+   "scale": 1.5420912420637682,
+   "rot": -7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.76984122271166,
+    -450.19976126346114
+   ],
+   "scale": 1.3080655364990714,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.64796543440321,
+    -447.00757740871217
+   ],
+   "scale": 1.162551890180848,
+   "rot": -7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.926830078616455,
+    -449.26594523980265
+   ],
+   "scale": 1.076828785771768,
+   "rot": 19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.67467751971501,
+    -449.2709090328838
+   ],
+   "scale": 1.1718631492678395,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.95373576732891,
+    -441.8182405749834
+   ],
+   "scale": 1.1345852641787009,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.746697755070215,
+    -442.7758754429475
+   ],
+   "scale": 1.4347894309874147,
+   "rot": -4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.43583595724384,
+    -443.1547348458891
+   ],
+   "scale": 1.4368189299833647,
+   "rot": 5,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.34381951809066,
+    -436.3397993584911
+   ],
+   "scale": 1.2588501537064598,
+   "rot": -19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.513756408290234,
+    -437.29354582802
+   ],
+   "scale": 1.2925885576924125,
+   "rot": -8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.20794777198793,
+    -436.4019189921263
+   ],
+   "scale": 1.0148046251059162,
+   "rot": 15,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.053201330462734,
+    -436.9976348649423
+   ],
+   "scale": 1.3515569177549072,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.41369555191445,
+    -437.38404499030275
+   ],
+   "scale": 1.106396007266818,
+   "rot": -25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.703330405886234,
+    -429.8854232160148
+   ],
+   "scale": 1.078673655561994,
+   "rot": 14,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.14882226173751,
+    -429.53724533289136
+   ],
+   "scale": 1.1422474236036884,
+   "rot": 17,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.53133275875489,
+    -429.0897989422542
+   ],
+   "scale": 1.0547308471116594,
+   "rot": -6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.9480273693617,
+    -425.724471785417
+   ],
+   "scale": 1.2840162118393552,
+   "rot": -21,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.07931964432285,
+    -424.0499379851788
+   ],
+   "scale": 1.3670161518580661,
+   "rot": 4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.73379446726612,
+    -425.53549011712045
+   ],
+   "scale": 0.9636088337737342,
+   "rot": 22,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.72518556147137,
+    -417.2662256252276
+   ],
+   "scale": 1.2543179262088249,
+   "rot": -19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.227508543655034,
+    -419.48813922192323
+   ],
+   "scale": 1.125241921240082,
+   "rot": -17,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.23347076349026,
+    -418.29851931530783
+   ],
+   "scale": 1.238124744135428,
+   "rot": 18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.89157318838255,
+    -419.0377756683968
+   ],
+   "scale": 1.5218836448160644,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.91093924539955,
+    -413.4364049449175
+   ],
+   "scale": 1.4591794805680538,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.83841149593388,
+    -411.90475888885277
+   ],
+   "scale": 1.1742360493467963,
+   "rot": -19,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.398726363458074,
+    -413.426788349318
+   ],
+   "scale": 1.0960690635787402,
+   "rot": 8,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.54679215262305,
+    -414.0613226512905
+   ],
+   "scale": 1.2870106220970836,
+   "rot": 10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.58411403145972,
+    -405.49927630158993
+   ],
+   "scale": 1.560649120461641,
+   "rot": 20,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.27301652974985,
+    -407.94301279504907
+   ],
+   "scale": 1.0367673823435821,
+   "rot": -10,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.10566608765276,
+    -406.1682370767601
+   ],
+   "scale": 1.5626506621848673,
+   "rot": 23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.1059981442152,
+    -407.5603727841519
+   ],
+   "scale": 1.0570558577205351,
+   "rot": -23,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.41118102350789,
+    -408.1805073942221
+   ],
+   "scale": 1.5640860622133204,
+   "rot": -18,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.970626139199,
+    -399.27604799401695
+   ],
+   "scale": 1.0177746456961898,
+   "rot": -4,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.243852445093424,
+    -401.9910062055553
+   ],
+   "scale": 1.1289898521598791,
+   "rot": 9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -42.780753912466366,
+    -399.437716834205
+   ],
+   "scale": 1.4134009543531467,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -46.40158186869199,
+    -395.06490166626884
+   ],
+   "scale": 1.3966259812349886,
+   "rot": -7,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.7453353311209,
+    -393.11181375568316
+   ],
+   "scale": 1.4465317698139784,
+   "rot": 25,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.09933247286136,
+    -393.19760835220814
+   ],
+   "scale": 1.116789223869053,
+   "rot": -9,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.114517534568826,
+    -388.812385785847
+   ],
+   "scale": 1.2091419221984139,
+   "rot": -16,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -44.293471779391425,
+    -390.6435786168748
+   ],
+   "scale": 0.9746299562294723,
+   "rot": 12,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.90541850426446,
+    -387.4208398335285
+   ],
+   "scale": 1.236335762529624,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -45.98969764106948,
+    -388.5976730770369
+   ],
+   "scale": 1.3851595983514178,
+   "rot": 6,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/common/boulder",
+   "pos": [
+    -43.94134617472277,
+    -387.99280039660914
+   ],
+   "scale": 1.143124081324017,
+   "rot": 1,
+   "collide": "box",
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -3.5,
+    -440.0
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    3.5,
+    -440.0
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -3.5,
+    -426.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    3.5,
+    -426.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -3.5,
+    -412.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    3.5,
+    -412.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -15.5,
+    -440.0
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    8.0,
+    -445.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -12.5,
+    -426.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    11.0,
+    -431.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -4.5,
+    -418.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  },
+  {
+   "model": "hgss/pewter_city/lamp",
+   "pos": [
+    -22.0,
+    -418.5
+   ],
+   "scale": 0.8,
+   "collide": "trunk",
+   "light": true,
+   "y": 0.0
+  }
+ ],
+ "fences": [
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    6.0,
+    -408.0
+   ],
+   "to": [
+    13.0,
+    -408.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    15.0,
+    -408.0
+   ],
+   "to": [
+    26.0,
+    -408.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    6.0,
+    -408.0
+   ],
+   "to": [
+    6.0,
+    -394.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    26.0,
+    -408.0
+   ],
+   "to": [
+    26.0,
+    -394.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    6.0,
+    -394.0
+   ],
+   "to": [
+    26.0,
+    -394.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    28.0,
+    -410.0
+   ],
+   "to": [
+    28.0,
+    -400.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    41.0,
+    -410.0
+   ],
+   "to": [
+    41.0,
+    -400.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    28.0,
+    -400.0
+   ],
+   "to": [
+    41.0,
+    -400.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    28.0,
+    -410.0
+   ],
+   "to": [
+    33.3,
+    -410.0
+   ]
+  },
+  {
+   "model": "hgss/common/fence",
+   "scale": 0.8,
+   "from": [
+    35.7,
+    -410.0
+   ],
+   "to": [
+    41.0,
+    -410.0
+   ]
+  }
+ ],
+ "flower_beds": [
+  {
+   "center": [
+    -30.0,
+    -445.0
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -37.0,
+    -443.0
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    9.5,
+    -404.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    11.0,
+    -401.5
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    22.5,
+    -404.5
+   ],
+   "radius": 1.6,
+   "tile": true
+  },
+  {
+   "center": [
+    10.5,
+    -397.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    22.0,
+    -397.0
+   ],
+   "radius": 1.3,
+   "tile": true
+  },
+  {
+   "center": [
+    -5.0,
+    -420.0
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    -14.0,
+    -420.0
+   ],
+   "radius": 1.0,
+   "tile": true
+  },
+  {
+   "center": [
+    -25.0,
+    -420.0
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -22.0,
+    -438.0
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -12.0,
+    -438.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    20.0,
+    -438.0
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    26.0,
+    -437.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -24.0,
+    -424.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -14.0,
+    -424.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -4.0,
+    -424.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    6.0,
+    -424.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    14.0,
+    -424.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    22.0,
+    -424.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -24.0,
+    -411.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -18.0,
+    -411.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -6.0,
+    -411.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    3.0,
+    -411.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -26.0,
+    -436.0
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    16.0,
+    -432.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    24.0,
+    -432.5
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -7.0,
+    -406.0
+   ],
+   "radius": 1.4,
+   "tile": true
+  },
+  {
+   "center": [
+    -5.0,
+    -402.0
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    4.0,
+    -406.0
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -24.0,
+    -404.5
+   ],
+   "radius": 1.2,
+   "tile": true
+  },
+  {
+   "center": [
+    -20.0,
+    -403.0
+   ],
+   "radius": 1.0,
+   "tile": true
+  }
+ ],
+ "ledges": [],
+ "walls": [
+  [
+   46.5,
+   -463,
+   1.5,
+   32
+  ],
+  [
+   46.5,
+   -427,
+   1.5,
+   44
+  ],
+  [
+   -48,
+   -383.5,
+   45,
+   1.5
+  ],
+  [
+   3,
+   -383.5,
+   45,
+   1.5
+  ],
+  [
+   -48,
+   -463,
+   96,
+   1.5
+  ],
+  [
+   -48,
+   -463,
+   1.5,
+   80
+  ]
+ ],
+ "tall_grass": [],
+ "plateaus": [],
+ "spawn_zones": [
+  {
+   "name": "PewterParkMuseum",
+   "pos": [
+    -34.0,
+    -446.0
+   ],
+   "radius": 4.0,
+   "max": 4,
+   "table": "pewter_grove",
+   "y": 0.0
+  },
+  {
+   "name": "PewterGroveWest",
+   "pos": [
+    -42.0,
+    -458.0
+   ],
+   "radius": 2.5,
+   "max": 3,
+   "table": "pewter_grove",
+   "y": 0.0
+  },
+  {
+   "name": "PewterGroveNorthEast",
+   "pos": [
+    34.0,
+    -446.0
+   ],
+   "radius": 4.0,
+   "max": 4,
+   "table": "pewter_grove",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnEast",
+   "pos": [
+    38.0,
+    -433.0
+   ],
+   "radius": 3.0,
+   "max": 3,
+   "table": "pewter_city",
+   "y": 0.0
+  },
+  {
+   "name": "PewterGroveGarden",
+   "pos": [
+    16.0,
+    -401.0
+   ],
+   "radius": 3.5,
+   "max": 4,
+   "table": "pewter_grove",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnSouthWest",
+   "pos": [
+    -38.0,
+    -406.0
+   ],
+   "radius": 3.5,
+   "max": 5,
+   "table": "pewter_city",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnEntranceWest",
+   "pos": [
+    -20.0,
+    -389.0
+   ],
+   "radius": 3.5,
+   "max": 5,
+   "table": "pewter_city",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnEntranceEast",
+   "pos": [
+    16.0,
+    -389.0
+   ],
+   "radius": 3.5,
+   "max": 4,
+   "table": "pewter_city",
+   "y": 0.0
+  },
+  {
+   "name": "PewterQuarry",
+   "pos": [
+    -30.0,
+    -421.0
+   ],
+   "radius": 2.5,
+   "max": 3,
+   "table": "pewter_grove",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnNorthEast",
+   "pos": [
+    40.0,
+    -452.0
+   ],
+   "radius": 3.0,
+   "max": 3,
+   "table": "pewter_city",
+   "y": 0.0
+  },
+  {
+   "name": "PewterLawnSouthEast",
+   "pos": [
+    34.0,
+    -396.0
+   ],
+   "radius": 2.5,
+   "max": 2,
+   "table": "pewter_city",
+   "y": 0.0
+  }
+ ],
+ "npcs": [
+  {
+   "name": "Camp Coordinator",
+   "node": "NPC_CampCoordinator",
+   "pos": [
+    31.9,
+    -409.0
+   ],
+   "sprite": "npc_hiker.png",
+   "facing": 3,
+   "attendant": {
+    "options": [
+     "Geodude|9|prop_dummy_geodude",
+     "Ekans|9|prop_dummy_ekans",
+     "Zubat|9|prop_dummy_zubat"
+    ],
+    "center": [
+     34.5,
+     0.0,
+     -405.0
+    ],
+    "size": [
+     10.0,
+     6.0
+    ]
+   },
+   "lines": [
+    "Welcome to the Pewter training camp! Hit a board and it gives your Pokémon real EV training — the effort points behind its stats.",
+    "Pick a board by what it trains: GEODUDE gives DEFENSE, EKANS ATTACK, ZUBAT SPEED.",
+    "The board matches your Pokémon's level and refills every time you knock it down — keep hitting it as long as you like.",
+    "When you've had enough, open the pause menu and RUN."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Camper Ray",
+   "node": "NPC_CampTraineeRun",
+   "pos": [
+    29.0,
+    -400.9
+   ],
+   "sprite": "npc_camper.png",
+   "facing": 3,
+   "lines": [
+    "Caught in a wild fight you don't want? Open the pause menu with Esc and pick RUN.",
+    "TRAINER battles refuse — you have to win or lose those.",
+    "The practice boards count as wild, so RUN is how you end a session."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Lass June",
+   "node": "NPC_CampTraineeJump",
+   "pos": [
+    33.0,
+    -400.8
+   ],
+   "sprite": "npc_lass.png",
+   "facing": 3,
+   "lines": [
+    "See the disc on the ground? That's a ground move telegraphing where it will hit.",
+    "Jump while it shows and moves like EARTHQUAKE and MAGNITUDE miss you clean.",
+    "Watch for the disc, then jump — timing beats raw power."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Super Nerd Gil",
+   "node": "NPC_CampTraineeStatus",
+   "pos": [
+    35.8,
+    -400.8
+   ],
+   "sprite": "npc_super_nerd.png",
+   "facing": 3,
+   "lines": [
+    "A burn halves your Attack and ticks off HP every beat.",
+    "Paralysis and sleep stop you acting at all — a bad status can lose a fight on its own.",
+    "Status lingers after the battle ends. A POKéMON CENTER heals it."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Youngster Ned",
+   "node": "NPC_CampTraineeStats",
+   "pos": [
+    40.0,
+    -400.9
+   ],
+   "sprite": "npc_youngster.png",
+   "facing": 3,
+   "lines": [
+    "Moves like GROWL lower one of the foe's stats for the rest of the fight.",
+    "They stack, so two GROWLs cut Attack twice as hard.",
+    "The drops wear off when the battle ends — hit hard while they last."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Youngster",
+   "node": "NPC_Youngster",
+   "pos": [
+    41.0,
+    -429.0
+   ],
+   "sprite": "npc_youngster.png",
+   "facing": 2,
+   "lines": [
+    "You can't go east to Route 3 without the Boulder Badge.",
+    "Beat Leader Brock at the Pewter Gym and come back!"
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Gym Guide",
+   "node": "NPC_GymGuide",
+   "pos": [
+    -24.0,
+    -428.0
+   ],
+   "sprite": "npc_kid.png",
+   "lines": [
+    "There aren't many serious POKéMON\nTRAINERS here.",
+    "They're all like BUG CATCHERS,\nyou know, just hobbyists.",
+    "But PEWTER GYM's BROCK isn't like\nthat, not one bit."
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "Museum Goer",
+   "node": "NPC_MuseumGoer",
+   "pos": [
+    -24.0,
+    -443.0
+   ],
+   "sprite": "npc_scientist.png",
+   "lines": [
+    "This is it, the MUSEUM.",
+    "You have to pay to get in, but it's\nworth it. See you around!"
+   ],
+   "y": 0.0
+  }
+ ],
+ "signs": [
+  {
+   "name": "PewterSign",
+   "pos": [
+    4.5,
+    -387.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "PEWTER CITY",
+    "A Stone Gray City"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "GymSign",
+   "pos": [
+    -11.0,
+    -432.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "PEWTER CITY POKéMON GYM\nLEADER: BROCK\nThe Rock-Solid POKéMON TRAINER!"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "MartSign",
+   "pos": [
+    11.0,
+    -431.6
+   ],
+   "title": "Sign",
+   "lines": [
+    "PEWTER CITY POKé MART"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "CenterSign",
+   "pos": [
+    -5.5,
+    -418.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "POKéMON CENTER"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "MuseumSign",
+   "pos": [
+    -6.5,
+    -447.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "PEWTER MUSEUM OF SCIENCE"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "FossilNotice",
+   "pos": [
+    4.0,
+    -438.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "NOTICE!",
+    "Thieves have been stealing POKéMON\nfossils from MT. MOON.",
+    "Please call the PEWTER POLICE if\nyou have any information."
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "TipsSign",
+   "pos": [
+    -4.6,
+    -421.0
+   ],
+   "title": "Trainer Tips",
+   "lines": [
+    "TRAINER TIPS",
+    "All POKéMON that appear in battle, however briefly, earn EXP Points."
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "RestGreen",
+   "pos": [
+    -16.0,
+    -402.0
+   ],
+   "title": "Sign",
+   "lines": [
+    "PEWTER CITY",
+    "A quiet green. Trainers rest here before the road to MT. MOON."
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  },
+  {
+   "name": "Route3Sign",
+   "pos": [
+    44.5,
+    -431.5
+   ],
+   "title": "Sign",
+   "lines": [
+    "ROUTE 3",
+    "PEWTER CITY - MT. MOON"
+   ],
+   "model": "hgss/common/sign_a",
+   "model_scale": 0.8,
+   "y": 0.0
+  }
+ ],
+ "arrivals": [
+  {
+   "name": "pw_camp",
+   "pos": [
+    34.5,
+    -408.0
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_south",
+   "pos": [
+    0.0,
+    -386.0
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_lamps",
+   "pos": [
+    0.0,
+    -433.0
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_center_front",
+   "pos": [
+    -10.0,
+    -415.0
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_gym_front",
+   "pos": [
+    -18.15,
+    -429.5
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_museum",
+   "pos": [
+    -15.53,
+    -443.0
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_mart",
+   "pos": [
+    5.9,
+    -429.5
+   ],
+   "y": 0.0
+  },
+  {
+   "name": "pw_east",
+   "pos": [
+    38.0,
+    -429.0
+   ],
+   "y": 0.0
+  }
+ ],
+ "items": [
+  {
+   "uid": "pw_hidden_poke_ball",
+   "item": "poke_ball",
+   "count": 1,
+   "pos": [
+    -33.0,
+    -442.5
+   ],
+   "hidden": true,
+   "y": 0.0
+  }
+ ],
+ "triggers": [
+  {
+   "node": "PewterEastBlock",
+   "event": "pewter_east_block",
+   "pos": [
+    43.0,
+    -429.0
+   ],
+   "size": [
+    5,
+    3,
+    2.0
+   ],
+   "requires": [],
+   "blocks": [
+    "boulder_badge"
+   ],
+   "y": 0.0
+  }
+ ],
+ "cut_trees": [],
+ "trainers": [],
+ "flag_walls": [],
+ "statics": [],
+ "sun_shafts": [],
+ "look": {
+  "env": "res://resources/look/pewter_env.tres",
+  "sun_energy": 1.6,
+  "path_tint": "#7a7e83",
+  "path_mix": 1.0,
+  "rock_palette": {
+   "dirt": "#8f9294",
+   "grass": "#767d78"
+  },
+  "tree_palette": {
+   "leafsGreen": "#4a5f42",
+   "leafsDark": "#34452f",
+   "grass": "#3f5a3a",
+   "woodBark": "#4a4640",
+   "woodBarkDark": "#39362f"
+  },
+  "ground": {
+   "tint_a": "#dbe2c9",
+   "tint_b": "#9dae8b",
+   "tint_c": "#e8ecd8",
+   "desaturate": 0.2
+  }
+ },
+ "scatter": [
+  {
+   "name": "Grass",
+   "models": [
+    "nature/grass",
+    "nature/grass",
+    "nature/grass_large"
+   ],
+   "areas": [
+    [
+     -46,
+     -461,
+     92,
+     50.5
+    ],
+    [
+     -46,
+     -399.5,
+     92,
+     14.5
+    ],
+    [
+     -46,
+     -410.5,
+     73.5,
+     11.0
+    ],
+    [
+     41.5,
+     -410.5,
+     4.5,
+     11.0
+    ]
+   ],
+   "density": 3.0,
+   "scale": [
+    0.8,
+    1.4
+   ],
+   "palette": {
+    "grass": "#849b60"
+   }
+  }
+ ]
+}

@@ -1,0 +1,293 @@
+{
+ "start": {
+  "zone": "pallet_town",
+  "spawn": "start"
+ },
+ "zones": [
+  {
+   "id": "pallet_town",
+   "name": "PALLET TOWN",
+   "rect": [
+    -22,
+    -19.5,
+    44,
+    40
+   ],
+   "neighbors": [
+    "route_1"
+   ],
+   "scene": "res://scenes/world/zones/pallet_town.tscn",
+   "spawns": [
+    "start",
+    "player_house_door",
+    "rival_house_door",
+    "lab_door"
+   ],
+   "look": {}
+  },
+  {
+   "id": "route_1",
+   "name": "ROUTE 1",
+   "rect": [
+    -33,
+    -105,
+    66,
+    85.5
+   ],
+   "neighbors": [
+    "pallet_town",
+    "viridian_city"
+   ],
+   "scene": "res://scenes/world/zones/route_1.tscn",
+   "spawns": [
+    "r1_south",
+    "r1_hill_foot",
+    "r1_band1",
+    "r1_road",
+    "r1_hill",
+    "r1_hilltop"
+   ],
+   "look": {}
+  },
+  {
+   "id": "pewter_city",
+   "name": "PEWTER CITY",
+   "rect": [
+    -48,
+    -463,
+    96,
+    80
+   ],
+   "neighbors": [
+    "route_2_north",
+    "route_3"
+   ],
+   "scene": "res://scenes/world/zones/pewter_city.tscn",
+   "spawns": [
+    "pw_camp",
+    "pw_south",
+    "pw_lamps",
+    "pw_center_front",
+    "pw_gym_front",
+    "pw_museum",
+    "pw_mart",
+    "pw_east",
+    "pw_museum_door",
+    "pw_house2_door",
+    "pw_gym_door",
+    "pw_mart_door",
+    "pw_center_door",
+    "pw_house1_door"
+   ],
+   "look": {
+    "env": "res://resources/look/pewter_env.tres",
+    "sun_energy": 1.6,
+    "path_tint": "#7a7e83",
+    "path_mix": 1.0,
+    "rock_palette": {
+     "dirt": "#8f9294",
+     "grass": "#767d78"
+    },
+    "tree_palette": {
+     "leafsGreen": "#4a5f42",
+     "leafsDark": "#34452f",
+     "grass": "#3f5a3a",
+     "woodBark": "#4a4640",
+     "woodBarkDark": "#39362f"
+    },
+    "ground": {
+     "tint_a": "#dbe2c9",
+     "tint_b": "#9dae8b",
+     "tint_c": "#e8ecd8",
+     "desaturate": 0.2
+    }
+   }
+  },
+  {
+   "id": "route_2",
+   "name": "ROUTE 2",
+   "rect": [
+    -30.0,
+    -253.0,
+    60,
+    58
+   ],
+   "neighbors": [
+    "viridian_city",
+    "viridian_forest"
+   ],
+   "scene": "res://scenes/world/zones/route_2.tscn",
+   "spawns": [
+    "r2_south",
+    "r2_square",
+    "r2_forest",
+    "r2_cave",
+    "r2_forest_gate_door",
+    "r2_forest_gate_back"
+   ],
+   "look": {}
+  },
+  {
+   "id": "route_22",
+   "name": "ROUTE 22",
+   "rect": [
+    -136,
+    -152,
+    92,
+    34
+   ],
+   "neighbors": [
+    "viridian_city"
+   ],
+   "scene": "res://scenes/world/zones/route_22.tscn",
+   "spawns": [
+    "r22_east",
+    "r22_south_loop",
+    "r22_grove",
+    "r22_grass",
+    "r22_hill",
+    "r22_lake",
+    "r22_ledge",
+    "r22_return",
+    "r22_rest",
+    "r22_clearing",
+    "r22_gate"
+   ],
+   "look": {}
+  },
+  {
+   "id": "route_2_north",
+   "name": "ROUTE 2",
+   "rect": [
+    -30,
+    -383,
+    60,
+    30
+   ],
+   "neighbors": [
+    "viridian_forest",
+    "pewter_city"
+   ],
+   "scene": "res://scenes/world/zones/route_2_north.tscn",
+   "spawns": [
+    "r2n_south",
+    "r2n_road",
+    "r2n_gate_door",
+    "r2n_gate_back"
+   ],
+   "look": {}
+  },
+  {
+   "id": "route_3",
+   "name": "ROUTE 3",
+   "rect": [
+    48,
+    -447,
+    216,
+    40
+   ],
+   "neighbors": [
+    "pewter_city"
+   ],
+   "scene": "res://scenes/world/zones/route_3.tscn",
+   "spawns": [
+    "r3_south",
+    "r3_fork",
+    "r3_upper",
+    "r3_east",
+    "r3_gate",
+    "r4_corridor",
+    "r4_center",
+    "r4_valley",
+    "r4_east",
+    "r4_center_door",
+    "r4_west_mouth"
+   ],
+   "look": {
+    "camera_yaw": -90.0,
+    "camera_pitch": -22.0,
+    "camera_distance": 11.0,
+    "camera_pitch_near": 0.0,
+    "camera_pitch_range": [
+     198.0,
+     -447.0,
+     52.0,
+     40.0
+    ],
+    "camera_far": 480.0,
+    "fog_density": 0.0004
+   }
+  },
+  {
+   "id": "viridian_city",
+   "name": "VIRIDIAN CITY",
+   "rect": [
+    -44,
+    -195,
+    88,
+    90
+   ],
+   "neighbors": [
+    "route_1",
+    "route_2",
+    "route_22"
+   ],
+   "scene": "res://scenes/world/zones/viridian_city.tscn",
+   "spawns": [
+    "vc_camp",
+    "vc_south",
+    "vc_gate",
+    "vc_center",
+    "vc_north",
+    "vc_west",
+    "vc_gym",
+    "vc_school",
+    "vc_pond",
+    "vc_center_door",
+    "vc_school_door",
+    "vc_mart_door",
+    "vc_house_door"
+   ],
+   "look": {}
+  },
+  {
+   "id": "viridian_forest",
+   "name": "VIRIDIAN FOREST",
+   "rect": [
+    -60,
+    -353,
+    90,
+    100
+   ],
+   "neighbors": [
+    "route_2",
+    "route_2_north"
+   ],
+   "scene": "res://scenes/world/zones/viridian_forest.tscn",
+   "spawns": [
+    "vf_south",
+    "vf_north",
+    "vf_mid"
+   ],
+   "look": {
+    "env": "res://resources/look/forest_env.tres",
+    "sun_energy": 0.9,
+    "ground": {
+     "tint_a": "#8aa76c",
+     "tint_b": "#557a49",
+     "tint_c": "#9db078"
+    },
+    "camera_distance": 10.0,
+    "arena_size": 8.0,
+    "canopy": {
+     "models": [
+      "hgss/viridian_forest/tree",
+      "hgss/viridian_forest/tree_double"
+     ],
+     "step": 1.6,
+     "scale": 0.8
+    }
+   }
+  }
+ ]
+}

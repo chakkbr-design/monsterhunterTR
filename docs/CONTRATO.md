@@ -76,3 +76,25 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - A arena grava em cada `Mon` o HP, o pool de PP e o status persistente.
 - Pendentes: tela de esquecer golpe (eventos `learned: false`), itens durante a batalha, batalha 2x1 com aliado.
 - Cena principal: `res://world/overworld.tscn`.
+
+## Rodada 2 (pendentes) — donos de pasta
+
+| Pasta | Dono |
+|---|---|
+| `res://core/`, `res://data/`, `project.godot`, `docs/CONTRATO.md` | Núcleo (integrador) |
+| `res://ui/`, `res://tests/ui/` | UI (tela de esquecer golpe, menu de bolsa/party fora da batalha) |
+| `res://battle/`, `res://tests/battle/` | Arena (itens na batalha, 2x1 com aliado) |
+| `res://world/`, `res://tests/world/` | Mapa (rota real construída a partir de `data/maps/*.json`) |
+
+### Fila de golpes (núcleo, já pronto)
+
+- `Game.pending_learns: Array` de `{mon: Mon, move: String}` e `signal Game.learn_requested`.
+- O `Game` enche a fila sozinho: golpes `learned:false` do `result.exp`, golpes que a evolução não coube, TM com 4 golpes e Rare Candy.
+- `Game.queue_learn(mon, move)` (aprende direto se houver espaço), `Game.resolve_learn(slot)`: 0..3 troca aquele golpe, -1 desiste.
+- A UI fica em `res://ui/learn_move_ui.gd` (um `CanvasLayer`), que o Núcleo registra como autoload `LearnMove`.
+  Ela escuta `Game.learn_requested` e resolve a fila inteira. Enquanto aberta, `LearnMove.is_open()` é verdadeiro e o jogador do overworld não anda.
+
+### Mapas
+
+- `data/maps/*.json` (geometria das rotas do original) e `data/world.json` (zonas). Esquema documentado em
+  `pba-referencia/analise/03-arquitetura-mundo.md`.
