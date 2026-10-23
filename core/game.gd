@@ -268,7 +268,9 @@ func _finish(result: Dictionary) -> void:
 		money += result.prize
 		flags["trainer_" + id] = true
 	elif outcome == "lose":
-		money /= 2
+		# Batalha de roteiro (opts.scripted): perder não custa dinheiro.
+		if not _opts.get("scripted", false):
+			money /= 2
 		heal_party()
 	result.evolved = _evolve_pending()
 	for x in result.get("exp", []):

@@ -118,6 +118,7 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - `Game.spawn_request: Dictionary` = `{zone, spawn}` ou `{interior, spawn}`: onde a RouteWorld deve pôr o jogador ao abrir. Ela consome e limpa.
 - Prioridade ao abrir a RouteWorld: `spawn_request` > `last_save` > início do `world.json`.
 - `data/interiors/pallet.json` e `viridian.json`: manifestos das salas do original (rect, spawns, next).
+- `opts.scripted: true` na batalha: perder não custa dinheiro (o time é curado). O mundo decide se manda para o ponto de cura.
 - Treinadores com item: brock e misty (`super_potion`), rival (`potion`).
 
 ### API dos Interiores (dono: Interiores; História e Início dependem dela)
