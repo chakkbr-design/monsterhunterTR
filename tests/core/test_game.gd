@@ -41,6 +41,13 @@ func _initialize() -> void:
 	game.use_item("rare_candy", y)
 	fails += int(y.level != 25 or game.pending_learns.size() != (0 if y.moves.has("sweet_scent") else 1))
 	game.resolve_learn(-1)
+	game.new_game("ASH", "GARY")
+	var st: Mon = game.choose_starter("charmander")
+	fails += int(game.party.size() != 1 or st.level != 5 or game.flags.rival_starter != "Squirtle" or game.fill_names("{PLAYER} x {RIVAL}") != "ASH x GARY")
+	game.save_game()
+	game.player_name = ""
+	game.load_game()
+	fails += int(game.player_name != "ASH")
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)

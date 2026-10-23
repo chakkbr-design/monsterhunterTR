@@ -15,6 +15,16 @@ var pc: Array = []
 var bag: Dictionary = {"poke_ball": 10, "potion": 3}
 var money := START_MONEY
 var flags: Dictionary = {}
+var player_name := "RED"
+var rival_name := "BLUE"
+## "male" ou "female".
+var player_gender := "male"
+
+## Iniciais oferecidos no laboratório, na ordem da mesa.
+const STARTERS := ["Bulbasaur", "Charmander", "Squirtle"]
+## O rival pega o inicial com vantagem sobre o seu.
+const RIVAL_PICK := {"Bulbasaur": "Charmander", "Charmander": "Squirtle", "Squirtle": "Bulbasaur"}
+const STARTER_LEVEL := 5
 ## Pokédex: espécie -> true.
 var seen: Dictionary = {}
 var caught: Dictionary = {}
@@ -29,6 +39,8 @@ var pending_learns: Array = []
 
 ## Último save carregado (posição etc.). Vazio num jogo novo.
 var last_save: Dictionary = {}
+## Onde o próximo mapa deve pôr o jogador: {zone, spawn} ou {interior, spawn}. A RouteWorld consome e limpa.
+var spawn_request: Dictionary = {}
 
 var _arena: Node = null
 
@@ -63,6 +75,40 @@ func add_mon(m: Mon) -> void:
 		party.append(m)
 	else:
 		pc.append(m)
+
+
+## Novo jogo: zera tudo e guarda os nomes.
+func new_game(p_name: String, r_name: String, gender := "male") -> void:
+	party = []
+	pc = []
+	bag = {"potion": 1}
+	money = START_MONEY
+	flags = {}
+	seen = {}
+	caught = {}
+	pending_learns = []
+	last_save = {}
+	player_name = p_name if p_name != "" else "RED"
+	rival_name = r_name if r_name != "" else "BLUE"
+	player_gender = gender
+
+
+## Escolha do inicial: entra na equipe e define o do rival (flag rival_starter, lida pelo trainers.json).
+func choose_starter(species: String) -> Mon:
+	var m := Mon.create(species, STARTER_LEVEL)
+	add_mon(m)
+	flags["starter"] = m.species
+	flags["rival_starter"] = RIVAL_PICK.get(m.species, "Squirtle")
+	return m
+
+
+## Troca {PLAYER} e {RIVAL} num texto de diálogo.
+func fill_names(text: String) -> String:
+	return text.replace("{PLAYER}", player_name).replace("{RIVAL}", rival_name)
+
+
+func has_save() -> bool:
+	return FileAccess.file_exists(save_path)
 
 
 func heal_party() -> void:
@@ -117,7 +163,8 @@ const SAVE_VERSION := 1
 func to_dict() -> Dictionary:
 	return {"version": SAVE_VERSION, "party": party.map(func(m): return m.to_dict()),
 		"pc": pc.map(func(m): return m.to_dict()), "bag": bag, "money": money, "flags": flags,
-		"seen": seen.keys(), "caught": caught.keys()}
+		"seen": seen.keys(), "caught": caught.keys(),
+		"player_name": player_name, "rival_name": rival_name, "player_gender": player_gender}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -126,6 +173,9 @@ func from_dict(d: Dictionary) -> void:
 	bag = d.get("bag", {})
 	money = int(d.get("money", START_MONEY))
 	flags = d.get("flags", {})
+	player_name = d.get("player_name", "RED")
+	rival_name = d.get("rival_name", "BLUE")
+	player_gender = d.get("player_gender", "male")
 	seen = {}
 	caught = {}
 	for sp in d.get("seen", []):

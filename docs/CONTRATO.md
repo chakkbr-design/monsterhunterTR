@@ -100,3 +100,44 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - `data/maps/*.json` (geometria das rotas do original) e `data/world.json` (zonas). Esquema documentado em
   `pba-referencia/analise/03-arquitetura-mundo.md`.
 - Rodada 2 da arena (pronto): bolsa rápida na batalha (E), item de treinador (campo `item` do trainers.json ou `opts.trainer_item`), 2x1 com aliado em batalha selvagem (Tab troca o controle, F muda o modo ATAQUE/DEFESA/SUPORTE). Opts novos: `battle_size` (1 desliga o aliado), `trainer_item`, `game` (injeção em testes).
+
+## Rodada 3 — interiores, história e início de jogo
+
+| Pasta | Dono |
+|---|---|
+| `core/`, `data/`, `project.godot`, `docs/CONTRATO.md` | Núcleo |
+| `interiors/`, `tests/interiors/`, e também `world/` (portas e ligação com a RouteWorld) | Interiores |
+| `story/`, `tests/story/` | História |
+| `ui/front/`, `tests/ui_front/` | Início de jogo |
+
+### Núcleo (pronto)
+
+- `Game.player_name`, `Game.rival_name`, `Game.player_gender` (salvos). `Game.fill_names(texto)` troca `{PLAYER}`/`{RIVAL}`.
+- `Game.new_game(nome, rival, genero)` zera o estado. `Game.has_save()`.
+- `Game.STARTERS` (Bulbasaur, Charmander, Squirtle), `Game.choose_starter(especie) -> Mon`: põe na equipe, grava `flags.starter` e `flags.rival_starter` (lido pelo `@rival_starter` do trainers.json).
+- `Game.spawn_request: Dictionary` = `{zone, spawn}` ou `{interior, spawn}`: onde a RouteWorld deve pôr o jogador ao abrir. Ela consome e limpa.
+- Prioridade ao abrir a RouteWorld: `spawn_request` > `last_save` > início do `world.json`.
+- `data/interiors/pallet.json` e `viridian.json`: manifestos das salas do original (rect, spawns, next).
+- Treinadores com item: brock e misty (`super_potion`), rival (`potion`).
+
+### API dos Interiores (dono: Interiores; História e Início dependem dela)
+
+- Salas montadas em código dentro da própria RouteWorld (não trocar de cena), longe do mapa externo; portas teletransportam com fade.
+- Na RouteWorld (classe `RouteWorld`):
+  - `go_to_interior(interior_id: String, spawn: String)` e `go_to_zone(zone: String, spawn: String)`.
+  - `signal location_changed(kind: String, id: String)`, onde `kind` é `"zone"` ou `"interior"`.
+  - `marker(interior_id: String, name: String) -> Node3D`: pontos nomeados nas salas para a história usar.
+- Ids mínimos de sala: `player_room` (quarto, spawn `bed`), `player_house` (Mamãe), `oak_lab` (3 mesas de Pokébola nos marcadores `ball_1..3`, `oak`, `rival`), `pokemon_center_viridian`, `mart_viridian` (marcador `clerk`), `pokemon_center_pewter` opcional.
+  O Centro Pokémon cura no balcão (`Game.heal_party`). A loja vende pelo `data/shops.json`, debitando `Game.money`.
+
+### História (dono: História) — autoload `Story` em `res://story/story.gd`
+
+- Roteiro FRLG simplificado, guiado por `Game.flags`: sair de casa → Oak barra no mato alto de Pallet → laboratório → escolher inicial (`Game.choose_starter`, UI própria em `story/`) → batalha com o rival (`trainer_id` `rival_blue_route22`, com a party do rival a partir de `flags.rival_starter`) → Viridian Mart entrega `oaks_parcel` → volta ao Oak → `flags.has_pokedex = true` e algumas Poké Balls.
+- Enquanto uma cena da história roda, `Story.is_running()` é verdadeiro e o jogador não anda.
+
+### Início de jogo (dono: Início) — cena principal `res://ui/front/title.tscn`
+
+- Título: Continuar (só se `Game.has_save()`), Novo jogo, Sair.
+- Novo jogo: fala do Oak, escolha de gênero, nome do jogador, nome do rival → `Game.new_game(...)` →
+  `Game.spawn_request = {"interior": "player_room", "spawn": "bed"}` → `change_scene_to_file("res://world/route_world.tscn")`.
+- Continuar: `Game.load_game()` (o `last_save` é preenchido) → muda para a RouteWorld.

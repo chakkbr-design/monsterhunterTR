@@ -1,0 +1,69 @@
+{
+ "town": "pallet",
+ "scene": "res://scenes/interiors/pallet_town_interiors.tscn",
+ "spacing": 40.0,
+ "rooms": [
+  {
+   "node": "Bedroom",
+   "scene": "res://scenes/interiors/pallet/Bedroom.tscn",
+   "rect": [
+    -5.5,
+    -4.0,
+    11,
+    8
+   ],
+   "spawns": [
+    "bedroom",
+    "bedroom_start"
+   ],
+   "next": [
+    "PlayerHouse"
+   ]
+  },
+  {
+   "node": "PlayerHouse",
+   "scene": "res://scenes/interiors/pallet/PlayerHouse.tscn",
+   "rect": [
+    34.0,
+    -3.5,
+    12,
+    7
+   ],
+   "spawns": [
+    "player_house",
+    "player_house_stairs"
+   ],
+   "next": [
+    "Bedroom"
+   ]
+  },
+  {
+   "node": "RivalHouse",
+   "scene": "res://scenes/interiors/pallet/RivalHouse.tscn",
+   "rect": [
+    74.0,
+    -3.5,
+    12,
+    7
+   ],
+   "spawns": [
+    "rival_house"
+   ],
+   "next": []
+  },
+  {
+   "node": "Lab",
+   "scene": "res://scenes/interiors/pallet/Lab.tscn",
+   "rect": [
+    113.4,
+    -8.0,
+    13.2,
+    16
+   ],
+   "spawns": [
+    "lab"
+   ],
+   "next": []
+  }
+ ]
+}

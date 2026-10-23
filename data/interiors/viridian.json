@@ -1,0 +1,63 @@
+{
+ "town": "viridian",
+ "scene": "res://scenes/interiors/viridian_city_interiors.tscn",
+ "spacing": 40.0,
+ "rooms": [
+  {
+   "node": "PokemonCenter",
+   "scene": "res://scenes/interiors/viridian/PokemonCenter.tscn",
+   "rect": [
+    -7.5,
+    -3.5,
+    15,
+    7
+   ],
+   "spawns": [
+    "vc_center_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "PokeMart",
+   "scene": "res://scenes/interiors/viridian/PokeMart.tscn",
+   "rect": [
+    34.5,
+    -3.0,
+    11,
+    6
+   ],
+   "spawns": [
+    "vc_mart_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "TrainerSchool",
+   "scene": "res://scenes/interiors/viridian/TrainerSchool.tscn",
+   "rect": [
+    75.0,
+    -3.0,
+    10,
+    6
+   ],
+   "spawns": [
+    "vc_school_in"
+   ],
+   "next": []
+  },
+  {
+   "node": "ViridianHouse",
+   "scene": "res://scenes/interiors/viridian/ViridianHouse.tscn",
+   "rect": [
+    114.0,
+    -3.5,
+    12,
+    7
+   ],
+   "spawns": [
+    "vc_house_in"
+   ],
+   "next": []
+  }
+ ]
+}
