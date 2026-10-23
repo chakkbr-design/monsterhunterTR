@@ -23,7 +23,7 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 - `Controls` (`core/controls.gd`): cria o input map em código no `_ready`.
   Ações: `move_left` `move_right` `move_forward` `move_back` (WASD e setas), `jump` (Espaço),
   `sprint` (Shift), `interact` (E), `move_1`..`move_4` (teclas 1-4), `throw_ball` (Q),
-  `swap_mon` (Tab), `run_away` (R), `pause` (Esc), `cam_left`/`cam_right` (Z/C).
+  `swap_mon` (Tab), `run_away` (R), `pause` (Esc), `cam_left`/`cam_right` (Z/C), `ally_mode` (F).
 - `Game` (`core/game.gd`): estado do jogador e ponte overworld ↔ batalha.
 
 ## API do núcleo (classes com `class_name`, funções estáticas onde indicado)

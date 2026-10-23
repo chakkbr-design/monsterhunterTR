@@ -19,6 +19,7 @@ const KEYS := {
 	"pause": [KEY_ESCAPE],
 	"cam_left": [KEY_Z],
 	"cam_right": [KEY_C],
+	"ally_mode": [KEY_F],
 }
 
 
