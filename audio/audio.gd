@@ -101,8 +101,14 @@ func sfx(sfx_name: String, volume_db := 0.0) -> void:
 	if now - float(_sfx_last.get(sfx_name, -1.0)) < SFX_GAP:
 		return
 	_sfx_last[sfx_name] = now
+	# Voz livre primeiro; só corta um efeito tocando (estalo) quando todas estão ocupadas.
+	var n := _sfx_players.size()
+	for k in n:
+		if not _sfx_players[(_sfx_next + k) % n].playing:
+			_sfx_next = (_sfx_next + k) % n
+			break
 	var p := _sfx_players[_sfx_next]
-	_sfx_next = (_sfx_next + 1) % _sfx_players.size()
+	_sfx_next = (_sfx_next + 1) % n
 	p.stream = st
 	p.volume_db = volume_db
 	p.play()

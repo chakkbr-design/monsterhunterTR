@@ -845,8 +845,10 @@ class Dialog extends Win:
 		label.visible_characters = -1
 
 	func _process(dt: float) -> void:
+		if not is_visible_in_tree():
+			return
 		_t += dt
-		if visible and label.visible_characters >= 0:
+		if label.visible_characters >= 0:
 			_chars += dt * cps
 			label.visible_characters = int(_chars)
 			if label.visible_characters >= label.get_total_character_count():

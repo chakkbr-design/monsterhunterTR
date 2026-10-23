@@ -42,6 +42,7 @@ class PartyOrbs extends Control:
 	var _shown := {}
 	var _flash := {}
 	var _t := 0.0
+	var _key: Array = []
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -52,18 +53,25 @@ class PartyOrbs extends Control:
 	func panel_size() -> Vector2:
 		return Vector2(68, 6.0 * SLOT_GAP + 10.0)
 
+	## Só redesenha quando algo muda (anel animando, flash ou dados da equipe).
 	func refresh(p: Array, delta: float) -> void:
 		party = p
 		_t += delta
+		var key: Array = []
+		var moving := false
 		for i in mini(party.size(), 6):
 			var m: Mon = party[i]
 			var hp := clampf(float(m.hp) / maxf(float(m.max_hp), 1.0), 0.0, 1.0)
 			var shown := float(_shown.get(i, hp))
 			if hp < shown - 0.001:
 				_flash[i] = 0.2
+			moving = moving or shown != hp or float(_flash.get(i, 0.0)) > 0.0
 			_shown[i] = move_toward(shown, hp, delta * 8.0)
 			_flash[i] = maxf(float(_flash.get(i, 0.0)) - delta, 0.0)
-		queue_redraw()
+			key.append_array([m, m.species, m.hp, m.max_hp, m.pp, m.pp_base, m.status, m.level])
+		if moving or key != _key:
+			_key = key
+			queue_redraw()
 
 	func _draw() -> void:
 		var K = preload("res://ui/ui_kit.gd")
@@ -208,12 +216,21 @@ func _process(delta: float) -> void:
 	_loc.visible = _location != "" and not busy
 	_hint.visible = not _open and not busy
 	_layout()
-	if _open and _clock - _line_at > 0.2 \
+	if _open and _clock - _line_at > 0.2 and not _overlay_open() \
 			and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("jump")):
 		if not _dlg.complete():
 			_dlg.finish()
 		else:
 			advanced.emit()
+
+
+## Menu, PC, evolução ou aprender golpe por cima: a tecla deles (lida por Input) não avança a fala.
+func _overlay_open() -> bool:
+	for path in ["/root/PauseMenu", "/root/LearnMove", "/root/PCStorage", "/root/Evolution"]:
+		var n := get_node_or_null(path)
+		if n and n.has_method("is_open") and n.is_open():
+			return true
+	return false
 
 
 ## Liga ao location_changed da RouteWorld para mostrar o nome do lugar na pílula.

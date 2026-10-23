@@ -66,6 +66,13 @@ func _ready() -> void:
 	_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_box)
 	_root.visible = false
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+
+## As janelas são posicionadas pelo tamanho visível; redesenha quando a janela muda (tela cheia, redimensionar).
+func _on_viewport_resized() -> void:
+	if screen != "":
+		_render()
 
 
 ## Verdadeiro também no frame em que fechou, para a tecla de confirmar não vazar para o overworld.
@@ -80,7 +87,7 @@ func _learn_open() -> bool:
 
 
 func open() -> bool:
-	if screen != "" or game == null or game.is_busy() or _learn_open() or _story_running():
+	if screen != "" or game == null or game.is_busy() or _learn_open() or _story_running() or _other_open():
 		return false
 	_root.visible = true
 	_main_cur = maxi(0, entries().find("pokemon"))
@@ -98,6 +105,18 @@ func close() -> void:
 func _story_running() -> bool:
 	var st := get_node_or_null("/root/Story")
 	return st != null and st.is_running()
+
+
+## PC, evolução ou uma fala do HUD abertos: o menu não abre por cima (a tecla vazaria para eles).
+func _other_open() -> bool:
+	if not is_inside_tree():
+		return false
+	for n in ["PCStorage", "Evolution"]:
+		var node := get_node_or_null("/root/" + n)
+		if node != null and node.has_method("is_open") and node.is_open():
+			return true
+	var hud := get_tree().get_first_node_in_group("ow_hud")
+	return hud != null and hud.has_method("is_dialog_open") and hud.is_dialog_open()
 
 
 ## Itens do menu principal, na ordem do original.

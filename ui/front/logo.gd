@@ -7,17 +7,9 @@ const LINE2 := "BATTLE ADVANCED"
 const GOLD := Color("ffd84a")
 const BLUE := Color("2a3a8a")
 
-var t := 0.0
-
-
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(560, 170)
-
-
-func _process(dt: float) -> void:
-	t += dt
-	queue_redraw()
 
 
 func _draw() -> void:
