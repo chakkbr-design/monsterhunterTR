@@ -1,7 +1,11 @@
 extends Node3D
 ## Arena de batalha em tempo real. Contrato: start(player_party, enemies, opts) e signal finished(result).
 ## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?,
-##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada)}.
+##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada),
+##        center? (Vector3 global: quadra num lugar certo), arena? (Vector2 [w, d]), trainer_node? (Node3D),
+##        arena_color? (Color)}.
+## Quadra num lugar certo (o original: Battle.start_trainer_battle com opts.center; trainers.json "center"
+## + "arena" no ginásio): ver _setup_court.
 ## Com `manual = true` nada anda sozinho: quem chama step(dt) (testes headless).
 
 signal finished(result: Dictionary)
@@ -11,6 +15,7 @@ const START_GAP := 6.0
 const WILD_OPENING_DELAY := 0.5
 const TRAINER_SWAP_HOLD := 0.5
 const INTRO_TIME := 1.2
+const DEFAULT_SPEED := 0.6  ## original Settings "Slow" (the default battle speed)
 const FAINT_CLEAR := 1.0
 const NEXT_TRAINER_MON := 1.4
 const SWAP_CD := 1.0
@@ -31,13 +36,29 @@ const CONTROL_SWAP_CD := 0.3
 const ALLY_MODE_NAMES := ["ATAQUE", "DEFESA", "SUPORTE"]
 const ALLY_MODE_COLORS := [Color(1.0, 0.5, 0.4), Color(0.5, 0.75, 1.0), Color(0.55, 1.0, 0.6)]
 const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
+## Quadra fixa, valores do original (battle.gd start_trainer_battle / start_battle, battle_arena.gd):
+## sem `arena` o tamanho é 10 x 6; os treinadores ficam 0.3 m fora da borda no eixo X (jogador a oeste);
+## o 1º mon do adversário cai a 40% do caminho até ele e o do jogador 1.5 m à frente do jogador.
+const FIXED_ARENA := Vector2(10, 6)
+const TRAINER_STAND_OFF := 0.3
+const FOE_THROW := 0.4
+const LEAD_STEP := 1.5
+const FIXED_FADE := 0.25
+## Câmera de batalha do original nas salas: rig das salas (pitch 30°, fov 30°) parado no meio entre o
+## treinador e o mon do adversário, a 12 + 2 m.
+const FIXED_CAM_DIST := 14.0
+const FIXED_CAM_PITCH := deg_to_rad(30.0)
+const FIXED_CAM_FOV := 30.0
+## Corpo do mon contra paredes e móveis (o original: CharacterBody3D, cápsula r 0.35, camadas 1|2).
+const BODY_R := 0.35
+const SOLID_MASK := 1
 
 var manual := false
 var rng := RandomNumberGenerator.new()
 var moves: BattleMoves
 var hud: BattleHUD
 var vfx: BattleVfx
-var fight_speed := 1.0
+var fight_speed := DEFAULT_SPEED
 var opts := {}
 var kind := "wild"
 var party: Array = []
@@ -59,6 +80,10 @@ var exp_log: Array = []
 var log_lines: Array = []
 var hits := 0
 var rect := Rect2(-ARENA_SIZE / 2.0, -ARENA_SIZE / 2.0, ARENA_SIZE, ARENA_SIZE)
+var fixed := false  ## quadra num lugar certo (opts.center ou "center" do trainers.json)
+var axis := Vector3(0, 0, -1)  ## do lado do jogador para o do adversário
+var player_spot := Vector3(0, 0, START_GAP / 2.0)  ## onde cai o 1º mon do jogador (local)
+var enemy_spot := Vector3(0, 0, -START_GAP / 2.0)  ## onde o adversário joga os mons (local)
 
 var _state_t := 0.0
 var _end_delay := 0.0
@@ -75,6 +100,9 @@ var _trainer_item := ""
 var _battle_size := 1
 var _f_was_down := false
 var _built := false
+var _court_color := ARENA_LINE
+var _cam_focus := Vector3.ZERO  ## câmera parada (quadra fixa): ponto que ela olha
+var _probe: PhysicsShapeQueryParameters3D
 
 
 func _physics_process(delta: float) -> void:
@@ -93,7 +121,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	party = player_party
 	enemies = enemy_list
 	kind = String(o.get("kind", "wild"))
-	fight_speed = float(o.get("speed", 1.0))
+	fight_speed = float(o.get("speed", DEFAULT_SPEED))
 	if o.has("seed"):
 		rng.seed = int(o.seed)
 	else:
@@ -109,17 +137,18 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	)
 	if not InputMap.has_action("move_1"):
 		load("res://core/controls.gd").register()
+	_setup_court(o)
 	_build()
 	var pi := _next_healthy(-1)
 	var ei := _next_enemy(-1)
 	if pi < 0 or ei < 0:
 		_end("lose" if pi < 0 else "win", 0.0)
 		return
-	_send_player(pi, Vector3(0, 0, START_GAP / 2.0))
+	_send_player(pi, player_spot)
 	if _battle_size >= 2:
 		var ai_i := _next_healthy(pi)
 		if ai_i >= 0:
-			_send_ally(ai_i, Vector3(1.6, 0, START_GAP / 2.0 + 0.4))
+			_send_ally(ai_i, player_spot + Vector3(1.6, 0, 0.4))
 	_send_enemy(ei)
 	var e: Mon = enemies[ei]
 	hud.banner(
@@ -147,7 +176,7 @@ func _build() -> void:
 	vfx = BattleVfx.new(self)
 	_prev_cam = get_viewport().get_camera_3d() if is_inside_tree() else null
 	_cam = Camera3D.new()
-	_cam.fov = 60.0
+	_cam.fov = FIXED_CAM_FOV if fixed else 60.0
 	if _prev_cam:
 		# Mesmo alcance e atributos da câmera do mundo (far curto do streaming, exposição/DOF).
 		_cam.far = _prev_cam.far
@@ -164,7 +193,7 @@ func _build_court() -> void:
 	if bool(opts.get("floor", false)):
 		var floor_mi := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		pm.size = Vector2(ARENA_SIZE + 8.0, ARENA_SIZE + 8.0)
+		pm.size = rect.size + Vector2(8.0, 8.0)
 		var fm := StandardMaterial3D.new()
 		fm.albedo_color = Color(0.42, 0.58, 0.33)
 		pm.material = fm
@@ -173,19 +202,172 @@ func _build_court() -> void:
 	var quad := MeshInstance3D.new()
 	quad.name = "ArenaQuad"
 	var qm := PlaneMesh.new()
-	qm.size = Vector2(ARENA_SIZE, ARENA_SIZE)
+	qm.size = rect.size
 	quad.mesh = qm
-	quad.position.y = 0.04
+	quad.position = Vector3(rect.get_center().x, 0.04, rect.get_center().y)
 	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = _court_texture()
-	mat.albedo_color = ARENA_LINE
+	mat.albedo_color = _court_color
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.roughness = 1.0
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.render_priority = -1
 	quad.material_override = mat
 	add_child(quad)
+
+
+## Quadra num lugar certo, como o original com opts.center (Battle.start_trainer_battle sem plan):
+## laboratório = RivalBattleSpot 10 x 6.4 (story.gd), ginásio = "center"/"arena" do trainers.json.
+## A arena vai para o centro, eixo X (jogador a oeste, adversário a leste, max(w, d)/2 + 0.3 do centro);
+## o jogador e o treinador do mundo trocam de lugar sob um fade; os mons caem no ponto livre mais perto.
+func _setup_court(o: Dictionary) -> void:
+	if not is_inside_tree():
+		return
+	var def := Dex.trainer(String(o.get("trainer_id", ""))) if kind == "trainer" else {}
+	var c = o.get("center")
+	if not (c is Vector3):
+		c = _marker_center(String(def.get("center", "")))
+	if not (c is Vector3) or not c.is_finite():
+		return
+	var sz = o.get("arena", def.get("arena", FIXED_ARENA))
+	if sz is Array and sz.size() >= 2:
+		sz = Vector2(float(sz[0]), float(sz[1]))
+	if not (sz is Vector2) or sz.x <= 0.0 or sz.y <= 0.0:
+		sz = FIXED_ARENA
+	var col = o.get("arena_color", def.get("arena_color", ""))
+	if col is String and col != "":
+		_court_color = Color(col)
+	elif col is Color:
+		_court_color = col
+	fixed = true
+	global_position = c
+	rect = Rect2(-sz * 0.5, sz)
+	axis = Vector3.RIGHT
+	var spread: float = maxf(sz.x, sz.y) * 0.5 + TRAINER_STAND_OFF
+	var me := -axis * spread
+	var them := axis * spread
+	enemy_spot = _nearest_free(axis * spread * FOE_THROW)
+	player_spot = _nearest_free(me + axis * LEAD_STEP)
+	_cam_focus = (me + enemy_spot) * 0.5
+	var p := get_tree().get_first_node_in_group(OverworldPlayer.GROUP) as Node3D
+	var t := _trainer_body(o)
+	if p or t:
+		_fade_from_black()
+	if p:
+		_place_body(p, me, them)
+	if t:
+		_place_body(t, them, me)
+
+
+## Marcador da sala atual com esse nome (o original procura o nó na cena); as salas daqui chamam o
+## centro da quadra de "arena_center".
+func _marker_center(marker: String) -> Variant:
+	var w := get_tree().get_first_node_in_group(Overworld.GROUP)
+	if marker == "" or w == null or not w.has_method("interior"):
+		return null
+	var room = w.interior(str(w.get("location_id")))
+	if room == null:
+		return null
+	for nm in [marker, "arena_center"]:
+		var m = room.markers.get(nm)
+		if m is Node3D:
+			return (m as Node3D).global_position
+	return null
+
+
+## O treinador no mundo: opts.trainer_node, senão o WorldTrainer desse trainer_id mais perto da quadra.
+func _trainer_body(o: Dictionary) -> Node3D:
+	var n = o.get("trainer_node")
+	if n is Node3D and is_instance_valid(n):
+		return n
+	var id := String(o.get("trainer_id", ""))
+	var best: Node3D = null
+	var best_d := INF
+	for t in get_tree().get_nodes_in_group(WorldNpc.GROUP):
+		if id != "" and t is Node3D and str(t.get("trainer_id")) == id:
+			var d := (t as Node3D).global_position.distance_squared_to(global_position)
+			if d < best_d:
+				best = t
+				best_d = d
+	return best
+
+
+## _place_trainer do original: põe o corpo em `at` (local, mesmo y) virado para `look`.
+func _place_body(n: Node3D, at: Vector3, look: Vector3) -> void:
+	var g := to_global(at)
+	g.y = n.global_position.y
+	n.global_position = g
+	if n is CharacterBody3D:
+		(n as CharacterBody3D).velocity = Vector3.ZERO
+	var l := to_global(look)
+	l.y = g.y
+	if n.has_method("face_toward"):
+		n.face_toward(l)
+	elif n.has_method("face"):
+		n.face(l)
+
+
+## A volta do fade do original (Transitions.fade 1 -> 0 em 0.25 s) por cima da troca de lugar.
+func _fade_from_black() -> void:
+	var cl := CanvasLayer.new()
+	cl.name = "CourtFade"
+	cl.layer = 41
+	add_child(cl)
+	var r := ColorRect.new()
+	r.color = Color.BLACK
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cl.add_child(r)
+	var tw := create_tween()
+	tw.tween_property(r, "color:a", 0.0, FIXED_FADE)
+	tw.tween_callback(cl.queue_free)
+
+
+## nearest_ok do original: o ponto mais perto (anéis de 1 m) dentro da quadra e sem parede/móvel.
+func _nearest_free(at: Vector3) -> Vector3:
+	for r in 9:
+		for i in range(-r, r + 1):
+			for j in range(-r, r + 1):
+				if maxi(absi(i), absi(j)) != r:
+					continue
+				var q := at + Vector3(i, 0, j)
+				if rect.has_point(Vector2(q.x, q.z)) and not _solid_at(q):
+					return q
+	return at
+
+
+func _space() -> PhysicsDirectSpaceState3D:
+	var w := get_world_3d() if is_inside_tree() else null
+	return w.direct_space_state if w else null
+
+
+## Parede ou móvel (camada 1) onde o corpo de um mon ficaria com o pé em `at` (local).
+func _solid_at(at: Vector3) -> bool:
+	var space := _space()
+	if space == null:
+		return false
+	if _probe == null:
+		var s := SphereShape3D.new()
+		s.radius = BODY_R
+		_probe = PhysicsShapeQueryParameters3D.new()
+		_probe.shape = s
+		_probe.collision_mask = SOLID_MASK
+	_probe.transform = Transform3D(Basis(), to_global(Vector3(at.x, 0.6, at.z)))
+	return not space.intersect_shape(_probe, 1).is_empty()
+
+
+## O mon não atravessa parede nem móvel: desliza num eixo ou fica parado (quem já está dentro pode sair).
+func _block_solid(f: BattleFighter, before: Vector3) -> void:
+	var now := f.position
+	if not _solid_at(now) or _solid_at(before):
+		return
+	if not _solid_at(Vector3(now.x, now.y, before.z)):
+		f.position = Vector3(now.x, now.y, before.z)
+	elif not _solid_at(Vector3(before.x, now.y, now.z)):
+		f.position = Vector3(before.x, now.y, now.z)
+	else:
+		f.position = Vector3(before.x, now.y, before.z)
 
 
 static var _court_tex: ImageTexture
@@ -260,7 +442,7 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	add_child(f)
 	f.setup(m, side, ctrl)
 	f.position = at
-	f.facing = Vector3(0, 0, -1) if side == 0 else Vector3(0, 0, 1)
+	f.facing = axis if side == 0 else -axis
 	f.fainted.connect(_on_fainted)
 	fighters.append(f)
 	if vfx and f.is_inside_tree():
@@ -284,7 +466,7 @@ func _send_ally(i: int, at: Vector3) -> void:
 
 func _send_enemy(i: int) -> void:
 	enemy_index = i
-	enemy = _spawn(enemies[i], 1, "ai", Vector3(0, 0, -START_GAP / 2.0))
+	enemy = _spawn(enemies[i], 1, "ai", enemy_spot)
 	enemy.ai.think_scale = _think_scale
 	enemy.ai.think = WILD_OPENING_DELAY if kind == "wild" else TRAINER_SWAP_HOLD
 	enemy.trainer_item = _trainer_item if kind == "trainer" else ""
@@ -330,7 +512,26 @@ func edge_push(f: BattleFighter) -> Vector3:
 		p.z = (inner.position.y - f.position.z) / 2.0
 	elif f.position.z > inner.end.y:
 		p.z = (inner.end.y - f.position.z) / 2.0
+	if fixed:
+		p += _obstacle_push(f) / 2.0
 	return p
+
+
+## O original (combatant.gd _obstacle_push): 8 raios de 1 m na altura do corpo; o que bate empurra para longe.
+func _obstacle_push(f: BattleFighter) -> Vector3:
+	var space := _space()
+	if space == null:
+		return Vector3.ZERO
+	var origin := to_global(f.position) + Vector3(0, 0.6, 0)
+	var push := Vector3.ZERO
+	for i in 8:
+		var a := i * TAU / 8.0
+		var dir := Vector3(cos(a), 0.0, sin(a))
+		var q := PhysicsRayQueryParameters3D.create(origin, origin + dir, SOLID_MASK)
+		var hit := space.intersect_ray(q)
+		if not hit.is_empty():
+			push -= dir * (1.0 - origin.distance_to(hit.position))
+	return push
 
 
 func note_hit(
@@ -430,7 +631,10 @@ func _fight_step(dt: float) -> void:
 				speed = BattleFighter.PLAYER_SPEED
 			elif f.controller == "ai" and f.impact_t <= 0.0:
 				want = f.ai.step(dt)
+		var before: Vector3 = f.position
 		f.drive(dt, want, speed)
+		if fixed:
+			_block_solid(f, before)
 		var bounds := rect.grow(-0.5)
 		f.position.x = clampf(f.position.x, bounds.position.x, bounds.end.x)
 		f.position.z = clampf(f.position.z, bounds.position.y, bounds.end.y)
@@ -1128,7 +1332,18 @@ func _camera_input(dt: float) -> void:
 
 
 func _update_camera(dt: float) -> void:
-	if _cam == null or not is_instance_valid(player):
+	if _cam == null:
+		return
+	if fixed:
+		# Como o original numa quadra fixa: câmera parada (focus_fixed), só gira com Z/C.
+		var off := Vector3(0, sin(FIXED_CAM_PITCH), cos(FIXED_CAM_PITCH)) * FIXED_CAM_DIST
+		_cam.position = _cam.position.lerp(
+			_cam_focus + off.rotated(Vector3.UP, _yaw), clampf(dt * 6.0, 0.0, 1.0)
+		)
+		if _cam.is_inside_tree():
+			_cam.look_at(to_global(_cam_focus), Vector3.UP)
+		return
+	if not is_instance_valid(player):
 		return
 	var focus := player.position * Vector3(1, 0, 1)
 	var look := focus

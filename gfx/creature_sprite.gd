@@ -16,7 +16,6 @@ extends Node3D
 
 signal oneshot_finished(anim: String)
 
-const FACING_MARGIN := 1.25
 const FAINT_TIME := 0.3
 const FAINT_SCALE := Vector3(1.15, 0.55, 1.15)
 const FAINT_TINT := Color(0.55, 0.55, 0.55)
@@ -39,9 +38,13 @@ const FAINT_TINT := Color(0.55, 0.55, 0.55)
 ## Sem _process: o dono chama tick(delta) (testes headless).
 @export var manual := false
 
+## Velocidade em m/s de tempo real (na batalha: já multiplicada pela velocidade da luta, como o
+## body.velocity do original).
 var velocity := Vector3.ZERO
 var facing := Vector3(0, 0, 1)
-var move_speed := 3.0
+## Base do ritmo do Walk: rate = |velocity| / move_speed, entre 0.6 e 2.0 (creature.gd _pmd_rate).
+## O original usa o move_speed exportado do Creature (2.5) em todo modo: mundo, seguidor e batalha.
+var move_speed := 2.5
 var state := ""
 var fainted := false
 var tint := Color.WHITE:
@@ -65,7 +68,6 @@ var _collapse_t := -1.0
 var _last_pos := Vector3.ZERO
 var _has_last := false
 var _anim_t := 0.0
-var _row := 0
 var _base_scale := Vector3.ONE
 
 
@@ -210,16 +212,11 @@ func dir8() -> int:
 	return posmod(int(round(atan2(f.x, f.y) / (PI / 4.0))), 8)
 
 
-static func facing_row(dir: Vector2, prev_row: int) -> int:
-	var dx := absf(dir.x)
-	var dy := absf(dir.y)
-	if prev_row == 1 or prev_row == 2:
-		if dy > dx * FACING_MARGIN:
-			return 0 if dir.y > 0.0 else 3
-		return 1 if dir.x < 0.0 else 2
-	if dx > dy * FACING_MARGIN:
-		return 1 if dir.x < 0.0 else 2
-	return 0 if dir.y > 0.0 else 3
+## Linha da folha overworld de 4 direções (pokemon_sprites.gd animate: eixo dominante, sem histerese).
+static func facing_dir(f: Vector2) -> String:
+	if absf(f.x) > absf(f.y):
+		return "left" if f.x < 0.0 else "right"
+	return "down" if f.y > 0.0 else "up"
 
 
 # --- one-shots ---------------------------------------------------------------
@@ -252,9 +249,9 @@ func resolve(chain: Array) -> String:
 
 ## Animação de golpe pelo pmd_anims.json (moves > kinds). `secs` = duração do golpe,
 ## usada para segurar o RushFrame (dash) ou o HitFrame (stream/beam).
+## Sem PMD (ou sem anim na cadeia) não toca nada, como o original (creature.gd play_move_anim).
 func play_move(mv: Dictionary, secs := -1.0) -> String:
 	if not has_pmd():
-		_bump()
 		return ""
 	# Como no original (play_move_anim): o golpe não corta a animação de dano em curso.
 	if _oneshot and _anim != "" and _anim == resolve(PokemonSprites.state_chain("hurt")):
@@ -272,7 +269,6 @@ func play_move(mv: Dictionary, secs := -1.0) -> String:
 			return wings
 	var name := resolve(PokemonSprites.move_chain(mv))
 	if name == "":
-		_bump()
 		return ""
 	var a: Dictionary = _look.pmd[name]
 	var swoop: Array = chains.get("swoop", {}).get("moves", [])
@@ -286,10 +282,7 @@ func play_move(mv: Dictionary, secs := -1.0) -> String:
 
 
 func hurt() -> void:
-	if not has_pmd():
-		_bump()
-		return
-	if fainted:
+	if not has_pmd() or fainted:
 		return
 	play_chain(PokemonSprites.state_chain("hurt"), true)
 
@@ -318,15 +311,6 @@ func _enter_faint_pose() -> void:
 	_collapse_t = 0.0
 	if has_pmd() and _look.pmd.has("Hurt"):
 		_play("Hurt", true)
-
-
-## Pulo curto para quem não tem PMD (sem animação de ataque).
-func _bump() -> void:
-	var tw := create_tween() if is_inside_tree() else null
-	if tw == null:
-		return
-	tw.tween_property(_sprite, "position:y", 0.18 * scale_mult, 0.08)
-	tw.tween_property(_sprite, "position:y", 0.0, 0.12)
 
 
 # --- laço ----------------------------------------------------------------------
@@ -492,8 +476,7 @@ func _tick_static(delta: float) -> void:
 		if absf(f.x) > 0.1:
 			_sprite.flip_h = (f.x > 0.0) != (String(s.get("faces", "left")) == "right")
 		return
-	_row = facing_row(f, _row)
-	var dir: String = ["down", "left", "right", "up"][_row]
+	var dir := facing_dir(f)
 	var rows: Dictionary = s.get("rows", PokemonSprites.DEFAULT_ROWS)
 	var fpr := maxi(1, int(s.frames_per_row))
 	var r := clampi(int(rows.get(dir, 0)), 0, int(s.vframes) - 1)

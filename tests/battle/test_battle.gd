@@ -47,6 +47,8 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	var got := {}
 	a.finished.connect(func(r: Dictionary) -> void: got.merge(r), CONNECT_ONE_SHOT)
 	a.set_meta("got", got)
+	if not opts.has("speed"):
+		opts["speed"] = 1.0  # the rules are timed at 1x (the game plays at the original's 0.6)
 	a.start(party, enemies, opts)
 	return a
 

@@ -8,7 +8,19 @@ extends Node3D
 
 const C_TRIM := Color(0.42, 0.33, 0.25)
 const C_VOID := Color(0.08, 0.07, 0.07)
-const FRONT_VISIBLE_H := 0.5
+const FRONT_VISIBLE_H := 0.6  ## original room.gd: the open front wall is drawn 0.6 m tall
+## Wall height of the original room scenes (room.gd wall_height, default 2.8; scenes/interiors/*).
+const WALL_H := 2.8
+const WALL_HEIGHTS := {
+	"oak_lab": 3.4,
+	"pokemon_center_viridian": 3.0,
+	"pokemon_center_mt_moon": 3.0,
+	"pokemon_center_pewter": 3.75,
+	"pewter_gym": 4.5,
+	"pewter_museum": 4.25,
+}
+## Furniture a chair turns to face (the nearest one of these names).
+const SEATS_FACE := ["Mesa", "Carteira", "Escrivaninha"]
 
 var id := ""
 var def: Dictionary = {}
@@ -27,6 +39,10 @@ func setup(room_id: String, d: Dictionary) -> InteriorRoom:
 	name = "Interior_%s" % room_id
 	position = InteriorDefs.origin_of(room_id)
 	return self
+
+
+func wall_height() -> float:
+	return float(WALL_HEIGHTS.get(id, WALL_H))
 
 
 func display_name() -> String:
@@ -77,7 +93,12 @@ func _ready() -> void:
 		var sz := Vector3(float(f[2][0]), float(f[2][1]), float(f[2][2]))
 		var solid: bool = f.size() < 5 or bool(f[4])
 		if InteriorLook.furniture(
-			self, String(f[0]), at + Vector3(0, sz.y / 2.0, 0), sz, Color(String(f[3]))
+			self,
+			String(f[0]),
+			at + Vector3(0, sz.y / 2.0, 0),
+			sz,
+			Color(String(f[3])),
+			_seat_target(String(f[0]), at)
 		):
 			if solid:
 				_solid(at + Vector3(0, sz.y / 2.0, 0), sz)
@@ -106,7 +127,7 @@ func _ready() -> void:
 	for n in def.get("npcs", []):
 		_spawn_npc(n)
 	var light := OmniLight3D.new()
-	light.position = Vector3(0, InteriorDefs.WALL_H - 0.2, 0)
+	light.position = Vector3(0, wall_height() - 0.2, 0)
 	light.omni_range = maxf(size.x, size.y) * 1.1
 	light.light_energy = 0.5
 	light.light_color = Color(1.0, 0.95, 0.85)
@@ -116,7 +137,7 @@ func _ready() -> void:
 func _build_shell() -> void:
 	var w := size.x
 	var d := size.y
-	var h := InteriorDefs.WALL_H
+	var h := wall_height()
 	var void_floor := _mesh_box(Vector3(0, -0.12, 0), Vector3(w + 30, 0.1, d + 30), C_VOID, "Void")
 	void_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_box(
@@ -148,6 +169,20 @@ func _build_shell() -> void:
 	_solid(Vector3(0, h / 2.0, d / 2.0 + t / 2.0), Vector3(w + 2 * t, h, t))
 	for z in [-d / 2.0 + 0.03]:
 		_mesh_box(Vector3(0, 0.08, z), Vector3(w, 0.16, 0.06), C_TRIM, "Trim")
+
+
+## A chair faces the nearest table / desk of the room (Vector3.INF for anything else).
+func _seat_target(fname: String, at: Vector3) -> Vector3:
+	if fname != "Cadeira":
+		return Vector3.INF
+	var best := Vector3.INF
+	for f in def.get("furniture", []):
+		if not SEATS_FACE.has(String(f[0])):
+			continue
+		var c := Vector3(float(f[1][0]), 0.0, float(f[1][1]))
+		if best == Vector3.INF or c.distance_to(at) < best.distance_to(at):
+			best = c
+	return best
 
 
 ## Exit mat on the front wall (spawn "door"), or on the back wall (back = true, spawn "back": gatehouses).

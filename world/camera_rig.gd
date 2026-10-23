@@ -1,7 +1,9 @@
 class_name OverworldCamera
 extends Node3D
 ## Port of the original camera_rig.gd: fixed-pitch orbit that follows the player with exponential
-## smoothing (pitch 38°, 16 m), tilt-shift depth of field around the focus (camera_attrs.tres),
+## smoothing, with the original overworld.tscn rig values (pitch 32°, 12 m, FOV 35°, far 220, DOF band
+## 6 m; the script defaults 38° / 16 m are overridden there; interiors: RouteWorld._camera_mode),
+## tilt-shift depth of field around the focus (camera_attrs.tres),
 ## per-zone look (camera_distance / camera_yaw / camera_pitch / camera_pitch_near over a rect /
 ## camera_far), and buildings / terraces that fade to see-through while they hide the player.
 ## Publishes main_cam_pos for the HGSS billboard shader. cam_left/cam_right still turn it in steps.
@@ -10,19 +12,19 @@ const GROUP := "ow_camera"
 const FADE_RADIUS := 18.0
 const ATTRS := "res://world/look/camera_attrs.tres"
 
-@export_range(15.0, 75.0) var pitch_deg := 38.0
-@export var distance := 16.0
+@export_range(15.0, 75.0) var pitch_deg := 32.0
+@export var distance := 12.0
 @export var follow_sharpness := 6.0
 @export var yaw_step_deg := 45.0
 @export var yaw_sharpness := 8.0
-@export var fov := 45.0
-@export var dof_band := 3.5
+@export var fov := 35.0
+@export var dof_band := 6.0
 @export var building_alpha := 0.25
 
 var camera: Camera3D
 var _yaw := 0.0
 var _yaw_target := 0.0
-var _dist := 16.0
+var _dist := 12.0
 var _zone_dist := 0.0
 var _zone_yaw := 0.0
 var _zone_pitch := 0.0
@@ -75,6 +77,16 @@ func set_zone_look(look: Dictionary) -> void:
 	var far := float(look.get("camera_far", 0.0))
 	if camera:
 		camera.far = far if far > 0.0 else _far
+
+
+## Lens: field of view (deg) and default far plane (m). RouteWorld switches the original's outdoor
+## (35° / 220 m, overworld.tscn) and interior (30° / 120 m, *_interiors.tscn) lenses.
+func set_lens(fov_deg: float, far_m: float) -> void:
+	fov = fov_deg
+	_far = far_m
+	if camera:
+		camera.fov = fov_deg
+		camera.far = far_m
 
 
 func _base_dist() -> float:

@@ -31,6 +31,19 @@ const TYPE_PT := {
 	"grass": "Planta", "fire": "Fogo", "water": "Água", "poison": "Veneno", "normal": "Normal"
 }
 const LAB := "oak_lab"
+## Quadra da 1ª luta com o rival: RIVAL_ARENA do original (story.gd), centrada no marcador
+## "rival_battle" do lab (o RivalBattleSpot do Lab.tscn).
+const RIVAL_ARENA := Vector2(10, 6.4)
+## LabExitTrigger do original (13 x 0.6, faixa inteira antes da porta, oak_stopped e sem
+## rival_battle_done). Aqui fica entre o spawn "door" (z 6.2) e o tapete de saída (z 7.1).
+const LAB_EXIT_TRIGGER := {
+	"node": "LabExitTrigger",
+	"event": "lab_exit",
+	"pos": [0.0, 6.8],
+	"size": [13, 3, 0.4],
+	"requires": ["oak_stopped"],
+	"blocks": ["rival_battle_done"]
+}
 const MT_MOON_B2F := "mt_moon_b2f"
 const MOON_CENTER := "pokemon_center_mt_moon"
 const MAGIKARP_PRICE := 500
@@ -56,6 +69,7 @@ var _actors: Dictionary = {}  ## papel -> StoryNpc (salas)
 var _balls: Dictionary = {}  ## espécie -> StarterBall
 var _triggers: Array = []
 static var _trigger_cache: Dictionary = {}  ## zona -> entradas de triggers tratadas
+var _cover: ColorRect  ## fade para preto antes de uma luta numa quadra fixa
 
 
 func is_running() -> bool:
@@ -240,6 +254,8 @@ func trigger(event: String, _source: Node = null) -> void:
 				await mt_moon_fossils()
 		"mt_moon_exit":
 			await mt_moon_exit()
+		"lab_exit":
+			await lab_exit()
 
 
 # --- API de cena --------------------------------------------------------------------------------
@@ -408,6 +424,9 @@ func _populate(id: String) -> void:
 				_spawn_role("oak", marker_pos(LAB, "oak"))
 			if StoryFlags.lab_has_rival(f) and actor("rival") == null:
 				_spawn_role("rival", marker_pos(LAB, "rival"))
+			var room: Node = world.interior(LAB) if world.has_method("interior") else null
+			if room and room.get_node_or_null(String(LAB_EXIT_TRIGGER.node)) == null:
+				room.add_child(StoryTrigger.from_entry(LAB_EXIT_TRIGGER))  # vive e morre com a sala
 			var left := StoryFlags.balls_left(f, Game.STARTERS)
 			for i in Game.STARTERS.size():
 				var sp: String = Game.STARTERS[i]
@@ -599,45 +618,68 @@ func pick_starter(b: StarterBall) -> void:
 	await say(
 		"", ["{RIVAL} recebeu %s do Prof. Carvalho!" % String(Dex.species(rsp).get("name", rsp))]
 	)
-	await rival_battle()
 	end()
 
 
-## 2c. Primeira luta com o rival (inicial dele no Nv5). Ganhar ou perder, a história segue.
+## 2c. Saída do laboratório (LabExitTrigger do original): sem inicial o Oak segura o jogador;
+## com ele, o rival desafia na hora de sair (como o original e o FRLG, não logo depois da escolha).
+func lab_exit() -> void:
+	if flag("rival_battle_done"):
+		return
+	if not flag("got_starter"):
+		await begin("lab_exit")
+		await say(OAK, ["Ei! Não vá embora ainda!"])
+		var p := player()
+		if p:
+			await walk(p, p.global_position + Vector3(0, 0, -1.5))
+		end()
+		return
+	await rival_battle()
+
+
+## 2d. Primeira luta com o rival (inicial dele no Nv5). Ganhar ou perder, a história segue.
+## Como o original: os dois se viram, fade, o jogador vai para a ponta oeste da quadra do lab e o
+## rival para a leste (BattleArena com opts.center/arena); depois da luta todos ficam onde estão.
 func rival_battle() -> void:
+	await begin("rival_battle")
 	var p := player()
 	var rival := actor("rival")
+	if rival == null and p:
+		rival = _spawn_role("rival", door_pos(LAB, p.global_position + Vector3(0, 0, 4)))
 	if rival and p:
-		await approach(rival, p, 1.4)
+		face_each_other(rival, p)
 	await say("{RIVAL}", ["Espere, {PLAYER}! Vamos ver qual Pokémon é mais forte!"])
 	var enemies: Array = []
 	for e in StoryFlags.first_rival_party(Game.flags):
 		enemies.append(Mon.create(String(e[0]), int(e[1])))
 	var tflag := "trainer_" + StoryFlags.RIVAL_TRAINER
 	var had_tflag := Game.flags.has(tflag)
-	var back := p.global_position if p else Vector3.ZERO
 	var opts := {
 		"kind": "trainer",
 		"trainer_id": StoryFlags.RIVAL_TRAINER,
 		"can_run": false,
 		"scripted": true
 	}
+	var spot = world.marker(LAB, "rival_battle") if world and world.has_method("marker") else null
+	if spot is Node3D:
+		opts["center"] = (spot as Node3D).global_position
+		opts["arena"] = RIVAL_ARENA
+	if rival:
+		opts["trainer_node"] = rival
 	if auto_battle:
 		opts["autoplay"] = true
 	opts.merge(battle_extra, true)
 	var r: Dictionary = {}
 	var ow := Overworld.of(self)
 	if ow and not enemies.is_empty():
+		await fade_out()
 		r = await ow.battle(enemies, opts)
+		uncover()
 	last_battle = r
 	# A vitória aqui não conta como vencer o rival da Rota 22.
 	if not had_tflag:
 		Game.flags.erase(tflag)
 	var outcome := String(r.get("outcome", "win"))
-	if outcome == "lose" and p:
-		# Batalha de roteiro: nada de voltar ao ponto de cura (o Game já curou e não cobrou).
-		p.global_position = back
-		p.velocity = Vector3.ZERO
 	set_flag("rival_battle_done")
 	set_flag("rival_battle_won", outcome == "win")
 	if outcome == "win":
@@ -658,6 +700,35 @@ func rival_battle() -> void:
 			"Depois siga para o norte, pela Rota 1, até a Cidade de Viridian."
 		]
 	)
+	end()
+
+
+## Ida do fade do original antes de trocar os treinadores de lugar (Transitions.fade 0 -> 1 em
+## 0.25 s); a arena faz a volta. O preto sai quando a luta começa (ou em uncover()).
+func fade_out(secs := 0.25) -> void:
+	if not is_inside_tree():
+		return
+	if _cover == null:
+		var cl := CanvasLayer.new()
+		cl.layer = 41
+		add_child(cl)
+		_cover = ColorRect.new()
+		_cover.color = Color(0, 0, 0, 0)
+		_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		cl.add_child(_cover)
+	var tw := create_tween()
+	tw.tween_property(_cover, "color:a", 1.0, secs)
+	await tw.finished
+	if not Game.battle_started.is_connected(uncover):
+		Game.battle_started.connect(uncover, CONNECT_ONE_SHOT)
+
+
+func uncover() -> void:
+	if Game.battle_started.is_connected(uncover):
+		Game.battle_started.disconnect(uncover)
+	if _cover:
+		_cover.color.a = 0.0
 
 
 ## 3. Mamãe cura depois da primeira luta.
@@ -847,22 +918,31 @@ func brock_battle(npc: Node = null) -> Dictionary:
 	await begin("brock")
 	var def := Dex.trainer(BROCK)
 	var p := player()
-	if npc is Node3D and p:
-		face_each_other(npc, p)
+	var body := npc as Node3D
+	var home := body.global_position if body else Vector3.INF
+	var home_yaw := body.rotation.y if body else 0.0
+	if body and p:
+		face_each_other(body, p)
 	if flag("badge_boulder"):
 		await say("Brock", TrainerText.lines(BROCK, "after", def))
 		end()
 		return {}
 	await say("Brock", TrainerText.lines(BROCK, "intro", def))
 	var enemies := WorldTrainer.build_party(def)
+	# A quadra do ginásio ("center" + "arena" do trainers.json) a arena acha sozinha; como no
+	# original, o Brock vai para a ponta leste e volta para o lugar dele depois (_return_home).
 	var opts := {"kind": "trainer", "trainer_id": BROCK, "can_run": false}
+	if body:
+		opts["trainer_node"] = body
 	if auto_battle:
 		opts["autoplay"] = true
 	opts.merge(battle_extra, true)
 	var r: Dictionary = {}
 	var ow := Overworld.of(self)
 	if ow and not enemies.is_empty():
+		await fade_out()
 		r = await ow.battle(enemies, opts)
+		uncover()
 	last_battle = r
 	if String(r.get("outcome", "")) == "win":
 		await say("Brock", TrainerText.lines(BROCK, "defeat", def))
@@ -873,6 +953,13 @@ func brock_battle(npc: Node = null) -> Dictionary:
 		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(1))
 	elif String(r.get("outcome", "")) == "lose":
 		await say("Brock", ["Volte quando estiver mais preparado."])
+	if (
+		is_instance_valid(body)
+		and home.is_finite()
+		and body.global_position.distance_to(home) > 0.2
+	):
+		await walk(body, home, 8.0)
+		body.rotation.y = home_yaw
 	end()
 	return r
 

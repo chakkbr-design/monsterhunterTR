@@ -55,7 +55,12 @@ const HGSS_SCALE := 0.8
 const HGSS_TREE := "hgss/common/tree"
 const HGSS_BUSH := "hgss/common/bush"
 const HGSS_BOULDER := "hgss/common/boulder"
+const KENNEY_TREE_SCALE := 3.2
 const BOARD_SCALE_HGSS := 0.6
+## Door spawn points of the original zone scenes (scenes/world/zones/*.tscn): 1.6 m in front of the
+## model's facade (its Door area 0.15 m out, the spawn 1.45 m past it). The port's door is a solid
+## interactable, so it stays on the facade.
+const DOOR_SPAWN := 1.6
 const HGSS_FLOWER_Y := 0.03
 const HGSS_FLOWER_SECONDS := 0.25
 const FLOWER_KINDS := [
@@ -381,6 +386,31 @@ func _flush() -> void:
 
 static func _scaled(at: Vector3, size: Vector3, yaw := 0.0) -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(size), at)
+
+
+static var _boxes: Dictionary = {}  ## model id -> local AABB at scale 1, rot 0
+
+
+## Local AABB of a model at scale 1 and rot 0 (empty when missing), like the original's probe
+## instances (world_builder._model_width, Props.bounds).
+static func model_box(id: String) -> AABB:
+	if not _boxes.has(id):
+		var box := AABB()
+		var ps := WorldProps.scene(id)
+		if ps:
+			var n: Node3D = ps.instantiate()
+			box = WorldProps.bounds(n, true)
+			n.free()
+		_boxes[id] = box
+	return _boxes[id]
+
+
+## Axis-aligned box of model `id` placed at the origin with scale s and yaw (rad).
+static func placed_box(id: String, s: float, yaw := 0.0) -> AABB:
+	return (
+		Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * s), Vector3.ZERO)
+		* model_box(id)
+	)
 
 
 # --- terrain -------------------------------------------------------------------------------------
@@ -757,6 +787,8 @@ func _buildings() -> void:
 		var rot := float(b.get("rot", 0.0))
 		var basis := Basis(Vector3.UP, deg_to_rad(rot))
 		var front_l := float(dims[3])
+		var back_l := front_l - d
+		var spawn_l := 1.2
 		var id := String(b.get("id", key))
 		var inst: Node3D = null
 		if WorldProps.exists(model) and is_inside_tree():
@@ -777,6 +809,12 @@ func _buildings() -> void:
 			)
 		if inst:
 			inst.name = id.to_pascal_case()
+			# Doors on the model's own facade, spawns where the original zone scenes put them.
+			var lb := model_box(model)
+			var bs := float(b.get("scale", 5.0))
+			front_l = lb.end.z * bs
+			back_l = lb.position.z * bs
+			spawn_l = DOOR_SPAWN
 			var bb := WorldProps.bounds(inst)
 			_solid_box(
 				Vector3(
@@ -812,7 +850,9 @@ func _buildings() -> void:
 		door.rotation.y = PI + deg_to_rad(rot)
 		add_child(door)
 		if dr.has("spawn"):
-			arrivals[String(dr.spawn)] = door.position + basis * Vector3(0, 0, 1.2)
+			arrivals[String(dr.spawn)] = _arrival_pad(
+				door.position + basis * Vector3(0, 0, spawn_l)
+			)
 		var bd: Dictionary = b.get("back_door", {})
 		if not bd.is_empty():  # gatehouses: a second door on the back (-Z) face
 			var back := WorldDoor.new()
@@ -824,13 +864,13 @@ func _buildings() -> void:
 			back.body_height = 2.0
 			back.target_scene = String(bd.get("target_scene", ""))
 			back.target_spawn = String(bd.get("target_spawn", ""))
-			back.position = origin + basis * Vector3(float(b.get("door_dx", 0.0)), 0, front_l - d)
+			back.position = origin + basis * Vector3(float(b.get("door_dx", 0.0)), 0, back_l)
 			back.rotation.y = deg_to_rad(rot)
 			add_child(back)
 			if bd.has("spawn"):
-				var ba := back.position + basis * Vector3(0, 0, -1.2)
+				var ba := back.position + basis * Vector3(0, 0, -spawn_l)
 				ba.y = height_at(ba.x, ba.z)  # the gate may sit on a terrace that ends at its back wall
-				arrivals[String(bd.spawn)] = ba
+				arrivals[String(bd.spawn)] = _arrival_pad(ba)
 		if b.has("board"):
 			if inst:
 				_board(g, inst, b)
@@ -844,6 +884,14 @@ func _buildings() -> void:
 				add_child(lab)
 		_bump("buildings")
 		await _tick()
+
+
+## A door spawn just past the zone edge (gatehouses whose far side opens on the next zone) gets a
+## patch of this zone's ground under it, so arriving there never waits for the neighbour to stream in.
+func _arrival_pad(at: Vector3) -> Vector3:
+	if not rect.grow(0.6).has_point(Vector2(at.x, at.z)):
+		_solid_box(at + Vector3(0, -0.5, 0), Vector3(2.0, 1.0, 2.0))
+	return at
 
 
 ## The original's sign stand beside a building door (Pokémon Center, Mart, Museum...).
@@ -990,20 +1038,22 @@ func _fences() -> void:
 		mid.y = height_at(mid.x, mid.z)
 		var len := a.distance_to(b)
 		var yaw := atan2(-(b - a).z, (b - a).x)
-		var model := String(f.get("model", "hgss/common/fence"))
-		var s := float(f.get("scale", 0.8))
+		# Original defaults: a Kenney nature/fence_simple at scale 2 (Viridian's grove fence has no model).
+		var model := String(f.get("model", "nature/fence_simple"))
+		var s := float(f.get("scale", 2.0))
 		if WorldProps.exists(model):
-			# Original: n pieces of the model's native width, stretched to fill the run exactly.
-			var native := 2.0 * s if model == "hgss/common/fence" else 2.0 * s
+			# Original: n pieces of the model's native width, stretched to fill the run exactly, each
+			# re-centred on its slot (Kenney pieces have their origin on a corner).
+			var lb := model_box(model)
+			var native := maxf(lb.size.x * s, 0.01)
 			var n := maxi(int(round(len / native)), 1)
+			var k := len / n / native
+			var basis := Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(s * k, s, s))
+			var c := basis * Vector3(lb.get_center().x, 0.0, lb.get_center().z)
 			for i in n:
 				var at := a.lerp(b, (i + 0.5) / n)
 				at.y = height_at(at.x, at.z)
-				var xf := Transform3D(
-					Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(s * len / n / native, s, s)),
-					at
-				)
-				_add_model(model, xf)
+				_add_model(model, Transform3D(basis, at - c))
 		else:
 			var xf := Transform3D(Basis(Vector3.UP, yaw), mid + Vector3(0, 0.45, 0))
 			_add("fence", xf.scaled_local(Vector3(len + 0.1, 0.9, 0.12)))
@@ -1085,19 +1135,35 @@ func _bounds() -> void:
 # --- vegetation & props --------------------------------------------------------------------------
 
 
-## A tree: the original's HGSS billboard card (batched), placeholder trunk + crown if missing.
-func _tree(at: Vector3, s: float, model := HGSS_TREE) -> void:
-	var yaw := _rng.randf() * TAU
-	if model.begins_with("hgss/"):
-		if not _add_model(
+## A tree, like the original world_builder._tree: HGSS billboard card (batched) at HGSS_SCALE, or a
+## Kenney tree at KENNEY_TREE_SCALE widened 1.2-1.4x in x/z; random yaw; a trunk collider sized
+## from the placed model (radius max(18% of its width, 0.3), height its own) unless `collide` is
+## false (map "cover" trees). Placeholder trunk + crown if the model is missing.
+func _tree(at: Vector3, s: float, model := HGSS_TREE, collide := true) -> void:
+	var yaw := deg_to_rad(_rng.randi_range(0, 359))
+	var hgss := model.begins_with("hgss/")
+	var sc := (HGSS_SCALE if hgss else KENNEY_TREE_SCALE) * s
+	var ok := false
+	if hgss:
+		ok = _add_model(
+			model, _scaled(at, Vector3.ONE * sc, yaw), {"billboard": true, "tint": HGSS_TREE_TINT}
+		)
+	else:
+		var wide := _rng.randf_range(1.2, 1.4)
+		var pal := _palette(_look.get("tree_palette", {}))
+		ok = _add_model(
 			model,
-			_scaled(at, Vector3.ONE * HGSS_SCALE * s),
-			{"billboard": true, "tint": HGSS_TREE_TINT}
-		):
-			_placeholder_tree(at, s, yaw)
-	elif not _add_model(model, _scaled(at, Vector3.ONE * 3.2 * s, yaw), {}):
+			_scaled(at, Vector3(sc * wide, sc, sc * wide), yaw),
+			{"palette": pal} if not pal.is_empty() else {}
+		)
+	if not ok:
 		_placeholder_tree(at, s, yaw)
-	_solid_cyl(at, 0.45 * s, 3.0 * s)
+	if collide:
+		if ok:
+			var bb := placed_box(model, sc, yaw)
+			_solid_cyl(at, maxf(bb.size.x * 0.18, 0.3), maxf(bb.size.y, 1.5))
+		else:
+			_solid_cyl(at, 0.45 * s, 3.0 * s)
 	if leaf_points.size() < 4000:
 		leaf_points.append(at)
 	_bump("trees")
@@ -1108,6 +1174,9 @@ func _placeholder_tree(at: Vector3, s: float, yaw: float) -> void:
 	_add("crown", _scaled(at + Vector3(0, 2.4 * s, 0), Vector3(2.4, 2.2, 2.4) * s, yaw))
 
 
+## Tree lines: rows of trees spaced by the first model's width (original: step and row offset 85%
+## of the HGSS tree's width at HGSS_SCALE, odd rows staggered by half of it; Kenney 2.3 / 2.1 / 1.15),
+## jittered +-0.4 m, a random model of the line per tree. Then the single trees of the map.
 func _trees() -> void:
 	for t in data.get("tree_lines", []):
 		var a := Vector3(float(t.from[0]), 0, float(t.from[1]))
@@ -1115,23 +1184,37 @@ func _trees() -> void:
 		var o: Array = t.get("out", [0, 0])
 		var out := Vector3(float(o[0]), 0, float(o[1]))
 		var models: Array = t.get("models", [HGSS_TREE])
-		var step := 1.9
+		var step := 2.3
+		var row_off := 2.1
+		var stagger := 1.15
+		if String(models[0]).begins_with("hgss/"):
+			var w := placed_box(String(models[0]), HGSS_SCALE).size.x
+			if w > 0.01:
+				step = w * 0.85
+				row_off = w * 0.85
+				stagger = w * 0.5
 		var n := maxi(int(a.distance_to(b) / step), 1)
 		for row in int(t.get("rows", 2)):
 			var off := (
-				out * (row * 1.9) + (Vector3.ZERO if row % 2 == 0 else (b - a).normalized() * 0.95)
+				out * (row * row_off)
+				+ (Vector3.ZERO if row % 2 == 0 else (b - a).normalized() * stagger)
 			)
 			for i in n + 1:
 				var p := (
 					a.lerp(b, float(i) / n)
 					+ off
-					+ Vector3(_rng.randf_range(-0.3, 0.3), 0, _rng.randf_range(-0.3, 0.3))
+					+ Vector3(_rng.randf_range(-0.4, 0.4), 0, _rng.randf_range(-0.4, 0.4))
 				)
 				p.y = height_at(p.x, p.z)
-				_tree(p, _rng.randf_range(0.9, 1.15), String(models[(i + row) % models.size()]))
+				_tree(p, _rng.randf_range(0.9, 1.15), String(models[_rng.randi() % models.size()]))
 		await _tick()
 	for t in data.get("trees", []):
-		_tree(_at(t), _rng.randf_range(0.9, 1.1), String(t.get("model", HGSS_TREE)))
+		_tree(
+			_at(t),
+			_rng.randf_range(0.9, 1.15),
+			String(t.get("model", HGSS_TREE)),
+			not bool(t.get("cover", false))
+		)
 		await _tick()
 
 
@@ -1143,12 +1226,13 @@ func _props() -> void:
 		var mid := String(p.get("model", ""))
 		var model := mid.get_file()
 		var at := _at(p) + Vector3(0, float(p.get("dy", 0.0)), 0)
-		var s := float(p.get("scale", 1.0))
+		var s := float(p.get("scale", 2.0))  # original world_builder._props default
 		var yaw := deg_to_rad(float(p.get("rot", 0.0)))
 		var collide := String(p.get("collide", ""))
+		var sprite := String(p.get("sprite", "")) != ""
 		if bool(p.get("cave", false)):
 			_cave_mouth(g, p)
-		elif String(p.get("sprite", "")) != "":
+		elif sprite:
 			_sprite_prop(g, p)
 		elif WorldProps.exists(mid):
 			var opts := {}
@@ -1194,25 +1278,57 @@ func _props() -> void:
 			_add("wood", _scaled(at + Vector3(0, 0.3, 0), Vector3(1.2, 0.6, 0.5), yaw))
 		else:
 			_add("box", _scaled(at + Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.6), yaw))
-		match collide:
-			"round":
-				_solid_cyl(_at(p), 0.45 * s, 1.2)
-			"trunk":
-				_solid_cyl(_at(p), 0.15, 2.4)
-			"box":
-				var size := (
-					Vector3(2.6, 1.2, 2.6) if model == "fountain" else Vector3(0.6, 1.2, 0.6)
-				)
-				_solid_box(_at(p) + Vector3(0, size.y / 2.0, 0), size)
+		if collide != "" and not sprite and not bool(p.get("cave", false)):
+			if WorldProps.exists(mid):
+				_prop_collider(mid, at, s, yaw, collide, p)
+			else:
+				match collide:
+					"round":
+						_solid_cyl(_at(p), 0.45 * s, 1.2)
+					"trunk":
+						_solid_cyl(_at(p), 0.15, 2.4)
+					"box":
+						var size := (
+							Vector3(2.6, 1.2, 2.6)
+							if model == "fountain"
+							else Vector3(0.6, 1.2, 0.6)
+						)
+						_solid_box(_at(p) + Vector3(0, size.y / 2.0, 0), size)
 		_bump("props")
 		await _tick()
+
+
+## Collider of a model prop sized from the placed model, like the original Props.place "collide":
+## "box" = its bounds (at least 1 m tall), "trunk" = cylinder of radius max(18% of its width, 0.3),
+## "round" = cylinder of radius collide_radius or half its larger side (min 0.2); cylinders are as
+## tall as the model, at least 1.5 m.
+func _prop_collider(
+	id: String, at: Vector3, s: float, yaw: float, kind: String, p: Dictionary
+) -> void:
+	var bb := placed_box(id, s, yaw)
+	bb.position += at
+	match kind:
+		"box":
+			var h := maxf(bb.size.y, 1.0)
+			_solid_box(
+				Vector3(bb.get_center().x, bb.position.y + h / 2.0, bb.get_center().z),
+				Vector3(maxf(bb.size.x, 0.2), h, maxf(bb.size.z, 0.2))  # flat cards get some depth
+			)
+		"trunk":
+			_solid_cyl(at, maxf(bb.size.x * 0.18, 0.3), maxf(bb.size.y, 1.5))
+		"round":
+			var r := float(p.get("collide_radius", maxf(bb.size.x, bb.size.z) * 0.5))
+			_solid_cyl(at, maxf(r, 0.2), maxf(bb.size.y, 1.5))
 
 
 ## Billboard prop sprite of the original (training dummies: prop_dummy_*.png).
 func _sprite_prop(parent: Node3D, p: Dictionary) -> void:
 	var tex := WorldFx.tex("sprites/%s.png" % String(p.sprite))
+	var collide := String(p.get("collide", "")) != ""
 	if tex == null:
 		_add("wood", _scaled(_at(p) + Vector3(0, 0.5, 0), Vector3(0.5, 1.0, 0.5)))
+		if collide:
+			_solid_box(_at(p) + Vector3(0, 0.6, 0), Vector3(0.6, 1.2, 0.6))
 		return
 	var h := float(p.get("height", 1.3))
 	var spr := Sprite3D.new()
@@ -1225,6 +1341,10 @@ func _sprite_prop(parent: Node3D, p: Dictionary) -> void:
 	spr.pixel_size = h / maxf(1.0, float(tex.get_height()))
 	spr.position = _at(p) + Vector3(0, h / 2.0, 0)
 	parent.add_child(spr)
+	if collide:  # original: a wall as wide as the sprite, 0.4 m deep
+		_solid_box(
+			spr.position, Vector3(h * float(tex.get_width()) / float(tex.get_height()), h, 0.4)
+		)
 
 
 func _cave_mouth(parent: Node3D, p: Dictionary) -> void:

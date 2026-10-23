@@ -125,7 +125,16 @@ func _story_without_world() -> void:
 		game.flags.get("got_starter") == true and game.flags.get("rival_starter") == "Squirtle",
 		"flags got_starter / rival Squirtle"
 	)
-	check(game.flags.get("rival_battle_done") == true, "luta resolvida sem mundo (vitória padrão)")
+	check(
+		not game.flags.has("rival_battle_done"),
+		"escolher não começa a luta (ela é na saída do lab)"
+	)
+	await story.trigger("lab_exit")
+	check(
+		game.flags.get("rival_battle_done") == true,
+		"saída do lab: luta resolvida sem mundo (vitória padrão)"
+	)
+	check(not story.is_running(), "saída do lab não deixa cena presa")
 	check(not game.flags.has("trainer_rival_blue_route22"), "rival da Rota 22 continua não vencido")
 
 	# Recusar no cartão não escolhe nada.

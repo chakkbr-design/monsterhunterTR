@@ -125,7 +125,7 @@ func _run() -> void:
 			"Charmander no ball_2"
 		)
 
-	# Escolhe Charmander (como o E do jogador faria) -> rival pega Squirtle -> batalha.
+	# Escolhe Charmander (como o E do jogador faria) -> rival pega Squirtle. A luta é na saída do lab.
 	var battles: Array = []
 	game.battle_finished.connect(func(r): battles.append(r))
 	if b:
@@ -133,11 +133,20 @@ func _run() -> void:
 		p.locked = true
 		story.pick_starter(b)
 	ok = await until(
+		func(): return not story.is_running() and game.flags.get("got_starter", false), 30.0
+	)
+	p.locked = false
+	check(ok, "inicial escolhido")
+	check(
+		battles.is_empty() and not game.flags.get("rival_battle_done", false),
+		"escolher não começa a luta (ela é na saída do lab, como no original)"
+	)
+	await _lab_exit_battle(p)
+	ok = await until(
 		func(): return not story.is_running() and game.flags.get("rival_battle_done", false),
 		MAX_WAIT_S
 	)
-	p.locked = false
-	check(ok, "inicial + batalha do rival terminaram")
+	check(ok, "batalha do rival terminou")
 	check(game.party.size() == 1 and game.party[0].species == "Charmander", "Charmander na equipe")
 	check(game.flags.get("rival_starter") == "Squirtle", "rival ficou com Squirtle")
 	check(
@@ -203,3 +212,60 @@ func _run() -> void:
 
 	print("%s (%d falhas)" % ["PASSOU" if _fails == 0 else "FALHOU", _fails])
 	quit(1 if _fails else 0)
+
+
+## Anda para a saída do lab: o rival desafia e a luta acontece na quadra do RivalBattleSpot
+## (original: centro (0, 0.6), 10 x 6.4, jogador em x -5.3, rival em +5.3, mons em -3.8 e +2.12).
+func _lab_exit_battle(p: CharacterBody3D) -> void:
+	var lab: Node3D = world.interior("oak_lab")
+	check(lab.get_node_or_null("LabExitTrigger") != null, "gatilho da saída do lab")
+	p.global_position = lab.to_global(Vector3(-2.5, 0.05, 5.6))
+	await frames(3)
+	Input.action_press("move_back")
+	var started := await until(func(): return game.is_busy(), 6.0)
+	Input.action_release("move_back")
+	if not started:
+		# Câmera não alinhada ao sul: põe o jogador direto no gatilho.
+		p.global_position = lab.to_global(Vector3(-2.5, 0.05, 6.8))
+		started = await until(func(): return game.is_busy(), 6.0)
+	check(started, "o rival desafia na saída do lab")
+	if not started:
+		return
+	await frames(2)
+	var arena: Node3D = game.get("_arena")
+	var spot: Node3D = world.marker("oak_lab", "rival_battle")
+	check(
+		(
+			arena != null
+			and spot != null
+			and arena.global_position.distance_to(spot.global_position) < 0.01
+		),
+		"quadra no centro do lab (marcador rival_battle)"
+	)
+	if arena == null:
+		return
+	check(arena.fixed and arena.rect.size.is_equal_approx(Vector2(10, 6.4)), "quadra 10 x 6,4")
+	var lp: Vector3 = lab.to_local(p.global_position)
+	check(
+		Vector2(lp.x, lp.z).distance_to(Vector2(-5.3, 0.6)) < 0.05,
+		"jogador na ponta oeste (%s)" % lp
+	)
+	var rv: Node3D = story.actor("rival")
+	var lr: Vector3 = lab.to_local(rv.global_position) if rv else Vector3.INF
+	check(
+		Vector2(lr.x, lr.z).distance_to(Vector2(5.3, 0.6)) < 0.05, "rival na ponta leste (%s)" % lr
+	)
+	check(
+		arena.player.position.distance_to(Vector3(-3.8, 0, 0)) < 0.05,
+		"Charmander 1,5 m à frente do jogador (%s)" % arena.player.position
+	)
+	check(
+		arena.enemy.position.distance_to(Vector3(2.12, 0, 0)) < 0.05,
+		"Squirtle a 40%% do caminho até o rival (%s)" % arena.enemy.position
+	)
+	var free := true
+	for x in range(-4, 5):
+		for z in [-2.6, 0.0, 2.6]:  # local da arena
+			if arena._solid_at(Vector3(x, 0, z)):
+				free = false
+	check(free, "nenhum móvel dentro da quadra")

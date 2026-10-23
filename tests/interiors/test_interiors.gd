@@ -193,8 +193,8 @@ func _doors() -> void:
 	)
 	var rig = get_first_node_in_group("ow_camera")
 	check(
-		not is_equal_approx(rig.distance, w.INDOOR_DISTANCE),
-		"outdoor camera restored (%.1f)" % rig.distance
+		not is_equal_approx(rig.pitch_deg, w.INDOOR_PITCH),
+		"outdoor camera restored (pitch %.1f)" % rig.pitch_deg
 	)
 	check(events.has(["zone", "pallet_town"]), "location_changed(zone, pallet_town)")
 	await frames(10)

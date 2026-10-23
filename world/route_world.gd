@@ -24,8 +24,13 @@ const ZONES := [
 ]
 const LOAD_RANGE := 40.0
 const UNLOAD_MARGIN := 20.0
-const INDOOR_DISTANCE := 11.0
-const INDOOR_PITCH := 52.0
+## Interior camera of the original (every scenes/interiors/*_interiors.tscn CameraRig): 12 m, 30°,
+## FOV 30°, far 120 m, DOF band 2.5 m. Outdoors the rig keeps its own (overworld.tscn) values.
+const INDOOR_DISTANCE := 12.0
+const INDOOR_PITCH := 30.0
+const INDOOR_FOV := 30.0
+const INDOOR_FAR := 120.0
+const INDOOR_DOF := 2.5
 const REARM_S := 0.5  ## walk-on triggers ignored this long after arriving
 
 ## Hand-placed content the maps don't carry. Trainers come from the map JSON (bug catchers in the forest,
@@ -49,7 +54,7 @@ var _loading := ""
 var _check_t := 0.0
 var _since_arrival := 0.0
 var _fade: ColorRect
-var _cam_out := Vector2(14.0, 38.0)  ## outdoor rig distance, pitch
+var _cam_out := Vector4(12.0, 32.0, 35.0, 6.0)  ## outdoor rig distance, pitch, fov, dof band
 
 
 func _ready() -> void:
@@ -70,7 +75,7 @@ func _ready() -> void:
 	_make_sky()
 	var rig := _rig()
 	if rig:
-		_cam_out = Vector2(rig.distance, rig.pitch_deg)
+		_cam_out = Vector4(rig.distance, rig.pitch_deg, rig.fov, rig.dof_band)
 	var sz := String(start.get("zone", "pallet_town"))
 	var sp := String(start.get("spawn", "start"))
 	var saved := _vec(sv.get("pos"))
@@ -260,6 +265,8 @@ func _camera_mode(indoor: bool) -> void:
 		return
 	rig.distance = INDOOR_DISTANCE if indoor else _cam_out.x
 	rig.pitch_deg = INDOOR_PITCH if indoor else _cam_out.y
+	rig.dof_band = INDOOR_DOF if indoor else _cam_out.w
+	rig.set_lens(INDOOR_FOV if indoor else _cam_out.z, INDOOR_FAR if indoor else 220.0)
 	if indoor:  # face the room's open (low) front wall
 		rig._yaw = 0.0
 		rig._yaw_target = 0.0

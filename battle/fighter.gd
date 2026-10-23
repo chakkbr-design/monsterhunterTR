@@ -118,16 +118,13 @@ var look_h := 1.0
 
 var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
 var vfx: BattleVfx
-var _shadow: MeshInstance3D
-var _ring: MeshInstance3D
-var _ring_mat: StandardMaterial3D
 var _status_fx: FxSprite
 var _status_fx_id := ""
 var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
 var _spawn_t := 0.0
 
-const SPAWN_GROW := 0.3
+const SPAWN_GROW := 0.25  ## game.gd send_out: escala 0.05 -> 1.15 em 0.15 s, -> 1.0 em 0.1 s
 const FLASH_COL := Color(2.2, 2.2, 2.2)
 
 
@@ -163,46 +160,22 @@ func _build_visual() -> void:
 	look.manual = true
 	look.auto_motion = false
 	look.auto_face = false
-	look.move_speed = PLAYER_SPEED if controller == "player" else AI_SPEED
 	look.species = mon.species
 	add_child(look)
 	look.facing = facing
-	# Sombra suave + anel do lado (azul = jogador, vermelho = inimigo), finos para não brigar com a arte.
-	var r := clampf(look.footprint() * 0.55, 0.25, 1.1)
-	_shadow = MeshInstance3D.new()
-	var sm := CylinderMesh.new()
-	sm.top_radius = r
-	sm.bottom_radius = r
-	sm.height = 0.01
-	sm.radial_segments = 24
-	var smat := StandardMaterial3D.new()
-	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	smat.albedo_color = Color(0, 0, 0, 0.28)
-	sm.material = smat
-	_shadow.mesh = sm
-	_shadow.position.y = 0.02
-	_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_shadow)
-	_ring = MeshInstance3D.new()
-	var rm := TorusMesh.new()
-	rm.inner_radius = r + 0.04
-	rm.outer_radius = r + 0.1
-	rm.rings = 32
-	_ring_mat = StandardMaterial3D.new()
-	_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_ring_mat.albedo_color = (
-		Color(0.35, 0.65, 1.0, 0.75) if side == 0 else Color(1.0, 0.35, 0.3, 0.75)
-	)
-	rm.material = _ring_mat
-	_ring.mesh = rm
-	_ring.scale = Vector3(1, 0.15, 1)
-	_ring.position.y = 0.03
-	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_ring)
+	# Como o original (creature.tscn): só o Sprite3D, que projeta sombra de verdade; sem disco nem anel.
 	_spawn_t = SPAWN_GROW
 	refresh_label()
+
+
+## Escala de tempo da luta (a mesma do dt que a arena passa), para o ritmo do sprite.
+func _fight_speed() -> float:
+	if arena == null or not ("fight_speed" in arena):
+		return 1.0
+	var k := float(arena.fight_speed)
+	if "menu" in arena and String(arena.menu) != "":
+		k *= 0.2  # MODAL_SLOW da arena (battle.gd:159)
+	return k
 
 
 ## Altura visível da arte (m). Só visual: a jogabilidade continua usando look_h.
@@ -222,10 +195,13 @@ func visual_step(dt: float) -> void:
 	var vdt := 0.0 if impact_t > 0.0 else dt
 	if _spawn_t > 0.0:
 		_spawn_t = maxf(_spawn_t - dt, 0.0)
-		var k := 1.0 - _spawn_t / SPAWN_GROW
-		look.scale_mult = lerpf(0.05, 1.0, ease(k, 0.4))
-	look.velocity = velocity
-	look.move_speed = PLAYER_SPEED if controller == "player" else AI_SPEED  # muda ao trocar o controle (Tab)
+		var t := SPAWN_GROW - _spawn_t
+		look.scale_mult = (
+			lerpf(0.05, 1.15, t / 0.15) if t < 0.15 else lerpf(1.15, 1.0, (t - 0.15) / 0.1)
+		)
+	# Em m/s de tempo real, como o body.velocity do original (já vezes a velocidade da luta): o Walk
+	# anda a |v| / 2.5 com o delta também escalado (creature.gd _pmd_rate / combatant drive_velocity).
+	look.velocity = velocity * _fight_speed()
 	if facing.length() > 0.01:
 		look.facing = facing
 	var st := ""
@@ -630,7 +606,6 @@ func _faint() -> void:
 	if look:
 		look.tint = _tint()  # sem isso o clarão de um acerto anterior fica preso no sprite desmaiado
 		look.faint()
-		_ring.visible = false
 	fainted.emit(self)
 
 

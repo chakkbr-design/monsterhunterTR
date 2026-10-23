@@ -5,7 +5,7 @@ extends CharacterBody3D
 
 const GROUP := "ow_wild"
 const LAYER := 4
-const SPEED := 2.6
+const SPEED := 2.5  ## creature.gd move_speed (also the CreatureSprite walk-rate base)
 const TOUCH := 1.1
 const CHASE := 6.0
 const FLEE := 5.0

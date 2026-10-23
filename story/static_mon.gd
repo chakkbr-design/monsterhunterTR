@@ -15,6 +15,13 @@ var hidden := false
 var fighting := false
 var _area: Area3D
 var _sprite: Node3D
+## Sprite como no original (world/static_mon.gd): 1.25x, respira, vira a cada 3-6 s, pula a cada 5-8 s.
+const SPRITE_SCALE := 1.25
+const ROW_VEC := [Vector3(0, 0, 1), Vector3(-1, 0, 0), Vector3(1, 0, 0), Vector3(0, 0, -1)]
+var _idle_t := 0.0
+var _turn_t := 0.0
+var _hop_t := 0.0
+var _yaw := INF
 
 ## Opts extras da batalha (testes: autoplay, seed, speed).
 static var battle_extra: Dictionary = {}
@@ -69,7 +76,10 @@ func _build_body() -> void:
 		_sprite = cs_script.new()
 		_sprite.set("species", species)
 		_sprite.set("auto_motion", false)
+		_sprite.set("scale_mult", SPRITE_SCALE)
 		add_child(_sprite)
+		_turn_t = randf_range(3.0, 6.0)
+		_hop_t = randf_range(5.0, 8.0)
 		return
 	var mi := MeshInstance3D.new()
 	var sm := SphereMesh.new()
@@ -79,6 +89,26 @@ func _build_body() -> void:
 	mi.mesh = sm
 	mi.position.y = 0.5
 	add_child(mi)
+
+
+func _process(delta: float) -> void:
+	if _sprite == null or not _sprite.has_method("face") or not visible:
+		return
+	if rotation.y != _yaw:  # face() / facing do mapa: o sprite olha para onde o corpo olha
+		_yaw = rotation.y
+		_sprite.face(-global_transform.basis.z)
+	_idle_t += delta
+	_sprite.scale = Vector3(1.0, 1.0 + sin(_idle_t * 1.6) * 0.02, 1.0)
+	_turn_t -= delta
+	if _turn_t <= 0.0:
+		_turn_t = randf_range(3.0, 6.0)
+		_sprite.face(ROW_VEC[randi() % 4])
+	_hop_t -= delta
+	if _hop_t <= 0.0:
+		_hop_t = randf_range(5.0, 8.0)
+		var tw := _sprite.create_tween()
+		tw.tween_property(_sprite, "position:y", 0.18, 0.16).set_trans(Tween.TRANS_QUAD)
+		tw.tween_property(_sprite, "position:y", 0.0, 0.2).set_trans(Tween.TRANS_QUAD)
 
 
 func prompt() -> String:

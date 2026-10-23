@@ -2,6 +2,9 @@ class_name CharSprite
 extends Sprite3D
 ## Billboard walking sheet of the original (player, NPCs, trainers): 3 columns x 4 rows
 ## (Down, Left, Right, Up), walk cycle [0, 1, 0, 2], pixel 0.05 m, feet at the node origin.
+## Like the original player.tscn / npc.tscn Sprite3D it is a Y-axis billboard (billboard = 2): it stays
+## upright and only turns toward the camera, so the 1.6 m figure keeps its height next to the buildings
+## (a full billboard tilts back with the camera pitch and reads ~20% taller).
 ## The row is chosen in SCREEN space (facing rotated by the camera yaw), like npc.gd camera_row and
 ## player.gd SpriteLook.facing_row. By default it reads its parent: facing = parent's -Z (WorldNpc
 ## faces that way) and "moving" = the parent's position changed; the player drives it directly
@@ -50,7 +53,7 @@ func _ready() -> void:
 	vframes = 4
 	pixel_size = PIXEL
 	offset = Vector2(0, 16)
-	billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 	shaded = true
