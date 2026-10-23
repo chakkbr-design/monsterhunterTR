@@ -4,9 +4,9 @@ extends RefCounted
 
 const MISSABLE := ["dash", "arc", "multi_arc", "whip", "projectile", "beam", "aoe_target", "zone"]
 const STATUS_IMMUNE := {"burn": "fire", "poison": "poison", "paralysis": "electric", "leech": "grass"}
-const STAT_NAMES := {"atk": "Attack", "def": "Defense", "spa": "Sp. Atk", "spd": "Sp. Def", "spe": "Speed", "acc": "Accuracy"}
-const STATUS_WORDS := {"burn": "BURNED!", "poison": "POISONED!", "paralysis": "PARALYZED!", "sleep": "ASLEEP!",
-	"leech": "SEEDED!", "flinch": "FLINCHED!", "confusion": "CONFUSED!"}
+const STAT_NAMES := {"atk": "Ataque", "def": "Defesa", "spa": "At. Esp.", "spd": "Def. Esp.", "spe": "Velocidade", "acc": "Precisão"}
+const STATUS_WORDS := {"burn": "QUEIMADO!", "poison": "ENVENENADO!", "paralysis": "PARALISADO!", "sleep": "DORMINDO!",
+	"leech": "SEMEADO!", "flinch": "HESITOU!", "confusion": "CONFUSO!"}
 const PARALYSIS_FAIL := 0.2
 const CONFUSION_CHANCE := 0.33
 const AI_ROLL_MEAN := 0.925
@@ -38,14 +38,14 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	var cost := Dex.pp_cost(mv)
 	if user.pp_max < cost:
 		if feedback:
-			user.popup("Not enough PP!", Color(1, 0.6, 0.4))
+			user.popup("PP insuficiente!", Color(1, 0.6, 0.4))
 		return false
 	var exhausted := user.spend(cost, Dex.fatigue(mv))
 	var sf := user.speed_factor()
 	user.move_cd[id] = Dex.cooldown(mv) / sf
 	user.gcd_t = Dex.GLOBAL_COOLDOWN / sf
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
-		user.popup("Fully paralyzed!", Dex.type_color("electric"))
+		user.popup("Paralisado!", Dex.type_color("electric"))
 		return true
 	var prepare := Dex.prepare_time(mv)
 	if exhausted:
@@ -96,7 +96,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 			dir = _miss_dir(user, aimed, mv, dir)
 		_announce_miss(user, aimed, mv)
 	if user.confusion_t > 0.0 and rng.randf() < CONFUSION_CHANCE:
-		user.popup("It's confused!", Dex.type_color("psychic"))
+		user.popup("Está confuso!", Dex.type_color("psychic"))
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	user.facing = dir
@@ -140,7 +140,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		"clones":
 			user.evasion_t = float(mv.get("duration", 5.0))
 			user.evasion = float(mv.get("evasion", 0.4))
-			user.popup("EVA UP!", Color(0.95, 0.6, 0.9))
+			user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
 		_:
 			_arc(user, mv, dir, miss)
 
@@ -173,7 +173,7 @@ func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 			delay = float(mv.get("windup", 0.6)) + 0.1
 	arena.later(delay, func() -> void:
 		if is_instance_valid(target) and target.active():
-			target.popup("Miss!", Color(0.75, 0.85, 1.0)))
+			target.popup("Errou!", Color(0.75, 0.85, 1.0)))
 
 
 func _roll_magnitude(table: Array) -> Array:
@@ -226,7 +226,7 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
-		target.popup("Miss!", Color(0.9, 0.9, 1.0))
+		target.popup("Errou!", Color(0.9, 0.9, 1.0))
 		return
 	var power := float(mv.get("power", 0)) * power_scale
 	if power > 0.0:
@@ -237,7 +237,7 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 		var res := Damage.compute(user.damage_profile(), target.damage_profile(), m, rng)
 		var eff := float(res.eff)
 		if eff == 0.0:
-			target.popup("No effect...", Color(0.7, 0.7, 0.7))
+			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
 			return
 		var dmg := int(res.damage)
 		var hp_before := target.hp
@@ -249,11 +249,11 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 		var col := Color(1, 0.75, 0.15) if eff > 1.0 else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
 		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35)
 		if res.crit:
-			target.popup("CRITICAL!", Color(1, 0.55, 0.3), 1.0, 0.6)
+			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6)
 		if eff > 1.0:
-			target.popup("SUPER EFFECTIVE!", Color(1, 0.8, 0.2), 1.0, 0.85)
+			target.popup("SUPEREFETIVO!", Color(1, 0.8, 0.2), 1.0, 0.85)
 		elif eff < 1.0:
-			target.popup("Not very effective", Color(0.7, 0.7, 0.8), 1.0, 0.85)
+			target.popup("Pouco efetivo", Color(0.7, 0.7, 0.8), 1.0, 0.85)
 		arena.note_hit(user, target, mv, dmg, hp_before)
 	var ef = mv.get("effect")
 	if ef is Dictionary and target.alive() and rng.randf() < float(ef.get("chance", 0.0)):
@@ -262,7 +262,7 @@ func hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector
 		else:
 			var st := String(ef.status)
 			if STATUS_IMMUNE.get(st, "-") in target.types:
-				target.popup("Immune to %s" % st, Color(0.8, 0.8, 0.8))
+				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
 			elif target.apply_status(st, user):
 				target.popup(String(STATUS_WORDS.get(st, st.to_upper() + "!")), Color(1, 0.9, 0.6))
 
@@ -274,10 +274,10 @@ func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 	var nv := clampi(cur + delta, -6, 6)
 	var name := String(STAT_NAMES.get(k, k))
 	if nv == cur:
-		c.popup("%s won't go any %s!" % [name, "higher" if delta > 0 else "lower"], Color(0.8, 0.8, 0.8))
+		c.popup("%s não %s mais!" % [name, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
 		return
 	c.stages[k] = nv
-	var word := ("rose" if absi(delta) == 1 else "sharply rose") if delta > 0 else ("fell" if absi(delta) == 1 else "harshly fell")
+	var word := ("subiu" if absi(delta) == 1 else "subiu muito") if delta > 0 else ("caiu" if absi(delta) == 1 else "caiu muito")
 	c.popup("%s %s!" % [name, word], Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6))
 
 
@@ -500,11 +500,11 @@ func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
 	if st == "crit":
 		var before := user.crit_stage
 		user.crit_stage = mini(user.crit_stage + int(mv.get("stages", 1)), 4)
-		user.popup("Getting pumped!" if user.crit_stage != before else "Already pumped!", Color(1, 0.8, 0.4))
+		user.popup("Está se concentrando!" if user.crit_stage != before else "Já está concentrado!", Color(1, 0.8, 0.4))
 	elif st == "evasion":
 		user.evasion_t = float(mv.get("duration", 5.0))
 		user.evasion = float(mv.get("evasion", 0.4))
-		user.popup("EVA UP!", Color(0.95, 0.6, 0.9))
+		user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
 	else:
 		change_stage(user, st, int(mv.get("stages", 1)))
 

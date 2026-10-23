@@ -300,7 +300,7 @@ func stagger() -> void:
 	stagger_t = STAGGER_TIME
 	stamina = 0.0
 	sprinting = false
-	popup("Exhausted!", Color(1, 0.75, 0.35))
+	popup("Exausto!", Color(1, 0.75, 0.35))
 	refresh_label()
 
 
@@ -346,7 +346,7 @@ func interrupt_prepare() -> void:
 	stun_t = maxf(stun_t, PREPARE_STUN)
 	if id != "":
 		move_cd[id] = minf(float(move_cd.get(id, 0.0)), gcd_t)
-	popup("Interrupted!", Color(0.9, 0.9, 0.9), 0.8)
+	popup("Interrompido!", Color(0.9, 0.9, 0.9), 0.8)
 
 
 func start_dash(mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
@@ -376,7 +376,7 @@ func struggle() -> bool:
 	struggle_cd = STRUGGLE_CD
 	gcd_t = Dex.GLOBAL_COOLDOWN / speed_factor()
 	var dir := aim_dir()
-	popup("Struggle", Color(0.9, 0.9, 0.9), 1.0, 0.9)
+	popup("Desespero", Color(0.9, 0.9, 0.9), 1.0, 0.9)
 	begin_prepare("", LUNGE_PREPARE, func() -> void:
 		lunge_dir = dir
 		lunge_t = LUNGE_TIME
@@ -505,7 +505,7 @@ func _faint() -> void:
 	lunge_t = 0.0
 	root_t = 0.0
 	sprinting = false
-	popup("%s fainted!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
+	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
 	if _body:
 		var cap := _body.mesh as CapsuleMesh
 		_body.rotation.x = PI / 2.0
@@ -654,7 +654,7 @@ func _check_dash_hit() -> void:
 		if passes_under(t):
 			if not dash_dodged.has(t.get_instance_id()):
 				dash_dodged[t.get_instance_id()] = true
-				t.popup("DODGED!", Color(0.75, 0.9, 1.0))
+				t.popup("DESVIOU!", Color(0.75, 0.9, 1.0))
 			continue
 		dash_hit = true
 		dash_t = 0.0
@@ -670,12 +670,12 @@ func _check_lunge_hit() -> void:
 	lunge_done = true
 	lunge_t = 0.0
 	if passes_under(opponent):
-		opponent.popup("DODGED!", Color(0.75, 0.9, 1.0))
+		opponent.popup("DESVIOU!", Color(0.75, 0.9, 1.0))
 		return
 	arena.moves.hit(self, opponent, STRUGGLE, lunge_dir)
 	if alive():
 		take_damage(maxi(1, int(max_hp / 4.0)), Vector3.ZERO, 0.0)
-		popup("Recoil", Color(0.9, 0.6, 0.6), 0.8)
+		popup("Recuo", Color(0.9, 0.6, 0.6), 0.8)
 
 
 ## Depois de um item aplicado ao Mon: copia HP e status persistente de volta para o lutador.

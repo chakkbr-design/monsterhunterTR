@@ -64,13 +64,13 @@ func _start() -> void:
 
 func _on_finished(result: Dictionary) -> void:
 	print("[battle_test] result: ", result.get("outcome"))
-	var lines := ["Result: %s" % result.get("outcome")]
+	var lines := ["Resultado: %s" % result.get("outcome")]
 	for e in result.get("exp", []):
 		lines.append("%s +%d EXP (Lv %d)" % [e.mon.display_name, e.amount, e.mon.level])
 	if result.get("caught_mon") is Mon:
-		lines.append("Caught %s! Party: %d" % [result.caught_mon.display_name, game.party.size()])
-	lines.append("Party: " + ", ".join(game.party.map(func(m): return "%s %d/%d" % [m.display_name, m.hp, m.max_hp])))
-	lines.append("Enter: next battle   T: trainer %s   A: autoplay %s   H: heal party" % ["on" if _trainer else "off", "on" if _autoplay else "off"])
+		lines.append("Capturou %s! Equipe: %d" % [result.caught_mon.display_name, game.party.size()])
+	lines.append("Equipe: " + ", ".join(game.party.map(func(m): return "%s %d/%d" % [m.display_name, m.hp, m.max_hp])))
+	lines.append("Enter: próxima batalha   T: treinador %s   A: automático %s   H: curar equipe" % ["on" if _trainer else "off", "on" if _autoplay else "off"])
 	_label.text = "\n".join(lines)
 	_wait = 4.0
 

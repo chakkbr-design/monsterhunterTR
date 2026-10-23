@@ -3,7 +3,7 @@ extends CanvasLayer
 ## HUD placeholder: barras de HP e PP de 3 camadas (pool base, PP restante, stamina), golpes com cooldown e banner.
 
 const BAR_W := 260.0
-const HELP := "WASD move  Shift sprint  Space jump  1-4 moves  E bag  Tab swap  F ally mode  Q ball  R run  Z/C camera"
+const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F modo do aliado  Q bola  R foge  Z/C câmera"
 
 var _player := {}
 var _enemy := {}

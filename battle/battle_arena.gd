@@ -26,7 +26,7 @@ const ITEM_CD := 3.0
 const SUPPORT_HEAL_AT := 0.5
 const MODAL_SLOW := 0.2
 const CONTROL_SWAP_CD := 0.3
-const ALLY_MODE_NAMES := ["ATTACK", "DEFEND", "SUPPORT"]
+const ALLY_MODE_NAMES := ["ATAQUE", "DEFESA", "SUPORTE"]
 const ALLY_MODE_COLORS := [Color(1.0, 0.5, 0.4), Color(0.5, 0.75, 1.0), Color(0.55, 1.0, 0.6)]
 const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 
@@ -112,7 +112,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 			_send_ally(ai_i, Vector3(1.6, 0, START_GAP / 2.0 + 0.4))
 	_send_enemy(ei)
 	var e: Mon = enemies[ei]
-	hud.banner(("A wild %s appeared!" % e.display_name) if kind == "wild" else ("Trainer sent out %s!" % e.display_name), INTRO_TIME)
+	hud.banner(("Um %s selvagem apareceu!" % e.display_name) if kind == "wild" else ("O treinador mandou %s!" % e.display_name), INTRO_TIME)
 	state = "intro"
 	_state_t = 0.0
 	_update_camera(1.0)
@@ -208,14 +208,14 @@ func _send_player(i: int, at: Vector3) -> void:
 	player = _spawn(party[i], 0, _player_ctrl(), at)
 	player.set_meta("party_index", i)
 	_bind()
-	player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	player.popup("Vai, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 
 
 func _send_ally(i: int, at: Vector3) -> void:
 	ally = _spawn(party[i], 0, "ai", at)
 	ally.set_meta("party_index", i)
 	_bind()
-	ally.popup("Go, %s!" % ally.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	ally.popup("Vai, %s!" % ally.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 
 
 func _send_enemy(i: int) -> void:
@@ -286,7 +286,7 @@ func step(dt: float) -> void:
 		"intro":
 			if _state_t >= INTRO_TIME:
 				state = "fight"
-				hud.banner("Fight!", 0.8)
+				hud.banner("Lutem!", 0.8)
 		"fight":
 			_fight_step(dt)
 		"capture":
@@ -426,7 +426,7 @@ func swap_control() -> bool:
 	ally.controller = "ai"
 	ally.ai.think = maxf(ally.ai.think, 0.3)
 	_swap_cd = CONTROL_SWAP_CD
-	player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	player.popup("Vai, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 	return true
 
 
@@ -464,7 +464,7 @@ func cycle_ally_mode() -> int:
 	ally_mode = (ally_mode + 1) % ALLY_MODE_NAMES.size()
 	if is_instance_valid(ally) and ally.active():
 		ally.popup(ALLY_MODE_NAMES[ally_mode], ALLY_MODE_COLORS[ally_mode], 1.0, 0.9)
-	hud.banner("Ally mode: %s" % ALLY_MODE_NAMES[ally_mode], 1.0)
+	hud.banner("Modo do aliado: %s" % ALLY_MODE_NAMES[ally_mode], 1.0)
 	return ally_mode
 
 
@@ -504,12 +504,12 @@ func use_item(id: String, m: Mon = null) -> bool:
 		m = player.mon
 	var g := _game()
 	if g == null or int(g.bag.get(id, 0)) <= 0:
-		hud.banner("You don't have any %s left!" % Dex.item(id).get("name", id), 1.2)
+		hud.banner("Acabou %s!" % Dex.item(id).get("name", id), 1.2)
 		return false
 	if item_cd > 0.0:
 		return false
 	if player.stagger_t > 0.0:
-		hud.banner("Too exhausted to use an item!", 1.2)
+		hud.banner("Exausto demais para usar item!", 1.2)
 		return false
 	var f := _active_fighter_of(m)
 	var fx: Dictionary = Dex.item(id).get("effect", {})
@@ -524,14 +524,14 @@ func use_item(id: String, m: Mon = null) -> bool:
 			m.hp = f.hp
 		text = g.use_item(id, m)
 		if text == "":
-			hud.banner("It won't have any effect.", 1.2)
+			hud.banner("Não vai ter efeito.", 1.2)
 			return false
 		if f:
 			f.sync_after_item()
 	item_cd = ITEM_CD
 	player.gcd_t = maxf(player.gcd_t, Dex.GLOBAL_COOLDOWN)
 	close_menu()
-	hud.banner("Used %s! %s" % [Dex.item(id).get("name", id), text], 1.8)
+	hud.banner("Usou %s! %s" % [Dex.item(id).get("name", id), text], 1.8)
 	if f:
 		if m.hp > before:
 			f.popup("+%d HP" % (m.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
@@ -583,7 +583,7 @@ func _support_heal() -> void:
 
 
 func item_used_by_trainer(f: BattleFighter, item_name: String) -> void:
-	hud.banner("The trainer used a %s on %s!" % [item_name, f.mon.display_name], 1.4)
+	hud.banner("O treinador usou %s em %s!" % [item_name, f.mon.display_name], 1.4)
 
 
 # --- Menu rápido (bolsa / party) ---
@@ -638,18 +638,18 @@ func _menu_text() -> String:
 		var items := battle_items()
 		menu_sel = clampi(menu_sel, 0, maxi(items.size() - 1, 0))
 		var tgt: Mon = party[clampi(menu_target, 0, party.size() - 1)]
-		lines.append("BAG   (Tab: party)   target < %s %d/%d >" % [tgt.display_name, tgt.hp, tgt.max_hp])
+		lines.append("BOLSA   (Tab: equipe)   alvo < %s %d/%d >" % [tgt.display_name, tgt.hp, tgt.max_hp])
 		if items.is_empty():
 			lines.append("  (no battle items)")
 		for k in items.size():
 			var id: String = items[k]
 			lines.append("%s %s%s x%d" % [">" if k == menu_sel else " ", ("%d " % (k + 1)) if k < 4 else "  ",
 				Dex.item(id).get("name", id), int(g.bag[id])])
-		lines.append("W/S select  A/D target  Space/1-4 use  E close")
+		lines.append("W/S escolhe  A/D alvo  Espaço/1-4 usa  E fecha")
 		if item_cd > 0.0:
-			lines.append("Item cooldown %.1fs" % item_cd)
+			lines.append("Item em %.1fs" % item_cd)
 	else:
-		lines.append("PARTY   (Tab: bag)")
+		lines.append("EQUIPE   (Tab: bolsa)")
 		for k in party.size():
 			var m: Mon = party[k]
 			var tag := ""
@@ -660,7 +660,7 @@ func _menu_text() -> String:
 			elif m.is_fainted():
 				tag = " [fainted]"
 			lines.append("%s %s Lv%d %d/%d%s" % [">" if k == menu_sel else " ", m.display_name, m.level, m.hp, m.max_hp, tag])
-		lines.append("W/S select  Space send in" + ("  F send as ally" if _battle_size >= 2 else "") + "  E close")
+		lines.append("W/S escolhe  Espaço manda" + ("  F send as ally" if _battle_size >= 2 else "") + "  E close")
 	return "\n".join(lines)
 
 
@@ -676,9 +676,9 @@ func run_away() -> bool:
 	if state != "fight":
 		return false
 	if kind != "wild" or not opts.get("can_run", true):
-		hud.banner("No! There's no running from a trainer battle!" if kind != "wild" else "Can't escape!")
+		hud.banner("Não! Não dá para fugir de batalha de treinador!" if kind != "wild" else "Não dá para fugir!")
 		return false
-	hud.banner("Got away safely!", 1.0)
+	hud.banner("Fugiu em segurança!", 1.0)
 	_end("run", 0.6)
 	return true
 
@@ -708,11 +708,11 @@ func _pick_ball() -> String:
 func throw_ball() -> bool:
 	if state != "fight" or kind != "wild" or not is_instance_valid(enemy) or not enemy.active() or not player.alive():
 		if kind != "wild" and state == "fight":
-			hud.banner("You can't catch a trainer's Pokémon!")
+			hud.banner("Não dá para capturar Pokémon de treinador!")
 		return false
 	var ball_id := _pick_ball()
 	if ball_id == "":
-		hud.banner("No Poké Balls left!")
+		hud.banner("Acabaram as Poké Balls!")
 		return false
 	var g := _game()
 	if g:
@@ -731,7 +731,7 @@ func throw_ball() -> bool:
 	ball.position = from
 	_capture = {"ball": ball, "id": ball_id, "res": res, "from": from,
 		"to": enemy.position + Vector3(0, 0.16, 0), "shown": mini(int(res.shakes), 3)}
-	hud.banner("Go, %s!" % Dex.item(ball_id).get("name", "Ball"), 0.8)
+	hud.banner("Vai, %s!" % Dex.item(ball_id).get("name", "Ball"), 0.8)
 	state = "capture"
 	_state_t = 0.0
 	return true
@@ -755,7 +755,7 @@ func _capture_step(_dt: float) -> void:
 	ball.rotation.z = 0.0
 	if _capture.res.caught:
 		enemy.mon.ball = _capture.id
-		hud.banner("Gotcha! %s was caught!" % enemy.mon.display_name, 2.0)
+		hud.banner("Peguei! %s foi capturado!" % enemy.mon.display_name, 2.0)
 		_end("caught", 1.6, {"caught_mon": enemy.mon})
 		return
 	ball.queue_free()
@@ -790,12 +790,12 @@ func _enemy_fainted(f: BattleFighter) -> void:
 	_award_exp(f.mon)
 	var nxt := _next_enemy(enemy_index)
 	if kind == "trainer" and nxt >= 0:
-		hud.banner("Trainer is about to send out %s!" % enemies[nxt].display_name, NEXT_TRAINER_MON)
+		hud.banner("O treinador vai mandar %s!" % enemies[nxt].display_name, NEXT_TRAINER_MON)
 		later(NEXT_TRAINER_MON, func() -> void:
 			_recall(f)
 			_send_enemy(nxt))
 		return
-	hud.banner(("Wild %s fainted! You won!" % f.mon.display_name) if kind == "wild" else "You defeated the trainer!", 2.0)
+	hud.banner(("%s selvagem desmaiou! Você venceu!" % f.mon.display_name) if kind == "wild" else "Você venceu o treinador!", 2.0)
 	_end("win", 2.0)
 
 
@@ -812,9 +812,9 @@ func _award_exp(defeated: Mon) -> void:
 			f.popup("+%d EXP" % amount, Color(0.7, 1.0, 0.7), 1.0, 1.0)
 			for e in events:
 				if e.type == "level":
-					f.popup("Grew to Lv %d!" % e.level, Color(1, 1, 0.5), 1.2, 1.3)
+					f.popup("Subiu para o Nv %d!" % e.level, Color(1, 1, 0.5), 1.2, 1.3)
 				elif e.type == "move" and e.learned:
-					f.popup("Learned %s!" % Dex.move(e.move).get("name", e.move), Color(0.7, 0.9, 1.0), 1.0, 1.5)
+					f.popup("Aprendeu %s!" % Dex.move(e.move).get("name", e.move), Color(0.7, 0.9, 1.0), 1.0, 1.5)
 			_sync_from_mon(f)
 
 
@@ -839,7 +839,7 @@ func _player_fainted(f: BattleFighter) -> void:
 			player = ally
 			player.controller = _player_ctrl()
 			player.sprinting = false
-			player.popup("Go, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+			player.popup("Vai, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 		ally = null
 		if menu != "" and not is_instance_valid(player):
 			close_menu()
@@ -850,7 +850,7 @@ func _player_fainted(f: BattleFighter) -> void:
 		return
 	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
 	if nxt < 0:
-		hud.banner("You have no more Pokémon that can fight!", 2.0)
+		hud.banner("Você não tem mais Pokémon para lutar!", 2.0)
 		_end("lose", 2.0)
 		return
 	var at := f.position
