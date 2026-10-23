@@ -86,15 +86,15 @@ func _pitch_near_blend(p: Vector3) -> float:
 
 
 func _process(delta: float) -> void:
-	if not Game.is_busy():
+	var t := Overworld.player_of(self)
+	if not Game.is_busy() and not (t and t.ui_blocking()):  # Z/C also drive the PC boxes and menus
 		if Input.is_action_just_pressed("cam_left"):
 			_yaw_target -= deg_to_rad(yaw_step_deg)
 		if Input.is_action_just_pressed("cam_right"):
 			_yaw_target += deg_to_rad(yaw_step_deg)
 	_yaw = lerpf(_yaw, _yaw_target, 1.0 - exp(-yaw_sharpness * delta))
-	var t := Overworld.player_of(self)
 	if t:
-		global_position = global_position.lerp(t.global_position, 1.0 - exp(-follow_sharpness * delta))
+		global_position = global_position.lerp(t.visual_position(), 1.0 - exp(-follow_sharpness * delta))
 	_dist = lerpf(_dist, _base_dist(), 1.0 - exp(-3.0 * delta))
 	_yaw_off = lerpf(_yaw_off, _zone_yaw, 1.0 - exp(-1.1 * delta))
 	var pt := _zone_pitch
@@ -162,7 +162,7 @@ func _fade_buildings(delta: float, target: Node3D) -> void:
 	for n in WorldProps.faders_near(f, FADE_RADIUS):
 		_fading[n] = true
 	var eye := camera.global_position
-	var at := target.global_position if target else f
+	var at: Vector3 = target.visual_position() if target else f
 	for n in _fading.keys():
 		if not is_instance_valid(n) or not n.has_meta("rect"):
 			_fading.erase(n)

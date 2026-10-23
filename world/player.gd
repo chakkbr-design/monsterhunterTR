@@ -24,6 +24,8 @@ var _rng := RandomNumberGenerator.new()
 var _model: Node3D
 var _alert: Label3D
 var sprite: CharSprite  ## the original trainer sheet (walk / run), null = capsule placeholder
+var _phys_prev := Vector3.ZERO  ## body position at the last two physics ticks: the visuals are drawn
+var _phys_cur := Vector3.ZERO  ## between them so they don't step at the physics rate on faster screens
 
 
 func _enter_tree() -> void:
@@ -47,6 +49,8 @@ func _ready() -> void:
 	_alert = WorldNpc.make_alert(2.3)
 	add_child(_alert)
 	Game.battle_finished.connect(_on_battle_finished)
+	_phys_prev = global_position
+	_phys_cur = global_position
 
 
 ## Original trainer sheet (red, or green for a girl) with its run sheet; capsule if missing.
@@ -125,7 +129,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y -= GRAVITY * delta
 	var before := global_position
+	_phys_prev = before
 	move_and_slide()
+	_phys_cur = global_position
 	if dir.length() > 0.1:
 		facing = dir.normalized()
 	if sprite:
@@ -141,6 +147,22 @@ func _physics_process(delta: float) -> void:
 		if enc.walk(moved, WildTable.rate(patch.table()), _rng):
 			_ambush(patch)
 	_update_focus(active)
+
+
+## Where the player is drawn this frame (between the last two physics ticks). Camera and follower track this.
+func visual_position() -> Vector3:
+	if not global_position.is_equal_approx(_phys_cur):  # teleported outside physics: no blending
+		_phys_prev = global_position
+		_phys_cur = global_position
+	return _phys_prev.lerp(_phys_cur, Engine.get_physics_interpolation_fraction())
+
+
+func _process(_delta: float) -> void:
+	var off := to_local(visual_position())
+	_model.position = off
+	_alert.position = off + Vector3(0, 2.3, 0)
+	if sprite:
+		sprite.position = off
 
 
 func _camera_yaw() -> float:

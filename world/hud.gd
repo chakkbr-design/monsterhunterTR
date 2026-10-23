@@ -284,6 +284,8 @@ func set_prompt(text: String) -> void:
 		elif rest == "Talk":
 			rest = "Falar"
 		_prompt.text = ("%s %s" % [key, rest]) if key != "" else rest
+	elif _prompt.visible == (text != "" and not _open):
+		return
 	_prompt.visible = text != "" and not _open
 	_layout()
 

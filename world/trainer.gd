@@ -98,9 +98,9 @@ func _physics_process(delta: float) -> void:
 func can_see(p: OverworldPlayer) -> bool:
 	if _def.is_empty() or _busy or beaten() or sight <= 0.0 or _sight_cd > 0.0:
 		return false
-	if not p.can_act() or Game.first_healthy() < 0:
+	if not TrainerSight.in_corridor(global_transform, p.global_position, sight):  # cheap math first, every tick
 		return false
-	return TrainerSight.in_corridor(global_transform, p.global_position, sight) and _sight_clear(p)
+	return p.can_act() and Game.first_healthy() >= 0 and _sight_clear(p)
 
 
 func _sight_clear(p: OverworldPlayer) -> bool:

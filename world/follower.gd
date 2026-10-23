@@ -35,7 +35,7 @@ func _process(_delta: float) -> void:
 	visible = p != null and look != null and not Game.is_busy()
 	if p == null:
 		return
-	var at := p.global_position
+	var at: Vector3 = p.visual_position()
 	if _trail.is_empty() or at.distance_to(global_position) > SNAP:
 		_trail.clear()
 		_trail.append(at)

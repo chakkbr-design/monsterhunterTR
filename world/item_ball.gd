@@ -11,6 +11,7 @@ var count := 1
 
 var _ball: Node3D
 var _t := 0.0
+var _glow := -1.0  ## last glow energy sent (-1 = none yet)
 
 
 static func taken(item_uid: String) -> bool:
@@ -38,7 +39,10 @@ func _process(delta: float) -> void:
 	if _ball == null or not _ball.has_method("set_glow"):
 		return
 	_t += delta
-	_ball.set_glow(Color(1, 1, 0.85), maxf(0.0, sin(_t * 2.2) - 0.85) * 12.0)
+	var e := maxf(0.0, sin(_t * 2.2) - 0.85) * 12.0
+	if e > 0.0 or _glow > 0.0:  # dark ~90% of the time: don't dirty the material every frame
+		_ball.set_glow(Color(1, 1, 0.85), e)
+	_glow = e
 
 
 func prompt() -> String:

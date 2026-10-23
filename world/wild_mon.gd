@@ -24,6 +24,8 @@ var _wander_t := 0.0
 var _wander_to := Vector3.ZERO
 var _engaging := false
 var look: Node3D  ## CreatureSprite (null = placeholder capsule)
+var _phys_prev := Vector3.INF  ## last two physics positions: the look is drawn between them (no 60 Hz stepping)
+var _phys_cur := Vector3.INF
 
 const CREATURE_SPRITE := "res://gfx/creature_sprite.gd"
 
@@ -80,25 +82,38 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	peace_timer = maxf(peace_timer - delta, 0.0)  # also for swimmers (roams = false), or they stay unengageable
+	_phys_prev = global_position
+	_phys_cur = global_position
 	if Game.is_busy() or ambusher or not roams or not visible:
 		velocity = Vector3.ZERO
 		return
-	peace_timer = maxf(peace_timer - delta, 0.0)
 	var dir := _wander_logic(delta)
 	velocity.x = dir.x * SPEED
 	velocity.z = dir.z * SPEED
 	velocity.y = -0.5 if is_on_floor() else velocity.y - OverworldPlayer.GRAVITY * delta
 	move_and_slide()
+	_phys_cur = global_position
 	if dir.length() > 0.05:
 		rotation.y = lerp_angle(rotation.y, atan2(-dir.x, -dir.z), 1.0 - exp(-8.0 * delta))
 
 
+func _process(_delta: float) -> void:
+	if look == null:
+		return
+	if not global_position.is_equal_approx(_phys_cur):  # moved outside physics (spawn, pop-out tween)
+		_phys_prev = global_position
+		_phys_cur = global_position
+	look.position = to_local(_phys_prev.lerp(_phys_cur, Engine.get_physics_interpolation_fraction()))
+
+
 func _wander_logic(delta: float) -> Vector3:
 	var p := Overworld.player_of(self)
-	if p and p.can_act() and peace_timer <= 0.0 and Game.first_healthy() >= 0:
-		var to := p.global_position - global_position
-		to.y = 0.0
-		var d := to.length()
+	var to: Vector3 = p.global_position - global_position if p else Vector3.INF
+	to.y = 0.0
+	var d := to.length()
+	# Distance before can_act(): it walks the modal autoloads, too costly for every mon every tick.
+	if behaviour != Behaviour.PASSIVE and d < maxf(CHASE, FLEE) and peace_timer <= 0.0 and p.can_act() and Game.first_healthy() >= 0:
 		if behaviour == Behaviour.AGGRESSIVE:
 			if d < TOUCH:
 				engage()

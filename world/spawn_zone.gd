@@ -23,10 +23,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var before := _alive.size()
-	_alive.assign(_alive.filter(func(c) -> bool: return is_instance_valid(c)))
-	for i in before - _alive.size():
-		_pending.append(_rng.randf_range(respawn_min, respawn_max))
+	for i in range(_alive.size() - 1, -1, -1):  # in place: no array + lambda per tick
+		if not is_instance_valid(_alive[i]):
+			_alive.remove_at(i)
+			_pending.append(_rng.randf_range(respawn_min, respawn_max))
 	if not _filled:
 		_filled = true
 		for i in max_alive:
