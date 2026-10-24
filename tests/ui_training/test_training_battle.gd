@@ -63,7 +63,10 @@ func _run() -> void:
 		o.autoplay and o.no_rewards and o.kind == "trainer",
 		"opts: autoplay, sem recompensa, treinador"
 	)
-	check(o.arena == Vector2(16, 10), "quadra fixa de 16 x 10")
+	check(
+		o.arena == Vector2(24, 14) and o.terrain and o.mirror_court,
+		"quadra fixa de 24 x 14 com relevo"
+	)
 	check(o.battle_size == 2, "opts: 2x2 por padrão")
 	check(
 		o.keyboard == false and Cfg.default_config().p1_control == "ai", "padrão: IA, sem teclado"

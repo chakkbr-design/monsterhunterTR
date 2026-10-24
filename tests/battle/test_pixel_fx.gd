@@ -64,7 +64,7 @@ func _in_arena() -> void:
 	a.field._add_mark("crater", Vector3(2, 0, 2), 1.2, 0)
 	check(a.field.marks[-1].node is Sprite3D, "crater usa decalque")
 	a.field._add_object(Vector3(-3, 0, 3))
-	check(a.field.objects[-1].node is Sprite3D, "objeto usa sprite")
+	check(a.field.objects[-1].node is Node3D, "objeto 3D com textura de pixel")
 	a.field._break(a.field.objects[-1])
 	for i in 60:
 		a.step(DT)
