@@ -456,13 +456,9 @@ func may_start(mv: Dictionary) -> bool:
 	return not is_airborne() or bool(mv.get("allowed_midair", true))
 
 
-## PP gasto pelo golpe: escala com o ritmo da luta (arena.damage_pace), para o mesmo número de
-## golpes por nocaute de antes caber no PP.
+## PP gasto pelo golpe: o oficial (o Caio pediu só o dano reduzido; o PP não acompanha o ritmo).
 func pp_cost_of(mv: Dictionary) -> float:
-	var k := 1.0
-	if arena and arena.get("moves"):
-		k = arena.moves.pace()
-	return Dex.pp_cost(mv) * k
+	return Dex.pp_cost(mv)
 
 
 func min_move_cost() -> float:
