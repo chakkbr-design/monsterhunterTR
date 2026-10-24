@@ -173,8 +173,8 @@ func _battle_sequence(intro: bool) -> void:
 	opts.merge(battle_extra, true)
 	var r := await ow.battle(party, opts)
 	var outcome := String(r.get("outcome", ""))
-	if outcome == "":
-		return
+	if outcome == "" or (outcome == "lose" and not bool(_def.get("scripted", false))):
+		return  # like the original: a real loss whites out and the trainer stays for a rematch
 	if _def.has("done_flag"):
 		Game.flags[String(_def.done_flag)] = true
 	if outcome == "win":

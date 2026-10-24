@@ -231,7 +231,7 @@ static func music_for(kind: String, id: String) -> String:
 			return "lab"
 		if id.contains("gym"):
 			return "gym"
-		if id.contains("forest"):
+		if id.contains("forest") or id.begins_with("mt_moon_"):  # no cave track yet: the darkest one
 			return "forest"
 		return "town"
 	if id.contains("forest"):
