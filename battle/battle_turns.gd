@@ -275,6 +275,5 @@ func _begin_round() -> void:
 func _end_round() -> void:
 	if round_n == 0:
 		return
-	var ab = arena.get("abilities")
-	if ab and ab.has_method("on_round_end"):
-		ab.on_round_end()
+	if arena.has_method("end_of_round"):
+		arena.end_of_round()

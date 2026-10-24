@@ -103,6 +103,7 @@ var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintoni
 var field: BattleField  ## terreno que muda, objetos, clones
 var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
+var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
 var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
 var _turn_pulse := 0.0
 var hud: BattleHUD
@@ -230,6 +231,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	field = BattleField.new(self)
 	abilities = BattleAbilities.new(self)
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)))
+	end_turn = BattleEndTurn.new(self)
 	if kind == "trainer":
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
 		_think_scale = float(tr.get("ai_think_scale", 1.0))
@@ -874,6 +876,12 @@ func _obstacle_push(f: BattleFighter) -> Vector3:
 		if not hit.is_empty():
 			push -= dir * (1.0 - origin.distance_to(hit.position))
 	return push
+
+
+## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial.
+func end_of_round() -> void:
+	if end_turn:
+		end_turn.run()
 
 
 func note_hit(
