@@ -331,6 +331,12 @@ func _ready(id: String) -> bool:
 	)
 
 
+## Começo da rodada (BattleTurns): escolhe a intenção que entra na fila (a prioridade dela conta).
+func plan_round() -> void:
+	if is_instance_valid(f.opponent) and f.opponent.active():
+		intent = _plan()
+
+
 ## Intenção: o golpe que vai buscar agora (o mesmo critério de pick, sem olhar a distância).
 func _plan() -> String:
 	if f.out_of_pp():

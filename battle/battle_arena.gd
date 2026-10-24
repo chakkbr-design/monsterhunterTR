@@ -102,6 +102,7 @@ var moves: BattleMoves
 var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintonia
 var field: BattleField  ## terreno que muda, objetos, clones
 var abilities: BattleAbilities  ## efeitos das habilidades
+var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
 var hud: BattleHUD
 var vfx: BattleVfx
 var fight_speed := DEFAULT_SPEED
@@ -226,6 +227,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	combos = BattleCombos.new(self)
 	field = BattleField.new(self)
 	abilities = BattleAbilities.new(self)
+	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)))
 	if kind == "trainer":
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
 		_think_scale = float(tr.get("ai_think_scale", 1.0))
@@ -1042,6 +1044,7 @@ func _fight_step(dt: float) -> void:
 	field.tick(dt)
 	abilities.tick(dt)
 	moves.effects.tick(dt)
+	turns.tick(dt)
 	for f in fighters:
 		if f.on_field:
 			f.tick(dt)
