@@ -143,6 +143,10 @@ físico de tempo real (batida do arremesso em `battle_physics.gd`, chão queimad
 - `all_other_pokemon` acerta o parceiro perto (Earthquake). O parceiro pula quando vê o Earthquake do
   aliado (`battle_ai.gd` `_partner_quake`). Acerto no parceiro não marca combo nem aciona "Protegeu".
 - Mesmo dano do 1x1: `DOUBLES_PACE = 1,0` (`battle_moves.gd`); só o spread muda o dano.
+- Troca (oficial): sai antes de todos os golpes da rodada; quem entra não age nessa rodada e leva os golpes
+  mirados em quem saiu; uma por lado por rodada (aqui por regra, no oficial por Pokémon); substituto de quem
+  desmaiou no fim do turno. Jogo: `battle_arena.gd` `request_switch` / `begin_of_round` / `at_round_end`.
+  Adaptado: quem cai no próprio fim de turno entra logo depois da virada e espera a rodada seguinte para agir.
 - Follow Me ainda não existe; o mais parecido é "cobrir o parceiro" (`battle_moves.gd` `_cover`: em
   DEFENSIVO ou Muralha, com o parceiro abaixo de 60% de HP, 35% de chance de levar o golpe no lugar).
   Helping Hand existe nos dados, ainda sem efeito no parceiro.

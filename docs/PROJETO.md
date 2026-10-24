@@ -46,7 +46,8 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 ### Batalha (tempo real, como o original)
 - Arena no próprio mapa. Stamina, cooldown por golpe e global, pool único de PP, fator de Speed, estágios de stat, status com duração em segundos (queimado, envenenado, paralisado, dormindo, confuso, semente, hesitar).
 - 14 tipos de entrega de golpe (investida, arco, projétil, raio, área, corrente etc.), acerto geométrico, dano da fórmula oficial Gen 5+ (spread 0,75x na dupla, golpe de alvo único acerta um só), empurrão pela eficácia, arremesso com batida na cerca/caixa, Body Slam pulando em cima, Aerial Ace, Dig por baixo da terra (`battle/battle_physics.gd`, detalhes em `docs/MECANICAS.md`).
-- Rodadas pela Speed (`battle/battle_turns.gd`): a cada ~4 s a fila sai pela prioridade do golpe e pela Speed (Trick Room inverte), cada Pokémon solta um golpe na vez dele com 0,8 s de folga entre golpes, e um anel com seta marca quem é o próximo. Fora da vez a IA escolhe um ponto no campo (longe da parede, cobertura, sem terreno ruim, dupla lado a lado). Detalhes em `docs/BATALHA_VIVA.md`.
+- Posições fixas de VGC, um treinador atrás de cada lado, troca pela Pokébola só no começo da rodada, fim de turno oficial uma vez por rodada (`battle/battle_end_turn.gd`) e botões de modo na tela.
+- Rodadas pela Speed (`battle/battle_turns.gd`): a cada ~4 s a fila sai pela prioridade do golpe e pela Speed (Trick Room inverte), cada Pokémon solta um golpe na vez dele com 0,8 s de folga entre golpes, e um anel com seta marca quem é o próximo. Fora da vez cada Pokémon fica na posição fixa do seu lado. Detalhes em `docs/BATALHA_VIVA.md`.
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 

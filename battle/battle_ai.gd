@@ -1049,6 +1049,8 @@ func _status_lands(opp: BattleFighter, st: String, powder: bool) -> bool:
 		return false
 	if st == "confusion":
 		return opp.confusion_t <= 0.0
+	if st == "leech":
+		return not opp.seeded and not "grass" in opp.types
 	if st in ["poison", "toxic"] and "steel" in opp.types:
 		return false
 	return opp.status == "" and not BattleMoves.STATUS_IMMUNE.get(st, "-") in opp.types

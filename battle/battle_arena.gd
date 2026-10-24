@@ -33,6 +33,8 @@ const NEXT_TRAINER_MON := 1.4
 const SWAP_CD := 1.0
 ## Folga no começo da rodada quando alguém trocou (a bola voltando e saindo) antes do 1º golpe.
 const SWITCH_HOLD := 1.0
+## Até ROUND_GRACE s depois da virada (sem ninguém ter agido) o substituto entra na hora.
+const ROUND_GRACE := 2.0
 const CAM_DIST := 5.0
 const CAM_HEIGHT := 3.4
 const BALL_FLIGHT := 0.5
@@ -1218,10 +1220,21 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 
 ## Ritmo de rodadas: guarda a ação para o fim da rodada; sem a fila, faz na hora.
 func at_round_end(cb: Callable) -> void:
-	if turns and turns.on and state == "fight":
+	if turns and turns.on and state == "fight" and not _round_just_began():
 		_round_end_q.append(cb)
 	else:
 		cb.call()
+
+
+## A rodada acabou de virar e ninguém agiu ainda (quem caiu no fim de turno entra agora, sem esperar a
+## rodada inteira; fica fora da fila desta rodada como quem troca).
+func _round_just_began() -> bool:
+	if turns.round_t > ROUND_GRACE:
+		return false
+	for e in turns.history:
+		if int(e.round) == turns.round_n:
+			return false
+	return true
 
 
 ## Substituto escolhido pela IA do treinador (pick_replacement) ou `fallback` (índice da equipe).

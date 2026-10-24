@@ -697,6 +697,8 @@ class FighterCard:
 			tx += sw + gap
 		if body.confusion_t > 0.0:
 			tx += UiDraw.status_pill(self, Vector2(tx, CHIP_Y), "confusion", 10) + gap
+		if body.seeded:  # Leech Seed é volátil (convive com o status principal)
+			tx += UiDraw.status_pill(self, Vector2(tx, CHIP_Y), "leech", 10) + gap
 		var cw := UiDraw.mod_chips(
 			self,
 			Vector2(tx, CHIP_Y),
