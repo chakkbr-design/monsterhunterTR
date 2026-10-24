@@ -32,19 +32,27 @@
     "learnset": [
       [
         1,
-        "tackle"
-      ],
-      [
-        4,
         "growl"
       ],
       [
-        7,
+        1,
+        "tackle"
+      ],
+      [
+        3,
+        "vine_whip"
+      ],
+      [
+        6,
+        "growth"
+      ],
+      [
+        9,
         "leech_seed"
       ],
       [
-        10,
-        "vine_whip"
+        12,
+        "razor_leaf"
       ],
       [
         15,
@@ -55,12 +63,16 @@
         "sleep_powder"
       ],
       [
-        20,
-        "razor_leaf"
+        18,
+        "seed_bomb"
       ],
       [
-        25,
+        24,
         "sweet_scent"
+      ],
+      [
+        36,
+        "solar_beam"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -83,7 +95,18 @@
       "tips": 1
     },
     "tm": [
-      "bullet_seed"
+      "body_slam",
+      "bullet_seed",
+      "curse",
+      "helping_hand",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "chlorophyll",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "curse",
+      "petal_dance"
     ]
   },
   "Ivysaur": {
@@ -121,19 +144,27 @@
     "learnset": [
       [
         1,
-        "tackle"
-      ],
-      [
-        1,
         "growl"
       ],
       [
         1,
+        "growth"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
+        "vine_whip"
+      ],
+      [
+        9,
         "leech_seed"
       ],
       [
-        10,
-        "vine_whip"
+        12,
+        "razor_leaf"
       ],
       [
         15,
@@ -144,11 +175,18 @@
         "sleep_powder"
       ],
       [
-        22,
-        "razor_leaf"
+        20,
+        "seed_bomb"
+      ],
+      [
+        30,
+        "sweet_scent"
+      ],
+      [
+        50,
+        "solar_beam"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#9ad6a0",
     "placeholder_scale": 1.25,
@@ -169,13 +207,24 @@
       "tips": 2
     },
     "tm": [
-      "bullet_seed"
+      "body_slam",
+      "bullet_seed",
+      "curse",
+      "helping_hand",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "chlorophyll",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "curse",
+      "petal_dance"
     ]
   },
   "Venusaur": {
     "abilities": [
       "overgrow",
-      "thick_fat"
+      "chlorophyll"
     ],
     "types": [
       "grass",
@@ -207,19 +256,31 @@
     "learnset": [
       [
         1,
-        "tackle"
-      ],
-      [
-        1,
         "growl"
       ],
       [
         1,
-        "leech_seed"
+        "growth"
+      ],
+      [
+        1,
+        "petal_dance"
+      ],
+      [
+        1,
+        "tackle"
       ],
       [
         1,
         "vine_whip"
+      ],
+      [
+        9,
+        "leech_seed"
+      ],
+      [
+        12,
+        "razor_leaf"
       ],
       [
         15,
@@ -230,11 +291,18 @@
         "sleep_powder"
       ],
       [
-        22,
-        "razor_leaf"
+        20,
+        "seed_bomb"
+      ],
+      [
+        30,
+        "sweet_scent"
+      ],
+      [
+        58,
+        "solar_beam"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#6fbf8a",
     "placeholder_scale": 1.55,
@@ -251,13 +319,29 @@
       "tips": 3
     },
     "tm": [
-      "bullet_seed"
+      "body_slam",
+      "bullet_seed",
+      "curse",
+      "earth_power",
+      "earthquake",
+      "helping_hand",
+      "hyper_beam",
+      "poison_jab",
+      "scary_face",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "chlorophyll",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "curse",
+      "petal_dance"
     ]
   },
   "Charmander": {
     "abilities": [
       "blaze",
-      "flame_body"
+      "solar_power"
     ],
     "types": [
       "fire"
@@ -285,26 +369,38 @@
     "learnset": [
       [
         1,
-        "scratch"
-      ],
-      [
-        1,
         "growl"
       ],
       [
-        7,
+        1,
+        "scratch"
+      ],
+      [
+        4,
         "ember"
       ],
       [
-        13,
-        "metal_claw"
-      ],
-      [
-        19,
+        8,
         "smokescreen"
       ],
       [
-        25,
+        12,
+        "dragon_breath"
+      ],
+      [
+        17,
+        "fire_fang"
+      ],
+      [
+        20,
+        "slash"
+      ],
+      [
+        24,
+        "flamethrower"
+      ],
+      [
+        28,
         "scary_face"
       ]
     ],
@@ -324,12 +420,34 @@
     "jump_height": 0.52,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "crunch",
+      "dig",
+      "dragon_claw",
+      "fire_blast",
+      "fire_fang",
+      "flamethrower",
+      "heat_wave",
+      "helping_hand",
+      "metal_claw",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "swift"
+    ],
+    "hidden_ability": "solar_power",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "bite",
+      "iron_tail",
+      "metal_claw"
+    ]
   },
   "Charmeleon": {
     "abilities": [
       "blaze",
-      "flame_body"
+      "solar_power"
     ],
     "types": [
       "fire"
@@ -360,7 +478,7 @@
     "learnset": [
       [
         1,
-        "scratch"
+        "ember"
       ],
       [
         1,
@@ -368,18 +486,33 @@
       ],
       [
         1,
-        "ember"
+        "scratch"
       ],
       [
-        13,
-        "metal_claw"
-      ],
-      [
-        20,
+        1,
         "smokescreen"
+      ],
+      [
+        12,
+        "dragon_breath"
+      ],
+      [
+        19,
+        "fire_fang"
+      ],
+      [
+        24,
+        "slash"
+      ],
+      [
+        30,
+        "flamethrower"
+      ],
+      [
+        37,
+        "scary_face"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#ff6a3a",
     "placeholder_scale": 1.25,
@@ -395,13 +528,33 @@
     "jump_height": 0.92,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "crunch",
+      "dig",
+      "dragon_claw",
+      "fire_blast",
+      "fire_fang",
+      "flamethrower",
+      "heat_wave",
+      "helping_hand",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "swift"
+    ],
+    "hidden_ability": "solar_power",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "bite",
+      "iron_tail",
+      "metal_claw"
+    ]
   },
   "Charizard": {
     "abilities": [
       "blaze",
-      "gale_wings",
-      "tough_claws"
+      "solar_power"
     ],
     "types": [
       "fire",
@@ -427,9 +580,21 @@
       "scratch",
       "ember",
       "flamethrower",
-      "gust"
+      "scary_face"
     ],
     "learnset": [
+      [
+        1,
+        "dragon_claw"
+      ],
+      [
+        1,
+        "ember"
+      ],
+      [
+        1,
+        "growl"
+      ],
       [
         1,
         "heat_wave"
@@ -440,23 +605,31 @@
       ],
       [
         1,
-        "growl"
-      ],
-      [
-        1,
-        "ember"
-      ],
-      [
-        1,
-        "metal_claw"
-      ],
-      [
-        20,
         "smokescreen"
+      ],
+      [
+        12,
+        "dragon_breath"
+      ],
+      [
+        19,
+        "fire_fang"
+      ],
+      [
+        24,
+        "slash"
+      ],
+      [
+        30,
+        "flamethrower"
+      ],
+      [
+        39,
+        "scary_face"
       ]
     ],
     "evo_moves": [
-      "wing_attack"
+      "air_slash"
     ],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#ff8a30",
@@ -470,12 +643,39 @@
     "shape": "upright",
     "locomotion": "fly",
     "fly_height": 1.6,
-    "tm": []
+    "tm": [
+      "aerial_ace",
+      "air_slash",
+      "body_slam",
+      "crunch",
+      "dig",
+      "dragon_claw",
+      "earthquake",
+      "fire_blast",
+      "fire_fang",
+      "flamethrower",
+      "heat_wave",
+      "helping_hand",
+      "hurricane",
+      "hyper_beam",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "solar_beam",
+      "swift"
+    ],
+    "hidden_ability": "solar_power",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "bite",
+      "iron_tail",
+      "metal_claw"
+    ]
   },
   "Squirtle": {
     "abilities": [
       "torrent",
-      "rough_skin"
+      "rain_dish"
     ],
     "types": [
       "water"
@@ -500,7 +700,7 @@
       "tackle",
       "tail_whip",
       "water_gun",
-      "harden"
+      "hydro_pump"
     ],
     "learnset": [
       [
@@ -508,28 +708,40 @@
         "tackle"
       ],
       [
-        4,
+        1,
         "tail_whip"
       ],
       [
-        7,
-        "bubble"
-      ],
-      [
-        10,
-        "withdraw"
-      ],
-      [
-        13,
+        3,
         "water_gun"
       ],
       [
-        18,
+        6,
+        "withdraw"
+      ],
+      [
+        9,
+        "rapid_spin"
+      ],
+      [
+        12,
         "bite"
       ],
       [
-        23,
-        "rapid_spin"
+        15,
+        "water_pulse"
+      ],
+      [
+        21,
+        "rain_dance"
+      ],
+      [
+        24,
+        "aqua_tail"
+      ],
+      [
+        33,
+        "hydro_pump"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -548,12 +760,26 @@
     "jump_height": 0.3,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "helping_hand",
+      "hydro_pump",
+      "rain_dance",
+      "water_pulse"
+    ],
+    "hidden_ability": "rain_dish",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aqua_jet",
+      "flail",
+      "yawn"
+    ]
   },
   "Wartortle": {
     "abilities": [
       "torrent",
-      "rough_skin"
+      "rain_dish"
     ],
     "types": [
       "water"
@@ -581,7 +807,7 @@
       "tackle",
       "tail_whip",
       "water_gun",
-      "harden"
+      "hydro_pump"
     ],
     "learnset": [
       [
@@ -594,26 +820,37 @@
       ],
       [
         1,
-        "bubble"
-      ],
-      [
-        10,
-        "withdraw"
-      ],
-      [
-        13,
         "water_gun"
       ],
       [
-        19,
+        1,
+        "withdraw"
+      ],
+      [
+        9,
+        "rapid_spin"
+      ],
+      [
+        12,
         "bite"
       ],
       [
+        15,
+        "water_pulse"
+      ],
+      [
         25,
-        "rapid_spin"
+        "rain_dance"
+      ],
+      [
+        30,
+        "aqua_tail"
+      ],
+      [
+        45,
+        "hydro_pump"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#5a96f0",
     "placeholder_scale": 1.25,
@@ -629,13 +866,26 @@
     "jump_height": 0.46,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "helping_hand",
+      "hydro_pump",
+      "rain_dance",
+      "water_pulse"
+    ],
+    "hidden_ability": "rain_dish",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aqua_jet",
+      "flail",
+      "yawn"
+    ]
   },
   "Blastoise": {
     "abilities": [
       "torrent",
-      "rough_skin",
-      "sturdy"
+      "rain_dish"
     ],
     "types": [
       "water"
@@ -661,8 +911,8 @@
     "moves": [
       "tackle",
       "water_gun",
-      "harden",
-      "bite"
+      "bite",
+      "hydro_pump"
     ],
     "learnset": [
       [
@@ -675,26 +925,37 @@
       ],
       [
         1,
-        "bubble"
+        "water_gun"
       ],
       [
         1,
         "withdraw"
       ],
       [
-        13,
-        "water_gun"
+        9,
+        "rapid_spin"
       ],
       [
-        19,
+        12,
         "bite"
       ],
       [
+        15,
+        "water_pulse"
+      ],
+      [
         25,
-        "rapid_spin"
+        "rain_dance"
+      ],
+      [
+        30,
+        "aqua_tail"
+      ],
+      [
+        49,
+        "hydro_pump"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#3f7ee0",
     "placeholder_scale": 1.55,
@@ -706,13 +967,33 @@
     "jump_height": 0.45,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "crunch",
+      "dig",
+      "earthquake",
+      "helping_hand",
+      "hydro_pump",
+      "hyper_beam",
+      "rain_dance",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "water_pulse"
+    ],
+    "hidden_ability": "rain_dish",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aqua_jet",
+      "flail",
+      "yawn"
+    ]
   },
   "Pidgey": {
     "abilities": [
       "keen_eye",
-      "big_pecks",
-      "gale_wings"
+      "tangled_feet",
+      "big_pecks"
     ],
     "types": [
       "normal",
@@ -756,12 +1037,28 @@
         "quick_attack"
       ],
       [
-        19,
+        17,
         "whirlwind"
       ],
       [
-        25,
+        21,
+        "twister"
+      ],
+      [
+        33,
         "wing_attack"
+      ],
+      [
+        45,
+        "aerial_ace"
+      ],
+      [
+        49,
+        "air_slash"
+      ],
+      [
+        53,
+        "hurricane"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -781,14 +1078,22 @@
     "locomotion": "fly",
     "fly_height": 0.67,
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "rain_dance",
       "thief"
+    ],
+    "hidden_ability": "big_pecks",
+    "learnset_version": "brilliant-diamond-shining-pearl",
+    "egg": [
+      "air_slash"
     ]
   },
   "Pidgeotto": {
     "abilities": [
       "keen_eye",
-      "big_pecks",
-      "gale_wings"
+      "tangled_feet",
+      "big_pecks"
     ],
     "types": [
       "normal",
@@ -819,7 +1124,7 @@
     "learnset": [
       [
         1,
-        "tackle"
+        "gust"
       ],
       [
         1,
@@ -827,6 +1132,14 @@
       ],
       [
         1,
+        "tackle"
+      ],
+      [
+        5,
+        "sand_attack"
+      ],
+      [
+        9,
         "gust"
       ],
       [
@@ -834,11 +1147,30 @@
         "quick_attack"
       ],
       [
-        20,
+        17,
         "whirlwind"
+      ],
+      [
+        22,
+        "twister"
+      ],
+      [
+        37,
+        "wing_attack"
+      ],
+      [
+        52,
+        "aerial_ace"
+      ],
+      [
+        57,
+        "air_slash"
+      ],
+      [
+        62,
+        "hurricane"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#e8c890",
     "placeholder_scale": 1.25,
@@ -856,14 +1188,19 @@
     "locomotion": "fly",
     "fly_height": 1.21,
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "rain_dance",
       "thief"
-    ]
+    ],
+    "hidden_ability": "big_pecks",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Pidgeot": {
     "abilities": [
       "keen_eye",
-      "big_pecks",
-      "sniper"
+      "tangled_feet",
+      "big_pecks"
     ],
     "types": [
       "normal",
@@ -875,7 +1212,7 @@
       "def": 75,
       "spa": 70,
       "spd": 70,
-      "spe": 91
+      "spe": 101
     },
     "ev_yield": {
       "spe": 3
@@ -889,12 +1226,20 @@
       "gust",
       "quick_attack",
       "double_team",
-      "swift"
+      "hurricane"
     ],
     "learnset": [
       [
         1,
-        "tackle"
+        "gust"
+      ],
+      [
+        1,
+        "hurricane"
+      ],
+      [
+        1,
+        "quick_attack"
       ],
       [
         1,
@@ -902,18 +1247,45 @@
       ],
       [
         1,
+        "tackle"
+      ],
+      [
+        5,
+        "sand_attack"
+      ],
+      [
+        9,
         "gust"
       ],
       [
-        1,
+        13,
         "quick_attack"
       ],
       [
-        20,
+        17,
         "whirlwind"
+      ],
+      [
+        22,
+        "twister"
+      ],
+      [
+        38,
+        "wing_attack"
+      ],
+      [
+        56,
+        "aerial_ace"
+      ],
+      [
+        62,
+        "air_slash"
+      ],
+      [
+        68,
+        "hurricane"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#f0c070",
     "placeholder_scale": 1.5,
@@ -927,14 +1299,20 @@
     "locomotion": "fly",
     "fly_height": 1.6,
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "hyper_beam",
+      "rain_dance",
       "thief"
-    ]
+    ],
+    "hidden_ability": "big_pecks",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Rattata": {
     "abilities": [
       "run_away",
       "guts",
-      "quick_feet"
+      "hustle"
     ],
     "types": [
       "normal"
@@ -969,16 +1347,28 @@
         "tail_whip"
       ],
       [
-        7,
+        4,
         "quick_attack"
       ],
       [
-        13,
-        "hyper_fang"
+        7,
+        "focus_energy"
       ],
       [
-        20,
-        "focus_energy"
+        10,
+        "bite"
+      ],
+      [
+        22,
+        "crunch"
+      ],
+      [
+        25,
+        "sucker_punch"
+      ],
+      [
+        28,
+        "super_fang"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -998,14 +1388,28 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
+      "dig",
+      "double_team",
+      "iron_tail",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "brilliant-diamond-shining-pearl",
+    "egg": [
+      "bite",
+      "fury_swipes",
+      "screech"
     ]
   },
   "Raticate": {
     "abilities": [
       "run_away",
       "guts",
-      "quick_feet"
+      "hustle"
     ],
     "types": [
       "normal"
@@ -1035,6 +1439,18 @@
     "learnset": [
       [
         1,
+        "focus_energy"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        1,
+        "scary_face"
+      ],
+      [
+        1,
         "tackle"
       ],
       [
@@ -1042,16 +1458,28 @@
         "tail_whip"
       ],
       [
-        1,
+        4,
         "quick_attack"
       ],
       [
-        13,
-        "hyper_fang"
+        7,
+        "focus_energy"
       ],
       [
-        20,
-        "scary_face"
+        10,
+        "bite"
+      ],
+      [
+        24,
+        "crunch"
+      ],
+      [
+        29,
+        "sucker_punch"
+      ],
+      [
+        34,
+        "super_fang"
       ]
     ],
     "evo_moves": [
@@ -1069,8 +1497,18 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
-    ]
+      "dig",
+      "double_team",
+      "hyper_beam",
+      "iron_tail",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Caterpie": {
     "abilities": [
@@ -1096,16 +1534,16 @@
     "pp": 85,
     "moves": [
       "tackle",
-      "harden"
+      "string_shot"
     ],
     "learnset": [
       [
         1,
-        "tackle"
+        "string_shot"
       ],
       [
         1,
-        "string_shot"
+        "tackle"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -1124,12 +1562,13 @@
     "jump_height": 0.0,
     "shape": "armor",
     "locomotion": "ground",
-    "tm": []
+    "tm": [],
+    "hidden_ability": "run_away",
+    "learnset_version": "sword-shield"
   },
   "Metapod": {
     "abilities": [
-      "shed_skin",
-      "battle_armor"
+      "shed_skin"
     ],
     "types": [
       "bug"
@@ -1149,8 +1588,7 @@
     "gender_ratio": 0.5,
     "pp": 85,
     "moves": [
-      "harden",
-      "tackle"
+      "harden"
     ],
     "learnset": [
       [
@@ -1178,13 +1616,13 @@
     "jump_height": 0.0,
     "shape": "squiggle",
     "locomotion": "ground",
-    "tm": []
+    "tm": [],
+    "learnset_version": "sword-shield"
   },
   "Butterfree": {
     "abilities": [
       "compound_eyes",
-      "serene_grace",
-      "prankster"
+      "tinted_lens"
     ],
     "types": [
       "bug",
@@ -1194,7 +1632,7 @@
       "hp": 60,
       "atk": 45,
       "def": 50,
-      "spa": 80,
+      "spa": 90,
       "spd": 80,
       "spe": 70
     },
@@ -1214,37 +1652,64 @@
     "learnset": [
       [
         1,
-        "confusion"
+        "gust"
       ],
       [
-        13,
-        "poison_powder"
+        1,
+        "harden"
       ],
       [
-        14,
-        "stun_spore"
+        1,
+        "string_shot"
       ],
       [
-        15,
-        "sleep_powder"
+        1,
+        "tackle"
       ],
       [
-        18,
+        4,
         "supersonic"
       ],
       [
-        23,
+        8,
+        "confusion"
+      ],
+      [
+        12,
+        "poison_powder"
+      ],
+      [
+        12,
+        "sleep_powder"
+      ],
+      [
+        12,
+        "stun_spore"
+      ],
+      [
+        16,
+        "psybeam"
+      ],
+      [
+        20,
         "whirlwind"
+      ],
+      [
+        24,
+        "air_slash"
+      ],
+      [
+        32,
+        "bug_buzz"
       ]
     ],
     "evo_moves": [
-      "confusion",
       "gust"
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#a8b8f5",
     "placeholder_scale": 1.5,
-    "base_exp": 160,
+    "base_exp": 178,
     "growth": "medium_fast",
     "dex_no": 12,
     "category": "Butterfly Pokémon",
@@ -1256,8 +1721,17 @@
     "locomotion": "fly",
     "fly_height": 1.31,
     "tm": [
+      "air_slash",
+      "bug_buzz",
+      "hurricane",
+      "hyper_beam",
+      "rain_dance",
+      "solar_beam",
+      "swift",
       "thief"
-    ]
+    ],
+    "hidden_ability": "tinted_lens",
+    "learnset_version": "sword-shield"
   },
   "Weedle": {
     "abilities": [
@@ -1283,8 +1757,8 @@
     "gender_ratio": 0.5,
     "pp": 90,
     "moves": [
-      "tackle",
-      "poison_powder"
+      "string_shot",
+      "poison_sting"
     ],
     "learnset": [
       [
@@ -1312,12 +1786,13 @@
     "jump_height": 0.0,
     "shape": "armor",
     "locomotion": "ground",
-    "tm": []
+    "tm": [],
+    "hidden_ability": "run_away",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Kakuna": {
     "abilities": [
-      "shed_skin",
-      "battle_armor"
+      "shed_skin"
     ],
     "types": [
       "bug",
@@ -1338,8 +1813,7 @@
     "gender_ratio": 0.5,
     "pp": 85,
     "moves": [
-      "harden",
-      "tackle"
+      "harden"
     ],
     "learnset": [
       [
@@ -1367,13 +1841,13 @@
     "jump_height": 0.0,
     "shape": "squiggle",
     "locomotion": "ground",
-    "tm": []
+    "tm": [],
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Beedrill": {
     "abilities": [
       "swarm",
-      "sniper",
-      "technician"
+      "sniper"
     ],
     "types": [
       "bug",
@@ -1381,7 +1855,7 @@
     ],
     "base": {
       "hp": 65,
-      "atk": 80,
+      "atk": 90,
       "def": 40,
       "spa": 45,
       "spd": 80,
@@ -1395,10 +1869,10 @@
     "gender_ratio": 0.5,
     "pp": 115,
     "moves": [
-      "fury_swipes",
       "harden",
-      "poison_powder",
-      "swift"
+      "poison_jab",
+      "pin_missile",
+      "focus_energy"
     ],
     "learnset": [
       [
@@ -1406,26 +1880,41 @@
         "fury_attack"
       ],
       [
-        15,
-        "focus_energy"
+        1,
+        "harden"
+      ],
+      [
+        1,
+        "poison_sting"
+      ],
+      [
+        1,
+        "string_shot"
+      ],
+      [
+        17,
+        "poison_sting"
       ],
       [
         20,
-        "twineedle"
+        "focus_energy"
       ],
       [
-        25,
-        "rage"
+        32,
+        "pin_missile"
+      ],
+      [
+        35,
+        "poison_jab"
       ]
     ],
     "evo_moves": [
-      "fury_attack",
-      "twineedle"
+      "fury_attack"
     ],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#e8cf3a",
     "placeholder_scale": 1.4,
-    "base_exp": 159,
+    "base_exp": 178,
     "growth": "medium_fast",
     "dex_no": 15,
     "category": "Poison Bee Pokémon",
@@ -1436,14 +1925,20 @@
     "shape": "bug-wings",
     "locomotion": "hover",
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "hyper_beam",
+      "poison_jab",
+      "solar_beam",
       "thief"
-    ]
+    ],
+    "hidden_ability": "sniper",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Pikachu": {
     "abilities": [
       "static",
-      "lightning_rod",
-      "speed_boost"
+      "lightning_rod"
     ],
     "types": [
       "electric"
@@ -1451,9 +1946,9 @@
     "base": {
       "hp": 35,
       "atk": 55,
-      "def": 30,
+      "def": 40,
       "spa": 50,
-      "spd": 40,
+      "spd": 50,
       "spe": 90
     },
     "ev_yield": {
@@ -1471,36 +1966,52 @@
     "learnset": [
       [
         1,
-        "thunder_shock"
-      ],
-      [
-        1,
         "growl"
       ],
       [
-        6,
-        "tail_whip"
-      ],
-      [
-        8,
-        "thunder_wave"
-      ],
-      [
-        11,
+        1,
         "quick_attack"
       ],
       [
-        15,
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "thunder_shock"
+      ],
+      [
+        4,
+        "thunder_wave"
+      ],
+      [
+        8,
         "double_team"
       ],
       [
+        12,
+        "electro_ball"
+      ],
+      [
         20,
-        "slam"
+        "spark"
+      ],
+      [
+        28,
+        "iron_tail"
+      ],
+      [
+        36,
+        "thunderbolt"
+      ],
+      [
+        44,
+        "thunder"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#ffe94a",
-    "base_exp": 82,
+    "base_exp": 112,
     "growth": "medium_fast",
     "evolution": {
       "method": "item",
@@ -1515,13 +2026,27 @@
     "jump_height": 0.9,
     "shape": "quadruped",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "body_slam",
+      "charge",
+      "dig",
+      "electro_ball",
+      "encore",
+      "helping_hand",
+      "rain_dance",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt"
+    ],
+    "hidden_ability": "lightning_rod",
+    "learnset_version": "scarlet-violet"
   },
   "Raichu": {
     "abilities": [
       "static",
-      "lightning_rod",
-      "speed_boost"
+      "lightning_rod"
     ],
     "types": [
       "electric"
@@ -1532,7 +2057,7 @@
       "def": 55,
       "spa": 90,
       "spd": 80,
-      "spe": 100
+      "spe": 110
     },
     "ev_yield": {
       "spe": 3
@@ -1549,11 +2074,19 @@
     "learnset": [
       [
         1,
-        "thunder_shock"
+        "double_team"
       ],
       [
         1,
-        "tail_whip"
+        "electro_ball"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "iron_tail"
       ],
       [
         1,
@@ -1561,10 +2094,29 @@
       ],
       [
         1,
+        "spark"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        1,
+        "thunder"
+      ],
+      [
+        1,
+        "thunder_shock"
+      ],
+      [
+        1,
+        "thunder_wave"
+      ],
+      [
+        5,
         "thunderbolt"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#f5b030",
     "base_exp": 218,
@@ -1578,14 +2130,27 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
-      "thief"
-    ]
+      "body_slam",
+      "charge",
+      "dig",
+      "electro_ball",
+      "encore",
+      "helping_hand",
+      "hyper_beam",
+      "rain_dance",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt"
+    ],
+    "hidden_ability": "lightning_rod",
+    "learnset_version": "scarlet-violet"
   },
   "Spearow": {
     "abilities": [
       "keen_eye",
-      "sniper",
-      "super_luck"
+      "sniper"
     ],
     "types": [
       "normal",
@@ -1606,40 +2171,48 @@
     "gender_ratio": 0.5,
     "pp": 110,
     "moves": [
-      "gust",
       "growl",
-      "quick_attack",
-      "fury_swipes"
+      "drill_peck",
+      "focus_energy",
+      "wing_attack"
     ],
     "learnset": [
-      [
-        1,
-        "peck"
-      ],
       [
         1,
         "growl"
       ],
       [
-        7,
+        1,
+        "peck"
+      ],
+      [
+        4,
         "leer"
       ],
       [
-        13,
+        11,
         "fury_attack"
       ],
       [
-        19,
-        "pursuit"
+        15,
+        "aerial_ace"
       ],
       [
-        25,
-        "aerial_ace"
+        18,
+        "wing_attack"
+      ],
+      [
+        29,
+        "focus_energy"
+      ],
+      [
+        36,
+        "drill_peck"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#c89060",
-    "base_exp": 58,
+    "base_exp": 52,
     "growth": "medium_fast",
     "evolution": {
       "level": 20,
@@ -1655,14 +2228,25 @@
     "locomotion": "fly",
     "fly_height": 0.69,
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "rain_dance",
       "thief"
+    ],
+    "hidden_ability": "sniper",
+    "learnset_version": "brilliant-diamond-shining-pearl",
+    "egg": [
+      "astonish",
+      "quick_attack",
+      "scary_face",
+      "tri_attack",
+      "whirlwind"
     ]
   },
   "Fearow": {
     "abilities": [
       "keen_eye",
-      "sniper",
-      "super_luck"
+      "sniper"
     ],
     "types": [
       "normal",
@@ -1683,15 +2267,15 @@
     "gender_ratio": 0.5,
     "pp": 120,
     "moves": [
-      "gust",
       "growl",
-      "fury_swipes",
-      "swift"
+      "drill_run",
+      "drill_peck",
+      "focus_energy"
     ],
     "learnset": [
       [
         1,
-        "peck"
+        "drill_run"
       ],
       [
         1,
@@ -1703,14 +2287,41 @@
       ],
       [
         1,
+        "peck"
+      ],
+      [
+        4,
+        "leer"
+      ],
+      [
+        11,
         "fury_attack"
+      ],
+      [
+        15,
+        "aerial_ace"
+      ],
+      [
+        18,
+        "wing_attack"
+      ],
+      [
+        32,
+        "focus_energy"
+      ],
+      [
+        41,
+        "drill_peck"
+      ],
+      [
+        45,
+        "drill_run"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#b87840",
     "placeholder_scale": 1.4,
-    "base_exp": 162,
+    "base_exp": 155,
     "growth": "medium_fast",
     "dex_no": 22,
     "category": "Beak Pokémon",
@@ -1722,8 +2333,14 @@
     "locomotion": "fly",
     "fly_height": 1.5,
     "tm": [
+      "aerial_ace",
+      "double_team",
+      "hyper_beam",
+      "rain_dance",
       "thief"
-    ]
+    ],
+    "hidden_ability": "sniper",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Mankey": {
     "abilities": [
@@ -2676,7 +3293,7 @@
     "abilities": [
       "sand_veil",
       "arena_trap",
-      "hyper_cutter"
+      "sand_force"
     ],
     "types": [
       "ground"
@@ -2698,7 +3315,8 @@
     "moves": [
       "scratch",
       "growl",
-      "earthquake"
+      "earthquake",
+      "earth_power"
     ],
     "learnset": [
       [
@@ -2710,24 +3328,36 @@
         "scratch"
       ],
       [
-        5,
+        4,
         "growl"
       ],
       [
-        9,
-        "magnitude"
+        8,
+        "astonish"
       ],
       [
-        17,
+        12,
+        "mud_slap"
+      ],
+      [
+        20,
+        "sucker_punch"
+      ],
+      [
+        24,
+        "slash"
+      ],
+      [
+        32,
         "dig"
       ],
       [
-        21,
-        "fury_swipes"
+        36,
+        "earth_power"
       ],
       [
-        25,
-        "mud_slap"
+        40,
+        "earthquake"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -2747,22 +3377,34 @@
     "shape": "blob",
     "locomotion": "ground",
     "tm": [
+      "body_slam",
+      "curse",
+      "dig",
+      "earth_power",
+      "earthquake",
+      "helping_hand",
+      "mud_slap",
+      "rock_slide",
       "rock_tomb",
+      "sand_tomb",
+      "stone_edge",
       "thief"
-    ]
+    ],
+    "hidden_ability": "sand_force",
+    "learnset_version": "scarlet-violet"
   },
   "Dugtrio": {
     "abilities": [
       "sand_veil",
       "arena_trap",
-      "hyper_cutter"
+      "sand_force"
     ],
     "types": [
       "ground"
     ],
     "base": {
       "hp": 35,
-      "atk": 80,
+      "atk": 100,
       "def": 50,
       "spa": 50,
       "spd": 70,
@@ -2777,17 +3419,17 @@
     "moves": [
       "scratch",
       "growl",
-      "fury_swipes",
-      "earthquake"
+      "earthquake",
+      "earth_power"
     ],
     "learnset": [
       [
         1,
-        "tri_attack"
+        "astonish"
       ],
       [
         1,
-        "scratch"
+        "growl"
       ],
       [
         1,
@@ -2795,30 +3437,44 @@
       ],
       [
         1,
-        "growl"
+        "scratch"
       ],
       [
-        9,
-        "magnitude"
+        1,
+        "tri_attack"
       ],
       [
-        17,
+        12,
+        "mud_slap"
+      ],
+      [
+        20,
+        "sucker_punch"
+      ],
+      [
+        24,
+        "slash"
+      ],
+      [
+        36,
         "dig"
       ],
       [
-        21,
-        "fury_swipes"
+        42,
+        "earth_power"
       ],
       [
-        25,
-        "mud_slap"
+        48,
+        "earthquake"
       ]
     ],
-    "evo_moves": [],
+    "evo_moves": [
+      "sand_tomb"
+    ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#a06840",
     "placeholder_scale": 1.35,
-    "base_exp": 153,
+    "base_exp": 149,
     "growth": "medium_fast",
     "dex_no": 51,
     "category": "Mole Pokémon",
@@ -2829,15 +3485,27 @@
     "shape": "heads",
     "locomotion": "ground",
     "tm": [
+      "body_slam",
+      "curse",
+      "dig",
+      "earth_power",
+      "earthquake",
+      "hyper_beam",
+      "mud_slap",
+      "rock_slide",
       "rock_tomb",
+      "sand_tomb",
+      "stone_edge",
       "thief"
-    ]
+    ],
+    "hidden_ability": "sand_force",
+    "learnset_version": "scarlet-violet"
   },
   "Nidoran F": {
     "abilities": [
       "poison_point",
-      "hustle",
-      "rough_skin"
+      "rivalry",
+      "hustle"
     ],
     "types": [
       "poison"
@@ -2856,7 +3524,7 @@
     "catch_rate": 235,
     "gender_ratio": 1.0,
     "pp": 100,
-    "base_exp": 59,
+    "base_exp": 55,
     "growth": "medium_slow",
     "moves": [
       "scratch",
@@ -2871,27 +3539,39 @@
       ],
       [
         1,
-        "scratch"
-      ],
-      [
-        8,
-        "tail_whip"
-      ],
-      [
-        12,
-        "double_kick"
-      ],
-      [
-        17,
         "poison_sting"
       ],
       [
-        20,
+        5,
+        "scratch"
+      ],
+      [
+        10,
+        "tail_whip"
+      ],
+      [
+        15,
+        "fury_swipes"
+      ],
+      [
+        25,
+        "double_kick"
+      ],
+      [
+        30,
         "bite"
       ],
       [
-        23,
+        35,
         "helping_hand"
+      ],
+      [
+        50,
+        "crunch"
+      ],
+      [
+        55,
+        "earth_power"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -2909,14 +3589,32 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
+      "body_slam",
+      "crunch",
+      "dig",
+      "earth_power",
+      "focus_energy",
+      "helping_hand",
+      "iron_tail",
+      "poison_jab",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "sword-shield",
+    "egg": [
+      "disable",
+      "skull_bash",
+      "supersonic"
     ]
   },
   "Nidorina": {
     "abilities": [
       "poison_point",
-      "hustle",
-      "rough_skin"
+      "rivalry",
+      "hustle"
     ],
     "types": [
       "poison"
@@ -2935,7 +3633,7 @@
     "catch_rate": 120,
     "gender_ratio": 1.0,
     "pp": 115,
-    "base_exp": 117,
+    "base_exp": 128,
     "growth": "medium_slow",
     "evolution": {
       "method": "item",
@@ -2955,26 +3653,41 @@
       ],
       [
         1,
-        "scratch"
-      ],
-      [
-        8,
-        "tail_whip"
-      ],
-      [
-        12,
-        "double_kick"
-      ],
-      [
-        18,
         "poison_sting"
       ],
       [
-        22,
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        15,
+        "fury_swipes"
+      ],
+      [
+        29,
+        "double_kick"
+      ],
+      [
+        36,
         "bite"
+      ],
+      [
+        43,
+        "helping_hand"
+      ],
+      [
+        64,
+        "crunch"
+      ],
+      [
+        71,
+        "earth_power"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#e890c0",
     "placeholder_scale": 1.2,
@@ -2987,14 +3700,27 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
-    ]
+      "body_slam",
+      "crunch",
+      "dig",
+      "earth_power",
+      "focus_energy",
+      "helping_hand",
+      "iron_tail",
+      "poison_jab",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "sword-shield"
   },
   "Nidoqueen": {
     "abilities": [
       "poison_point",
-      "sheer_force",
-      "rough_skin"
+      "rivalry",
+      "sheer_force"
     ],
     "types": [
       "poison",
@@ -3002,7 +3728,7 @@
     ],
     "base": {
       "hp": 90,
-      "atk": 82,
+      "atk": 92,
       "def": 87,
       "spa": 75,
       "spd": 85,
@@ -3014,7 +3740,7 @@
     "catch_rate": 45,
     "gender_ratio": 1.0,
     "pp": 130,
-    "base_exp": 194,
+    "base_exp": 227,
     "growth": "medium_slow",
     "moves": [
       "poison_sting",
@@ -3025,11 +3751,11 @@
     "learnset": [
       [
         1,
-        "scratch"
+        "bite"
       ],
       [
         1,
-        "tail_whip"
+        "crunch"
       ],
       [
         1,
@@ -3037,14 +3763,33 @@
       ],
       [
         1,
+        "earth_power"
+      ],
+      [
+        1,
+        "fury_swipes"
+      ],
+      [
+        1,
+        "growl"
+      ],
+      [
+        1,
+        "helping_hand"
+      ],
+      [
+        1,
         "poison_sting"
       ],
       [
-        22,
-        "body_slam"
+        1,
+        "scratch"
+      ],
+      [
+        1,
+        "tail_whip"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#7ac0d8",
     "placeholder_scale": 1.45,
@@ -3057,15 +3802,36 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "body_slam",
+      "crunch",
+      "dig",
+      "drill_run",
+      "earth_power",
+      "earthquake",
+      "fire_blast",
+      "flamethrower",
+      "focus_energy",
+      "helping_hand",
+      "hyper_beam",
+      "iron_tail",
+      "poison_jab",
+      "rain_dance",
+      "rock_slide",
       "rock_tomb",
-      "thief"
-    ]
+      "sand_tomb",
+      "stone_edge",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "sheer_force",
+    "learnset_version": "sword-shield"
   },
   "Nidoran M": {
     "abilities": [
       "poison_point",
-      "hustle",
-      "competitive"
+      "rivalry",
+      "hustle"
     ],
     "types": [
       "poison"
@@ -3084,7 +3850,7 @@
     "catch_rate": 235,
     "gender_ratio": 0.0,
     "pp": 100,
-    "base_exp": 60,
+    "base_exp": 55,
     "growth": "medium_slow",
     "moves": [
       "peck",
@@ -3099,27 +3865,39 @@
       ],
       [
         1,
-        "peck"
-      ],
-      [
-        8,
-        "focus_energy"
-      ],
-      [
-        12,
-        "double_kick"
-      ],
-      [
-        17,
         "poison_sting"
       ],
       [
-        20,
+        5,
+        "peck"
+      ],
+      [
+        10,
+        "focus_energy"
+      ],
+      [
+        15,
+        "fury_attack"
+      ],
+      [
+        25,
+        "double_kick"
+      ],
+      [
+        30,
         "horn_attack"
       ],
       [
-        23,
+        35,
         "helping_hand"
+      ],
+      [
+        50,
+        "poison_jab"
+      ],
+      [
+        55,
+        "earth_power"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3137,14 +3915,34 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
+      "body_slam",
+      "dig",
+      "drill_run",
+      "earth_power",
+      "focus_energy",
+      "helping_hand",
+      "iron_tail",
+      "poison_jab",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "sword-shield",
+    "egg": [
+      "confusion",
+      "disable",
+      "sucker_punch",
+      "supersonic",
+      "thrash"
     ]
   },
   "Nidorino": {
     "abilities": [
       "poison_point",
-      "hustle",
-      "competitive"
+      "rivalry",
+      "hustle"
     ],
     "types": [
       "poison"
@@ -3163,7 +3961,7 @@
     "catch_rate": 120,
     "gender_ratio": 0.0,
     "pp": 115,
-    "base_exp": 118,
+    "base_exp": 128,
     "growth": "medium_slow",
     "evolution": {
       "method": "item",
@@ -3179,6 +3977,10 @@
     "learnset": [
       [
         1,
+        "focus_energy"
+      ],
+      [
+        1,
         "leer"
       ],
       [
@@ -3186,23 +3988,34 @@
         "peck"
       ],
       [
-        8,
-        "focus_energy"
-      ],
-      [
-        12,
-        "double_kick"
-      ],
-      [
-        18,
+        1,
         "poison_sting"
       ],
       [
-        22,
+        15,
+        "fury_attack"
+      ],
+      [
+        29,
+        "double_kick"
+      ],
+      [
+        36,
         "horn_attack"
+      ],
+      [
+        43,
+        "helping_hand"
+      ],
+      [
+        64,
+        "poison_jab"
+      ],
+      [
+        71,
+        "earth_power"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#b888d8",
     "placeholder_scale": 1.2,
@@ -3215,14 +4028,27 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
-      "thief"
-    ]
+      "body_slam",
+      "dig",
+      "drill_run",
+      "earth_power",
+      "focus_energy",
+      "helping_hand",
+      "iron_tail",
+      "poison_jab",
+      "rain_dance",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "hustle",
+    "learnset_version": "sword-shield"
   },
   "Nidoking": {
     "abilities": [
       "poison_point",
-      "sheer_force",
-      "competitive"
+      "rivalry",
+      "sheer_force"
     ],
     "types": [
       "poison",
@@ -3230,7 +4056,7 @@
     ],
     "base": {
       "hp": 81,
-      "atk": 92,
+      "atk": 102,
       "def": 77,
       "spa": 85,
       "spd": 75,
@@ -3242,18 +4068,22 @@
     "catch_rate": 45,
     "gender_ratio": 0.0,
     "pp": 130,
-    "base_exp": 195,
+    "base_exp": 227,
     "growth": "medium_slow",
     "moves": [
       "peck",
       "horn_attack",
-      "thrash",
-      "double_kick"
+      "double_kick",
+      "poison_sting"
     ],
     "learnset": [
       [
         1,
-        "peck"
+        "double_kick"
+      ],
+      [
+        1,
+        "earth_power"
       ],
       [
         1,
@@ -3261,18 +4091,40 @@
       ],
       [
         1,
-        "double_kick"
+        "fury_attack"
+      ],
+      [
+        1,
+        "helping_hand"
+      ],
+      [
+        1,
+        "horn_attack"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "megahorn"
+      ],
+      [
+        1,
+        "peck"
+      ],
+      [
+        1,
+        "poison_jab"
       ],
       [
         1,
         "poison_sting"
-      ],
-      [
-        22,
-        "thrash"
       ]
     ],
-    "evo_moves": [],
+    "evo_moves": [
+      "megahorn"
+    ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#a878d0",
     "placeholder_scale": 1.45,
@@ -3285,9 +4137,30 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "body_slam",
+      "dig",
+      "drill_run",
+      "earth_power",
+      "earthquake",
+      "fire_blast",
+      "flamethrower",
+      "focus_energy",
+      "helping_hand",
+      "hyper_beam",
+      "iron_tail",
+      "megahorn",
+      "poison_jab",
+      "rain_dance",
+      "rock_slide",
       "rock_tomb",
-      "thief"
-    ]
+      "sand_tomb",
+      "stone_edge",
+      "thief",
+      "thunder",
+      "thunderbolt"
+    ],
+    "hidden_ability": "sheer_force",
+    "learnset_version": "sword-shield"
   },
   "Geodude": {
     "abilities": [
@@ -3579,7 +4452,7 @@
   "Sandshrew": {
     "abilities": [
       "sand_veil",
-      "rough_skin"
+      "sand_rush"
     ],
     "types": [
       "ground"
@@ -3598,7 +4471,7 @@
     "catch_rate": 255,
     "gender_ratio": 0.5,
     "pp": 100,
-    "base_exp": 93,
+    "base_exp": 60,
     "growth": "medium_fast",
     "moves": [
       "scratch",
@@ -3609,23 +4482,47 @@
     "learnset": [
       [
         1,
-        "scratch"
-      ],
-      [
-        6,
         "defense_curl"
       ],
       [
-        11,
-        "sand_attack"
+        1,
+        "scratch"
       ],
       [
-        17,
+        3,
         "poison_sting"
       ],
       [
-        23,
+        6,
+        "sand_attack"
+      ],
+      [
+        9,
+        "rollout"
+      ],
+      [
+        15,
+        "rapid_spin"
+      ],
+      [
+        21,
+        "swift"
+      ],
+      [
+        24,
+        "fury_swipes"
+      ],
+      [
+        30,
         "slash"
+      ],
+      [
+        33,
+        "dig"
+      ],
+      [
+        45,
+        "earthquake"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -3643,15 +4540,37 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "aerial_ace",
+      "body_slam",
+      "curse",
+      "dig",
+      "earth_power",
+      "earthquake",
+      "leech_life",
+      "low_kick",
+      "metal_claw",
+      "mud_slap",
+      "poison_jab",
+      "rock_slide",
       "rock_tomb",
+      "sand_tomb",
+      "stone_edge",
+      "super_fang",
+      "swift",
       "thief"
+    ],
+    "hidden_ability": "sand_rush",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "flail",
+      "metal_claw",
+      "mud_slap"
     ]
   },
   "Sandslash": {
     "abilities": [
       "sand_veil",
-      "tough_claws",
-      "rough_skin"
+      "sand_rush"
     ],
     "types": [
       "ground"
@@ -3670,7 +4589,7 @@
     "catch_rate": 90,
     "gender_ratio": 0.5,
     "pp": 115,
-    "base_exp": 163,
+    "base_exp": 158,
     "growth": "medium_fast",
     "moves": [
       "scratch",
@@ -3681,7 +4600,7 @@
     "learnset": [
       [
         1,
-        "scratch"
+        "crush_claw"
       ],
       [
         1,
@@ -3689,18 +4608,49 @@
       ],
       [
         1,
-        "sand_attack"
-      ],
-      [
-        17,
         "poison_sting"
       ],
       [
-        24,
+        1,
+        "sand_attack"
+      ],
+      [
+        1,
+        "scratch"
+      ],
+      [
+        9,
+        "rollout"
+      ],
+      [
+        15,
+        "rapid_spin"
+      ],
+      [
+        21,
+        "swift"
+      ],
+      [
+        26,
+        "fury_swipes"
+      ],
+      [
+        31,
+        "sand_tomb"
+      ],
+      [
+        36,
         "slash"
+      ],
+      [
+        41,
+        "dig"
+      ],
+      [
+        61,
+        "earthquake"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#d8c080",
     "placeholder_scale": 1.35,
@@ -3713,8 +4663,33 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "aerial_ace",
+      "body_slam",
+      "curse",
+      "dig",
+      "drill_run",
+      "earth_power",
+      "earthquake",
+      "hyper_beam",
+      "leech_life",
+      "low_kick",
+      "metal_claw",
+      "mud_slap",
+      "poison_jab",
+      "rock_slide",
       "rock_tomb",
+      "sand_tomb",
+      "stone_edge",
+      "super_fang",
+      "swift",
       "thief"
+    ],
+    "hidden_ability": "sand_rush",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "flail",
+      "metal_claw",
+      "mud_slap"
     ]
   },
   "Zubat": {
@@ -3736,7 +4711,7 @@
     "catch_rate": 255,
     "shape": "wings",
     "pp": 105,
-    "base_exp": 54,
+    "base_exp": 49,
     "growth": "medium_fast",
     "moves": [
       "leech_life",
@@ -3747,23 +4722,27 @@
     "learnset": [
       [
         1,
-        "leech_life"
+        "absorb"
       ],
       [
-        6,
-        "astonish"
-      ],
-      [
-        11,
+        1,
         "supersonic"
       ],
       [
-        16,
+        5,
+        "astonish"
+      ],
+      [
+        30,
         "bite"
       ],
       [
-        21,
-        "wing_attack"
+        50,
+        "air_slash"
+      ],
+      [
+        55,
+        "leech_life"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -3774,7 +4753,7 @@
     },
     "abilities": [
       "inner_focus",
-      "super_luck"
+      "infiltrator"
     ],
     "gender_ratio": 0.5,
     "dex_no": 41,
@@ -3786,7 +4765,23 @@
     "jump_height": 0.39,
     "fly_height": 0.85,
     "tm": [
+      "air_slash",
+      "crunch",
+      "heat_wave",
+      "leech_life",
+      "rain_dance",
+      "swift",
       "thief"
+    ],
+    "hidden_ability": "infiltrator",
+    "learnset_version": "sword-shield",
+    "egg": [
+      "curse",
+      "gust",
+      "hypnosis",
+      "quick_attack",
+      "whirlwind",
+      "wing_attack"
     ]
   },
   "Golbat": {
@@ -3808,22 +4803,18 @@
     "catch_rate": 90,
     "shape": "wings",
     "pp": 125,
-    "base_exp": 171,
+    "base_exp": 159,
     "growth": "medium_fast",
     "moves": [
       "leech_life",
       "astonish",
-      "wing_attack",
-      "bite"
+      "bite",
+      "air_slash"
     ],
     "learnset": [
       [
         1,
-        "screech"
-      ],
-      [
-        1,
-        "leech_life"
+        "absorb"
       ],
       [
         1,
@@ -3831,15 +4822,23 @@
       ],
       [
         1,
+        "screech"
+      ],
+      [
+        1,
         "supersonic"
       ],
       [
-        16,
+        34,
         "bite"
       ],
       [
-        21,
-        "wing_attack"
+        62,
+        "air_slash"
+      ],
+      [
+        69,
+        "leech_life"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -3847,8 +4846,7 @@
     "placeholder_scale": 1.3,
     "abilities": [
       "inner_focus",
-      "super_luck",
-      "gale_wings"
+      "infiltrator"
     ],
     "gender_ratio": 0.5,
     "dex_no": 42,
@@ -3856,15 +4854,26 @@
     "height_m": 1.6,
     "weight_kg": 55.0,
     "flavor": "It clamps down on its prey with needle- sharp fangs and drains over 10 ounces of blood in one gulp.",
-    "evo_moves": [
-      "screech"
-    ],
     "locomotion": "fly",
     "jump_height": 0.83,
     "fly_height": 1.6,
     "tm": [
+      "air_slash",
+      "crunch",
+      "heat_wave",
+      "hyper_beam",
+      "leech_life",
+      "rain_dance",
+      "screech",
+      "swift",
       "thief"
-    ]
+    ],
+    "hidden_ability": "infiltrator",
+    "learnset_version": "sword-shield",
+    "evolution": {
+      "method": "level-up",
+      "into": null
+    }
   },
   "Paras": {
     "types": [
@@ -3885,13 +4894,13 @@
     "catch_rate": 190,
     "shape": "armor",
     "pp": 95,
-    "base_exp": 70,
+    "base_exp": 57,
     "growth": "medium_fast",
     "moves": [
       "scratch",
       "stun_spore",
       "poison_powder",
-      "leech_life"
+      "growth"
     ],
     "learnset": [
       [
@@ -3899,20 +4908,28 @@
         "scratch"
       ],
       [
-        7,
-        "stun_spore"
-      ],
-      [
-        13,
+        6,
         "poison_powder"
       ],
       [
-        19,
-        "leech_life"
+        6,
+        "stun_spore"
       ],
       [
-        25,
+        11,
+        "absorb"
+      ],
+      [
+        22,
         "spore"
+      ],
+      [
+        27,
+        "slash"
+      ],
+      [
+        33,
+        "growth"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -3923,8 +4940,8 @@
     },
     "abilities": [
       "effect_spore",
-      "natural_cure",
-      "tough_claws"
+      "dry_skin",
+      "damp"
     ],
     "gender_ratio": 0.5,
     "dex_no": 46,
@@ -3935,8 +4952,22 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "aerial_ace",
       "bullet_seed",
+      "dig",
+      "double_team",
+      "solar_beam",
       "thief"
+    ],
+    "hidden_ability": "damp",
+    "learnset_version": "brilliant-diamond-shining-pearl",
+    "egg": [
+      "flail",
+      "leech_seed",
+      "metal_claw",
+      "psybeam",
+      "screech",
+      "sweet_scent"
     ]
   },
   "Parasect": {
@@ -3959,15 +4990,23 @@
     "catch_rate": 75,
     "shape": "armor",
     "pp": 120,
-    "base_exp": 128,
+    "base_exp": 142,
     "growth": "medium_fast",
     "moves": [
       "scratch",
       "stun_spore",
-      "leech_life",
-      "poison_powder"
+      "poison_powder",
+      "growth"
     ],
     "learnset": [
+      [
+        1,
+        "absorb"
+      ],
+      [
+        1,
+        "poison_powder"
+      ],
       [
         1,
         "scratch"
@@ -3977,12 +5016,28 @@
         "stun_spore"
       ],
       [
-        1,
+        6,
         "poison_powder"
       ],
       [
-        19,
-        "leech_life"
+        6,
+        "stun_spore"
+      ],
+      [
+        11,
+        "absorb"
+      ],
+      [
+        22,
+        "spore"
+      ],
+      [
+        29,
+        "slash"
+      ],
+      [
+        37,
+        "growth"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -3990,8 +5045,8 @@
     "placeholder_scale": 1.25,
     "abilities": [
       "effect_spore",
-      "natural_cure",
-      "tough_claws"
+      "dry_skin",
+      "damp"
     ],
     "gender_ratio": 0.5,
     "dex_no": 47,
@@ -3999,17 +5054,23 @@
     "height_m": 1.0,
     "weight_kg": 29.5,
     "flavor": "It scatters toxic spores from the mushroom cap. In China, the spores are used as herbal medicine.",
-    "evo_moves": [],
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "aerial_ace",
       "bullet_seed",
+      "dig",
+      "double_team",
+      "hyper_beam",
+      "solar_beam",
       "thief"
-    ]
+    ],
+    "hidden_ability": "damp",
+    "learnset_version": "brilliant-diamond-shining-pearl"
   },
   "Clefairy": {
     "types": [
-      "normal"
+      "fairy"
     ],
     "base": {
       "hp": 70,
@@ -4025,42 +5086,38 @@
     "catch_rate": 150,
     "shape": "upright",
     "pp": 105,
-    "base_exp": 68,
+    "base_exp": 113,
     "growth": "fast",
     "moves": [
       "pound",
       "sing",
       "defense_curl",
-      "minimize"
+      "encore"
     ],
     "learnset": [
       [
         1,
-        "pound"
+        "defense_curl"
       ],
       [
         1,
         "growl"
       ],
       [
-        5,
-        "encore"
+        1,
+        "pound"
       ],
       [
-        9,
+        1,
         "sing"
       ],
       [
-        13,
-        "double_slap"
+        1,
+        "splash"
       ],
       [
-        21,
-        "minimize"
-      ],
-      [
-        25,
-        "defense_curl"
+        8,
+        "encore"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -4072,8 +5129,8 @@
     },
     "abilities": [
       "cute_charm",
-      "friend_guard",
-      "natural_cure"
+      "magic_guard",
+      "friend_guard"
     ],
     "gender_ratio": 0.75,
     "dex_no": 35,
@@ -4083,17 +5140,35 @@
     "flavor": "Its adorable appearance makes it popular as a pet. However, it is rare and difficult to find.",
     "locomotion": "ground",
     "jump_height": 0.3,
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "helping_hand",
+      "psybeam",
+      "rain_dance",
+      "solar_beam",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "water_pulse"
+    ],
+    "hidden_ability": "friend_guard",
+    "learnset_version": "scarlet-violet"
   },
   "Clefable": {
     "types": [
-      "normal"
+      "fairy"
     ],
     "base": {
       "hp": 95,
       "atk": 70,
       "def": 73,
-      "spa": 85,
+      "spa": 95,
       "spd": 90,
       "spe": 60
     },
@@ -4103,35 +5178,17 @@
     "catch_rate": 25,
     "shape": "upright",
     "pp": 130,
-    "base_exp": 129,
+    "base_exp": 217,
     "growth": "fast",
-    "moves": [
-      "double_slap",
-      "sing",
-      "minimize",
-      "defense_curl"
-    ],
-    "learnset": [
-      [
-        1,
-        "sing"
-      ],
-      [
-        1,
-        "double_slap"
-      ],
-      [
-        1,
-        "minimize"
-      ]
-    ],
+    "moves": [],
+    "learnset": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#e8a8c8",
     "placeholder_scale": 1.4,
     "abilities": [
       "cute_charm",
-      "friend_guard",
-      "marvel_scale"
+      "magic_guard",
+      "unaware"
     ],
     "gender_ratio": 0.75,
     "dex_no": 36,
@@ -4139,16 +5196,41 @@
     "height_m": 1.3,
     "weight_kg": 40.0,
     "flavor": "It has an acute sense of hearing. It can easily hear a pin being dropped nearly 1,100 yards away.",
-    "evo_moves": [
-      "minimize"
-    ],
     "locomotion": "ground",
     "jump_height": 0.42,
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "helping_hand",
+      "hyper_beam",
+      "psybeam",
+      "rain_dance",
+      "solar_beam",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "water_pulse"
+    ],
+    "hidden_ability": "unaware",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "defense_curl",
+      "encore",
+      "growl",
+      "pound",
+      "sing",
+      "splash"
+    ]
   },
   "Jigglypuff": {
     "types": [
-      "normal"
+      "normal",
+      "fairy"
     ],
     "base": {
       "hp": 115,
@@ -4164,7 +5246,7 @@
     "catch_rate": 170,
     "shape": "humanoid",
     "pp": 105,
-    "base_exp": 76,
+    "base_exp": 95,
     "growth": "fast",
     "moves": [
       "sing",
@@ -4175,27 +5257,23 @@
     "learnset": [
       [
         1,
-        "sing"
-      ],
-      [
-        4,
         "defense_curl"
       ],
       [
-        9,
-        "pound"
-      ],
-      [
-        14,
+        1,
         "disable"
       ],
       [
-        19,
-        "rollout"
+        1,
+        "pound"
+      ],
+      [
+        1,
+        "sing"
       ],
       [
         24,
-        "double_slap"
+        "body_slam"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -4207,8 +5285,8 @@
     },
     "abilities": [
       "cute_charm",
-      "friend_guard",
-      "competitive"
+      "competitive",
+      "friend_guard"
     ],
     "gender_ratio": 0.75,
     "dex_no": 39,
@@ -4218,17 +5296,35 @@
     "flavor": "It captivates foes with its huge, round eyes, then lulls them to sleep by singing a soothing melody.",
     "locomotion": "ground",
     "jump_height": 0.0,
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "helping_hand",
+      "rain_dance",
+      "solar_beam",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "water_pulse"
+    ],
+    "hidden_ability": "friend_guard",
+    "learnset_version": "scarlet-violet"
   },
   "Wigglytuff": {
     "types": [
-      "normal"
+      "normal",
+      "fairy"
     ],
     "base": {
       "hp": 140,
       "atk": 70,
       "def": 45,
-      "spa": 75,
+      "spa": 85,
       "spd": 50,
       "spe": 45
     },
@@ -4238,22 +5334,18 @@
     "catch_rate": 50,
     "shape": "humanoid",
     "pp": 130,
-    "base_exp": 109,
+    "base_exp": 196,
     "growth": "fast",
     "moves": [
-      "double_slap",
       "sing",
       "disable",
-      "defense_curl"
+      "defense_curl",
+      "pound"
     ],
     "learnset": [
       [
         1,
-        "sing"
-      ],
-      [
-        1,
-        "disable"
+        "body_slam"
       ],
       [
         1,
@@ -4261,7 +5353,15 @@
       ],
       [
         1,
-        "double_slap"
+        "disable"
+      ],
+      [
+        1,
+        "pound"
+      ],
+      [
+        1,
+        "sing"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -4269,8 +5369,8 @@
     "placeholder_scale": 1.4,
     "abilities": [
       "cute_charm",
-      "friend_guard",
-      "thick_fat"
+      "competitive",
+      "frisk"
     ],
     "gender_ratio": 0.75,
     "dex_no": 40,
@@ -4278,12 +5378,27 @@
     "height_m": 1.0,
     "weight_kg": 12.0,
     "flavor": "Its fur is extremely fine, dense, and supple. The exquisitely pleasant fur conveys an image of luxury.",
-    "evo_moves": [
-      "double_slap"
-    ],
     "locomotion": "ground",
     "jump_height": 0.3,
-    "tm": []
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "helping_hand",
+      "hyper_beam",
+      "rain_dance",
+      "solar_beam",
+      "swift",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "water_pulse"
+    ],
+    "hidden_ability": "frisk",
+    "learnset_version": "scarlet-violet"
   },
   "Magnemite": {
     "types": [
@@ -4590,7 +5705,7 @@
     "catch_rate": 255,
     "shape": "legs",
     "pp": 100,
-    "base_exp": 78,
+    "base_exp": 64,
     "growth": "medium_slow",
     "moves": [
       "absorb",
@@ -4604,8 +5719,20 @@
         "absorb"
       ],
       [
-        7,
+        1,
+        "growth"
+      ],
+      [
+        4,
+        "acid"
+      ],
+      [
+        8,
         "sweet_scent"
+      ],
+      [
+        12,
+        "mega_drain"
       ],
       [
         14,
@@ -4620,8 +5747,8 @@
         "sleep_powder"
       ],
       [
-        23,
-        "acid"
+        40,
+        "petal_dance"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -4632,7 +5759,7 @@
     },
     "abilities": [
       "chlorophyll",
-      "sap_sipper"
+      "run_away"
     ],
     "gender_ratio": 0.5,
     "dex_no": 43,
@@ -4643,7 +5770,17 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
-      "bullet_seed"
+      "bullet_seed",
+      "helping_hand",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "run_away",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "flail",
+      "leech_seed",
+      "razor_leaf"
     ]
   },
   "Gloom": {
@@ -4665,7 +5802,7 @@
     "catch_rate": 120,
     "shape": "humanoid",
     "pp": 115,
-    "base_exp": 132,
+    "base_exp": 138,
     "growth": "medium_slow",
     "moves": [
       "absorb",
@@ -4680,10 +5817,22 @@
       ],
       [
         1,
-        "sweet_scent"
+        "acid"
       ],
       [
         1,
+        "growth"
+      ],
+      [
+        1,
+        "sweet_scent"
+      ],
+      [
+        12,
+        "mega_drain"
+      ],
+      [
+        14,
         "poison_powder"
       ],
       [
@@ -4695,8 +5844,8 @@
         "sleep_powder"
       ],
       [
-        24,
-        "acid"
+        50,
+        "petal_dance"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -4709,7 +5858,7 @@
     },
     "abilities": [
       "chlorophyll",
-      "sap_sipper"
+      "stench"
     ],
     "gender_ratio": 0.5,
     "dex_no": 44,
@@ -4717,11 +5866,20 @@
     "height_m": 0.8,
     "weight_kg": 8.6,
     "flavor": "Its pistils exude an incredibly foul odor. The horrid stench can cause fainting at a distance of 1.25 miles.",
-    "evo_moves": [],
     "locomotion": "ground",
     "jump_height": 0.3,
     "tm": [
-      "bullet_seed"
+      "bullet_seed",
+      "helping_hand",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "stench",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "flail",
+      "leech_seed",
+      "razor_leaf"
     ]
   },
   "Vileplume": {
@@ -4733,7 +5891,7 @@
       "hp": 75,
       "atk": 80,
       "def": 85,
-      "spa": 100,
+      "spa": 110,
       "spd": 90,
       "spe": 50
     },
@@ -4743,7 +5901,7 @@
     "catch_rate": 45,
     "shape": "humanoid",
     "pp": 130,
-    "base_exp": 184,
+    "base_exp": 221,
     "growth": "medium_slow",
     "moves": [
       "absorb",
@@ -4758,11 +5916,35 @@
       ],
       [
         1,
-        "stun_spore"
+        "acid"
+      ],
+      [
+        1,
+        "growth"
       ],
       [
         1,
         "mega_drain"
+      ],
+      [
+        1,
+        "petal_dance"
+      ],
+      [
+        1,
+        "poison_powder"
+      ],
+      [
+        1,
+        "sleep_powder"
+      ],
+      [
+        1,
+        "stun_spore"
+      ],
+      [
+        1,
+        "sweet_scent"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -4770,8 +5952,7 @@
     "placeholder_scale": 1.5,
     "abilities": [
       "chlorophyll",
-      "sap_sipper",
-      "regenerator"
+      "effect_spore"
     ],
     "gender_ratio": 0.5,
     "dex_no": 45,
@@ -4779,13 +5960,22 @@
     "height_m": 1.2,
     "weight_kg": 18.6,
     "flavor": "Its petals are the largest in the world. It fiendishly scatters allergy-causing pollen from its petals.",
-    "evo_moves": [
-      "mega_drain"
-    ],
     "locomotion": "ground",
     "jump_height": 0.35,
     "tm": [
-      "bullet_seed"
+      "body_slam",
+      "bullet_seed",
+      "helping_hand",
+      "hyper_beam",
+      "seed_bomb",
+      "solar_beam"
+    ],
+    "hidden_ability": "effect_spore",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "flail",
+      "leech_seed",
+      "razor_leaf"
     ]
   },
   "Bellsprout": {
@@ -5336,7 +6526,7 @@
     "catch_rate": 255,
     "shape": "squiggle",
     "pp": 95,
-    "base_exp": 62,
+    "base_exp": 58,
     "growth": "medium_fast",
     "moves": [
       "wrap",
@@ -5347,27 +6537,31 @@
     "learnset": [
       [
         1,
-        "wrap"
-      ],
-      [
-        1,
         "leer"
       ],
       [
-        8,
+        1,
+        "wrap"
+      ],
+      [
+        4,
         "poison_sting"
       ],
       [
-        13,
+        9,
         "bite"
       ],
       [
-        20,
+        12,
         "glare"
       ],
       [
-        25,
+        17,
         "screech"
+      ],
+      [
+        20,
+        "acid"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -5379,7 +6573,7 @@
     "abilities": [
       "intimidate",
       "shed_skin",
-      "unburden"
+      "unnerve"
     ],
     "gender_ratio": 0.5,
     "dex_no": 23,
@@ -5390,7 +6584,25 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "crunch",
+      "dig",
+      "earthquake",
+      "fire_fang",
+      "leech_life",
+      "mud_slap",
+      "poison_jab",
+      "rain_dance",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "seed_bomb",
       "thief"
+    ],
+    "hidden_ability": "unnerve",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "scary_face",
+      "sucker_punch"
     ]
   },
   "Arbok": {
@@ -5399,7 +6611,7 @@
     ],
     "base": {
       "hp": 60,
-      "atk": 85,
+      "atk": 95,
       "def": 69,
       "spa": 65,
       "spd": 79,
@@ -5411,7 +6623,7 @@
     "catch_rate": 90,
     "shape": "squiggle",
     "pp": 120,
-    "base_exp": 147,
+    "base_exp": 157,
     "growth": "medium_fast",
     "moves": [
       "bite",
@@ -5422,7 +6634,11 @@
     "learnset": [
       [
         1,
-        "wrap"
+        "bite"
+      ],
+      [
+        1,
+        "fire_fang"
       ],
       [
         1,
@@ -5434,11 +6650,19 @@
       ],
       [
         1,
-        "bite"
+        "wrap"
+      ],
+      [
+        12,
+        "glare"
+      ],
+      [
+        17,
+        "screech"
       ],
       [
         20,
-        "glare"
+        "acid"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -5447,7 +6671,7 @@
     "abilities": [
       "intimidate",
       "shed_skin",
-      "unburden"
+      "unnerve"
     ],
     "gender_ratio": 0.5,
     "dex_no": 24,
@@ -5455,11 +6679,33 @@
     "height_m": 3.5,
     "weight_kg": 65.0,
     "flavor": "The pattern on its belly appears to be a frightening face. Weak foes will flee just at the sight of the pattern.",
-    "evo_moves": [],
+    "evo_moves": [
+      "crunch"
+    ],
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "body_slam",
+      "crunch",
+      "dig",
+      "earthquake",
+      "fire_fang",
+      "hyper_beam",
+      "leech_life",
+      "mud_slap",
+      "poison_jab",
+      "rain_dance",
+      "rock_slide",
+      "rock_tomb",
+      "scary_face",
+      "seed_bomb",
       "thief"
+    ],
+    "hidden_ability": "unnerve",
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "scary_face",
+      "sucker_punch"
     ]
   },
   "Staryu": {
@@ -5938,5 +7184,366 @@
     "jump_height": 0.0,
     "evo_moves": [],
     "tm": []
+  },
+  "Vulpix": {
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "dex_no": 37,
+    "types": [
+      "fire"
+    ],
+    "base": {
+      "hp": 38,
+      "atk": 41,
+      "def": 40,
+      "spa": 50,
+      "spd": 65,
+      "spe": 65
+    },
+    "ev_yield": {
+      "spe": 1
+    },
+    "abilities": [
+      "flash_fire",
+      "drought"
+    ],
+    "hidden_ability": "drought",
+    "learnset": [
+      [
+        1,
+        "ember"
+      ],
+      [
+        1,
+        "tail_whip"
+      ],
+      [
+        4,
+        "disable"
+      ],
+      [
+        8,
+        "quick_attack"
+      ],
+      [
+        32,
+        "flamethrower"
+      ],
+      [
+        52,
+        "fire_blast"
+      ]
+    ],
+    "learnset_version": "scarlet-violet",
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "heat_wave",
+      "helping_hand",
+      "swift"
+    ],
+    "egg": [
+      "flail",
+      "hypnosis"
+    ],
+    "moves": [
+      "fire_blast",
+      "flamethrower",
+      "quick_attack",
+      "disable"
+    ],
+    "catch_rate": 190,
+    "base_exp": 60,
+    "growth": "medium_fast",
+    "gender_ratio": 0.75,
+    "height_m": 0.6,
+    "weight_kg": 9.9,
+    "category": "Fox Pokémon",
+    "flavor": "In its belly burns a fire, which Vulpix spits out in the form of fireballs. When young, this Pokémon has but one white tail. As the Pokémon matures, this single tail splits into six.",
+    "evolution": {
+      "method": "item",
+      "item": "fire_stone",
+      "into": "Ninetales"
+    },
+    "pp": 100,
+    "jump_height": 0.35,
+    "sprite": "res://assets/sprites/critter_purple.png"
+  },
+  "Ninetales": {
+    "shape": "quadruped",
+    "locomotion": "ground",
+    "dex_no": 38,
+    "types": [
+      "fire"
+    ],
+    "base": {
+      "hp": 73,
+      "atk": 76,
+      "def": 75,
+      "spa": 81,
+      "spd": 100,
+      "spe": 100
+    },
+    "ev_yield": {
+      "spd": 1,
+      "spe": 1
+    },
+    "abilities": [
+      "flash_fire",
+      "drought"
+    ],
+    "hidden_ability": "drought",
+    "learnset": [
+      [
+        1,
+        "flamethrower"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        1,
+        "tail_whip"
+      ]
+    ],
+    "learnset_version": "scarlet-violet",
+    "tm": [
+      "body_slam",
+      "dig",
+      "encore",
+      "fire_blast",
+      "flamethrower",
+      "heat_wave",
+      "helping_hand",
+      "hyper_beam",
+      "solar_beam",
+      "swift"
+    ],
+    "egg": [
+      "flail",
+      "hypnosis"
+    ],
+    "moves": [
+      "tail_whip",
+      "quick_attack",
+      "flamethrower"
+    ],
+    "catch_rate": 75,
+    "base_exp": 177,
+    "growth": "medium_fast",
+    "gender_ratio": 0.75,
+    "height_m": 1.1,
+    "weight_kg": 19.9,
+    "category": "Fox Pokémon",
+    "flavor": "The coat of gleaming golden fur is quite magnificent. This species is said to store sacred power in its nine long tails and to live for a millennium.",
+    "pp": 100,
+    "jump_height": 0.35,
+    "sprite": "res://assets/sprites/critter_purple.png"
+  },
+  "Venonat": {
+    "shape": "upright",
+    "locomotion": "ground",
+    "dex_no": 48,
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base": {
+      "hp": 60,
+      "atk": 55,
+      "def": 50,
+      "spa": 40,
+      "spd": 55,
+      "spe": 45
+    },
+    "ev_yield": {
+      "spd": 1
+    },
+    "abilities": [
+      "compound_eyes",
+      "tinted_lens",
+      "run_away"
+    ],
+    "hidden_ability": "run_away",
+    "learnset": [
+      [
+        1,
+        "disable"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        5,
+        "supersonic"
+      ],
+      [
+        11,
+        "confusion"
+      ],
+      [
+        13,
+        "poison_powder"
+      ],
+      [
+        17,
+        "psybeam"
+      ],
+      [
+        23,
+        "stun_spore"
+      ],
+      [
+        25,
+        "bug_buzz"
+      ],
+      [
+        29,
+        "sleep_powder"
+      ],
+      [
+        35,
+        "leech_life"
+      ]
+    ],
+    "learnset_version": "scarlet-violet",
+    "tm": [
+      "bug_buzz",
+      "leech_life",
+      "psybeam",
+      "solar_beam",
+      "swift",
+      "thief"
+    ],
+    "egg": [
+      "screech"
+    ],
+    "moves": [
+      "leech_life",
+      "sleep_powder",
+      "bug_buzz",
+      "stun_spore"
+    ],
+    "catch_rate": 190,
+    "base_exp": 61,
+    "growth": "medium_fast",
+    "gender_ratio": 0.5,
+    "height_m": 1.0,
+    "weight_kg": 30.0,
+    "category": "Insect Pokémon",
+    "flavor": "Its large eyes act as radar. In a bright place, you can see that they are clusters of many tiny eyes.",
+    "evolution": {
+      "level": 31,
+      "into": "Venomoth"
+    },
+    "pp": 100,
+    "jump_height": 0.35,
+    "sprite": "res://assets/sprites/critter_purple.png"
+  },
+  "Venomoth": {
+    "shape": "bug-wings",
+    "locomotion": "fly",
+    "fly_height": 1.1,
+    "dex_no": 49,
+    "types": [
+      "bug",
+      "poison"
+    ],
+    "base": {
+      "hp": 70,
+      "atk": 65,
+      "def": 60,
+      "spa": 90,
+      "spd": 75,
+      "spe": 90
+    },
+    "ev_yield": {
+      "spa": 1,
+      "spe": 1
+    },
+    "abilities": [
+      "shield_dust",
+      "tinted_lens",
+      "wonder_skin"
+    ],
+    "hidden_ability": "wonder_skin",
+    "learnset": [
+      [
+        1,
+        "disable"
+      ],
+      [
+        1,
+        "supersonic"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        11,
+        "confusion"
+      ],
+      [
+        13,
+        "poison_powder"
+      ],
+      [
+        17,
+        "psybeam"
+      ],
+      [
+        23,
+        "stun_spore"
+      ],
+      [
+        25,
+        "bug_buzz"
+      ],
+      [
+        29,
+        "sleep_powder"
+      ],
+      [
+        37,
+        "leech_life"
+      ]
+    ],
+    "evo_moves": [
+      "air_slash"
+    ],
+    "learnset_version": "scarlet-violet",
+    "tm": [
+      "air_slash",
+      "bug_buzz",
+      "hyper_beam",
+      "leech_life",
+      "psybeam",
+      "solar_beam",
+      "swift",
+      "thief"
+    ],
+    "moves": [
+      "leech_life",
+      "sleep_powder",
+      "bug_buzz",
+      "stun_spore"
+    ],
+    "catch_rate": 75,
+    "base_exp": 158,
+    "growth": "medium_fast",
+    "gender_ratio": 0.5,
+    "height_m": 1.5,
+    "weight_kg": 12.5,
+    "category": "Poison Moth Pokémon",
+    "flavor": "The powdery scales on its wings are hard to remove from skin. They also contain poison that leaks out on contact.",
+    "pp": 100,
+    "jump_height": 0.35,
+    "sprite": "res://assets/sprites/critter_purple.png"
   }
 }

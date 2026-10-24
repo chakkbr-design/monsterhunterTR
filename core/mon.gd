@@ -81,8 +81,13 @@ static func _roll_gender(species_id: String, rng: RandomNumberGenerator) -> Stri
 	return "female" if (rng.randf() if rng else randf()) < ratio else "male"
 
 
+## Sorteia entre as habilidades normais; a oculta (hidden_ability, sempre a última) nunca sai sozinha.
 static func _roll_ability_slot(species_id: String, rng: RandomNumberGenerator) -> int:
-	if Dex.species(species_id).get("abilities", []).size() < 2:
+	var sp := Dex.species(species_id)
+	var n: int = sp.get("abilities", []).size()
+	if sp.has("hidden_ability") and n > 1:
+		n -= 1
+	if n < 2:
 		return 0
 	return 1 if (rng.randf() if rng else randf()) < 0.5 else 0
 

@@ -31,7 +31,8 @@ const PRIORITY_GCD := 0.6
 ## Ritmo da luta (Batalha Viva, "rápido": 15-30 s por Pokémon): a fórmula Gen 3 fica igual e o dano
 ## final é escalado por arena.damage_pace (padrão DAMAGE_PACE, opts.damage_pace muda).
 const DAMAGE_PACE := 0.5
-const DOUBLES_PACE := 0.26
+## Dupla com o mesmo dano da luta 1x1 (o Caio pediu: só o tempo muda, não o dano por golpe).
+const DOUBLES_PACE := 1.0
 ## Cobrir o parceiro com HP baixo: distância máxima e chance por golpe.
 const COVER_DIST := 2.5
 const COVER_CHANCE := 0.35

@@ -131,6 +131,12 @@ const COOLDOWN_SCALE := 2.5
 const MIN_COOLDOWN := 1.6
 const MIN_STATUS_COOLDOWN := 3.0
 const STAT_MOVE_COOLDOWN_MULT := 2.5
+## Golpes de status (todos) esperam bem mais: x3 no tempo base e no mínimo 8 s (o Caio pediu menos spam).
+const STATUS_COOLDOWN_MULT := 3.0
+const MIN_STATUS_COOLDOWN_VIVA := 8.0
+## Golpes fortes: poder de verdade ("bp", Gen 9) acima de 70 alonga o cooldown: x(1 + (bp - 70) / 80).
+const STRONG_BP := 70.0
+const STRONG_BP_SPAN := 80.0
 const GLOBAL_COOLDOWN := 1.0
 const FATIGUE_ANCHORS := [[5.0, 50.0], [10.0, 35.0], [40.0, 10.0]]
 const PREPARE_BY_KIND := {
@@ -204,9 +210,13 @@ static func cooldown(mv: Dictionary) -> float:
 		(float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + weight / 40.0)
 		* COOLDOWN_SCALE
 	)
-	cd = maxf(cd, MIN_STATUS_COOLDOWN if mv.get("category", "") == "status" else MIN_COOLDOWN)
-	if is_stat_move(mv):
-		cd *= STAT_MOVE_COOLDOWN_MULT
+	if mv.get("category", "") == "status":
+		cd = maxf(cd * STATUS_COOLDOWN_MULT, MIN_STATUS_COOLDOWN_VIVA)
+	else:
+		cd = maxf(cd, MIN_COOLDOWN)
+		var bp := float(mv.get("bp", 0))
+		if bp > STRONG_BP:
+			cd *= 1.0 + (bp - STRONG_BP) / STRONG_BP_SPAN
 	return snappedf(cd, 0.1)
 
 
