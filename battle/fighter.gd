@@ -70,6 +70,8 @@ var command := 3  # BattleAI.FREE
 var fly_h := 0.0
 var fly_target := 0.0
 var endured := false
+## Fração de dano que sobrou no ritmo baixo (damage_pace < 1), somada no próximo golpe.
+var dmg_carry := 0.0
 var mood_state := ""  # "" | "fury" | "panic"
 
 var moves: Array = []
@@ -654,7 +656,7 @@ static func impact_secs(hp_pct: float, crit: bool, eff: float, ko: bool, final_h
 func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> float:
 	if not alive():
 		return 0.0
-	var has_dir := amount > 0 and dir.length_squared() > 0.0
+	var has_dir := (amount > 0 or opts.has("source")) and dir.length_squared() > 0.0
 	if has_dir:
 		interrupt_prepare()
 	var hp_before := hp

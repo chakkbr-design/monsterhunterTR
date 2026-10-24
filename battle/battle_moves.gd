@@ -31,7 +31,7 @@ const PRIORITY_GCD := 0.6
 ## Ritmo da luta (Batalha Viva, "rápido": 15-30 s por Pokémon): a fórmula Gen 3 fica igual e o dano
 ## final é escalado por arena.damage_pace (padrão DAMAGE_PACE, opts.damage_pace muda).
 const DAMAGE_PACE := 0.5
-const DOUBLES_PACE := 0.36
+const DOUBLES_PACE := 0.26
 ## Cobrir o parceiro com HP baixo: distância máxima e chance por golpe.
 const COVER_DIST := 2.5
 const COVER_CHANCE := 0.35
@@ -381,7 +381,13 @@ func hit(
 			return
 		var dmg := int(res.damage)
 		var mult := extra_mult(user, target, mv) * pace()
-		if mult != 1.0:
+		if mult != 1.0 and pace() < 1.0:
+			# Ritmo baixo: a fração passa para o próximo golpe no mesmo alvo (com mínimo 1 todo golpe
+			# tirava 1 e o damage_pace parava de valer). Golpe de 0 ainda empurra e interrompe.
+			target.dmg_carry += float(dmg) * mult
+			dmg = int(target.dmg_carry)
+			target.dmg_carry -= dmg
+		elif mult != 1.0:
 			dmg = maxi(1, int(round(float(dmg) * mult)))
 		if arena.abilities:
 			dmg = arena.abilities.adjust_damage(user, target, mv, dmg)
@@ -406,7 +412,8 @@ func hit(
 			if eff > 1.0
 			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
 		)
-		target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")
+		if dmg > 0:
+			target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")
 		preload("res://audio/cue.gd").sfx(
 			(
 				"crit"
@@ -809,7 +816,7 @@ func _zone(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	var radius := float(mv.get("radius", 2.0))
 	var dur := float(mv.get("duration", 4.0))
 	var tick := float(mv.get("tick", 0.5))
-	arena.fx_disc(at, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.45), dur)
+	arena.fx_disc(at, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), dur)
 	if arena.field:
 		arena.field.on_move_landed(user, mv, at, radius)
 	_zone_tick(user, mv, at, radius, tick, int(ceil(dur / tick)))
@@ -844,10 +851,17 @@ func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
 		change_stage(user, st, int(mv.get("stages", 1)))
 
 
+## O disco do debuff mostra só a volta de quem usa (o alcance de 6 m cobria um quarto da quadra).
+const DEBUFF_FX_R := 2.5
+
+
 func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 	var radius := float(mv.get("radius", 6.0))
 	arena.fx_disc(
-		user.position, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), 0.3
+		user.position,
+		minf(radius, DEBUFF_FX_R),
+		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.18),
+		0.3
 	)
 	for t in targets_of(user):
 		if user.flat_to(t).length() <= radius:

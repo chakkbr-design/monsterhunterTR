@@ -119,11 +119,12 @@ func _init() -> void:
 	_menu_bg.visible = false
 	_root.add_child(_menu_bg)
 	_log = BattleLogLine.new()
+	# Embaixo no meio: no alto ela cobria o cartão do 2º adversário na dupla.
 	_place(
 		_log,
-		Vector2(0.5, 0),
+		Vector2(0.5, 1),
 		Vector2(BattleLogLine.MAX_W + 220.0, BattleLogLine.H),
-		Vector2(0, BattleLogLine.TOP + BattleLogLine.H * 0.5)
+		Vector2(0, -BattleLogLine.BOTTOM - BattleLogLine.H * 0.5)
 	)
 	# Pausa da batalha no canto de cima à direita, como a janela do pause_menu.gd do original.
 	_pause_bg = PanelContainer.new()
@@ -333,7 +334,7 @@ func refresh(
 	_menu.text = mt
 	for b in _moves:
 		b.body = player if is_instance_valid(player) else null
-		b.visible = b.body != null
+		b.visible = b.body != null and bool(info.get("show_moves", true))
 		b.queue_redraw()
 
 
@@ -929,7 +930,14 @@ class Pop:
 		var rise := (30.0 if style == "damage" else 18.0) * ease(clampf(age / life, 0.0, 1.0), 0.4)
 		var side := Vector2(46.0, 0.0) if style == "callout" else Vector2.ZERO
 		position = screen + Vector2(jitter, stack - rise) + side
-		position.y = maxf(position.y, 116.0)
+		# Fica abaixo dos cartões: os da direita (adversários) descem mais na dupla.
+		var vw := get_viewport_rect().size.x
+		var lim := 116.0
+		if position.x > vw - CARD_MARGIN - CARD_W - 60.0:
+			lim = CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 16.0
+		elif position.x < CARD_MARGIN + CARD_W + 60.0:
+			lim = CARD_TOP + CARD_H + ALLY_DROP + ALLY_H + 16.0
+		position.y = maxf(position.y, lim)
 
 	func _fs() -> int:
 		match style:
@@ -1078,6 +1086,7 @@ class BattleLogLine:
 	const CHIP_GAP := 8.0
 	const H := 32.0
 	const TOP := 116.0
+	const BOTTOM := 44.0
 	const FONT_SIZE := 18
 	const APPEAR := 0.25
 
@@ -1228,18 +1237,19 @@ class VivaTags:
 		obey: bool,
 		_foe: bool
 	) -> void:
+		# O comando abre a fileira de baixo do cartão (no alto ele saía cortado na borda da tela).
+		var x := x0
+		var y := card.y - 1.0
 		if cmd != "":
 			var c: Color = CMD_COL.get(cmd, CMD_COL["LIVRE"])
-			chip(
+			x += chip(
 				ci,
-				Vector2(card.x - 124.0 if _foe else x0 + 150.0, -7.0),
+				Vector2(x, y),
 				cmd + ("" if obey else " ?"),
 				c,
 				true,
 				String(CMD_ICON.get(cmd, "cmd_livre"))
 			)
-		var x := x0
-		var y := card.y - 1.0
 		for m in marks:
 			var col: Variant = m.get("color", Color.WHITE)
 			x += chip(
@@ -1363,24 +1373,25 @@ class VivaLayer:
 		if c.is_empty():
 			return
 		var age: float = c.age
-		var fs := 44
+		var fs := 26
 		var t: String = c.text
 		var col: Color = c.col
-		var w := _wid(t, fs) + 70.0
+		var w := _wid(t, fs) + 44.0
 		var k := ease(clampf(age / 0.16, 0.0, 1.0), 0.3)
 		var a := clampf((CALLOUT_LIFE - age) / 0.2, 0.0, 1.0)
 		var sc := lerpf(1.35, 1.0, k)
-		var y := size.y - 220.0 if side == 0 else 190.0
+		# Menor e longe dos cartões: o do jogador acima da faixa de log, o do adversário abaixo dos cartões.
+		var y := size.y - 130.0 if side == 0 else CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 40.0
 		var x := 28.0 if side == 0 else size.x - 28.0 - w
 		x += (1.0 - k) * (-260.0 if side == 0 else 260.0)
 		draw_set_transform(Vector2(x + w * 0.5, y), 0.0, Vector2(sc, sc))
-		var sk := 20.0
+		var sk := 12.0
 		var pts := PackedVector2Array(
 			[
-				Vector2(-w * 0.5 + sk, -34),
-				Vector2(w * 0.5 + sk, -34),
-				Vector2(w * 0.5 - sk, 34),
-				Vector2(-w * 0.5 - sk, 34)
+				Vector2(-w * 0.5 + sk, -20),
+				Vector2(w * 0.5 + sk, -20),
+				Vector2(w * 0.5 - sk, 20),
+				Vector2(-w * 0.5 - sk, 20)
 			]
 		)
 		var shadow := pts.duplicate()

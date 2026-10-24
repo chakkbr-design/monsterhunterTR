@@ -142,6 +142,7 @@ var result := {}
 var exp_log: Array = []
 var log_lines: Array = []
 var hits := 0
+var hit_dmg := 0  # soma do dano dos golpes (teste de ritmo)
 var rect := Rect2(-ARENA_SIZE * 0.7, -ARENA_SIZE / 2.0, ARENA_SIZE * 1.4, ARENA_SIZE)
 var fixed := false  ## quadra num lugar certo (opts.center ou "center" do trainers.json)
 ## Luta de treino (Battle.training do original): o selvagem é um boneco parado e imortal no nível do
@@ -873,6 +874,7 @@ func note_hit(
 	_user: BattleFighter, _target: BattleFighter, _mv: Dictionary, _dmg: int, _hp_before: int
 ) -> void:
 	hits += 1
+	hit_dmg += _dmg
 
 
 # --- Laço ---
@@ -934,6 +936,7 @@ func step(dt: float) -> void:
 			"item_cd": item_cd,
 			"menu": _menu_text() if menu != "" else "",
 			"foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
+			"show_moves": _human(),
 			"foe_balls": _foe_balls(),
 			"pause": _pause_text() if pause_open else "",
 			"exp_script":
