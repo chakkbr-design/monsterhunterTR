@@ -356,6 +356,9 @@ func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> voi
 	var col := Dex.type_color(String(r.color))
 	_banner(target, String(r.name), col)
 	arena.fx_disc(target.pos2(target.position), 1.2, col * Color(1, 1, 1, 0.6), 0.35)
+	_pixel_burst(target, String(r.color), 2.0 if not r.has("area") else float(r.area[1]) * 1.6)
+	if String(r.id) == "freeze":
+		_pixel_burst_key(target, "snow", 1.2, 0.6)
 	if r.has("status") and target.alive():
 		if arena.rng.randf() < float(r.status[1]):
 			_status(user, target, String(r.status[0]))
@@ -370,6 +373,16 @@ func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> voi
 	if r.has("area"):
 		var a: Array = r.area
 		_area_hit(user, target, float(a[0]), float(a[1]), String(a[2]), false)
+
+
+## Estouro de pixel art no alvo, pela cor/tipo (Sprite3D animado; sem arte nada acontece).
+func _pixel_burst(target: BattleFighter, type: String, size: float) -> void:
+	_pixel_burst_key(target, PixelFx.key_for_type(type), size, 0.5)
+
+
+func _pixel_burst_key(target: BattleFighter, key: String, size: float, life: float) -> void:
+	var at := target.pos2(target.position)
+	PixelFx.pop(arena, key, Vector3(at.x, maxf(target.look_h, 0.8) * 0.6, at.z), size, life)
 
 
 func _resonates(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
@@ -534,6 +547,8 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 	_notify(text, col)
 	arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
+	_pixel_burst_key(u1, "sparkle", 1.4, 0.5)
+	_pixel_burst_key(u2, "sparkle", 1.4, 0.5)
 	arena.later(DUO_DELAY, func() -> void: _duo_effect(u1, u2, target, duo))
 
 
@@ -546,6 +561,7 @@ func _duo_effect(
 	var radius := float(duo.radius)
 	var at := target.pos2(target.position)
 	var extra := {}
+	_pixel_burst(target, ty, clampf(radius * 2.2, 2.0, 5.0))
 	if duo.has("status"):
 		extra.effect = {"status": duo.status.id, "chance": float(duo.status.chance)}
 	match String(duo.effect):
@@ -586,6 +602,14 @@ func _run_field(
 		"combo_field", String(duo.name), String(duo.type), float(duo.power), float(duo.radius)
 	)
 	mv.merge(extra, true)
+	if left < int(ceil(float(duo.duration) / float(duo.tick))):
+		PixelFx.pop(
+			arena,
+			PixelFx.key_for_type(String(duo.type)),
+			Vector3(at.x, 0.6, at.z),
+			float(duo.radius) * 1.4,
+			0.4
+		)
 	for t in arena.targets_of(user):
 		if (t.pos2(t.position) - at).length() <= float(duo.radius):
 			arena.moves.hit(user, t, mv, Vector3.ZERO)

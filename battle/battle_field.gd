@@ -19,6 +19,16 @@ const MARKS := {
 	"dust": {"col": Color(0.85, 0.75, 0.5, 0.35), "life": 5.0, "mult": 0.9},
 	"spikes": {"col": Color(0.7, 0.7, 0.75, 0.6), "life": 20.0, "mult": 1.0},
 }
+## Decalques de pixel art por marca (assets/pixellab/fx): arquivo, lado do PNG em px, cor, fator do raio.
+## Sem arte (arquivo ausente) a marca continua sendo o cilindro colorido.
+const DECALS := {
+	"crater": {"file": "fx/stone_ring.png", "px": 64, "tint": Color(1, 1, 1, 0.9), "k": 1.15},
+	"puddle": {"file": "fx/water_swirl.png", "px": 64, "tint": Color(1, 1, 1, 0.75), "k": 1.15},
+	"ice": {"file": "fx/ice_patch.png", "px": 84, "tint": Color(1, 1, 1, 0.9), "k": 1.15},
+	"scorch":
+	{"file": "fx/infernal_circle.png", "px": 64, "tint": Color(0.3, 0.25, 0.25, 0.8), "k": 1.1},
+	"dust": {"file": "fx/dust_ring.png", "px": 64, "tint": Color(1, 1, 1, 0.75), "k": 1.2},
+}
 
 var arena: Node
 var marks: Array = []  ## {node, kind, pos, r, t, side, hit}
@@ -65,6 +75,29 @@ func _spot_ok(p: Vector3) -> bool:
 
 func _add_object(p: Vector3) -> void:
 	var rock: bool = arena.rng.randf() < 0.5
+	var mi: Node3D = PixelFx.prop("objects/rock.png" if rock else "objects/crate.png", 1.0, 32)
+	if mi != null:
+		mi.position = p
+	else:
+		mi = _mesh_object(rock, p)
+	arena.add_child(mi)
+	(
+		objects
+		. append(
+			{
+				"node": mi,
+				"pos": p,
+				"hp": arena.rng.randi_range(1, 2),
+				"berry": arena.rng.randf() < 0.35,
+				"rock": rock,
+				"cd": 0.0,
+			}
+		)
+	)
+
+
+## Visual antigo (fallback sem arte): esfera cinza ou caixa marrom.
+func _mesh_object(rock: bool, p: Vector3) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var mat := StandardMaterial3D.new()
 	if rock:
@@ -81,19 +114,7 @@ func _add_object(p: Vector3) -> void:
 		mat.albedo_color = Color(0.62, 0.42, 0.22)
 		mi.position = p + Vector3(0, 0.4, 0)
 	mi.material_override = mat
-	arena.add_child(mi)
-	(
-		objects
-		. append(
-			{
-				"node": mi,
-				"pos": p,
-				"hp": arena.rng.randi_range(1, 2),
-				"berry": arena.rng.randf() < 0.35,
-				"cd": 0.0,
-			}
-		)
-	)
+	return mi
 
 
 static func _flat(v: Vector3) -> Vector3:
@@ -114,8 +135,11 @@ func _tick_marks(dt: float) -> void:
 			_drop_mark(m)
 			continue
 		if m.t < 1.0 and is_instance_valid(m.node):
-			var mat: StandardMaterial3D = m.node.material_override
-			mat.albedo_color.a = float(MARKS[m.kind].col.a) * m.t
+			if m.node is Sprite3D:
+				m.node.modulate.a = float(m.alpha) * m.t
+			else:
+				var mat: StandardMaterial3D = m.node.material_override
+				mat.albedo_color.a = float(MARKS[m.kind].col.a) * m.t
 	for f in arena.fighters:
 		if not is_instance_valid(f) or not f.active():
 			continue
@@ -189,6 +213,39 @@ func _add_mark(kind: String, pos: Vector3, r: float, side: int) -> void:
 		if m.kind == kind and _flat(m.pos - pos).length() < 0.6:
 			m.t = def.life  # renova em vez de empilhar
 			return
+	var mi: Node3D = _decal_for(kind, r)
+	var alpha: float = float(def.col.a)
+	if mi != null:
+		alpha = float(DECALS[kind].tint.a)
+	else:
+		mi = _cylinder_mark(def, r)
+	mi.position = Vector3(pos.x, MARK_Y, pos.z)
+	arena.add_child(mi)
+	marks.append(
+		{
+			"node": mi,
+			"kind": kind,
+			"pos": pos,
+			"r": r,
+			"t": def.life,
+			"side": side,
+			"hit": {},
+			"alpha": alpha
+		}
+	)
+	while marks.size() > MAX_MARKS:
+		_drop_mark(marks[0])
+
+
+## Decalque de pixel art da marca (Sprite3D deitado) ou null se não há arte.
+func _decal_for(kind: String, r: float) -> Sprite3D:
+	if not DECALS.has(kind):
+		return null
+	var d: Dictionary = DECALS[kind]
+	return PixelFx.decal(String(d.file), r * 2.0 * float(d.k), int(d.px), d.tint)
+
+
+func _cylinder_mark(def: Dictionary, r: float) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = r
@@ -200,13 +257,7 @@ func _add_mark(kind: String, pos: Vector3, r: float, side: int) -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.albedo_color = def.col
 	mi.material_override = mat
-	mi.position = Vector3(pos.x, MARK_Y, pos.z)
-	arena.add_child(mi)
-	marks.append(
-		{"node": mi, "kind": kind, "pos": pos, "r": r, "t": def.life, "side": side, "hit": {}}
-	)
-	while marks.size() > MAX_MARKS:
-		_drop_mark(marks[0])
+	return mi
 
 
 ## Tipo de terreno em `pos` ("" = chão normal): crater, hole, puddle, ice, scorch, dust, spikes.
@@ -246,17 +297,20 @@ func _break(o: Dictionary) -> void:
 	objects.erase(o)
 	var col := Color(0.6, 0.45, 0.3)
 	if is_instance_valid(o.node):
-		col = o.node.material_override.albedo_color
+		if o.node is MeshInstance3D:
+			col = o.node.material_override.albedo_color
 		o.node.queue_free()
 	for i in 6:
-		var mi := MeshInstance3D.new()
-		var b := BoxMesh.new()
-		b.size = Vector3.ONE * 0.12
-		mi.mesh = b
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = col
-		mi.material_override = mat
-		mi.position = o.pos + Vector3(0, 0.4, 0)
+		var mi: Node3D = null
+		if i < 4:
+			mi = PixelFx.prop(
+				"objects/debris_rock.png" if o.rock else "objects/debris_crate.png", 0.3, 32
+			)
+		if mi != null:
+			mi.position = o.pos + Vector3(0, 0.4, 0)
+		else:
+			mi = _shard_box(col)
+			mi.position = o.pos + Vector3(0, 0.4, 0)
 		arena.add_child(mi)
 		var v := Vector3(
 			arena.rng.randf_range(-2, 2), arena.rng.randf_range(2, 4), arena.rng.randf_range(-2, 2)
@@ -264,20 +318,37 @@ func _break(o: Dictionary) -> void:
 		shards.append({"node": mi, "vel": v, "t": 0.7})
 	if arena.vfx and arena.is_inside_tree():
 		arena.vfx.puff(arena.to_global(o.pos + Vector3(0, 0.4, 0)), 1.0)
+		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.5, 0), 1.3, 0.4)
 	if o.berry:
 		_add_berry(o.pos)
 
 
-func _add_berry(p: Vector3) -> void:
+func _shard_box(col: Color) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	var s := SphereMesh.new()
-	s.radius = 0.15
-	s.height = 0.3
-	mi.mesh = s
+	var b := BoxMesh.new()
+	b.size = Vector3.ONE * 0.12
+	mi.mesh = b
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.9, 0.2, 0.35)
+	mat.albedo_color = col
 	mi.material_override = mat
-	mi.position = p + Vector3(0, 0.2, 0)
+	return mi
+
+
+func _add_berry(p: Vector3) -> void:
+	var mi: Node3D = PixelFx.prop("objects/berry.png", 0.5, 32)
+	if mi != null:
+		mi.position = p
+	else:
+		var sph := MeshInstance3D.new()
+		var s := SphereMesh.new()
+		s.radius = 0.15
+		s.height = 0.3
+		sph.mesh = s
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.9, 0.2, 0.35)
+		sph.material_override = mat
+		sph.position = p + Vector3(0, 0.2, 0)
+		mi = sph
 	arena.add_child(mi)
 	berries.append({"node": mi, "pos": p, "t": 15.0})
 

@@ -139,6 +139,7 @@ func _cooldowns() -> void:
 	_run(a, Dex.cooldown(mv) / sf * 1.06)
 	check(a.moves.use(p, "ember"), "ember volta após cooldown")
 	p.pp_max = 0.5
+	a.enemy.immortal = true  # queimadura do Ember não pode acabar a luta antes do struggle
 	_run(a, 10.0)
 	check(p.out_of_pp(), "sem PP")
 	check(not a.moves.use(p, "ember"), "sem PP não usa golpe")

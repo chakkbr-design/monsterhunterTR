@@ -55,6 +55,7 @@ const FURY_THINK := 0.6
 const PANIC_THINK := 1.3
 ## Variação de ritmo para a luta não ficar previsível (+-5%).
 const JITTER := 0.05
+const STALL_SECS := 6.0
 ## Comando: Ofensivo encurta a faixa e o recuo; Defensivo alonga e esquiva melhor.
 const CMD_BAND := [0.75, 1.25, 1.35, 1.0]
 const CMD_RETREAT := [0.4, 1.5, 1.2, 1.0]
@@ -83,6 +84,8 @@ var threat_id := -1
 var threat_ok := false
 var threat_wait := 0.0
 var auto_cmd_t := 0.0
+## Segundos sem soltar golpe: passado STALL_SECS para de fugir e vai para cima (sem empate eterno).
+var idle_t := 0.0
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -215,6 +218,7 @@ func step(dt: float) -> Vector3:
 			tactic_on = _tactic_ok()
 			var used := _use_best_move(d)
 			if used:
+				idle_t = 0.0
 				think = _think_secs()
 				retreat_t = (
 					float(_p("retreat", 0.5))
@@ -231,8 +235,10 @@ func step(dt: float) -> Vector3:
 		var guard := guard_steer()
 		if guard != Vector3.INF:
 			return guard
-	var b := _band()
-	var low := float(f.hp) <= float(f.max_hp) * LOW_HP
+	idle_t += dt
+	var stall := idle_t > STALL_SECS
+	var b := _band() * (0.7 if stall else 1.0)
+	var low := float(f.hp) <= float(f.max_hp) * LOW_HP and not stall
 	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low and f.mood_state != "fury" else b
 	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == ""
 	var want: Vector3
@@ -258,7 +264,7 @@ func step(dt: float) -> Vector3:
 	var r := reach()
 	var closing := d > kite.y and (r <= MELEE_BAND or d > r + FAR_GAP)
 	var reason := (closing and float(_p("sprint", 1.0)) >= 0.5) or slip or (low and d < b.y)
-	if mode == ATTACK and d > b.y:
+	if (mode == ATTACK or stall) and d > b.y:
 		reason = true
 	if _try_jump(dt, d):
 		return want

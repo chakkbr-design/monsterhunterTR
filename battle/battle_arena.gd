@@ -1094,6 +1094,8 @@ func _clash() -> void:
 			var mid: Vector3 = (a.position + b.position) * 0.5
 			popup(mid + Vector3(0, 1.4, 0), "CLASH!", Color(1, 0.95, 0.6), 1.6, "crit")
 			fx_disc(mid * Vector3(1, 0, 1), 1.2, Color(1, 0.95, 0.7, 0.8), 0.3)
+			PixelFx.pop(self, "impact", mid + Vector3(0, 0.9, 0), 2.4, 0.35)
+			PixelFx.pop(self, "shock", mid + Vector3(0, 0.6, 0), 3.0, 0.4)
 			preload("res://audio/cue.gd").sfx("hit_super")
 			say("CLASH! %s e %s se chocaram!" % [a.mon.display_name, b.mon.display_name])
 			cut_in("CLASH!", Color(1, 0.9, 0.5), 0.3)

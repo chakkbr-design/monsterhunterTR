@@ -1174,6 +1174,13 @@ class VivaTags:
 	}
 	const FS := 10
 	const H := 14.0
+	const ICON := 12.0
+	const CMD_ICON := {
+		"OFENSIVO": "cmd_ofensivo",
+		"DEFENSIVO": "cmd_defensivo",
+		"SUPORTE": "cmd_suporte",
+		"LIVRE": "cmd_livre"
+	}
 
 	## Tags "ATK↑2" a partir de f.stages (≠ 0): [{text, up}].
 	static func stage_tags(f: BattleFighter) -> Array:
@@ -1186,14 +1193,28 @@ class VivaTags:
 				)
 		return out
 
-	static func chip(ci: CanvasItem, pos: Vector2, s: String, col: Color, filled := false) -> float:
-		var w := UiDraw.text_width(s, FS) + 10.0
+	## Chip de texto; `icon` = nome em assets/pixellab/icons (sem o arquivo, só o texto).
+	static func chip(
+		ci: CanvasItem, pos: Vector2, s: String, col: Color, filled := false, icon := ""
+	) -> float:
+		var tex: Texture2D = PixelFx.icon(icon) if icon != "" else null
+		var ix := (ICON + 2.0) if tex else 0.0
+		var w := UiDraw.text_width(s, FS) + 10.0 + ix
 		var r := Rect2(pos, Vector2(w, H))
 		UiDraw.rounded(
 			ci, r, Color(col, 0.9) if filled else Color(UiDraw.INK, 0.9), H * 0.5, 1.5, col
 		)
+		if tex:
+			ci.draw_texture_rect(
+				tex, Rect2(pos + Vector2(4.0, (H - ICON) * 0.5), Vector2(ICON, ICON)), false
+			)
 		UiDraw.text(
-			ci, pos + Vector2(5.0, H - 3.5), s, FS, UiDraw.INK if filled else col.lightened(0.25), 0
+			ci,
+			pos + Vector2(5.0 + ix, H - 3.5),
+			s,
+			FS,
+			UiDraw.INK if filled else col.lightened(0.25),
+			0
 		)
 		return w + 4.0
 
@@ -1214,7 +1235,8 @@ class VivaTags:
 				Vector2(card.x - 124.0 if _foe else x0 + 150.0, -7.0),
 				cmd + ("" if obey else " ?"),
 				c,
-				true
+				true,
+				String(CMD_ICON.get(cmd, "cmd_livre"))
 			)
 		var x := x0
 		var y := card.y - 1.0
@@ -1224,7 +1246,9 @@ class VivaTags:
 				ci,
 				Vector2(x, y),
 				String(m.get("name", m.get("id", ""))),
-				col if col is Color else Color.WHITE
+				col if col is Color else Color.WHITE,
+				false,
+				"mark_" + String(m.get("id", ""))
 			)
 		for t in stage_tags(f):
 			x += chip(
@@ -1324,6 +1348,10 @@ class VivaLayer:
 				col = col.lightened(0.3 * (0.5 + 0.5 * sin(_time * 14.0)))
 			UiDraw.rounded(self, Rect2(x, 4.0, w, h), Color(0, 0, 0, 0.45), 2)
 			UiDraw.rounded(self, Rect2(x, 4.0, w * v, h), col, 2)
+			var ic: Texture2D = PixelFx.icon("sync")
+			if ic:
+				var ix := maxf(x, x + w * v - 8.0)
+				draw_texture_rect(ic, Rect2(ix, 4.0 + h * 0.5 - 8.0, 16.0, 16.0), false)
 			if full and fmod(_time, 0.5) < 0.32:
 				var tw := UiDraw.text_width("SINTONIA!", 11)
 				UiDraw.text(
