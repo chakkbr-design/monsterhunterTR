@@ -1,8 +1,9 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/ui_training/test_training_setup.gd
 ## Tela de montar o modo de treinamento pela API pública: slots, listas de espécie e de golpes,
-## nível, times salvos e as stats mostradas contra o Mon. Usa user://test_training_setup.json e
-## user://test_training_teams.json (nunca os arquivos de verdade) e troca de cena interceptada.
+## o Nv 50 fixo (qualquer golpe da espécie vale), times salvos e as stats mostradas contra o Mon.
+## Usa user://test_training_setup.json e user://test_training_teams.json (nunca os arquivos de
+## verdade) e troca de cena interceptada.
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const Title := preload("res://ui/front/title.gd")
@@ -37,7 +38,7 @@ func entry(scr: Node) -> Dictionary:
 	return scr.cfg.sides[scr.side].mons[scr.slot]
 
 
-## Stats na tela iguais às do Mon montado da entrada (Cfg.build_mon: IV 31, EV 0).
+## Stats na tela iguais às do Mon montado da entrada (Cfg.build_mon: Nv 50, IV 31, EV 0).
 func stats_match(scr: Node) -> bool:
 	var b := Cfg.build_mon(entry(scr).duplicate(true))
 	var shown: Dictionary = scr.shown_stats()
@@ -62,6 +63,8 @@ func _run() -> void:
 
 	check(scr.cfg == Cfg.current, "a tela edita Cfg.current")
 	check(scr.side == 0 and scr.slot == 0, "começa no 1º Pokémon do Time A")
+	check(int(entry(scr).level) == Cfg.LEVEL, "Pokémon do padrão nasce no Nv %d" % Cfg.LEVEL)
+	check(scr._level is Label, "o nível é um rótulo fixo, sem SpinBox")
 	if pm:
 		check(not pm.is_processing_unhandled_input(), "menu de pausa bloqueado na tela")
 
@@ -73,18 +76,6 @@ func _run() -> void:
 	check(int(bm.evs.atk) == 0 and int(bm.ivs.hp) == StatCalc.IV_MAX, "IV 31 e EV 0 na luta")
 	scr.select(0, 0)
 	check(stats_match(scr), "stats da tela batem com o Mon")
-
-	# --- Texto digitado num SpinBox (sem Enter) vai para o Pokémon que estava aberto ---
-	var le: LineEdit = scr._level.get_line_edit()
-	le.grab_focus()
-	le.text = "33"
-	scr._teams[1].slots[0].button_down.emit()
-	scr._teams[1].slots[0].pressed.emit()
-	await frames(2)
-	check(int(scr.cfg.sides[0].mons[0].level) == 33, "nível digitado fica no Pokémon aberto")
-	check(scr.side == 1 and int(scr.cfg.sides[1].mons[0].level) == 15, "e não no que abriu depois")
-	scr.select(0, 0)
-	scr.set_level(15)
 
 	# --- Slot vazio abre a lista de espécies (ordem da Pokédex); escolher põe no time ---
 	var n_a: int = scr.cfg.sides[0].mons.size()
@@ -113,9 +104,10 @@ func _run() -> void:
 		scr.cfg.sides[0].mons.size() == n_a + 1 and entry(scr).species == "Bulbasaur",
 		"Bulbasaur entrou no Time A e abriu na edição"
 	)
+	check(int(entry(scr).level) == Cfg.LEVEL, "Pokémon novo nasce no Nv %d" % Cfg.LEVEL)
 	scr.remove_mon(0, n_a)
 
-	# --- Trocar espécie: mantém nível e natureza, golpes do nível ---
+	# --- Trocar espécie: mantém natureza, golpes do Nv 50 da espécie nova ---
 	scr.select(0, 0)
 	var e := entry(scr)
 	e["nature"] = "adamant"
@@ -123,18 +115,11 @@ func _run() -> void:
 	scr.pick("Bulbasaur")
 	e = entry(scr)
 	check(e.species == "Bulbasaur", "troca de espécie (%s)" % e.species)
-	check(int(e.level) == 15 and e.nature == "adamant", "nível e natureza mantidos")
-	check(e.moves == Dex.moves_at("Bulbasaur", 15), "golpes do nível da espécie nova")
-	check(stats_match(scr), "stats da tela batem com o Mon (Bulbasaur Nv 15)")
+	check(int(e.level) == Cfg.LEVEL and e.nature == "adamant", "nível e natureza mantidos")
+	check(e.moves == Dex.moves_at("Bulbasaur", Cfg.LEVEL), "golpes do Nv 50 da espécie nova")
+	check(stats_match(scr), "stats da tela batem com o Mon (Bulbasaur Nv 50)")
 
-	# --- Nível ---
-	scr.set_level(42)
-	check(int(entry(scr).level) == 42 and stats_match(scr), "nível 42 e stats")
-	scr.set_level(500)
-	check(int(entry(scr).level) == Growth.MAX_LEVEL, "nível limitado a %d" % Growth.MAX_LEVEL)
-	scr.set_level(15)
-
-	# --- Golpes: só os que a espécie aprende, até o nível ---
+	# --- Golpes: qualquer golpe que a espécie aprende, em qualquer nível ---
 	var learn: Array = Cfg.learnable_moves("Bulbasaur")
 	check(not learn.is_empty(), "Bulbasaur tem golpes para aprender")
 	scr.open_moves(0)
@@ -143,17 +128,10 @@ func _run() -> void:
 		var mid := String(scr._ov_list.get_item_metadata(i))
 		only_learn = only_learn and (mid == "" or Cfg.learn_level("Bulbasaur", mid) >= 0)
 	check(only_learn, "lista de golpes só com os que aprende")
-	var high := ""
 	var low := ""
 	for l2 in learn:
-		if int(l2.level) > 15 and high == "":
-			high = l2.id
-		if int(l2.level) <= 15 and not entry(scr).moves.has(l2.id) and low == "":
+		if not entry(scr).moves.has(l2.id) and low == "":
 			low = l2.id
-	if high != "":
-		scr.pick(high)
-		check(not entry(scr).moves.has(high), "golpe acima do nível fica bloqueado")
-		check(scr.picker == "moves", "e a lista continua aberta")
 	var foreign := ""
 	for id in Dex.all_moves():
 		if Cfg.learn_level("Bulbasaur", id) < 0:
@@ -175,23 +153,48 @@ func _run() -> void:
 		"não tira o último golpe"
 	)
 	scr.moves_for_level()
-	check(entry(scr).moves == Dex.moves_at("Bulbasaur", 15), "golpes do nível")
+	check(entry(scr).moves == Dex.moves_at("Bulbasaur", Cfg.LEVEL), "golpes do Nv 50")
 	if not Dex.move("flamethrower").is_empty():
 		var bp := int(Dex.move("flamethrower").get("bp", 0))
 		check(scr._move_info("flamethrower").contains("Poder %d" % bp), "poder pelo bp (stream)")
 	if not Dex.move("seismic_toss").is_empty():
 		check(scr._move_info("seismic_toss").contains("Poder —"), "poder variável mostra —")
 
+	# --- Golpe de nível alto (acima do 50) entra num Pokémon novo, sem bloqueio ---
+	var hi_sp := ""
+	var hi_id := ""
+	var hi_lv := 0
+	for sp in Dex.all_species():
+		for le in Cfg.learnable_moves(sp):
+			if int(le.level) > Cfg.LEVEL and hi_id == "":
+				hi_sp = sp
+				hi_id = String(le.id)
+				hi_lv = int(le.level)
+	check(hi_id != "", "há golpe aprendido acima do Nv %d (%s, Nv %d)" % [Cfg.LEVEL, hi_id, hi_lv])
+	scr.add_mon(1, hi_sp)
+	check(
+		entry(scr).species == hi_sp and not entry(scr).moves.has(hi_id), "Pokémon novo, sem o golpe"
+	)
+	check(Cfg.learn_level(hi_sp, hi_id) == hi_lv and scr.can_use_move(hi_id), "golpe liberado")
+	scr.open_moves(0)
+	scr.pick(hi_id)
+	check(
+		entry(scr).moves[0] == hi_id and scr.picker == "", "golpe do Nv %d entra no slot 1" % hi_lv
+	)
+	check(stats_match(scr), "stats batem com o Mon (Nv 50, golpe de Nv %d)" % hi_lv)
+	scr.remove_mon(1, scr.slot)
+	scr.select(0, 0)
+
 	# --- Times: adicionar, duplicar (sem compartilhar), subir, remover ---
 	scr.add_mon(1)
 	check(scr.cfg.sides[1].mons.size() == 3 and scr.side == 1 and scr.slot == 2, "adiciona no B")
-	scr.set_level(30)
+	scr.set_field("hp_pct", 30)
 	scr.duplicate_mon(1, 2)
 	check(scr.cfg.sides[1].mons.size() == 4 and scr.slot == 3, "duplica o Pokémon")
-	scr.set_level(77)
-	check(int(scr.cfg.sides[1].mons[2].level) == 30, "cópia não compartilha a entrada")
+	scr.set_field("hp_pct", 77)
+	check(int(scr.cfg.sides[1].mons[2].hp_pct) == 30, "cópia não compartilha a entrada")
 	scr.move_mon(1, 3, -1)
-	check(int(scr.cfg.sides[1].mons[2].level) == 77 and scr.slot == 2, "sobe na ordem")
+	check(int(scr.cfg.sides[1].mons[2].hp_pct) == 77 and scr.slot == 2, "sobe na ordem")
 	scr.remove_mon(1, 2)
 	check(scr.cfg.sides[1].mons.size() == 3, "remove o Pokémon")
 	for i in 10:
@@ -224,8 +227,8 @@ func _run() -> void:
 		"slot 3 carregado no Time A"
 	)
 	scr.select(0, 0)
-	scr.set_level(9)
-	check(int(Cfg.load_teams()[2].mons[0].level) != 9, "time carregado não mexe no salvo")
+	scr.set_field("hp_pct", 9)
+	check(int(Cfg.load_teams()[2].mons[0].hp_pct) != 9, "time carregado não mexe no salvo")
 	scr.open_teams(0)
 	scr.pick(2)
 	scr._slot_btns.clear.pressed.emit()
@@ -245,26 +248,23 @@ func _run() -> void:
 	scr.copy_side(0)
 	check(scr.cfg.sides[1].mons.size() == 3 and scr.cfg.sides[1].name == "Rival", "copia A p/ B")
 	scr.select(1, 0)
-	scr.set_level(5)
-	check(int(scr.cfg.sides[0].mons[0].level) != 5, "cópia entre times não compartilha")
+	scr.set_field("hp_pct", 5)
+	check(int(scr.cfg.sides[0].mons[0].hp_pct) != 5, "cópia entre times não compartilha")
 	scr.set_team_name(1, "Time B")
 	scr.swap_sides()
 	check(scr.cfg.sides[0].name == "Time B" and scr.side == 0, "troca os times de lado")
 
-	# --- Começar (pelo botão, com um nível digitado e ainda não confirmado) ---
+	# --- Começar pelo botão: a config gravada tem o Nv 50 ---
 	check(not scr._start_btn.disabled, "Começar habilitado")
 	scr.select(0, 0)
-	var lv_le: LineEdit = scr._level.get_line_edit()
-	lv_le.grab_focus()
-	lv_le.text = "40"
 	scr._start_btn.button_down.emit()
 	scr._start_btn.pressed.emit()
 	check(scene_to == scr.BATTLE_SCENE, "start() vai para a luta")
 	check(Cfg.current == scr.cfg, "Cfg.current é a config da tela")
 	var saved := Cfg.load_config()
 	check(
-		FileAccess.file_exists(TEST_PATH) and int(saved.sides[0].mons[0].level) == 40,
-		"nível digitado confirmado antes de começar"
+		FileAccess.file_exists(TEST_PATH) and int(saved.sides[0].mons[0].level) == Cfg.LEVEL,
+		"config gravada com o Nv %d" % Cfg.LEVEL
 	)
 	scene_to = ""
 	scr.back_to_title()
@@ -272,6 +272,22 @@ func _run() -> void:
 	Title.boot_to_menu = false
 	scr.reset_default()
 	check(scr.cfg.sides[0].mons.size() == 2, "restaurar padrão")
+
+	# --- Config antiga (Nv 12 salvo, time salvo no slot 6): a luta usa o Nv 50 ---
+	var old12 := Cfg.mon_entry("Pikachu", 12)
+	var b12 := Cfg.build_mon(old12)
+	check(b12.level == Cfg.LEVEL, "build_mon põe o Nv 50 mesmo de entrada no Nv 12")
+	check(
+		b12.stat("spe") == Cfg.build_mon(Cfg.mon_entry("Pikachu", Cfg.LEVEL)).stat("spe"),
+		"stats do Nv 50 (não do Nv 12)"
+	)
+	Cfg.save_team(5, {"name": "Antigo", "item": "", "think_scale": 1.0, "mons": [old12]})
+	scr.load_team(0, 5)
+	check(scr.cfg.sides[0].name == "Antigo", "time salvo no Nv 12 carregado")
+	check(Cfg.build_side(scr.cfg, 0)[0].level == Cfg.LEVEL, "e a luta o monta no Nv 50")
+	scr.select(0, 0)
+	check(stats_match(scr), "tela mostra as stats do Nv 50 para o Nv 12 salvo")
+	check(scr._mon_line(entry(scr)).contains("Nv %d" % Cfg.LEVEL), "lista mostra Nv %d" % Cfg.LEVEL)
 
 	scr.queue_free()
 	await frames(2)

@@ -52,8 +52,8 @@ func _run() -> void:
 	e.status = "burn"
 	var m := Cfg.build_mon(e)
 	check(
-		m.level == 30 and m.ivs.atk == StatCalc.IV_MAX and m.evs.spe == 0,
-		"build_mon mantém o nível e põe IV 31 e EV 0"
+		m.level == Cfg.LEVEL and m.ivs.atk == StatCalc.IV_MAX and m.evs.spe == 0,
+		"build_mon põe o Nv 50 (entrada salva no Nv 30) e IV 31 e EV 0"
 	)
 	check(m.hp == ceili(m.max_hp * 0.5), "HP inicial pelo hp_pct")
 	check(m.status == "burn", "status inicial")
@@ -96,7 +96,7 @@ func _run() -> void:
 	)
 	check(tb.winner_name() == "Time A", "nome do vencedor")
 	check(int(tb.series.a) == 1 and int(tb.series.n) == 1, "placar 1 x 0")
-	check(tb.team_a[0].level == 60, "sem XP: nível não mudou")
+	check(tb.team_a[0].level == Cfg.LEVEL, "sem XP: todos no Nv %d (salvo no 60)" % Cfg.LEVEL)
 	check(tb.result.get("exp", []).is_empty(), "sem XP no resultado")
 	check(tb.fight_time > 0.0, "tempo da luta contado (%.1f s)" % tb.fight_time)
 	check(JSON.stringify(tb.cfg) == keep, "config dos times intacta")

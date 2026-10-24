@@ -6,6 +6,7 @@ extends RefCounted
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
+## Todos lutam no Nv 50 (LEVEL), mesmo entrada salva em outro nível; qualquer golpe da espécie vale.
 ## Uso: const Cfg := preload("res://ui/training/training_config.gd")
 
 const PATH := "user://training.json"
@@ -16,6 +17,8 @@ static var path := PATH
 static var teams_path := TEAMS_PATH
 const SIDES := 2
 const PARTY_MAX := 6
+## Nível de todo Pokémon do treino (build_mon força este nível).
+const LEVEL := 50
 ## Quadra fixa do treino: 16 x 10 (a quadra padrão da arena é 10 x 6).
 const ARENA := Vector2(16, 10)
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
@@ -42,13 +45,13 @@ static func default_config() -> Dictionary:
 				"name": "Time A",
 				"item": "",
 				"think_scale": 1.0,
-				"mons": [mon_entry("Magnemite", 15), mon_entry("Pidgey", 15)]
+				"mons": [mon_entry("Magnemite", LEVEL), mon_entry("Pidgey", LEVEL)]
 			},
 			{
 				"name": "Time B",
 				"item": "",
 				"think_scale": 1.0,
-				"mons": [mon_entry("Bulbasaur", 15), mon_entry("Charmander", 15)]
+				"mons": [mon_entry("Bulbasaur", LEVEL), mon_entry("Charmander", LEVEL)]
 			},
 		],
 		"speed": 1.0,
@@ -75,9 +78,11 @@ static func mon_entry(species: String, level: int) -> Dictionary:
 
 
 ## Mon pronto para a luta a partir de uma entrada (HP pelo hp_pct, sem evoluir no meio da luta).
-## IVs e EVs ficam sempre em 31 e 0, mesmo numa config antiga que tenha outros valores.
+## Nível sempre LEVEL, e IVs e EVs sempre 31 e 0, mesmo numa config antiga com outros valores.
 static func build_mon(d: Dictionary) -> Mon:
-	var m := Mon.from_dict(d.duplicate(true))
+	var e := d.duplicate(true)
+	e["level"] = LEVEL
+	var m := Mon.from_dict(e)
 	m.ivs = {}
 	for s in StatCalc.STATS:
 		m.ivs[s] = StatCalc.IV_MAX
