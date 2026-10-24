@@ -488,12 +488,6 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		"reckless":
 			if mv.has("recoil") or id in RECKLESS_MOVES:
 				um *= 1.2
-		"skill_link":
-			if kind == "multi_arc":
-				um *= 1.2
-		"sniper":
-			if kind in ["projectile", "beam", "stream"] and user.flat_to(target).length() >= 5.0:
-				um *= 1.4
 		"flash_fire":
 			if type == "fire" and _state(user).flash:
 				um *= 1.5
@@ -528,8 +522,6 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		"multiscale":
 			if target.hp >= target.max_hp:
 				tm *= 0.5
-		"shell_armor", "battle_armor":
-			tm *= 0.9
 		"marvel_scale":
 			# Defesa x1,5 com status: só no físico
 			if target.status != "" and cat == "physical":
@@ -549,6 +541,16 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 	if pa != null and ability_of(pa) == "friend_guard" and ua != "infiltrator":
 		tm *= 0.75
 	return {"user": um, "target": tm}
+
+
+## Shell Armor / Battle Armor: não leva crítico (oficial).
+func no_crit(f: BattleFighter) -> bool:
+	return ability_of(f) in ["shell_armor", "battle_armor"]
+
+
+## Sniper: o crítico dá 2,25x em vez de 1,5x (o fator extra por cima do CRIT_MULT).
+func crit_bonus(user: BattleFighter) -> float:
+	return 2.25 / StatCalc.CRIT_MULT if ability_of(user) == "sniper" else 1.0
 
 
 ## Multiplicador no fim da fórmula de dano (Blaze/Torrent/Overgrow/Swarm, Thick Fat...).
@@ -805,8 +807,6 @@ func acc_mult(f: BattleFighter) -> float:
 	match ability_of(f):
 		"compound_eyes":
 			return 1.3
-		"illuminate":
-			return 1.05
 		"no_guard":
 			return NO_GUARD_ACC
 		"hustle":

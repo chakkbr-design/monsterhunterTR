@@ -118,7 +118,7 @@
   "shell_armor": {
     "name": "SHELL ARMOR",
     "desc": "Blocks critical hits.",
-    "desc_pt": "Casca dura: dano recebido -10%."
+    "desc_pt": "Não leva acerto crítico."
   },
   "soundproof": {
     "name": "SOUNDPROOF",
@@ -178,7 +178,7 @@
   "illuminate": {
     "name": "ILLUMINATE",
     "desc": "Prevents loss of accuracy.",
-    "desc_pt": "A precisão não cai e mira um pouco melhor (x1,05)."
+    "desc_pt": "A precisão não cai."
   },
   "natural_cure": {
     "name": "NATURAL CURE",
@@ -307,8 +307,8 @@
   },
   "skill_link": {
     "name": "SKILL LINK",
-    "desc": "Multi-hit moves hit harder.",
-    "desc_pt": "Golpes múltiplos x1,2."
+    "desc": "Multi-hit moves always hit the maximum number of times.",
+    "desc_pt": "Golpes de vários acertos sempre acertam o máximo de vezes."
   },
   "serene_grace": {
     "name": "SERENE GRACE",
@@ -337,8 +337,8 @@
   },
   "sniper": {
     "name": "SNIPER",
-    "desc": "Ranged hits from afar do more.",
-    "desc_pt": "Tiros de longe x1,4."
+    "desc": "Powers up moves if they become critical hits.",
+    "desc_pt": "O crítico dá 2,25x em vez de 1,5x."
   },
   "super_luck": {
     "name": "SUPER LUCK",
@@ -377,8 +377,8 @@
   },
   "battle_armor": {
     "name": "BATTLE ARMOR",
-    "desc": "Hard armor: -10% damage taken.",
-    "desc_pt": "Armadura: dano recebido -10%."
+    "desc": "Blocks critical hits.",
+    "desc_pt": "Não leva acerto crítico."
   },
   "huge_power": {
     "name": "HUGE POWER",

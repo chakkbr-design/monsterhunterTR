@@ -247,7 +247,8 @@ golpes de alvo único do tipo, ficam imunes e ganham +1 At. Esp.; golpes de vár
 | Friend Guard, Plus/Minus, Telepathy | parceiro 0,75x de dano; At. Esp. 1,5x com parceiro Plus/Minus; imune a golpe de dano do parceiro | Infiltrator ignora o Friend Guard (inventado) |
 | Damp | ninguém explode com ele em campo; bloqueia Aftermath | o usuário da Autodestruição ainda cai |
 | Multiplicadores | Huge Power 2x, Hustle 1,5x/precisão 0,8, Iron Fist 1,2x (só socos), Strong Jaw (mordidas), Reckless (recuo e queda), Tinted Lens 2x, Marvel Scale só no físico, Rough Skin 1/8, Aftermath só no contato, Cute Charm só sexo oposto, Effect Spore não pega em Planta, Soundproof com a lista oficial | — |
-| Inventadas (Arena Trap, Magnet Pull, Run Away, Shell/Battle Armor, Rock Head, Sniper, Skill Link, Pickup, Sand Veil, Tangled Feet, Illuminate, No Guard) | — | efeitos contínuos valem contra todos os inimigos no 2x2; Pickup cura 2% por rodada; No Guard só nos golpes dele |
+| Shell Armor, Battle Armor, Sniper, Skill Link, Illuminate | sem crítico; crítico 2,25x; golpe de vários acertos sempre no máximo; a precisão não cai | igual ao oficial (2026-10-24: o Caio pediu os números oficiais em tudo; só o dano final é escalado pelo `damage_pace`) |
+| Adaptadas ao tempo real (Arena Trap, Magnet Pull, Run Away, Rock Head, Pickup, Sand Veil, Tangled Feet, No Guard) | — | efeitos contínuos valem contra todos os inimigos no 2x2; Pickup cura 2% por rodada; No Guard só nos golpes dele |
 
 Supressão: Cloud Nine/Air Lock anulam o clima; Gastro Acid/Worry Seed trocam a habilidade por
 `ability_override`. Mold Breaker/Teravolt/Turboblaze, Healer, Power of Alchemy, Receiver, Slush Rush e

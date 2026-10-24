@@ -35,7 +35,10 @@ static func compute(
 		return out
 	var physical: bool = move.get("category", "") == "physical"
 	var crit_stage := int(move.get("crit", 0)) + int(attacker.get("crit_stage", 0))
-	var crit := _randf(rng) < StatCalc.crit_chance(crit_stage)
+	# Shell Armor / Battle Armor no defensor: sem crítico (defender.no_crit).
+	var crit := (
+		not bool(defender.get("no_crit", false)) and _randf(rng) < StatCalc.crit_chance(crit_stage)
+	)
 	var ak := "atk" if physical else "spa"
 	var dk := "def" if physical else "spd"
 	var a := (

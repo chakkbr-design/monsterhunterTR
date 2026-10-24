@@ -609,6 +609,8 @@ func roll_hits(mv: Dictionary, user: BattleFighter = null) -> Dictionary:
 		if r < 0.0:
 			n = int(row[0])
 			break
+	if user != null and arena.abilities and arena.abilities.ability_of(user) == "skill_link":
+		n = int(hr[1])  # Skill Link: sempre o máximo de acertos
 	n = clampi(n, int(hr[0]), int(hr[1]))
 	var m := mv.duplicate()
 	if String(mv.get("kind", "")) == "projectile":
@@ -925,6 +927,8 @@ func defender_profile(_user: BattleFighter, target: BattleFighter, m: Dictionary
 		# Psyshock: golpe especial contra a Defesa física.
 		p["spd"] = p.def
 		p["crit_spd"] = p.crit_def
+	if arena.abilities and arena.abilities.no_crit(target):
+		p["no_crit"] = true
 	return p
 
 

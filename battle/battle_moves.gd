@@ -451,6 +451,8 @@ func hit(
 			return
 		var dmg := int(res.damage)
 		var mult := extra_mult(user, target, m) * pace()
+		if res.crit and arena.abilities:
+			mult *= arena.abilities.crit_bonus(user)  # Sniper: crítico 2,25x
 		if mult != 1.0 and pace() < 1.0:
 			# Ritmo baixo: a fração passa para o próximo golpe no mesmo alvo (com mínimo 1 todo golpe
 			# tirava 1 e o damage_pace parava de valer). Golpe de 0 ainda empurra e interrompe.

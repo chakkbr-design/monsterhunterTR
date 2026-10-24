@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_blocks()
 	_stage_abilities()
 	_helpers()
+	_official_numbers()
 	_doubles()
 	for i in 6:
 		_full_battle(i)
@@ -541,3 +542,41 @@ func _full_battle(i: int) -> void:
 	)
 	check(t < 400.0, "luta termina (%s x %s)" % [pr[0], pr[1]])
 	a.free()
+
+
+## Números oficiais (o Caio pediu: só o dano final é escalado): Shell Armor/Battle Armor sem crítico,
+## Sniper com crítico 2,25x, Skill Link sempre no máximo de acertos, Illuminate sem bônus de precisão.
+func _official_numbers() -> void:
+	var a := _still(_lent("squirtle", "shell_armor"), _lent("charmander", "sniper"))
+	var me: BattleFighter = a.player
+	var foe: BattleFighter = a.enemy
+	check(a.abilities.no_crit(me), "Shell Armor bloqueia crítico")
+	var crits := 0
+	var mv := Dex.move("tackle")
+	for i in 200:
+		var res := Damage.compute(
+			a.moves.effects.attacker_profile(foe, me, mv),
+			a.moves.effects.defender_profile(foe, me, mv),
+			mv.merged({"crit": 3}),
+			a.rng
+		)
+		crits += 1 if res.crit else 0
+	check(crits == 0, "Shell Armor: nenhum crítico mesmo com estágio +3 (%d)" % crits)
+	check(is_equal_approx(a.abilities.crit_bonus(foe), 1.5), "Sniper: crítico 2,25x (1,5 x 1,5)")
+	check(a.abilities.crit_bonus(me) == 1.0, "sem Sniper: crítico normal")
+	check(
+		is_equal_approx(a.abilities.damage_mult(me, foe, mv), 1.0),
+		"Shell Armor não reduz mais o dano (sem o -10% inventado)"
+	)
+	a.free()
+	var b := _still(_lent("rattata", "skill_link"), Mon.create("geodude", 10))
+	var multi := {"id": "double_slap", "kind": "multi_arc", "hits_range": [2, 5], "power": 15}
+	var all_max := true
+	for i in 30:
+		var r: Dictionary = b.moves.effects.roll_hits(multi, b.player)
+		all_max = all_max and int(r.get("hits", 5)) == 5
+	check(all_max, "Skill Link: sempre 5 acertos")
+	b.free()
+	var c := _still(_lent("venonat", "illuminate"), Mon.create("geodude", 10))
+	check(c.abilities.acc_mult(c.player) == 1.0, "Illuminate sem bônus de precisão (Gen 9)")
+	c.free()
