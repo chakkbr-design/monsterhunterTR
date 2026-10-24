@@ -48,13 +48,14 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 - 14 tipos de entrega de golpe (investida, arco, projétil, raio, área, corrente etc.), acerto geométrico, dano da fórmula oficial Gen 5+ (spread 0,75x na dupla, golpe de alvo único acerta um só), empurrão pela eficácia, arremesso com batida na cerca/caixa, Body Slam pulando em cima, Aerial Ace, Dig por baixo da terra (`battle/battle_physics.gd`, detalhes em `docs/MECANICAS.md`).
 - Posições fixas de VGC, um treinador atrás de cada lado, troca pela Pokébola só no começo da rodada, fim de turno oficial uma vez por rodada (`battle/battle_end_turn.gd`) e botões de modo na tela.
 - Rodadas pela Speed (`battle/battle_turns.gd`): a cada ~4 s a fila sai pela prioridade do golpe e pela Speed (Trick Room inverte), cada Pokémon solta um golpe na vez dele com 0,8 s de folga entre golpes, e um anel com seta marca quem é o próximo. Fora da vez cada Pokémon fica na posição fixa do seu lado. Detalhes em `docs/BATALHA_VIVA.md`.
+- **Modo de energia** (padrão no treino, `battle/battle_energy.gd`): sem rodadas nem posições fixas, barra de energia que enche com o tempo no lugar do PP, golpes gastam energia e têm cooldown, e a IA recua para recuperar ou fica lutando. Detalhes em `docs/BATALHA_VIVA.md`.
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - IA no estilo VGC (`docs/IA_VGC.md`): cada Pokémon escolhe golpe e alvo por pontuação (KO, super efetivo, foco com o parceiro, Protect, Tailwind) e o treinador troca, usa item e escolhe quem entra.
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 
 ### Modo de treinamento (para balancear)
 - Opção **MODO DE TREINAMENTO** no título (`ui/training/`). Não usa nem grava o save do jogo; a montagem fica em `user://training.json`.
-- Tela de montar, tudo numa tela sem rolagem: dois times com 6 slots (slot vazio abre a lista de espécies), e por Pokémon natureza, habilidade, 4 golpes escolhidos numa lista só com os que a espécie aprende (em qualquer nível) e HP/PP/status iniciais. Todos lutam no **Nv 50**, com IV 31 e EV 0 (sem IVs e EVs no treino), e qualquer golpe que a espécie aprende vale. Por time, nome, item do treinador, nível da IA (`think_scale`) e **Times salvos** (10 slots em `user://training_teams.json`, para salvar e carregar em qualquer lado); Jogador 1 manual ou IA, formato 1x1/2x2, velocidade (0,6x a 4x), turbo, limite de tempo e semente.
+- Tela de montar, tudo numa tela sem rolagem: dois times com 6 slots (slot vazio abre a lista de espécies), e por Pokémon natureza, habilidade, 4 golpes escolhidos numa lista só com os que a espécie aprende (em qualquer nível) e HP/PP/status iniciais. Todos lutam no **Nv 50**, com IV 31 e EV 0 (sem IVs e EVs no treino), e qualquer golpe que a espécie aprende vale. Por time, nome, item do treinador, nível da IA (`think_scale`) e **Times salvos** (10 slots em `user://training_teams.json`, para salvar e carregar em qualquer lado); Jogador 1 manual ou IA, formato 1x1/2x2, modo Energia/VGC, velocidade (0,6x a 4x), turbo, limite de tempo e semente.
 - Arena fixa 20 x 12 (o dobro da quadra padrão) com cerca. Os dois lados lutam sozinhos com a IA (`opts.autoplay`), sem XP, EVs, prêmio nem evolução (`opts.no_rewards`). Acima de 1x a arena anda em passos de no máximo 1x, para o resultado não mudar com a velocidade.
 - Resultado com HP final de cada Pokémon, duração, semente e placar da série; "Rodar série" faz N lutas seguidas (com semente fixa, a luta k usa semente + k) e "Copiar registro" copia o log da luta.
 
@@ -86,7 +87,7 @@ Flags de história em `Game.flags`: `got_starter`, `rival_starter`, `has_parcel`
 
 ## Testes
 
-Suítes headless em `tests/` (todas as `test_*.gd`), todas passando na última rodada (core, game, battle, gfx, audio, ui, ui_front, ui_pc, ui_evolution, ui_training, world, interiors, story, content). Novas da rodada pela Speed: `tests/battle/test_turns.gd` e `tests/battle/test_field_use.gd`. O teste do Mt. Moon leva de 10 a 15 minutos.
+Suítes headless em `tests/` (todas as `test_*.gd`), todas passando na última rodada (core, game, battle, gfx, audio, ui, ui_front, ui_pc, ui_evolution, ui_training, world, interiors, story, content). Novas da rodada pela Speed: `tests/battle/test_turns.gd` e `tests/battle/test_field_use.gd`; do modo de energia: `tests/battle/test_energy.gd` (`-- vgc` roda as mesmas lutas no VGC para comparar). O teste do Mt. Moon leva de 10 a 15 minutos.
 
 ```bash
 "/c/Users/User/Desktop/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe" --headless --fixed-fps 60 --path . --script res://tests/core/test_core.gd < /dev/null

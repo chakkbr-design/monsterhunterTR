@@ -3,7 +3,8 @@ extends RefCounted
 ## Formato (salvo em user://training.json, nunca no save do jogo):
 ##   {sides: [{name, item, think_scale, mons: [Mon.to_dict() + "hp_pct"]}, {...}],
 ##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite),
-##    battle_size (1 ou 2), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
+##    battle_size (1 ou 2), battle_mode ("energy" = barra de energia sem rodadas, padrão; "vgc" =
+##    rodadas pela Speed com posições fixas), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
 ##    só na luta única: a série roda com IA)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
@@ -61,6 +62,7 @@ static func default_config() -> Dictionary:
 		"turbo": false,
 		"time_limit": 0,
 		"battle_size": 2,
+		"battle_mode": "energy",
 		"p1_control": "ai",
 	}
 
@@ -145,6 +147,7 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"enemy_think_scale": float(cfg.sides[1].get("think_scale", 1.0)),
 		"no_rewards": true,
 		"battle_size": clampi(int(cfg.get("battle_size", 2)), 1, 2),
+		"battle_mode": battle_mode(cfg),
 	}
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)
@@ -153,6 +156,11 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		if cfg.has(k):
 			o[k] = cfg[k]
 	return o
+
+
+## Modo da batalha do treino: "energy" (padrão) ou "vgc".
+static func battle_mode(cfg: Dictionary) -> String:
+	return "vgc" if String(cfg.get("battle_mode", "energy")) == "vgc" else "energy"
 
 
 static func load_config() -> Dictionary:

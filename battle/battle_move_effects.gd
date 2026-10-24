@@ -1156,7 +1156,8 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			else:
 				var cut := 4.0 * target.pp_cost_of(Dex.move(last))
 				target.pp_max = maxf(target.pp_max - cut, 0.0)
-				target.mon.pp = target.pp_max
+				if not target.energy_mode:
+					target.mon.pp = target.pp_max
 				target.popup(
 					"PP de %s caiu!" % Dex.move(last).get("name", last), Color(0.8, 0.6, 0.9)
 				)

@@ -16,6 +16,8 @@ const CARD_TOP := 12.0
 ## Espaço para a faixa de marcas/estágios entre os cartões empilhados (coluna da esquerda e da direita).
 const ROW_GAP := 24.0
 const MOVE_R := 42.0
+## Barra e custo no modo de energia (BattleEnergy).
+const ENERGY_COL := Color("6fe08c")
 const MOVE_DX := 92.0
 const MOVE_DY := 68.0
 const DIAMOND_AT := Vector2(-182.0, -134.0)
@@ -656,7 +658,9 @@ class FighterCard:
 			3
 		)
 		var base := maxf(body.pp_base, 1.0)
-		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), body.pp_max / base, UiDraw.PP_BLUE)
+		# Modo de energia: a mesma linha vira a barra de energia (enche com o tempo).
+		var pp_col := ENERGY_COL if body.energy_mode else UiDraw.PP_BLUE
+		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), body.pp_max / base, pp_col)
 		UiDraw.bar(
 			self,
 			Rect2(x0 + PP_W + 6.0, PP_ROW_Y, EXP_W, 6),
@@ -832,16 +836,21 @@ class MoveButton:
 			for l in lines:
 				UiDraw.text_center(self, Vector2(c.x, y), String(l), fs, name_col, 3, tf)
 				y += lh
-		var cost_col := UiDraw.PP_BLUE
+		var cost_col := ENERGY_COL if body.energy_mode else UiDraw.PP_BLUE
 		if not afford:
 			cost_col = Color(1, 0.4, 0.35)
+		var unit := "EN" if body.energy_mode else "PP"
 		UiDraw.text_center(
-			self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 10, cost_col, 3
+			self, Vector2(c.x, c.y + r - 14.0), "%d %s" % [int(round(cost)), unit], 10, cost_col, 3
 		)
 		UiDraw.key_pill(self, c + Vector2(-r + 6.0, -r + 6.0), str(index + 1), 22, not afford)
 		if cd > 0.0:
 			var total := (
-				(Dex.GLOBAL_COOLDOWN if use_gcd else Dex.cooldown(mv))
+				(
+					Dex.GLOBAL_COOLDOWN
+					if use_gcd
+					else (BattleEnergy.cooldown(mv) if body.energy_mode else Dex.cooldown(mv))
+				)
 				/ maxf(body.speed_factor(), 0.01)
 			)
 			draw_circle(c, r - 2.0, Color(0, 0, 0, 0.55 * clampf(cd / maxf(total, 0.01), 0.0, 1.0)))

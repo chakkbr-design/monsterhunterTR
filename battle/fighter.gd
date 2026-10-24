@@ -98,6 +98,8 @@ var hp := 1
 var max_hp := 1
 var pp_base := 100.0
 var pp_max := 100.0
+## Modo de energia (BattleEnergy): pp_base/pp_max viram a barra de energia, que enche com o tempo.
+var energy_mode := false
 
 var move_cd := {}
 var gcd_t := 0.0
@@ -213,6 +215,10 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 	hp = clampi(m.hp, 0, max_hp)
 	pp_base = m.pp_base
 	pp_max = clampf(m.pp, 0.0, pp_base)
+	energy_mode = BattleEnergy.on(arena)
+	if energy_mode:
+		pp_base = BattleEnergy.MAX
+		pp_max = BattleEnergy.MAX * BattleEnergy.START
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
 	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
@@ -469,7 +475,7 @@ func may_start(mv: Dictionary) -> bool:
 
 ## PP gasto pelo golpe: o oficial (o Caio pediu só o dano reduzido; o PP não acompanha o ritmo).
 func pp_cost_of(mv: Dictionary) -> float:
-	return Dex.pp_cost(mv)
+	return BattleEnergy.cost(mv) if energy_mode else Dex.pp_cost(mv)
 
 
 func min_move_cost() -> float:
@@ -482,7 +488,7 @@ func min_move_cost() -> float:
 
 
 func out_of_pp() -> bool:
-	return pp_max < min_move_cost()
+	return not energy_mode and pp_max < min_move_cost()
 
 
 func dash_reach() -> float:
@@ -507,7 +513,8 @@ func aim_dir() -> Vector3:
 
 func spend(cost: float) -> void:
 	pp_max -= cost
-	mon.pp = pp_max
+	if not energy_mode:
+		mon.pp = pp_max
 
 
 func can_jump() -> bool:
@@ -938,6 +945,8 @@ func tick(dt: float) -> void:
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)
+	if energy_mode:
+		pp_max = minf(pp_max + BattleEnergy.regen(self) * dt, pp_base)
 	if prepare_t > 0.0:
 		prepare_t = maxf(prepare_t - dt, 0.0)
 		if prepare_t <= 0.0 and prepare_cb.is_valid():
@@ -1218,5 +1227,6 @@ func write_back() -> void:
 	if not alive() and mon.hp > 0:
 		return  # desmaiou em campo e foi revivido por item depois: não desfaz o Revive
 	mon.hp = hp
-	mon.pp = pp_max
+	if not energy_mode:
+		mon.pp = pp_max
 	mon.status = status if status in Mon.PERSIST_STATUS else ""

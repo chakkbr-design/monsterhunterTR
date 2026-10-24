@@ -93,14 +93,17 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	var cost := user.pp_cost_of(mv)
 	if user.pp_max < cost:
 		if feedback:
-			user.popup("PP insuficiente!", Color(1, 0.6, 0.4))
+			user.popup(
+				"Sem energia!" if user.energy_mode else "PP insuficiente!", Color(1, 0.6, 0.4)
+			)
 		return false
 	user.spend(cost)
 	var sf := user.speed_factor()
 	if arena.abilities and arena.abilities.has_method("cast_speed_mult"):
 		sf *= arena.abilities.cast_speed_mult(user, mv)
 	var jit := 1.0 + rng.randf_range(-JITTER, JITTER)
-	user.move_cd[id] = Dex.cooldown(mv) / sf * jit
+	var base_cd := BattleEnergy.cooldown(mv) if user.energy_mode else Dex.cooldown(mv)
+	user.move_cd[id] = base_cd / sf * jit
 	user.gcd_t = (
 		Dex.GLOBAL_COOLDOWN / sf * (PRIORITY_GCD if int(mv.get("priority", 0)) > 0 else 1.0)
 	)

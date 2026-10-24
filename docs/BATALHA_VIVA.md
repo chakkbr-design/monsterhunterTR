@@ -26,6 +26,7 @@ Os números são ponto de partida: o Caio balanceia pelo modo de treinamento.
 | Botões de modo | `battle_hud.gd` | Pílulas OFENSIVO/DEFENSIVO/SUPORTE/LIVRE ao lado do cartão de cada Pokémon do jogador (o modo atual cheio); clique = `order(slot, modo)`, igual às teclas F/G. Também no treino. |
 | IA de treinador (interface) | `battle_arena.gd` | Para a thread de IA: `arena.trainer_ai[side]` com `round_start()` (começo de cada rodada, antes da fila) e `pick_replacement(slot) -> int` (índice de `bench_of(side)`, -1 = a arena escolhe); `request_switch(side, out, bench_idx)`, `request_trainer_item(side, item, target)` (o alvo não ataca na rodada), `bench_of(side)`, `pending_switch(side)`, `turns.sits_out(f)`. |
 | IA VGC | `battle/battle_tactics.gd`, `battle_trainer_ai.gd` | Golpe e alvo por pontuação (KO, ameaça, foco com o parceiro, área com 0,75x, Protect com ameaça de KO e nunca seguido, Tailwind/Helping Hand/Follow Me/status quando valem, comando e Natureza pesando) e IA do treinador (troca com matchup ruim, item que salva, substituto). Pesquisa e números em `docs/IA_VGC.md`. |
+| Modo de energia | `battle/battle_energy.gd`, `fighter.gd`, `battle_ai.gd` | Segundo modo, para comparar com o VGC (`opts.battle_mode: "energy"`; padrão `"vgc"` fora do treino, `"energy"` no treino). Sem rodadas nem posições fixas: anda pela arena toda. Barra de energia (verde, no lugar da de PP; o PP do Pokémon não muda) com `MAX` 100, enche `REGEN` 5/s, Speed acelera pouco (0,85x–1,2x), longe de todo inimigo (`REST_DIST` 4,5 m) e sem golpe saindo enche 1,8x; começa com 40%. Custo = 12 + 0,25 x bp (até 50), status 28, prioridade 0,6x; cooldown por golpe = o de `Dex.cooldown` (forte e status longos), prioridade 1,8x. IA: escolhe o próximo golpe mesmo sem energia; se falta mais de 0,8 s, recua para descansar (correndo, saindo do canto) e volta quando a caminhada até o alcance cobre a espera; Fúria, OFENSIVO, alvo com HP baixo ou perfil que não recua ficam lutando com um golpe que já dá. Evita repetir o último golpe (80%). Desvio, pulo, corrida, investida longa e punir a recarga seguem os do ritmo livre. |
 | Espetáculo | `battle/battle_hud.gd`, arena | Balão com o nome do golpe por lado, cena de impacto (a luta congela 0,4 s; no máx. 1 a cada 2,5 s), CLASH (duas investidas de frente se anulam), "Precisa recarregar!" depois do Hyper Beam, cobrir o parceiro com HP baixo (DEFENSIVO ou Muralha), cartões 2x2, etiquetas de comando, marcas e estágios, barra de Sintonia. |
 
 ## Testes novos
@@ -42,6 +43,8 @@ variedade de golpes em `test_gen9_moves.gd`).
 
 **Constantes para o Caio ajustar:** `ROUND_SECS` (duração mínima da rodada, 4,0 s) e `MOVE_GAP` (folga entre golpes,
 0,8 s) no topo de `battle/battle_turns.gd`; `TURN_MAX` (2,2 s) é quanto a vez espera antes de passar.
+No modo de energia: `MAX`, `REGEN`, `REST_MULT`, `START`, custos e `PRIORITY_CD` no topo de
+`battle/battle_energy.gd`; `ENERGY_WAIT` e `REPEAT_AVOID` em `battle/battle_ai.gd`.
 `tests/battle/test_battle.gd` roda as regras no ritmo original (`damage_pace` 1,0, sem caixas no campo).
 
 ## Ainda não feito

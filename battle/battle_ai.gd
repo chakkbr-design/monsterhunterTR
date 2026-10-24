@@ -95,6 +95,12 @@ const CORNER_M := 1.6
 const CORNER_FOE := 3.2
 ## Depois de bater perto da parede volta para o centro.
 const CENTRE_PULL := 0.7
+## Modo de energia (BattleEnergy): recua para recuperar quando o golpe pretendido ainda leva mais de
+## ENERGY_WAIT s para ter energia; volta a fechar a distância quando a caminhada até o alcance cobre a
+## espera. REPEAT_AVOID = chance de não repetir o último golpe quando há outro pronto.
+const ENERGY_WAIT := 0.8
+const ENERGY_KEEP := 1.0
+const REPEAT_AVOID := 0.8
 ## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
 enum { ATTACK, DEFEND, SUPPORT, FREE }
 
@@ -132,6 +138,8 @@ var fired := false
 var acted_round := -1
 ## Voltando para a posição depois de bater (rodadas) / protegendo o parceiro (DEFENSIVO) fora dela.
 var returning := false
+## Último golpe solto (modo de energia evita repetir).
+var last_move := ""
 var guarding := false
 ## Escolha de golpe e alvo no estilo VGC (BattleTactics); null no selvagem e com opts.vgc_ai = false.
 var tactics: BattleTactics = null
@@ -269,6 +277,10 @@ func step(dt: float) -> Vector3:
 		return dir
 	if queued and not up_next:
 		return _off_turn(dt, d, dir, side_v)
+	if f.energy_mode and not queued:
+		var ew := _energy_steer(d, dir, side_v)
+		if ew != Vector3.INF:
+			return ew
 	if queued:
 		return _turn_move(dt, d, dir, side_v)
 	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
@@ -453,6 +465,15 @@ func _plan() -> String:
 	if f.out_of_pp():
 		return ""
 	var avail: Array = f.moves.filter(func(id): return _ready(String(id)))
+	if f.energy_mode:
+		# Energia: planeja também o golpe que ainda falta energia (recua até ter).
+		avail = f.moves.filter(
+			func(id):
+				return (
+					float(f.move_cd.get(id, 0.0)) <= 0.0
+					and f.arena.moves.effects.usable(f, Dex.move(String(id)))
+				)
+		)
 	if avail.is_empty():
 		return ""
 	if _immune_only(avail) and _has_connecting_move():
@@ -498,6 +519,58 @@ func move_reach(id: String) -> float:
 			return INF
 		_:
 			return float(mv.get("range", 10.0))
+
+
+## Modo de energia: planeja a posição pela próxima ação. Golpe pretendido sem energia: quem fica
+## lutando (Fúria, OFENSIVO, alvo quase caindo, perfil que não recua) troca por um golpe que já dá;
+## os outros recuam para longe dos inimigos (descansar enche mais rápido) e só voltam quando a
+## caminhada até o alcance cobre o que falta encher. INF = segue a faixa normal.
+func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
+	if intent == "" or recover_t > 0.0:
+		return Vector3.INF
+	var need := BattleEnergy.secs_to(f, f.pp_cost_of(Dex.move(intent)))
+	if need <= ENERGY_WAIT:
+		return Vector3.INF
+	if _stays_fighting():
+		var cheap: Array = f.moves.filter(
+			func(id):
+				return (
+					String(id) != intent
+					and float(Dex.move(String(id)).get("power", 0)) > 0.0
+					and _ready(String(id))
+				)
+		)
+		if not cheap.is_empty():
+			intent = pick(cheap)
+			return Vector3.INF
+	var r := move_reach(intent)
+	r = 0.0 if r == INF else r
+	var travel := maxf(d - r * 0.8, 0.0) / maxf(f.walk_speed(), 0.1)
+	if travel >= need:
+		return Vector3.INF  # já dá para ir: chega no alcance com a barra cheia o bastante
+	var keep := BattleEnergy.REST_DIST + ENERGY_KEEP
+	var want: Vector3
+	if d < keep:
+		want = (-dir + side_v * 0.5 * float(_p("strafe", 0.5))).normalized()
+		if _wall_dist(f.pos2(f.position)) < WALL_KEEP:
+			var esc := corner_escape()
+			want = (want + (esc if esc != Vector3.ZERO else _to_centre())).normalized()
+		f.sprinting = f.can_sprint(true)
+	else:
+		# Longe o bastante: rodeia devagar, de olho no alvo.
+		want = side_v * 0.45 + dir * clampf((d - keep - 1.0) * 0.3, -0.3, 0.3)
+	want += f.arena.edge_push(f) + _ally_spread()
+	_fly(d)
+	return want.normalized() if want.length() > 1.0 else want
+
+
+func _stays_fighting() -> bool:
+	if f.mood_state == "fury" or ally_mode() == ATTACK:
+		return true
+	var opp := f.opponent
+	if is_instance_valid(opp) and float(opp.hp) <= float(opp.max_hp) * TARGET_FINISH_HP:
+		return true
+	return float(_p("retreat", 0.5)) < 0.3
 
 
 ## Depois de bater: recua até retreat_to pelo perfil (o Brigão quase não recua; o Atirador some).
@@ -805,6 +878,7 @@ func _use_best_move(d: float) -> bool:
 
 ## Status usado: trava os próximos status (exceto urgente) e marca os de uma vez por luta.
 func note_used(id: String) -> void:
+	last_move = id
 	if tactics != null:
 		tactics.note_used(id)
 	if float(Dex.move(id).get("power", 0)) > 0.0:
@@ -842,6 +916,9 @@ func _has_connecting_move() -> bool:
 
 
 func pick(avail: Array) -> String:
+	if f.energy_mode and avail.size() > 1 and last_move in avail:
+		if _rng().randf() < REPEAT_AVOID:
+			avail = avail.filter(func(id): return String(id) != last_move)
 	var tac := _tactics()
 	if tac != null:
 		var chosen := tac.choose(avail)

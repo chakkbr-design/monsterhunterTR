@@ -257,7 +257,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	combos = BattleCombos.new(self)
 	field = BattleField.new(self)
 	abilities = BattleAbilities.new(self)
-	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)))
+	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
+	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
 	end_turn = BattleEndTurn.new(self)
 	# IA do treinador (BattleTrainerAI): o adversário treinador e, sem ninguém no teclado (autoplay,
 	# treino), o lado do jogador. opts.trainer_ai = false desliga ([lado 0, lado 1] por lado).
@@ -876,6 +877,11 @@ func _nearest(f: BattleFighter, cands: Array) -> BattleFighter:
 			bd = d
 			best = c
 	return best
+
+
+## opts.battle_mode "energy": barra de energia no lugar do PP, sem rodadas (BattleEnergy). Padrão "vgc".
+func energy_on() -> bool:
+	return String(opts.get("battle_mode", "vgc")) == "energy"
 
 
 ## Posição fixa do lutador na quadra (como no VGC): no 1x1 um ponto por lado; com dois do mesmo lado,

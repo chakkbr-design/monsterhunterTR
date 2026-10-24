@@ -47,6 +47,7 @@ var _seed: SpinBox
 var _turbo: CheckBox
 var _battle: OptionButton
 var _p1: OptionButton
+var _mode: OptionButton
 var _limit: SpinBox
 var _empty_note: Label
 var _editor: Control
@@ -288,6 +289,12 @@ func set_turbo(on: bool) -> void:
 ## Batalha 1x1 (1) ou 2x2 (2): quantos Pokémon de cada time lutam ao mesmo tempo.
 func set_battle_size(n: int) -> void:
 	cfg["battle_size"] = 1 if n == 1 else 2
+	_refresh_all()
+
+
+## Modo da batalha: "energy" (barra de energia, sem rodadas) ou "vgc" (rodadas pela Speed).
+func set_battle_mode(mode: String) -> void:
+	cfg["battle_mode"] = "vgc" if mode == "vgc" else "energy"
 	_refresh_all()
 
 
@@ -885,6 +892,19 @@ func _build_top() -> Control:
 	_battle.tooltip_text = "Quantos Pokémon de cada time lutam ao mesmo tempo"
 	_battle.item_selected.connect(_on_battle)
 	r2.add_child(_battle)
+	r2.add_child(_small("Modo"))
+	_mode = OptionButton.new()
+	_mode.add_item("Energia")
+	_mode.add_item("VGC")
+	_mode.set_item_metadata(0, "energy")
+	_mode.set_item_metadata(1, "vgc")
+	_mode.tooltip_text = (
+		"Energia: barra que enche com o tempo, golpes gastam energia, movimento livre
+"
+		+ "VGC: rodadas pela Speed, posições fixas"
+	)
+	_mode.item_selected.connect(_on_mode)
+	r2.add_child(_mode)
 	r2.add_child(_small("Jogador 1"))
 	_p1 = OptionButton.new()
 	_p1.add_item("IA")
@@ -1217,6 +1237,7 @@ func _refresh_all() -> void:
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
+	_mode.select(1 if Cfg.battle_mode(cfg) == "vgc" else 0)
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1411,6 +1432,11 @@ func _on_turbo(on: bool) -> void:
 func _on_battle(i: int) -> void:
 	if not _syncing:
 		set_battle_size(i + 1)
+
+
+func _on_mode(i: int) -> void:
+	if not _syncing:
+		set_battle_mode(String(_mode.get_item_metadata(i)))
 
 
 func _on_p1(i: int) -> void:
