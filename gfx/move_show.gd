@@ -395,7 +395,7 @@ func repeat(every: float, dur: float, cb: Callable, done := Callable(), now := t
 	if not _ok():
 		return null
 	var t := Ticker.new(every, dur, cb, done)
-	t.watch = ctx.filter(func(o): return o is Object)
+	t.watch = ctx.filter(func(o): return typeof(o) == TYPE_OBJECT)  # solto também: o Ticker para
 	if now:
 		t.acc = every
 	vfx._track(t)

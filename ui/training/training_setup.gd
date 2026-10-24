@@ -247,6 +247,15 @@ func copy_side(from: int) -> void:
 	_note("%s copiado para o %s." % [_side_name(from), _side_name(1 - from)])
 
 
+## Sorteia os dois times (Cfg.randomize_sides).
+func random_teams() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	Cfg.randomize_sides(cfg, rng)
+	select(side, 0)
+	_note("Times sorteados.")
+
+
 ## Troca os dois times de lado (com nome, item e nível da IA).
 func swap_sides() -> void:
 	var a = cfg.sides[0]
@@ -874,6 +883,16 @@ func _build_top() -> Control:
 		_btn("Trocar lados", swap_sides, "Troca o Time A e o Time B de lado (com nome e item)")
 	)
 	r1.add_child(_btn("Padrão", reset_default, "Volta para os times e opções padrão"))
+	(
+		r1
+		. add_child(
+			_btn(
+				"Times aleatórios",
+				random_teams,
+				"Sorteia 6 Pokémon para cada lado, com golpes do learnset (dano do tipo dele e um de status)"
+			)
+		)
+	)
 	_start_btn = _btn("Começar batalha", start, "As duas equipes lutam sozinhas, pela IA")
 	_start_btn.add_theme_stylebox_override("normal", _box(Kit.RED, Kit.INK, 6, 14, 3))
 	_start_btn.add_theme_stylebox_override(
@@ -899,8 +918,7 @@ func _build_top() -> Control:
 	_mode.set_item_metadata(0, "energy")
 	_mode.set_item_metadata(1, "vgc")
 	_mode.tooltip_text = (
-		"Energia: barra que enche com o tempo, golpes gastam energia, movimento livre
-"
+		"Energia: barra que enche com o tempo, golpes gastam energia, movimento livre\n"
 		+ "VGC: rodadas pela Speed, posições fixas"
 	)
 	_mode.item_selected.connect(_on_mode)

@@ -302,6 +302,17 @@ func _run() -> void:
 	check(stats_match(scr), "tela mostra as stats do Nv 50 para o Nv 12 salvo")
 	check(scr._mon_line(entry(scr)).contains("Nv %d" % Cfg.LEVEL), "lista mostra Nv %d" % Cfg.LEVEL)
 
+	# Times aleatórios: 6 por lado, da Pokédex 1-51, com dano e status quando a espécie aprende.
+	scr.random_teams()
+	for s in Cfg.SIDES:
+		var ms: Array = scr.cfg.sides[s].mons
+		check(ms.size() == Cfg.PARTY_MAX, "sorteio: lado %d com 6" % s)
+		check(
+			ms.all(func(d): return Cfg.random_pool().has(d.species) and not d.moves.is_empty()),
+			"sorteio: lado %d da Pokédex 1-51, com golpes" % s
+		)
+	check(Cfg.can_start(scr.cfg), "sorteio: pronto para lutar")
+
 	scr.queue_free()
 	await frames(2)
 	if pm:

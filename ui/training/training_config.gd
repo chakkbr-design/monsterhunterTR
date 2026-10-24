@@ -258,3 +258,68 @@ static func block_pause_menu(tree: SceneTree, on: bool) -> void:
 	if pm:
 		pm.set_process_unhandled_input(not on)
 		pm.set_process_input(not on)
+
+
+# --- Times aleatórios ---
+
+## Times sorteados só com a Pokédex 1-51 (learnsets completos da Gen 9).
+const RANDOM_DEX_MAX := 51
+
+
+static func random_pool() -> Array:
+	var out: Array = []
+	for sp in Dex.all_species():
+		if int(Dex.species(sp).get("dex_no", 9999)) <= RANDOM_DEX_MAX:
+			out.append(sp)
+	out.sort()  # mesma ordem sempre: a semente refaz os mesmos times
+	return out
+
+
+## Sorteia os Pokémon dos dois times (o nome, o item e o nível da IA de cada lado ficam).
+static func randomize_sides(cfg: Dictionary, rng: RandomNumberGenerator) -> void:
+	for s in SIDES:
+		cfg.sides[s]["mons"] = random_mons(rng)
+
+
+## PARTY_MAX espécies diferentes da Pokédex 1-RANDOM_DEX_MAX (as de learnset completo), cada uma com
+## habilidade e golpes sorteados (random_moves).
+static func random_mons(rng: RandomNumberGenerator) -> Array:
+	var pool := random_pool()
+	var out: Array = []
+	for k in mini(PARTY_MAX, pool.size()):
+		var sp := String(pool.pop_at(rng.randi() % pool.size()))
+		var d := mon_entry(sp, LEVEL)
+		var n: int = Dex.species(sp).get("abilities", []).size()
+		d["ability_slot"] = rng.randi() % maxi(n, 1)
+		d["moves"] = random_moves(sp, rng)
+		out.append(d)
+	return out
+
+
+## Até 4 golpes do learnset: um de dano de cada tipo da espécie (quando ela aprende), pelo menos um de
+## dano e um de status, e o resto livre.
+static func random_moves(sp: String, rng: RandomNumberGenerator) -> Array:
+	var dmg: Array = []
+	var other: Array = []
+	for e in learnable_moves(sp):
+		var mv := Dex.move(String(e.id))
+		if String(mv.get("category", "status")) == "status":
+			other.append(String(e.id))
+		else:
+			dmg.append(String(e.id))
+	var picks: Array = []
+	for t in Dex.species(sp).get("types", []):
+		var stab := dmg.filter(
+			func(id):
+				return Dex.move(id).get("type") == t and float(Dex.move(id).get("power", 0)) > 0
+		)
+		if not stab.is_empty():
+			picks.append(stab[rng.randi() % stab.size()])
+	if picks.is_empty() and not dmg.is_empty():
+		picks.append(dmg[rng.randi() % dmg.size()])
+	if not other.is_empty():
+		picks.append(other[rng.randi() % other.size()])
+	var rest := (dmg + other).filter(func(id): return not picks.has(id))
+	while picks.size() < Mon.MAX_MOVES and not rest.is_empty():
+		picks.append(rest.pop_at(rng.randi() % rest.size()))
+	return picks

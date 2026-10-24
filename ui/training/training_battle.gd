@@ -26,6 +26,8 @@ const POST_STEP := 2.0
 ## Placar da série enquanto a config não muda (sobrevive a "Repetir").
 ## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
 static var series := {"key": "", "a": 0, "b": 0, "draw": 0, "n": 0}
+## Série com times sorteados a cada luta (Cfg.randomize_sides, pela semente da luta).
+static var random_series := false
 
 var cfg := {}
 var arena: Node3D
@@ -41,6 +43,8 @@ var steps := 1
 var auto_left := 0
 ## Luta da série (Rodar série): todas as lutas dela rodam com IA, mesmo com Jogador 1 manual.
 var _series := false
+## Esta série sorteia os times antes de cada luta.
+var _random := false
 var _ui: CanvasLayer
 var _info: Label
 var _result_box: Control
@@ -147,12 +151,19 @@ func start_fight() -> void:
 	_result_box.visible = false
 	result = {}
 	fight_time = 0.0
+	var o := Cfg.arena_opts(cfg, global_position)
+	last_seed = int(o.seed) + int(series.n) if o.has("seed") else randi()
+	if _random:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = last_seed
+		Cfg.randomize_sides(cfg, rng)
+		Cfg.current = cfg
+		series.key = JSON.stringify(cfg)
+		o = Cfg.arena_opts(cfg, global_position)
 	team_a = Cfg.build_side(cfg, 0)
 	team_b = Cfg.build_side(cfg, 1)
-	var o := Cfg.arena_opts(cfg, global_position)
 	if _series:
 		o.merge({"autoplay": true, "auto_battle": true, "keyboard": false}, true)
-	last_seed = int(o.seed) + int(series.n) if o.has("seed") else randi()
 	o.seed = last_seed
 	# Acima de 1x a arena anda em vários passos de no máximo 1x por quadro: um passo grande faria
 	# golpes rápidos atravessarem o alvo e mudaria o resultado da luta.
@@ -405,6 +416,12 @@ func _show_result() -> void:
 	count.suffix = "lutas"
 	rep.add_child(count)
 	rep.add_child(_button("Rodar série", func() -> void: _repeat(int(count.value) - 1)))
+	var rnd := CheckBox.new()
+	rnd.text = "Sortear times a cada luta"
+	rnd.focus_mode = Control.FOCUS_NONE
+	rnd.button_pressed = random_series
+	rnd.toggled.connect(func(on: bool) -> void: random_series = on)
+	rep.add_child(rnd)
 	rep.add_child(_button("Zerar placar", _reset_series))
 	var nav := HBoxContainer.new()
 	nav.add_theme_constant_override("separation", 8)
@@ -427,6 +444,7 @@ func _mon_line(m: Mon) -> String:
 func _repeat(extra: int) -> void:
 	auto_left = extra
 	_series = extra > 0
+	_random = _series and random_series
 	start_fight()
 
 

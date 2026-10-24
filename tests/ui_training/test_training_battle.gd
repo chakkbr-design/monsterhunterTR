@@ -189,6 +189,38 @@ func _run() -> void:
 	done = await _wait_result(tb)
 	check(done and int(tb.series.n) == n_before + 2, "série de 2 lutas com IA termina")
 
+	# Série com times sorteados: cada luta tem times novos de 6, sempre de espécies diferentes.
+	tb.queue_free()
+	await process_frame
+	var rc := _cfg([Cfg.mon_entry("Pikachu", 30)], [Cfg.mon_entry("Weedle", 3)])
+	rc.turbo = true
+	rc.time_limit = 20
+	Cfg.current = rc
+	tb = load(SCENE).instantiate()
+	root.add_child(tb)
+	await process_frame
+	tb.stop_fight()
+	tb.random_series = true
+	var seen := {}
+	n_before = int(tb.series.n)
+	tb._repeat(2)
+	done = false
+	for i in LIMIT:
+		seen[JSON.stringify(tb.cfg.sides)] = true
+		await process_frame
+		if tb._result_box.visible:
+			done = true
+			break
+	check(done and int(tb.series.n) == n_before + 3, "série sorteada de 3 lutas termina")
+	check(seen.size() == 3, "times novos a cada luta (%d diferentes)" % seen.size())
+	for s in 2:
+		var sp: Array = tb.cfg.sides[s].mons.map(func(d): return d.species)
+		var uniq := {}
+		for x in sp:
+			uniq[x] = true
+		check(sp.size() == Cfg.PARTY_MAX and uniq.size() == sp.size(), "lado %d: 6 diferentes" % s)
+	tb.random_series = false
+
 	tb.queue_free()
 	await process_frame
 	check(pm == null or pm.is_processing_unhandled_input(), "menu de pausa volta ao sair")
