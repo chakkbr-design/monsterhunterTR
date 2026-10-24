@@ -664,7 +664,7 @@ func _trainer_lines() -> void:
 		("%s vai mandar Caterpie!" % nm) in a.log_lines,
 		"vai mandar com o nome (%s)" % [a.log_lines.slice(-3)]
 	)
-	_run(a, 1.5)
+	_run(a, 2.0)
 	check(a.enemy.mon == foes[1] and a.enemy.visible, "manda o 2º Pokémon")
 	_done(a)
 	var r := _arena(

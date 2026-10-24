@@ -261,6 +261,11 @@ func _build_visual() -> void:
 	refresh_label()
 
 
+## Aparece saindo da bola (cresce de 0,05 a 1,15 e volta a 1,0).
+func flash_spawn() -> void:
+	_spawn_t = SPAWN_GROW
+
+
 ## Escala de tempo da luta (a mesma do dt que a arena passa), para o ritmo do sprite.
 func _fight_speed() -> float:
 	if arena == null or not ("fight_speed" in arena):

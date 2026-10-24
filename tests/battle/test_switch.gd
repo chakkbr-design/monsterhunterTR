@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_trainer_hooks()
 	_replacement_at_round_end()
 	_trainer_item()
+	_stands_and_ball()
 	print("switch: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -183,8 +184,9 @@ func _replacement_at_round_end() -> void:
 func _trainer_item() -> void:
 	var a := _doubles(10)
 	var f: BattleFighter = a.enemy
-	for g in [a.player, a.ally]:
+	for g in [a.player, a.ally, a.enemy2, f]:
 		g.controller = "none"  # ninguém bate no alvo do item enquanto a rodada não vira
+	_run(a, 2.0)  # golpes que já estavam no ar caem antes
 	f.hp = int(f.max_hp * 0.3)
 	var hp0: int = f.hp
 	check(a.request_trainer_item(1, "super_potion", f), "pede a Super Poção")
@@ -195,3 +197,26 @@ func _trainer_item() -> void:
 	check(a.turns.sits_out(f), "quem recebeu o item não ataca na rodada")
 	check(not a.request_trainer_item(1, "potion", f), "item do treinador uma vez por Mon")
 	a.free()
+
+
+## Um treinador atrás de cada lado (no selvagem só o do jogador) e a troca pela bola: o que entra só
+## aparece quando a bola abre.
+func _stands_and_ball() -> void:
+	var a := _doubles(11)
+	check(a._stands.has(0) and a._stands.has(1), "treinador dos dois lados na luta de treinador")
+	var t0: Vector3 = a.trainer_spot(0)
+	var t1: Vector3 = a.trainer_spot(1)
+	check((t1 - t0).dot(a.axis) > 0.0, "cada treinador do seu lado")
+	a.request_switch(0, a.player, 0)
+	_next_round(a)
+	var nf: BattleFighter = a.player
+	check(not nf.visible and a._balls.size() == 1, "a bola sai da mão do treinador")
+	_run(a, a.SEND_FLIGHT + 0.05)
+	check(nf.visible, "o Pokémon aparece quando a bola abre")
+	_run(a, a.SEND_OPEN + 0.1)
+	check(a._balls.is_empty(), "a bola some depois de abrir")
+	a.free()
+	var w := _arena([Mon.create("charmander", 10)], [Mon.create("pidgey", 5)], {"seed": 3})
+	_run(w, 1.0)
+	check(w._stands.has(0) and not w._stands.has(1), "selvagem: só o treinador do jogador")
+	w.free()

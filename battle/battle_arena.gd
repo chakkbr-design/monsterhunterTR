@@ -64,7 +64,17 @@ const FRIEND_OBEY := 1
 const CUT_IN_SECS := 0.4
 const CUT_IN_GAP := 2.5
 ## Dupla de treinador: distância lateral entre os dois mons de cada lado.
-const DOUBLES_GAP := 1.8
+## Dupla: distância entre os dois de cada lado (lado a lado, de frente para a outra dupla).
+const DOUBLES_GAP := 3.6
+## Posição fixa de cada lado longe da parede pelo menos HOME_WALL m.
+const HOME_WALL := 1.8
+## Treinador de cada lado: TRAINER_BACK m atrás da posição do lado e TRAINER_SIDE m de lado.
+const TRAINER_BACK := 2.6
+const TRAINER_SIDE := 2.2
+## Pokébola na troca: voo, tempo aberta e o raio vermelho de volta.
+const SEND_FLIGHT := 0.45
+const SEND_OPEN := 0.3
+const RECALL_BEAM := 0.3
 const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 ## Quadra fixa, valores do original (battle.gd start_trainer_battle / start_battle, battle_arena.gd):
 ## sem `arena` o tamanho é 10 x 6; os treinadores ficam 0.3 m fora da borda no eixo X (jogador a oeste);
@@ -114,6 +124,10 @@ var _switch_req := {}
 var _item_req: Array = []
 ## Substituições de quem desmaiou, feitas no fim da rodada (como no oficial).
 var _round_end_q: Array = []
+## Treinador parado atrás de cada lado {side: Node3D} (o corpo do mundo ou um boneco criado aqui).
+var _stands := {}
+var _stand_owned := {}
+var _balls: Array = []
 var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
 var _turn_pulse := 0.0
 var hud: BattleHUD
@@ -271,6 +285,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
+	_setup_stands()
 	field.setup()
 	clear_tut_lock()
 	# A lição e os cartões ensinam as teclas de golpe: não valem com a batalha automática.
@@ -444,8 +459,10 @@ func _setup_court(o: Dictionary) -> void:
 		_fade_from_black()
 	if p:
 		_place_body(p, me, them)
+		_stands[0] = p
 	if t:
 		_place_body(t, them, me)
+		_stands[1] = t
 
 
 ## Selvagem com centro fixo (wild_arena_center do original, só o treino usa): o jogador fica onde está,
@@ -693,7 +710,19 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	fighters.append(f)
 	if moves:
 		moves.effects.on_enter(f)
-	if vfx and f.is_inside_tree():
+	if state == "fight" and _stands.has(side):
+		# Troca/substituto: o treinador joga a bola; o Pokémon aparece quando ela abre.
+		f.visible = false
+		f.stun_t = maxf(f.stun_t, SEND_FLIGHT + 0.1)
+		throw_ball_fx(
+			side,
+			at,
+			func() -> void:
+				if is_instance_valid(f) and f.on_field:
+					f.visible = true
+					f.flash_spawn()
+		)
+	elif vfx and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
 		abilities.on_enter(f)
@@ -837,6 +866,38 @@ func _nearest(f: BattleFighter, cands: Array) -> BattleFighter:
 	return best
 
 
+## Posição fixa do lutador na quadra (como no VGC): no 1x1 um ponto por lado; com dois do mesmo lado,
+## esquerda (controlado / 1º do adversário) e direita (aliado / 2º), de frente para o outro lado.
+func home_of(f: BattleFighter) -> Vector3:
+	var base := player_spot if f.side == 0 else enemy_spot
+	var pair := false
+	var slot := 0
+	if f.side == 0:
+		pair = (
+			is_instance_valid(ally)
+			and ally.active()
+			and is_instance_valid(player)
+			and player.active()
+		)
+		slot = 1 if f == ally else 0
+	else:
+		pair = (
+			is_instance_valid(enemy2)
+			and enemy2.active()
+			and is_instance_valid(enemy)
+			and enemy.active()
+		)
+		slot = 1 if f == enemy2 else 0
+	var p := base
+	if pair:
+		p += _lateral() * DOUBLES_GAP * (0.5 if slot == 1 else -0.5)
+	var r := rect.grow(-HOME_WALL)
+	p.x = clampf(p.x, r.position.x, r.end.x)
+	p.z = clampf(p.z, r.position.y, r.end.y)
+	p.y = 0.0
+	return p
+
+
 func targets_of(user: BattleFighter) -> Array:
 	var out: Array = []
 	for f in fighters:
@@ -898,6 +959,115 @@ func _obstacle_push(f: BattleFighter) -> Vector3:
 		if not hit.is_empty():
 			push -= dir * (1.0 - origin.distance_to(hit.position))
 	return push
+
+
+## --- Treinadores e Pokébola ---
+
+
+## Onde o treinador do lado fica (local da arena): o corpo do mundo, se a quadra o pôs lá; senão
+## TRAINER_BACK m atrás da posição do lado, meio de lado para não tapar a câmera.
+func trainer_spot(side: int) -> Vector3:
+	var n = _stands.get(side)
+	if n is Node3D and is_instance_valid(n) and n.is_inside_tree() and is_inside_tree():
+		var l := to_local((n as Node3D).global_position)
+		l.y = 0.0
+		return l
+	var base := player_spot if side == 0 else enemy_spot
+	if side == 0:
+		# Do lado da câmera: à esquerda dos Pokémon, quase na linha deles (atrás taparia a luta).
+		return base - axis * TRAINER_BACK * 0.3 - _lateral() * TRAINER_SIDE * 2.0
+	return base + axis * TRAINER_BACK - _lateral() * TRAINER_SIDE
+
+
+## Um treinador parado atrás de cada lado (no selvagem só o do jogador). Usa o corpo do mundo quando a
+## quadra fixa já o pôs no lugar; senão cria um boneco com o sprite do treinador.
+func _setup_stands() -> void:
+	for side in [0, 1]:
+		if side == 1 and kind == "wild":
+			continue
+		if _stands.has(side) and is_instance_valid(_stands[side]):
+			continue
+		if side == 0 and is_inside_tree():
+			# No mundo o próprio jogador é o treinador do lado dele.
+			var me := get_tree().get_first_node_in_group(OverworldPlayer.GROUP) as Node3D
+			if me:
+				_stands[0] = me
+				continue
+		var sheet := "trainer.png"
+		if side == 1:
+			var def := Dex.trainer(String(opts.get("trainer_id", "")))
+			sheet = String(def.get("sprite", "npc_youngster.png"))
+		var tex := CharSprite.sheet(sheet)
+		if tex == null:
+			continue
+		var root := Node3D.new()
+		root.name = "TrainerStand%d" % side
+		add_child(root)
+		root.position = trainer_spot(side)
+		var spr := CharSprite.make(tex)
+		spr.follow_parent = false
+		spr.facing = axis if side == 0 else -axis
+		root.add_child(spr)
+		_stands[side] = root
+		_stand_owned[side] = true
+
+
+## A mão do treinador do lado (local da arena), de onde a bola sai e para onde o raio volta.
+func _hand(side: int) -> Vector3:
+	return trainer_spot(side) + Vector3(0, 1.1, 0)
+
+
+## Bola jogada pelo treinador até `to` (local): voa em arco, abre, solta fumaça e chama `on_open`.
+func throw_ball_fx(side: int, to: Vector3, on_open: Callable) -> void:
+	var ball := PokeBall3D.create()
+	add_child(ball)
+	var from := _hand(side)
+	ball.position = from
+	_balls.append(
+		{
+			"ball": ball,
+			"from": from,
+			"to": Vector3(to.x, 0.35, to.z),
+			"t": 0.0,
+			"cb": on_open,
+			"opened": false
+		}
+	)
+	preload("res://audio/cue.gd").sfx("ball_throw")
+
+
+func _tick_balls(dt: float) -> void:
+	for e in _balls.duplicate():
+		e.t += dt
+		var ball: PokeBall3D = e.ball
+		var k := clampf(e.t / SEND_FLIGHT, 0.0, 1.0)
+		if k < 1.0:
+			var p: Vector3 = e.from.lerp(e.to, k)
+			p.y += sin(k * PI) * 1.2
+			ball.position = p
+			ball.set_spin(-k * TAU * 2.0)
+			continue
+		if not e.opened:
+			e.opened = true
+			ball.position = e.to
+			ball.set_spin(0.0)
+			ball.set_lid(1.0)
+			ball.set_glow(Color(1, 1, 1), 3.0)
+			if vfx and ball.is_inside_tree():
+				vfx.puff(ball.global_position, 1.6)
+			e.cb.call()
+		if e.t >= SEND_FLIGHT + SEND_OPEN:
+			ball.queue_free()
+			_balls.erase(e)
+
+
+## Raio vermelho do Pokémon recolhido até a mão do treinador.
+func _recall_beam(f: BattleFighter) -> void:
+	var from := f.position + Vector3(0, 0.5, 0)
+	var to := _hand(f.side)
+	var d := to - from
+	fx_beam(from, d, d.length(), 0.09, Color(1.0, 0.15, 0.15, 0.9), RECALL_BEAM)
+	fx_disc(f.position * Vector3(1, 0, 1), 0.4, Color(1.0, 0.2, 0.2, 0.6), RECALL_BEAM)
 
 
 ## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial, e depois a entrada
@@ -1196,6 +1366,7 @@ func _visual_step(dt: float) -> void:
 			f.visual_step(dt)
 	if vfx:
 		vfx.tick(dt)
+	_tick_balls(dt)
 	_place_turn_mark(dt)
 
 
@@ -1974,7 +2145,9 @@ func _menu_text() -> String:
 
 ## Tira o lutador de campo (fica escondido até a arena ser liberada; callbacks pendentes seguem válidos).
 func _recall(f: BattleFighter) -> void:
-	if vfx and f.visible and f.is_inside_tree():
+	if f.visible and _stands.has(f.side) and state == "fight":
+		_recall_beam(f)  # raio vermelho de volta para a bola na mão do treinador
+	elif vfx and f.visible and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.4)
 	f.write_back()
 	f.on_field = false
@@ -2534,6 +2707,8 @@ func _player_fainted(f: BattleFighter) -> void:
 		)
 		return
 	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
+	if nxt < 0 and not _pending.is_empty():
+		return  # o substituto já chamado entra no fim da rodada
 	if nxt < 0:
 		say("Você não tem mais Pokémon para lutar!", "faint")
 		_end("lose", 2.0)
