@@ -136,9 +136,13 @@ Leech Seed (`battle_moves.gd` `STATUS_IMMUNE`). O dano por segundo acompanha o r
 vez; Feint quebra; variantes punem contato (Spiky Shield, King's Shield, Baneful Bunker, Silk Trap,
 Burning Bulwark).
 
-**Jogo:** ainda não há Protect. A defesa em tempo real é física: pular investida/terremoto, sair da área
-avisada, esquiva pela evasão, CLASH de duas investidas (`battle_arena.gd` `_clash`), Dig/Fly fora de
-alcance (abaixo).
+**Jogo:** a defesa em tempo real é física: pular investida/terremoto, sair da área avisada, esquiva pela
+evasão, CLASH de duas investidas (`battle_arena.gd` `_clash`), Dig/Fly fora de alcance (abaixo). Os golpes
+de proteção (`battle_move_effects.gd`) viram janelas curtas: Protect 0,8 s (Feint quebra), Quick Guard
+1,2 s, Endure 0,8 s (aguenta com 1 HP), Wide Guard 0,8 s (golpes de vários alvos no lado). Counter/Mirror
+Coat (-5): postura de 1 s parado; o golpe físico/especial recebido nela volta 2x para quem bateu.
+Substitute: boneco com 1/4 do HP que leva dano e status até quebrar (som atravessa). Sem a chance
+reduzida do uso seguido.
 
 ## 10. Clima e terreno
 
@@ -151,6 +155,13 @@ tempestade de areia 1/16 por turno em quem não é Pedra/Terra/Aço e +50% Def. 
 não tem clima de luta: Rain Dance sobe At. Esp. "Terreno" do jogo é outra coisa: marcas no chão que
 mudam o andar e às vezes queimam (cratera, buraco do Dig, poça, gelo, grama queimada, Spikes) em
 `battle_field.gd`.
+
+Terrenos de golpe (`battle_move_effects.gd`, 5 turnos de 1,6 s, um tira o outro): Grama (cura 1/16 por
+turno, Planta 1,3x, Earthquake 0,5x), Elétrico (Elétrico 1,3x, ninguém no chão dorme), Névoa (no chão
+sem status nem confusão, Dragão 0,5x). Ice Spinner e Defog apagam. Rain Dance/Sunny Day/Sandstorm criam
+clima. Armadilhas: Spikes (marca no chão, 1/8 em quem pisa e não voa), Stealth Rock (pedras em volta do
+adversário, 1/8 x eficácia de Pedra, pega quem voa), Toxic Spikes; Rapid Spin tira as do adversário,
+Defog todas.
 
 ## 11. Semi-invulnerável (Dig, Fly, Bounce, Dive)
 

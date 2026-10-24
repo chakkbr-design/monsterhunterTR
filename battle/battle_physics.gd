@@ -169,6 +169,8 @@ func after_hit(
 
 ## Arremessa o alvo `dist` metros na direção `dir` (desacelera até parar; sobe um pouco no meio).
 func launch(f: BattleFighter, dir: Vector3, dist: float, forced := false) -> void:
+	if arena.get("moves") and arena.moves.effects.rooted(f):
+		return  # Ingrain: enraizado não sai do lugar
 	var secs := clampf(0.25 + dist * 0.07, 0.3, 0.7)
 	var lift := minf(0.2 + dist * 0.12, 0.9)
 	f.launch(dir, dist, secs, lift)
