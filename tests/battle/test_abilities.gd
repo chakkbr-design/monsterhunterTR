@@ -468,7 +468,7 @@ func _intimidate_doubles() -> void:
 		check(a.send_in(2), "troca do controlado pelo Ekans")
 	else:
 		check(a.send_in(2, true), "troca do aliado pelo Ekans")
-	_run(a, 0.2)
+	_next_round(a)
 	all_down = true
 	for t in a.targets_of(a.player):
 		if int(t.stages.get("atk", 0)) != -2:
@@ -580,3 +580,14 @@ func _official_numbers() -> void:
 	var c := _still(_lent("venonat", "illuminate"), Mon.create("geodude", 10))
 	check(c.abilities.acc_mult(c.player) == 1.0, "Illuminate sem bônus de precisão (Gen 9)")
 	c.free()
+
+
+## Rodadas: anda até a próxima rodada começar (troca sai no começo da rodada, substituto no fim) e mais
+## `extra` s.
+func _next_round(a: Node, extra := 0.2) -> void:
+	var r: int = a.turns.round_n
+	var t := 0.0
+	while a.turns.round_n == r and t < 15.0:
+		a.step(DT)
+		t += DT
+	_run(a, extra)

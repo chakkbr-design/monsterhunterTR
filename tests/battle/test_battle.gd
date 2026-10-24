@@ -230,20 +230,26 @@ func _swap() -> void:
 	_run(a, 1.3)
 	a.player.hp = 7
 	a.player.mon.hp = 7
+	var old: BattleFighter = a.player
 	check(a.swap(), "troca de mon")
+	check(not a.swap(), "troca tem cooldown")
+	_next_round(a)  # a troca sai no começo da rodada
 	check(
 		a.player.mon == party[1] and a.enemy.opponent == a.player,
 		"novo mon em campo e alvo do inimigo"
 	)
-	check(party[0].hp == 7, "HP do mon recolhido persiste")
-	check(not a.swap(), "troca tem cooldown")
+	# Até a troca sair o recolhido ainda pode apanhar: o HP dele na hora da volta é o que fica.
+	check(party[0].hp == old.hp and old.hp <= 7, "HP do mon recolhido persiste")
 	_done(a)
 
 
 ## Golpe de vários acertos (multi_arc) não continua do lutador recolhido pela troca.
 func _recall_stops_combo() -> void:
 	var party := [Mon.create("charmander", 20), Mon.create("squirtle", 20)]
-	var a := _arena(party, [Mon.create("onix", 30)], {"seed": 3, "battle_size": 1})
+	# Troca na hora (sem a fila de rodadas): o golpe em andamento é o que importa aqui.
+	var a := _arena(
+		party, [Mon.create("onix", 30)], {"seed": 3, "battle_size": 1, "turn_mode": false}
+	)
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.player.position = Vector3(0, 0, 0.6)
@@ -512,10 +518,14 @@ func _control_swap() -> void:
 	]
 	var b := _arena(party, [Mon.create("rattata", 12)], {"seed": 4})
 	_run(b, 1.3)
-	check(b.send_in(2, true) and b.ally.mon == party[2], "escolhe da party quem entra como aliado")
+	check(b.send_in(2, true), "pede a troca do aliado")
+	_next_round(b)
+	check(b.ally.mon == party[2], "escolhe da party quem entra como aliado")
 	_run(b, 1.1)
+	check(b.send_in(1), "pede a troca do controlado")
+	_next_round(b)
 	check(
-		b.send_in(1) and b.player.mon == party[1] and b.ally.mon == party[2],
+		b.player.mon == party[1] and b.ally.mon == party[2],
 		"escolhe da party quem entra como controlado"
 	)
 	_done(b)
@@ -649,6 +659,7 @@ func _trainer_lines() -> void:
 	a.step(DT)
 	check("Volte, Weedle!" in a.log_lines, "Volte, X! na troca")
 	_run(a, 0.6)
+	_next_round(a)  # o substituto entra no fim da rodada
 	check(
 		("%s vai mandar Caterpie!" % nm) in a.log_lines,
 		"vai mandar com o nome (%s)" % [a.log_lines.slice(-3)]
@@ -799,3 +810,14 @@ func _no_rewards() -> void:
 	check(mine.xp == xp0 and mine.ev_total() == 0, "no_rewards: sem XP nem EVs")
 	check(got.get("exp", []).is_empty() and int(got.get("prize", 0)) == 0, "no_rewards: sem prêmio")
 	_done(a)
+
+
+## Rodadas: anda até a próxima rodada começar (troca sai no começo da rodada, substituto no fim) e mais
+## `extra` s.
+func _next_round(a: Node, extra := 0.2) -> void:
+	var r: int = a.turns.round_n
+	var t := 0.0
+	while a.turns.round_n == r and t < 15.0:
+		a.step(DT)
+		t += DT
+	_run(a, extra)

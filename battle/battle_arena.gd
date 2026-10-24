@@ -31,6 +31,8 @@ const DEFAULT_SPEED := 0.6  ## original Settings "Slow" (the default battle spee
 const FAINT_CLEAR := 1.0
 const NEXT_TRAINER_MON := 1.4
 const SWAP_CD := 1.0
+## Folga no começo da rodada quando alguém trocou (a bola voltando e saindo) antes do 1º golpe.
+const SWITCH_HOLD := 1.0
 const CAM_DIST := 5.0
 const CAM_HEIGHT := 3.4
 const BALL_FLIGHT := 0.5
@@ -104,6 +106,14 @@ var field: BattleField  ## terreno que muda, objetos, clones
 var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
+## IA do treinador por lado (BattleTrainerAI, opcional): round_start() no começo da rodada e
+## pick_replacement(slot) -> índice de bench_of(side) (-1 = a arena escolhe).
+var trainer_ai := {}
+## Pedidos para o começo da próxima rodada: troca {side: {out, mon}} e itens [{side, item, target}].
+var _switch_req := {}
+var _item_req: Array = []
+## Substituições de quem desmaiou, feitas no fim da rodada (como no oficial).
+var _round_end_q: Array = []
 var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
 var _turn_pulse := 0.0
 var hud: BattleHUD
@@ -134,6 +144,7 @@ var damage_pace := BattleMoves.DAMAGE_PACE
 var enemy2: BattleFighter
 var _pending: Array = []  ## Mons do jogador já chamados para entrar (ainda não em campo)
 var _enemy_pending := 0
+var _enemy_reserved: Array = []  ## Mons do adversário já chamados para entrar (substituição)
 var item_cd := 0.0  # cooldown global de itens (bolsa rápida e cura do SUPPORT)
 var menu := ""  # "" | "bag" | "party" (abre com interact; a luta fica a MODAL_SLOW)
 var menu_sel := 0
@@ -653,8 +664,17 @@ func _human() -> bool:
 
 
 func _next_enemy(after: int) -> int:
+	var here: Array = []
+	for f in fighters:
+		if is_instance_valid(f) and f.side == 1 and f.on_field and f.alive():
+			here.append(f.mon)
 	for i in range(after + 1, enemies.size()):
-		if not enemies[i].is_fainted():
+		var m: Mon = enemies[i]
+		if not m.is_fainted() and not here.has(m) and not _enemy_reserved.has(m):
+			return i
+	for i in range(0, mini(after + 1, enemies.size())):
+		var m: Mon = enemies[i]
+		if not m.is_fainted() and not here.has(m) and not _enemy_reserved.has(m):
 			return i
 	return -1
 
@@ -878,10 +898,169 @@ func _obstacle_push(f: BattleFighter) -> Vector3:
 	return push
 
 
-## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial.
+## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial, e depois a entrada
+## dos substitutos de quem desmaiou.
 func end_of_round() -> void:
-	if end_turn:
+	if end_turn and state == "fight":
 		end_turn.run()
+	var q := _round_end_q
+	_round_end_q = []
+	for cb in q:
+		cb.call()
+
+
+## Começo da rodada (BattleTurns, antes de montar a fila): a IA de treinador de cada lado decide
+## (round_start), depois saem as trocas (uma por lado) e os itens pedidos. Quem entrou e quem recebeu
+## item ficam fora da fila nesta rodada. Devolve a folga (s) para a bola antes do 1º golpe.
+func begin_of_round() -> float:
+	if state != "fight":
+		return 0.0
+	for side in [0, 1]:
+		var t = trainer_ai.get(side)
+		if t != null and t.has_method("round_start"):
+			t.round_start()
+	var hold := 0.0
+	for side in [0, 1]:
+		var req: Dictionary = _switch_req.get(side, {})
+		if req.is_empty():
+			continue
+		_switch_req.erase(side)
+		if _do_switch(req.out, req.mon):
+			hold = maxf(hold, SWITCH_HOLD)
+	var items := _item_req
+	_item_req = []
+	for r in items:
+		_do_trainer_item(int(r.side), String(r.item), r.target)
+	return hold
+
+
+## Mons do banco do lado (vivos, fora de campo, sem estar chamados). O índice é o que request_switch e
+## pick_replacement usam.
+func bench_of(side: int) -> Array:
+	var list: Array = party if side == 0 else enemies
+	var out: Array = []
+	var here: Array = []
+	for f in fighters:
+		if is_instance_valid(f) and f.side == side and f.on_field:
+			here.append(f.mon)
+	for m in list:
+		if m is Mon and not m.is_fainted() and not here.has(m) and not _pending.has(m):
+			if side == 1 and _enemy_reserved.has(m):
+				continue
+			out.append(m)
+	return out
+
+
+## Pede a troca de `out` pelo Mon bench_of(side)[bench_idx] no começo da próxima rodada (uma por lado
+## por rodada; Mean Look segura). Quem entra não ataca nessa rodada e herda os golpes mirados em `out`.
+## Sem a fila de rodadas (turn_mode false) a troca sai na hora.
+func request_switch(side: int, out: BattleFighter, bench_idx: int) -> bool:
+	if state != "fight" or not is_instance_valid(out) or out.side != side or not out.active():
+		return false
+	if _switch_req.has(side):
+		return false
+	var bench := bench_of(side)
+	if bench_idx < 0 or bench_idx >= bench.size():
+		return false
+	if moves.effects.cant_escape(out):
+		return false
+	_switch_req[side] = {"out": out, "mon": bench[bench_idx]}
+	if not turns.on:
+		begin_of_round()
+	return true
+
+
+## Troca pedida para o lado (vazio = nenhuma): {out, mon}.
+func pending_switch(side: int) -> Dictionary:
+	return _switch_req.get(side, {})
+
+
+## Pede o item `item` (id de items.json; um por Mon por luta, como o item do treinador) em `target` no
+## começo da próxima rodada; o alvo não ataca nessa rodada.
+func request_trainer_item(side: int, item: String, target: BattleFighter) -> bool:
+	if state != "fight" or not is_instance_valid(target) or target.side != side or target.item_used:
+		return false
+	if Dex.item(item).is_empty():
+		return false
+	for r in _item_req:
+		if r.target == target:
+			return false
+	_item_req.append({"side": side, "item": item, "target": target})
+	if not turns.on:
+		begin_of_round()
+	return true
+
+
+func _do_trainer_item(side: int, item: String, target: BattleFighter) -> void:
+	if not is_instance_valid(target) or not target.active() or target.side != side:
+		return
+	var e: Dictionary = Dex.item(item).get("effect", {})
+	target.item_used = true
+	if e.has("hp"):
+		var amount: int = target.max_hp if str(e.hp) == "full" else int(e.hp)
+		var before := target.hp
+		target.heal(mini(amount, target.max_hp - target.hp))
+		target.popup("+%d HP" % (target.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
+	if e.has("cure") and (String(e.cure) == "all" or target.status == String(e.cure)):
+		target.clear_status()
+	if turns.on:
+		target.set_meta("sit_round", turns.round_n)
+	item_used_by_trainer(target, String(Dex.item(item).get("name", item)))
+
+
+## Troca de fato: recolhe `out`, o treinador joga a bola com `m` no mesmo lugar; os golpes mirados em
+## `out` vão para quem entrou, que fica fora da fila desta rodada.
+func _do_switch(out: BattleFighter, m: Mon) -> bool:
+	if not is_instance_valid(out) or not out.active() or m.is_fainted():
+		return false
+	var side := out.side
+	var at := out.position
+	at.y = 0.0
+	say("Volte, %s!" % out.mon.display_name, "trainer" if side == 1 else "info")
+	var was_ally := out == ally
+	var slot := 1 if out == enemy2 else 0
+	var aimed: Array = fighters.filter(func(g): return is_instance_valid(g) and g.opponent == out)
+	_recall(out)
+	var nf: BattleFighter
+	if side == 0:
+		var i := party.find(m)
+		if was_ally:
+			_send_ally(i, at)
+			nf = ally
+		else:
+			_send_player(i, at)
+			nf = player
+	else:
+		_enemy_reserved.erase(m)
+		_send_enemy(enemies.find(m), slot)
+		nf = enemy2 if slot == 1 else enemy
+	if is_instance_valid(nf):
+		nf.position = at
+		if turns.on:
+			nf.set_meta("sit_round", turns.round_n)
+		for g in aimed:
+			if is_instance_valid(g) and g.active():
+				g.opponent = nf
+	return true
+
+
+## Ritmo de rodadas: guarda a ação para o fim da rodada; sem a fila, faz na hora.
+func at_round_end(cb: Callable) -> void:
+	if turns and turns.on and state == "fight":
+		_round_end_q.append(cb)
+	else:
+		cb.call()
+
+
+## Substituto escolhido pela IA do treinador (pick_replacement) ou `fallback` (índice da equipe).
+func _replacement(side: int, slot: int, fallback: int) -> int:
+	var t = trainer_ai.get(side)
+	if t != null and t.has_method("pick_replacement"):
+		var k := int(t.pick_replacement(slot))
+		var bench := bench_of(side)
+		if k >= 0 and k < bench.size():
+			return (party if side == 0 else enemies).find(bench[k])
+	return fallback
 
 
 func note_hit(
@@ -1343,6 +1522,15 @@ func send_in(i: int, as_ally := false) -> bool:
 	var m: Mon = party[i]
 	if m.is_fainted() or _field_mons().has(m):
 		return false
+	# Rodadas: trocar quem está em campo só no começo da próxima rodada (request_switch).
+	var out: BattleFighter = ally if as_ally else player
+	if turns and turns.on and is_instance_valid(out) and out.active():
+		var k := bench_of(0).find(m)
+		if not request_switch(0, out, k):
+			return false
+		out.popup("Troca na próxima rodada", Color(0.7, 0.9, 1.0), 0.8, 0.8)
+		_swap_cd = SWAP_CD
+		return true
 	if as_ally:
 		if _battle_size < 2 or not is_instance_valid(player) or not player.active():
 			return false
@@ -1987,7 +2175,7 @@ func _enemy_fainted(f: BattleFighter) -> void:
 	var nxt := _next_enemy(enemy_index)
 	var slot := 1 if f == enemy2 else 0
 	if doubles and nxt >= 0:
-		enemy_index = nxt  # reservado: o outro desmaio não manda o mesmo
+		_enemy_reserved.append(enemies[nxt])  # reservado: o outro desmaio não manda o mesmo
 		_enemy_pending += 1
 		say("Volte, %s!" % f.mon.display_name, "trainer")
 		later(
@@ -1995,17 +2183,9 @@ func _enemy_fainted(f: BattleFighter) -> void:
 			func() -> void:
 				if fighters.has(f):
 					_recall(f)
-				var line := "%s vai mandar %s!" % [trainer_name(), enemies[nxt].display_name]
-				hud.banner(line, NEXT_TRAINER_MON)
-				say(line, "trainer")
 		)
-		later(
-			RECALL_SECS + NEXT_TRAINER_MON,
-			func() -> void:
-				_enemy_pending -= 1
-				if state == "fight":
-					_send_enemy(nxt, slot)
-		)
+		# O substituto entra no fim da rodada (oficial); a IA do treinador pode escolher outro.
+		later(RECALL_SECS, func() -> void: at_round_end(_enemy_refill.bind(nxt, slot)))
 		return
 	if doubles and _enemy_pending == 0:
 		_last_stand(f)
@@ -2017,18 +2197,18 @@ func _enemy_fainted(f: BattleFighter) -> void:
 		_bind()
 		return
 	if kind == "trainer" and nxt >= 0:
-		# O original (_send_trainer_mon): "Come back, X!" e recolhe; depois "<NOME> is about to send out Y!".
+		# O original (_send_trainer_mon): "Come back, X!" e recolhe; no fim da rodada
+		# "<NOME> vai mandar Y!" e a bola.
+		_enemy_reserved.append(enemies[nxt])
+		_enemy_pending += 1
 		say("Volte, %s!" % f.mon.display_name, "trainer")
 		later(
 			RECALL_SECS,
 			func() -> void:
 				if fighters.has(f):
 					_recall(f)
-				var line := "%s vai mandar %s!" % [trainer_name(), enemies[nxt].display_name]
-				hud.banner(line, NEXT_TRAINER_MON)
-				say(line, "trainer")
 		)
-		later(RECALL_SECS + NEXT_TRAINER_MON, func() -> void: _send_enemy(nxt))
+		later(RECALL_SECS, func() -> void: at_round_end(_enemy_refill.bind(nxt, 0)))
 		return
 	say(
 		(
@@ -2039,6 +2219,27 @@ func _enemy_fainted(f: BattleFighter) -> void:
 		"info" if kind == "wild" else "trainer"
 	)
 	_end("win", 2.0)
+
+
+## Substituto do adversário (fim da rodada): o escolhido pela IA do treinador ou o reservado; anuncia
+## e manda depois de NEXT_TRAINER_MON s.
+func _enemy_refill(nxt: int, slot: int) -> void:
+	_enemy_reserved.erase(enemies[nxt])
+	var pick := _replacement(1, slot, nxt) if state == "fight" else nxt
+	if pick < 0 or enemies[pick].is_fainted():
+		pick = nxt
+	_enemy_reserved.append(enemies[pick])
+	var line := "%s vai mandar %s!" % [trainer_name(), enemies[pick].display_name]
+	hud.banner(line, NEXT_TRAINER_MON)
+	say(line, "trainer")
+	later(
+		NEXT_TRAINER_MON,
+		func() -> void:
+			_enemy_pending -= 1
+			_enemy_reserved.erase(enemies[pick])
+			if state == "fight":
+				_send_enemy(pick, slot)
+	)
 
 
 ## Dupla: quem fica sozinho em campo ganha +1 de Ataque e At. Esp. ("Última esperança!").
@@ -2337,11 +2538,21 @@ func _player_fainted(f: BattleFighter) -> void:
 		return
 	var at := f.position
 	at.y = 0.0
+	var m_next: Mon = party[nxt]
+	_pending.append(m_next)
 	later(
 		FAINT_CLEAR,
 		func() -> void:
-			_recall(f)
-			_send_player(nxt, at)
+			if fighters.has(f):
+				_recall(f)
+			at_round_end(
+				func() -> void:
+					_pending.erase(m_next)
+					if state != "fight":
+						return
+					var k := _replacement(0, 0, party.find(m_next))
+					_send_player(k if not party[k].is_fainted() else party.find(m_next), at)
+			)
 	)
 
 
@@ -2365,15 +2576,21 @@ func _doubles_refill(f: BattleFighter) -> bool:
 	later(
 		FAINT_CLEAR,
 		func() -> void:
-			_pending.erase(m)
 			if fighters.has(f):
 				_recall(f)
-			if state != "fight" or m.is_fainted():
-				return
-			if as_ally and is_instance_valid(player) and player.active():
-				_send_ally(party.find(m), at)
-			else:
-				_send_player(party.find(m), at)
+			at_round_end(
+				func() -> void:
+					_pending.erase(m)
+					if state != "fight" or m.is_fainted():
+						return
+					var k := _replacement(0, 1 if as_ally else 0, party.find(m))
+					if party[k].is_fainted():
+						k = party.find(m)
+					if as_ally and is_instance_valid(player) and player.active():
+						_send_ally(k, at)
+					else:
+						_send_player(k, at)
+			)
 	)
 	_bind()
 	return true

@@ -140,6 +140,11 @@ func tracked(f: BattleFighter) -> bool:
 # --- Consultas da IA ---
 
 
+## Fica fora da fila nesta rodada: acabou de entrar (troca) ou o treinador usou item nele.
+func sits_out(f: BattleFighter) -> bool:
+	return int(f.get_meta("sit_round", -1)) == round_n
+
+
 ## Pode soltar golpe agora: a fila desligada, ou é a vez dele e a folga já passou.
 func can_fire(f: BattleFighter) -> bool:
 	if not on or not tracked(f):
@@ -262,14 +267,18 @@ func _begin_round() -> void:
 	round_t = 0.0
 	_ties.clear()
 	queue = []
+	var hold := 0.0
+	if arena.has_method("begin_of_round"):
+		hold = float(arena.begin_of_round())
 	if on:
-		var live: Array = arena.fighters.filter(func(f): return tracked(f))
+		var live: Array = arena.fighters.filter(func(f): return tracked(f) and not sits_out(f))
 		for f in live:
 			f.ai.plan_round()
 		queue = build_order(live)
 	index = 0
 	current = null
 	turn_t = 0.0
+	gap_t = maxf(gap_t, hold) if on else 0.0
 
 
 func _end_round() -> void:
