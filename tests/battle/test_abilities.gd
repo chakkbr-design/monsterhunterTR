@@ -61,6 +61,15 @@ func _mon(species: String, ab: String, lv := 10) -> Mon:
 	return m
 
 
+## Como _mon, mas empresta a habilidade à espécie se a geração atual não a dá a ninguém
+## (Speed Boost, Prankster, Gale Wings saíram dos dados): só testa o efeito.
+func _lent(species: String, ab: String, lv := 10) -> Mon:
+	var list: Array = Dex.species(species).get("abilities", [])
+	if not ab in list:
+		list.append(ab)
+	return _mon(species, ab, lv)
+
+
 func _still(mine: Mon, foe: Mon) -> Node:
 	var a := _arena([mine], [foe], {"seed": 7})
 	_run(a, 1.3)
@@ -209,7 +218,7 @@ func _blocks() -> void:
 
 
 func _stage_abilities() -> void:
-	var a := _still(_mon("pikachu", "speed_boost"), Mon.create("pidgey", 10))
+	var a := _still(_lent("pikachu", "speed_boost"), Mon.create("pidgey", 10))
 	_run(a, 8.5)
 	check(int(a.player.stages.get("spe", 0)) == 1, "Speed Boost: +1 VEL em 8 s")
 	a.free()
@@ -242,7 +251,7 @@ func _stage_abilities() -> void:
 
 
 func _helpers() -> void:
-	var a := _still(_mon("butterfree", "prankster"), _mon("diglett", "arena_trap"))
+	var a := _still(_lent("butterfree", "prankster"), _mon("diglett", "arena_trap"))
 	var ab: BattleAbilities = a.abilities
 	check(ab.cast_speed_mult(a.player, Dex.move("sleep_powder")) > 1.0, "Prankster acelera status")
 	check(ab.cast_speed_mult(a.player, Dex.move("tackle")) == 1.0, "Prankster só em status")
@@ -250,9 +259,11 @@ func _helpers() -> void:
 	check(ab.walk_mult(a.player) < 1.0, "Arena Trap atrapalha o inimigo")
 	check(ab.profile_bias(a.enemy) == "", "Arena Trap sem perfil")
 	a.free()
-	var b := _still(_mon("pidgey", "gale_wings"), _mon("goldeen", "swift_swim"))
+	var b := _still(_lent("pidgey", "gale_wings"), _mon("goldeen", "swift_swim"))
 	check(b.abilities.profile_bias(b.player) == "flyer", "Gale Wings -> flyer")
-	check(b.abilities.walk_mult(b.enemy) > 1.0, "Swift Swim anda mais")
+	check(b.abilities.walk_mult(b.enemy) == 1.0, "Swift Swim: sem chuva, normal")
+	b.abilities.set_weather("rain", 10.0)
+	check(b.abilities.walk_mult(b.enemy) > 1.0, "Swift Swim anda mais na chuva")
 	check(
 		b.abilities.cast_speed_mult(b.player, Dex.move("wing_attack")) > 1.0,
 		"Gale Wings acelera voador"

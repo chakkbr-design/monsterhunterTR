@@ -1,5 +1,5 @@
 {
-  "_doc": "Abilities: id -> name/desc (en) + desc_pt. Gen 3 (FireRed/LeafGreen) ones from pret/pokefirered src/data/text/abilities.h plus newer-gen additions for real-time and double battles. A Mon stores only its ability slot (core/mon.gd ability_slot); effects live in battle/battle_abilities.gd.",
+  "_doc": "Abilities: id -> name/desc (en) + desc_pt. Gen 3 (FireRed/LeafGreen) ones from pret/pokefirered src/data/text/abilities.h plus newer-gen additions for real-time and double battles. A Mon stores only its ability slot (core/mon.gd ability_slot); effects live in battle/battle_abilities.gd. Clima (Drought, Chlorophyll, Sand Rush...): BattleAbilities.weather_now() = sun/rain/sand/hail, criado por set_weather(kind, secs) (Drought dura 25 s) ou fixo em arena.opts.weather; Cloud Nine suprime.",
   "arena_trap": {
     "name": "ARENA TRAP",
     "desc": "Prevents fleeing.",
@@ -12,13 +12,13 @@
   },
   "chlorophyll": {
     "name": "CHLOROPHYLL",
-    "desc": "Raises SPEED in sunshine.",
-    "desc_pt": "Anda um pouco mais rápido (sem clima)."
+    "desc": "Boosts Speed in sunshine.",
+    "desc_pt": "No sol, Speed dobrada (anda e prepara golpes x1,5)."
   },
   "cloud_nine": {
     "name": "CLOUD NINE",
-    "desc": "Negates weather effects.",
-    "desc_pt": "Sem clima no jogo: sem efeito."
+    "desc": "Eliminates the effects of weather.",
+    "desc_pt": "Enquanto está em campo, o clima não tem efeito em ninguém."
   },
   "cute_charm": {
     "name": "CUTE CHARM",
@@ -33,7 +33,7 @@
   "damp": {
     "name": "DAMP",
     "desc": "Prevents self-destruction.",
-    "desc_pt": "Reduz dano de autodestruição."
+    "desc_pt": "Impede Autodestruição por perto (imune e dano x0,5)."
   },
   "effect_spore": {
     "name": "EFFECT SPORE",
@@ -102,8 +102,8 @@
   },
   "sand_veil": {
     "name": "SAND VEIL",
-    "desc": "Ups evasion in a sandstorm.",
-    "desc_pt": "Chance leve de esquivar."
+    "desc": "Boosts evasion in a sandstorm.",
+    "desc_pt": "Na tempestade de areia, 20% de esquivar e não sofre a areia."
   },
   "shed_skin": {
     "name": "SHED SKIN",
@@ -152,8 +152,8 @@
   },
   "swift_swim": {
     "name": "SWIFT SWIM",
-    "desc": "Raises SPEED in rain.",
-    "desc_pt": "Anda um pouco mais rápido (sem chuva)."
+    "desc": "Boosts Speed in rain.",
+    "desc_pt": "Na chuva, Speed dobrada (anda e prepara golpes x1,5)."
   },
   "torrent": {
     "name": "TORRENT",
@@ -444,5 +444,75 @@
     "name": "IMMUNITY",
     "desc": "Cannot be poisoned.",
     "desc_pt": "Não se envenena."
+  },
+  "drought": {
+    "name": "DROUGHT",
+    "desc": "Turns the sunlight harsh when the Pokémon enters a battle.",
+    "desc_pt": "Ao entrar, abre o sol por 25 s: Fogo x1,5, Água x0,5, Clorofila acelera."
+  },
+  "dry_skin": {
+    "name": "DRY SKIN",
+    "desc": "Restores HP in rain or when hit by Water moves; hurts in harsh sunlight; Fire moves hurt more.",
+    "desc_pt": "Água absorvida cura 25%. Chuva cura 1/8 do HP a cada 2 s, sol tira 1/8. Fogo causa x1,25."
+  },
+  "frisk": {
+    "name": "FRISK",
+    "desc": "When it enters a battle, the Pokémon can check an opposing Pokémon's held item.",
+    "desc_pt": "Ao entrar, mostra o item que os inimigos seguram."
+  },
+  "infiltrator": {
+    "name": "INFILTRATOR",
+    "desc": "Moves are unaffected by the target's barriers, substitutes, and the like.",
+    "desc_pt": "Ignora barreiras: o Friend Guard do parceiro do alvo não reduz o dano."
+  },
+  "magic_guard": {
+    "name": "MAGIC GUARD",
+    "desc": "The Pokémon only takes damage from attacks.",
+    "desc_pt": "Só leva dano de golpes: sem dano de veneno, queimadura, semente, areia, granizo, sol nem contato."
+  },
+  "rain_dish": {
+    "name": "RAIN DISH",
+    "desc": "The Pokémon gradually regains HP in rain.",
+    "desc_pt": "Na chuva, recupera 1/16 do HP a cada 2 s."
+  },
+  "rivalry": {
+    "name": "RIVALRY",
+    "desc": "Deals more damage to the same gender, less to the opposite gender.",
+    "desc_pt": "Dano x1,25 contra o mesmo sexo e x0,75 contra o sexo oposto."
+  },
+  "sand_force": {
+    "name": "SAND FORCE",
+    "desc": "Boosts Rock, Ground and Steel moves in a sandstorm.",
+    "desc_pt": "Na tempestade de areia, golpes de Pedra, Terra e Aço x1,3 e não sofre a areia."
+  },
+  "sand_rush": {
+    "name": "SAND RUSH",
+    "desc": "Boosts the Pokémon's Speed in a sandstorm.",
+    "desc_pt": "Na tempestade de areia, Speed dobrada (anda e prepara golpes x1,5) e não sofre a areia."
+  },
+  "solar_power": {
+    "name": "SOLAR POWER",
+    "desc": "In harsh sunlight, Sp. Atk is boosted, but HP decreases every turn.",
+    "desc_pt": "No sol, At. Esp. x1,5, mas perde 1/8 do HP a cada 2 s."
+  },
+  "tangled_feet": {
+    "name": "TANGLED FEET",
+    "desc": "Boosts evasiveness if the Pokémon is confused.",
+    "desc_pt": "Confuso, a esquiva dobra (20% de errar o golpe do inimigo)."
+  },
+  "unaware": {
+    "name": "UNAWARE",
+    "desc": "Ignores other Pokémon's stat changes when attacking or being attacked.",
+    "desc_pt": "Ignora os estágios de Defesa do alvo ao atacar e os de Ataque de quem bate nele."
+  },
+  "unnerve": {
+    "name": "UNNERVE",
+    "desc": "Unnerves opposing Pokémon and makes them unable to eat Berries.",
+    "desc_pt": "Enquanto está em campo, os inimigos não conseguem usar o item do treinador."
+  },
+  "wonder_skin": {
+    "name": "WONDER SKIN",
+    "desc": "Makes status moves more likely to miss the Pokémon.",
+    "desc_pt": "Golpes de status dos inimigos (precisão acima de 50%) falham em metade das vezes."
   }
 }
