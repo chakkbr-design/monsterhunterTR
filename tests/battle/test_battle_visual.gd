@@ -54,7 +54,7 @@ func _fight() -> void:
 	var a := _arena(
 		[Mon.create("charmander", 12)],
 		[Mon.create("pidgey", 8)],
-		{"seed": 3, "autoplay": true, "battle_size": 1}
+		{"seed": 3, "autoplay": true, "battle_size": 1, "damage_pace": 1.0}
 	)
 	await process_frame
 	var p: BattleFighter = a.player
