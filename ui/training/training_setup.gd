@@ -1090,7 +1090,7 @@ func _build_stats(box: HBoxContainer) -> void:
 		bar.anchor_bottom = 1.0
 		track.add_child(bar)
 		_bar[s] = bar
-		_final[s] = Kit.header("", Kit.INK, 17)
+		_final[s] = Kit.label("", Kit.INK, SMALL_SIZE + 3)
 		_final[s].custom_minimum_size.x = 40
 		_final[s].horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		for c in [nm, _base[s], track, _final[s]]:
