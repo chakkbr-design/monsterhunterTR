@@ -123,6 +123,13 @@ var _last_exp: Array = []
 var _xp_shown := -1.0
 var _xp_level := 0
 var _revealed := true
+## opts.out (índices da equipe fora da bola, que o Game passa): o líder é quem está fora, o aliado da
+## selvagem só sai de quem já está fora (battle.gd:316-327 do original). Sem opts.out (testes da arena)
+## vale o jeito antigo: o 2º saudável entra como aliado.
+var _track_out := false
+var _out: Array = []  ## Mons fora da bola agora; vai em result.out_mons
+## Amizade perdida ao desmaiar (Game.FAINT_LOSS, battle.gd:1251 do original).
+const FAINT_LOSS := 20
 
 
 func _physics_process(delta: float) -> void:
@@ -159,14 +166,23 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
-	var pi := _next_healthy(-1)
+	_track_out = o.get("out") is Array
+	_out = []
+	if _track_out:
+		for i in o.out:
+			if int(i) >= 0 and int(i) < party.size():
+				_out.append(party[int(i)])
+	var pi := _lead_index() if _track_out else _next_healthy(-1)
 	var ei := _next_enemy(-1)
 	if pi < 0 or ei < 0:
 		_end("lose" if pi < 0 else "win", 0.0)
 		return
+	if _track_out and kind != "wild":
+		# Treinador: os outros fora da bola voltam para ela (start_trainer_battle do original).
+		_out = _out.filter(func(m): return m == party[pi])
 	_send_player(pi, player_spot)
 	if _battle_size >= 2:
-		var ai_i := _next_healthy(pi)
+		var ai_i := _out_ally(pi) if _track_out else _next_healthy(pi)
 		if ai_i >= 0:
 			_send_ally(ai_i, player_spot + Vector3(1.6, 0, 0.4))
 	_send_enemy(ei)
@@ -459,6 +475,24 @@ func _next_healthy(after: int) -> int:
 	return -1
 
 
+## Líder (Game.state.first_healthy do original): o 1º de pé fora da bola, senão o 1º de pé.
+func _lead_index() -> int:
+	for i in party.size():
+		if _out.has(party[i]) and not party[i].is_fainted():
+			return i
+	return _next_healthy(-1)
+
+
+## Aliado da selvagem só se o líder já está fora: o próximo de pé também fora da bola.
+func _out_ally(lead: int) -> int:
+	if lead < 0 or not _out.has(party[lead]):
+		return -1
+	for i in party.size():
+		if i != lead and _out.has(party[i]) and not party[i].is_fainted():
+			return i
+	return -1
+
+
 ## Mons do jogador vivos em campo (controlado e aliado).
 func _field_mons() -> Array:
 	var out: Array = []
@@ -495,6 +529,8 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 
 
 func _send_player(i: int, at: Vector3) -> void:
+	if _track_out and not _out.has(party[i]):
+		_out.append(party[i])
 	player = _spawn(party[i], 0, _player_ctrl(), at)
 	player.set_meta("party_index", i)
 	_bind()
@@ -503,6 +539,8 @@ func _send_player(i: int, at: Vector3) -> void:
 
 
 func _send_ally(i: int, at: Vector3) -> void:
+	if _track_out and not _out.has(party[i]):
+		_out.append(party[i])
 	ally = _spawn(party[i], 0, "ai", at)
 	ally.set_meta("party_index", i)
 	_bind()
@@ -1180,6 +1218,8 @@ func _recall(f: BattleFighter) -> void:
 	f.on_field = false
 	f.visible = false
 	fighters.erase(f)
+	if f.side == 0:
+		_out.erase(f.mon)  # recolhido (troca ou desmaio): volta para a bola
 
 
 func run_away() -> bool:
@@ -1572,6 +1612,8 @@ func _sync_from_mon(f: BattleFighter) -> void:
 
 
 func _player_fainted(f: BattleFighter) -> void:
+	if f.mon.has_method("set_friend"):
+		f.mon.set_friend(f.mon.friend - FAINT_LOSS)
 	say("%s desmaiou!" % f.mon.display_name, "faint")
 	if f == ally or (f == player and is_instance_valid(ally) and ally.active()):
 		# Ainda sobra um mon em campo: se era o controlado, o controle passa para o aliado. Ninguém novo entra.
@@ -1628,6 +1670,8 @@ func _finish() -> void:
 	if vfx:
 		vfx.clear()
 	result["exp"] = exp_log
+	if _track_out:
+		result["out_mons"] = _out.filter(func(m): return not m.is_fainted())
 	if is_instance_valid(_prev_cam) and _prev_cam.is_inside_tree():
 		_prev_cam.make_current()
 	elif _cam:

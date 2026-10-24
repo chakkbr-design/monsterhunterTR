@@ -228,7 +228,7 @@ func _run() -> void:
 	pl.add_to_group("ow_player")
 	root.add_child(pl)
 	pl.global_position = Vector3(1, 2, 3)
-	send(KEY_S, 3)  # Salvar (Pokémon, Bolsa, Cartão, Salvar...)
+	send(KEY_S, 4)  # Salvar (Pokémon, Bolsa, Piquenique, Cartão, Salvar...)
 	send(KEY_E)
 	check(menu.screen == "msg" and menu.message == "Jogo salvo.", "salvou")
 	var d: Dictionary = game.load_game()
@@ -276,6 +276,13 @@ func _run() -> void:
 	check(menu.screen == "main", "Pokédex volta ao menu")
 	menu.press("down")
 	menu.press("down")
+	menu.press("down")
+	check(
+		menu.entries()[3] == "picnic" and not menu.can_picnic(),
+		"PIQUENIQUE desativado sem ninguém fora"
+	)
+	menu.press("ok")
+	check(menu.screen == "main", "piquenique desativado não abre")
 	menu.press("down")
 	menu.press("ok")
 	check(menu.screen == "card" and menu.card_front, "cartão de treinador (frente)")

@@ -203,8 +203,26 @@ func entries() -> Array:
 	var out: Array = []
 	if game != null and game.flags.get("has_pokedex", false):
 		out.append("pokedex")
-	out.append_array(["pokemon", "bag", "trainer", "save", "options", "title"])
+	out.append_array(["pokemon", "bag", "picnic", "trainer", "save", "options", "title"])
 	return out
+
+
+## Piquenique (pause_menu.gd:86 e _can_picnic do original): só com alguém fora da bola, no chão.
+func can_picnic() -> bool:
+	if not is_inside_tree() or game == null or game.get("out") == null or game.out.is_empty():
+		return false
+	var p := get_tree().get_first_node_in_group("ow_player") as CharacterBody3D
+	return p != null and p.is_on_floor() and get_tree().get_first_node_in_group("picnic") == null
+
+
+func _start_picnic() -> void:
+	var p := get_tree().get_first_node_in_group("ow_player")
+	close()
+	if p == null or not ResourceLoader.exists("res://world/picnic.gd"):
+		return
+	var pic: Node3D = load("res://world/picnic.gd").new()
+	p.get_parent().add_child(pic)
+	pic.begin(p)
 
 
 func _entry_label(id: String) -> String:
@@ -215,6 +233,8 @@ func _entry_label(id: String) -> String:
 			return "POKéMON"
 		"bag":
 			return "BOLSA"
+		"picnic":
+			return "PIQUENIQUE"
 		"trainer":
 			return String(game.player_name).to_upper()
 		"save":
@@ -281,6 +301,10 @@ func press(a: String) -> void:
 						_bag_cur = 0
 						_bag_note = ""
 						_go("bag")
+					"picnic":
+						if can_picnic():
+							_start_picnic()
+							return
 					"trainer":
 						card_front = true
 						_go("card")
@@ -916,7 +940,8 @@ func _render_main() -> void:
 	var ents := entries()
 	var col := _add_win("", Vector2(vp.x - 284, 20), Vector2(264, 0), 2)
 	for i in ents.size():
-		col.add_child(Kit.row([_entry_label(ents[i])], [], i == _main_cur))
+		var off: bool = ents[i] == "picnic" and not can_picnic()  # "disabled" do original
+		col.add_child(Kit.row([_entry_label(ents[i])], [], i == _main_cur, off))
 	var money := Kit.label(
 		"Dinheiro  " + Kit.format_money(int(game.money)), Kit.GREEN, Kit.SIZE_SMALL
 	)

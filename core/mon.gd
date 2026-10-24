@@ -108,6 +108,22 @@ func heal_full() -> void:
 	status = ""
 
 
+## Amizade 0..255 (mon.gd set_friend do original).
+func set_friend(v: int) -> void:
+	friend = clampi(v, 0, 255)
+
+
+## Humor pela amizade (mon.gd mood do original): Wary < 70 <= Content < 150 <= Happy < 220 <= Devoted.
+static func mood(v: int) -> String:
+	if v < 70:
+		return "Wary"
+	if v < 150:
+		return "Content"
+	if v < 220:
+		return "Happy"
+	return "Devoted"
+
+
 func is_fainted() -> bool:
 	return hp <= 0
 

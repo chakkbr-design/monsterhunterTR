@@ -76,13 +76,138 @@ func _process(delta: float) -> void:
 		play_time += delta
 		if not is_busy():
 			regen_pp(delta)
+			friend_tick(delta)
 
 
-## _regen_pp do original: devolve PP a quem está de pé e abaixo do máximo.
+## _regen_pp do original: devolve PP a quem está de pé e abaixo do máximo. Quem está fora da bola
+## num piquenique ou descansando recupera pelo ritmo do piquenique (world/picnic.gd), não por aqui.
 func regen_pp(delta: float) -> void:
+	var picnicking := is_inside_tree() and get_tree().get_first_node_in_group("picnic") != null
 	for m in party:
-		if m.hp > 0 and m.pp < m.pp_base:
-			m.pp = minf(m.pp_base, m.pp + m.pp_base * PP_WORLD_REGEN * delta)
+		if m.hp <= 0 or m.pp >= m.pp_base:
+			continue
+		if out.has(m) and (picnicking or resting.has(m)):
+			continue
+		m.pp = minf(m.pp_base, m.pp + m.pp_base * PP_WORLD_REGEN * delta)
+
+
+# --- Companheiros fora da bola e amizade (game.gd:17-23, 636-860 do original) ---
+
+const PET_GAIN := 6
+const FEED_GAIN := 8
+const PET_CD := 60.0
+const FEED_CD := 90.0
+const PASSIVE_TICK_S := 10.0
+const PASSIVE_GAIN := 1
+## Amizade perdida quando o Pokémon desmaia na batalha (battle.gd:1251 do original).
+const FAINT_LOSS := 20
+
+## Pokémon da equipe fora da bola, andando com o jogador (Game.companions do original; não vai
+## para o save). As teclas 1-6 mandam e recolhem cada um; o mundo desenha um WorldCompanion por Mon.
+var out: Array = []
+## Mons descansando com o jogador (fase "rest" do pedido de descanso): o mundo cuida do ritmo.
+var resting: Dictionary = {}
+var _friend_cd: Dictionary = {}  ## Mon -> s até o próximo carinho/comida (um só para os dois)
+var _passive_t := 0.0
+
+
+func is_out(i: int) -> bool:
+	return i >= 0 and i < party.size() and out.has(party[i])
+
+
+## Índices da equipe fora da bola, em ordem.
+func out_indices() -> Array:
+	var r: Array = []
+	for i in party.size():
+		if out.has(party[i]):
+			r.append(i)
+	return r
+
+
+## first_healthy(prefer_out) do original: quem está fora e de pé primeiro, senão o 1º de pé.
+func lead_index() -> int:
+	for i in party.size():
+		if out.has(party[i]) and not party[i].is_fainted():
+			return i
+	return first_healthy()
+
+
+## send_out do original. Devolve "" ou o aviso para o HUD.
+func send_out(i: int) -> String:
+	if i < 0 or i >= party.size() or is_out(i):
+		return ""
+	if party[i].is_fainted():
+		return "%s desmaiou!" % party[i].display_name
+	out.append(party[i])
+	return ""
+
+
+func recall(i: int) -> void:
+	if i >= 0 and i < party.size():
+		out.erase(party[i])
+		resting.erase(party[i])
+
+
+## _party_key do original fora da batalha: tecla 1-6 manda ou recolhe aquele Pokémon.
+func party_key(i: int) -> String:
+	if i < 0 or i >= party.size() or is_busy():
+		return ""
+	if is_out(i):
+		recall(i)
+		return ""
+	return send_out(i)
+
+
+## Tira de `out` quem não está mais na equipe (PC, troca) ou desmaiou.
+func prune_out() -> void:
+	out = out.filter(func(m): return party.has(m) and not m.is_fainted())
+	for m in resting.keys():
+		if not out.has(m):
+			resting.erase(m)
+
+
+func _can_friend(i: int) -> bool:
+	return is_out(i) and not party[i].is_fainted() and not is_busy()
+
+
+## Carinho (E no companheiro): {ok, text}. +6 de amizade, espera 60 s.
+func pet(i: int) -> Dictionary:
+	if not _can_friend(i):
+		return {"ok": false, "text": ""}
+	var m: Mon = party[i]
+	if float(_friend_cd.get(m, 0.0)) > 0.0:
+		return {"ok": false, "text": "%s ainda está feliz com o último carinho." % m.display_name}
+	m.set_friend(m.friend + PET_GAIN)
+	_friend_cd[m] = PET_CD
+	return {"ok": true, "text": ""}
+
+
+## Comida (F no companheiro): {ok, text}. +8 de amizade, espera 90 s.
+func feed(i: int) -> Dictionary:
+	if not _can_friend(i):
+		return {"ok": false, "text": ""}
+	var m: Mon = party[i]
+	if float(_friend_cd.get(m, 0.0)) > 0.0:
+		return {"ok": false, "text": "%s não está com fome agora." % m.display_name}
+	m.set_friend(m.friend + FEED_GAIN)
+	_friend_cd[m] = FEED_CD
+	return {"ok": true, "text": ""}
+
+
+## _friend_tick do original: esperas do carinho/comida e +1 de amizade a cada 10 s fora da bola.
+func friend_tick(delta: float) -> void:
+	for m in _friend_cd.keys():
+		var left := float(_friend_cd[m]) - delta
+		if left <= 0.0:
+			_friend_cd.erase(m)
+		else:
+			_friend_cd[m] = left
+	_passive_t += delta
+	while _passive_t >= PASSIVE_TICK_S:
+		_passive_t -= PASSIVE_TICK_S
+		for m in party:
+			if out.has(m) and m.hp > 0:
+				m.set_friend(m.friend + PASSIVE_GAIN)
 
 
 func _ready() -> void:
@@ -144,6 +269,8 @@ func new_game(p_name: String, r_name: String, gender := "male") -> void:
 	trainer_id = randi_range(10000, 99999)
 	repel_steps = 0
 	save_enabled = true
+	out = []
+	resting = {}
 
 
 ## Escolha do inicial: entra na equipe e define o do rival (flag rival_starter, lida pelo trainers.json).
@@ -185,6 +312,7 @@ func deposit(party_index: int) -> bool:
 	if healthy == 0:
 		return false
 	var m: Mon = party.pop_at(party_index)
+	out.erase(m)  # quem estava fora da bola volta para ela antes de ir para o PC
 	m.heal_full()  # game_state.gd:296 do original: a caixa cura
 	pc.append(m)
 	return true
@@ -306,6 +434,8 @@ func from_dict(d: Dictionary) -> void:
 	play_time = float(d.get("play_time", 0.0))
 	trainer_id = int(d.get("trainer_id", 0))
 	repel_steps = maxi(int(d.get("repel_steps", 0)), 0)
+	out = []
+	resting = {}
 	seen = {}
 	caught = {}
 	pending_learns = []
@@ -428,6 +558,10 @@ func trainer_payout(trainer_id: String, last_level: int, trainer_class := "") ->
 func request_battle(enemies: Array, opts: Dictionary, host: Node3D, at: Vector3) -> void:
 	if is_busy():
 		return
+	if not opts.has("out"):
+		# A arena escolhe o líder e o aliado pelo que está fora da bola (battle.gd:316-327).
+		opts = opts.duplicate()
+		opts["out"] = out_indices()
 	_opts = opts
 	_enemies = enemies
 	for e in enemies:
@@ -488,6 +622,10 @@ func resolve_evolution(m: Mon, accept: bool) -> void:
 ## Aplica as consequências da batalha e avisa o mundo. result ganha "prize" quando há dinheiro.
 func _finish(result: Dictionary) -> void:
 	var outcome: String = result.get("outcome", "")
+	if result.get("out_mons") is Array:
+		# Quem lutou e não desmaiou continua fora da bola (end_battle do original: FOLLOW).
+		out = result.out_mons.duplicate()
+	prune_out()
 	if outcome == "caught" and result.get("caught_mon") is Mon:
 		add_mon(result.caught_mon)
 	elif outcome == "win" and _opts.get("kind") == "trainer":

@@ -153,7 +153,20 @@ func _physics_process(delta: float) -> void:
 		var patch: TallGrass = _grass[-1]
 		if enc.walk(moved, WildTable.rate(patch.table()), _rng, _repelled()):
 			_ambush(patch)
+	if active:
+		_party_keys()
 	_update_focus(active)
+
+
+## Teclas 1-6 fora da batalha (_party_key do original): manda ou recolhe aquele Pokémon.
+func _party_keys() -> void:
+	for i in Game.PARTY_MAX:
+		var a := "party_%d" % (i + 1)
+		if InputMap.has_action(a) and Input.is_action_just_pressed(a):
+			var msg: String = Game.party_key(i)
+			var hud := Overworld.hud_of(self)
+			if msg != "" and hud:
+				hud.toast(msg, 2.5)
 
 
 ## Original footstep cadence (0.32 s walking, 0.24 s running): each one spends a Repel step.
@@ -200,14 +213,8 @@ func _camera_yaw() -> float:
 	return rig.yaw() if rig else 0.0
 
 
-func _update_focus(active: bool) -> void:
-	var cands: Array = []  # [node, reach, cone]
-	for n in get_tree().get_nodes_in_group(WorldNpc.GROUP):
-		cands.append([n, TALK_RANGE, 0.4])
-	if not Game.party.is_empty():
-		for w in get_tree().get_nodes_in_group(WildMon.GROUP):
-			if w.visible and w.peace_timer <= 0.0:
-				cands.append([w, ENGAGE_RANGE, 0.5])
+## O mais perto de [node, alcance, cone] na frente do jogador (ou a menos de 1,3 m).
+func _nearest(cands: Array) -> Node3D:
 	var best: Node3D = null
 	var best_d := INF
 	for c in cands:
@@ -217,6 +224,24 @@ func _update_focus(active: bool) -> void:
 		if d < c[1] and d < best_d and (d < 1.3 or facing.dot(to / maxf(d, 0.001)) > c[2]):
 			best = c[0]
 			best_d = d
+	return best
+
+
+func _update_focus(active: bool) -> void:
+	var cands: Array = []  # [node, reach, cone]
+	for n in get_tree().get_nodes_in_group(WorldNpc.GROUP):
+		cands.append([n, TALK_RANGE, 0.4])
+	if not Game.party.is_empty():
+		for w in get_tree().get_nodes_in_group(WildMon.GROUP):
+			if w.visible and w.peace_timer <= 0.0:
+				cands.append([w, ENGAGE_RANGE, 0.5])
+	var best: Node3D = _nearest(cands)
+	if best == null:  # E carinho, F comida; NPCs e selvagens têm a vez (o companheiro anda colado)
+		var mine: Array = []
+		for c in get_tree().get_nodes_in_group(WorldCompanion.GROUP):
+			if c.visible:
+				mine.append([c, TALK_RANGE, 0.4])
+		best = _nearest(mine)
 	focus = best
 	var hud := Overworld.hud_of(self)
 	if hud == null:
@@ -224,6 +249,13 @@ func _update_focus(active: bool) -> void:
 	hud.set_prompt(_prompt_for(focus) if active and focus else "")
 	if active and focus and hud.can_interact() and Input.is_action_just_pressed("interact"):
 		_interact(focus)
+	elif (
+		active
+		and focus is WorldCompanion
+		and InputMap.has_action("feed")
+		and Input.is_action_just_pressed("feed")
+	):
+		(focus as WorldCompanion).feed()
 
 
 func _prompt_for(n: Node3D) -> String:
