@@ -48,7 +48,11 @@ func _run() -> void:
 	]:
 		game.flags[f] = true
 	game.flags["rival_starter"] = "Charmander"
-	game.add_mon(load("res://core/mon.gd").create("squirtle", 28))
+	# Golpes fixos: o teste é da história (Liam e Brock em autoplay); com o learnset Gen 9 o Squirtle Lv28
+	# sai com um golpe de dano só e a luta vira sorte.
+	var sq = load("res://core/mon.gd").create("squirtle", 28)
+	sq.moves = ["water_pulse", "water_gun", "aqua_tail", "protect"]
+	game.add_mon(sq)
 	story = root.get_node("Story")
 	story.auto_advance = true
 	story.auto_answer = true

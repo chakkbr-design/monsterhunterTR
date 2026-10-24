@@ -153,11 +153,11 @@ func _spot_scores() -> void:
 	var mid := Vector3(o.x, 0, o.z) + Vector3(0, 0, (b.x + b.y) * 0.5)
 	var wall := Vector3(r.position.x + 0.3, 0, mid.z)
 	check(f.ai.score_spot(mid, b) > f.ai.score_spot(wall, b), "ponto na parede perde")
+	var dry_score: float = f.ai.score_spot(mid, b)
 	a.field._add_mark("puddle", mid, 1.0, 1)
-	var dry := mid + Vector3(1.5, 0, 0)
 	check(
-		f.ai.score_spot(mid, b) < f.ai.score_spot(dry, b) + 1.0 or "water" in f.types,
-		"poça perde para chão seco"
+		f.ai.score_spot(mid, b) < dry_score or "water" in f.types,
+		"o mesmo ponto com poça perde para ele seco"
 	)
 	var p: Vector3 = f.ai.pick_spot()
 	check(r.grow(-1.0).has_point(Vector2(p.x, p.z)), "ponto escolhido longe da parede")

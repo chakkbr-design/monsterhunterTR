@@ -233,7 +233,7 @@ func tick(dt: float) -> void:
 			current = null
 		else:
 			turn_t += dt
-			if not current.can_act() and turn_t >= SKIP_HOLD:
+			if not current.can_act() and turn_t >= SKIP_HOLD and not current.ai.can_sleep_act():
 				_record(current, "skip")
 				current = null
 			elif turn_t >= TURN_MAX:

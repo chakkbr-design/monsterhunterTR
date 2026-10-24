@@ -248,7 +248,8 @@ func step(dt: float) -> Vector3:
 			turns.done(f, "item")
 		return Vector3.ZERO
 	if f.status == "sleep":
-		_sleep_move(f.flat_to(opp).length())
+		if my_turn and _sleep_move(f.flat_to(opp).length()) and queued:
+			turns.done(f, "move")
 		return Vector3.ZERO
 	_mood()
 	var to_o := f.flat_to(opp)
@@ -742,8 +743,8 @@ func use_trainer_item() -> void:
 		f.arena.item_used_by_trainer(f, String(it.get("name", f.trainer_item)))
 
 
-## Dormindo: só Snore/Sleep Talk saem (BattleMoveEffects.sleep_move).
-func _sleep_move(d: float) -> void:
+## Dormindo: só Snore/Sleep Talk saem (BattleMoveEffects.sleep_move). Na fila, só na vez.
+func _sleep_move(d: float) -> bool:
 	for id in f.moves:
 		var mv := Dex.move(String(id))
 		if (
@@ -753,7 +754,18 @@ func _sleep_move(d: float) -> void:
 			and f.arena.moves.use(f, String(id))
 		):
 			note_used(String(id))
-			return
+			return true
+	return false
+
+
+## Tem Snore/Sleep Talk para usar dormindo (a vez não passa logo por causa do sono).
+func can_sleep_act() -> bool:
+	if f.status != "sleep":
+		return false
+	for id in f.moves:
+		if f.arena.moves.effects.sleep_move(f, Dex.move(String(id))):
+			return true
+	return false
 
 
 func _punish(d: float) -> bool:
