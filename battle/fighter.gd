@@ -793,7 +793,7 @@ func _faint() -> void:
 	lunge_t = 0.0
 	root_t = 0.0
 	sprinting = false
-	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 1.0, 1.2)
+	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 0.7, 1.2)
 	preload("res://audio/cue.gd").sfx("faint")
 	if look:
 		look.tint = _tint()  # sem isso o clarão de um acerto anterior fica preso no sprite desmaiado

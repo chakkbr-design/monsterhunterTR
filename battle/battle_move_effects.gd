@@ -53,6 +53,11 @@ const CALL_BAN := [
 	"self_destruct",
 	"transform",
 ]
+## Helping Hand: o parceiro tem HELP_WINDOW s para soltar um golpe de dano, que vale 1,5x por
+## HELP_HOLD s (cobre jatos e golpes de vários acertos do mesmo uso).
+const HELP_WINDOW := 4.0
+const HELP_HOLD := 2.5
+const HELP_MULT := 1.5
 const MAJOR := ["burn", "poison", "toxic", "paralysis", "sleep", "freeze"]
 const HEAL_COL := Color(0.5, 1.0, 0.55)
 
@@ -96,6 +101,9 @@ func st(f: BattleFighter) -> Dictionary:
 			"trapped": false,
 			"curled": false,
 			"self_cast": -1,
+			"helped": -99.0,
+			"help_id": "",
+			"help_t": -99.0,
 		}
 	return _st[id]
 
@@ -286,6 +294,11 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 	if not String(mv.get("special", "")) in ["copycat", "metronome"]:
 		last_any = id
 	var sd := _sd(user.side)
+	if float(mv.get("power", 0)) > 0.0 and now - float(s.helped) <= HELP_WINDOW:
+		# Helping Hand: o próximo golpe de dano do parceiro sai com 1,5x
+		s.help_id = id
+		s.help_t = now
+		s.helped = -99.0
 	match String(mv.get("special", "")):
 		"chain":
 			var c: Dictionary = s.chain.get(id, {"n": 0, "t": -99.0, "cast": 0, "hit": 0})
@@ -558,6 +571,9 @@ func on_damage_roll(
 ## Multiplicador do fim da fórmula: Light Screen, clima e terreno.
 func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	var m := 1.0
+	var s := st(user)
+	if String(s.help_id) == String(mv.get("id", "")) and now - float(s.help_t) <= HELP_HOLD:
+		m *= HELP_MULT
 	var type := String(mv.get("type", ""))
 	var special: bool = mv.get("category", "") == "special"
 	if special and active(_sd(target.side), "light_screen") and not _last_crit:
@@ -842,6 +858,13 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				if best != "":
 					p.move_cd[best] = 0.0
 				p.popup("Vai você primeiro!", Color(0.8, 0.9, 1.0))
+		"helping_hand":
+			var ally := partner(user)
+			if ally and ally.alive():
+				st(ally).helped = now
+				ally.popup("Ajuda!", Color(1.0, 0.85, 0.4), 0.8)
+			else:
+				_fail(user)
 		"laser_focus":
 			s.laser = now + LASER_TIME
 			user.popup("Mira perfeita!", Color(1, 0.6, 0.3))
@@ -1226,6 +1249,8 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			var p2 := partner(f)
 			return p2 != null and float(p2.hp) / maxf(p2.max_hp, 1) < 0.6
 		"after_you":
+			return partner(f) != null
+		"helping_hand":
 			return partner(f) != null
 		"laser_focus":
 			return not active(s, "laser")

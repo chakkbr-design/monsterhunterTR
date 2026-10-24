@@ -32,7 +32,7 @@ const STATUS_TAGS := {
 	"confusion": ["CNF", Color(0.85, 0.45, 0.75)]
 }
 const STAGE_ORDER := ["atk", "def", "spa", "spd", "spe"]
-const STAGE_SHORT := {"atk": "ATK", "def": "DEF", "spa": "SP.A", "spd": "SP.D", "spe": "SPE"}
+const STAGE_SHORT := {"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "SPE"}
 
 static var _fonts := {}
 

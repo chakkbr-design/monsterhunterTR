@@ -86,7 +86,13 @@ func _init() -> void:
 		_place(b, Vector2(1, 1), Vector2(MOVE_R, MOVE_R) * 2.0, DIAMOND_AT + offs[i])
 		_moves.append(b)
 	_banner = BannerPill.new()
-	_place(_banner, Vector2(0.5, 0), Vector2(900, 64), Vector2(0, CARD_TOP + CARD_H + 52))
+	# Avisos grandes ("vai mandar", desmaiou) embaixo, no lugar do log (o meio fica para a luta).
+	_place(
+		_banner,
+		Vector2(0.5, 1),
+		Vector2(900, 64),
+		Vector2(0, -BattleLogLine.BOTTOM - BattleLogLine.H * 0.5)
+	)
 	_help = Label.new()
 	_help.anchor_top = 1.0
 	_help.anchor_bottom = 1.0
@@ -310,6 +316,11 @@ func refresh(
 	# A faixa de log some enquanto a pílula de banner (abertura, troca do treinador) está no mesmo lugar.
 	_log.hidden_by_banner = _banner.t > 0.0
 	_log.step(dt)
+	# a pílula fica exatamente onde está o log (o treino sobe o log acima do painel) e o log some na hora
+	var mid := (_log.offset_top + _log.offset_bottom) * 0.5
+	_banner.offset_top = mid - 32.0
+	_banner.offset_bottom = mid + 32.0
+	_log.visible = _banner.t <= 0.0
 	var pt := String(info.get("pause", ""))
 	_pause_bg.visible = pt != ""
 	_pause.text = pt
@@ -773,7 +784,7 @@ class BannerPill:
 			return
 		var a := _a * clampf(t / 0.3, 0.0, 1.0)
 		var tf := UiDraw.title_font()
-		var fs := 24
+		var fs := 18
 		var w := minf(UiDraw.text_width(text, fs, tf) + 56.0, size.x)
 		var r := Rect2(Vector2(size.x * 0.5 - w * 0.5, size.y * 0.5 - 20.0), Vector2(w, 40.0))
 		UiDraw.rounded(
@@ -1137,7 +1148,7 @@ class VivaTags:
 		"LIVRE": Color(0.6, 0.63, 0.68)
 	}
 	const STAGE_TAG := {
-		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "VEL", "acc": "ACC"
+		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "SPE", "acc": "ACC"
 	}
 	const FS := 10
 	const H := 14.0
@@ -1223,9 +1234,13 @@ class VivaTags:
 				false,
 				"mark_" + String(m.get("id", ""))
 			)
-		for t in stage_tags(f):
+		# os estágios já aparecem como chips dentro do cartão; aqui só o que o cartão não mostra (ACC)
+		for k in STAGE_TAG:
+			var v := int(f.stages.get(k, 0))
+			if v == 0 or UiDraw.STAGE_SHORT.has(k):
+				continue
 			x += chip(
-				ci, Vector2(x, y), String(t.text), UiDraw.COL_BUFF if t.up else UiDraw.COL_DEBUFF
+				ci, Vector2(x, y), stage_text(k, v), UiDraw.COL_BUFF if v > 0 else UiDraw.COL_DEBUFF
 			)
 
 

@@ -102,6 +102,7 @@ func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "user")
 	if not r.is_empty():
 		pmd(String(r.fx), _center(user), dir, r)
+	show.ctx = [user]
 	show.on_cast(user, mv, dir)
 
 
@@ -132,6 +133,7 @@ func on_hit(
 	pmd(String(r.fx), at, dir, r)
 	if crit or eff > 1.0:
 		pmd("hit_neutral", at, dir, {"scale": 1.6, "tint": Color(1, 0.9, 0.5)})
+	show.ctx = [user, target]
 	show.on_hit(user, target, mv, dir, crit, eff)
 
 
@@ -165,6 +167,7 @@ func sky_bolt(move_id: String, at: Vector3, dur := 0.6, notify := true) -> void:
 	if not enabled or not arena.is_inside_tree():
 		return
 	if notify:
+		show.ctx = []
 		show.landed(move_id, at)
 	var id := BeamFx.beam_for(move_id)
 	if id == "":
@@ -214,6 +217,7 @@ func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -
 
 ## Visual de projétil: papel "travel" (PMD em laço) ou uma orbe brilhante do tipo.
 func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
+	show.ctx = [p]
 	show.projectile_trail(p, mv)
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "travel")
 	if not r.is_empty() and attach(p, String(r.fx), dir, r) != null:
@@ -255,6 +259,7 @@ func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 	var id := String(st.get("up" if up else "down", ""))
 	if id != "" and is_instance_valid(f):
 		pmd(id, _center(f, 0.45), Vector3.FORWARD, {"billboard": true})
+	show.ctx = [f]
 	show.stat_change(f, key, up)
 
 
@@ -275,31 +280,37 @@ func status_look(f: BattleFighter, status: String) -> FxSprite:
 ## Rastro de terra que avança pelo chão de `from` até `to` (coordenadas locais da arena, como
 ## fighter.position) em `duration` s, com terra levantando.
 func dig_trail(user: BattleFighter, from: Vector3, to: Vector3, duration: float) -> void:
+	show.ctx = [user]
 	show.dig_trail(user, from, to, duration)
 
 
 ## O lutador entrou no chão: buraco e terra espirrando.
 func burrow(user: BattleFighter) -> void:
+	show.ctx = [user]
 	show.burrow(user)
 
 
 ## O lutador saiu do chão: estouro de terra, pedras e anel de poeira.
 func unburrow(user: BattleFighter) -> void:
+	show.ctx = [user]
 	show.unburrow(user)
 
 
 ## Lutador arremessado bateu na cerca/caixa/pedra/parede (`at` local da arena): poeira e estrelinhas.
 func crash(f: BattleFighter, at: Vector3, what: String) -> void:
+	show.ctx = [f]
 	show.crash(f, at, what)
 
 
 ## Arremesso forte (Whirlwind, Roar, Dragon Tail, contato 80+): rastro de vento enquanto voa.
 func launch(f: BattleFighter, dir: Vector3, dist: float) -> void:
+	show.ctx = [f]
 	show.launch(f, dir, dist)
 
 
 ## Reapareceu de repente (Aerial Ace "blink"): flash e linhas onde surge.
 func blink(f: BattleFighter) -> void:
+	show.ctx = [f]
 	show.blink(f)
 
 
@@ -307,43 +318,52 @@ func blink(f: BattleFighter) -> void:
 
 
 func protect_shield(f: BattleFighter, secs: float) -> void:
+	show.ctx = [f]
 	show.protect_shield(f, secs)
 
 
 ## Follow Me / Rage Powder.
 func spotlight(f: BattleFighter, secs: float) -> void:
+	show.ctx = [f]
 	show.spotlight(f, secs)
 
 
 ## light_screen, reflect, safeguard, quick_guard, tailwind sobre o lado `side`.
 func screen(side: int, kind: String, secs: float) -> void:
+	show.ctx = []
 	show.screen(side, kind, secs)
 
 
 ## sun, rain, sand, hail.
 func weather(kind: String, secs: float) -> void:
+	show.ctx = []
 	show.weather(kind, secs)
 
 
 ## "grassy".
 func terrain(kind: String, secs: float) -> void:
+	show.ctx = []
 	show.terrain(kind, secs)
 
 
 func gravity(secs: float) -> void:
+	show.ctx = []
 	show.gravity(secs)
 
 
 func haze(user: BattleFighter) -> void:
+	show.ctx = [user]
 	show.haze(user)
 
 
 ## `at` local da arena.
 func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
+	show.ctx = []
 	show.toxic_spikes(side, at, r, life)
 
 
 func heal(f: BattleFighter) -> void:
+	show.ctx = [f]
 	show.heal(f)
 
 

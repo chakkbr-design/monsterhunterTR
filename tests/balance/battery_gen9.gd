@@ -1,6 +1,6 @@
 extends SceneTree
 ## Bateria de lutas do modo treino (Gen 9, Pokémon 1-51): times de 6 com tipos variados, todos contra
-## todos, em 1x1 e 2x2, com turbo. Mede vencedor, duração, uso de golpes (status x dano), dano médio
+## todos, em 1x1 e 2x2, com turbo, nos dois lados (A x B e B x A, para ver vantagem de lado). Mede vencedor, duração, uso de golpes (status x dano), dano médio
 ## por acerto de cada golpe nos dois modos (deve ser igual) e erros.
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/balance/battery_gen9.gd
 ## Opções (depois de --): seeds=N (lutas por par e modo, padrão 1), level=N (padrão 50),
@@ -53,7 +53,9 @@ func _run() -> void:
 	var fights: Array = []
 	for size in [1, 2]:
 		for i in keys.size():
-			for j in range(i + 1, keys.size()):
+			for j in keys.size():
+				if j == i:
+					continue
 				for s in seeds:
 					var r := await _one(keys[i], keys[j], size, 100 + s)
 					fights.append(r)
@@ -168,6 +170,21 @@ func _report(fights: Array) -> void:
 				% [k, m.n, m.time / maxf(1, m.n), m.timeout]
 			)
 		)
+	print("
+== Vitórias por time e por lado ==")
+	for mode in ["1x1", "2x2"]:
+		var wins := {}
+		var side_a := 0
+		var n := 0
+		for f in fights:
+			if f.mode != mode or f.outcome == "timeout":
+				continue
+			n += 1
+			var w: String = f.a if f.outcome == "win" else f.b
+			wins[w] = int(wins.get(w, 0)) + 1
+			if f.outcome == "win":
+				side_a += 1
+		print("%s: lado A ganhou %d de %d; por time %s" % [mode, side_a, n, str(wins)])
 	var status_uses := {"1x1": 0, "2x2": 0}
 	var all_uses := {"1x1": 0, "2x2": 0}
 	var ids := {}

@@ -225,6 +225,9 @@ var vfx: BattleVfx:
 	get:
 		return _vfx_ref.get_ref() as BattleVfx
 var _vfx_ref: WeakRef
+## Nós da chamada em curso (quem usa, alvo): os repeat() criados agora param sozinhos quando um
+## deles é liberado, sem chamar o lambda que o capturou (o Godot reclamaria do nó liberado).
+var ctx: Array = []
 var _pending := {}  ## move_id -> {user, at, r} do golpe em área que ainda vai cair
 
 
@@ -392,6 +395,7 @@ func repeat(every: float, dur: float, cb: Callable, done := Callable(), now := t
 	if not _ok():
 		return null
 	var t := Ticker.new(every, dur, cb, done)
+	t.watch = ctx.filter(func(o): return o is Object)
 	if now:
 		t.acc = every
 	vfx._track(t)
@@ -3623,6 +3627,7 @@ class Ticker:
 	var cb: Callable
 	var done_cb: Callable
 	var _over := false
+	var watch: Array = []
 
 	func _init(e: float, d: float, c: Callable, dn: Callable) -> void:
 		every = maxf(e, 0.005)
@@ -3633,6 +3638,10 @@ class Ticker:
 	func tick(dt: float) -> bool:
 		if _over:
 			return false
+		for o in watch:
+			if not is_instance_valid(o):
+				_over = true
+				return false
 		age += dt
 		acc += dt
 		var go := true

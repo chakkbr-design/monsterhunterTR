@@ -137,6 +137,7 @@ func _initialize() -> void:
 	_priority()
 	_variable_power()
 	_support()
+	_helping_hand()
 	_call_moves()
 	for i in 4:
 		_ai_fight(i)
@@ -486,6 +487,42 @@ func _support() -> void:
 	check(a.moves.use(p, "rest"), "Rest")
 	_run(a, 0.4)
 	check(p.hp == p.max_hp and p.status == "sleep", "Rest cura tudo e dorme")
+	a.free()
+
+
+func _helping_hand() -> void:
+	var a := _arena(
+		[Mon.create("charmander", 30), Mon.create("pidgey", 30)],
+		[Mon.create("rattata", 30), Mon.create("rattata", 30)],
+		{"seed": 11, "battle_size": 2}
+	)
+	_run(a, 1.3)
+	var mine: Array = a.fighters.filter(func(f): return f.side == 0 and f.active())
+	var foe: BattleFighter = a.fighters.filter(func(f): return f.side == 1 and f.active())[0]
+	check(mine.size() == 2, "dupla com dois do meu lado")
+	if mine.size() < 2:
+		a.free()
+		return
+	for f in a.fighters:
+		f.controller = "none"
+	_run(a, 1.5)
+	var helper: BattleFighter = mine[1]
+	var striker: BattleFighter = mine[0]
+	var fx: BattleMoveEffects = a.moves.effects
+	_ready_all(helper)
+	helper.moves = ["helping_hand"]
+	var ember := Dex.move("ember")
+	check(is_equal_approx(fx.damage_mult(striker, foe, ember), 1.0), "sem ajuda: 1x")
+	check(a.moves.use(helper, "helping_hand"), "Helping Hand")
+	_run(a, 0.5)
+	fx.on_use(striker, ember)
+	check(
+		is_equal_approx(fx.damage_mult(striker, foe, ember), 1.5),
+		"Helping Hand: próximo golpe do parceiro 1,5x"
+	)
+	_run(a, BattleMoveEffects.HELP_HOLD + 0.2)
+	check(is_equal_approx(fx.damage_mult(striker, foe, ember), 1.0), "a ajuda acaba depois do uso")
+	check(helper.stages.get("atk", 0) == 0, "Helping Hand não sobe o Ataque de quem usa")
 	a.free()
 
 
