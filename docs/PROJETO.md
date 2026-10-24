@@ -50,7 +50,7 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 
 ### Modo de treinamento (para balancear)
 - Opção **MODO DE TREINAMENTO** no título (`ui/training/`). Não usa nem grava o save do jogo; a montagem fica em `user://training.json`.
-- Tela de montar: dois times de até 6, qualquer espécie, apelido, nível, natureza, gênero, habilidade, IVs, EVs, 4 golpes entre todos os golpes do jogo, HP/PP/status iniciais e amizade; por time, nome, item do treinador e nível da IA (`think_scale`); velocidade (0,6x a 4x), turbo, limite de tempo e semente.
+- Tela de montar, tudo numa tela sem rolagem: dois times com 6 slots (slot vazio abre a lista de espécies), e por Pokémon nível, natureza, habilidade, 4 golpes escolhidos numa lista só com os que a espécie aprende (os acima do nível aparecem bloqueados) e HP/PP/status iniciais. Sem IVs e EVs no treino: todos lutam com IV 31 e EV 0. Por time, nome, item do treinador, nível da IA (`think_scale`) e **Times salvos** (10 slots em `user://training_teams.json`, para salvar e carregar em qualquer lado); formato 1x1/2x2, velocidade (0,6x a 4x), turbo, limite de tempo e semente.
 - Arena fixa 20 x 12 (o dobro da quadra padrão) com cerca. Os dois lados lutam sozinhos com a IA (`opts.autoplay`), sem XP, EVs, prêmio nem evolução (`opts.no_rewards`). Acima de 1x a arena anda em passos de no máximo 1x, para o resultado não mudar com a velocidade.
 - Resultado com HP final de cada Pokémon, duração, semente e placar da série; "Rodar série" faz N lutas seguidas (com semente fixa, a luta k usa semente + k) e "Copiar registro" copia o log da luta.
 

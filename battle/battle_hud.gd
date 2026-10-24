@@ -5,15 +5,16 @@ extends CanvasLayer
 ## golpes em losango, banner em pílula, faixas de introdução + "Lutem!", popups de dano em tela e menu rápido.
 ## API usada pela arena: banner(text, secs), refresh(player, enemy, dt, ally, info), add_popup(...), intro_bars(on), fight_flash().
 
-const CARD_W := 506.0
-const CARD_H := 92.0
+## Os quatro cartões da dupla têm o mesmo tamanho: desenhados no tamanho de projeto e reduzidos por escala.
+const CARD_DESIGN_W := 506.0
+const CARD_DESIGN_H := 92.0
+const CARD_K := 0.8
+const CARD_W := CARD_DESIGN_W * CARD_K
+const CARD_H := CARD_DESIGN_H * CARD_K
 const CARD_MARGIN := 14.0
 const CARD_TOP := 12.0
-const ALLY_W := 340.0
-const ALLY_H := 40.0
-## Espaço para a faixa de marcas/estágios entre os cartões empilhados.
-const ALLY_DROP := 24.0
-const FOE2_GAP := 22.0
+## Espaço para a faixa de marcas/estágios entre os cartões empilhados (coluna da esquerda e da direita).
+const ROW_GAP := 24.0
 const MOVE_R := 42.0
 const MOVE_DX := 92.0
 const MOVE_DY := 68.0
@@ -27,7 +28,7 @@ var _player_card: FighterCard
 var _foe_card: FighterCard
 var _foe2_card: FighterCard
 var _viva: VivaLayer
-var _ally_card: AllyCard
+var _ally_card: FighterCard
 var _moves: Array = []
 var _banner: BannerPill
 var _intro: IntroLayer
@@ -53,35 +54,28 @@ func _init() -> void:
 	_pops.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_pops)
 	_pops.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Dupla em 2x2: direita os adversários (topo e abaixo), esquerda o jogador e o aliado.
 	_foe_card = FighterCard.new()
 	_foe_card.foe = true
-	_place(
-		_foe_card,
-		Vector2(1, 0),
-		Vector2(CARD_W, CARD_H),
-		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
+	_place_card(
+		_foe_card, Vector2(1, 0), Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
 	)
 	_foe2_card = FighterCard.new()
 	_foe2_card.foe = true
-	_place(
+	_place_card(
 		_foe2_card,
 		Vector2(1, 0),
-		Vector2(CARD_W, CARD_H),
-		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 1.5 + FOE2_GAP)
+		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 1.5 + ROW_GAP)
 	)
 	_player_card = FighterCard.new()
-	_place(
-		_player_card,
-		Vector2(0, 0),
-		Vector2(CARD_W, CARD_H),
-		Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
+	_place_card(
+		_player_card, Vector2(0, 0), Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
 	)
-	_ally_card = AllyCard.new()
-	_place(
+	_ally_card = FighterCard.new()
+	_place_card(
 		_ally_card,
 		Vector2(0, 0),
-		Vector2(ALLY_W, ALLY_H),
-		Vector2(CARD_MARGIN + ALLY_W * 0.5, CARD_TOP + CARD_H + ALLY_DROP + ALLY_H * 0.5)
+		Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 1.5 + ROW_GAP)
 	)
 	var offs := [
 		Vector2(0, MOVE_DY), Vector2(MOVE_DX, 0), Vector2(-MOVE_DX, 0), Vector2(0, -MOVE_DY)
@@ -100,7 +94,7 @@ func _init() -> void:
 	_help.offset_top = -30
 	_help.offset_right = 760
 	_help.add_theme_font_override("font", UiDraw.font())
-	_help.add_theme_font_size_override("font_size", 14)
+	_help.add_theme_font_size_override("font_size", 12)
 	_help.add_theme_constant_override("outline_size", 4)
 	_help.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_help.modulate = Color(1, 1, 1, 0.8)
@@ -108,13 +102,13 @@ func _init() -> void:
 	_root.add_child(_help)
 	_menu_bg = PanelContainer.new()
 	_menu_bg.offset_left = CARD_MARGIN
-	_menu_bg.offset_top = CARD_TOP + CARD_H + ALLY_H + 20 + ALLY_DROP - 6.0
+	_menu_bg.offset_top = CARD_TOP + CARD_H * 2.0 + ROW_GAP + 6.0
 	var msb := UiDraw.glass_box(0.86, 12)
 	msb.set_content_margin_all(12)
 	_menu_bg.add_theme_stylebox_override("panel", msb)
 	_menu = Label.new()
 	_menu.add_theme_font_override("font", UiDraw.font())
-	_menu.add_theme_font_size_override("font_size", 16)
+	_menu.add_theme_font_size_override("font_size", 13)
 	_menu_bg.add_child(_menu)
 	_menu_bg.visible = false
 	_root.add_child(_menu_bg)
@@ -138,7 +132,7 @@ func _init() -> void:
 	_pause_bg.add_theme_stylebox_override("panel", psb)
 	_pause = Label.new()
 	_pause.add_theme_font_override("font", UiDraw.title_font())
-	_pause.add_theme_font_size_override("font_size", 20)
+	_pause.add_theme_font_size_override("font_size", 16)
 	_pause.add_theme_constant_override("line_spacing", 6)
 	_pause_bg.add_child(_pause)
 	_pause_bg.visible = false
@@ -159,6 +153,21 @@ func _place(c: Control, anchor: Vector2, size_px: Vector2, center: Vector2) -> v
 	c.offset_right = center.x + size_px.x * 0.5
 	c.offset_top = center.y - size_px.y * 0.5
 	c.offset_bottom = center.y + size_px.y * 0.5
+
+
+## Cartão reduzido por CARD_K: a origem fica no canto de cima à esquerda (pivô padrão), então o centro visual é `center`.
+func _place_card(c: Control, anchor: Vector2, center: Vector2) -> void:
+	_root.add_child(c)
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.scale = Vector2.ONE * CARD_K
+	c.anchor_left = anchor.x
+	c.anchor_right = anchor.x
+	c.anchor_top = anchor.y
+	c.anchor_bottom = anchor.y
+	c.offset_left = center.x - CARD_W * 0.5
+	c.offset_right = c.offset_left + CARD_DESIGN_W
+	c.offset_top = center.y - CARD_H * 0.5
+	c.offset_bottom = c.offset_top + CARD_DESIGN_H
 
 
 func banner(text: String, secs := 1.6) -> void:
@@ -260,6 +269,15 @@ func combo(text: String, col: Color) -> void:
 	_viva.start_combo(text, col)
 
 
+## Aviso curto embaixo da arena, acima da faixa de log (CLASH, Ressonância, reações): não cobre a luta.
+func warn(text: String, col: Color) -> void:
+	_viva.add_warn(text, col)
+
+
+func warn_text() -> String:
+	return _viva.warn_text()
+
+
 ## Faixa "[Pokémon] — [HABILIDADE]" do lado do lutador (1.2 s).
 func ability_banner(f: BattleFighter, ability_name: String) -> void:
 	if is_instance_valid(f):
@@ -317,7 +335,7 @@ func refresh(
 	_ally_card.visible = has_ally
 	# Resultado do fim: a barra de EXP do cartão enche sob o controle da arena (begin_scripted/fill_to).
 	var xs: Dictionary = info.get("exp_script", {})
-	for c in [_player_card, _foe_card, _foe2_card]:
+	for c in [_player_card, _foe_card, _foe2_card, _ally_card]:
 		c.script_xp = -1.0
 		if not xs.is_empty() and c.body != null and c.body.mon == xs.get("mon"):
 			c.script_xp = float(xs.xp)
@@ -325,8 +343,6 @@ func refresh(
 		c.visible = c.body != null
 		c.marks = _marks_of(marks, c.body)
 		c.step(dt)
-	_ally_card.marks = _marks_of(marks, _ally_card.body)
-	_ally_card.queue_redraw()
 	var icd := float(info.get("item_cd", 0.0))
 	_help.text = HELP + ("   item %.1fs" % icd if icd > 0.0 else "")
 	var mt := String(info.get("menu", ""))
@@ -361,7 +377,7 @@ func card_rect(which: String) -> Rect2:
 		c = _ally_card
 	elif which == "foe2":
 		c = _foe2_card
-	return Rect2(c.position, c.size) if c else Rect2()
+	return Rect2(c.position, c.size * c.scale) if c else Rect2()
 
 
 func moves_rect() -> Rect2:
@@ -381,7 +397,11 @@ func move_rect(i: int) -> Rect2:
 
 func foe_chips_rect() -> Rect2:
 	var c: Rect2 = _foe_card.chips
-	return Rect2(_foe_card.position + c.position, c.size) if c.size.x > 0.0 else Rect2()
+	return (
+		Rect2(_foe_card.position + c.position * CARD_K, c.size * CARD_K)
+		if c.size.x > 0.0
+		else Rect2()
+	)
 
 
 # ---------------------------------------------------------------------------
@@ -406,6 +426,8 @@ class FighterCard:
 	var drawn_name := ""
 	var cmd := ""
 	var obey := true
+	## Modo do aliado ("OFENSIVO"...), escrito ao lado do nome; vazio no lutador controlado e nos adversários.
+	var mode := ""
 	var marks: Array = []
 	## Onde os chips de estágio (▲▼) foram desenhados, local ao cartão (holofote do tutorial).
 	var chips := Rect2()
@@ -483,13 +505,13 @@ class FighterCard:
 		var tf := UiDraw.title_font()
 		drawn_name = body.mon.display_name
 		var lv := "Lv %d" % (script_level if script_xp >= 0.0 and script_level > 0 else body.level)
-		var lvw := UiDraw.text_width(lv, 18, tf)
+		var lvw := UiDraw.text_width(lv, 15, tf)
 		if foe:
 			UiDraw.text(
 				self,
 				Vector2(x0, NAME_Y),
 				drawn_name,
-				24,
+				20,
 				UiDraw.COL_WHITE,
 				4,
 				HORIZONTAL_ALIGNMENT_RIGHT,
@@ -500,7 +522,7 @@ class FighterCard:
 				self,
 				Vector2(x0, NAME_Y),
 				lv,
-				18,
+				15,
 				UiDraw.AMBER,
 				4,
 				HORIZONTAL_ALIGNMENT_LEFT,
@@ -512,7 +534,7 @@ class FighterCard:
 				self,
 				Vector2(x0, NAME_Y),
 				drawn_name,
-				24,
+				20,
 				UiDraw.COL_WHITE,
 				4,
 				HORIZONTAL_ALIGNMENT_LEFT,
@@ -523,13 +545,16 @@ class FighterCard:
 				self,
 				Vector2(x1 - lvw, NAME_Y),
 				lv,
-				18,
+				15,
 				UiDraw.AMBER,
 				4,
 				HORIZONTAL_ALIGNMENT_LEFT,
 				-1.0,
 				tf
 			)
+			if mode != "":
+				var mx := x0 + UiDraw.text_width(drawn_name, 20, tf) + 10.0
+				UiDraw.text(self, Vector2(mx, NAME_Y), mode, 10, Color(1, 1, 1, 0.6), 3)
 		_draw_chips(x0, x1, types)
 		UiDraw.bar(
 			self,
@@ -545,9 +570,9 @@ class FighterCard:
 		var hp_s := "%d / %d" % [body.hp, body.max_hp]
 		UiDraw.text(
 			self,
-			Vector2(x1 - UiDraw.text_width(hp_s, 13), CHIP_Y + 14.0),
+			Vector2(x1 - UiDraw.text_width(hp_s, 11), CHIP_Y + 14.0),
 			hp_s,
-			13,
+			11,
 			Color(1, 1, 1, 0.85),
 			3
 		)
@@ -620,53 +645,6 @@ class FighterCard:
 				)
 
 
-class AllyCard:
-	extends Control
-	var body: BattleFighter
-	var mode := ""
-	var cmd := ""
-	var obey := true
-	var marks: Array = []
-
-	func _draw() -> void:
-		if body == null:
-			return
-		var r := Rect2(Vector2.ZERO, size)
-		VivaTags.draw_strip(self, body, 44.0, size, marks, cmd, obey, false)
-		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.3), 12)
-		UiDraw.glass(self, r, 0.7, 12)
-		var icon := PokemonSprites.icon_fitted(body.mon.species, 32)
-		if icon:
-			draw_texture_rect(icon, Rect2(6, 4, 32, 32), false)
-		var tf := UiDraw.title_font()
-		UiDraw.text(
-			self,
-			Vector2(44, 18),
-			body.mon.display_name,
-			16,
-			UiDraw.COL_WHITE,
-			3,
-			HORIZONTAL_ALIGNMENT_LEFT,
-			-1.0,
-			tf
-		)
-		UiDraw.text(
-			self,
-			Vector2(size.x - 12 - UiDraw.text_width("Lv %d" % body.level, 13, tf), 18),
-			"Lv %d" % body.level,
-			13,
-			UiDraw.AMBER,
-			3,
-			HORIZONTAL_ALIGNMENT_LEFT,
-			-1.0,
-			tf
-		)
-		if mode != "":
-			UiDraw.text(self, Vector2(160, 18), mode, 11, Color(1, 1, 1, 0.6), 2)
-		var ratio := float(body.hp) / maxf(body.max_hp, 1)
-		UiDraw.bar(self, Rect2(44, 26, size.x - 58, 7), ratio, UiDraw.hp_color(ratio))
-
-
 class MoveButton:
 	extends Control
 	const NAME_W := 62.0
@@ -694,8 +672,8 @@ class MoveButton:
 		return _fits[nm]
 
 	func _fit_now(nm: String) -> Array:
-		var fs := 16
-		while fs > 10:
+		var fs := 14
+		while fs > 9:
 			var lines := _wrap(nm, fs)
 			var ok := lines.size() <= 2
 			for l in lines:
@@ -704,7 +682,7 @@ class MoveButton:
 			if ok:
 				return [lines, fs]
 			fs -= 1
-		return [_wrap(nm, 10), 10]
+		return [_wrap(nm, 9), 9]
 
 	func _draw() -> void:
 		var c := size * 0.5
@@ -740,7 +718,7 @@ class MoveButton:
 				s = s.substr(0, s.length() - 1)
 			if s != nm:
 				s += "…"
-			UiDraw.text_center(self, Vector2(c.x, c.y - 18.0), s, 11, name_col, 3, tf)
+			UiDraw.text_center(self, Vector2(c.x, c.y - 18.0), s, 10, name_col, 3, tf)
 		else:
 			var fit := _fit(nm)
 			var lines: Array = fit[0]
@@ -756,7 +734,7 @@ class MoveButton:
 		elif tired:
 			cost_col = Color(1, 0.7, 0.3)
 		UiDraw.text_center(
-			self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 12, cost_col, 3
+			self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 10, cost_col, 3
 		)
 		UiDraw.key_pill(self, c + Vector2(-r + 6.0, -r + 6.0), str(index + 1), 22, not afford)
 		if cd > 0.0:
@@ -766,7 +744,7 @@ class MoveButton:
 			)
 			draw_circle(c, r - 2.0, Color(0, 0, 0, 0.55 * clampf(cd / maxf(total, 0.01), 0.0, 1.0)))
 			UiDraw.text_center(
-				self, Vector2(c.x, c.y + 6.0), "%.1f" % cd, 20, Color(1, 1, 1, 0.95), 4
+				self, Vector2(c.x, c.y + 6.0), "%.1f" % cd, 16, Color(1, 1, 1, 0.95), 4
 			)
 		if body.prepare_id == id and body.prepare_t > 0.0:
 			var pf := 1.0 - clampf(body.prepare_t / maxf(Dex.prepare_time(mv), 0.01), 0.0, 1.0)
@@ -795,9 +773,9 @@ class BannerPill:
 			return
 		var a := _a * clampf(t / 0.3, 0.0, 1.0)
 		var tf := UiDraw.title_font()
-		var fs := 30
+		var fs := 24
 		var w := minf(UiDraw.text_width(text, fs, tf) + 56.0, size.x)
-		var r := Rect2(Vector2(size.x * 0.5 - w * 0.5, size.y * 0.5 - 24.0), Vector2(w, 48.0))
+		var r := Rect2(Vector2(size.x * 0.5 - w * 0.5, size.y * 0.5 - 20.0), Vector2(w, 40.0))
 		UiDraw.rounded(
 			self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35 * a), 16
 		)
@@ -847,7 +825,7 @@ class IntroLayer:
 		var sc := lerpf(1.8, 1.0, clampf(t / 0.22, 0.0, 1.0))
 		var a := clampf(t / 0.12, 0.0, 1.0) * clampf((1.1 - t) / 0.3, 0.0, 1.0)
 		var tf := UiDraw.title_font()
-		var fs := 110
+		var fs := 84
 		var w := UiDraw.text_width(_flash_text, fs, tf)
 		draw_set_transform(size * 0.5, 0.0, Vector2(sc, sc))
 		draw_string_outline(
@@ -937,20 +915,20 @@ class Pop:
 		var vw := get_viewport_rect().size.x
 		var lim := 116.0
 		if position.x > vw - CARD_MARGIN - CARD_W - 60.0:
-			lim = CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 16.0
+			lim = CARD_TOP + CARD_H * 2.0 + ROW_GAP + 16.0
 		elif position.x < CARD_MARGIN + CARD_W + 60.0:
-			lim = CARD_TOP + CARD_H + ALLY_DROP + ALLY_H + 16.0
+			lim = CARD_TOP + CARD_H * 2.0 + ROW_GAP + 16.0
 		position.y = maxf(position.y, lim)
 
 	func _fs() -> int:
 		match style:
 			"damage":
-				return 50 if scale_k > 1.45 else 40
+				return 40 if scale_k > 1.45 else 30
 			"weak":
-				return 20
+				return 16
 			"callout":
-				return 26
-		return 24
+				return 20
+		return 19
 
 	func text_height() -> float:
 		return (
@@ -974,23 +952,23 @@ class Pop:
 		match style:
 			"damage":
 				var crit := scale_k > 1.45
-				_text(text, 50 if crit else 40, CRIT_TXT if crit else CREAM, 12)
+				_text(text, 40 if crit else 30, CRIT_TXT if crit else CREAM, 12)
 			"crit":
-				_text(text, 24, Color(1.0, 0.85, 0.2))
+				_text(text, 19, Color(1.0, 0.85, 0.2))
 			"super":
-				_text(text, 24, Color(1.0, 0.78, 0.15))
+				_text(text, 19, Color(1.0, 0.78, 0.15))
 			"weak":
-				_text(text, 20, Color(0.72, 0.74, 0.8))
+				_text(text, 16, Color(0.72, 0.74, 0.8))
 			"stat_up":
-				_stat(UiDraw.COL_BUFF, true)
+				_stat(UiDraw.COL_BUFF)
 			"stat_down":
-				_stat(UiDraw.COL_DEBUFF, false)
+				_stat(UiDraw.COL_DEBUFF)
 			"miss", "dodge":
 				_speed(text)
 			"move", "callout":
 				_pill(text, col)
 			_:
-				_text(text, 24, col)
+				_text(text, 19, col)
 
 	func _line(pos: Vector2, t: String, fs: int, c: Color, outline := 8) -> void:
 		var f := UiDraw.heavy_font()
@@ -1016,35 +994,12 @@ class Pop:
 		var w := UiDraw.heavy_font().get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		_line(Vector2(-w * 0.5, fs * 0.36), t, fs, c, outline)
 
-	func _stat(c: Color, up: bool) -> void:
-		var fs := 22
-		var tw := UiDraw.heavy_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-		var tri := fs * 0.62
-		var x := -(tw + tri + 6.0) * 0.5
-		_line(Vector2(x, fs * 0.36), text, fs, c)
-		var p := Vector2(x + tw + 6.0, 0)
-		var pts := (
-			PackedVector2Array(
-				[
-					p + Vector2(0, tri * 0.45),
-					p + Vector2(tri, tri * 0.45),
-					p + Vector2(tri * 0.5, -tri * 0.45)
-				]
-			)
-			if up
-			else PackedVector2Array(
-				[
-					p + Vector2(0, -tri * 0.45),
-					p + Vector2(tri, -tri * 0.45),
-					p + Vector2(tri * 0.5, tri * 0.45)
-				]
-			)
-		)
-		draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0, 0, 0, 0.92), 5.0, true)
-		draw_colored_polygon(pts, c)
+	## Mudança de stat: "+1 ATK" / "-2 DEF" (sinal e sigla de 3 letras, sem seta).
+	func _stat(c: Color) -> void:
+		_text(text, 16, c)
 
 	func _speed(t: String) -> void:
-		var fs := 24
+		var fs := 18
 		var w := UiDraw.heavy_font().get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		for i in 3:
 			var y := -8.0 + i * 8.0
@@ -1057,8 +1012,8 @@ class Pop:
 		_text(t, fs, Color.WHITE)
 
 	func _pill(t: String, c: Color) -> void:
-		var fs := 20
-		var w := UiDraw.text_width(t, fs, UiDraw.title_font()) + 26.0
+		var fs := 15
+		var w := UiDraw.text_width(t, fs, UiDraw.title_font()) + 22.0
 		var h := fs + 12.0
 		var r := Rect2(-w * 0.5, -h * 0.5, w, h)
 		UiDraw.rounded(
@@ -1090,7 +1045,7 @@ class BattleLogLine:
 	const H := 32.0
 	const TOP := 116.0
 	const BOTTOM := 96.0  # acima da barra de status e do "Parar (Esc)" do treino
-	const FONT_SIZE := 18
+	const FONT_SIZE := 15
 	const APPEAR := 0.25
 
 	var entries: Array = []
@@ -1149,7 +1104,7 @@ class BattleLogLine:
 		var a := _a * (0.55 + 0.45 * clampf(_age / APPEAR, 0.0, 1.0))
 		var hint_w := 0.0
 		if hint_text != "":
-			hint_w = UiDraw.text_width(hint_text, 14) + 40.0
+			hint_w = UiDraw.text_width(hint_text, 12) + 40.0
 		var w := minf(UiDraw.text_width(s, FONT_SIZE) + PAD * 2.0 + CHIP + CHIP_GAP, MAX_W) + hint_w
 		var x := size.x * 0.5 - w * 0.5
 		var y := size.y * 0.5 - H * 0.5
@@ -1166,10 +1121,10 @@ class BattleLogLine:
 			3
 		)
 		if hint_text != "":
-			var hx := x + w - PAD - UiDraw.text_width(hint_text, 14)
+			var hx := x + w - PAD - UiDraw.text_width(hint_text, 12)
 			UiDraw.key_pill(self, Vector2(hx - 16.0, y + H * 0.5), hint_glyph, 18)
 			UiDraw.text(
-				self, Vector2(hx, y + H * 0.5 + 5.0), hint_text, 14, Color(UiDraw.PAPER, a), 3
+				self, Vector2(hx, y + H * 0.5 + 5.0), hint_text, 12, Color(UiDraw.PAPER, a), 3
 			)
 
 
@@ -1182,7 +1137,7 @@ class VivaTags:
 		"LIVRE": Color(0.6, 0.63, 0.68)
 	}
 	const STAGE_TAG := {
-		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "VEL", "acc": "PREC"
+		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "VEL", "acc": "ACC"
 	}
 	const FS := 10
 	const H := 14.0
@@ -1194,16 +1149,21 @@ class VivaTags:
 		"LIVRE": "cmd_livre"
 	}
 
-	## Tags "ATK↑2" a partir de f.stages (≠ 0): [{text, up}].
+	## Sigla de 3 letras de um stat ("atk" -> "ATK"), para os popups de mudança e os chips.
+	static func short_stat(k: String) -> String:
+		return STAGE_TAG.get(k, k.to_upper())
+
+	## Tags "+2 ATK" a partir de f.stages (≠ 0): [{text, up}].
 	static func stage_tags(f: BattleFighter) -> Array:
 		var out: Array = []
 		for k in STAGE_TAG:
 			var v := int(f.stages.get(k, 0))
 			if v != 0:
-				out.append(
-					{"text": "%s%s%d" % [STAGE_TAG[k], "↑" if v > 0 else "↓", absi(v)], "up": v > 0}
-				)
+				out.append({"text": stage_text(k, v), "up": v > 0})
 		return out
+
+	static func stage_text(k: String, v: int) -> String:
+		return "%s%d %s" % ["+" if v > 0 else "-", absi(v), short_stat(k)]
 
 	## Chip de texto; `icon` = nome em assets/pixellab/icons (sem o arquivo, só o texto).
 	static func chip(
@@ -1275,6 +1235,7 @@ class VivaLayer:
 	const CALLOUT_LIFE := 1.0
 	const ABILITY_LIFE := 1.2
 	const COMBO_LIFE := 0.8
+	const WARN_LIFE := 1.0
 	const SKEW := -0.2
 
 	var sync_shown := [0.0, 0.0]
@@ -1284,6 +1245,7 @@ class VivaLayer:
 	var _abilities := [{}, {}]
 	var _cut := {}
 	var _combo := {}
+	var _warn := {}
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1294,6 +1256,9 @@ class VivaLayer:
 	func add_ability(side: int, text: String) -> void:
 		_abilities[clampi(side, 0, 1)] = {"text": text, "age": 0.0}
 
+	func add_warn(text: String, col: Color) -> void:
+		_warn = {"text": text, "col": col, "age": 0.0}
+
 	func start_cut(text: String, col: Color, secs: float) -> void:
 		_cut = {"text": text, "col": col, "age": 0.0, "life": maxf(secs, 0.05)}
 
@@ -1303,6 +1268,9 @@ class VivaLayer:
 	func callout_text(side: int) -> String:
 		var c: Dictionary = _callouts[clampi(side, 0, 1)]
 		return String(c.get("text", ""))
+
+	func warn_text() -> String:
+		return String(_warn.get("text", ""))
 
 	func ability_text(side: int) -> String:
 		var c: Dictionary = _abilities[clampi(side, 0, 1)]
@@ -1325,6 +1293,7 @@ class VivaLayer:
 			_sync[i] = clampf(float(sync[i]) if sync.size() > i else 0.0, 0.0, 1.0)
 			sync_shown[i] = move_toward(sync_shown[i], _sync[i], dt * 2.5)
 		_combo = _age(_combo, COMBO_LIFE, dt)
+		_warn = _age(_warn, WARN_LIFE, dt)
 		_cut = _age(_cut, float(_cut.get("life", 0.4)), dt)
 		queue_redraw()
 
@@ -1344,6 +1313,7 @@ class VivaLayer:
 			_draw_ability(i)
 		for i in 2:
 			_draw_callout(i)
+		_draw_warn()
 		_draw_combo()
 		_draw_cut()
 
@@ -1366,17 +1336,17 @@ class VivaLayer:
 				var ix := maxf(x, x + w * v - 8.0)
 				draw_texture_rect(ic, Rect2(ix, 4.0 + h * 0.5 - 8.0, 16.0, 16.0), false)
 			if full and fmod(_time, 0.5) < 0.32:
-				var tw := UiDraw.text_width("SINTONIA!", 11)
-				UiDraw.text(
-					self, Vector2(x + w * 0.5 - tw * 0.5, 17.0), "SINTONIA!", 11, UiDraw.AMBER, 3
-				)
+				# Embaixo da arena, com os avisos, e não sobre a luta: a barra do jogador à esquerda, a do adversário à direita.
+				var by := size.y - BattleHUD.BattleLogLine.BOTTOM - BattleHUD.BattleLogLine.H - 34.0
+				var bx := x if i == 0 else x + w - UiDraw.text_width("SINTONIA!", 12)
+				UiDraw.text(self, Vector2(bx, by), "SINTONIA!", 12, UiDraw.AMBER, 3)
 
 	func _draw_callout(side: int) -> void:
 		var c: Dictionary = _callouts[side]
 		if c.is_empty():
 			return
 		var age: float = c.age
-		var fs := 26
+		var fs := 20
 		var t: String = c.text
 		var col: Color = c.col
 		var w := _wid(t, fs) + 44.0
@@ -1384,7 +1354,7 @@ class VivaLayer:
 		var a := clampf((CALLOUT_LIFE - age) / 0.2, 0.0, 1.0)
 		var sc := lerpf(1.35, 1.0, k)
 		# Menor e longe dos cartões: o do jogador acima da faixa de log, o do adversário abaixo dos cartões.
-		var y := size.y - 175.0 if side == 0 else CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 40.0
+		var y := size.y - 175.0 if side == 0 else CARD_TOP + CARD_H * 2.0 + ROW_GAP + 28.0
 		var x := 28.0 if side == 0 else size.x - 28.0 - w
 		x += (1.0 - k) * (-260.0 if side == 0 else 260.0)
 		draw_set_transform(Vector2(x + w * 0.5, y), 0.0, Vector2(sc, sc))
@@ -1415,24 +1385,53 @@ class VivaLayer:
 			return
 		var age: float = c.age
 		var t: String = c.text
-		var fs := 24
+		var fs := 18
 		var tf := UiDraw.title_font()
-		var w := UiDraw.text_width(t, fs, tf) + 60.0
+		var w := UiDraw.text_width(t, fs, tf) + 44.0
 		var k := ease(clampf(age / 0.2, 0.0, 1.0), 0.3)
 		var a := clampf((ABILITY_LIFE - age) / 0.25, 0.0, 1.0)
 		var y := size.y * 0.5 + 40.0 if side == 0 else size.y * 0.5 - 100.0
 		var home := 0.0 if side == 0 else size.x - w
 		var from := -w if side == 0 else size.x
-		var r := Rect2(lerpf(from, home, k), y, w, 44.0)
+		var r := Rect2(lerpf(from, home, k), y, w, 36.0)
 		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35 * a), 8)
 		UiDraw.rounded(self, r, Color(UiDraw.INK, 0.9 * a), 8, 2.0, Color(UiDraw.AMBER, 0.9 * a))
 		UiDraw.text(
 			self,
-			r.position + Vector2(30.0, 30.0),
+			r.position + Vector2(22.0, 25.0),
 			t,
 			fs,
 			Color(UiDraw.PAPER, a),
 			4,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			tf
+		)
+
+	func _draw_warn() -> void:
+		if _warn.is_empty():
+			return
+		var t: String = _warn.text
+		var col: Color = _warn.col
+		var age: float = _warn.age
+		var fs := 15
+		var tf := UiDraw.title_font()
+		var a := clampf((WARN_LIFE - age) / 0.25, 0.0, 1.0) * clampf(age / 0.1, 0.0, 1.0)
+		var w := UiDraw.text_width(t, fs, tf) + 36.0
+		var h := 28.0
+		var x := size.x * 0.5 - w * 0.5
+		var y := size.y - BattleHUD.BattleLogLine.BOTTOM - BattleHUD.BattleLogLine.H - 34.0 - h
+		UiDraw.rounded(self, Rect2(x, y + 3.0, w, h), Color(0, 0, 0, 0.35 * a), h * 0.5)
+		UiDraw.rounded(
+			self, Rect2(x, y, w, h), Color(UiDraw.INK, 0.88 * a), h * 0.5, 2.0, Color(col, a)
+		)
+		UiDraw.text(
+			self,
+			Vector2(x + 18.0, y + h * 0.5 + fs * 0.36),
+			t,
+			fs,
+			Color(col.lightened(0.3), a),
+			3,
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1.0,
 			tf
@@ -1450,7 +1449,7 @@ class VivaLayer:
 		elif age < 0.2:
 			sc = lerpf(1.25, 1.0, (age - 0.1) / 0.1)
 		var a := clampf((COMBO_LIFE - age) / 0.2, 0.0, 1.0)
-		var fs := 72
+		var fs := 50
 		draw_set_transform_matrix(
 			Transform2D(Vector2(sc, 0), Vector2(SKEW * sc, sc), Vector2(size.x * 0.5, size.y * 0.4))
 		)
@@ -1480,7 +1479,7 @@ class VivaLayer:
 			var len_px := 160.0 + fmod(float(i) * 71.0, 240.0)
 			var lx := fmod(float(i) * 233.0 + _time * 2600.0, bw + len_px) - bw * 0.5 - len_px
 			draw_line(Vector2(lx, ly), Vector2(lx + len_px, ly), Color(1, 1, 1, 0.45 * a), 3.0)
-		var fs := 104
+		var fs := 80
 		var shake := Vector2(sin(age * 90.0), cos(age * 70.0)) * 3.0 * (1.0 - k)
 		var slide := (1.0 - k) * -420.0
 		_big(Vector2(-_wid(t, fs) * 0.5 + slide, fs * 0.35) + shake, t, fs, Color(1, 1, 1, a), 16)

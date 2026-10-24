@@ -52,7 +52,8 @@ func _run() -> void:
 	e.status = "burn"
 	var m := Cfg.build_mon(e)
 	check(
-		m.level == 30 and m.ivs.atk == 0 and m.evs.spe == 252, "build_mon mantém nível, IVs e EVs"
+		m.level == 30 and m.ivs.atk == StatCalc.IV_MAX and m.evs.spe == 0,
+		"build_mon mantém o nível e põe IV 31 e EV 0"
 	)
 	check(m.hp == ceili(m.max_hp * 0.5), "HP inicial pelo hp_pct")
 	check(m.status == "burn", "status inicial")

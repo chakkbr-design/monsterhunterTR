@@ -1095,13 +1095,14 @@ func _clash() -> void:
 			a.stun_t = maxf(a.stun_t, 0.25)
 			b.stun_t = maxf(b.stun_t, 0.25)
 			var mid: Vector3 = (a.position + b.position) * 0.5
-			popup(mid + Vector3(0, 1.4, 0), "CLASH!", Color(1, 0.95, 0.6), 1.6, "crit")
+			# O aviso vai para embaixo da arena (BattleHUD.warn), sem congelar a luta nem cobrir os Pokémon.
+			if hud:
+				hud.warn("CLASH!", Color(1, 0.9, 0.5))
 			fx_disc(mid * Vector3(1, 0, 1), 1.2, Color(1, 0.95, 0.7, 0.8), 0.3)
 			PixelFx.pop(self, "impact", mid + Vector3(0, 0.9, 0), 2.4, 0.35)
 			PixelFx.pop(self, "shock", mid + Vector3(0, 0.6, 0), 3.0, 0.4)
 			preload("res://audio/cue.gd").sfx("hit_super")
 			say("CLASH! %s e %s se chocaram!" % [a.mon.display_name, b.mon.display_name])
-			cut_in("CLASH!", Color(1, 0.9, 0.5), 0.3)
 
 
 func _separate() -> void:
