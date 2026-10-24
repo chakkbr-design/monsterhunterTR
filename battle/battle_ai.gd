@@ -62,6 +62,23 @@ const PANIC_THINK := 1.3
 ## Variação de ritmo para a luta não ficar previsível (+-5%).
 const JITTER := 0.05
 const STALL_SECS := 6.0
+## Status com bom senso (jogador competitivo): golpe de parceiro só com parceiro vivo, buff até +2,
+## debuff até -2, Focus Energy uma vez, peso por golpe e, depois de um status, STATUS_LOCK s preferindo
+## atacar (só o urgente passa: Protect diante de ameaça, cura com HP muito baixo).
+const PARTNER_MOVES := ["helping_hand", "follow_me", "rage_powder", "after_you", "quick_guard"]
+const ONCE_MOVES := ["focus_energy"]
+const LOW_VALUE_MOVES := ["sweet_scent", "worry_seed", "splash", "sand_attack", "smokescreen"]
+const BUFF_CAP := 2
+const DEBUFF_CAP := -2
+const STATUS_LOCK := Vector2(4.0, 6.0)
+const URGENT_HP := 0.35
+const STATUS_W_SETUP := 0.4
+const STATUS_W_BASE := 0.25
+const STATUS_W_LOW := 0.08
+const SETUP_STATS := ["atk", "spa", "spe"]
+## Status sem golpe de dano pronto: peso x FILLER_MULT. Recusou todos: DECLINE_LOCK s sem rolar de novo.
+const FILLER_MULT := 2.0
+const DECLINE_LOCK := 1.5
 ## Comando: Ofensivo encurta a faixa e o recuo; Defensivo alonga e esquiva melhor.
 const CMD_BAND := [0.75, 1.25, 1.35, 1.0]
 const CMD_RETREAT := [0.4, 1.5, 1.2, 1.0]
@@ -92,6 +109,10 @@ var threat_wait := 0.0
 var auto_cmd_t := 0.0
 ## Segundos sem soltar golpe: passado STALL_SECS para de fugir e vai para cima (sem empate eterno).
 var idle_t := 0.0
+## Depois de um golpe de status: segundos em que só o status urgente passa.
+var status_lock_t := 0.0
+## Golpes de uma vez por luta já usados (Focus Energy).
+var used_once := {}
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -181,6 +202,7 @@ func move_ready(d: float) -> bool:
 ## Um passo de IA: devolve a direção desejada e ajusta f.sprinting; pode disparar golpes.
 func step(dt: float) -> Vector3:
 	f.sprinting = false
+	status_lock_t = maxf(status_lock_t - dt, 0.0)
 	pick_target(dt)
 	_auto_command(dt)
 	var opp := f.opponent
@@ -225,6 +247,9 @@ func step(dt: float) -> Vector3:
 		if punish and not punished and tactic_on:
 			fire = true
 			punished = true
+		# Sem PP: Desespero de perto (os dois sem PP ficavam rodando sem bater até o fim do tempo).
+		if f.out_of_pp() and d < 2.2:
+			fire = true
 		if fire and f.can_act():
 			tactic_on = _tactic_ok()
 			var used := _use_best_move(d)
@@ -605,10 +630,22 @@ func _use_best_move(d: float) -> bool:
 	if _immune_only(avail) and _has_connecting_move():
 		return false
 	var id := intent if intent in avail else pick(avail)
+	if id == "":
+		return false
 	if f.arena.moves.use(f, id):
 		recover_t = RECOVER
+		note_used(id)
 		return true
 	return false
+
+
+## Status usado: trava os próximos status (exceto urgente) e marca os de uma vez por luta.
+func note_used(id: String) -> void:
+	if float(Dex.move(id).get("power", 0)) > 0.0:
+		return
+	status_lock_t = _rng().randf_range(STATUS_LOCK.x, STATUS_LOCK.y)
+	if id in ONCE_MOVES:
+		used_once[id] = true
 
 
 func _dmg(id: String) -> float:
@@ -631,10 +668,15 @@ func _has_connecting_move() -> bool:
 
 func pick(avail: Array) -> String:
 	var mode := ally_mode()
-	if mode >= 0:
-		var useful: Array = avail.filter(func(id): return not _stat_move_maxed(id))
-		if not useful.is_empty():
-			avail = useful
+	var connects := _has_connecting_move()
+	var useful: Array = avail.filter(func(id): return status_ok(String(id), connects))
+	if useful.is_empty():
+		# Só sobrou status ruim agora: com golpe de dano no repertório, espera ele em vez do status.
+		if connects:
+			return ""
+		useful = avail.filter(func(id): return not _stat_move_maxed(id))
+	if not useful.is_empty():
+		avail = useful
 	var pref: Array = []
 	match mode:
 		ATTACK:
@@ -644,10 +686,11 @@ func pick(avail: Array) -> String:
 				pref = avail.filter(func(id): return Dex.move(id).get("kind", "") == "self_buff")
 		SUPPORT:
 			pref = avail.filter(func(id): return is_support_move(id))
+	var full := avail
 	if not pref.is_empty():
 		avail = pref
 	var dmg := {}
-	for id in avail:
+	for id in full:
 		if float(Dex.move(id).get("power", 0)) > 0.0:
 			dmg[id] = _dmg(id)
 			if BattleMoves.multi_target(Dex.move(id)) == "all_other_pokemon" and partner() != null:
@@ -666,10 +709,86 @@ func pick(avail: Array) -> String:
 	if rng.randf() < error_chance():
 		return String(pool[rng.randi() % pool.size()])
 	var has_hit := dmg.values().any(func(v): return v > 0.0)
-	var kit: Array = pool.filter(func(id): return _worth_status(id, has_hit))
+	var kit: Array = pool.filter(func(id): return float(Dex.move(id).get("power", 0)) <= 0.0)
 	if not kit.is_empty():
-		return String(kit[rng.randi() % kit.size()])
+		if not connects:
+			return String(kit[rng.randi() % kit.size()])
+		# Cada status passa pelo próprio peso (o urgente sempre); com o golpe de dano só esperando o
+		# cooldown o peso dobra (status de enchimento), e se nenhum passar a IA espera o ataque.
+		var k := 1.0 if has_hit else FILLER_MULT
+		var from := rng.randi() % kit.size()
+		for i in kit.size():
+			var id := String(kit[(from + i) % kit.size()])
+			if rng.randf() < status_weight(id) * k:
+				return id
+		status_lock_t = maxf(status_lock_t, DECLINE_LOCK)
+		if best == "":
+			best = best_move(full.filter(func(id): return dmg.get(id, 0.0) > 0.0), dmg)
+		if best == "":
+			return ""
 	return best if best != "" else String(pool[rng.randi() % pool.size()])
+
+
+## Regras duras do status: o golpe faz sentido agora? Golpe de dano sempre passa. Na trava depois de um
+## status só passa o urgente (com golpe de dano que conecta no repertório).
+func status_ok(id: String, connects := true) -> bool:
+	var mv := Dex.move(id)
+	if float(mv.get("power", 0)) > 0.0:
+		return true
+	if id in PARTNER_MOVES and partner() == null:
+		return false
+	if id in ONCE_MOVES and used_once.has(id):
+		return false
+	if not _worth_status(id, connects):
+		return false
+	if connects and status_lock_t > 0.0 and not status_urgent(id):
+		return false
+	return true
+
+
+## Status que vale mesmo na trava: Protect/Quick Guard diante de ameaça, cura com HP bem baixo.
+func status_urgent(id: String) -> bool:
+	var mv := Dex.move(id)
+	var hp := float(f.hp) / maxf(f.max_hp, 1)
+	match String(mv.get("special", "")):
+		"protect", "quick_guard":
+			return f.arena.moves.effects._threatened(f)
+		"roost", "heal_weather", "swallow", "rest", "healing_wish":
+			return hp < URGENT_HP
+		"life_dew":
+			var p := partner()
+			return hp < URGENT_HP or (p != null and float(p.hp) / maxf(p.max_hp, 1) < URGENT_HP)
+	return false
+
+
+## Chance de escolher este status (já aprovado por status_ok) quando há golpe de dano à mão.
+func status_weight(id: String) -> float:
+	if status_urgent(id):
+		return 1.0
+	var mv := Dex.move(id)
+	var st := String(mv.get("stat", ""))
+	var kind := String(mv.get("kind", ""))
+	if (
+		id in LOW_VALUE_MOVES
+		or kind == "clones"
+		or (kind == "self_buff" and st in ["acc", "evasion"])
+	):
+		return STATUS_W_LOW
+	if kind == "self_buff" and String(mv.get("special", "")) == "":
+		var ups := _raised(mv)
+		if ups.any(func(k): return k in SETUP_STATS and int(f.stages.get(k, 0)) <= 0):
+			return STATUS_W_SETUP
+	return STATUS_W_BASE
+
+
+## Atributos que o buff sobe (Shell Smash: atk, spa, spe).
+func _raised(mv: Dictionary) -> Array:
+	var stats = mv.get("stats")
+	if stats is Dictionary:
+		return stats.keys().filter(func(k): return int(stats[k]) > 0)
+	if int(mv.get("stages", 1)) > 0 and mv.has("stat"):
+		return [String(mv.stat)]
+	return []
 
 
 ## Golpe com menos acertos até o KO; empate vai para o de maior dano.
@@ -708,23 +827,58 @@ func _worth_status(id: String, has_damage: bool) -> bool:
 			var cur := f.crit_stage if st == "crit" else int(f.stages.get(st, 0))
 			if st == "evasion":
 				return f.evasion_t <= 0.0
+			# Vários atributos (Shell Smash, Quiver Dance): nenhum dos que sobem já em +2.
+			for k in _raised(mv):
+				if int(f.stages.get(String(k), 0)) >= BUFF_CAP:
+					return false
 			var moved := cur * signi(delta)
-			return delta != 0 and (moved <= 0 or stack_ok) and moved < KIT_STAT_DEPTH
+			return delta != 0 and (moved <= 0 or stack_ok) and moved < BUFF_CAP
 		"debuff_aoe":
-			var cur2 := int(opp.stages.get(String(mv.get("stat", "")), 0))
-			return (cur2 >= 0 or stack_ok) and cur2 > -KIT_STAT_DEPTH
+			return _debuff_ok(opp, String(mv.get("stat", "")), stack_ok)
 		"clones":
 			return f.evasion_t <= 0.0
 	var ef = mv.get("effect")
+	if String(mv.get("special", "")) == "thunder_wave" and "ground" in opp.types:
+		return false
 	if ef is Dictionary and ef.has("status"):
-		var st2 := String(ef.status)
-		if st2 == "confusion":
-			return opp.confusion_t <= 0.0
-		return opp.status == "" and not BattleMoves.STATUS_IMMUNE.get(st2, "-") in opp.types
+		return _status_lands(opp, String(ef.status), bool(mv.get("powder", false)))
 	if ef is Dictionary and ef.has("stat"):
-		var cur3 := int(opp.stages.get(String(ef.stat), 0))
-		return (cur3 >= 0 or stack_ok) and cur3 > -KIT_STAT_DEPTH
+		return _debuff_ok(opp, String(ef.stat), stack_ok)
 	return false
+
+
+## Debuff no alvo: não já em -2 (ou menos) nem com habilidade que impede a queda (Clear Body...).
+func _debuff_ok(opp: BattleFighter, st: String, stack_ok: bool) -> bool:
+	var cur := int(opp.stages.get(st, 0))
+	if cur <= DEBUFF_CAP or (cur < 0 and not stack_ok):
+		return false
+	var ab = f.arena.get("abilities")
+	return not (ab and ab.has_method("ability_of") and _keeps_stat(String(ab.ability_of(opp)), st))
+
+
+static func _keeps_stat(ability: String, st: String) -> bool:
+	if not BattleAbilities.KEEP_STAT.has(ability):
+		return false
+	var keys: Array = BattleAbilities.KEEP_STAT[ability]
+	return keys.is_empty() or st in keys
+
+
+## O status pega no alvo agora: sem condição, sem imunidade de tipo/habilidade, sem Safeguard do lado
+## dele; pó não pega em Planta.
+func _status_lands(opp: BattleFighter, st: String, powder: bool) -> bool:
+	if powder and "grass" in opp.types:
+		return false
+	var ab = f.arena.get("abilities")
+	var a := String(ab.ability_of(opp)) if ab and ab.has_method("ability_of") else ""
+	if a == "shield_dust" or st in BattleAbilities.BLOCKS.get(a, []):
+		return false
+	if f.arena.moves.effects.side_active(opp.side, "safeguard"):
+		return false
+	if st == "confusion":
+		return opp.confusion_t <= 0.0
+	if st in ["poison", "toxic"] and "steel" in opp.types:
+		return false
+	return opp.status == "" and not BattleMoves.STATUS_IMMUNE.get(st, "-") in opp.types
 
 
 # --- Esquiva ---

@@ -429,8 +429,8 @@ func _variable_power() -> void:
 	var e: BattleFighter = a.enemy
 	var fx: BattleMoveEffects = a.moves.effects
 	check(
-		float(fx.adjust_move(p, e, Dex.move("gyro_ball")).power) > 60.0,
-		"Gyro Ball mais forte no lento"
+		float(fx.adjust_move(p, e, Dex.move("gyro_ball")).power) > 40.0,
+		"Gyro Ball mais forte no lento (IVs sorteados: 25 x Speed dele / minha + 1)"
 	)
 	e.apply_status("poison")
 	check(

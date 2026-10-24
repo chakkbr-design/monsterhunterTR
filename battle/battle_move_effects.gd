@@ -112,6 +112,11 @@ func active(d: Dictionary, k: String) -> bool:
 	return _left(d, k) > 0.0
 
 
+## Efeito de lado ativo (safeguard, light_screen, tailwind...). A IA consulta.
+func side_active(side: int, k: String) -> bool:
+	return active(_sd(side), k)
+
+
 func _ability(f: BattleFighter) -> String:
 	if arena.abilities and arena.abilities.has_method("ability_of"):
 		return String(arena.abilities.ability_of(f))
@@ -1183,7 +1188,7 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 		"swallow":
 			return hp < 0.5
 		"stockpile":
-			return int(s.stock) < 3
+			return int(s.stock) < 2 and int(f.stages.get("def", 0)) < 2
 		"haze":
 			var mine := 0
 			var theirs := 0
@@ -1202,7 +1207,7 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 				and ("flying" in opp.types or opp.fly_target > 0.0)
 			)
 		"grassy_terrain":
-			return not active(field, "grassy")
+			return not active(field, "grassy") and (hp < 0.8 or _has_type_hit(f, "grass"))
 		"sandstorm":
 			return (
 				weather() != "sand"
@@ -1246,8 +1251,16 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 		"curse":
 			if "ghost" in f.types:
 				return hp > 0.6
-			return int(f.stages.get("atk", 0)) < 4
+			return int(f.stages.get("atk", 0)) < 2
 	return null
+
+
+func _has_type_hit(f: BattleFighter, type: String) -> bool:
+	return f.moves.any(
+		func(m):
+			var mv := Dex.move(String(m))
+			return float(mv.get("power", 0)) > 0.0 and String(mv.get("type", "")) == type
+	)
 
 
 func _threatened(f: BattleFighter) -> bool:
