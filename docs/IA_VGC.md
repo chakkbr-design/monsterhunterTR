@@ -78,9 +78,10 @@ interface da thread de turnos: `round_start()` no começo da rodada, `request_sw
 "/c/Users/User/Desktop/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe" --headless --fixed-fps 60 --path . --script res://tests/balance/ia_duel.gd -- seeds=5
 ```
 
-Resultado de 2026-10-24 (5 sementes, 40 lutas, Protect ainda com a janela de 0,8 s): com o mesmo time
-dos dois lados a IA nova venceu 12 de 20; nos cruzados o time "Vento" vence quase sempre, com qualquer IA.
-A IA nova trocou de 1 a 3 vezes por luta com o time "Vento" e usou a Super Poção de 1 a 5 vezes.
+Resultado de 2026-10-24 (5 sementes, 40 lutas, já com Protect valendo a rodada inteira): com o mesmo
+time dos dois lados a IA nova venceu 14 de 20 (1 empate por tempo); contando os cruzados, 24 de 40. A IA
+nova usou Protect em ~16% das ações, Tailwind 21 vezes, Helping Hand 40, Follow Me 18, trocou de 1 a 3
+vezes por luta com o time "Vento" e usou a Super Poção quando a cura salvava.
 
 ## Testes
 
