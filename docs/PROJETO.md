@@ -10,6 +10,7 @@ Atualizado em 2026-10-24. Jogo em Godot 4.7 (GDScript), feito a partir do estudo
 | `C:\Users\User\Documents\pokmemon-like` | O projeto Godot (repositório git local, sem remoto) |
 | `C:\Users\User\Documents\pba-referencia` | Engenharia reversa do original: `codigo/` (164 scripts decompilados), `dados/` (JSONs), `analise/` (3 relatórios), `ferramentas/` (extrator do PCK, decompilador `.gdc`, conversor de arte) |
 | `docs/MECANICAS.md` | Regras da batalha oficial atual (dano Gen 5+, crítico, prioridade, dupla, status, clima) e como o jogo adapta cada uma, com o arquivo |
+| `docs/GOLPES.md` | Guia golpe por golpe de como cada golpe oficial (Gen 9) foi adaptado ao tempo real; gerado por `tools/move_guide.py` (também gera a página HTML) |
 | `docs/CONTRATO.md` | Regras de quem edita qual pasta e as APIs entre as partes (histórico de todas as rodadas) |
 | `docs/pedidos/*.md` | Pedidos que cada parte fez às outras |
 | `docs/screens/*.png` | Capturas reais de cada parte do jogo |
