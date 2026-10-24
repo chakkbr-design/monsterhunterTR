@@ -1306,14 +1306,20 @@ func _sync_editor() -> void:
 		var nm := String(a.get("name", abil[k])).capitalize()
 		_ability.add_item(nm + (" (oculta)" if String(abil[k]) == hidden else ""))
 		_ability.set_item_metadata(k, k)
-		_ability.set_item_tooltip(k, String(a.get("desc", "")))
+		_ability.set_item_tooltip(k, String(a.get("desc_pt", a.get("desc", ""))))
 	if abil.is_empty():
 		_ability.add_item("—")
 		_ability.set_item_metadata(0, 0)
 	var ak := clampi(m.ability_slot, 0, _ability.item_count - 1)
 	_ability.select(ak)
 	_ability_desc.text = (
-		String(Dex.ability(String(abil[ak])).get("desc", "")) if not abil.is_empty() else ""
+		String(
+			Dex.ability(String(abil[ak])).get(
+				"desc_pt", Dex.ability(String(abil[ak])).get("desc", "")
+			)
+		)
+		if not abil.is_empty()
+		else ""
 	)
 	_hp.value = int(e.get("hp_pct", 100))
 	_hp_info.text = "%d / %d" % [m.hp, m.max_hp]
