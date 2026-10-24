@@ -35,6 +35,8 @@ func _initialize() -> void:
 	_replacement_at_round_end()
 	_trainer_item()
 	_stands_and_ball()
+	_status_on_switch()
+	_paralysis_secs()
 	print("switch: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -220,3 +222,78 @@ func _stands_and_ball() -> void:
 	_run(w, 1.0)
 	check(w._stands.has(0) and not w._stands.has(1), "selvagem: só o treinador do jogador")
 	w.free()
+
+
+## Troca como no oficial: estágios, confusão e Leech Seed zeram; status principal fica (Toxic com o
+## contador zerado, sono com os turnos que faltam, congelado); a paralisia segue com o tempo que falta.
+func _status_on_switch() -> void:
+	var a := _doubles(8)
+	var cases := [["toxic", "toxic"], ["sleep", "sleep"], ["freeze", "freeze"], ["burn", "burn"]]
+	for c in cases:
+		var out: BattleFighter = a.player
+		var m: Mon = out.mon
+		out.clear_status()
+		out.stages["atk"] = 2
+		out.stages["spe"] = -1
+		out.apply_status("confusion")
+		out.apply_status("leech", a.enemy)
+		check(out.apply_status(String(c[0])), "%s pegou" % c[0])
+		out.toxic_n = 4
+		if c[0] == "sleep":
+			out.sleep_turns = 1
+		var back: BattleFighter = null
+		for k in 6:
+			var nf: BattleFighter = a.switch_out(a.player)
+			if nf == null:
+				break
+			if nf.mon == m:
+				back = nf
+				break
+		check(back != null, "%s: voltou para campo" % c[0])
+		if back == null:
+			continue
+		check(back.status == String(c[1]), "%s: status ficou (%s)" % [c[0], back.status])
+		check(back.stages["atk"] == 0 and back.stages["spe"] == 0, "%s: estágios zeraram" % c[0])
+		check(
+			back.confusion_t <= 0.0 and not back.seeded, "%s: confusão e Leech Seed saíram" % c[0]
+		)
+		check(back.toxic_n == 0, "%s: contador do Toxic zerou" % c[0])
+		if c[0] == "sleep":
+			check(
+				back.sleep_turns == 1, "sono guardou os turnos que faltavam (%d)" % back.sleep_turns
+			)
+	a.player.clear_status()
+	a.free()
+
+
+func _paralysis_secs() -> void:
+	var a := _doubles(9)
+	var f: BattleFighter = a.player
+	f.immortal = true
+	f.clear_status()
+	check(f.apply_status("paralysis"), "paralisou")
+	_run(a, 6.0)
+	check(f.status == "paralysis", "ainda paralisado em 6 s")
+	var nf: BattleFighter = a.switch_out(f)
+	check(
+		f.mon.par_left > 3.0 and f.mon.par_left < 4.5, "guardou o que falta (%.2f)" % f.mon.par_left
+	)
+	var m: Mon = f.mon
+	for k in 6:
+		if nf == null or nf.mon == m:
+			break
+		nf = a.switch_out(nf)
+	check(nf != null and nf.mon == m and nf.status == "paralysis", "voltou paralisado")
+	if nf:
+		nf.immortal = true
+		_run(a, 3.0)
+		check(nf.status == "paralysis", "ainda paralisado com o tempo que faltava")
+		_run(a, 2.0)
+		check(nf.status != "paralysis", "paralisia acabou nos 10 s de campo somados")
+	var g: BattleFighter = a.ally
+	g.immortal = true
+	g.clear_status()
+	g.apply_status("paralysis")
+	_run(a, BattleFighter.PARALYSIS_SECS + 0.5)
+	check(g.status != "paralysis", "aliado também sai da paralisia em 10 s")
+	a.free()

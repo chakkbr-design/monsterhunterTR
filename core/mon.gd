@@ -15,6 +15,12 @@ var evs := {}
 var stats := {}
 var hp := 0
 var status := ""
+## Só em memória, para a troca no meio da luta (BattleFighter.write_back/setup): segundos de
+## paralisia que faltam (PARALYSIS_SECS), turnos de sono que faltam e status que não sobra fora da luta
+## (toxic, que fica "poison" em status, e freeze).
+var par_left := 0.0
+var sleep_left := 0
+var battle_status := ""
 ## Pool único de PP do Pokémon (não é por golpe).
 var pp := 0.0
 var gender := ""
@@ -110,7 +116,15 @@ func stat(k: String) -> int:
 func heal_full() -> void:
 	hp = max_hp
 	pp = pp_base
+	cure()
+
+
+## Tira o status e o que a luta guardou dele.
+func cure() -> void:
 	status = ""
+	par_left = 0.0
+	sleep_left = 0
+	battle_status = ""
 
 
 ## Amizade 0..255 (mon.gd set_friend do original).

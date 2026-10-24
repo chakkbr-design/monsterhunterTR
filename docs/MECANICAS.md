@@ -100,10 +100,11 @@ fim de turno (`battle/battle_end_turn.gd`, uma vez por rodada; ver "Fim de turno
 | Queimadura | 1/16 por turno, físico 0,5x, não acaba sozinha | igual |
 | Veneno | 1/8 por turno, não acaba sozinho | igual |
 | Toxic | n/16 no n-ésimo turno (n até 15, zera na troca) | igual (`toxic_n`; fora da luta vira veneno comum) |
-| Paralisia | Speed 0,5x, 25% não age, não acaba sozinha | não acaba sozinha, Speed 0,5x; falhar o golpe segue em 20% (`BattleMoves.PARALYSIS_FAIL`, não mexido) |
+| Paralisia | Speed 0,5x, 25% não age, não acaba sozinha | acaba sozinha depois de 10 s em campo (`PARALYSIS_SECS`, pedido do Caio; o que falta segue na troca), Speed 0,5x; falhar o golpe segue em 20% (`BattleMoves.PARALYSIS_FAIL`, não mexido) |
 | Sono | 1-3 turnos (contador 2-4 que desce ao tentar agir); Rest 2 | igual (`sleep_turns`, `SLEEP_COUNTER`, `REST_COUNTER`); golpe não acorda |
 | Congelamento | 20% de descongelar a cada tentativa de agir; Fogo descongela | igual (`THAW_CHANCE`) |
 | Confusão | 2-5 turnos (contador desce ao tentar agir), 33% | contador 2-5 (`confusion_turns`); 33% de sair em direção aleatória |
+| Troca | estágios, confusão, Leech Seed e contador do Toxic zeram; status principal fica (Toxic segue Toxic, sono guarda os turnos que faltam) | igual (lutador novo do `Mon`; `Mon.battle_status`/`sleep_left`/`par_left` guardam o resto dentro da luta; Baton Pass passa os estágios) |
 | Hesitar | só se o alvo age depois | 0,5 s parado (tempo real) |
 | Leech Seed | volátil, 1/8 por turno para quem plantou | igual (`seeded`, convive com outro status, sai na troca ou com Rapid Spin) |
 

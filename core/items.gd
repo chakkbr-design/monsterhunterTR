@@ -36,7 +36,7 @@ static func use(id: String, m: Mon) -> String:
 		m.hp = m.max_hp if str(fx.hp) == "full" else mini(m.max_hp, m.hp + int(fx.hp))
 		return "%s recuperou %d de HP." % [m.display_name, m.hp - before]
 	if fx.has("cure"):
-		m.status = ""
+		m.cure()
 		return "%s está curado." % m.display_name
 	if fx.has("level"):
 		m.add_exp(Growth.exp_for_level(m.growth, m.level + int(fx.level)) - m.xp)

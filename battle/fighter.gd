@@ -30,7 +30,7 @@ const LUNGE_SPEED := 10.0
 const LUNGE_TIME := 0.2
 const LUNGE_PREPARE := 0.15
 const STRUGGLE_CD := 1.0
-## Status como no oficial (Gen 9): queimadura, veneno e paralisia não acabam sozinhos; o dano de
+## Status como no oficial (Gen 9): queimadura e veneno não acabam sozinhos; o dano de
 ## queimadura/veneno/Toxic é de fim de turno (BattleEndTurn), uma vez por rodada.
 ## Sono: contador 2..4 que desce a cada tentativa de agir e acorda no zero (1 a 3 turnos dormindo, como
 ## o Showdown); Rest dorme 2 turnos (contador 3).
@@ -43,6 +43,9 @@ const THAW_CHANCE := 0.2
 ## Toxic: n/16 no n-ésimo fim de turno (n até 15; zera ao sair de campo).
 const TOXIC_MAX := 15
 const FLINCH_TIME := 0.5
+## Paralisia acaba sozinha depois de PARALYSIS_SECS s de luta em campo (pedido do Caio; no oficial é
+## permanente). O que sobra fica no Mon (par_left) para a troca e a próxima luta.
+const PARALYSIS_SECS := 10.0
 ## Clarão do efeito de fim de turno (popup + tinta curta no sprite).
 const RESIDUAL_FLASH := 0.25
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
@@ -116,6 +119,8 @@ var confusion_turns := 0
 var status := ""
 ## Sono: tentativas de agir até acordar (SLEEP_COUNTER).
 var sleep_turns := 0
+## Segundos de paralisia que faltam (PARALYSIS_SECS).
+var par_t := 0.0
 ## Rodada (BattleTurns.round_n) em que o status / a confusão começou.
 var status_round := -1
 var confusion_round := -1
@@ -222,8 +227,16 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
 	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
-	if m.status in Mon.PERSIST_STATUS:
-		apply_status(m.status)
+	# Status volta da troca como no oficial: Toxic (contador zerado), congelado e o sono que faltava.
+	var st := m.status
+	if m.battle_status == "toxic" and st == "poison":
+		st = "toxic"
+	elif m.battle_status == "freeze" and st == "":
+		st = "freeze"
+	if st in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
+		apply_status(st)
+		if st == "sleep" and m.sleep_left > 0:
+			sleep_turns = m.sleep_left
 	_set_profile()
 	ai = BattleAI.new(self)
 	_build_visual()
@@ -650,6 +663,8 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 	status_round = round_now()
 	if s == "sleep":
 		sleep_turns = _roll(SLEEP_COUNTER)
+	elif s == "paralysis":
+		par_t = mon.par_left if mon.par_left > 0.0 else PARALYSIS_SECS
 	if s in Mon.PERSIST_STATUS:
 		mon.status = s
 	elif s == "toxic":
@@ -664,7 +679,8 @@ func clear_status() -> void:
 	status = ""
 	sleep_turns = 0
 	toxic_n = 0
-	mon.status = ""
+	par_t = 0.0
+	mon.cure()
 	refresh_label()
 
 
@@ -942,6 +958,11 @@ func tick(dt: float) -> void:
 	evasion_t = maxf(evasion_t - dt, 0.0)
 	struggle_cd = maxf(struggle_cd - dt, 0.0)
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
+	if status == "paralysis":
+		par_t -= dt
+		if par_t <= 0.0:
+			clear_status()
+			popup("Não está mais paralisado", Color(1, 1, 0.5), 0.8)
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)
@@ -1229,4 +1250,7 @@ func write_back() -> void:
 	mon.hp = hp
 	if not energy_mode:
 		mon.pp = pp_max
-	mon.status = status if status in Mon.PERSIST_STATUS else ""
+	mon.status = "poison" if status == "toxic" else status if status in Mon.PERSIST_STATUS else ""
+	mon.battle_status = status if status in ["toxic", "freeze"] else ""
+	mon.par_left = par_t if status == "paralysis" else 0.0
+	mon.sleep_left = sleep_turns if status == "sleep" else 0

@@ -246,6 +246,10 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	opts = o
 	party = player_party
 	enemies = enemy_list
+	for m in party + enemies:
+		if m is Mon:
+			m.sleep_left = 0  # contagem de sono e Toxic/congelado só valem dentro de uma luta
+			m.battle_status = ""
 	kind = String(o.get("kind", "wild"))
 	training = kind == "wild" and bool(o.get("training", false))
 	fight_speed = float(o.get("speed", _settings_speed()))

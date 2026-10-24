@@ -1859,8 +1859,8 @@ func _aromatherapy(user: BattleFighter) -> void:
 	var list = arena.get("party") if user.side == 0 else arena.get("enemies")
 	if list is Array:
 		for m in list:
-			if m is Mon and m.hp > 0 and m.status != "":
-				m.status = ""
+			if m is Mon and m.hp > 0 and (m.status != "" or m.battle_status != ""):
+				m.cure()
 				cured += 1
 	user.popup("Aroma calmante!" if cured > 0 else "Ninguém precisava.", Color(0.7, 1.0, 0.7))
 
