@@ -123,7 +123,7 @@ func est(a: Dictionary, d: Dictionary, mv: Dictionary) -> float:
 	var base := ((2.0 * float(a.level) / 5.0 + 2.0) * power * at / df) / 50.0 + 2.0
 	var stab := 1.5 if mv.get("type") in a.types else 1.0
 	var acc := float(mv.get("accuracy", 100)) / 100.0
-	var hits := float(mv.get("hits", mv.get("count", 1)))
+	var hits := float(BattleMoves.hits_of(mv))
 	var pace := float(arena.get("damage_pace")) if arena.get("damage_pace") != null else 1.0
 	return base * stab * eff * ROLL_MEAN * clampf(acc, 0.0, 1.0) * hits * pace
 

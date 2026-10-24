@@ -48,6 +48,8 @@ const FIELD_ENDS := {
 	"grassy": "O campo de grama sumiu.",
 	"electric": "O campo elétrico sumiu.",
 	"misty": "O campo de névoa sumiu.",
+	"psychic": "O campo psíquico sumiu.",
+	"wonder": "A Wonder Room acabou.",
 }
 
 var arena: Node
@@ -292,6 +294,9 @@ func _volatiles(f: BattleFighter) -> void:
 		_note("disable_end", f)
 	if fx.count_round(s, "heal_block"):
 		_note("heal_block_end", f)
+	if fx.count_round(s, "magnet"):
+		f.popup("O levitar acabou.", COL_END, 0.8)
+		_note("magnet_end", f)
 	if fx.count_round(s, "throat"):
 		_note("throat_end", f)
 	if fx.count_round(s, "yawn"):

@@ -112,9 +112,21 @@ const BIND_MOVES := [
 const PIVOT_DELAY := 0.35
 const PRESENT_HEAL := 0.2
 const STEALTH_R := 1.4
-const TERRAINS := ["grassy", "electric", "misty"]
+const TERRAINS := ["grassy", "electric", "misty", "psychic"]
 const TERRAIN_BOOST := 1.3
 const MISTY_DRAGON := 0.5
+## Magnet Rise: 5 turnos levitando (imune a Terra, sem pisar no chão), a altura do voo em m.
+const MAGNET_TURNS := 5
+const MAGNET_H := 0.8
+## Lock-On: o próximo golpe não erra (o uso + o turno seguinte).
+const LOCK_TURNS := 2
+## Rage Fist: +50 de poder por vez que levou golpe, até 350.
+const RAGE_STEP := 50.0
+const RAGE_MAX := 350.0
+## Golpes que descongelam o alvo além dos de Fogo.
+const THAW_MOVES := ["scald"]
+## Acupressure: atributos que podem subir.
+const ACUPRESSURE_STATS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Golpes de som oficiais que existem no jogo (Throat Chop bloqueia; atravessam o Substitute).
 const SOUND_MOVES := [
 	"alluring_voice",
@@ -202,6 +214,8 @@ func st(f: BattleFighter) -> Dictionary:
 			"focus_t": -99.0,
 			"pivot_cast": -1,
 			"omni_cast": -1,
+			"rage": 0,
+			"destiny": false,
 		}
 	return _st[id]
 
@@ -315,6 +329,15 @@ func note_fail(f: BattleFighter) -> void:
 		st(f).fail = true
 
 
+## Supercell Slam: errou ou foi parado, o usuário se machuca (fração do HP máximo em "crash").
+func crash_damage(user: BattleFighter, mv: Dictionary) -> void:
+	if not mv.has("crash") or not is_instance_valid(user) or not user.alive():
+		return
+	var n := maxi(1, int(ceil(float(user.max_hp) * float(mv.crash))))
+	user.take_damage(n, Vector3.ZERO, 0.0)
+	user.popup("-%d machucou-se!" % n, Color(1.0, 0.7, 0.5), 0.9)
+
+
 ## Entrou em campo agora (Fake Out conta a partir daqui).
 func on_enter(f: BattleFighter) -> void:
 	st(f).entered = now
@@ -352,6 +375,8 @@ func _party_of(f: BattleFighter) -> Array:
 func grounded(f: BattleFighter) -> bool:
 	if active(field, "gravity"):
 		return true
+	if active(st(f), "magnet"):
+		return false
 	return (
 		not f.is_airborne()
 		and f.fly_h < 0.3
@@ -585,6 +610,18 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 	if not String(mv.get("special", "")) in ["copycat", "metronome"]:
 		last_any = id
 	var sd := _sd(user.side)
+	if id != "destiny_bond":
+		s.destiny = false  # Destiny Bond vale até o próximo golpe de quem usou
+	if mv.has("max_recoil"):
+		# Steel Beam: perde metade do HP máximo depois de atirar, acertando ou não
+		var lose := int(ceil(float(user.max_hp) * float(mv.max_recoil)))
+		arena.later(
+			float(mv.get("windup", 0.0)) + 0.2,
+			func() -> void:
+				if is_instance_valid(user) and user.alive():
+					user.take_damage(lose, Vector3.ZERO, 0.0)
+					user.popup("-%d recuo" % lose, Color(0.9, 0.6, 0.6), 0.8)
+		)
 	if float(mv.get("power", 0)) > 0.0 and now - float(s.helped) <= HELP_WINDOW:
 		# Helping Hand: o próximo golpe de dano do parceiro sai com 1,5x
 		s.help_id = id
@@ -670,6 +707,8 @@ func accuracy_of(user: BattleFighter, mv: Dictionary) -> float:
 		var t := user.opponent
 		if is_instance_valid(t):
 			acc += float(user.level - t.level)
+	if active(st(user), "lock"):
+		return 0.0  # Lock-On: não erra
 	if active(field, "gravity"):
 		acc *= 5.0 / 3.0
 	return acc
@@ -736,6 +775,14 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 	if sp == "thunder_wave" and "ground" in target.types:
 		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
 		return true
+	if (
+		String(mv.get("type", "")) == "ground"
+		and float(mv.get("power", 0)) > 0.0
+		and active(st(target), "magnet")
+		and not active(field, "gravity")
+	):
+		target.popup("Levitando!", Color(0.8, 0.9, 1.0))
+		return true
 	var ts := st(target)
 	var sd := _sd(target.side)
 	if sp == "feint":
@@ -756,6 +803,11 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		return false
 	if active(ts, "protect"):
 		target.popup("Protegeu-se!", Color(0.6, 0.9, 1.0), 1.1)
+		us.fail = true
+		crash_damage(user, mv)
+		return true
+	if active(field, "psychic") and int(mv.get("priority", 0)) > 0 and grounded(target):
+		target.popup("O campo psíquico protege!", Dex.type_color("psychic"))
 		us.fail = true
 		return true
 	if int(mv.get("priority", 0)) > 0 and active(sd, "quick_guard"):
@@ -889,6 +941,13 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 		"stomping_tantrum":
 			if bool(s.prev_fail):
 				p *= 2.0
+		"brine":
+			if target.hp * 2 < target.max_hp:
+				p *= 2.0
+		"hard_press":
+			p = maxf(1.0, floorf(p * float(target.hp) / maxf(float(target.max_hp), 1.0)))
+		"rage_fist":
+			p = minf(p + RAGE_STEP * int(s.rage), RAGE_MAX)
 		"water_spout":
 			p = maxf(1.0, floorf(p * float(user.hp) / maxf(float(user.max_hp), 1.0)))
 		"heat_crash":
@@ -1007,6 +1066,14 @@ func defender_profile(_user: BattleFighter, target: BattleFighter, m: Dictionary
 		var ty: Array = p.types.duplicate()
 		ty.erase("flying")
 		p["types"] = ty if not ty.is_empty() else ["normal"]
+	if active(field, "wonder"):
+		# Wonder Room: Defesa e Def. Esp. trocadas
+		var d: float = p.def
+		p["def"] = p.spd
+		p["spd"] = d
+		var cd: float = p.crit_def
+		p["crit_def"] = p.crit_spd
+		p["crit_spd"] = cd
 	if String(m.get("special", "")) == "psyshock":
 		# Psyshock: golpe especial contra a Defesa física.
 		p["spd"] = p.def
@@ -1056,6 +1123,8 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 		if String(mv.get("id", "")) in QUAKE_MOVES and grounded(target):
 			m *= 0.5
 	if active(field, "electric") and type == "electric" and grounded(user):
+		m *= TERRAIN_BOOST
+	if active(field, "psychic") and type == "psychic" and grounded(user):
 		m *= TERRAIN_BOOST
 	if active(field, "misty") and type == "dragon" and grounded(target):
 		m *= MISTY_DRAGON
@@ -1110,12 +1179,24 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 	if dealt > 0:
 		st(target).hurt_t = now
 		st(target).hit_by[user.get_instance_id()] = now
+		if user.side != target.side:
+			st(target).rage = int(st(target).rage) + 1
+		if active(s, "lock"):
+			s.lock = -99.0
+		if not target.alive() and bool(st(target).destiny) and user.alive():
+			st(target).destiny = false
+			user.popup("Levado pelo Destiny Bond!", Dex.type_color("ghost"))
+			user.take_damage(user.hp, Vector3.ZERO, 0.0)
 		_counter(user, target, mv, dealt)
 		if active(s, "laser"):
 			s.laser = -99.0
 		if String(mv.get("type", "")) == "electric":
 			s.charged = -99.0
-		if target.status == "freeze" and String(mv.get("type", "")) == "fire" and target.alive():
+		if (
+			target.status == "freeze"
+			and (String(mv.get("type", "")) == "fire" or id in THAW_MOVES)
+			and target.alive()
+		):
 			target.clear_status()
 			target.popup("Descongelou!", Color(0.7, 0.95, 1.0))
 		if mv.has("recoil") and user.alive() and _ability(user) != "rock_head":
@@ -1160,6 +1241,26 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			_burn_berries_near(target)
 		"rapid_spin":
 			_rapid_spin(user)
+		"clear_smog":
+			if dealt > 0 and target.alive():
+				for k in target.stages:
+					target.stages[k] = 0
+				target.popup("Atributos zerados!", Color(0.8, 0.9, 1.0))
+		"soak":
+			if target.types == ["water"]:
+				_fail(user)
+			else:
+				target.types = ["water"]
+				target.popup("Virou Water!", Dex.type_color("water"))
+		"simple_beam":
+			if _ability(target) == "simple":
+				_fail(user)
+			else:
+				target.set_meta("ability_override", "simple")
+				target.popup("Habilidade virou Simple!", Color(0.7, 0.9, 0.5))
+		"lock_on":
+			set_rounds(s, "lock", LOCK_TURNS)
+			user.popup("Mira travada!", Color(1, 0.6, 0.3))
 		"mean_look":
 			if "ghost" in target.types:
 				target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
@@ -1175,9 +1276,8 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.pp_max = maxf(target.pp_max - cut, 0.0)
 				if not target.energy_mode:
 					target.mon.pp = target.pp_max
-				target.popup(
-					"PP de %s caiu!" % Dex.move(last).get("name", last), Color(0.8, 0.6, 0.9)
-				)
+				var said := "PP de %s caiu!" % Dex.move(last).get("name", last)
+				target.popup("Energia caiu!" if target.energy_mode else said, Color(0.8, 0.6, 0.9))
 		"disable":
 			var last2 := _last_of(target)
 			if last2 == "":
@@ -1567,6 +1667,68 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			elif w != "":
 				k2 = 0.25
 			_heal(user, int(ceil(user.max_hp * k2)))
+		"heal_half":
+			_heal(user, int(ceil(user.max_hp * float(mv.get("heal", 0.5)))))
+		"magnet_rise":
+			if active(s, "magnet") or active(field, "gravity"):
+				_fail(user)
+				return true
+			set_rounds(s, "magnet", MAGNET_TURNS)
+			user.popup("Levitando!", Dex.type_color("electric"))
+		"wonder_room":
+			var wpos := user.position + Vector3(0, 1.6, 0)
+			if active(field, "wonder"):
+				field.erase("wonder")
+				field.erase("wonder#")
+				arena.popup(wpos, "Tudo voltou ao normal!", Dex.type_color("psychic"))
+			else:
+				set_rounds(field, "wonder", FIELD_TURNS)
+				arena.popup(wpos, "Defesas trocadas!", Dex.type_color("psychic"))
+				_vfx("gravity", [rounds_secs(FIELD_TURNS)])
+		"psychic_terrain":
+			_set_terrain("psychic", user, "Campo psíquico!", "psychic")
+		"destiny_bond":
+			s.destiny = true
+			user.popup("Destiny Bond!", Dex.type_color("ghost"))
+		"coaching":
+			var coach := partner(user)
+			if coach == null:
+				_fail(user)
+			else:
+				for k in ["atk", "def"]:
+					arena.moves.change_stage(coach, k, 1)
+		"acupressure":
+			var pool3: Array = ACUPRESSURE_STATS.filter(
+				func(k): return int(user.stages.get(k, 0)) < 6
+			)
+			if pool3.is_empty():
+				_fail(user)
+			else:
+				arena.moves.change_stage(user, String(pool3[rng.randi() % pool3.size()]), 2)
+		"recycle":
+			if user.trainer_item != "" and user.item_used:
+				user.item_used = false
+				user.popup("Reciclou %s!" % _item_name(user), Color(0.7, 1.0, 0.7))
+			else:
+				_fail(user)
+		"magnetic_flux":
+			var got3 := 0
+			for f in [user, partner(user)]:
+				if f != null and _ability(f) in ["plus", "minus"]:
+					got3 += 1
+					for k in ["def", "spd"]:
+						arena.moves.change_stage(f, k, 1)
+			if got3 == 0:
+				_fail(user)
+		"ally_switch":
+			var mate := partner(user)
+			if mate == null:
+				_fail(user)
+			else:
+				var at := user.position
+				user.position = mate.position
+				mate.position = at
+				user.popup("Trocou de lugar!", Dex.type_color("psychic"))
 		"roost":
 			_heal(user, int(ceil(user.max_hp * float(mv.get("heal", 0.5)))))
 			if "flying" in user.types:
@@ -1925,6 +2087,15 @@ func tick(dt: float) -> void:
 		if s.has("roost_types") and not active(s, "roost"):
 			f.types = s.roost_types
 			s.erase("roost_types")
+		if active(s, "magnet") and gravity:
+			s.erase("magnet")  # Gravity derruba quem levitava
+		var mag_on := bool(s.get("mag", false))
+		if active(s, "magnet"):
+			f.fly_target = maxf(float(f.prof.get("fly", 0.0)), MAGNET_H)
+			s["mag"] = true
+		elif mag_on:
+			s["mag"] = false
+			f.fly_target = float(f.prof.get("fly", 0.0))
 		var grav_on := bool(s.get("grav", false))
 		if gravity or active(s, "roost"):
 			f.fly_target = 0.0
@@ -2092,7 +2263,7 @@ func free_bind(f: BattleFighter) -> void:
 func end_turn_only() -> void:
 	for id in _st:
 		var s: Dictionary = _st[id]
-		for k in ["protect", "endure", "roost", "follow", "laser"]:
+		for k in ["protect", "endure", "roost", "follow", "laser", "lock"]:
 			count_round(s, k)
 	for sd in sides:
 		for k in ["quick_guard", "wide_guard"]:
@@ -2182,8 +2353,30 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			return _threatened(f)
 		"rest":
 			return hp < 0.35 or (f.status in MAJOR and hp < 0.6)
-		"roost", "heal_weather":
+		"roost", "heal_weather", "heal_half":
 			return hp < 0.5
+		"magnet_rise":
+			return not active(s, "magnet") and has_opp and _has_type_hit(opp, "ground")
+		"wonder_room":
+			return not active(field, "wonder") and has_opp and opp.stat("spd") > opp.stat("def")
+		"psychic_terrain":
+			return not active(field, "psychic") and _has_type_hit(f, "psychic")
+		"destiny_bond":
+			return hp < 0.4 and _threatened(f)
+		"coaching":
+			return partner(f) != null
+		"acupressure":
+			return _stage_sum(f) < 2
+		"recycle":
+			return f.item_used and f.trainer_item != ""
+		"magnetic_flux":
+			return _ability(f) in ["plus", "minus"]
+		"ally_switch":
+			return false
+		"lock_on":
+			return has_opp and not active(s, "lock")
+		"soak", "simple_beam":
+			return has_opp
 		"life_dew":
 			var p := partner(f)
 			return hp < 0.6 or (p != null and float(p.hp) / maxf(p.max_hp, 1) < 0.6)

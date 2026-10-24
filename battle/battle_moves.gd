@@ -198,6 +198,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 	):
 		miss = aimed
 		effects.note_fail(user)
+		effects.crash_damage(user, mv)
 		if kind != "multi_arc":
 			dir = _miss_dir(user, aimed, mv, dir)
 		_announce_miss(user, aimed, mv)
@@ -363,7 +364,7 @@ func expected_damage(
 	if physical and user.status == "burn":
 		a *= Damage.BURN_ATK_MULT
 	var d := target.stat("def" if physical else "spd")
-	var hits := float(mv.get("hits", mv.get("count", 1)))
+	var hits := float(hits_of(mv))
 	var base := ((2.0 * float(user.level) / 5.0 + 2.0) * power * a / maxf(d, 1.0)) / 50.0 + 2.0
 	var stab := 1.5 if mv.get("type") in user.types else 1.0
 	var score := base * hits * stab * eff * AI_ROLL_MEAN * hit_chance(user, mv) * pace()
@@ -387,6 +388,10 @@ func hit(
 ) -> void:
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
+	var left := _spend_hit(target, mv)
+	if left < 0:
+		return  # este uso já deu todos os acertos oficiais neste alvo (jato, nuvem, folhas extras)
+	final = final or left == 0
 	if effects.blocks_hit(user, target, mv):
 		_landed(user, target, mv)
 		return
@@ -434,6 +439,7 @@ func hit(
 		var eff := float(res.eff)
 		if eff == 0.0:
 			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+			effects.crash_damage(user, mv)
 			_landed(user, target, mv)
 			return
 		var dmg := int(res.damage)
@@ -587,6 +593,8 @@ func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 func change_stage(c: BattleFighter, k: String, delta: int, src: BattleFighter = null) -> void:
 	if delta == 0 or not is_instance_valid(c):
 		return
+	if arena.abilities and arena.abilities.ability_of(c) == "simple":
+		delta *= 2  # Simple: as mudanças de atributo valem o dobro
 	if delta < 0 and effects.mist_blocks(c, src):
 		return
 	if (
@@ -1067,6 +1075,31 @@ func _set_spread(mv: Dictionary, n: int) -> void:
 func spread_of(mv: Dictionary) -> float:
 	var ctx = mv.get("_cast")
 	return SPREAD_MULT if ctx is Dictionary and bool(ctx.get("spread", false)) else 1.0
+
+
+## Acertos oficiais de um uso em cada alvo: o sorteado no multi-hit oficial (hits_range, Beat Up) e 1 no
+## resto. Jatos, nuvens, golpes de várias folhas ou vários socos continuam desenhando tudo, mas só o
+## primeiro que alcança cada alvo dá dano e efeito.
+static func hits_of(mv: Dictionary) -> int:
+	if mv.has("hits_range") or mv.has("_beat"):
+		return maxi(int(mv.get("hits", mv.get("count", 1))), 1)
+	return 1
+
+
+## Gasta um acerto do uso neste alvo: devolve quantos sobram (0 = era o último) ou -1 se já acabaram.
+## Sem "_cast" (combos, golpes sintéticos) não limita.
+func _spend_hit(target: BattleFighter, mv: Dictionary) -> int:
+	var ctx = mv.get("_cast")
+	if not ctx is Dictionary:
+		return 1
+	var got: Dictionary = ctx.get_or_add("landed", {})
+	var id := target.get_instance_id()
+	var n := int(got.get(id, 0))
+	var cap := hits_of(mv)
+	if n >= cap:
+		return -1
+	got[id] = n + 1
+	return cap - n - 1
 
 
 ## Golpe de alvo único acerta só um alvo por uso (o primeiro que alcança), mesmo que a geometria pegue dois.

@@ -23,6 +23,10 @@ const BASE_COST := 12.0
 const BP_COST := 0.25
 const MAX_COST := 50.0
 const STATUS_COST := 28.0
+## Golpe de poder variável ou dano fixo: custa como um de 70 de poder.
+const VARIABLE_BP := 70.0
+## Acertos médios do multi-hit 2-5 oficial (35/35/15/15%).
+const MEAN_HITS_2_5 := 3.1
 ## Prioridade (Quick Attack...): custo PRIORITY_COST x, cooldown PRIORITY_CD x.
 const PRIORITY_COST := 0.6
 const PRIORITY_CD := 1.8
@@ -37,11 +41,25 @@ static func on(arena) -> bool:
 static func cost(mv: Dictionary) -> float:
 	var c := STATUS_COST
 	if String(mv.get("category", "")) != "status":
-		var bp := float(mv.get("bp", mv.get("power", 0)))
-		c = minf(BASE_COST + bp * BP_COST, MAX_COST)
+		c = minf(BASE_COST + nominal_bp(mv) * BP_COST, MAX_COST)
 	if int(mv.get("priority", 0)) > 0:
 		c *= PRIORITY_COST
 	return roundf(c)
+
+
+## Poder que o custo usa: o oficial vezes os acertos médios do multi-hit oficial (2-5 = 3,1; Double
+## Kick = 2) e VARIABLE_BP nos golpes de poder variável ou dano fixo (Low Kick, Seismic Toss...), que
+## sem isso sairiam pelo custo mínimo.
+static func nominal_bp(mv: Dictionary) -> float:
+	var bp := float(mv.get("bp", 0))
+	if bp <= 0.0:
+		return VARIABLE_BP
+	var hr = mv.get("hits_range")
+	if hr is Array:
+		var lo := int(hr[0])
+		var hi := int(hr[1])
+		bp *= float(lo) if lo == hi else MEAN_HITS_2_5
+	return bp
 
 
 ## Cooldown do golpe no modo de energia (antes do fator de Speed): o de Dex, prioridade mais longa.

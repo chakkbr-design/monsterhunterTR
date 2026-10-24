@@ -3421,6 +3421,8 @@ func terrain(kind: String, secs: float) -> void:
 	if not _ok():
 		return
 	var col := Color(0.4, 0.9, 0.35) if kind == "grassy" else Color(0.9, 0.8, 1.0)
+	if kind == "psychic":
+		col = Color(0.95, 0.5, 0.85)
 	bit(
 		"ring_soft",
 		_field_center(),

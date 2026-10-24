@@ -1,4 +1,5 @@
-"""Atualiza data/species.json para a geração atual (PokeAPI) nos Pokémon de número 1..N (padrão 51).
+"""Atualiza data/species.json para a geração atual (PokeAPI) nos Pokémon de número 1..N (padrão 51); nas
+outras espécies do jogo atualiza só os golpes (learnset, evolução, TM, egg e tutor).
 
 Stats base, tipos, habilidades (normais + oculta), learnset por nível da versão mais recente em que a
 espécie aparece (SV > SwSh > BDSP > USUM), golpes de evolução (nível 0 da PokeAPI), TMs, egg e tutor.
@@ -13,6 +14,7 @@ P = os.path.join(os.path.dirname(__file__), "..", "..", "pba-referencia", "dados
 if len(sys.argv) > 1:
     P = sys.argv[1]
 LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 51
+ALL = True
 PREF = ["scarlet-violet", "sword-shield", "brilliant-diamond-shining-pearl", "ultra-sun-ultra-moon"]
 GROWTH = {
     "slow": "slow",
@@ -116,7 +118,7 @@ def main():
             n["name"] for n in sp["names"] if n["language"]["name"] == "en"
         )
     missing = {}
-    for no in range(1, LAST + 1):
+    for no in sorted(set(range(1, LAST + 1)) | set(by_no)):
         p = load("pokemon_%d" % no)
         sp = load("pokemon-species_%d" % no)
         key = by_no.get(no)
@@ -126,16 +128,18 @@ def main():
             doc[key]["dex_no"] = no
             names[sp["name"]] = key
         e = doc[key]
-        e["types"] = [t["type"]["name"] for t in sorted(p["types"], key=lambda t: t["slot"])]
-        e["base"] = {STAT[s["stat"]["name"]]: s["base_stat"] for s in p["stats"]}
-        e["ev_yield"] = {STAT[s["stat"]["name"]]: s["effort"] for s in p["stats"] if s["effort"]}
-        ab = sorted(p["abilities"], key=lambda a: a["slot"])
-        e["abilities"] = [mid(a["ability"]["name"]) for a in ab]
-        hid = [mid(a["ability"]["name"]) for a in ab if a["is_hidden"]]
-        if hid:
-            e["hidden_ability"] = hid[0]
-        else:
-            e.pop("hidden_ability", None)
+        full = no <= LAST  # depois do N: só os golpes (o resto da espécie fica como está)
+        if full:
+            e["types"] = [t["type"]["name"] for t in sorted(p["types"], key=lambda t: t["slot"])]
+            e["base"] = {STAT[s["stat"]["name"]]: s["base_stat"] for s in p["stats"]}
+            e["ev_yield"] = {STAT[s["stat"]["name"]]: s["effort"] for s in p["stats"] if s["effort"]}
+            ab = sorted(p["abilities"], key=lambda a: a["slot"])
+            e["abilities"] = [mid(a["ability"]["name"]) for a in ab]
+            hid = [mid(a["ability"]["name"]) for a in ab if a["is_hidden"]]
+            if hid:
+                e["hidden_ability"] = hid[0]
+            else:
+                e.pop("hidden_ability", None)
         vg, lv = latest_vg(p, "level-up")
         evo, learn = [], []
         for lvl, _no, name in sorted(lv):
@@ -164,27 +168,28 @@ def main():
             for _, m in reversed(learn):
                 if m not in e["moves"] and len(e["moves"]) < 4:
                     e["moves"].append(m)
-        e["catch_rate"] = sp["capture_rate"]
-        e["base_exp"] = p["base_experience"]
-        e["growth"] = GROWTH[sp["growth_rate"]["name"]]
-        e["gender_ratio"] = -1 if sp["gender_rate"] < 0 else sp["gender_rate"] / 8.0
-        e["height_m"] = p["height"] / 10.0
-        e["weight_kg"] = p["weight"] / 10.0
-        e["category"] = next(g["genus"] for g in sp["genera"] if g["language"]["name"] == "en")
-        if "flavor" not in e:
-            fl = [f for f in sp["flavor_text_entries"] if f["language"]["name"] == "en"]
-            e["flavor"] = " ".join(fl[-1]["flavor_text"].split()) if fl else ""
-        nxt = evo_chain_next(sp)
-        if nxt:
-            n = nxt[0]
-            d = n["evolution_details"][0] if n["evolution_details"] else {}
-            into = names.get(n["species"]["name"])
-            if d.get("trigger", {}).get("name") == "level-up" and d.get("min_level"):
-                e["evolution"] = {"level": d["min_level"], "into": into}
-            elif d.get("trigger", {}).get("name") == "use-item":
-                e["evolution"] = {"method": "item", "item": ITEM_EVO.get(d["item"]["name"], mid(d["item"]["name"])), "into": into}
-            elif "evolution" not in e:
-                e["evolution"] = {"method": d.get("trigger", {}).get("name", "level-up"), "into": into}
+        if full:
+            e["catch_rate"] = sp["capture_rate"]
+            e["base_exp"] = p["base_experience"]
+            e["growth"] = GROWTH[sp["growth_rate"]["name"]]
+            e["gender_ratio"] = -1 if sp["gender_rate"] < 0 else sp["gender_rate"] / 8.0
+            e["height_m"] = p["height"] / 10.0
+            e["weight_kg"] = p["weight"] / 10.0
+            e["category"] = next(g["genus"] for g in sp["genera"] if g["language"]["name"] == "en")
+            if "flavor" not in e:
+                fl = [f for f in sp["flavor_text_entries"] if f["language"]["name"] == "en"]
+                e["flavor"] = " ".join(fl[-1]["flavor_text"].split()) if fl else ""
+            nxt = evo_chain_next(sp)
+            if nxt:
+                n = nxt[0]
+                d = n["evolution_details"][0] if n["evolution_details"] else {}
+                into = names.get(n["species"]["name"])
+                if d.get("trigger", {}).get("name") == "level-up" and d.get("min_level"):
+                    e["evolution"] = {"level": d["min_level"], "into": into}
+                elif d.get("trigger", {}).get("name") == "use-item":
+                    e["evolution"] = {"method": "item", "item": ITEM_EVO.get(d["item"]["name"], mid(d["item"]["name"])), "into": into}
+                elif "evolution" not in e:
+                    e["evolution"] = {"method": d.get("trigger", {}).get("name", "level-up"), "into": into}
         e.setdefault("pp", 100)
         e.setdefault("jump_height", 0.35)
         e.setdefault("sprite", "res://assets/sprites/critter_purple.png")

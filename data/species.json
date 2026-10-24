@@ -3378,9 +3378,9 @@
     "pp": 105,
     "moves": [
       "scratch",
-      "growl",
       "fury_swipes",
-      "swift"
+      "swift",
+      "final_gambit"
     ],
     "learnset": [
       [
@@ -3392,20 +3392,60 @@
         "leer"
       ],
       [
-        6,
-        "low_kick"
+        1,
+        "focus_energy"
       ],
       [
-        11,
-        "karate_chop"
+        1,
+        "covet"
       ],
       [
-        16,
+        5,
         "fury_swipes"
       ],
       [
-        21,
-        "focus_energy"
+        8,
+        "low_kick"
+      ],
+      [
+        12,
+        "seismic_toss"
+      ],
+      [
+        17,
+        "swagger"
+      ],
+      [
+        22,
+        "cross_chop"
+      ],
+      [
+        26,
+        "assurance"
+      ],
+      [
+        29,
+        "thrash"
+      ],
+      [
+        33,
+        "close_combat"
+      ],
+      [
+        36,
+        "screech"
+      ],
+      [
+        40,
+        "stomping_tantrum"
+      ],
+      [
+        44,
+        "outrage"
+      ],
+      [
+        48,
+        "final_gambit"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3425,8 +3465,69 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "acrobatics",
+      "body_slam",
+      "brick_break",
+      "bulk_up",
+      "bulldoze",
+      "close_combat",
+      "curse",
+      "dig",
+      "double_edge",
+      "drain_punch",
+      "earthquake",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fire_punch",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "gunk_shot",
+      "helping_hand",
+      "ice_punch",
+      "lash_out",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "outrage",
+      "overheat",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "reversal",
+      "rock_slide",
       "rock_tomb",
-      "thief"
+      "scary_face",
+      "seed_bomb",
+      "shadow_claw",
+      "sleep_talk",
+      "spite",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "throat_chop",
+      "thunder_punch",
+      "thunderbolt",
+      "u_turn",
+      "uproar"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "beat_up",
+      "counter",
+      "curse",
+      "encore",
+      "night_slash",
+      "spite"
     ]
   },
   "Primeape": {
@@ -3454,9 +3555,9 @@
     "pp": 120,
     "moves": [
       "scratch",
-      "growl",
       "fury_swipes",
-      "swift"
+      "swift",
+      "final_gambit"
     ],
     "learnset": [
       [
@@ -3469,27 +3570,64 @@
       ],
       [
         1,
-        "low_kick"
+        "focus_energy"
       ],
       [
         1,
-        "rage"
+        "fling"
       ],
       [
-        11,
-        "karate_chop"
-      ],
-      [
-        16,
+        5,
         "fury_swipes"
       ],
       [
-        21,
-        "focus_energy"
+        8,
+        "low_kick"
+      ],
+      [
+        15,
+        "seismic_toss"
+      ],
+      [
+        17,
+        "swagger"
+      ],
+      [
+        22,
+        "cross_chop"
+      ],
+      [
+        26,
+        "assurance"
+      ],
+      [
+        30,
+        "thrash"
+      ],
+      [
+        35,
+        "rage_fist"
+      ],
+      [
+        39,
+        "close_combat"
+      ],
+      [
+        44,
+        "screech"
+      ],
+      [
+        48,
+        "stomping_tantrum"
+      ],
+      [
+        53,
+        "outrage"
+      ],
+      [
+        57,
+        "final_gambit"
       ]
-    ],
-    "evo_moves": [
-      "rage"
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#e8d0a8",
@@ -3505,9 +3643,68 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "acrobatics",
+      "body_slam",
+      "brick_break",
+      "bulk_up",
+      "bulldoze",
+      "close_combat",
+      "curse",
+      "dig",
+      "double_edge",
+      "drain_punch",
+      "earthquake",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fire_punch",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "giga_impact",
+      "gunk_shot",
+      "helping_hand",
+      "hyper_beam",
+      "ice_punch",
+      "lash_out",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "outrage",
+      "overheat",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "reversal",
+      "rock_slide",
       "rock_tomb",
-      "thief"
-    ]
+      "scary_face",
+      "seed_bomb",
+      "shadow_claw",
+      "sleep_talk",
+      "smack_down",
+      "spite",
+      "stealth_rock",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "throat_chop",
+      "thunder",
+      "thunder_punch",
+      "thunderbolt",
+      "u_turn",
+      "uproar",
+      "vacuum_wave"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Psyduck": {
     "abilities": [
@@ -3543,27 +3740,59 @@
     "learnset": [
       [
         1,
-        "water_sport"
-      ],
-      [
-        1,
         "scratch"
       ],
       [
-        5,
+        1,
         "tail_whip"
       ],
       [
-        10,
-        "disable"
+        3,
+        "water_gun"
       ],
       [
-        16,
+        6,
         "confusion"
       ],
       [
-        23,
+        9,
+        "fury_swipes"
+      ],
+      [
+        12,
+        "water_pulse"
+      ],
+      [
+        15,
+        "disable"
+      ],
+      [
+        18,
+        "zen_headbutt"
+      ],
+      [
+        21,
         "screech"
+      ],
+      [
+        24,
+        "aqua_tail"
+      ],
+      [
+        27,
+        "soak"
+      ],
+      [
+        30,
+        "psych_up"
+      ],
+      [
+        34,
+        "amnesia"
+      ],
+      [
+        39,
+        "wonder_room"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -3582,7 +3811,73 @@
     "jump_height": 0.39,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "amnesia",
+      "blizzard",
+      "body_slam",
+      "brick_break",
+      "calm_mind",
+      "chilling_water",
+      "confuse_ray",
+      "dig",
+      "double_edge",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fling",
+      "flip_turn",
+      "focus_punch",
+      "haze",
+      "helping_hand",
+      "hydro_pump",
+      "ice_beam",
+      "ice_punch",
+      "icy_wind",
+      "knock_off",
+      "light_screen",
+      "liquidation",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "mud_shot",
+      "muddy_water",
+      "nasty_plot",
+      "protect",
+      "psybeam",
+      "psych_up",
+      "psychic",
+      "psychic_noise",
+      "psyshock",
+      "rain_dance",
+      "rest",
+      "shadow_claw",
+      "skill_swap",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "trailblaze",
+      "vacuum_wave",
+      "water_pulse",
+      "waterfall",
+      "whirlpool",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "clear_smog",
+      "confuse_ray",
+      "cross_chop",
+      "hypnosis",
+      "psybeam",
+      "simple_beam",
+      "yawn"
+    ]
   },
   "Golduck": {
     "abilities": [
@@ -3617,10 +3912,6 @@
     "learnset": [
       [
         1,
-        "water_sport"
-      ],
-      [
-        1,
         "scratch"
       ],
       [
@@ -3629,18 +3920,61 @@
       ],
       [
         1,
-        "disable"
+        "water_gun"
       ],
       [
-        16,
+        1,
         "confusion"
       ],
       [
-        23,
+        1,
+        "aqua_jet"
+      ],
+      [
+        9,
+        "fury_swipes"
+      ],
+      [
+        12,
+        "water_pulse"
+      ],
+      [
+        15,
+        "disable"
+      ],
+      [
+        18,
+        "zen_headbutt"
+      ],
+      [
+        21,
         "screech"
+      ],
+      [
+        24,
+        "aqua_tail"
+      ],
+      [
+        27,
+        "soak"
+      ],
+      [
+        30,
+        "psych_up"
+      ],
+      [
+        36,
+        "amnesia"
+      ],
+      [
+        40,
+        "hydro_pump"
+      ],
+      [
+        45,
+        "wonder_room"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#6aa8e0",
     "placeholder_scale": 1.45,
@@ -3654,7 +3988,70 @@
     "jump_height": 0.59,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "amnesia",
+      "blizzard",
+      "body_slam",
+      "brick_break",
+      "calm_mind",
+      "chilling_water",
+      "confuse_ray",
+      "dig",
+      "double_edge",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fling",
+      "flip_turn",
+      "focus_blast",
+      "focus_punch",
+      "future_sight",
+      "giga_impact",
+      "grass_knot",
+      "haze",
+      "helping_hand",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "ice_punch",
+      "icy_wind",
+      "knock_off",
+      "light_screen",
+      "liquidation",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "mud_shot",
+      "muddy_water",
+      "nasty_plot",
+      "power_gem",
+      "protect",
+      "psybeam",
+      "psych_up",
+      "psychic",
+      "psychic_noise",
+      "psyshock",
+      "rain_dance",
+      "rest",
+      "shadow_claw",
+      "skill_swap",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "trailblaze",
+      "vacuum_wave",
+      "water_pulse",
+      "waterfall",
+      "whirlpool",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Slowpoke": {
     "abilities": [
@@ -3691,31 +4088,71 @@
     "learnset": [
       [
         1,
-        "curse"
-      ],
-      [
-        1,
-        "yawn"
-      ],
-      [
-        1,
         "tackle"
       ],
       [
-        6,
+        1,
+        "curse"
+      ],
+      [
+        3,
         "growl"
       ],
       [
-        13,
+        6,
         "water_gun"
       ],
       [
-        17,
+        9,
+        "yawn"
+      ],
+      [
+        12,
         "confusion"
       ],
       [
-        24,
+        15,
         "disable"
+      ],
+      [
+        18,
+        "water_pulse"
+      ],
+      [
+        21,
+        "headbutt"
+      ],
+      [
+        24,
+        "zen_headbutt"
+      ],
+      [
+        27,
+        "amnesia"
+      ],
+      [
+        30,
+        "surf"
+      ],
+      [
+        33,
+        "slack_off"
+      ],
+      [
+        36,
+        "psychic"
+      ],
+      [
+        39,
+        "psych_up"
+      ],
+      [
+        42,
+        "rain_dance"
+      ],
+      [
+        45,
+        "heal_pulse"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3734,7 +4171,66 @@
     "jump_height": 0.0,
     "shape": "quadruped",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "amnesia",
+      "avalanche",
+      "blizzard",
+      "body_slam",
+      "bulldoze",
+      "calm_mind",
+      "chilling_water",
+      "curse",
+      "dig",
+      "earthquake",
+      "endure",
+      "expanding_force",
+      "facade",
+      "fire_blast",
+      "flamethrower",
+      "foul_play",
+      "grass_knot",
+      "helping_hand",
+      "hydro_pump",
+      "ice_beam",
+      "icy_wind",
+      "imprison",
+      "light_screen",
+      "liquidation",
+      "mud_shot",
+      "protect",
+      "psybeam",
+      "psych_up",
+      "psychic",
+      "psychic_terrain",
+      "psyshock",
+      "rain_dance",
+      "rest",
+      "shadow_ball",
+      "skill_swap",
+      "sleep_talk",
+      "stored_power",
+      "substitute",
+      "sunny_day",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thunder_wave",
+      "trick",
+      "trick_room",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "belch",
+      "belly_drum",
+      "block",
+      "stomp"
+    ]
   },
   "Slowbro": {
     "abilities": [
@@ -3771,14 +4267,6 @@
     "learnset": [
       [
         1,
-        "curse"
-      ],
-      [
-        1,
-        "yawn"
-      ],
-      [
-        1,
         "tackle"
       ],
       [
@@ -3786,20 +4274,69 @@
         "growl"
       ],
       [
-        13,
+        1,
         "water_gun"
       ],
       [
-        17,
+        1,
+        "withdraw"
+      ],
+      [
+        1,
+        "curse"
+      ],
+      [
+        9,
+        "yawn"
+      ],
+      [
+        12,
         "confusion"
       ],
       [
-        24,
+        15,
         "disable"
+      ],
+      [
+        18,
+        "water_pulse"
+      ],
+      [
+        21,
+        "headbutt"
+      ],
+      [
+        24,
+        "zen_headbutt"
+      ],
+      [
+        27,
+        "amnesia"
+      ],
+      [
+        30,
+        "surf"
+      ],
+      [
+        33,
+        "slack_off"
+      ],
+      [
+        36,
+        "psychic"
+      ],
+      [
+        41,
+        "psych_up"
+      ],
+      [
+        46,
+        "rain_dance"
+      ],
+      [
+        51,
+        "heal_pulse"
       ]
-    ],
-    "evo_moves": [
-      "withdraw"
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#e890b0",
@@ -3814,7 +4351,79 @@
     "jump_height": 0.0,
     "shape": "upright",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "amnesia",
+      "avalanche",
+      "blizzard",
+      "body_press",
+      "body_slam",
+      "brick_break",
+      "bulldoze",
+      "calm_mind",
+      "chilling_water",
+      "curse",
+      "dig",
+      "drain_punch",
+      "earthquake",
+      "endure",
+      "expanding_force",
+      "facade",
+      "fire_blast",
+      "flamethrower",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "foul_play",
+      "future_sight",
+      "giga_impact",
+      "grass_knot",
+      "helping_hand",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "ice_punch",
+      "icy_wind",
+      "imprison",
+      "iron_defense",
+      "light_screen",
+      "liquidation",
+      "metronome",
+      "mud_shot",
+      "muddy_water",
+      "nasty_plot",
+      "protect",
+      "psybeam",
+      "psych_up",
+      "psychic",
+      "psychic_noise",
+      "psychic_terrain",
+      "psyshock",
+      "rain_dance",
+      "rest",
+      "scald",
+      "shadow_ball",
+      "skill_swap",
+      "sleep_talk",
+      "stored_power",
+      "substitute",
+      "sunny_day",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thunder_wave",
+      "trick",
+      "trick_room",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "future_sight"
+    ]
   },
   "Poliwag": {
     "abilities": [
@@ -3842,30 +4451,55 @@
     "gender_ratio": 0.5,
     "pp": 100,
     "moves": [
-      "tackle",
       "water_gun",
-      "swift"
+      "swift",
+      "double_edge",
+      "belly_drum"
     ],
     "learnset": [
       [
         1,
-        "bubble"
-      ],
-      [
-        7,
-        "hypnosis"
-      ],
-      [
-        13,
         "water_gun"
       ],
       [
-        19,
-        "double_slap"
+        1,
+        "hypnosis"
       ],
       [
-        25,
+        6,
+        "pound"
+      ],
+      [
+        12,
+        "mud_shot"
+      ],
+      [
+        18,
+        "bubble_beam"
+      ],
+      [
+        24,
         "rain_dance"
+      ],
+      [
+        30,
+        "body_slam"
+      ],
+      [
+        36,
+        "earth_power"
+      ],
+      [
+        42,
+        "hydro_pump"
+      ],
+      [
+        48,
+        "belly_drum"
+      ],
+      [
+        54,
+        "double_edge"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3885,7 +4519,52 @@
     "shape": "legs",
     "locomotion": "ground",
     "tm": [
-      "thief"
+      "amnesia",
+      "blizzard",
+      "body_slam",
+      "bulldoze",
+      "chilling_water",
+      "dig",
+      "double_edge",
+      "earth_power",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "focus_punch",
+      "haze",
+      "helping_hand",
+      "hydro_pump",
+      "ice_beam",
+      "icy_wind",
+      "liquidation",
+      "low_kick",
+      "mud_shot",
+      "mud_slap",
+      "muddy_water",
+      "protect",
+      "psychic",
+      "rain_dance",
+      "rest",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thief",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "endeavor",
+      "mist",
+      "muddy_water",
+      "splash",
+      "water_pulse"
     ]
   },
   "Poliwhirl": {
@@ -3914,15 +4593,19 @@
     "gender_ratio": 0.5,
     "pp": 125,
     "moves": [
-      "tackle",
       "water_gun",
       "swift",
-      "hyper_beam"
+      "double_edge",
+      "belly_drum"
     ],
     "learnset": [
       [
         1,
-        "bubble"
+        "pound"
+      ],
+      [
+        1,
+        "water_gun"
       ],
       [
         1,
@@ -3930,14 +4613,37 @@
       ],
       [
         1,
-        "water_gun"
+        "mud_shot"
       ],
       [
-        19,
-        "double_slap"
+        18,
+        "bubble_beam"
+      ],
+      [
+        24,
+        "rain_dance"
+      ],
+      [
+        32,
+        "body_slam"
+      ],
+      [
+        40,
+        "earth_power"
+      ],
+      [
+        48,
+        "hydro_pump"
+      ],
+      [
+        56,
+        "belly_drum"
+      ],
+      [
+        66,
+        "double_edge"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#5a9ce8",
     "placeholder_scale": 1.2,
@@ -3957,7 +4663,59 @@
     "shape": "humanoid",
     "locomotion": "ground",
     "tm": [
-      "thief"
+      "amnesia",
+      "blizzard",
+      "body_slam",
+      "brick_break",
+      "bulldoze",
+      "chilling_water",
+      "dig",
+      "double_edge",
+      "earth_power",
+      "earthquake",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fling",
+      "focus_punch",
+      "haze",
+      "helping_hand",
+      "hydro_pump",
+      "ice_beam",
+      "ice_punch",
+      "icy_wind",
+      "liquidation",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "muddy_water",
+      "protect",
+      "psych_up",
+      "psychic",
+      "rain_dance",
+      "rest",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thief",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "endeavor",
+      "mist",
+      "muddy_water",
+      "splash",
+      "water_pulse"
     ]
   },
   "Poliwrath": {
@@ -3986,31 +4744,24 @@
     "gender_ratio": 0.5,
     "pp": 130,
     "moves": [
-      "tackle",
-      "water_gun",
       "swift",
-      "hyper_beam"
+      "hyper_beam",
+      "hypnosis",
+      "bubble_beam"
     ],
     "learnset": [
       [
         1,
-        "water_gun"
+        "body_slam"
+      ],
+      [
+        1,
+        "bubble_beam"
       ],
       [
         1,
         "hypnosis"
-      ],
-      [
-        1,
-        "double_slap"
-      ],
-      [
-        1,
-        "submission"
       ]
-    ],
-    "evo_moves": [
-      "submission"
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#4a80d0",
@@ -4026,8 +4777,90 @@
     "shape": "humanoid",
     "locomotion": "ground",
     "tm": [
+      "amnesia",
+      "baton_pass",
+      "blizzard",
+      "body_slam",
+      "brick_break",
+      "bulk_up",
+      "bulldoze",
+      "chilling_water",
+      "close_combat",
+      "coaching",
+      "dig",
+      "double_edge",
+      "drain_punch",
+      "earth_power",
+      "earthquake",
+      "encore",
+      "endeavor",
+      "endure",
+      "facade",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "giga_impact",
+      "haze",
+      "helping_hand",
+      "high_horsepower",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "ice_punch",
+      "icy_wind",
+      "knock_off",
+      "liquidation",
+      "low_kick",
+      "low_sweep",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "muddy_water",
+      "poison_jab",
+      "protect",
+      "psych_up",
+      "psychic",
+      "rain_dance",
+      "rest",
+      "reversal",
+      "rock_slide",
       "rock_tomb",
-      "thief"
+      "scary_face",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "throat_chop",
+      "upper_hand",
+      "vacuum_wave",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "belly_drum",
+      "circle_throw",
+      "double_edge",
+      "earth_power",
+      "endeavor",
+      "hydro_pump",
+      "mist",
+      "mud_shot",
+      "muddy_water",
+      "pound",
+      "rain_dance",
+      "splash",
+      "water_gun",
+      "water_pulse"
+    ],
+    "evo_moves": [
+      "dynamic_punch"
     ]
   },
   "Goldeen": {
@@ -4057,35 +4890,59 @@
     "gender_ratio": 0.5,
     "pp": 105,
     "moves": [
-      "tackle",
       "tail_whip",
-      "water_gun",
-      "swift"
+      "swift",
+      "horn_drill",
+      "megahorn"
     ],
     "learnset": [
-      [
-        1,
-        "peck"
-      ],
       [
         1,
         "tail_whip"
       ],
       [
         1,
-        "water_sport"
+        "peck"
+      ],
+      [
+        5,
+        "supersonic"
       ],
       [
         10,
-        "supersonic"
+        "water_pulse"
       ],
       [
         15,
         "horn_attack"
       ],
       [
-        24,
+        20,
+        "agility"
+      ],
+      [
+        25,
+        "aqua_ring"
+      ],
+      [
+        30,
         "flail"
+      ],
+      [
+        35,
+        "waterfall"
+      ],
+      [
+        40,
+        "soak"
+      ],
+      [
+        45,
+        "megahorn"
+      ],
+      [
+        50,
+        "horn_drill"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -4104,7 +4961,51 @@
     "jump_height": 0.0,
     "shape": "fish",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "agility",
+      "attract",
+      "blizzard",
+      "body_slam",
+      "bounce",
+      "dive",
+      "drill_run",
+      "endure",
+      "facade",
+      "hydro_pump",
+      "ice_beam",
+      "icy_wind",
+      "megahorn",
+      "mud_shot",
+      "muddy_water",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "round",
+      "scald",
+      "sleep_talk",
+      "smart_strike",
+      "snore",
+      "substitute",
+      "surf",
+      "swift",
+      "swords_dance",
+      "throat_chop",
+      "waterfall",
+      "whirlpool"
+    ],
+    "learnset_version": "sword-shield",
+    "egg": [
+      "acupressure",
+      "aqua_tail",
+      "haze",
+      "mud_slap",
+      "psybeam"
+    ],
+    "tutor": [
+      "flip_turn",
+      "scale_shot"
+    ]
   },
   "Seaking": {
     "abilities": [
@@ -4133,38 +5034,61 @@
     "gender_ratio": 0.5,
     "pp": 115,
     "moves": [
-      "tackle",
       "tail_whip",
-      "water_gun",
-      "fury_swipes"
+      "horn_drill",
+      "megahorn",
+      "flail"
     ],
     "learnset": [
-      [
-        1,
-        "peck"
-      ],
       [
         1,
         "tail_whip"
       ],
       [
         1,
-        "water_sport"
+        "supersonic"
       ],
       [
         1,
-        "supersonic"
+        "peck"
+      ],
+      [
+        1,
+        "water_pulse"
       ],
       [
         15,
         "horn_attack"
       ],
       [
-        24,
+        20,
+        "agility"
+      ],
+      [
+        25,
+        "aqua_ring"
+      ],
+      [
+        30,
         "flail"
+      ],
+      [
+        37,
+        "waterfall"
+      ],
+      [
+        44,
+        "soak"
+      ],
+      [
+        51,
+        "megahorn"
+      ],
+      [
+        58,
+        "horn_drill"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_bird.png",
     "placeholder_tint": "#f08040",
     "placeholder_scale": 1.4,
@@ -4178,7 +5102,46 @@
     "jump_height": 0.0,
     "shape": "fish",
     "locomotion": "ground",
-    "tm": []
+    "tm": [
+      "agility",
+      "attract",
+      "blizzard",
+      "body_slam",
+      "bounce",
+      "dive",
+      "drill_run",
+      "endure",
+      "facade",
+      "giga_impact",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "icy_wind",
+      "megahorn",
+      "mud_shot",
+      "muddy_water",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "round",
+      "scald",
+      "sleep_talk",
+      "smart_strike",
+      "snore",
+      "substitute",
+      "surf",
+      "swift",
+      "swords_dance",
+      "throat_chop",
+      "waterfall",
+      "whirlpool"
+    ],
+    "learnset_version": "sword-shield",
+    "tutor": [
+      "flip_turn",
+      "scale_shot"
+    ]
   },
   "Magikarp": {
     "abilities": [
@@ -4206,7 +5169,9 @@
     "gender_ratio": 0.5,
     "pp": 70,
     "moves": [
-      "tackle"
+      "tackle",
+      "flail",
+      "splash"
     ],
     "learnset": [
       [
@@ -4216,6 +5181,10 @@
       [
         15,
         "tackle"
+      ],
+      [
+        25,
+        "flail"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -4234,7 +5203,8 @@
     "jump_height": 0.0,
     "shape": "fish",
     "locomotion": "ground",
-    "tm": []
+    "tm": [],
+    "learnset_version": "scarlet-violet"
   },
   "Gyarados": {
     "abilities": [
@@ -4265,21 +5235,81 @@
     "moves": [
       "bite",
       "tackle",
-      "swift",
-      "hyper_beam"
+      "hyper_beam",
+      "thrash"
     ],
     "learnset": [
       [
         1,
+        "tackle"
+      ],
+      [
+        1,
+        "leer"
+      ],
+      [
+        1,
+        "splash"
+      ],
+      [
+        1,
+        "flail"
+      ],
+      [
+        1,
+        "twister"
+      ],
+      [
+        4,
+        "whirlpool"
+      ],
+      [
+        8,
+        "ice_fang"
+      ],
+      [
+        12,
+        "brine"
+      ],
+      [
+        16,
+        "scary_face"
+      ],
+      [
+        21,
+        "waterfall"
+      ],
+      [
+        24,
+        "crunch"
+      ],
+      [
+        28,
+        "rain_dance"
+      ],
+      [
+        32,
+        "aqua_tail"
+      ],
+      [
+        36,
+        "dragon_dance"
+      ],
+      [
+        40,
+        "hydro_pump"
+      ],
+      [
+        44,
+        "hurricane"
+      ],
+      [
+        48,
         "thrash"
       ],
       [
-        20,
-        "bite"
-      ],
-      [
-        25,
-        "dragon_rage"
+        52,
+        "hyper_beam"
       ]
     ],
     "evo_moves": [
@@ -4298,7 +5328,63 @@
     "jump_height": 0.0,
     "shape": "squiggle",
     "locomotion": "hover",
-    "tm": []
+    "tm": [
+      "avalanche",
+      "blizzard",
+      "body_slam",
+      "bulldoze",
+      "chilling_water",
+      "crunch",
+      "dark_pulse",
+      "double_edge",
+      "dragon_cheer",
+      "dragon_dance",
+      "dragon_pulse",
+      "dragon_tail",
+      "earthquake",
+      "endeavor",
+      "endure",
+      "facade",
+      "fire_blast",
+      "flamethrower",
+      "giga_impact",
+      "helping_hand",
+      "hurricane",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "ice_fang",
+      "icy_wind",
+      "iron_head",
+      "lash_out",
+      "muddy_water",
+      "outrage",
+      "protect",
+      "rain_dance",
+      "rest",
+      "roar",
+      "sandstorm",
+      "scald",
+      "scale_shot",
+      "scary_face",
+      "sleep_talk",
+      "spite",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "surf",
+      "take_down",
+      "taunt",
+      "temper_flare",
+      "tera_blast",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "water_pulse",
+      "waterfall",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Diglett": {
     "abilities": [
@@ -5570,7 +6656,7 @@
       "tackle",
       "defense_curl",
       "rock_throw",
-      "magnitude"
+      "stone_edge"
     ],
     "learnset": [
       [
@@ -5582,16 +6668,52 @@
         "defense_curl"
       ],
       [
-        11,
-        "rock_throw"
+        6,
+        "rock_polish"
+      ],
+      [
+        10,
+        "rollout"
+      ],
+      [
+        12,
+        "bulldoze"
       ],
       [
         16,
-        "magnitude"
+        "rock_throw"
       ],
       [
-        21,
+        18,
+        "smack_down"
+      ],
+      [
+        24,
         "self_destruct"
+      ],
+      [
+        28,
+        "stealth_rock"
+      ],
+      [
+        30,
+        "rock_blast"
+      ],
+      [
+        34,
+        "earthquake"
+      ],
+      [
+        36,
+        "explosion"
+      ],
+      [
+        40,
+        "double_edge"
+      ],
+      [
+        42,
+        "stone_edge"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -5609,7 +6731,54 @@
     "shape": "arms",
     "locomotion": "hover",
     "tm": [
-      "rock_tomb"
+      "body_slam",
+      "brick_break",
+      "bulldoze",
+      "curse",
+      "dig",
+      "double_edge",
+      "earth_power",
+      "earthquake",
+      "endure",
+      "facade",
+      "fire_blast",
+      "fire_punch",
+      "flamethrower",
+      "fling",
+      "focus_punch",
+      "gyro_ball",
+      "high_horsepower",
+      "iron_defense",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "protect",
+      "rest",
+      "rock_blast",
+      "rock_slide",
+      "rock_tomb",
+      "sandstorm",
+      "scary_face",
+      "sleep_talk",
+      "smack_down",
+      "stealth_rock",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "tera_blast",
+      "thunder_punch"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "block",
+      "curse",
+      "dynamic_punch",
+      "flail",
+      "hammer_arm",
+      "mega_punch",
+      "wide_guard"
     ]
   },
   "Graveler": {
@@ -5645,7 +6814,7 @@
       "tackle",
       "defense_curl",
       "rock_throw",
-      "magnitude"
+      "stone_edge"
     ],
     "learnset": [
       [
@@ -5658,18 +6827,53 @@
       ],
       [
         1,
-        "rock_throw"
+        "rock_polish"
+      ],
+      [
+        10,
+        "rollout"
+      ],
+      [
+        12,
+        "bulldoze"
       ],
       [
         16,
-        "magnitude"
+        "rock_throw"
       ],
       [
-        21,
+        18,
+        "smack_down"
+      ],
+      [
+        24,
         "self_destruct"
+      ],
+      [
+        30,
+        "stealth_rock"
+      ],
+      [
+        34,
+        "rock_blast"
+      ],
+      [
+        40,
+        "earthquake"
+      ],
+      [
+        44,
+        "explosion"
+      ],
+      [
+        50,
+        "double_edge"
+      ],
+      [
+        54,
+        "stone_edge"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#a89880",
     "placeholder_scale": 1.2,
@@ -5682,7 +6886,59 @@
     "shape": "humanoid",
     "locomotion": "ground",
     "tm": [
-      "rock_tomb"
+      "body_press",
+      "body_slam",
+      "brick_break",
+      "bulldoze",
+      "curse",
+      "dig",
+      "double_edge",
+      "earth_power",
+      "earthquake",
+      "endure",
+      "facade",
+      "fire_blast",
+      "fire_punch",
+      "flamethrower",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "gyro_ball",
+      "hard_press",
+      "heavy_slam",
+      "high_horsepower",
+      "iron_defense",
+      "iron_head",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "protect",
+      "rest",
+      "rock_blast",
+      "rock_slide",
+      "rock_tomb",
+      "sandstorm",
+      "scary_face",
+      "sleep_talk",
+      "smack_down",
+      "stealth_rock",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "tera_blast",
+      "thunder_punch"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "block",
+      "curse",
+      "dynamic_punch",
+      "flail",
+      "hammer_arm",
+      "mega_punch",
+      "wide_guard"
     ]
   },
   "Golem": {
@@ -5713,9 +6969,9 @@
     "growth": "medium_slow",
     "moves": [
       "rock_throw",
-      "magnitude",
       "tackle",
-      "defense_curl"
+      "defense_curl",
+      "stone_edge"
     ],
     "learnset": [
       [
@@ -5728,18 +6984,53 @@
       ],
       [
         1,
-        "rock_throw"
+        "rock_polish"
+      ],
+      [
+        1,
+        "heavy_slam"
       ],
       [
         16,
-        "magnitude"
+        "rock_throw"
       ],
       [
-        21,
+        18,
+        "smack_down"
+      ],
+      [
+        22,
+        "bulldoze"
+      ],
+      [
+        24,
         "self_destruct"
+      ],
+      [
+        30,
+        "stealth_rock"
+      ],
+      [
+        34,
+        "rock_blast"
+      ],
+      [
+        40,
+        "earthquake"
+      ],
+      [
+        44,
+        "explosion"
+      ],
+      [
+        50,
+        "double_edge"
+      ],
+      [
+        54,
+        "stone_edge"
       ]
     ],
-    "evo_moves": [],
     "sprite": "res://assets/sprites/critter_green.png",
     "placeholder_tint": "#988870",
     "placeholder_scale": 1.45,
@@ -5752,7 +7043,62 @@
     "shape": "humanoid",
     "locomotion": "ground",
     "tm": [
-      "rock_tomb"
+      "body_press",
+      "body_slam",
+      "brick_break",
+      "bulldoze",
+      "curse",
+      "dig",
+      "double_edge",
+      "earth_power",
+      "earthquake",
+      "endure",
+      "facade",
+      "fire_blast",
+      "fire_punch",
+      "flamethrower",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "giga_impact",
+      "gyro_ball",
+      "hard_press",
+      "heavy_slam",
+      "high_horsepower",
+      "hyper_beam",
+      "iron_defense",
+      "iron_head",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "protect",
+      "rest",
+      "roar",
+      "rock_blast",
+      "rock_slide",
+      "rock_tomb",
+      "sandstorm",
+      "scary_face",
+      "sleep_talk",
+      "smack_down",
+      "stealth_rock",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "tera_blast",
+      "thunder_punch"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "block",
+      "curse",
+      "dynamic_punch",
+      "flail",
+      "hammer_arm",
+      "mega_punch",
+      "wide_guard"
     ]
   },
   "Onix": {
@@ -5790,27 +7136,75 @@
     "learnset": [
       [
         1,
+        "bind"
+      ],
+      [
+        1,
         "tackle"
       ],
       [
         1,
-        "screech"
-      ],
-      [
-        8,
-        "bind"
-      ],
-      [
-        12,
         "rock_throw"
       ],
       [
-        19,
+        1,
         "harden"
       ],
       [
-        23,
-        "rage"
+        4,
+        "smack_down"
+      ],
+      [
+        8,
+        "rock_polish"
+      ],
+      [
+        12,
+        "dragon_breath"
+      ],
+      [
+        16,
+        "curse"
+      ],
+      [
+        20,
+        "rock_slide"
+      ],
+      [
+        24,
+        "screech"
+      ],
+      [
+        28,
+        "sand_tomb"
+      ],
+      [
+        32,
+        "stealth_rock"
+      ],
+      [
+        36,
+        "slam"
+      ],
+      [
+        40,
+        "sandstorm"
+      ],
+      [
+        44,
+        "dig"
+      ],
+      [
+        48,
+        "iron_tail"
+      ],
+      [
+        52,
+        "stone_edge"
+      ],
+      [
+        56,
+        "double_edge"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -5825,7 +7219,60 @@
     "shape": "squiggle",
     "locomotion": "ground",
     "tm": [
-      "rock_tomb"
+      "attract",
+      "body_press",
+      "body_slam",
+      "breaking_swipe",
+      "brutal_swing",
+      "bulldoze",
+      "dig",
+      "dragon_dance",
+      "dragon_pulse",
+      "drill_run",
+      "earth_power",
+      "earthquake",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "gyro_ball",
+      "heavy_slam",
+      "high_horsepower",
+      "iron_head",
+      "iron_tail",
+      "payback",
+      "protect",
+      "rest",
+      "rock_blast",
+      "rock_slide",
+      "rock_tomb",
+      "round",
+      "sand_tomb",
+      "sandstorm",
+      "scary_face",
+      "screech",
+      "self_destruct",
+      "sleep_talk",
+      "snore",
+      "stealth_rock",
+      "stomping_tantrum",
+      "stone_edge",
+      "substitute",
+      "sunny_day",
+      "taunt"
+    ],
+    "learnset_version": "sword-shield",
+    "egg": [
+      "block",
+      "defense_curl",
+      "dragon_tail",
+      "flail",
+      "head_smash",
+      "rollout",
+      "wide_guard"
+    ],
+    "tutor": [
+      "meteor_beam",
+      "scorching_sands"
     ]
   },
   "Sandshrew": {
@@ -7605,32 +9052,68 @@
       "metal_sound",
       "tackle",
       "thunder_shock",
-      "sonic_boom"
+      "light_screen"
     ],
     "learnset": [
-      [
-        1,
-        "metal_sound"
-      ],
       [
         1,
         "tackle"
       ],
       [
-        6,
+        1,
         "thunder_shock"
       ],
       [
-        11,
+        4,
         "supersonic"
       ],
       [
-        16,
-        "sonic_boom"
+        8,
+        "thunder_wave"
       ],
       [
-        21,
-        "thunder_wave"
+        12,
+        "electro_ball"
+      ],
+      [
+        16,
+        "gyro_ball"
+      ],
+      [
+        20,
+        "spark"
+      ],
+      [
+        24,
+        "screech"
+      ],
+      [
+        28,
+        "magnet_rise"
+      ],
+      [
+        32,
+        "flash_cannon"
+      ],
+      [
+        36,
+        "discharge"
+      ],
+      [
+        40,
+        "metal_sound"
+      ],
+      [
+        44,
+        "light_screen"
+      ],
+      [
+        48,
+        "lock_on"
+      ],
+      [
+        52,
+        "zap_cannon"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -7652,7 +9135,48 @@
     "flavor": "It moves while constantly hovering. It discharges THUNDER WAVE and so on from the units at its sides.",
     "locomotion": "hover",
     "jump_height": 0.3,
-    "tm": []
+    "tm": [
+      "charge",
+      "charge_beam",
+      "confuse_ray",
+      "eerie_impulse",
+      "electric_terrain",
+      "electro_ball",
+      "electroweb",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "gravity",
+      "gyro_ball",
+      "heavy_slam",
+      "helping_hand",
+      "iron_defense",
+      "iron_head",
+      "light_screen",
+      "metal_sound",
+      "protect",
+      "rain_dance",
+      "reflect",
+      "rest",
+      "sandstorm",
+      "sleep_talk",
+      "steel_beam",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "volt_switch",
+      "wild_charge"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "electroweb",
+      "explosion"
+    ]
   },
   "Magneton": {
     "types": [
@@ -7677,18 +9201,18 @@
     "growth": "medium_fast",
     "moves": [
       "thunder_shock",
-      "sonic_boom",
       "thunder_wave",
-      "metal_sound"
+      "metal_sound",
+      "light_screen"
     ],
     "learnset": [
       [
         1,
-        "metal_sound"
+        "tackle"
       ],
       [
         1,
-        "tackle"
+        "supersonic"
       ],
       [
         1,
@@ -7696,15 +9220,55 @@
       ],
       [
         1,
-        "supersonic"
+        "thunder_wave"
+      ],
+      [
+        1,
+        "electric_terrain"
+      ],
+      [
+        12,
+        "electro_ball"
       ],
       [
         16,
-        "sonic_boom"
+        "gyro_ball"
       ],
       [
-        21,
-        "thunder_wave"
+        20,
+        "spark"
+      ],
+      [
+        24,
+        "screech"
+      ],
+      [
+        28,
+        "magnet_rise"
+      ],
+      [
+        34,
+        "flash_cannon"
+      ],
+      [
+        40,
+        "discharge"
+      ],
+      [
+        46,
+        "metal_sound"
+      ],
+      [
+        52,
+        "light_screen"
+      ],
+      [
+        58,
+        "lock_on"
+      ],
+      [
+        64,
+        "zap_cannon"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -7721,10 +9285,50 @@
     "height_m": 1.0,
     "weight_kg": 60.0,
     "flavor": "A linked cluster formed of several MAGNEMITE. It discharges powerful magnetic waves at high voltage.",
-    "evo_moves": [],
+    "evo_moves": [
+      "tri_attack"
+    ],
     "locomotion": "hover",
     "jump_height": 0.0,
-    "tm": []
+    "tm": [
+      "charge",
+      "charge_beam",
+      "confuse_ray",
+      "eerie_impulse",
+      "electric_terrain",
+      "electro_ball",
+      "electroweb",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "gravity",
+      "gyro_ball",
+      "heavy_slam",
+      "helping_hand",
+      "hyper_beam",
+      "iron_defense",
+      "iron_head",
+      "light_screen",
+      "metal_sound",
+      "protect",
+      "rain_dance",
+      "reflect",
+      "rest",
+      "sandstorm",
+      "sleep_talk",
+      "steel_beam",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "volt_switch",
+      "wild_charge"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Voltorb": {
     "types": [
@@ -7750,28 +9354,76 @@
       "charge",
       "tackle",
       "screech",
-      "sonic_boom"
+      "mirror_coat"
     ],
     "learnset": [
-      [
-        1,
-        "charge"
-      ],
       [
         1,
         "tackle"
       ],
       [
-        8,
+        1,
+        "charge"
+      ],
+      [
+        4,
+        "thunder_shock"
+      ],
+      [
+        6,
+        "eerie_impulse"
+      ],
+      [
+        9,
+        "spark"
+      ],
+      [
+        11,
+        "rollout"
+      ],
+      [
+        13,
         "screech"
       ],
       [
-        15,
-        "sonic_boom"
+        16,
+        "charge_beam"
       ],
       [
-        21,
-        "spark"
+        20,
+        "swift"
+      ],
+      [
+        22,
+        "electro_ball"
+      ],
+      [
+        26,
+        "self_destruct"
+      ],
+      [
+        29,
+        "light_screen"
+      ],
+      [
+        34,
+        "magnet_rise"
+      ],
+      [
+        37,
+        "discharge"
+      ],
+      [
+        41,
+        "explosion"
+      ],
+      [
+        46,
+        "gyro_ball"
+      ],
+      [
+        50,
+        "mirror_coat"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -7794,7 +9446,41 @@
     "locomotion": "ground",
     "jump_height": 1.16,
     "tm": [
-      "thief"
+      "agility",
+      "charge",
+      "charge_beam",
+      "double_edge",
+      "eerie_impulse",
+      "electric_terrain",
+      "electro_ball",
+      "electroweb",
+      "endure",
+      "facade",
+      "foul_play",
+      "gyro_ball",
+      "helping_hand",
+      "light_screen",
+      "metal_sound",
+      "protect",
+      "rain_dance",
+      "rest",
+      "sleep_talk",
+      "substitute",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "volt_switch",
+      "wild_charge"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "metal_sound",
+      "recycle"
     ]
   },
   "Electrode": {
@@ -7819,30 +9505,82 @@
     "growth": "medium_fast",
     "moves": [
       "spark",
-      "sonic_boom",
       "screech",
-      "charge"
+      "charge",
+      "mirror_coat"
     ],
     "learnset": [
-      [
-        1,
-        "charge"
-      ],
       [
         1,
         "tackle"
       ],
       [
         1,
-        "screech"
+        "thunder_shock"
       ],
       [
         1,
-        "sonic_boom"
+        "charge"
       ],
       [
-        21,
+        1,
+        "eerie_impulse"
+      ],
+      [
+        1,
+        "magnetic_flux"
+      ],
+      [
+        9,
         "spark"
+      ],
+      [
+        11,
+        "rollout"
+      ],
+      [
+        13,
+        "screech"
+      ],
+      [
+        16,
+        "charge_beam"
+      ],
+      [
+        20,
+        "swift"
+      ],
+      [
+        22,
+        "electro_ball"
+      ],
+      [
+        26,
+        "self_destruct"
+      ],
+      [
+        29,
+        "light_screen"
+      ],
+      [
+        36,
+        "magnet_rise"
+      ],
+      [
+        41,
+        "discharge"
+      ],
+      [
+        47,
+        "explosion"
+      ],
+      [
+        54,
+        "gyro_ball"
+      ],
+      [
+        58,
+        "mirror_coat"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -7859,12 +9597,46 @@
     "height_m": 1.2,
     "weight_kg": 66.6,
     "flavor": "It explodes in response to even minor stimuli. It is feared, with the nickname of “The Bomb Ball.”",
-    "evo_moves": [],
     "locomotion": "ground",
     "jump_height": 1.4,
     "tm": [
-      "thief"
-    ]
+      "agility",
+      "charge",
+      "charge_beam",
+      "curse",
+      "double_edge",
+      "eerie_impulse",
+      "electric_terrain",
+      "electro_ball",
+      "electroweb",
+      "endure",
+      "facade",
+      "foul_play",
+      "giga_impact",
+      "gyro_ball",
+      "helping_hand",
+      "hyper_beam",
+      "light_screen",
+      "metal_sound",
+      "protect",
+      "rain_dance",
+      "rest",
+      "scary_face",
+      "sleep_talk",
+      "substitute",
+      "supercell_slam",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "volt_switch",
+      "wild_charge"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Oddish": {
     "types": [
@@ -8348,7 +10120,7 @@
         "vine_whip"
       ],
       [
-        6,
+        7,
         "growth"
       ],
       [
@@ -8356,20 +10128,48 @@
         "wrap"
       ],
       [
-        15,
+        13,
         "sleep_powder"
       ],
       [
-        17,
+        15,
         "poison_powder"
       ],
       [
-        19,
+        17,
         "stun_spore"
       ],
       [
         23,
         "acid"
+      ],
+      [
+        27,
+        "knock_off"
+      ],
+      [
+        29,
+        "sweet_scent"
+      ],
+      [
+        35,
+        "gastro_acid"
+      ],
+      [
+        39,
+        "razor_leaf"
+      ],
+      [
+        41,
+        "poison_jab"
+      ],
+      [
+        47,
+        "slam"
+      ],
+      [
+        52,
+        "power_whip"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -8391,8 +10191,50 @@
     "locomotion": "ground",
     "jump_height": 0.3,
     "tm": [
+      "acid_spray",
       "bullet_seed",
-      "thief"
+      "encore",
+      "endure",
+      "energy_ball",
+      "facade",
+      "giga_drain",
+      "grass_knot",
+      "grassy_glide",
+      "grassy_terrain",
+      "knock_off",
+      "leaf_storm",
+      "leech_life",
+      "lunge",
+      "magical_leaf",
+      "poison_jab",
+      "pounce",
+      "protect",
+      "reflect",
+      "rest",
+      "seed_bomb",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "solar_beam",
+      "substitute",
+      "sunny_day",
+      "swords_dance",
+      "tera_blast",
+      "thief",
+      "toxic",
+      "trailblaze",
+      "venoshock",
+      "weather_ball"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "clear_smog",
+      "ingrain",
+      "strength_sap",
+      "sucker_punch",
+      "synthesis",
+      "tickle",
+      "worry_seed"
     ]
   },
   "Weepinbell": {
@@ -8429,27 +10271,55 @@
       ],
       [
         1,
-        "growth"
-      ],
-      [
-        1,
         "wrap"
       ],
       [
-        15,
+        1,
+        "growth"
+      ],
+      [
+        13,
         "sleep_powder"
       ],
       [
-        17,
+        15,
         "poison_powder"
       ],
       [
-        19,
+        17,
         "stun_spore"
       ],
       [
         24,
         "acid"
+      ],
+      [
+        29,
+        "knock_off"
+      ],
+      [
+        32,
+        "sweet_scent"
+      ],
+      [
+        39,
+        "gastro_acid"
+      ],
+      [
+        44,
+        "razor_leaf"
+      ],
+      [
+        47,
+        "poison_jab"
+      ],
+      [
+        54,
+        "slam"
+      ],
+      [
+        58,
+        "power_whip"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -8470,12 +10340,56 @@
     "height_m": 1.0,
     "weight_kg": 6.4,
     "flavor": "The leafy parts act as cutters for slashing foes. It spits a fluid that dissolves everything.",
-    "evo_moves": [],
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
+      "body_slam",
+      "bug_bite",
       "bullet_seed",
-      "thief"
+      "encore",
+      "endure",
+      "energy_ball",
+      "facade",
+      "giga_drain",
+      "grass_knot",
+      "grassy_glide",
+      "grassy_terrain",
+      "knock_off",
+      "leaf_storm",
+      "leech_life",
+      "lunge",
+      "magical_leaf",
+      "poison_jab",
+      "pounce",
+      "protect",
+      "reflect",
+      "rest",
+      "seed_bomb",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "solar_beam",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "swords_dance",
+      "tera_blast",
+      "thief",
+      "toxic",
+      "trailblaze",
+      "venoshock",
+      "weather_ball"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "clear_smog",
+      "ingrain",
+      "strength_sap",
+      "sucker_punch",
+      "synthesis",
+      "tickle",
+      "worry_seed"
     ]
   },
   "Victreebel": {
@@ -8503,12 +10417,16 @@
       "razor_leaf",
       "vine_whip",
       "sleep_powder",
-      "acid"
+      "sweet_scent"
     ],
     "learnset": [
       [
         1,
         "vine_whip"
+      ],
+      [
+        1,
+        "razor_leaf"
       ],
       [
         1,
@@ -8519,8 +10437,8 @@
         "sweet_scent"
       ],
       [
-        1,
-        "razor_leaf"
+        44,
+        "leaf_blade"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -8538,13 +10456,66 @@
     "weight_kg": 15.5,
     "flavor": "Lures prey into its mouth with a honeylike aroma. The helpless prey is melted with a dissolving fluid.",
     "evo_moves": [
-      "razor_leaf"
+      "leaf_storm"
     ],
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
+      "body_slam",
+      "bug_bite",
       "bullet_seed",
-      "thief"
+      "encore",
+      "endure",
+      "energy_ball",
+      "facade",
+      "giga_drain",
+      "giga_impact",
+      "grass_knot",
+      "grassy_glide",
+      "grassy_terrain",
+      "hyper_beam",
+      "knock_off",
+      "leaf_storm",
+      "leech_life",
+      "lunge",
+      "magical_leaf",
+      "poison_jab",
+      "pounce",
+      "protect",
+      "reflect",
+      "rest",
+      "scary_face",
+      "seed_bomb",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "solar_beam",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "swords_dance",
+      "tera_blast",
+      "thief",
+      "toxic",
+      "trailblaze",
+      "venoshock",
+      "weather_ball"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "clear_smog",
+      "gastro_acid",
+      "ingrain",
+      "power_whip",
+      "spit_up",
+      "stockpile",
+      "strength_sap",
+      "sucker_punch",
+      "swallow",
+      "synthesis",
+      "tickle",
+      "worry_seed"
     ]
   },
   "Grimer": {
@@ -8576,27 +10547,67 @@
     "learnset": [
       [
         1,
-        "poison_gas"
+        "pound"
       ],
       [
         1,
-        "pound"
+        "poison_gas"
       ],
       [
         4,
         "harden"
       ],
       [
-        8,
+        7,
+        "mud_slap"
+      ],
+      [
+        12,
         "disable"
       ],
       [
-        13,
+        15,
         "sludge"
       ],
       [
-        19,
+        18,
+        "mud_shot"
+      ],
+      [
+        21,
         "minimize"
+      ],
+      [
+        26,
+        "toxic"
+      ],
+      [
+        29,
+        "sludge_bomb"
+      ],
+      [
+        32,
+        "sludge_wave"
+      ],
+      [
+        37,
+        "screech"
+      ],
+      [
+        40,
+        "gunk_shot"
+      ],
+      [
+        43,
+        "acid_armor"
+      ],
+      [
+        46,
+        "belch"
+      ],
+      [
+        48,
+        "memento"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -8619,8 +10630,65 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
+      "body_slam",
+      "confuse_ray",
+      "curse",
+      "dig",
+      "drain_punch",
+      "endure",
+      "facade",
+      "fire_blast",
+      "fire_punch",
+      "flamethrower",
+      "fling",
+      "giga_drain",
+      "gunk_shot",
+      "haze",
+      "helping_hand",
+      "hex",
+      "ice_punch",
+      "imprison",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "pain_split",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "rock_slide",
       "rock_tomb",
-      "thief"
+      "sandstorm",
+      "scary_face",
+      "shadow_ball",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunder_punch",
+      "thunderbolt",
+      "toxic",
+      "venoshock",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "acid_spray",
+      "curse",
+      "haze",
+      "mean_look",
+      "shadow_punch",
+      "shadow_sneak",
+      "spit_up",
+      "stockpile",
+      "swallow"
     ]
   },
   "Muk": {
@@ -8653,10 +10721,6 @@
     "learnset": [
       [
         1,
-        "poison_gas"
-      ],
-      [
-        1,
         "pound"
       ],
       [
@@ -8664,16 +10728,60 @@
         "harden"
       ],
       [
-        8,
+        1,
+        "poison_gas"
+      ],
+      [
+        1,
+        "mud_slap"
+      ],
+      [
+        12,
         "disable"
       ],
       [
-        13,
+        15,
         "sludge"
       ],
       [
-        19,
+        18,
+        "mud_shot"
+      ],
+      [
+        21,
         "minimize"
+      ],
+      [
+        26,
+        "toxic"
+      ],
+      [
+        29,
+        "sludge_bomb"
+      ],
+      [
+        32,
+        "sludge_wave"
+      ],
+      [
+        37,
+        "screech"
+      ],
+      [
+        40,
+        "gunk_shot"
+      ],
+      [
+        46,
+        "acid_armor"
+      ],
+      [
+        52,
+        "belch"
+      ],
+      [
+        57,
+        "memento"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -8690,13 +10798,70 @@
     "height_m": 1.2,
     "weight_kg": 30.0,
     "flavor": "It is usually undetectable because it blends in with the ground. Touching it can cause terrible poisoning.",
-    "evo_moves": [],
     "locomotion": "ground",
     "jump_height": 0.32,
     "tm": [
+      "acid_spray",
+      "body_slam",
+      "brick_break",
+      "confuse_ray",
+      "curse",
+      "dark_pulse",
+      "dig",
+      "drain_punch",
+      "endure",
+      "facade",
+      "fire_blast",
+      "fire_punch",
+      "flamethrower",
+      "fling",
+      "focus_blast",
+      "focus_punch",
+      "giga_drain",
+      "giga_impact",
+      "gunk_shot",
+      "haze",
+      "helping_hand",
+      "hex",
+      "hyper_beam",
+      "ice_punch",
+      "imprison",
+      "knock_off",
+      "lash_out",
+      "lunge",
+      "metronome",
+      "mud_shot",
+      "mud_slap",
+      "pain_split",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "rock_slide",
       "rock_tomb",
-      "thief"
-    ]
+      "sandstorm",
+      "scary_face",
+      "shadow_ball",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "spite",
+      "substitute",
+      "sunny_day",
+      "swift",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunder_punch",
+      "thunderbolt",
+      "toxic",
+      "toxic_spikes",
+      "venoshock",
+      "zen_headbutt"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Koffing": {
     "types": [
@@ -8727,27 +10892,63 @@
     "learnset": [
       [
         1,
-        "poison_gas"
-      ],
-      [
-        1,
         "tackle"
       ],
       [
-        9,
+        1,
+        "poison_gas"
+      ],
+      [
+        4,
         "smog"
       ],
       [
-        17,
-        "self_destruct"
+        8,
+        "smokescreen"
       ],
       [
-        21,
+        12,
+        "clear_smog"
+      ],
+      [
+        16,
+        "assurance"
+      ],
+      [
+        20,
         "sludge"
       ],
       [
-        25,
-        "smokescreen"
+        24,
+        "haze"
+      ],
+      [
+        28,
+        "self_destruct"
+      ],
+      [
+        32,
+        "sludge_bomb"
+      ],
+      [
+        36,
+        "toxic"
+      ],
+      [
+        40,
+        "belch"
+      ],
+      [
+        44,
+        "explosion"
+      ],
+      [
+        48,
+        "memento"
+      ],
+      [
+        52,
+        "destiny_bond"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -8769,7 +10970,49 @@
     "locomotion": "hover",
     "jump_height": 0.3,
     "tm": [
-      "thief"
+      "acid_spray",
+      "body_slam",
+      "curse",
+      "dark_pulse",
+      "endure",
+      "facade",
+      "fire_blast",
+      "flamethrower",
+      "gunk_shot",
+      "gyro_ball",
+      "haze",
+      "pain_split",
+      "protect",
+      "psybeam",
+      "rain_dance",
+      "rest",
+      "scary_face",
+      "shadow_ball",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "spite",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunderbolt",
+      "toxic",
+      "toxic_spikes",
+      "venoshock",
+      "will_o_wisp"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "curse",
+      "pain_split",
+      "spit_up",
+      "spite",
+      "stockpile",
+      "swallow"
     ]
   },
   "Weezing": {
@@ -8801,11 +11044,11 @@
     "learnset": [
       [
         1,
-        "poison_gas"
+        "tackle"
       ],
       [
         1,
-        "tackle"
+        "smokescreen"
       ],
       [
         1,
@@ -8813,15 +11056,55 @@
       ],
       [
         1,
-        "self_destruct"
+        "poison_gas"
       ],
       [
-        21,
+        1,
+        "heat_wave"
+      ],
+      [
+        12,
+        "clear_smog"
+      ],
+      [
+        16,
+        "assurance"
+      ],
+      [
+        20,
         "sludge"
       ],
       [
-        25,
-        "smokescreen"
+        24,
+        "haze"
+      ],
+      [
+        28,
+        "self_destruct"
+      ],
+      [
+        32,
+        "sludge_bomb"
+      ],
+      [
+        38,
+        "toxic"
+      ],
+      [
+        44,
+        "belch"
+      ],
+      [
+        50,
+        "explosion"
+      ],
+      [
+        56,
+        "memento"
+      ],
+      [
+        62,
+        "destiny_bond"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -8838,11 +11121,50 @@
     "height_m": 1.2,
     "weight_kg": 9.5,
     "flavor": "Very rarely, a sudden mutation can result in two small KOFFING twins becoming conjoined as a WEEZING.",
-    "evo_moves": [],
     "locomotion": "hover",
     "jump_height": 0.0,
     "tm": [
-      "thief"
+      "acid_spray",
+      "body_slam",
+      "curse",
+      "dark_pulse",
+      "endure",
+      "facade",
+      "fire_blast",
+      "flamethrower",
+      "giga_impact",
+      "gunk_shot",
+      "gyro_ball",
+      "haze",
+      "heat_wave",
+      "hyper_beam",
+      "pain_split",
+      "protect",
+      "psybeam",
+      "rain_dance",
+      "rest",
+      "scary_face",
+      "shadow_ball",
+      "sleep_talk",
+      "sludge_bomb",
+      "sludge_wave",
+      "spite",
+      "substitute",
+      "sunny_day",
+      "take_down",
+      "taunt",
+      "tera_blast",
+      "thief",
+      "thunder",
+      "thunderbolt",
+      "toxic",
+      "toxic_spikes",
+      "venoshock",
+      "will_o_wisp"
+    ],
+    "learnset_version": "scarlet-violet",
+    "evo_moves": [
+      "double_hit"
     ]
   },
   "Ekans": {
@@ -9246,16 +11568,60 @@
         "harden"
       ],
       [
-        6,
+        4,
         "water_gun"
       ],
       [
-        10,
+        8,
+        "confuse_ray"
+      ],
+      [
+        12,
         "rapid_spin"
       ],
       [
-        24,
+        16,
+        "minimize"
+      ],
+      [
+        20,
         "swift"
+      ],
+      [
+        24,
+        "psybeam"
+      ],
+      [
+        28,
+        "brine"
+      ],
+      [
+        32,
+        "light_screen"
+      ],
+      [
+        36,
+        "power_gem"
+      ],
+      [
+        40,
+        "psychic"
+      ],
+      [
+        44,
+        "surf"
+      ],
+      [
+        48,
+        "recover"
+      ],
+      [
+        52,
+        "cosmic_power"
+      ],
+      [
+        56,
+        "hydro_pump"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9282,7 +11648,44 @@
       "item": "water_stone",
       "into": "Starmie"
     },
-    "tm": []
+    "tm": [
+      "blizzard",
+      "brine",
+      "cosmic_power",
+      "dazzling_gleam",
+      "dive",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "gyro_ball",
+      "hydro_pump",
+      "ice_beam",
+      "icy_wind",
+      "light_screen",
+      "power_gem",
+      "protect",
+      "psychic",
+      "rain_dance",
+      "reflect",
+      "rest",
+      "round",
+      "scald",
+      "sleep_talk",
+      "snore",
+      "substitute",
+      "surf",
+      "swift",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "tri_attack",
+      "waterfall",
+      "whirlpool"
+    ],
+    "learnset_version": "sword-shield",
+    "tutor": [
+      "flip_turn"
+    ]
   },
   "Starmie": {
     "types": [
@@ -9309,12 +11712,56 @@
       "water_gun",
       "rapid_spin",
       "swift",
-      "bubble_beam"
+      "cosmic_power"
     ],
     "learnset": [
       [
         1,
+        "tackle"
+      ],
+      [
+        1,
         "water_gun"
+      ],
+      [
+        1,
+        "hydro_pump"
+      ],
+      [
+        1,
+        "surf"
+      ],
+      [
+        1,
+        "psybeam"
+      ],
+      [
+        1,
+        "psychic"
+      ],
+      [
+        1,
+        "recover"
+      ],
+      [
+        1,
+        "harden"
+      ],
+      [
+        1,
+        "minimize"
+      ],
+      [
+        1,
+        "confuse_ray"
+      ],
+      [
+        1,
+        "light_screen"
+      ],
+      [
+        1,
+        "swift"
       ],
       [
         1,
@@ -9322,7 +11769,15 @@
       ],
       [
         1,
-        "swift"
+        "cosmic_power"
+      ],
+      [
+        1,
+        "brine"
+      ],
+      [
+        1,
+        "power_gem"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9345,8 +11800,58 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "jump_height_override": 0.55,
-    "evo_moves": [],
-    "tm": []
+    "tm": [
+      "agility",
+      "ally_switch",
+      "avalanche",
+      "blizzard",
+      "brine",
+      "cosmic_power",
+      "dazzling_gleam",
+      "dive",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "giga_impact",
+      "grass_knot",
+      "gyro_ball",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "icy_wind",
+      "light_screen",
+      "power_gem",
+      "protect",
+      "psychic",
+      "psycho_cut",
+      "psyshock",
+      "rain_dance",
+      "reflect",
+      "rest",
+      "round",
+      "scald",
+      "skill_swap",
+      "sleep_talk",
+      "snore",
+      "substitute",
+      "surf",
+      "swift",
+      "thunder",
+      "thunder_wave",
+      "thunderbolt",
+      "tri_attack",
+      "trick",
+      "trick_room",
+      "waterfall",
+      "whirlpool",
+      "wonder_room"
+    ],
+    "learnset_version": "sword-shield",
+    "tutor": [
+      "expanding_force",
+      "flip_turn",
+      "meteor_beam"
+    ]
   },
   "Horsea": {
     "types": [
@@ -9369,27 +11874,63 @@
     "base_exp": 59,
     "growth": "medium_fast",
     "moves": [
-      "bubble",
       "smokescreen",
       "leer",
-      "water_gun"
+      "water_gun",
+      "rain_dance"
     ],
     "learnset": [
       [
         1,
-        "bubble"
-      ],
-      [
-        8,
-        "smokescreen"
-      ],
-      [
-        15,
         "leer"
       ],
       [
-        22,
+        1,
         "water_gun"
+      ],
+      [
+        5,
+        "smokescreen"
+      ],
+      [
+        10,
+        "twister"
+      ],
+      [
+        15,
+        "focus_energy"
+      ],
+      [
+        20,
+        "dragon_breath"
+      ],
+      [
+        25,
+        "bubble_beam"
+      ],
+      [
+        30,
+        "agility"
+      ],
+      [
+        35,
+        "water_pulse"
+      ],
+      [
+        40,
+        "dragon_pulse"
+      ],
+      [
+        45,
+        "hydro_pump"
+      ],
+      [
+        50,
+        "dragon_dance"
+      ],
+      [
+        55,
+        "rain_dance"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9412,7 +11953,44 @@
       "level": 32,
       "into": "Seadra"
     },
-    "tm": []
+    "tm": [
+      "agility",
+      "blizzard",
+      "chilling_water",
+      "dragon_dance",
+      "dragon_pulse",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "flip_turn",
+      "hydro_pump",
+      "ice_beam",
+      "icy_wind",
+      "liquidation",
+      "muddy_water",
+      "outrage",
+      "protect",
+      "rain_dance",
+      "rest",
+      "scale_shot",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "tera_blast",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aurora_beam",
+      "clear_smog",
+      "disable",
+      "flail",
+      "splash"
+    ]
   },
   "Shellder": {
     "types": [
@@ -9447,19 +12025,55 @@
       ],
       [
         1,
+        "water_gun"
+      ],
+      [
+        4,
         "withdraw"
       ],
       [
         8,
-        "icicle_spear"
+        "ice_shard"
       ],
       [
-        15,
+        12,
+        "leer"
+      ],
+      [
+        16,
+        "whirlpool"
+      ],
+      [
+        20,
         "supersonic"
       ],
       [
-        22,
+        24,
         "aurora_beam"
+      ],
+      [
+        28,
+        "protect"
+      ],
+      [
+        32,
+        "razor_shell"
+      ],
+      [
+        36,
+        "iron_defense"
+      ],
+      [
+        40,
+        "ice_beam"
+      ],
+      [
+        44,
+        "shell_smash"
+      ],
+      [
+        48,
+        "hydro_pump"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9484,7 +12098,44 @@
       "item": "water_stone",
       "into": "Cloyster"
     },
-    "tm": []
+    "tm": [
+      "avalanche",
+      "blizzard",
+      "chilling_water",
+      "endure",
+      "facade",
+      "helping_hand",
+      "hydro_pump",
+      "ice_beam",
+      "ice_spinner",
+      "icicle_spear",
+      "icy_wind",
+      "iron_defense",
+      "liquidation",
+      "mud_shot",
+      "protect",
+      "rain_dance",
+      "rest",
+      "rock_blast",
+      "sleep_talk",
+      "spikes",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "toxic_spikes",
+      "water_pulse",
+      "waterfall",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aqua_ring",
+      "bubble_beam",
+      "life_dew",
+      "water_pulse"
+    ]
   },
   "Seadra": {
     "types": [
@@ -9509,19 +12160,11 @@
     "growth": "medium_fast",
     "moves": [
       "water_gun",
-      "bubble",
       "smokescreen",
-      "twister"
+      "twister",
+      "rain_dance"
     ],
     "learnset": [
-      [
-        1,
-        "bubble"
-      ],
-      [
-        1,
-        "smokescreen"
-      ],
       [
         1,
         "leer"
@@ -9529,6 +12172,50 @@
       [
         1,
         "water_gun"
+      ],
+      [
+        1,
+        "smokescreen"
+      ],
+      [
+        1,
+        "twister"
+      ],
+      [
+        15,
+        "focus_energy"
+      ],
+      [
+        20,
+        "dragon_breath"
+      ],
+      [
+        25,
+        "bubble_beam"
+      ],
+      [
+        30,
+        "agility"
+      ],
+      [
+        37,
+        "water_pulse"
+      ],
+      [
+        44,
+        "dragon_pulse"
+      ],
+      [
+        51,
+        "hydro_pump"
+      ],
+      [
+        58,
+        "dragon_dance"
+      ],
+      [
+        65,
+        "rain_dance"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9549,13 +12236,52 @@
     "swim_sink": 0.25,
     "locomotion": "ground",
     "jump_height": 0.0,
-    "evo_moves": [],
     "evolution": {
       "method": "item",
       "item": "dragon_scale",
       "into": "Kingdra"
     },
-    "tm": []
+    "tm": [
+      "agility",
+      "blizzard",
+      "chilling_water",
+      "dragon_dance",
+      "dragon_pulse",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "flip_turn",
+      "giga_impact",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "icy_wind",
+      "liquidation",
+      "muddy_water",
+      "outrage",
+      "protect",
+      "rain_dance",
+      "rest",
+      "scale_shot",
+      "scary_face",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "tera_blast",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aurora_beam",
+      "clear_smog",
+      "disable",
+      "flail",
+      "splash"
+    ]
   },
   "Kingdra": {
     "types": [
@@ -9582,19 +12308,11 @@
     "growth": "medium_fast",
     "moves": [
       "water_gun",
-      "bubble",
       "twister",
-      "hydro_pump"
+      "hydro_pump",
+      "wave_crash"
     ],
     "learnset": [
-      [
-        1,
-        "bubble"
-      ],
-      [
-        1,
-        "smokescreen"
-      ],
       [
         1,
         "leer"
@@ -9602,6 +12320,62 @@
       [
         1,
         "water_gun"
+      ],
+      [
+        1,
+        "smokescreen"
+      ],
+      [
+        1,
+        "twister"
+      ],
+      [
+        1,
+        "whirlpool"
+      ],
+      [
+        1,
+        "yawn"
+      ],
+      [
+        15,
+        "focus_energy"
+      ],
+      [
+        20,
+        "dragon_breath"
+      ],
+      [
+        25,
+        "bubble_beam"
+      ],
+      [
+        30,
+        "agility"
+      ],
+      [
+        37,
+        "water_pulse"
+      ],
+      [
+        44,
+        "dragon_pulse"
+      ],
+      [
+        51,
+        "hydro_pump"
+      ],
+      [
+        58,
+        "dragon_dance"
+      ],
+      [
+        65,
+        "rain_dance"
+      ],
+      [
+        72,
+        "wave_crash"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9622,8 +12396,55 @@
     "swim_sink": 0.3,
     "locomotion": "ground",
     "jump_height": 0.0,
-    "evo_moves": [],
-    "tm": []
+    "tm": [
+      "agility",
+      "blizzard",
+      "body_slam",
+      "breaking_swipe",
+      "chilling_water",
+      "double_edge",
+      "draco_meteor",
+      "dragon_dance",
+      "dragon_pulse",
+      "endure",
+      "facade",
+      "flash_cannon",
+      "flip_turn",
+      "giga_impact",
+      "hurricane",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "icy_wind",
+      "iron_head",
+      "liquidation",
+      "muddy_water",
+      "outrage",
+      "protect",
+      "rain_dance",
+      "rest",
+      "scald",
+      "scale_shot",
+      "scary_face",
+      "sleep_talk",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet",
+    "egg": [
+      "aurora_beam",
+      "clear_smog",
+      "disable",
+      "flail",
+      "splash"
+    ]
   },
   "Cloyster": {
     "types": [
@@ -9655,7 +12476,11 @@
     "learnset": [
       [
         1,
-        "withdraw"
+        "tackle"
+      ],
+      [
+        1,
+        "leer"
       ],
       [
         1,
@@ -9663,7 +12488,59 @@
       ],
       [
         1,
+        "water_gun"
+      ],
+      [
+        1,
+        "hydro_pump"
+      ],
+      [
+        1,
+        "ice_beam"
+      ],
+      [
+        1,
         "aurora_beam"
+      ],
+      [
+        1,
+        "withdraw"
+      ],
+      [
+        1,
+        "protect"
+      ],
+      [
+        1,
+        "spikes"
+      ],
+      [
+        1,
+        "whirlpool"
+      ],
+      [
+        1,
+        "iron_defense"
+      ],
+      [
+        1,
+        "toxic_spikes"
+      ],
+      [
+        1,
+        "ice_shard"
+      ],
+      [
+        1,
+        "shell_smash"
+      ],
+      [
+        1,
+        "icicle_crash"
+      ],
+      [
+        5,
+        "razor_shell"
       ]
     ],
     "sprite": "res://assets/sprites/critter_bird.png",
@@ -9684,8 +12561,50 @@
     "swim_sink": 0.5,
     "locomotion": "ground",
     "jump_height": 0.0,
-    "evo_moves": [],
-    "tm": []
+    "evo_moves": [
+      "icicle_spear"
+    ],
+    "tm": [
+      "avalanche",
+      "blizzard",
+      "body_slam",
+      "chilling_water",
+      "drill_run",
+      "endure",
+      "facade",
+      "giga_impact",
+      "helping_hand",
+      "hydro_pump",
+      "hyper_beam",
+      "ice_beam",
+      "ice_spinner",
+      "icicle_spear",
+      "icy_wind",
+      "iron_defense",
+      "light_screen",
+      "liquidation",
+      "mud_shot",
+      "poison_jab",
+      "protect",
+      "rain_dance",
+      "rest",
+      "rock_blast",
+      "scary_face",
+      "sleep_talk",
+      "smart_strike",
+      "spikes",
+      "substitute",
+      "surf",
+      "swift",
+      "take_down",
+      "tera_blast",
+      "toxic_spikes",
+      "water_pulse",
+      "waterfall",
+      "weather_ball",
+      "whirlpool"
+    ],
+    "learnset_version": "scarlet-violet"
   },
   "Vulpix": {
     "shape": "quadruped",
