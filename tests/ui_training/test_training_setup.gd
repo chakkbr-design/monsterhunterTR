@@ -210,6 +210,19 @@ func _run() -> void:
 	scr.set_time_limit(120)
 	check(scr.cfg.turbo == true and int(scr.cfg.time_limit) == 120, "turbo e limite de tempo")
 
+	# --- Jogador 1: IA (padrão) ou Manual (teclado no Time A) ---
+	check(Cfg.default_config().p1_control == "ai", "Jogador 1 começa como IA")
+	scr.set_p1_control("manual")
+	check(
+		scr.cfg.p1_control == "manual" and scr._p1.selected == 1,
+		"set_p1_control grava e mostra Manual"
+	)
+	check(Cfg.arena_opts(scr.cfg, Vector3.ZERO).keyboard == true, "manual: opts com teclado")
+	scr.set_p1_control("ai")
+	check(scr.cfg.p1_control == "ai" and scr._p1.selected == 0, "volta para IA")
+	scr.set_p1_control("qualquer")
+	check(scr.cfg.p1_control == "ai", "valor inválido vira IA")
+
 	# --- Times salvos em slots ---
 	scr.set_team_name(1, "Rival")
 	scr.open_teams(1)

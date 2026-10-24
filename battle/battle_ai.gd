@@ -138,6 +138,9 @@ var returning := false
 var guarding := false
 ## Metade da vez já passou esperando fôlego: solta mesmo cansado (fica exausto) em vez de perder a vez.
 var careless := false
+## Escolha de golpe e alvo no estilo VGC (BattleTactics); null no selvagem e com opts.vgc_ai = false.
+var tactics: BattleTactics = null
+var _tactics_checked := false
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -812,11 +815,22 @@ func _use_best_move(d: float) -> bool:
 
 ## Status usado: trava os próximos status (exceto urgente) e marca os de uma vez por luta.
 func note_used(id: String) -> void:
+	if tactics != null:
+		tactics.note_used(id)
 	if float(Dex.move(id).get("power", 0)) > 0.0:
 		return
 	status_lock_t = _rng().randf_range(STATUS_LOCK.x, STATUS_LOCK.y)
 	if id in ONCE_MOVES:
 		used_once[id] = true
+
+
+## BattleTactics criado na primeira escolha (a arena já existe aí).
+func _tactics() -> BattleTactics:
+	if not _tactics_checked and f.arena != null:
+		_tactics_checked = true
+		if BattleTactics.enabled_for(f):
+			tactics = BattleTactics.new(self)
+	return tactics
 
 
 func _dmg(id: String) -> float:
@@ -838,6 +852,11 @@ func _has_connecting_move() -> bool:
 
 
 func pick(avail: Array) -> String:
+	var tac := _tactics()
+	if tac != null:
+		var chosen := tac.choose(avail)
+		if chosen != "":
+			return chosen
 	var mode := ally_mode()
 	var connects := _has_connecting_move()
 	var useful: Array = avail.filter(func(id): return status_ok(String(id), connects))
@@ -906,6 +925,8 @@ func status_ok(id: String, connects := true) -> bool:
 	var mv := Dex.move(id)
 	if float(mv.get("power", 0)) > 0.0:
 		return true
+	if tactics != null and id == intent and id == tactics.last_pick:
+		return true  # BattleTactics já pesou este status nesta rodada
 	if id in PARTNER_MOVES and partner() == null:
 		return false
 	if id in ONCE_MOVES and used_once.has(id):

@@ -46,6 +46,7 @@ var _speed: OptionButton
 var _seed: SpinBox
 var _turbo: CheckBox
 var _battle: OptionButton
+var _p1: OptionButton
 var _limit: SpinBox
 var _empty_note: Label
 var _editor: Control
@@ -287,6 +288,12 @@ func set_turbo(on: bool) -> void:
 ## Batalha 1x1 (1) ou 2x2 (2): quantos Pokémon de cada time lutam ao mesmo tempo.
 func set_battle_size(n: int) -> void:
 	cfg["battle_size"] = 1 if n == 1 else 2
+	_refresh_all()
+
+
+## Jogador 1: "manual" (o Time A é do teclado, só na luta única) ou "ai" (padrão).
+func set_p1_control(mode: String) -> void:
+	cfg["p1_control"] = "manual" if mode == "manual" else "ai"
 	_refresh_all()
 
 
@@ -878,6 +885,15 @@ func _build_top() -> Control:
 	_battle.tooltip_text = "Quantos Pokémon de cada time lutam ao mesmo tempo"
 	_battle.item_selected.connect(_on_battle)
 	r2.add_child(_battle)
+	r2.add_child(_small("Jogador 1"))
+	_p1 = OptionButton.new()
+	_p1.add_item("IA")
+	_p1.add_item("Manual")
+	_p1.set_item_metadata(0, "ai")
+	_p1.set_item_metadata(1, "manual")
+	_p1.tooltip_text = "Manual: você controla o Time A pelo teclado (na série, a IA luta)"
+	_p1.item_selected.connect(_on_p1)
+	r2.add_child(_p1)
 	r2.add_child(_small("Velocidade"))
 	_speed = OptionButton.new()
 	for v in Cfg.SPEEDS:
@@ -1200,6 +1216,7 @@ func _refresh_all() -> void:
 	_limit.value = int(cfg.get("time_limit", 0))
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
+	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1394,6 +1411,11 @@ func _on_turbo(on: bool) -> void:
 func _on_battle(i: int) -> void:
 	if not _syncing:
 		set_battle_size(i + 1)
+
+
+func _on_p1(i: int) -> void:
+	if not _syncing:
+		set_p1_control(String(_p1.get_item_metadata(i)))
 
 
 func _on_option(k: int, opt: OptionButton, key: String) -> void:

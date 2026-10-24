@@ -65,6 +65,16 @@ func _run() -> void:
 	)
 	check(o.arena == Vector2(16, 10), "quadra fixa de 16 x 10")
 	check(o.battle_size == 2, "opts: 2x2 por padrão")
+	check(
+		o.keyboard == false and Cfg.default_config().p1_control == "ai", "padrão: IA, sem teclado"
+	)
+	var pm_cfg := _cfg([e], [e])
+	pm_cfg.p1_control = "manual"
+	var om := Cfg.arena_opts(pm_cfg, Vector3.ZERO)
+	check(
+		om.autoplay == false and om.auto_battle == false and om.keyboard == true,
+		"opts manual: sem IA no Time A e com teclado"
+	)
 	var one := _cfg([e], [e])
 	one.battle_size = 1
 	check(Cfg.arena_opts(one, Vector3.ZERO).battle_size == 1, "opts: 1x1 quando escolhido")
@@ -151,6 +161,33 @@ func _run() -> void:
 		items.has("potion") and items.has("antidote") and not items.has("persim_berry"),
 		"itens do treinador só os que a IA usa"
 	)
+
+	tb.queue_free()
+	await process_frame
+
+	# Jogador 1 manual: o Time A é do teclado (controller "player"); a série roda com IA.
+	var mc := _cfg([Cfg.mon_entry("Pikachu", 30)], [Cfg.mon_entry("Weedle", 3)])
+	mc.p1_control = "manual"
+	Cfg.current = mc
+	tb = load(SCENE).instantiate()
+	root.add_child(tb)
+	await process_frame
+	check(
+		tb.arena.player.controller == "player" and tb.arena.opts.keyboard == true,
+		"manual: o lutador do lado 0 é do jogador"
+	)
+	check(not tb.arena.opts.autoplay, "manual: a arena não anda sozinha")
+	tb.stop_fight()
+	await process_frame
+	var n_before := int(tb.series.n)
+	tb._repeat(1)
+	await process_frame
+	check(
+		tb.arena.player.controller == "ai" and tb.arena.opts.autoplay == true,
+		"série: o Time A é da IA mesmo com Jogador 1 manual"
+	)
+	done = await _wait_result(tb)
+	check(done and int(tb.series.n) == n_before + 2, "série de 2 lutas com IA termina")
 
 	tb.queue_free()
 	await process_frame

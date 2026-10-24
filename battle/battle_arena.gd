@@ -679,9 +679,11 @@ func _rewards() -> bool:
 	return not bool(opts.get("no_rewards", false))
 
 
-## Tem alguém no teclado (fora de testes manuais e do autoplay).
+## Tem alguém no teclado (fora de testes manuais e do autoplay; opts.keyboard libera o manual).
 func _human() -> bool:
-	return not manual and not bool(opts.get("autoplay", false))
+	return (
+		(not manual or bool(opts.get("keyboard", false))) and not bool(opts.get("autoplay", false))
+	)
 
 
 func _next_enemy(after: int) -> int:
@@ -1587,7 +1589,7 @@ func _ally_mode_pressed() -> bool:
 
 
 func _player_input(f: BattleFighter) -> Vector3:
-	if manual:
+	if manual and not bool(opts.get("keyboard", false)):
 		return Vector3.ZERO
 	if not _commands(f):
 		return Vector3.ZERO
@@ -2620,7 +2622,7 @@ func _auto_confirm() -> bool:
 
 func _confirm_pressed() -> bool:
 	return (
-		not manual
+		(not manual or bool(opts.get("keyboard", false)))
 		and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("ui_accept"))
 	)
 

@@ -1,7 +1,8 @@
 extends Node3D
 ## Modo de treinamento: a luta automática entre os dois times montados em training_setup.
 ## Arena fixa de Cfg.ARENA (16 x 10), as duas IAs lutando sozinhas
-## (opts.autoplay), sem mexer no save nem na equipe do jogo. No fim mostra o vencedor e o
+## (opts.autoplay), sem mexer no save nem na equipe do jogo. Com p1_control "manual" o Time A é
+## do teclado (só na luta única; a série sempre roda com IA). No fim mostra o vencedor e o
 ## placar da série.
 ## Esc para a luta e volta para a tela de montar.
 
@@ -38,6 +39,8 @@ var last_seed := 0
 var steps := 1
 ## Lutas que ainda faltam na série automática (0 = para no fim desta).
 var auto_left := 0
+## Luta da série (Rodar série): todas as lutas dela rodam com IA, mesmo com Jogador 1 manual.
+var _series := false
 var _ui: CanvasLayer
 var _info: Label
 var _result_box: Control
@@ -147,6 +150,8 @@ func start_fight() -> void:
 	team_a = Cfg.build_side(cfg, 0)
 	team_b = Cfg.build_side(cfg, 1)
 	var o := Cfg.arena_opts(cfg, global_position)
+	if _series:
+		o.merge({"autoplay": true, "auto_battle": true, "keyboard": false}, true)
 	last_seed = int(o.seed) + int(series.n) if o.has("seed") else randi()
 	o.seed = last_seed
 	# Acima de 1x a arena anda em vários passos de no máximo 1x por quadro: um passo grande faria
@@ -162,8 +167,8 @@ func start_fight() -> void:
 	arena.start(team_a, team_b, o)
 	_fit_camera()
 	var help = arena.hud.get("_help") if arena.get("hud") else null
-	if help is Control:
-		help.visible = false  # teclas do jogador: ninguém controla nada no treino
+	if help is Control and not bool(o.get("keyboard", false)):
+		help.visible = false  # teclas do jogador: ninguém controla nada no treino (manual: ficam)
 
 
 ## Solta a arena atual sem deixar ela terminar depois (Parar, Repetir).
@@ -418,8 +423,10 @@ func _mon_line(m: Mon) -> String:
 	)
 
 
+## extra > 0 é uma série (Rodar série): as lutas dela são todas de IA.
 func _repeat(extra: int) -> void:
 	auto_left = extra
+	_series = extra > 0
 	start_fight()
 
 

@@ -2,7 +2,9 @@ extends RefCounted
 ## Modo de treinamento: a configuração das lutas (dois times, opções) e a montagem dos Mon.
 ## Formato (salvo em user://training.json, nunca no save do jogo):
 ##   {sides: [{name, item, think_scale, mons: [Mon.to_dict() + "hp_pct"]}, {...}],
-##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite)}
+##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite),
+##    battle_size (1 ou 2), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
+##    só na luta única: a série roda com IA)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
@@ -59,6 +61,7 @@ static func default_config() -> Dictionary:
 		"turbo": false,
 		"time_limit": 0,
 		"battle_size": 2,
+		"p1_control": "ai",
 	}
 
 
@@ -121,12 +124,15 @@ static func side_name(cfg: Dictionary, side: int) -> String:
 	return n if n != "" else ("Time A" if side == 0 else "Time B")
 
 
-## opts da arena para uma luta automática dos dois lados (contrato em battle/battle_arena.gd).
+## opts da arena (contrato em battle/battle_arena.gd). Com p1_control "manual" o Time A é do
+## teclado (keyboard) e a arena não anda sozinha; com "ai", as duas IAs lutam sozinhas.
 static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
+	var manual := String(cfg.get("p1_control", "ai")) == "manual"
 	var o := {
 		"kind": "trainer",
-		"autoplay": true,
-		"auto_battle": true,
+		"autoplay": not manual,
+		"auto_battle": not manual,
+		"keyboard": manual,
 		"can_run": false,
 		"floor": false,
 		"center": center,
