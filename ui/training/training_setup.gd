@@ -655,13 +655,15 @@ static func _speed_text(v: float) -> String:
 static func _move_info(id: String) -> String:
 	var mv := Dex.move(id)
 	var cat := String(mv.get("category", ""))
-	var power := int(mv.get("power", 0))
+	## Poder oficial em "bp" (o "power" dos golpes stream é por tique); sem bp = poder variável.
+	var power := int(mv.get("bp", 0))
+	var dmg := power > 0 or int(mv.get("power", 0)) > 0
 	var acc := int(mv.get("accuracy", 0))
 	return (
 		"%s · %s · %s"
 		% [
 			Kit.CATEGORIES.get(cat, cat),
-			("Poder %d" % power) if power > 0 else "Sem dano",
+			("Poder %d" % power) if power > 0 else ("Poder —" if dmg else "Sem dano"),
 			("%d%%" % acc) if acc > 0 else "Sempre acerta"
 		]
 	)
