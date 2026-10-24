@@ -125,6 +125,7 @@ var _count := 0
 
 
 func _initialize() -> void:
+	seed(9)  # Mon.create sorteia IVs/natureza/habilidade no RNG global: luta de IA repetível
 	_data()
 	_hits_odds()
 	_recoil()
@@ -139,7 +140,17 @@ func _initialize() -> void:
 	_support()
 	_helping_hand()
 	_call_moves()
-	for i in 4:
+	_counter()
+	_substitute()
+	_switch_moves()
+	_endure_and_false_swipe()
+	_focus_punch()
+	_hazards()
+	_terrains()
+	_conditional_power()
+	_jealousy_and_mist()
+	_taunt_and_sleep()
+	for i in 6:
 		_ai_fight(i)
 	print("gen9_moves: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -536,6 +547,310 @@ func _call_moves() -> void:
 	a.free()
 
 
+func _counter() -> void:
+	var a := _still("nidoqueen", "rattata", 50, 20)
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	check(a.moves.use(p, "counter"), "Counter")
+	check(p.prepare_t >= 0.5 / 1.6, "Counter -5 entra devagar (%.2f s)" % p.prepare_t)
+	_run(a, p.prepare_t + 0.05)
+	check(fx.active(fx.st(p), "counter"), "postura do Counter ativa")
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	var took := p.max_hp - p.hp
+	check(took > 0, "Counter levou o golpe físico (%d)" % took)
+	check(
+		e.max_hp - e.hp == mini(took * 2, e.max_hp),
+		"Counter devolve 2x (%d de %d)" % [e.max_hp - e.hp, took]
+	)
+	e.hp = e.max_hp
+	p.hp = p.max_hp
+	fx.st(p).counter = fx.now + 1.0
+	fx.st(p).counter_cat = "physical"
+	a.moves.hit(e, p, Dex.move("ember"), Vector3.BACK)
+	check(e.hp == e.max_hp, "Counter não devolve golpe especial")
+	_run(a, 1.2)
+	p.hp = p.max_hp
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	check(e.hp == e.max_hp, "fora da postura não devolve")
+	a.free()
+
+
+func _substitute() -> void:
+	var a := _still("charmander", "rattata")
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	check(a.moves.use(p, "substitute"), "Substitute")
+	_run(a, 0.4)
+	var cost := p.max_hp / 4
+	check(p.hp == p.max_hp - cost and int(fx.st(p).sub) == cost, "Substitute custa 1/4 do HP")
+	var hp0 := p.hp
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	check(p.hp == hp0 and int(fx.st(p).sub) < cost, "o substituto leva o golpe")
+	fx.st(p).sub = 999
+	a.moves.hit(e, p, Dex.move("thunder_wave"), Vector3.BACK)
+	check(p.status == "", "o substituto bloqueia status")
+	fx.st(p).sub = 1
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	check(int(fx.st(p).sub) == 0 and p.hp == hp0, "o substituto quebra sem passar dano")
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	check(p.hp < hp0, "sem substituto o dano volta")
+	_ready_all(p)
+	p.hp = p.max_hp / 5
+	check(not fx.usable(p, Dex.move("substitute")), "Substitute sem HP falha")
+	a.free()
+
+
+func _switch_moves() -> void:
+	var a := _arena(
+		[Mon.create("pikachu", 30), Mon.create("squirtle", 30)],
+		[Mon.create("rattata", 30), Mon.create("pidgey", 30)],
+		{"seed": 11, "battle_size": 1}
+	)
+	_run(a, 1.3)
+	for f in a.fighters:
+		f.controller = "none"
+	_run(a, 1.5)
+	var p: BattleFighter = a.player
+	_ready_all(p)
+	p.stages.atk = 2
+	p.crit_stage = 1
+	check(a.moves.use(p, "baton_pass"), "Baton Pass")
+	_run(a, 0.5)
+	var q: BattleFighter = a.player
+	check(q != p and q.mon.species.to_lower() == "squirtle", "Baton Pass troca com o reserva")
+	check(int(q.stages.atk) == 2 and q.crit_stage == 1, "Baton Pass passa os estágios")
+	q.controller = "none"
+	a.moves.hit(q, a.enemy, Dex.move("u_turn"), Vector3.FORWARD)
+	_run(a, 0.6)
+	check(
+		a.player != q and a.player.mon.species.to_lower() == "pikachu",
+		"U-turn volta para o reserva"
+	)
+	check(int(a.player.stages.atk) == 0, "U-turn não passa estágios")
+	a.player.controller = "none"
+	var e: BattleFighter = a.enemy
+	a.moves.hit(e, a.player, Dex.move("u_turn"), Vector3.BACK)
+	_run(a, 0.6)
+	check(
+		a.enemy != e and a.enemy.mon.species.to_lower() == "pidgey",
+		"U-turn do adversário troca o dele"
+	)
+	check(a.enemies[1].species.to_lower() == "rattata", "quem saiu volta a esperar na lista")
+	a.free()
+	var s := _still()
+	check(not s.moves.effects.usable(s.player, Dex.move("baton_pass")), "Baton Pass sozinho falha")
+	s.free()
+
+
+func _endure_and_false_swipe() -> void:
+	var a := _still("rattata", "charmander", 40, 30)
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	e.hp = 3
+	a.moves.hit(p, e, Dex.move("false_swipe"), Vector3.FORWARD)
+	check(e.hp == 1, "False Swipe deixa 1 HP (%d)" % e.hp)
+	a.moves.hit(p, e, Dex.move("false_swipe"), Vector3.FORWARD)
+	check(e.hp == 1, "False Swipe não derruba")
+	check(int(Dex.move("endure").priority) == 4, "Endure prioridade +4")
+	check(a.moves.use(e, "endure"), "Endure")
+	_run(a, 0.1)
+	e.hp = 2
+	a.moves.hit(p, e, Dex.move("body_slam"), Vector3.FORWARD)
+	check(e.hp == 1, "Endure aguenta com 1 HP")
+	_run(a, BattleMoveEffects.PROTECT_TIME + 0.2)
+	e.immortal = true
+	e.hp = 1
+	a.moves.hit(p, e, Dex.move("tackle"), Vector3.FORWARD)
+	check(e.hp == e.max_hp, "depois da janela o Endure não segura (o boneco caiu e recarregou)")
+	a.free()
+
+
+func _focus_punch() -> void:
+	var a := _still("nidoking", "rattata", 30, 30)
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	p.position = e.position + Vector3(0, 0, 1.2)
+	check(a.moves.use(p, "focus_punch"), "Focus Punch")
+	check(p.prepare_t > 0.5, "Focus Punch concentra antes (%.2f s)" % p.prepare_t)
+	_run(a, 0.2)
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	_run(a, 2.0)
+	check(e.hp == e.max_hp, "apanhou na concentração: Focus Punch falha")
+	fx.st(p).focus_t = fx.now - 1.0
+	fx.st(p).hurt_t = fx.now - 0.5
+	a.moves.hit(p, e, Dex.move("focus_punch"), Vector3.FORWARD)
+	check(e.hp == e.max_hp, "dano depois de começar a concentração também faz falhar")
+	fx.st(p).hurt_t = fx.now - 2.0
+	a.moves.hit(p, e, Dex.move("focus_punch"), Vector3.FORWARD)
+	check(e.hp < e.max_hp, "sem levar golpe o Focus Punch acerta")
+	a.free()
+
+
+func _hazards() -> void:
+	var a := _still("pikachu", "rattata")
+	var e: BattleFighter = a.enemy
+	check(a.moves.use(a.player, "spikes"), "Spikes")
+	_run(a, 0.3)
+	var spk := e.max_hp - maxi(1, int(e.max_hp / 8.0))
+	check(e.hp == spk, "Spikes tira 1/8 de quem pisa (%d/%d)" % [e.hp, e.max_hp])
+	_run(a, 0.5)
+	check(e.hp == spk, "Spikes pega uma vez só")
+	a.free()
+	a = _still("pikachu", "pidgey")
+	e = a.enemy
+	check(a.moves.use(a.player, "spikes"), "Spikes no Voador")
+	_run(a, 0.3)
+	check(e.hp == e.max_hp, "Spikes não pega Voador")
+	_ready_all(a.player)
+	check(a.moves.use(a.player, "stealth_rock"), "Stealth Rock")
+	_run(a, 0.3)
+	check(
+		e.hp == e.max_hp - maxi(1, int(e.max_hp / 8.0 * 2.0)),
+		"Stealth Rock pela eficácia de Pedra (Voador 2x: 1/4) %d/%d" % [e.hp, e.max_hp]
+	)
+	check(not a.moves.effects.spikes.is_empty(), "pedras no campo")
+	a.moves.effects._rapid_spin(e)
+	check(a.moves.effects.spikes.is_empty(), "Rapid Spin tira as pedras")
+	a.free()
+
+
+func _terrains() -> void:
+	var a := _still("pikachu", "rattata")
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	check(a.moves.use(p, "electric_terrain"), "Electric Terrain")
+	_run(a, 0.3)
+	check(near(fx.damage_mult(p, e, Dex.move("thunder_shock")), 1.3, 0.001), "Elétrico 1,3x")
+	check(fx.blocks_status(e, p, "sleep"), "no campo elétrico ninguém dorme")
+	_ready_all(e)
+	check(a.moves.use(e, "misty_terrain"), "Misty Terrain")
+	_run(a, 0.3)
+	check(not fx.active(fx.field, "electric"), "um terreno tira o outro")
+	check(fx.blocks_status(e, p, "burn"), "campo de névoa bloqueia status")
+	check(near(fx.damage_mult(e, p, Dex.move("dragon_pulse")), 0.5, 0.001), "névoa: Dragão 0,5x")
+	a.moves.hit(p, e, Dex.move("ice_spinner"), Vector3.FORWARD)
+	check(not fx.active(fx.field, "misty"), "Ice Spinner destrói o terreno")
+	check(int(fx.move_for(p, Dex.move("grassy_glide")).get("priority", 0)) == 0, "Glide sem grama")
+	fx.field["grassy"] = fx.now + 5.0
+	check(
+		int(fx.move_for(p, Dex.move("grassy_glide")).get("priority", 0)) == 1,
+		"Grassy Glide +1 na grama"
+	)
+	_run(a, 5.2)
+	check(not fx.active(fx.field, "grassy"), "terreno acaba")
+	a.free()
+
+
+func _conditional_power() -> void:
+	var a := _still("nidoking", "rattata")
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	var rev := Dex.move("revenge")
+	fx.st(p).hit_by.clear()
+	check(near(float(fx.adjust_move(p, e, rev).power), 60.0, 0.1), "Revenge normal 60")
+	a.moves.hit(e, p, Dex.move("tackle"), Vector3.BACK)
+	check(near(float(fx.adjust_move(p, e, rev).power), 120.0, 0.1), "Revenge 2x depois de apanhar")
+	_run(a, BattleMoveEffects.REVENGE_WINDOW + 0.2)
+	check(near(float(fx.adjust_move(p, e, rev).power), 60.0, 0.1), "Revenge volta a 60")
+	e.apply_status("paralysis")
+	check(near(float(fx.adjust_move(p, e, Dex.move("hex")).power), 130.0, 0.1), "Hex 2x com status")
+	p.apply_status("burn")
+	check(near(float(fx.adjust_move(p, e, Dex.move("facade")).power), 140.0, 0.1), "Facade 2x")
+	check(not fx.attacker_profile(p, e, Dex.move("facade")).burned, "Facade ignora a queimadura")
+	p.clear_status()
+	var wb := Dex.move("weather_ball")
+	check(fx.adjust_move(p, e, wb).type == "normal", "Weather Ball sem clima é Normal")
+	fx.set_weather("rain", 5.0)
+	var w2 := fx.adjust_move(p, e, wb)
+	check(
+		w2.type == "water" and near(float(w2.power), 100.0, 0.1), "Weather Ball na chuva: Água 100"
+	)
+	fx.set_weather("sun", 5.0)
+	check(fx.adjust_move(p, e, wb).type == "fire", "Weather Ball no sol: Fogo")
+	p.hp = p.max_hp / 2
+	check(
+		near(float(fx.adjust_move(p, e, Dex.move("water_spout")).power), 75.0, 1.0),
+		"Water Spout pela fração de HP"
+	)
+	a.free()
+	a = _still("venusaur", "diglett")
+	fx = a.moves.effects
+	var hc := Dex.move("heat_crash")
+	check(
+		near(float(fx.adjust_move(a.player, a.enemy, hc).power), 120.0, 0.1), "Heat Crash 5x: 120"
+	)
+	check(
+		near(float(fx.adjust_move(a.enemy, a.player, hc).power), 40.0, 0.1), "Heat Crash leve: 40"
+	)
+	a.free()
+
+
+func _jealousy_and_mist() -> void:
+	var a := _still("charmander", "rattata")
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	e.immortal = true
+	a.moves.hit(p, e, Dex.move("burning_jealousy"), Vector3.FORWARD)
+	check(e.status == "", "Burning Jealousy sem subir atributo não queima")
+	a.moves.change_stage(e, "atk", 1)
+	a.moves.hit(p, e, Dex.move("burning_jealousy"), Vector3.FORWARD)
+	check(e.status == "burn", "Burning Jealousy queima quem subiu atributo")
+	e.clear_status()
+	_run(a, BattleMoveEffects.TURN + 0.1)
+	a.moves.hit(p, e, Dex.move("burning_jealousy"), Vector3.FORWARD)
+	check(e.status == "", "só vale o último turno")
+	var lo := Dex.move("lash_out")
+	check(near(float(fx.adjust_move(p, e, lo).power), 75.0, 0.1), "Lash Out normal")
+	a.moves.change_stage(p, "atk", -1, e)
+	check(near(float(fx.adjust_move(p, e, lo).power), 150.0, 0.1), "Lash Out 2x depois de cair")
+	_ready_all(p)
+	check(a.moves.use(p, "mist"), "Mist")
+	_run(a, 0.3)
+	var atk := int(p.stages.atk)
+	a.moves.change_stage(p, "atk", -1, e)
+	check(int(p.stages.atk) == atk, "Mist barra a queda vinda do adversário")
+	a.moves.change_stage(p, "atk", -1)
+	check(int(p.stages.atk) == atk - 1, "Mist não barra a própria queda")
+	a.free()
+
+
+func _taunt_and_sleep() -> void:
+	var a := _still("charmander", "rattata")
+	var p: BattleFighter = a.player
+	var e: BattleFighter = a.enemy
+	var fx: BattleMoveEffects = a.moves.effects
+	a.moves.hit(p, e, Dex.move("taunt"), Vector3.FORWARD)
+	check(not fx.usable(e, Dex.move("growl")), "Taunt bloqueia golpe de status")
+	check(fx.usable(e, Dex.move("tackle")), "Taunt deixa atacar")
+	_run(a, BattleMoveEffects.TAUNT_TURNS * BattleMoveEffects.TURN + 0.1)
+	check(fx.usable(e, Dex.move("growl")), "Taunt acaba")
+	check(not fx.usable(p, Dex.move("fake_out")), "Fake Out só logo ao entrar")
+	fx.st(p).entered = fx.now
+	check(fx.usable(p, Dex.move("fake_out")), "Fake Out ao entrar")
+	p.moves = ["snore", "ember"]
+	check(not fx.usable(p, Dex.move("snore")), "Snore acordado falha")
+	p.apply_status("sleep")
+	p.status_t = 5.0
+	check(not a.moves.use(p, "ember"), "dormindo não solta golpe comum")
+	check(a.moves.use(p, "snore"), "Snore sai dormindo")
+	_run(a, 1.0)
+	_ready_all(p)
+	p.clear_status()
+	p.hp = 10
+	check(a.moves.use(p, "wish"), "Wish")
+	_run(a, 0.3)
+	check(p.hp == 10, "Wish ainda não cura")
+	_run(a, BattleMoveEffects.TURN)
+	check(p.hp >= mini(10 + p.max_hp / 2, p.max_hp), "Wish cura metade um turno depois")
+	a.free()
+
+
 ## IA contra IA só com golpes novos: a luta termina e os golpes de suporte saem.
 func _ai_fight(i: int) -> void:
 	var sets := [
@@ -562,6 +877,18 @@ func _ai_fight(i: int) -> void:
 			["sandstorm", "swords_dance", "gyro_ball", "fissure"],
 			"zubat",
 			["mean_look", "quick_guard", "venoshock", "poison_fang"]
+		],
+		[
+			"nidoqueen",
+			["counter", "substitute", "spikes", "body_press"],
+			"clefairy",
+			["wish", "taunt", "stealth_rock", "facade"]
+		],
+		[
+			"jigglypuff",
+			["rest", "sleep_talk", "hyper_voice", "reflect"],
+			"oddish",
+			["misty_terrain", "strength_sap", "grassy_glide", "attract"]
 		],
 	]
 	var m: Array = sets[i]

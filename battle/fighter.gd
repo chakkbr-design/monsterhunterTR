@@ -116,6 +116,8 @@ var confusion_t := 0.0
 var status := ""
 var status_t := 0.0
 var status_tick := 0.0
+## Snore/Sleep Talk: age dormindo só enquanto o golpe sai (BattleMoves.use).
+var sleep_act_t := 0.0
 var leech_source: BattleFighter
 var toxic_n := 0
 
@@ -441,7 +443,7 @@ func can_act() -> bool:
 		and stun_t <= 0.0
 		and stagger_t <= 0.0
 		and impact_t <= 0.0
-		and status != "sleep"
+		and (status != "sleep" or sleep_act_t > 0.0)
 		and status != "freeze"
 	)
 
@@ -698,6 +700,8 @@ func _dot(amount: int, why: String, col: Color) -> void:
 func heal(n: int) -> void:
 	if not alive():
 		return
+	if arena and arena.get("moves") and arena.moves.effects.heal_blocked(self):
+		return  # Psychic Noise
 	hp = mini(hp + n, max_hp)
 	mon.hp = hp
 	refresh_label()
@@ -829,6 +833,7 @@ func tick(dt: float) -> void:
 	evasion_t = maxf(evasion_t - dt, 0.0)
 	confusion_t = maxf(confusion_t - dt, 0.0)
 	struggle_cd = maxf(struggle_cd - dt, 0.0)
+	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)
@@ -865,7 +870,7 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 		speed *= 0.5
 	if sprinting:
 		speed *= SPRINT_MULT
-	if not can_act() or root_t > 0.0:
+	if not can_act() or root_t > 0.0 or status == "sleep":
 		want = Vector3.ZERO
 	if trap_t > 0.0:
 		want = Vector3.ZERO

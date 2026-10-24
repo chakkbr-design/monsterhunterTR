@@ -90,7 +90,7 @@ func _move_fx() -> void:
 		if not ResourceLoader.exists(p):
 			missing.append(p)
 	for id in d.get("beams", {}):
-		var dir := "res://original/assets/vfx/pmd/beams/" + String(id) + "/"
+		var dir := "res://original/assets/vfx/pmd/beams/" + String(d.beams[id].get("dir", id)) + "/"
 		if not DirAccess.dir_exists_absolute(dir):
 			missing.append(dir)
 	for id in d.get("moves", {}):

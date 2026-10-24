@@ -663,6 +663,8 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	f.facing = axis if side == 0 else -axis
 	f.fainted.connect(_on_fainted)
 	fighters.append(f)
+	if moves:
+		moves.effects.on_enter(f)
 	if vfx and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
@@ -1292,6 +1294,45 @@ func send_in(i: int, as_ally := false) -> bool:
 		_send_player(i, at)
 	_swap_cd = SWAP_CD
 	return true
+
+
+## Troca de golpe (Baton Pass, U-turn, Volt Switch...): recolhe `f` e manda o próximo de pé do banco no
+## mesmo lugar, dos dois lados. Devolve o lutador novo (null se não há ninguém). Não usa o cooldown da troca.
+func switch_out(f: BattleFighter) -> BattleFighter:
+	if state != "fight" or not is_instance_valid(f) or not f.active() or not fighters.has(f):
+		return null
+	var at := f.position
+	at.y = 0.0
+	if f.side == 0:
+		var i := _next_healthy(int(f.get_meta("party_index", 0)))
+		if i < 0:
+			return null
+		var was_ally := f == ally
+		_recall(f)
+		if was_ally:
+			_send_ally(i, at)
+		else:
+			_send_player(i, at)
+		_swap_cd = SWAP_CD
+		return ally if was_ally else player
+	# Adversário: o reserva troca de lugar na lista com quem sai (quem sai volta a esperar a vez).
+	var j := -1
+	for k in range(enemy_index + 1, enemies.size()):
+		if not enemies[k].is_fainted():
+			j = k
+			break
+	var i_out := enemies.find(f.mon)
+	if j < 0 or i_out < 0:
+		return null
+	var slot := 1 if f == enemy2 else 0
+	_recall(f)
+	enemies[i_out] = enemies[j]
+	enemies[j] = f.mon
+	_send_enemy(i_out, slot)
+	var nf: BattleFighter = enemy2 if slot == 1 else enemy
+	nf.position = at
+	say("%s voltou; entrou %s!" % [f.mon.display_name, nf.mon.display_name], "trainer")
+	return nf
 
 
 func cycle_ally_mode() -> int:

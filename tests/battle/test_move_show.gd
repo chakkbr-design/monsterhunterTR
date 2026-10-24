@@ -146,6 +146,7 @@ func _arena_moves() -> void:
 	var e: BattleFighter = a.enemy
 	e.controller = "none"
 	p.controller = "none"
+	e.max_hp = 99999  # golpe 4x com crítico (Frenzy Plant no Onix) não pode nocautear o boneco
 	var f := FileAccess.open("res://data/moves.json", FileAccess.READ)
 	var mj = JSON.parse_string(f.get_as_text())
 	var silent := []

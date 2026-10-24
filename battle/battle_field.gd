@@ -159,12 +159,26 @@ func _tick_marks(dt: float) -> void:
 					if n >= 1:
 						f.popup("-%d queimado" % n, Dex.type_color("fire"), 0.7)
 						f.take_damage(n, Vector3.ZERO, 0.0)
-			elif m.kind == "spikes" and f.side != m.side and not m.hit.has(id):
+			elif m.kind == "spikes" and f.side != m.side and not m.hit.has(id) and _on_ground(f):
 				m.hit[id] = true
 				var d := maxi(1, int(f.max_hp / 8.0))
 				f.popup("-%d Spikes" % d, Dex.type_color("ground"), 0.8)
 				f.take_damage(d, Vector3.ZERO, 0.0)
 		_still[id] = st
+
+
+## Spikes só pegam quem pisa (Voador, Levitate e quem está no ar passam por cima).
+func _on_ground(f: BattleFighter) -> bool:
+	if f.position.y > 0.3:
+		return false
+	return not arena.get("moves") or arena.moves.effects.grounded(f)
+
+
+## Tira os Spikes do lado `side` (-1 = todos): Rapid Spin, Defog.
+func clear_spikes(side := -1) -> void:
+	for m in marks.duplicate():
+		if m.kind == "spikes" and (side < 0 or int(m.side) == side):
+			_drop_mark(m)
 
 
 func _drop_mark(m: Dictionary) -> void:

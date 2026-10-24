@@ -2,8 +2,8 @@ extends Control
 ## Modo de treinamento: monta os dois times que lutam sozinhos (IA dos dois lados) e as opções da
 ## luta, tudo numa tela só (sem rolagem). Cada time tem 6 slots; clicar num slot vazio abre a
 ## lista de espécies, clicar num golpe abre a lista dos golpes que a espécie aprende. Por Pokémon:
-## espécie, nível, natureza, habilidade, golpes e HP/status/PP iniciais (sem IVs e EVs: ver
-## training_config.gd). Times salvos em slots. Só mouse, com os controles padrão do Godot.
+## espécie, natureza, habilidade, golpes (qualquer golpe que a espécie aprende) e HP/status/PP
+## iniciais. Todos lutam no Nv 50 e sem IVs e EVs (ver training_config.gd). Times salvos em slots. Só mouse, com os controles padrão do Godot.
 ## A config (formato em training_config.gd) fica em Cfg.current enquanto o jogo está aberto.
 
 const Kit := preload("res://ui/ui_kit.gd")
@@ -16,7 +16,6 @@ const SMALL_SIZE := 12
 const ICON_PX := 32
 const SPRITE_PX := 76
 const TEAM_W := 236
-const NEW_LEVEL := 15
 const THINK_MIN := 0.25
 const THINK_MAX := 4.0
 const STAT_BAR_W := 150
@@ -54,7 +53,7 @@ var _where: Label
 var _title: Label
 var _sprite: TextureRect
 var _types: HBoxContainer
-var _level: SpinBox
+var _level: Label
 var _nature: OptionButton
 var _ability: OptionButton
 var _ability_desc: Label
@@ -134,7 +133,7 @@ func set_species(id: String) -> void:
 	var was_full := float(e.get("pp", 0.0)) >= _pp_base(String(e.get("species", "")))
 	var abil: Array = Dex.species(sp).get("abilities", [])
 	e["species"] = sp
-	e["moves"] = Dex.moves_at(sp, int(e.get("level", 1)))
+	e["moves"] = Dex.moves_at(sp, Cfg.LEVEL)
 	e["ability_slot"] = clampi(int(e.get("ability_slot", 0)), 0, maxi(abil.size() - 1, 0))
 	e["gender"] = _valid_gender(sp, String(e.get("gender", "")))
 	e["pp"] = _pp_base(sp) if was_full else minf(float(e.get("pp", 0.0)), _pp_base(sp))
@@ -143,25 +142,14 @@ func set_species(id: String) -> void:
 	_refresh_all()
 
 
-func set_level(n: int) -> void:
-	set_field("level", clampi(n, 1, Growth.MAX_LEVEL))
-
-
 ## Põe o golpe `id` no slot k (0..3); "" tira o golpe. Golpe repetido troca de lugar.
-## Só golpes que a espécie aprende até o nível atual.
+## Só golpes que a espécie aprende (em qualquer nível).
 func set_move(k: int, id: String) -> void:
 	var e := _entry()
 	if e.is_empty() or k < 0 or k >= Mon.MAX_MOVES:
 		return
 	if id != "" and not can_use_move(id):
-		var lv := Cfg.learn_level(String(e.species), id)
-		_note(
-			(
-				"%s só aprende %s no Nv %d." % [e.species, Kit.move_name(id), lv]
-				if lv > 0
-				else "%s não aprende %s." % [e.species, Kit.move_name(id)]
-			)
-		)
+		_note("%s não aprende %s." % [e.species, Kit.move_name(id)])
 		return
 	var mv: Array = (e.get("moves", []) as Array).duplicate()
 	var j := mv.find(id)
@@ -184,20 +172,19 @@ func set_move(k: int, id: String) -> void:
 	_refresh_all()
 
 
-## A espécie em edição aprende o golpe até o nível atual.
+## A espécie em edição aprende o golpe (em qualquer nível).
 func can_use_move(id: String) -> bool:
 	var e := _entry()
 	if e.is_empty():
 		return false
-	var lv := Cfg.learn_level(String(e.get("species", "")), id)
-	return lv >= 0 and lv <= int(e.get("level", 1))
+	return Cfg.learn_level(String(e.get("species", "")), id) >= 0
 
 
-## Golpes que a espécie sabe no nível atual (Dex.moves_at).
+## Golpes que a espécie sabe no Nv 50 (Dex.moves_at).
 func moves_for_level() -> void:
 	var e := _entry()
 	if not e.is_empty():
-		set_field("moves", Dex.moves_at(String(e.species), int(e.get("level", 1))))
+		set_field("moves", Dex.moves_at(String(e.species), Cfg.LEVEL))
 
 
 ## Campo simples da entrada em edição: level, nature, ability_slot, hp_pct, status, pp, moves.
@@ -214,9 +201,8 @@ func add_mon(s: int, sp := "") -> void:
 	var mons := _mons(s)
 	if mons.size() >= Cfg.PARTY_MAX:
 		return
-	var lv := NEW_LEVEL if mons.is_empty() else int(mons[-1].get("level", NEW_LEVEL))
 	var id := Dex.canon(sp) if Dex.canon(sp) != "" else String(_species_order[0])
-	mons.append(Cfg.mon_entry(id, lv))
+	mons.append(Cfg.mon_entry(id, Cfg.LEVEL))
 	select(s, mons.size() - 1)
 
 
@@ -437,12 +423,8 @@ func pick(value) -> void:
 				select(_pick_side, _pick_slot)
 				set_species(sp)
 		"moves":
-			var id := String(value)
-			if id != "" and not can_use_move(id):
-				set_move(_pick_move, id)
-				return
 			close_picker()
-			set_move(_pick_move, id)
+			set_move(_pick_move, String(value))
 		"teams":
 			_team_slot = int(value)
 			_confirm_clear = false
@@ -515,11 +497,10 @@ func _fill_species() -> void:
 func _fill_moves() -> void:
 	var e := _entry()
 	var sp := String(e.get("species", ""))
-	var lvl := int(e.get("level", 1))
 	var mv: Array = e.get("moves", [])
 	var cur := String(mv[_pick_move]) if _pick_move < mv.size() else ""
-	_ov_title.text = "Golpe %d de %s (Nv %d)" % [_pick_move + 1, sp, lvl]
-	_ov_hint.text = "Só os golpes que %s aprende. Os cinzas pedem um nível maior." % sp
+	_ov_title.text = "Golpe %d de %s (Nv %d)" % [_pick_move + 1, sp, Cfg.LEVEL]
+	_ov_hint.text = "Todos os golpes que %s aprende, em qualquer nível." % sp
 	var q := _ov_search.text.strip_edges().to_lower()
 	if cur != "" and mv.size() > 1:
 		var i0 := _ov_list.add_item("(vazio): tirar %s deste slot" % Kit.move_name(cur))
@@ -540,8 +521,6 @@ func _fill_moves() -> void:
 		var i := _ov_list.add_item(text, _type_icon(t))
 		_ov_list.set_item_metadata(i, id)
 		_ov_list.set_item_tooltip(i, String(m.get("desc", "")))
-		if int(le.level) > lvl:
-			_ov_list.set_item_custom_fg_color(i, Kit.DIM)
 		if id == cur:
 			_ov_list.select(i)
 			_ov_list.ensure_current_is_visible()
@@ -670,7 +649,7 @@ static func _move_info(id: String) -> String:
 
 
 static func _mon_line(d: Dictionary) -> String:
-	var t := "%s  Nv %d" % [String(d.get("species", "?")), int(d.get("level", 1))]
+	var t := "%s  Nv %d" % [String(d.get("species", "?")), Cfg.LEVEL]
 	if int(d.get("hp_pct", 100)) < 100:
 		t += " · %d%%" % int(d.hp_pct)
 	if String(d.get("status", "")) != "":
@@ -1048,8 +1027,7 @@ func _build_head(box: VBoxContainer) -> void:
 	g.add_theme_constant_override("h_separation", 8)
 	g.add_theme_constant_override("v_separation", 1)
 	box.add_child(g)
-	_level = _spin(1, Growth.MAX_LEVEL, 1.0, 76)
-	_level.value_changed.connect(_on_level)
+	_level = Kit.label("Nv %d" % Cfg.LEVEL, Kit.INK, SMALL_SIZE + 1)
 	_nature = _option()
 	for n in StatCalc.NATURES:
 		_nature.add_item(_nature_text(n))
@@ -1140,7 +1118,7 @@ func _build_moves(box: VBoxContainer) -> void:
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(l)
 	head.add_child(
-		_btn("Golpes do nível", moves_for_level, "Os 4 últimos golpes que aprende até este nível")
+		_btn("Golpes do nível", moves_for_level, "Os 4 últimos golpes que aprende até o Nv 50")
 	)
 	var g := GridContainer.new()
 	g.columns = 2
@@ -1296,7 +1274,6 @@ func _sync_editor() -> void:
 	Kit.clear(_types)
 	for t in spd.get("types", []):
 		_types.add_child(Kit.tag(Kit.type_name(String(t)), Kit.type_col(String(t)), 12))
-	_level.value = m.level
 	_nature.select(StatCalc.NATURES.keys().find(m.nature))
 	_ability.clear()
 	var abil: Array = spd.get("abilities", [])
@@ -1359,12 +1336,8 @@ func _sync_editor() -> void:
 		var lv := Cfg.learn_level(sp, id) if id != "" else 0
 		if lv < 0:
 			info = "não aprende!  " + info
-		elif lv > m.level:
-			info = "só no Nv %d!  %s" % [lv, info]
 		r.info.text = info
-		r.info.add_theme_color_override(
-			"font_color", Kit.RED if lv < 0 or lv > m.level else Kit.INK
-		)
+		r.info.add_theme_color_override("font_color", Kit.RED if lv < 0 else Kit.INK)
 		b.tooltip_text = String(Dex.move(id).get("desc", ""))
 
 
@@ -1421,11 +1394,6 @@ func _on_turbo(on: bool) -> void:
 func _on_battle(i: int) -> void:
 	if not _syncing:
 		set_battle_size(i + 1)
-
-
-func _on_level(v: float) -> void:
-	if not _syncing:
-		set_level(int(v))
 
 
 func _on_option(k: int, opt: OptionButton, key: String) -> void:

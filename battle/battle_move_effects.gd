@@ -3,8 +3,11 @@ extends RefCounted
 ## Mecânicas dos golpes da Gen 9 que não cabem num `kind` de entrega: proteção, recuo, poder variável,
 ## dano fixo e OHKO, cura, Stockpile, clima, terreno, telas, Tailwind, Gravity, Toxic Spikes, Follow Me,
 ## Metronome/Copycat/Mimic, Imprison, Spite, Disable, Encore, Mean Look, troca de habilidade etc.
+## Learnsets completos: Counter, Substitute, Endure, troca (Baton Pass, U-turn), armadilhas (Spikes, Stealth
+## Rock), terrenos Elétrico/Névoa, Reflect, Taunt, Attract, Wish, Future Sight, poder condicional...
 ## Chamado pelos ganchos de BattleMoves (use/deliver/hit) e pela arena (tick). Campo "special" do golpe.
 ## Tempo real: 1 turno da série = TURN segundos para os efeitos de campo (status já duram em segundos).
+## Janelas de reação (Protect, Endure, Wide Guard, Counter) são curtas; "o turno anterior" vira 1 TURN.
 
 const TURN := 1.6
 const PROTECT_TIME := 0.8
@@ -52,6 +55,15 @@ const CALL_BAN := [
 	"healing_wish",
 	"self_destruct",
 	"transform",
+	"counter",
+	"mirror_coat",
+	"endure",
+	"wide_guard",
+	"focus_punch",
+	"sleep_talk",
+	"snore",
+	"trick",
+	"switcheroo",
 ]
 ## Helping Hand: o parceiro tem HELP_WINDOW s para soltar um golpe de dano, que vale 1,5x por
 ## HELP_HOLD s (cobre jatos e golpes de vários acertos do mesmo uso).
@@ -60,6 +72,48 @@ const HELP_HOLD := 2.5
 const HELP_MULT := 1.5
 const MAJOR := ["burn", "poison", "toxic", "paralysis", "sleep", "freeze"]
 const HEAL_COL := Color(0.5, 1.0, 0.55)
+## Counter/Mirror Coat: postura curta (prioridade -5 já atrasa a entrada); o golpe recebido volta 2x.
+const COUNTER_TIME := 1.0
+const COUNTER_MULT := 2
+## Fake Out só logo depois de entrar em campo; Avalanche/Payback/Revenge: o alvo me acertou há pouco.
+const FAKE_OUT_WINDOW := 1.5
+const REVENGE_WINDOW := 1.5
+## Future Sight cai ~2 turnos depois do uso (o aviso no chão é o windup normal no fim).
+const FUTURE_DELAY := 2.0 * TURN
+const ATTRACT_TIME := 6.0
+const ATTRACT_FAIL := 0.5
+const TAUNT_TURNS := 3
+const THROAT_TURNS := 2
+const HEAL_BLOCK_TURNS := 2
+const UPROAR_TURNS := 3
+const PIVOT_DELAY := 0.35
+const PRESENT_HEAL := 0.2
+const STEALTH_R := 1.4
+const TERRAINS := ["grassy", "electric", "misty"]
+const TERRAIN_BOOST := 1.3
+const MISTY_DRAGON := 0.5
+## Golpes de som oficiais que existem no jogo (Throat Chop bloqueia; atravessam o Substitute).
+const SOUND_MOVES := [
+	"alluring_voice",
+	"bug_buzz",
+	"disarming_voice",
+	"echoed_voice",
+	"growl",
+	"howl",
+	"hyper_voice",
+	"metal_sound",
+	"psychic_noise",
+	"roar",
+	"round",
+	"screech",
+	"sing",
+	"snarl",
+	"snore",
+	"supersonic",
+	"uproar",
+]
+## Saem mesmo dormindo (Snore, Sleep Talk).
+const SLEEP_MOVES := ["sleep_only", "sleep_talk"]
 
 var arena: Node
 var rng: RandomNumberGenerator
@@ -104,6 +158,26 @@ func st(f: BattleFighter) -> Dictionary:
 			"helped": -99.0,
 			"help_id": "",
 			"help_t": -99.0,
+			"entered": now,
+			"endure": -99.0,
+			"counter": -99.0,
+			"counter_cat": "",
+			"sub": 0,
+			"taunt": -99.0,
+			"throat": -99.0,
+			"heal_block": -99.0,
+			"attract": -99.0,
+			"regen": false,
+			"rooted": false,
+			"used": {},
+			"fail": false,
+			"prev_fail": false,
+			"rose_t": -99.0,
+			"fell_t": -99.0,
+			"hit_by": {},
+			"focus_t": -99.0,
+			"pivot_cast": -1,
+			"omni_cast": -1,
 		}
 	return _st[id]
 
@@ -151,6 +225,9 @@ func _heal(f: BattleFighter, n: int) -> void:
 	n = mini(n, f.max_hp - f.hp)
 	if n <= 0 or not f.alive():
 		return
+	if heal_blocked(f):
+		f.popup("Não pode se curar!", Color(0.8, 0.6, 0.9), 0.8)
+		return
 	f.heal(n)
 	f.popup("+%d" % n, HEAL_COL, 0.9, 0.3, "heal")
 	_vfx("heal", [f])
@@ -158,6 +235,47 @@ func _heal(f: BattleFighter, n: int) -> void:
 
 func _fail(f: BattleFighter) -> void:
 	f.popup("Mas falhou!", Color(0.8, 0.8, 0.8))
+	note_fail(f)
+
+
+## O golpe deste uso falhou ou errou (Stomping Tantrum dobra no próximo).
+func note_fail(f: BattleFighter) -> void:
+	if is_instance_valid(f):
+		st(f).fail = true
+
+
+## Entrou em campo agora (Fake Out conta a partir daqui).
+func on_enter(f: BattleFighter) -> void:
+	st(f).entered = now
+
+
+## Mudança de estágio que pegou (Burning Jealousy, Lash Out olham o último turno).
+func note_stage(f: BattleFighter, delta: int) -> void:
+	if delta > 0:
+		st(f).rose_t = now
+	elif delta < 0:
+		st(f).fell_t = now
+
+
+## Queda de atributo vinda do outro lado barrada pelo Mist.
+func mist_blocks(c: BattleFighter, src: BattleFighter) -> bool:
+	if not is_instance_valid(src) or src.side == c.side or not side_active(c.side, "mist"):
+		return false
+	c.popup("Protegido pela névoa!", Color(0.8, 0.9, 1.0))
+	return true
+
+
+func _has_item(f: BattleFighter) -> bool:
+	return is_instance_valid(f) and f.trainer_item != "" and not f.item_used
+
+
+func _item_name(f: BattleFighter) -> String:
+	return String(Dex.item(f.trainer_item).get("name", f.trainer_item))
+
+
+func _party_of(f: BattleFighter) -> Array:
+	var list = arena.get("party") if f.side == 0 else arena.get("enemies")
+	return list if list is Array else []
 
 
 func grounded(f: BattleFighter) -> bool:
@@ -221,10 +339,51 @@ func usable(user: BattleFighter, mv: Dictionary, feedback := false) -> bool:
 
 func _blocked(user: BattleFighter, mv: Dictionary) -> String:
 	var id := String(mv.get("id", ""))
+	var s := st(user)
 	for foe in _foes(user):
 		if bool(st(foe).imprison) and id in foe.moves:
 			return "Aprisionado!"
+	if active(s, "taunt") and String(mv.get("category", "")) == "status":
+		return "Provocado!"
+	if active(s, "throat") and id in SOUND_MOVES:
+		return "Garganta ferida!"
 	match String(mv.get("special", "")):
+		"baton_pass":
+			if not has_reserve(user):
+				return "Ninguém para entrar!"
+		"fake_out":
+			if now - float(s.entered) > FAKE_OUT_WINDOW:
+				return "Só logo ao entrar!"
+		"upper_hand":
+			if not _priority_windup(user.opponent):
+				return "Mas falhou!"
+		"fling":
+			if not _has_item(user):
+				return "Sem item para arremessar!"
+		"last_resort":
+			for mid in user.moves:
+				if String(mid) != id and not s.used.has(String(mid)):
+					return "Ainda não!"
+			if user.moves.size() < 2:
+				return "Mas falhou!"
+		"sleep_only", "sleep_talk":
+			if user.status != "sleep":
+				return "Só dormindo!"
+		"belly_drum":
+			if user.hp <= user.max_hp / 2 or int(user.stages.get("atk", 0)) >= 6:
+				return "Mas falhou!"
+		"substitute":
+			if int(s.sub) > 0:
+				return "Já tem um substituto!"
+			if user.hp <= user.max_hp / 4:
+				return "HP insuficiente!"
+		"dragon_cheer":
+			if partner(user) == null:
+				return "Mas falhou!"
+		"wish":
+			for w in _sd(user.side).get("wishes", []):
+				if int(w.id) == user.get_instance_id():
+					return "Mas falhou!"
 		"spit_up", "swallow":
 			if int(st(user).stock) <= 0:
 				return "Nada guardado!"
@@ -264,6 +423,57 @@ func _copyable(id: String) -> String:
 	return id
 
 
+## Upper Hand: o alvo está preparando (ou já lançado num) golpe de prioridade.
+func _priority_windup(t: BattleFighter) -> bool:
+	if not is_instance_valid(t) or not t.active():
+		return false
+	if t.prepare_t > 0.0 and int(Dex.move(t.prepare_id).get("priority", 0)) > 0:
+		return true
+	return t.dash_t > 0.0 and int(t.dash_move.get("priority", 0)) > 0
+
+
+## Golpe que sai mesmo dormindo (Snore, Sleep Talk), se nada mais segura o lutador.
+func sleep_move(f: BattleFighter, mv: Dictionary) -> bool:
+	return (
+		f.status == "sleep"
+		and String(mv.get("special", "")) in SLEEP_MOVES
+		and f.alive()
+		and f.stun_t <= 0.0
+		and f.stagger_t <= 0.0
+		and f.impact_t <= 0.0
+	)
+
+
+## O golpe como sai agora (Grassy Glide ganha prioridade +1 no campo de grama).
+func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
+	if (
+		String(mv.get("special", "")) == "grassy_glide"
+		and active(field, "grassy")
+		and grounded(user)
+	):
+		var m := mv.duplicate()
+		m["priority"] = 1
+		return m
+	return mv
+
+
+## Apaixonado (Attract): metade das vezes o golpe não sai.
+func infatuated_fail(f: BattleFighter) -> bool:
+	if not active(st(f), "attract") or rng.randf() >= ATTRACT_FAIL:
+		return false
+	f.popup("Está apaixonado!", Color(1, 0.55, 0.75))
+	return true
+
+
+func heal_blocked(f: BattleFighter) -> bool:
+	return is_instance_valid(f) and active(st(f), "heal_block")
+
+
+## Ingrain: enraizado, não é empurrado nem arremessado.
+func rooted(f: BattleFighter) -> bool:
+	return is_instance_valid(f) and bool(st(f).rooted)
+
+
 func has_reserve(user: BattleFighter) -> bool:
 	var list = arena.get("party") if user.side == 0 else arena.get("enemies")
 	if not list is Array:
@@ -291,6 +501,9 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 	var id := String(mv.get("id", ""))
 	var s := st(user)
 	s.last = id
+	s.prev_fail = bool(s.fail)
+	s.fail = false
+	s.used[id] = true
 	if not String(mv.get("special", "")) in ["copycat", "metronome"]:
 		last_any = id
 	var sd := _sd(user.side)
@@ -327,6 +540,18 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 		"spit_up":
 			s.spit = int(s.stock)
 			_drop_stockpile(user)
+		"focus_punch":
+			s.focus_t = now
+			user.popup("Concentrando...", Color(1, 0.75, 0.4), 0.8)
+		"fling":
+			user.item_used = true
+			user.popup("Arremessou %s!" % _item_name(user), Color(1, 0.85, 0.5), 0.8)
+		"uproar":
+			field["uproar"] = now + UPROAR_TURNS * TURN
+			for f in arena.fighters:
+				if is_instance_valid(f) and f.active() and f.status == "sleep":
+					f.clear_status()
+					f.popup("Acordou com o barulho!", Color(1, 0.85, 0.5))
 		"self_confuse":
 			var wait := float(mv.get("duration", 0.0)) + float(mv.get("windup", 0.0)) + 0.6
 			arena.later(
@@ -366,7 +591,14 @@ func accuracy_of(user: BattleFighter, mv: Dictionary) -> float:
 	return acc
 
 
-func roll_hits(mv: Dictionary) -> Dictionary:
+func roll_hits(mv: Dictionary, user: BattleFighter = null) -> Dictionary:
+	if String(mv.get("special", "")) == "beat_up" and user != null:
+		# Beat Up: um golpe por membro saudável da equipe (poder oficial 5 + Ataque base / 10).
+		var pw := _beat_powers(user)
+		var b := mv.duplicate()
+		b["hits"] = pw.size()
+		b["_beat"] = {"i": 0, "pw": pw}
+		return b
 	var hr = mv.get("hits_range")
 	if not hr is Array:
 		return mv
@@ -386,6 +618,16 @@ func roll_hits(mv: Dictionary) -> Dictionary:
 	return m
 
 
+func _beat_powers(user: BattleFighter) -> Array:
+	var pw := []
+	for m in _party_of(user):
+		if m is Mon and m.hp > 0 and m.status == "":
+			pw.append(5 + int(Dex.species(m.species).get("base", {}).get("atk", 50)) / 10)
+	if pw.is_empty():
+		pw.append(5 + int(Dex.species(user.mon.species).get("base", {}).get("atk", 50)) / 10)
+	return pw
+
+
 # --- Ganchos de BattleMoves.hit ---
 
 
@@ -394,6 +636,11 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 	if not is_instance_valid(user) or target.side == user.side:
 		return false
 	var sp := String(mv.get("special", ""))
+	var us := st(user)
+	if sp == "focus_punch" and float(us.hurt_t) > float(us.focus_t):
+		user.popup("Perdeu a concentração!", Color(0.85, 0.85, 0.85))
+		us.fail = true
+		return true
 	if (
 		bool(mv.get("powder", false))
 		and ("grass" in target.types or _ability(target) == "overcoat")
@@ -411,13 +658,27 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 			sd.erase("quick_guard")
 			target.popup("A proteção caiu!", Color(1, 0.8, 0.5))
 		return false
+	if (
+		float(mv.get("power", 0)) <= 0.0
+		and int(ts.sub) > 0
+		and not String(mv.get("id", "")) in SOUND_MOVES
+	):
+		target.popup("O substituto bloqueou!", Color(0.85, 0.85, 0.85))
+		us.fail = true
+		return true
 	if sp == "no_protect":
 		return false
 	if active(ts, "protect"):
 		target.popup("Protegeu-se!", Color(0.6, 0.9, 1.0), 1.1)
+		us.fail = true
 		return true
 	if int(mv.get("priority", 0)) > 0 and active(sd, "quick_guard"):
 		target.popup("Guarda Rápida!", Color(0.6, 0.9, 1.0))
+		us.fail = true
+		return true
+	if BattleMoves.multi_target(mv) != "" and active(sd, "wide_guard"):
+		target.popup("Guarda Ampla!", Color(0.6, 0.9, 1.0))
+		us.fail = true
 		return true
 	return false
 
@@ -425,11 +686,20 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 ## Golpe que não usa a fórmula: OHKO (Fissure) e Endeavor. true = já resolvido aqui.
 func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector3) -> bool:
 	var sp := String(mv.get("special", ""))
-	if sp != "ohko" and sp != "endeavor":
-		return false
 	var prof := defender_profile(user, target, mv)
-	if Dex.effectiveness(String(mv.get("type", "normal")), prof.types) == 0.0:
+	var eff := Dex.effectiveness(String(mv.get("type", "normal")), prof.types)
+	if sp == "screen_break" and eff > 0.0 and target.side != user.side:
+		_break_screens(target)
+	if sp == "present" and rng.randf() < PRESENT_HEAL:
+		# Present: às vezes o "presente" cura o alvo em 1/4.
+		target.popup("Era um presente!", Color(1, 0.85, 0.6))
+		_heal(target, int(ceil(target.max_hp / 4.0)))
+		return true
+	if not sp in ["ohko", "endeavor", "final_gambit"]:
+		return false
+	if eff == 0.0:
 		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		note_fail(user)
 		return true
 	var amount := 0
 	if sp == "ohko":
@@ -437,11 +707,16 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 			target.popup("Não afetou!", Color(0.8, 0.8, 0.8))
 			return true
 		amount = target.hp
+	elif sp == "final_gambit":
+		amount = user.hp
 	else:
 		if target.hp <= user.hp:
 			_fail(user)
 			return true
 		amount = target.hp - user.hp
+	if substitute_soak(user, target, mv, amount):
+		amount = 0
+	amount = cap_damage(user, target, mv, amount)
 	var hp_before := target.hp
 	target.last_hit_by = user
 	target.take_damage(
@@ -454,6 +729,47 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 	if amount >= hp_before and arena.has_method("on_knocked_out"):
 		arena.on_knocked_out(user, target)
 	st(target).hurt_t = now
+	if sp == "final_gambit" and user.alive():
+		user.take_damage(user.hp, Vector3.ZERO, 0.0)
+	return true
+
+
+## Brick Break / Psychic Fangs: quebra o Reflect e o Light Screen do lado do alvo antes do acerto.
+func _break_screens(target: BattleFighter) -> void:
+	var sd := _sd(target.side)
+	if active(sd, "reflect") or active(sd, "light_screen"):
+		sd.erase("reflect")
+		sd.erase("light_screen")
+		target.popup("As barreiras quebraram!", Color(1, 0.8, 0.5))
+
+
+## Dano final que o alvo aguenta: Endure e False Swipe deixam 1 HP.
+func cap_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary, dmg: int) -> int:
+	if dmg < target.hp or not is_instance_valid(user):
+		return dmg
+	if String(mv.get("special", "")) == "false_swipe":
+		return maxi(target.hp - 1, 0)
+	if active(st(target), "endure"):
+		target.popup("Aguentou!", Color(1, 0.85, 0.5), 1.1)
+		return target.hp - 1
+	return dmg
+
+
+## Substitute leva o golpe no lugar do dono (som atravessa). true = o boneco absorveu.
+func substitute_soak(user: BattleFighter, target: BattleFighter, mv: Dictionary, dmg: int) -> bool:
+	var ts := st(target)
+	if (
+		int(ts.sub) <= 0
+		or not is_instance_valid(user)
+		or user.side == target.side
+		or String(mv.get("id", "")) in SOUND_MOVES
+	):
+		return false
+	ts.sub = maxi(int(ts.sub) - dmg, 0)
+	target.popup("Substituto -%d" % dmg, Color(0.85, 0.85, 0.85), 0.9)
+	if int(ts.sub) <= 0:
+		target.popup("O substituto quebrou!", Color(1, 0.8, 0.5))
+		_vfx("substitute", [target, false])
 	return true
 
 
@@ -463,7 +779,53 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 	var p := float(m.get("power", 0))
 	var p0 := p
 	var id := String(m.get("id", ""))
+	var ty := String(m.get("type", ""))
+	var ty0 := ty
 	match String(m.get("special", "")):
+		"acrobatics":
+			if not _has_item(user):
+				p *= 2.0
+		"facade":
+			if user.status in ["burn", "poison", "toxic", "paralysis"]:
+				p *= 2.0
+		"hex":
+			if target.status in MAJOR:
+				p *= 2.0
+		"knock_off":
+			if _has_item(target):
+				p *= 1.5
+		"lash_out":
+			if now - float(s.fell_t) <= TURN:
+				p *= 2.0
+		"revenge":
+			if now - float(s.hit_by.get(target.get_instance_id(), -99.0)) <= REVENGE_WINDOW:
+				p *= 2.0
+		"stomping_tantrum":
+			if bool(s.prev_fail):
+				p *= 2.0
+		"water_spout":
+			p = maxf(1.0, floorf(p * float(user.hp) / maxf(float(user.max_hp), 1.0)))
+		"heat_crash":
+			var r := BattlePhysics.weight_of(user) / maxf(BattlePhysics.weight_of(target), 0.1)
+			p = (
+				120.0
+				if r >= 5.0
+				else (100.0 if r >= 4.0 else (80.0 if r >= 3.0 else (60.0 if r >= 2.0 else 40.0)))
+			)
+		"weather_ball":
+			var wb := {"sun": "fire", "rain": "water", "sand": "rock", "hail": "ice", "snow": "ice"}
+			var w := weather()
+			if wb.has(w):
+				ty = String(wb[w])
+				p *= 2.0
+		"present":
+			var r2 := rng.randf() * (1.0 - PRESENT_HEAL)
+			p = 40.0 if r2 < 0.4 else (80.0 if r2 < 0.7 else 120.0)
+		"beat_up":
+			var b = m.get("_beat")
+			if b is Dictionary and not (b.pw as Array).is_empty():
+				p = float(b.pw[mini(int(b.i), b.pw.size() - 1)])
+				b.i = int(b.i) + 1
 		"chain":
 			var c: Dictionary = s.chain.get(id, {})
 			p *= pow(2.0, mini(int(c.get("n", 0)), int(m.get("chain", 2))))
@@ -527,13 +889,29 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 	if String(m.get("type", "")) == "electric" and active(s, "charged"):
 		p *= 2.0
 	var crit := active(s, "laser")
-	if p == p0 and not crit:
+	if p == p0 and not crit and ty == ty0:
 		return m
 	var out := m.duplicate()
 	out["power"] = p
+	out["type"] = ty
 	if crit:
 		out["crit"] = 3
 	return out
+
+
+## Perfil do atacante: Body Press usa a Defesa, Foul Play o Ataque do alvo, Facade ignora a queimadura.
+func attacker_profile(user: BattleFighter, target: BattleFighter, m: Dictionary) -> Dictionary:
+	var p := user.damage_profile()
+	match String(m.get("special", "")):
+		"body_press":
+			p["atk"] = user.stat("def")
+			p["crit_atk"] = user.crit_stat("def", true)
+		"foul_play":
+			p["atk"] = target.stat("atk")
+			p["crit_atk"] = target.crit_stat("atk", true)
+		"facade":
+			p["burned"] = false
+	return p
 
 
 ## Perfil do defensor: na Gravity o Voador perde a imunidade a golpe de Terra.
@@ -543,6 +921,10 @@ func defender_profile(_user: BattleFighter, target: BattleFighter, m: Dictionary
 		var ty: Array = p.types.duplicate()
 		ty.erase("flying")
 		p["types"] = ty if not ty.is_empty() else ["normal"]
+	if String(m.get("special", "")) == "psyshock":
+		# Psyshock: golpe especial contra a Defesa física.
+		p["spd"] = p.def
+		p["crit_spd"] = p.crit_def
 	return p
 
 
@@ -576,13 +958,19 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 		m *= HELP_MULT
 	var type := String(mv.get("type", ""))
 	var special: bool = mv.get("category", "") == "special"
-	if special and active(_sd(target.side), "light_screen") and not _last_crit:
+	var physical: bool = mv.get("category", "") == "physical"
+	var screen := "light_screen" if special else ("reflect" if physical else "")
+	if screen != "" and active(_sd(target.side), screen) and not _last_crit:
 		m *= SCREEN_MULT_DOUBLES if bool(arena.get("doubles")) else SCREEN_MULT
 	if active(field, "grassy"):
 		if type == "grass" and grounded(user):
 			m *= GRASSY_BOOST
 		if String(mv.get("id", "")) in QUAKE_MOVES and grounded(target):
 			m *= 0.5
+	if active(field, "electric") and type == "electric" and grounded(user):
+		m *= TERRAIN_BOOST
+	if active(field, "misty") and type == "dragon" and grounded(target):
+		m *= MISTY_DRAGON
 	var w := weather()
 	if String(mv.get("id", "")) == "solar_beam" and w in ["rain", "sand", "hail", "snow"]:
 		m *= 0.5
@@ -598,6 +986,15 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 func blocks_status(user: BattleFighter, target: BattleFighter, s: String) -> bool:
 	if s in ["poison", "toxic"] and ("steel" in target.types or "poison" in target.types):
 		target.popup("Imune a veneno", Color(0.8, 0.8, 0.8))
+		return true
+	if (
+		s == "sleep"
+		and (active(field, "uproar") or (active(field, "electric") and grounded(target)))
+	):
+		target.popup("Não consegue dormir!", Color(0.85, 0.85, 0.85))
+		return true
+	if (s in MAJOR or s == "confusion") and active(field, "misty") and grounded(target):
+		target.popup("Protegido pelo campo de névoa!", Color(0.95, 0.75, 0.95))
 		return true
 	if (
 		(s in MAJOR or s == "confusion")
@@ -624,6 +1021,8 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 	var sheer := sheer_force(user, mv)
 	if dealt > 0:
 		st(target).hurt_t = now
+		st(target).hit_by[user.get_instance_id()] = now
+		_counter(user, target, mv, dealt)
 		if active(s, "laser"):
 			s.laser = -99.0
 		if String(mv.get("type", "")) == "electric":
@@ -714,7 +1113,77 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.clear_status()
 			target.popup("Habilidade virou Insomnia!", Color(0.7, 0.9, 0.5))
 		"flatter":
-			arena.moves.change_stage(target, "spa", 1)
+			# Flatter: At. Esp. +1; Swagger ("flatter_stat": "atk"): Ataque +2.
+			var fk := String(mv.get("flatter_stat", "spa"))
+			arena.moves.change_stage(target, fk, 2 if fk == "atk" else 1)
+		"jealousy":
+			if not sheer and target.alive() and now - float(ts.rose_t) <= TURN:
+				_status(user, target, String(mv.get("jealous_status", "burn")))
+		"omni_boost":
+			if not sheer and user.alive() and int(s.omni_cast) != user.cast_n:
+				s.omni_cast = user.cast_n
+				if rng.randf() < float(mv.get("omni_chance", 0.1)):
+					for k in ["atk", "def", "spa", "spd", "spe"]:
+						arena.moves.change_stage(user, k, 1)
+		"knock_off":
+			if dealt > 0 and _has_item(target):
+				target.item_used = true
+				target.popup("Perdeu %s!" % _item_name(target), Color(1, 0.75, 0.5))
+		"heal_block":
+			if target.alive():
+				ts.heal_block = now + HEAL_BLOCK_TURNS * TURN
+				target.popup("Não pode se curar!", Color(0.8, 0.6, 0.9))
+		"throat_chop":
+			if dealt > 0 and target.alive():
+				ts.throat = now + THROAT_TURNS * TURN
+				target.popup("Garganta ferida!", Color(0.85, 0.6, 0.6))
+		"terrain_clear":
+			_clear_terrain(target)
+		"pivot":
+			if user.alive() and int(s.pivot_cast) != user.cast_n and has_reserve(user):
+				s.pivot_cast = user.cast_n
+				arena.later(PIVOT_DELAY, func() -> void: _switch(user, false))
+		"attract":
+			_attract(user, target)
+		"taunt":
+			ts.taunt = now + TAUNT_TURNS * TURN
+			target.popup("Provocado!", Color(1, 0.55, 0.4))
+		"memento":
+			arena.moves.change_stage(target, "atk", -2, user)
+			arena.moves.change_stage(target, "spa", -2, user)
+			if user.alive():
+				user.take_damage(user.hp, Vector3.ZERO, 0.0)
+		"pain_split":
+			var avg := (user.hp + target.hp) / 2
+			for f in [user, target]:
+				if f.hp > avg:
+					f.take_damage(f.hp - avg, Vector3.ZERO, 0.0)
+				elif f.hp < avg:
+					f.heal(avg - f.hp)
+				f.popup("HP dividido!", Color(0.9, 0.9, 1.0), 0.8)
+		"skill_swap":
+			var a := _ability(user)
+			var b := _ability(target)
+			user.set_meta("ability_override", b)
+			target.set_meta("ability_override", a)
+			user.popup("Trocou de habilidade!", Dex.type_color("psychic"))
+		"strength_sap":
+			if int(target.stages.get("atk", 0)) <= -6:
+				_fail(user)
+			else:
+				_heal(user, int(target.stat("atk")))
+				arena.moves.change_stage(target, "atk", -1, user)
+		"trick":
+			if not _has_item(user) and not _has_item(target):
+				_fail(user)
+			else:
+				var mine := user.trainer_item if _has_item(user) else ""
+				var theirs := target.trainer_item if _has_item(target) else ""
+				user.trainer_item = theirs
+				user.item_used = false
+				target.trainer_item = mine
+				target.item_used = false
+				user.popup("Trocou os itens!", Color(1, 0.85, 0.5))
 		"yawn":
 			if target.status != "":
 				_fail(user)
@@ -744,6 +1213,83 @@ func _status(user: BattleFighter, target: BattleFighter, s: String) -> void:
 			0.15,
 			"status"
 		)
+
+
+## Counter/Mirror Coat: na postura, o golpe da categoria certa volta 2x para quem bateu.
+func _counter(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt: int) -> void:
+	var ts := st(target)
+	if (
+		user.side == target.side
+		or not active(ts, "counter")
+		or String(mv.get("category", "")) != String(ts.counter_cat)
+		or not target.alive()
+		or not user.alive()
+	):
+		return
+	ts.counter = -99.0
+	target.popup("Revidou!", Color(1, 0.6, 0.35), 1.1)
+	_direct(target, user, dealt * COUNTER_MULT)
+
+
+## Dano direto (fora da fórmula), com empurrão e hit-stop de golpe.
+func _direct(src: BattleFighter, dst: BattleFighter, amount: int, knock := 6.0) -> void:
+	var to := dst.position - src.position
+	to.y = 0.0
+	var dir := to.normalized() if to.length() > 0.01 else Vector3.BACK
+	var hp0 := dst.hp
+	dst.last_hit_by = src
+	dst.take_damage(amount, dir, knock, {"source": src, "eff": 1.0, "final": true})
+	dst.popup(str(amount), Color(0.95, 0.3, 0.25), 1.2, 0.35, "damage")
+	arena.note_hit(src, dst, {}, amount, hp0)
+	if amount >= hp0 and arena.has_method("on_knocked_out"):
+		arena.on_knocked_out(src, dst)
+	st(dst).hurt_t = now
+
+
+func _attract(user: BattleFighter, target: BattleFighter) -> void:
+	var a := String(user.mon.gender)
+	var b := String(target.mon.gender)
+	if a == "" or b == "":
+		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		note_fail(user)
+	elif a == b or active(st(target), "attract"):
+		_fail(user)
+	else:
+		st(target).attract = now + ATTRACT_TIME
+		target.popup("Apaixonou-se!", Color(1, 0.55, 0.75))
+
+
+## Troca de golpe (Baton Pass, U-turn...): o próximo do banco entra no lugar. pass_stats = Baton Pass.
+func _switch(user: BattleFighter, pass_stats: bool) -> void:
+	if not is_instance_valid(user) or not user.active() or not arena.has_method("switch_out"):
+		return
+	var keep: Dictionary = user.stages.duplicate()
+	var crit := user.crit_stage
+	var nf = arena.switch_out(user)
+	if nf == null:
+		_fail(user)
+	elif pass_stats:
+		nf.stages = keep
+		nf.crit_stage = crit
+		nf.popup("Recebeu o bastão!", Color(0.8, 0.9, 1.0))
+
+
+func _clear_terrain(near: BattleFighter) -> void:
+	var had := false
+	for k in TERRAINS:
+		if active(field, k):
+			had = true
+		field.erase(k)
+	if had:
+		near.popup("O terreno sumiu!", Color(0.85, 0.85, 0.85))
+
+
+func _set_terrain(kind: String, user: BattleFighter, text: String, type: String) -> void:
+	for k in TERRAINS:
+		field.erase(k)
+	field[kind] = now + FIELD_TURNS * TURN
+	arena.popup(user.position + Vector3(0, 1.6, 0), text, Dex.type_color(type))
+	_vfx("terrain", [kind, FIELD_TURNS * TURN])
 
 
 func _steal_item(user: BattleFighter, target: BattleFighter) -> void:
@@ -798,6 +1344,27 @@ func _rapid_spin(user: BattleFighter) -> void:
 	for z in spikes.duplicate():
 		if int(z.side) != user.side:
 			_drop_spike(z)
+	if arena.field and arena.field.has_method("clear_spikes"):
+		arena.field.clear_spikes(1 - user.side)
+
+
+## debuff_aoe com "special" (Tickle, Teeter Dance, Venom Drench). true = resolvido aqui.
+func debuff_move(user: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
+	match String(mv.get("special", "")):
+		"tickle":
+			arena.moves.change_stage(t, "atk", -1, user)
+			arena.moves.change_stage(t, "def", -1, user)
+		"teeter_dance":
+			_status(user, t, "confusion")
+		"venom_drench":
+			if t.status in ["poison", "toxic"]:
+				for k in ["atk", "spa", "spe"]:
+					arena.moves.change_stage(t, k, -1, user)
+			else:
+				t.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		_:
+			return false
+	return true
 
 
 # --- self_buff com "special" ou vários atributos ---
@@ -931,11 +1498,15 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				Color(0.8, 0.9, 1.0)
 			)
 			_vfx("haze", [user])
-		"light_screen", "safeguard":
+		"light_screen", "safeguard", "reflect", "mist":
 			sd[sp] = now + FIELD_TURNS * TURN
-			user.popup(
-				"Light Screen!" if sp == "light_screen" else "Safeguard!", Color(0.9, 0.85, 1.0)
-			)
+			var words := {
+				"light_screen": "Light Screen!",
+				"safeguard": "Safeguard!",
+				"reflect": "Reflect!",
+				"mist": "Névoa protetora!"
+			}
+			user.popup(String(words[sp]), Color(0.9, 0.85, 1.0))
 			_vfx("screen", [user.side, sp, FIELD_TURNS * TURN])
 		"tailwind":
 			sd["tailwind"] = now + TAILWIND_TURNS * TURN
@@ -948,11 +1519,130 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			)
 			_vfx("gravity", [FIELD_TURNS * TURN])
 		"grassy_terrain":
-			field["grassy"] = now + FIELD_TURNS * TURN
+			_set_terrain("grassy", user, "Campo de grama!", "grass")
+		"electric_terrain":
+			_set_terrain("electric", user, "Campo elétrico!", "electric")
+		"misty_terrain":
+			_set_terrain("misty", user, "Campo de névoa!", "fairy")
+		"sunny_day":
+			set_weather("sun", FIELD_TURNS * TURN)
 			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Campo de grama!", Dex.type_color("grass")
+				user.position + Vector3(0, 1.6, 0), "O sol ficou forte!", Dex.type_color("fire")
 			)
-			_vfx("terrain", ["grassy", FIELD_TURNS * TURN])
+		"endure":
+			s.endure = now + PROTECT_TIME
+			user.popup("Aguentar!", Color(1, 0.85, 0.5), 1.1)
+			_vfx("protect_shield", [user, PROTECT_TIME])
+		"wide_guard":
+			sd["wide_guard"] = now + PROTECT_TIME
+			user.popup("Guarda Ampla!", Color(0.6, 0.9, 1.0))
+			_vfx("protect_shield", [user, PROTECT_TIME])
+		"counter":
+			s.counter = now + COUNTER_TIME
+			s.counter_cat = String(mv.get("counter_cat", "physical"))
+			user.root_t = maxf(user.root_t, COUNTER_TIME)
+			user.popup("Em guarda!", Color(1, 0.7, 0.4))
+			_vfx("protect_shield", [user, COUNTER_TIME])
+		"substitute":
+			var cost := maxi(1, user.max_hp / 4)
+			if int(s.sub) > 0 or user.hp <= cost:
+				_fail(user)
+				return true
+			user.take_damage(cost, Vector3.ZERO, 0.0)
+			s.sub = cost
+			user.popup("Criou um substituto!", Color(0.9, 0.9, 0.95))
+			_vfx("substitute", [user, true])
+		"belly_drum":
+			if user.hp <= user.max_hp / 2:
+				_fail(user)
+				return true
+			user.take_damage(user.max_hp / 2, Vector3.ZERO, 0.0)
+			arena.moves.change_stage(user, "atk", 12)
+			user.popup("Ataque no máximo!", Color(1, 0.6, 0.3))
+		"howl":
+			for f in [user, partner(user)]:
+				if f != null:
+					arena.moves.change_stage(f, "atk", 1)
+		"dragon_cheer":
+			var dc := partner(user)
+			if dc == null:
+				_fail(user)
+			else:
+				dc.crit_stage = mini(dc.crit_stage + (2 if "dragon" in dc.types else 1), 4)
+				dc.popup("Ânimo de dragão!", Dex.type_color("dragon"))
+		"heal_pulse":
+			var hp_to := partner(user)
+			if hp_to == null:
+				hp_to = user
+			_heal(hp_to, int(ceil(hp_to.max_hp * 0.5)))
+		"psych_up":
+			var foe2 := user.opponent
+			if not is_instance_valid(foe2) or not foe2.active():
+				_fail(user)
+			else:
+				for k in foe2.stages:
+					user.stages[k] = int(foe2.stages[k])
+				user.crit_stage = foe2.crit_stage
+				user.popup("Copiou os atributos!", Color(0.9, 0.9, 1.0))
+		"regen":
+			var root := bool(mv.get("rooted", false))
+			if bool(s.regen) and (not root or bool(s.rooted)):
+				_fail(user)
+				return true
+			s.regen = true
+			if root:
+				s.rooted = true
+				s.trapped = true
+			user.popup("Criou raízes!" if root else "Anel de água!", HEAL_COL)
+		"defog":
+			var foe3 := user.opponent
+			if is_instance_valid(foe3) and foe3.active():
+				foe3.evasion_t = 0.0
+			var other := _sd(1 - user.side)
+			for k in ["light_screen", "reflect", "safeguard", "mist"]:
+				other.erase(k)
+			spikes.clear()
+			if arena.field and arena.field.has_method("clear_spikes"):
+				arena.field.clear_spikes(-1)
+			_clear_terrain(user)
+			user.popup("O vento limpou o campo!", Dex.type_color("flying"))
+		"spikes":
+			var foes := _foes(user)
+			if foes.is_empty() or not arena.field:
+				_fail(user)
+				return true
+			for foe in foes:
+				arena.field.add_spikes(user.side, foe.position)
+			user.popup("Espinhos!", Dex.type_color("ground"))
+		"stealth_rock":
+			_lay_stealth_rock(user)
+		"baton_pass":
+			user.popup("Passou o bastão!", Color(0.8, 0.9, 1.0))
+			arena.later(0.05, func() -> void: _switch(user, true))
+		"wish":
+			var w: Array = sd.get("wishes", [])
+			w.append(
+				{
+					"t": now + TURN,
+					"amt": int(ceil(user.max_hp / 2.0)),
+					"id": user.get_instance_id(),
+					"pos": user.position
+				}
+			)
+			sd["wishes"] = w
+			user.popup("Fez um desejo!", Color(1, 0.85, 0.95))
+		"sleep_talk":
+			var pool2: Array = user.moves.filter(
+				func(x):
+					return (
+						_copyable(String(x)) != ""
+						and not String(Dex.move(String(x)).get("special", "")) in SLEEP_MOVES
+					)
+			)
+			if pool2.is_empty():
+				_fail(user)
+			else:
+				_call(user, String(pool2[rng.randi() % pool2.size()]))
 		"sandstorm":
 			set_weather("sand", FIELD_TURNS * TURN)
 			arena.popup(
@@ -999,6 +1689,11 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 func _call(user: BattleFighter, id: String) -> void:
 	var mv := Dex.move(id)
 	user.popup("→ %s!" % mv.get("name", id), Color(1, 0.95, 0.7), 1.0, 0.5)
+	if user.status == "sleep":
+		# Sleep Talk: o golpe chamado sai dormindo (o lutador age só durante ele).
+		user.sleep_act_t = maxf(
+			user.sleep_act_t, 0.65 + float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0))
+		)
 	arena.later(
 		0.25,
 		func() -> void:
@@ -1039,7 +1734,11 @@ func _lay_toxic_spikes(user: BattleFighter) -> void:
 		var at := Vector3(foe.position.x, 0.0, foe.position.z)
 		var layered := false
 		for z in spikes:
-			if int(z.side) == user.side and Vector3(z.pos - at).length() < TOXIC_SPIKE_R + 0.5:
+			if (
+				int(z.side) == user.side
+				and not z.get("rock", false)
+				and Vector3(z.pos - at).length() < TOXIC_SPIKE_R + 0.5
+			):
 				z.layers = mini(int(z.layers) + 1, 2)
 				z.t = now + TOXIC_SPIKE_LIFE
 				layered = true
@@ -1052,6 +1751,21 @@ func _lay_toxic_spikes(user: BattleFighter) -> void:
 			)
 			_vfx("toxic_spikes", [user.side, at, TOXIC_SPIKE_R, TOXIC_SPIKE_LIFE])
 	user.popup("Espinhos venenosos!", Dex.type_color("poison"))
+
+
+## Stealth Rock: pedras flutuando em volta de cada adversário; pega até quem voa (dano pela eficácia de Pedra).
+func _lay_stealth_rock(user: BattleFighter) -> void:
+	var foes := _foes(user)
+	if foes.is_empty():
+		_fail(user)
+		return
+	for foe in foes:
+		var at := Vector3(foe.position.x, 0.0, foe.position.z)
+		var t := now + TOXIC_SPIKE_LIFE
+		spikes.append({"pos": at, "side": user.side, "layers": 1, "t": t, "hit": {}, "rock": true})
+		arena.fx_disc(at, STEALTH_R, Dex.type_color("rock") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE)
+		_vfx("stealth_rock", [user.side, at, STEALTH_R, TOXIC_SPIKE_LIFE])
+	user.popup("Pedras flutuantes!", Dex.type_color("rock"))
 
 
 func _drop_spike(z: Dictionary) -> void:
@@ -1097,6 +1811,8 @@ func tick(dt: float) -> void:
 		if turn and f.alive():
 			if grassy and grounded(f) and f.hp < f.max_hp:
 				_heal(f, maxi(1, int(f.max_hp / 16.0 * f.dot_scale())))
+			if bool(s.regen) and f.hp < f.max_hp:  # Aqua Ring / Ingrain
+				_heal(f, maxi(1, int(f.max_hp / 16.0 * f.dot_scale())))
 			if sand and not ("rock" in f.types or "ground" in f.types or "steel" in f.types):
 				var d2 := maxi(1, int(f.max_hp / 16.0 * f.dot_scale()))
 				f.popup("-%d areia" % d2, Dex.type_color("rock"), 0.8)
@@ -1114,14 +1830,23 @@ func _tick_spikes() -> void:
 			if not is_instance_valid(f) or not f.active() or f.side == int(z.side):
 				continue
 			var id: int = f.get_instance_id()
-			if z.hit.has(id) or not grounded(f) or f.position.y > 0.3:
+			var rock := bool(z.get("rock", false))
+			if z.hit.has(id) or (not rock and (not grounded(f) or f.position.y > 0.3)):
 				continue
 			if (
 				Vector3(f.position.x - z.pos.x, 0.0, f.position.z - z.pos.z).length()
-				> TOXIC_SPIKE_R
+				> (STEALTH_R if rock else TOXIC_SPIKE_R)
 			):
 				continue
 			z.hit[id] = true
+			if rock:
+				var ab = arena.abilities
+				if ab and ab.has_method("no_indirect") and ab.no_indirect(f):
+					continue
+				var d := maxi(1, int(f.max_hp / 8.0 * Dex.effectiveness("rock", f.types)))
+				f.popup("-%d pedras" % d, Dex.type_color("rock"), 0.8)
+				f.take_damage(d, Vector3.ZERO, 0.0)
+				continue
 			if "poison" in f.types:
 				f.popup("Absorveu os espinhos!", Dex.type_color("poison"))
 				_drop_spike(z)
@@ -1131,6 +1856,28 @@ func _tick_spikes() -> void:
 
 func _tick_wish() -> void:
 	for side in 2:
+		var ws: Array = sides[side].get("wishes", [])
+		for w in ws.duplicate():
+			if now < float(w.t):
+				continue
+			ws.erase(w)
+			# Quem está no lugar de quem desejou: ele mesmo, ou o substituto mais perto do lugar.
+			var to: BattleFighter = null
+			var best := INF
+			for f in arena.fighters:
+				if not is_instance_valid(f) or not f.active() or f.side != side:
+					continue
+				var d: float = (
+					-1.0
+					if f.get_instance_id() == int(w.id)
+					else Vector3(f.position - w.pos).length()
+				)
+				if d < best:
+					best = d
+					to = f
+			if to != null:
+				to.popup("O desejo se realizou!", Color(1, 0.8, 0.95), 1.1)
+				_heal(to, int(w.amt))
 		var ids = sides[side].get("wish")
 		if not ids is Array:
 			continue
@@ -1172,6 +1919,15 @@ func expected_exact(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 			return float(target.hp) * clampf(accuracy_of(user, mv) / 100.0, 0.0, 1.0)
 		"endeavor":
 			return float(maxi(target.hp - user.hp, 0))
+		"final_gambit":
+			# Só vale como último recurso: HP baixo e o golpe derruba.
+			if (
+				Dex.effectiveness(String(mv.get("type", "")), target.types) == 0.0
+				or float(user.hp) / maxf(float(user.max_hp), 1.0) > 0.4
+				or user.hp < target.hp
+			):
+				return 0.0
+			return float(target.hp)
 	return -1.0
 
 
@@ -1181,9 +1937,26 @@ func ai_power(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> flo
 		return 0.0
 	if not usable(user, mv):
 		return 0.0
-	if String(mv.get("special", "")) == "spit_up":
-		return 100.0 * int(st(user).stock)
-	return float(adjust_move(user, target, mv).get("power", 0))
+	match String(mv.get("special", "")):
+		"spit_up":
+			return 100.0 * int(st(user).stock)
+		"beat_up":
+			var tot := 0.0
+			for x in _beat_powers(user):
+				tot += float(x)
+			return tot
+		"present":
+			return 40.0  # média dos 40/80/120 descontando a cura
+		"body_press":
+			return float(mv.power) * user.stat("def") / maxf(user.stat("atk"), 1.0)
+		"foul_play":
+			return float(mv.power) * target.stat("atk") / maxf(user.stat("atk"), 1.0)
+		"psyshock":
+			return float(mv.power) * target.stat("spd") / maxf(target.stat("def"), 1.0)
+	var p := float(adjust_move(user, target, mv).get("power", 0))
+	if String(mv.get("special", "")) == "facade" and user.status == "burn":
+		p *= 2.0  # a IA aplica a queimadura no Ataque; o Facade não sofre
+	return p
 
 
 ## A IA usa este golpe de suporte agora? null = critério padrão (estágio).
@@ -1223,6 +1996,94 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			return theirs >= 2 or mine <= -2
 		"light_screen", "safeguard", "tailwind":
 			return not active(sd, sp)
+		"reflect":
+			return not active(sd, sp) and has_opp and _has_cat(opp, "physical")
+		"mist":
+			return not active(sd, sp) and has_opp and _has_debuff(opp)
+		"endure":
+			return hp < 0.3 and _threatened(f)
+		"wide_guard":
+			return partner(f) != null and _threatened(f)
+		"counter":
+			return (
+				has_opp
+				and _threatened(f)
+				and _has_cat(opp, String(mv.get("counter_cat", "physical")))
+			)
+		"substitute":
+			return int(s.sub) <= 0 and hp > 0.5
+		"belly_drum":
+			return hp > 0.75 and int(f.stages.get("atk", 0)) < 2 and _has_cat(f, "physical")
+		"howl":
+			return int(f.stages.get("atk", 0)) < 2
+		"dragon_cheer":
+			var dp := partner(f)
+			return dp != null and dp.crit_stage < 2
+		"heal_pulse":
+			var hp2 := partner(f)
+			if hp2 == null:
+				return hp < 0.5
+			return float(hp2.hp) / maxf(hp2.max_hp, 1) < 0.5
+		"wish":
+			return hp < 0.6
+		"regen":
+			return not bool(s.regen) and hp < 0.9
+		"psych_up":
+			return has_opp and _stage_sum(opp) - _stage_sum(f) >= 2
+		"baton_pass":
+			return _stage_sum(f) >= 2
+		"electric_terrain":
+			return not active(field, "electric") and _has_type_hit(f, "electric")
+		"misty_terrain":
+			return (
+				not active(field, "misty")
+				and has_opp
+				and (_has_type_hit(opp, "dragon") or _has_cat(opp, "status"))
+			)
+		"sunny_day":
+			return weather() != "sun"
+		"defog":
+			var mine_hz := spikes.any(func(z): return int(z.side) != f.side)
+			var walls := (
+				has_opp
+				and (active(_sd(opp.side), "reflect") or active(_sd(opp.side), "light_screen"))
+			)
+			return mine_hz or walls
+		"spikes":
+			return has_opp and not _spikes_laid(f.side)
+		"stealth_rock":
+			return (
+				has_opp
+				and not spikes.any(
+					func(z): return int(z.side) == f.side and bool(z.get("rock", false))
+				)
+			)
+		"sleep_talk":
+			return f.status == "sleep"
+		"attract":
+			return (
+				has_opp
+				and not active(st(opp), "attract")
+				and f.mon.gender != ""
+				and opp.mon.gender != ""
+				and f.mon.gender != opp.mon.gender
+			)
+		"taunt":
+			return has_opp and not active(st(opp), "taunt") and _has_cat(opp, "status")
+		"memento":
+			return hp < 0.25
+		"pain_split":
+			return has_opp and hp < 0.5 and opp.hp > f.hp
+		"strength_sap":
+			return has_opp and hp < 0.6 and int(opp.stages.get("atk", 0)) > -6
+		"skill_swap":
+			return has_opp and _ability(opp) != _ability(f) and _ability(opp) != ""
+		"trick":
+			return has_opp and _has_item(opp) and not _has_item(f)
+		"teeter_dance":
+			return has_opp and opp.confusion_t <= 0.0
+		"venom_drench":
+			return has_opp and opp.status in ["poison", "toxic"]
 		"gravity":
 			return (
 				not active(field, "gravity")
@@ -1243,7 +2104,9 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 				has_opp
 				and opp.status == ""
 				and not ("poison" in opp.types or "steel" in opp.types)
-				and spikes.filter(func(z): return int(z.side) == f.side).is_empty()
+				and not spikes.any(
+					func(z): return int(z.side) == f.side and not z.get("rock", false)
+				)
 			)
 		"follow_me":
 			var p2 := partner(f)
@@ -1286,6 +2149,36 @@ func _has_type_hit(f: BattleFighter, type: String) -> bool:
 			var mv := Dex.move(String(m))
 			return float(mv.get("power", 0)) > 0.0 and String(mv.get("type", "")) == type
 	)
+
+
+## Tem golpe da categoria (physical / special / status).
+func _has_cat(f: BattleFighter, cat: String) -> bool:
+	return f.moves.any(func(m): return String(Dex.move(String(m)).get("category", "")) == cat)
+
+
+## Tem golpe que baixa atributo do outro (Growl, Screech, efeito de golpe...).
+func _has_debuff(f: BattleFighter) -> bool:
+	return f.moves.any(
+		func(m):
+			var mv := Dex.move(String(m))
+			var ef = mv.get("effect")
+			return (
+				(String(mv.get("kind", "")) == "debuff_aoe" and int(mv.get("stages", 0)) < 0)
+				or (ef is Dictionary and int(ef.get("stages", 0)) < 0 and not ef.get("self", false))
+			)
+	)
+
+
+func _stage_sum(f: BattleFighter) -> int:
+	var n := 0
+	for k in f.stages:
+		n += int(f.stages[k])
+	return n
+
+
+func _spikes_laid(side: int) -> bool:
+	var fl = arena.get("field")
+	return fl != null and fl.marks.any(func(m): return m.kind == "spikes" and int(m.side) == side)
 
 
 func _threatened(f: BattleFighter) -> bool:

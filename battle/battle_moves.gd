@@ -73,8 +73,13 @@ func can_afford(user: BattleFighter, id: String, careful := true) -> bool:
 
 ## Checa, debita PP/stamina, aplica cooldowns e solta (ou prepara) o golpe. Falso se não saiu.
 func use(user: BattleFighter, id: String, feedback := false) -> bool:
-	var mv := Dex.move(id)
-	if mv.is_empty() or not user.can_act():
+	var mv := effects.move_for(user, Dex.move(id))
+	var asleep := user.status == "sleep"
+	if mv.is_empty():
+		return false
+	if asleep and not effects.sleep_move(user, mv):
+		return false  # dormindo só saem Snore e Sleep Talk
+	if not asleep and not user.can_act():
 		return false
 	if (
 		float(user.move_cd.get(id, 0.0)) > 0.0
@@ -104,6 +109,8 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
 		user.popup("Paralisado!", Dex.type_color("electric"))
 		return true
+	if effects.infatuated_fail(user):
+		return true
 	effects.on_use(user, mv)
 	if arena and arena.has_method("on_move_used"):
 		arena.on_move_used(user, mv)
@@ -115,6 +122,12 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 		_telegraph_prepare(user, mv, prepare)
 	if exhausted:
 		_stagger_after(user, mv, prepare)
+	if asleep:
+		# Snore/Sleep Talk: o lutador age dormindo só enquanto o golpe sai.
+		user.sleep_act_t = maxf(
+			user.sleep_act_t,
+			prepare + float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + 0.4
+		)
 	if prepare <= 0.0:
 		deliver(user, mv)
 	else:
@@ -197,6 +210,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		and rng.randf() * 100.0 >= eff_acc
 	):
 		miss = aimed
+		effects.note_fail(user)
 		if kind != "multi_arc":
 			dir = _miss_dir(user, aimed, mv, dir)
 		_announce_miss(user, aimed, mv)
@@ -213,7 +227,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		mv = mv.duplicate()
 		mv.power = int(roll[1])
 		user.popup("Magnitude %d" % int(roll[0]), Dex.type_color(String(mv.type)), 1.0, 1.0)
-	mv = _cast_copy(user, effects.roll_hits(mv))
+	mv = _cast_copy(user, effects.roll_hits(mv, user))
 	user.cast_move = mv
 	user.cast_n += 1
 	_cast_visual(user, mv, dir)
@@ -242,7 +256,10 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		"aoe_self":
 			_aoe_self(user, mv)
 		"aoe_target":
-			_aoe_target(user, mv, dir, miss)
+			if String(mv.get("special", "")) == "future_sight":
+				_future_sight(user, mv, miss)
+			else:
+				_aoe_target(user, mv, dir, miss)
 		"zone":
 			_zone(user, mv, dir, miss)
 		"self_buff":
@@ -418,7 +435,7 @@ func hit(
 			m.power = power
 		m = effects.adjust_move(user, target, m)
 		var res := Damage.compute(
-			user.damage_profile(),
+			effects.attacker_profile(user, target, m),
 			effects.defender_profile(user, target, m),
 			m,
 			rng,
@@ -431,7 +448,7 @@ func hit(
 			_landed(user, target, mv)
 			return
 		var dmg := int(res.damage)
-		var mult := extra_mult(user, target, mv) * pace()
+		var mult := extra_mult(user, target, m) * pace()
 		if mult != 1.0 and pace() < 1.0:
 			# Ritmo baixo: a fração passa para o próximo golpe no mesmo alvo (com mínimo 1 todo golpe
 			# tirava 1 e o damage_pace parava de valer). Golpe de 0 ainda empurra e interrompe.
@@ -442,14 +459,22 @@ func hit(
 			dmg = maxi(1, int(round(float(dmg) * mult)))
 		if arena.abilities:
 			dmg = arena.abilities.adjust_damage(user, target, mv, dmg)
+		if effects.substitute_soak(user, target, mv, dmg):
+			_landed(user, target, mv)
+			return
+		dmg = effects.cap_damage(user, target, mv, dmg)
 		var hp_before := target.hp
 		target.last_hit_by = user
 		target.take_damage(
 			dmg,
 			dir,
 			(
-				float(mv.get("knockback", 4.0))
-				* BattlePhysics.knock_mult(eff, res.crit, BattlePhysics.weight_of(target))
+				0.0
+				if effects.rooted(target)
+				else (
+					float(mv.get("knockback", 4.0))
+					* BattlePhysics.knock_mult(eff, res.crit, BattlePhysics.weight_of(target))
+				)
 			),
 			{"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
@@ -494,7 +519,10 @@ func hit(
 		and rng.randf() < float(ef.get("chance", 0.0))
 	):
 		if ef.has("stat"):
-			change_stage(user if ef.get("self", false) else target, String(ef.stat), int(ef.stages))
+			if ef.get("self", false):
+				change_stage(user, String(ef.stat), int(ef.stages))
+			else:
+				change_stage(target, String(ef.stat), int(ef.stages), user)
 		else:
 			var st := String(ef.status)
 			if STATUS_IMMUNE.get(st, "-") in target.types:
@@ -564,8 +592,11 @@ func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 		arena.emit_signal("hit_landed", user, target, mv)
 
 
-func change_stage(c: BattleFighter, k: String, delta: int) -> void:
+## src: quem causou (outro lado = Mist barra a queda).
+func change_stage(c: BattleFighter, k: String, delta: int, src: BattleFighter = null) -> void:
 	if delta == 0 or not is_instance_valid(c):
+		return
+	if delta < 0 and effects.mist_blocks(c, src):
 		return
 	if (
 		delta < 0
@@ -581,6 +612,7 @@ func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 		c.popup("%s não %s mais!" % [short, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
 		return
 	c.stages[k] = nv
+	effects.note_stage(c, nv - cur)
 	c.popup(
 		BattleHUD.VivaTags.stage_text(k, nv - cur),
 		Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6),
@@ -794,6 +826,17 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	)
 
 
+## Future Sight: avisa agora e o golpe cai ~2 turnos depois no alvo de então (o usuário fica livre).
+func _future_sight(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> void:
+	user.popup("Previu o futuro!", Dex.type_color("psychic"))
+	arena.later(
+		maxf(BattleMoveEffects.FUTURE_DELAY - float(mv.get("windup", 1.0)), 0.0),
+		func() -> void:
+			if is_instance_valid(user) and user.alive():
+				_aoe_target(user, mv, user.aim_dir(), miss)
+	)
+
+
 func _ground_immune(mv: Dictionary, t: BattleFighter) -> bool:
 	return String(mv.get("type", "")) == "ground" and t.is_airborne() and not effects.no_jump()
 
@@ -947,8 +990,8 @@ func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 			continue
 		if effects.blocks_hit(user, t, mv):
 			continue
-		if mv.has("stat"):
-			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)))
+		if not effects.debuff_move(user, t, mv) and mv.has("stat"):
+			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)), user)
 		if phys.push_dist(mv) > 0.0:
 			var away := user.flat_to(t)
 			phys.launch(

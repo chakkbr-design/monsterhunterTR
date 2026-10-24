@@ -212,6 +212,9 @@ func step(dt: float) -> Vector3:
 		use_trainer_item()
 		recover_t = RECOVER
 		return Vector3.ZERO
+	if f.status == "sleep":
+		_sleep_move(f.flat_to(opp).length())
+		return Vector3.ZERO
 	_mood()
 	var to_o := f.flat_to(opp)
 	var d := to_o.length()
@@ -601,6 +604,20 @@ func use_trainer_item() -> void:
 		f.arena.item_used_by_trainer(f, String(it.get("name", f.trainer_item)))
 
 
+## Dormindo: só Snore/Sleep Talk saem (BattleMoveEffects.sleep_move).
+func _sleep_move(d: float) -> void:
+	for id in f.moves:
+		var mv := Dex.move(String(id))
+		if (
+			f.arena.moves.effects.sleep_move(f, mv)
+			and in_range(String(id), d)
+			and f.arena.moves.can_afford(f, String(id))
+			and f.arena.moves.use(f, String(id))
+		):
+			note_used(String(id))
+			return
+
+
 func _punish(d: float) -> bool:
 	var opp := f.opponent
 	if not f.can_act():
@@ -753,6 +770,8 @@ func status_urgent(id: String) -> bool:
 	match String(mv.get("special", "")):
 		"protect", "quick_guard":
 			return f.arena.moves.effects._threatened(f)
+		"endure", "wide_guard", "counter":
+			return f.arena.moves.effects.ai_worth(f, mv) == true
 		"roost", "heal_weather", "swallow", "rest", "healing_wish":
 			return hp < URGENT_HP
 		"life_dew":
