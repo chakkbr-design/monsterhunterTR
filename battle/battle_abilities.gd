@@ -2,15 +2,17 @@ class_name BattleAbilities
 extends RefCounted
 ## Efeitos das habilidades (data/abilities.json) na luta em tempo real, com a faixa de habilidade no HUD.
 ## A arena cria um por luta (arena.abilities) e chama os ganchos abaixo.
-## Regras oficiais (Gen 9, VGC) adaptadas à rodada (BattleTurns): o "fim de turno" do oficial é
-## on_round_end() (Speed Boost, Shed Skin, clima, Poison Heal...), "ao entrar" dispara na troca e na
-## substituição, em ordem pela Speed (do mais rápido ao mais lento; Trick Room inverte).
+## Regras oficiais (Gen 9, VGC) adaptadas à rodada (BattleTurns): o "fim de turno" do oficial roda em
+## BattleEndTurn.run(), que chama os passos daqui na ordem oficial (count_weather_round +
+## weather_residual, shed_skin, Poison Heal no passo do veneno, late_residual); on_round_end() faz só
+## a parte das habilidades. "Ao entrar" dispara na troca e na substituição, em ordem pela Speed (do mais
+## rápido ao mais lento; Trick Room inverte).
 ## Extras que a arena/moves/IA/turnos podem consultar: walk_mult(f), cast_speed_mult(f, mv),
 ## order_speed_mult(f), priority_bonus(f, mv), redirect(user, target, mv), profile_bias(f),
 ## blocks_stage_drop(f, stat).
-## Clima: `weather_now()` ("" | sun | rain | sand | hail) vem de set_weather() (golpe, com duração em
-## segundos), de set_weather_rounds() (habilidade, 5 rodadas como os 5 turnos do oficial) ou de
-## arena.opts.weather (a arena toda, sem fim). Cloud Nine/Air Lock o suprimem. "hail" é a neve da Gen 9
+## Clima: `weather_now()` ("" | sun | rain | sand | hail) vem de set_weather_rounds() (golpe e
+## habilidade, 5 rodadas como os 5 turnos do oficial, contadas no fim de turno), de set_weather() (em
+## segundos, para testes e efeitos de tempo real) ou de arena.opts.weather (a arena toda, sem fim). Cloud Nine/Air Lock o suprimem. "hail" é a neve da Gen 9
 ## (sem dano).
 
 const PINCH := {"blaze": "fire", "torrent": "water", "overgrow": "grass", "swarm": "bug"}
@@ -124,7 +126,7 @@ const KEEP_STAT := {
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Habilidades que agem ao entrar (troca, substituição, começo da luta), em ordem pela Speed.
 const ENTRY := ["intimidate", "drought", "frisk", "unnerve", "cloud_nine", "air_lock"]
-## Clima: duração padrão (s) do que um golpe cria e rodadas do que uma habilidade cria (5 turnos).
+## Clima: duração padrão de set_weather (s, tempo real) e rodadas do clima de golpe/habilidade (5 turnos).
 const WEATHER_SECS := 25.0
 const WEATHER_ROUNDS := 5
 const WEATHER_ALIAS := {
@@ -140,7 +142,6 @@ const WEATHER_ALIAS := {
 }
 const SANDPROOF_TYPES := ["rock", "ground", "steel"]
 const SANDPROOF := ["sand_rush", "sand_force", "sand_veil", "magic_guard", "overcoat"]
-const DOT_STATUS := ["burn", "poison", "toxic", "leech"]
 ## Speed na ordem da rodada (oficial) e no andar/preparo (tempo real) dos que dobram a Speed.
 const SPEED_DOUBLE := 2.0
 const SPEED_WALK := 1.5
@@ -215,7 +216,8 @@ var _pending_enter: Array = []  ## Intimidate, Drought, Frisk...: precisam de ca
 var _field := {}  ## id -> lutador ativo no frame anterior (para ver quem saiu na troca)
 var weather := ""  ## clima criado por golpe/habilidade
 var weather_t := 0.0  ## segundos restantes (-1 = sem fim em segundos)
-var weather_rounds := 0  ## rodadas restantes do clima de habilidade (0 = não conta rodada)
+var weather_rounds := 0  ## rodadas restantes do clima de golpe/habilidade (0 = não conta rodada)
+var weather_ended := ""  ## clima que acabou no último fim de turno (count_weather_round)
 
 
 func _init(a: Node) -> void:
@@ -369,7 +371,7 @@ func set_weather(kind: String, secs := WEATHER_SECS) -> bool:
 	return true
 
 
-## Clima de habilidade (Drought): dura `n` rodadas, como os 5 turnos do oficial.
+## Clima de golpe ou habilidade (Rain Dance, Drought): dura `n` rodadas, como os 5 turnos do oficial.
 func set_weather_rounds(kind: String, n := WEATHER_ROUNDS) -> bool:
 	kind = String(WEATHER_ALIAS.get(kind, kind))
 	if kind == "" or _weather_on(kind):
@@ -908,42 +910,100 @@ func profile_bias(f: BattleFighter) -> String:
 # --- Fim de rodada (o "fim de turno" do oficial) ---
 
 
-## Fim de cada rodada (BattleTurns, a cada ROUND_SECS s também sem a fila): clima (areia, Rain Dish,
-## Dry Skin, Solar Power), Speed Boost, Shed Skin, Natural Cure, Regenerator, Poison Heal, Pickup, em
-## ordem pela Speed. Depois conta a rodada do clima de habilidade.
+## Fim de turno só das habilidades, na ordem oficial (clima; Shed Skin; Poison Heal; Speed Boost e
+## o resto), pela Speed. A luta usa BattleEndTurn.run(), que chama os mesmos passos intercalados com
+## status, itens e campo; este atalho serve aos testes e a quem não tem BattleEndTurn.
 func on_round_end() -> void:
-	var live: Array = arena.fighters.filter(func(g): return is_instance_valid(g) and g.active())
-	last_round_order = _by_speed(live)
-	for f in last_round_order:
-		if is_instance_valid(f) and f.active():
-			_round_fighter(f)
-	if weather_rounds > 0:
-		weather_rounds -= 1
-		if weather_rounds == 0:
-			weather = ""
-			weather_t = 0.0
+	var order := round_order()
+	if count_weather_round():
+		for f in order:
+			if f.active():
+				weather_residual(f)
+	for f in order:
+		if f.active():
+			shed_skin(f)
+	for f in order:
+		if f.active() and ability_of(f) == "poison_heal" and f.status in ["poison", "toxic"]:
+			_round_heal(f, 1.0 / 8.0)
+	for f in order:
+		if f.active():
+			late_residual(f)
+	finish_round(order)
+
+
+## Lutadores ativos na ordem do fim de turno (Speed; Trick Room inverte).
+func round_order() -> Array:
+	return _by_speed(arena.fighters.filter(func(g): return is_instance_valid(g) and g.active()))
+
+
+## Fecha o fim de turno: guarda a ordem (testes) e conta a rodada (Speed Boost olha a de entrada).
+func finish_round(order: Array) -> void:
+	last_round_order = order
 	rounds += 1
 
 
-func _round_fighter(f: BattleFighter) -> void:
+## Passo 1 do fim de turno: conta a rodada do clima de golpe/habilidade (como o oficial, conta antes:
+## no turno em que acaba não tira HP). true = o clima segue valendo e age (areia, Rain Dish...).
+## weather_ended guarda o clima que acabou agora ("" se nenhum).
+func count_weather_round() -> bool:
+	weather_ended = ""
+	if weather_rounds > 0:
+		weather_rounds -= 1
+		if weather_rounds == 0:
+			weather_ended = weather
+			weather = ""
+			weather_t = 0.0
+			return false
+	return weather_now() != ""
+
+
+## Clima no fim do turno, para um lutador: Rain Dish 1/16, Dry Skin +1/8 na chuva e -1/8 no sol,
+## Solar Power -1/8, areia -1/16 em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force, Magic Guard,
+## Overcoat). A neve (hail) da Gen 9 não tira HP.
+func weather_residual(f: BattleFighter) -> void:
+	var a := ability_of(f)
+	var guard := a == "magic_guard"
+	match weather_now():
+		"rain":
+			if a == "rain_dish":
+				_round_heal(f, 1.0 / 16.0, "Rain Dish")
+			elif a == "dry_skin":
+				_round_heal(f, 1.0 / 8.0, "Dry Skin")
+		"sun":
+			if a in ["dry_skin", "solar_power"] and not guard:
+				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3), "sol")
+				_fire(f, Color(1.0, 0.75, 0.3))
+		"sand":
+			if not _sand_proof(f, a):
+				_weather_chip(f, 1.0 / 16.0, Color(0.85, 0.72, 0.42), "areia")
+
+
+## Passo 4 (junto do Leftovers): Shed Skin, 1/3 de curar o status. true = curou.
+func shed_skin(f: BattleFighter) -> bool:
+	if ability_of(f) != "shed_skin" or not f.status in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
+		return false
+	if not _roll(1.0 / 3.0):
+		return false
+	f.clear_status()
+	_fire(f)
+	return true
+
+
+## Passo final das habilidades (oficial: Speed Boost, Moody, Pickup... depois dos efeitos de campo):
+## Speed Boost +1 (não no turno em que entrou); adaptados ao tempo real: Natural Cure cura em campo,
+## Regenerator 1/16, Pickup 2%.
+func late_residual(f: BattleFighter) -> void:
 	var a := ability_of(f)
 	var s := _state(f)
-	_weather_round(f, a)
-	if not f.alive() or a == "":
-		return
 	match a:
 		"speed_boost":
 			# não na rodada em que entrou (oficial: não no turno da troca)
 			if int(s.enter_round) < rounds and int(f.stages.get("spe", 0)) < 6:
 				_stage_up(f, "spe", 1)
 				_fire(f)
-		"shed_skin":
-			if f.status in Mon.PERSIST_STATUS + ["toxic"] and _roll(1.0 / 3.0):
-				f.clear_status()
-				_fire(f)
 		"natural_cure":
 			# oficial: cura ao sair; em campo (tempo real) cura no fim da rodada
-			if f.status in Mon.PERSIST_STATUS + ["toxic"]:
+			if f.status in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
 				f.clear_status()
 				_fire(f, Color(0.6, 1.0, 0.7))
 		"regenerator":
@@ -951,35 +1011,12 @@ func _round_fighter(f: BattleFighter) -> void:
 			_round_heal(f, 1.0 / 16.0)
 		"pickup":
 			_round_heal(f, 0.02)
-		"poison_heal":
-			if f.status in ["poison", "toxic"]:
-				_round_heal(f, 1.0 / 8.0)
 
 
-func _round_heal(f: BattleFighter, pct: float) -> void:
+func _round_heal(f: BattleFighter, pct: float, why := "") -> void:
 	if f.hp < f.max_hp:
-		_heal_pct(f, pct)
+		f.residual_heal(maxi(1, int(float(f.max_hp) * pct)), why)
 		_fire(f, Color(0.5, 1.0, 0.6))
-
-
-## Clima no fim da rodada: Rain Dish 1/16, Dry Skin +1/8 na chuva e -1/8 no sol, Solar Power -1/8,
-## areia -1/16 em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force, Magic Guard, Overcoat).
-## A neve (hail) da Gen 9 não tira HP.
-func _weather_round(f: BattleFighter, a: String) -> void:
-	var guard := a == "magic_guard"
-	match weather_now():
-		"rain":
-			if a == "rain_dish":
-				_round_heal(f, 1.0 / 16.0)
-			elif a == "dry_skin":
-				_round_heal(f, 1.0 / 8.0)
-		"sun":
-			if a in ["dry_skin", "solar_power"] and not guard:
-				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3))
-				_fire(f, Color(1.0, 0.75, 0.3))
-		"sand":
-			if not _sand_proof(f, a):
-				_weather_chip(f, 1.0 / 16.0, Color(0.8, 0.7, 0.4))
 
 
 func _sand_proof(f: BattleFighter, a: String) -> bool:
@@ -991,10 +1028,9 @@ func _sand_proof(f: BattleFighter, a: String) -> bool:
 	return false
 
 
-func _weather_chip(f: BattleFighter, pct: float, col: Color) -> void:
-	var d := maxi(1, int(float(f.max_hp) * pct * f.dot_scale()))
-	f.popup("-%d" % d, col, 0.8)
-	f.take_damage(d, Vector3.ZERO, 0.0)
+## Dano de clima: oficial puro (sem o ritmo de dano dos golpes).
+func _weather_chip(f: BattleFighter, pct: float, col: Color, why: String) -> void:
+	f.residual_damage(maxi(1, int(float(f.max_hp) * pct)), why, col)
 
 
 # --- Troca ---
@@ -1095,14 +1131,6 @@ func _tick_fighter(f: BattleFighter) -> void:
 			if f.evasion_t <= 0.0 and weather_now() == "sand":
 				f.evasion = 0.2
 				f.evasion_t = 0.5
-		"magic_guard":
-			# sem dano indireto: veneno, queimadura e semente não tiram HP
-			if f.status in DOT_STATUS:
-				f.status_tick = maxf(f.status_tick, 0.5)
-		"poison_heal":
-			# o veneno não tira HP (cura no fim da rodada)
-			if f.status in ["poison", "toxic"]:
-				f.status_tick = maxf(f.status_tick, 0.5)
 		"rock_head":
 			if f.stagger_t > 1.2:
 				f.stagger_t = 1.2

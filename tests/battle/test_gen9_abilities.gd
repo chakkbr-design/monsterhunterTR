@@ -183,7 +183,7 @@ func _sand() -> void:
 	var h2 := pid.hp
 	c.abilities.on_round_end()
 	check(
-		pid.hp == h2 - maxi(1, int(pid.max_hp / 16.0 * pid.dot_scale())),
+		pid.hp == h2 - maxi(1, int(pid.max_hp / 16.0)),
 		"areia tira 1/16 no fim da rodada de quem não é imune (%d -> %d)" % [h2, pid.hp]
 	)
 	# rodando a luta: tira de novo no fim da rodada, não a cada 2 s
@@ -248,7 +248,7 @@ func _rain_sun() -> void:
 	var h := int(b.player.hp)
 	b.abilities.on_round_end()
 	check(
-		b.player.hp == h - maxi(1, int(b.player.max_hp / 8.0 * b.player.dot_scale())),
+		b.player.hp == h - maxi(1, int(b.player.max_hp / 8.0)),
 		"Solar Power custa 1/8 no sol no fim da rodada"
 	)
 	b.free()

@@ -34,19 +34,21 @@ const LUNGE_SPEED := 10.0
 const LUNGE_TIME := 0.2
 const LUNGE_PREPARE := 0.15
 const STRUGGLE_CD := 1.0
-const STATUS_TIME := {
-	"burn": 6.0,
-	"poison": 6.0,
-	"toxic": 6.0,
-	"paralysis": 6.0,
-	"sleep": 3.0,
-	"leech": 6.0,
-	"freeze": 2.5
-}
-## Toxic: o veneno piora a cada segundo (n/32 do HP no n-ésimo segundo; o comum tira 1/12 fixo).
-const TOXIC_STEP := 1.0 / 32.0
-const CONFUSION_TIME := 4.0
+## Status como no oficial (Gen 9): queimadura, veneno e paralisia não acabam sozinhos; o dano de
+## queimadura/veneno/Toxic é de fim de turno (BattleEndTurn), uma vez por rodada.
+## Sono: contador 2..4 que desce a cada tentativa de agir e acorda no zero (1 a 3 turnos dormindo, como
+## o Showdown); Rest dorme 2 turnos (contador 3).
+const SLEEP_COUNTER := [2, 4]
+const REST_COUNTER := 3
+## Confusão: contador 2..5 que desce a cada tentativa de agir; no zero sai da confusão e age.
+const CONFUSION_COUNTER := [2, 5]
+## Congelado: 20% de descongelar a cada tentativa de agir (golpe de Fogo recebido também descongela).
+const THAW_CHANCE := 0.2
+## Toxic: n/16 no n-ésimo fim de turno (n até 15; zera ao sair de campo).
+const TOXIC_MAX := 15
 const FLINCH_TIME := 0.5
+## Clarão do efeito de fim de turno (popup + tinta curta no sprite).
+const RESIDUAL_FLASH := 0.25
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
 const STRUGGLE := {
 	"id": "struggle",
@@ -112,14 +114,23 @@ var land_t := 0.0
 var impact_t := 0.0
 var evasion_t := 0.0
 var evasion := 0.0
+## Confuso enquanto > 0 (marca; a duração é confusion_turns, contada em turnos).
 var confusion_t := 0.0
+var confusion_turns := 0
 var status := ""
-var status_t := 0.0
-var status_tick := 0.0
+## Sono: tentativas de agir até acordar (SLEEP_COUNTER).
+var sleep_turns := 0
+## Rodada (BattleTurns.round_n) em que o status / a confusão começou.
+var status_round := -1
+var confusion_round := -1
 ## Snore/Sleep Talk: age dormindo só enquanto o golpe sai (BattleMoves.use).
 var sleep_act_t := 0.0
+## Leech Seed (volátil, como o oficial: convive com outro status e só sai na troca ou com Rapid Spin).
+var seeded := false
 var leech_source: BattleFighter
 var toxic_n := 0
+## Rodada em que a vez dele já começou (o sono/congelado/confusão contam a tentativa uma vez).
+var _turn_round := -1
 
 var prepare_t := 0.0
 var prepare_id := ""
@@ -184,6 +195,7 @@ var _status_fx: FxSprite
 var _status_fx_id := ""
 var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
+var _flash_col := Color(2.2, 2.2, 2.2)
 var _ring: MeshInstance3D
 var _spawn_t := 0.0
 
@@ -320,7 +332,7 @@ func visual_step(dt: float) -> void:
 	var tint := _tint()
 	if _flash_t > 0.0:
 		_flash_t -= dt
-		tint = FLASH_COL
+		tint = _flash_col
 	if alive() and not evolving:
 		look.tint = tint
 	_update_status_fx()
@@ -331,6 +343,8 @@ func _update_status_fx() -> void:
 	var want := status if alive() and on_field else ""
 	if want == "" and confusion_t > 0.0 and alive():
 		want = "confusion"
+	if want == "" and seeded and alive() and on_field:
+		want = "leech"
 	if want == _status_fx_id:
 		return
 	if is_instance_valid(_status_fx):
@@ -632,74 +646,175 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 	if s == "confusion":
 		if confusion_t > 0.0:
 			return false
-		confusion_t = CONFUSION_TIME
+		confusion_t = 1.0
+		confusion_turns = _roll(CONFUSION_COUNTER)
+		confusion_round = round_now()
+		_held_check()
+		return true
+	if s == "leech":
+		# Leech Seed é volátil no oficial: não ocupa o lugar do status.
+		if seeded:
+			return false
+		seeded = true
+		leech_source = source
+		refresh_label()
 		return true
 	if status != "":
 		return false
 	status = s
-	status_t = float(STATUS_TIME.get(s, 4.0))
-	status_tick = 1.0
-	if s == "leech":
-		leech_source = source
+	status_round = round_now()
+	if s == "sleep":
+		sleep_turns = _roll(SLEEP_COUNTER)
 	if s in Mon.PERSIST_STATUS:
 		mon.status = s
 	elif s == "toxic":
 		toxic_n = 0
 		mon.status = "poison"  # fora da luta o Toxic vira veneno comum (Gen 5+)
 	refresh_label()
+	_held_check()
 	return true
 
 
 func clear_status() -> void:
 	status = ""
-	status_t = 0.0
-	leech_source = null
+	sleep_turns = 0
+	toxic_n = 0
 	mon.status = ""
 	refresh_label()
 
 
-func _tick_status(dt: float) -> void:
-	if status == "":
+## Tira a Leech Seed (Rapid Spin; a troca já começa sem ela).
+func clear_seed() -> void:
+	seeded = false
+	leech_source = null
+
+
+func _roll(r: Array) -> int:
+	var lo := int(r[0])
+	var hi := int(r[1])
+	if arena and arena.get("rng"):
+		return arena.rng.randi_range(lo, hi)
+	return randi_range(lo, hi)
+
+
+## Rodada atual da luta (BattleTurns.round_n; -1 sem arena).
+func round_now() -> int:
+	var t = arena.get("turns") if arena else null
+	return int(t.round_n) if t else -1
+
+
+## O sono/congelado/confusão conta na tentativa de agir: na vez dele (fila de BattleTurns) ou, para
+## quem não segue a fila (jogador no teclado, ritmo antigo), no fim de cada rodada (BattleEndTurn).
+func counts_on_turn() -> bool:
+	var t = arena.get("turns") if arena else null
+	return t != null and bool(t.on) and t.tracked(self)
+
+
+## A vez dele começou nesta rodada: conta a tentativa de agir uma vez.
+func _check_turn() -> void:
+	var t = arena.get("turns") if arena else null
+	if t == null or not bool(t.on) or t.current != self or _turn_round == int(t.round_n):
 		return
-	status_t -= dt
-	status_tick -= dt
-	if status_tick <= 0.0:
-		status_tick += 1.0
-		match status:
-			"burn":
-				_dot(maxi(1, int(max_hp / 16.0 * dot_scale())), "burn", Dex.type_color("fire"))
-			"poison":
-				_dot(maxi(1, int(max_hp / 12.0 * dot_scale())), "poison", Dex.type_color("poison"))
-			"toxic":
-				toxic_n += 1
-				_dot(
-					maxi(1, int(max_hp * TOXIC_STEP * toxic_n * dot_scale())),
-					"toxic",
-					Dex.type_color("poison")
-				)
-			"leech":
-				var d := maxi(1, int(max_hp / 16.0 * dot_scale()))
-				_dot(d, "leech", Dex.type_color("grass"))
-				if is_instance_valid(leech_source) and leech_source.alive():
-					leech_source.heal(d)
-	if status_t <= 0.0 and alive():
+	_turn_round = int(t.round_n)
+	try_act()
+
+
+## Tentativa de agir (oficial: antes do golpe). Sono: o contador desce e acorda no zero (e age nesta
+## vez). Congelado: 20% de descongelar. Confusão: o contador desce e sai dela no zero.
+func try_act() -> void:
+	if not alive():
+		return
+	if status == "sleep":
+		sleep_turns -= 1
+		if sleep_turns <= 0:
+			clear_status()
+			popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+	elif status == "freeze" and _chance(THAW_CHANCE):
 		clear_status()
+		popup("Descongelou!", Color(0.7, 0.95, 1.0), 0.9)
+	if confusion_t > 0.0:
+		confusion_turns -= 1
+		if confusion_turns <= 0:
+			confusion_t = 0.0
+			popup("Saiu da confusão!", Color(0.9, 0.8, 1.0), 0.9)
 
 
-## Dano por segundo de status no ritmo da luta: igual ao original até o ritmo padrão do 1x1 e menor
-## na dupla (que tem ritmo mais lento), para queimar/envenenar não decidir a luta sozinho.
+## Fim da rodada para quem não segue a fila: a rodada inteira vale como a tentativa de agir (menos a
+## rodada em que o status começou). Acorda / sai da confusão quando a próxima tentativa já seria livre.
+func round_count() -> void:
+	if not alive():
+		return
+	var r := round_now()
+	if status == "sleep" and r != status_round:
+		sleep_turns -= 1
+		if sleep_turns <= 1:
+			clear_status()
+			popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+	elif status == "freeze" and r != status_round and _chance(THAW_CHANCE):
+		clear_status()
+		popup("Descongelou!", Color(0.7, 0.95, 1.0), 0.9)
+	if confusion_t > 0.0 and r != confusion_round:
+		confusion_turns -= 1
+		if confusion_turns <= 1:
+			confusion_t = 0.0
+			popup("Saiu da confusão!", Color(0.9, 0.8, 1.0), 0.9)
+
+
+func _chance(p: float) -> bool:
+	if arena and arena.get("rng"):
+		return arena.rng.randf() < p
+	return randf() < p
+
+
+## Ritmo da luta para o dano físico de tempo real (batida no arremesso, chão queimado): igual ao
+## original até o ritmo padrão do 1x1. O dano de fim de turno (status, clima, semente) NÃO usa: segue
+## o oficial puro (docs/MECANICAS.md, "Fim de turno").
 func dot_scale() -> float:
 	if arena == null or not arena.get("moves"):
 		return 1.0
 	return clampf(arena.moves.pace() / BattleMoves.DAMAGE_PACE, 0.0, 1.0)
 
 
-func _dot(amount: int, why: String, col: Color) -> void:
+## Dano de fim de turno (veneno, queimadura, semente, clima...): popup "-12 veneno" e clarão curto na
+## cor do efeito. Magic Guard segura (devolve 0). Devolve o dano tirado.
+func residual_damage(amount: int, why: String, col: Color) -> int:
+	if not alive() or amount <= 0:
+		return 0
 	var ab = arena.get("abilities") if arena else null
 	if ab and ab.has_method("no_indirect") and ab.no_indirect(self):
-		return
-	popup("-%d %s" % [amount, why], col, 0.8)
+		return 0
+	amount = mini(amount, hp)
+	popup("-%d %s" % [amount, why], col, 0.85, 0.3)
 	take_damage(amount, Vector3.ZERO, 0.0)
+	flash(col.lerp(Color.WHITE, 0.3) * 1.6, RESIDUAL_FLASH)
+	return amount
+
+
+## Cura de fim de turno (Leftovers, Aqua Ring, Grassy...): popup "+5 Leftovers" e clarão verde.
+## Devolve quanto curou (0 com HP cheio ou Heal Block).
+func residual_heal(amount: int, why: String) -> int:
+	if not alive() or amount <= 0 or hp >= max_hp:
+		return 0
+	var before := hp
+	heal(amount)
+	var got := hp - before
+	if got > 0:
+		popup("+%d %s" % [got, why], Color(0.5, 1.0, 0.55), 0.85, 0.3, "heal")
+		flash(Color(1.0, 2.0, 1.1), RESIDUAL_FLASH)
+	return got
+
+
+## Clarão de cor no sprite por `secs` s.
+func flash(col: Color, secs: float) -> void:
+	_flash_col = col
+	_flash_t = maxf(_flash_t, secs)
+
+
+## Item segurado que age sozinho (frutinha no limite de HP ou contra status): BattleEndTurn.held_check.
+func _held_check() -> void:
+	var et = arena.get("end_turn") if arena else null
+	if et and et.has_method("held_check"):
+		et.held_check(self)
 
 
 func heal(n: int) -> void:
@@ -757,9 +872,9 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 		impact_knock += k
 	else:
 		knock = k
-	if status == "sleep" and knockback > 0.0:
-		clear_status()
+	# Golpe não acorda quem dorme (oficial): o sono só acaba pelo contador (try_act).
 	if amount > 0:
+		_flash_col = FLASH_COL
 		_flash_t = maxf(imp, 0.12)
 		if has_dir and look and hp > 0:
 			look.hurt()
@@ -772,6 +887,8 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 			refresh_label()
 			return imp
 		_faint()
+	elif amount > 0:
+		_held_check()
 	return imp
 
 
@@ -821,8 +938,10 @@ func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15, style := "")
 # --- Por frame ---
 
 
-## Avança timers, status e stamina. dt já escalado pela velocidade da luta.
+## Avança timers e stamina (o status conta em turnos: try_act e BattleEndTurn). dt já escalado.
 func tick(dt: float) -> void:
+	if alive():
+		_check_turn()
 	if impact_t > 0.0:
 		impact_t = maxf(impact_t - dt, 0.0)
 		if impact_t <= 0.0 and impact_knock != Vector3.ZERO:
@@ -836,7 +955,6 @@ func tick(dt: float) -> void:
 	trap_t = maxf(trap_t - dt, 0.0)
 	land_t = maxf(land_t - dt, 0.0)
 	evasion_t = maxf(evasion_t - dt, 0.0)
-	confusion_t = maxf(confusion_t - dt, 0.0)
 	struggle_cd = maxf(struggle_cd - dt, 0.0)
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
 	for k in move_cd.keys():
@@ -850,7 +968,6 @@ func tick(dt: float) -> void:
 			root_t = 0.0
 			if can_act():
 				cb.call()
-	_tick_status(dt)
 	if stagger_t > 0.0:
 		stagger_t = maxf(stagger_t - dt, 0.0)
 		stamina = 0.0

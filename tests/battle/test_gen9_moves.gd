@@ -322,14 +322,22 @@ func _toxic_and_freeze() -> void:
 	check(e.apply_status("toxic"), "Toxic")
 	check(e.mon.status == "poison", "fora da luta vira veneno comum")
 	_run(a, 1.05)
+	check(e.hp == hp0, "Toxic não tira HP por segundo (fim de turno)")
+	a.end_turn.run()
 	var d1 := hp0 - e.hp
-	_run(a, 1.0)
+	a.end_turn.run()
 	var d2 := hp0 - e.hp - d1
-	check(d1 == maxi(1, int(e.max_hp / 32.0)) and d2 > d1, "Toxic piora (%d, %d)" % [d1, d2])
+	var u := maxi(1, int(e.max_hp / 16.0))
+	check(d1 == u and d2 == 2 * u, "Toxic piora: 1/16, 2/16 (%d, %d)" % [d1, d2])
 	e.clear_status()
 	check(e.apply_status("freeze") and not e.can_act(), "congelado não age")
 	_run(a, 2.6)
-	check(e.status == "" and e.can_act(), "descongela sozinho")
+	check(e.status == "freeze", "congelado não descongela por tempo")
+	var tries := 0
+	while e.status == "freeze" and tries < 200:
+		e.try_act()
+		tries += 1
+	check(e.status == "" and e.can_act(), "descongela na tentativa de agir (20%%, %d)" % tries)
 	e.apply_status("freeze")
 	a.moves.hit(p, e, Dex.move("ember"), Vector3.FORWARD)
 	check(e.status != "freeze", "golpe de fogo descongela")
@@ -397,8 +405,9 @@ func _field_moves() -> void:
 		near(p.stat("spe"), spe0 * 2.0, 0.01) and near(e.stat("spe"), spe_e, 0.01),
 		"Tailwind dobra a Speed do lado"
 	)
-	_run(a, BattleMoveEffects.TAILWIND_TURNS * BattleMoveEffects.TURN)
-	check(near(p.stat("spe"), spe0, 0.01), "Tailwind acaba")
+	for i in BattleMoveEffects.TAILWIND_TURNS:
+		a.end_turn.run()
+	check(near(p.stat("spe"), spe0, 0.01), "Tailwind acaba em 4 rodadas")
 	_ready_all(p)
 	check(a.moves.use(p, "light_screen"), "Light Screen")
 	_run(a, 0.4)
@@ -484,8 +493,9 @@ func _support() -> void:
 	check(a.moves.use(p, "roost"), "Roost")
 	_run(a, 0.4)
 	check(p.hp >= hp0 + p.max_hp / 2 - 1 and not "flying" in p.types, "Roost cura e tira o Voador")
-	_run(a, BattleMoveEffects.ROOST_TIME + 0.2)
-	check("flying" in p.types, "Voador volta depois do Roost")
+	a.end_turn.run()
+	_run(a, 0.1)
+	check("flying" in p.types, "Voador volta no fim da rodada do Roost")
 	check(not fx.usable(p, Dex.move("healing_wish")), "Healing Wish sem reserva falha")
 	e.moves = ["mean_look", "ember"]
 	a.moves.hit(e, p, Dex.move("mean_look"), Vector3.BACK)
@@ -659,7 +669,7 @@ func _endure_and_false_swipe() -> void:
 	e.hp = 2
 	a.moves.hit(p, e, Dex.move("body_slam"), Vector3.FORWARD)
 	check(e.hp == 1, "Endure aguenta com 1 HP")
-	_run(a, BattleMoveEffects.PROTECT_TIME + 0.2)
+	a.end_turn.run()
 	e.immortal = true
 	e.hp = 1
 	a.moves.hit(p, e, Dex.move("tackle"), Vector3.FORWARD)
@@ -735,13 +745,14 @@ func _terrains() -> void:
 	a.moves.hit(p, e, Dex.move("ice_spinner"), Vector3.FORWARD)
 	check(not fx.active(fx.field, "misty"), "Ice Spinner destrói o terreno")
 	check(int(fx.move_for(p, Dex.move("grassy_glide")).get("priority", 0)) == 0, "Glide sem grama")
-	fx.field["grassy"] = fx.now + 5.0
+	fx.set_rounds(fx.field, "grassy", BattleMoveEffects.FIELD_TURNS)
 	check(
 		int(fx.move_for(p, Dex.move("grassy_glide")).get("priority", 0)) == 1,
 		"Grassy Glide +1 na grama"
 	)
-	_run(a, 5.2)
-	check(not fx.active(fx.field, "grassy"), "terreno acaba")
+	for i in BattleMoveEffects.FIELD_TURNS:
+		a.end_turn.run()
+	check(not fx.active(fx.field, "grassy"), "terreno acaba em 5 rodadas")
 	a.free()
 
 
@@ -765,12 +776,12 @@ func _conditional_power() -> void:
 	p.clear_status()
 	var wb := Dex.move("weather_ball")
 	check(fx.adjust_move(p, e, wb).type == "normal", "Weather Ball sem clima é Normal")
-	fx.set_weather("rain", 5.0)
+	fx.set_weather("rain", 5)
 	var w2 := fx.adjust_move(p, e, wb)
 	check(
 		w2.type == "water" and near(float(w2.power), 100.0, 0.1), "Weather Ball na chuva: Água 100"
 	)
-	fx.set_weather("sun", 5.0)
+	fx.set_weather("sun", 5)
 	check(fx.adjust_move(p, e, wb).type == "fire", "Weather Ball no sol: Fogo")
 	p.hp = p.max_hp / 2
 	check(
@@ -802,9 +813,9 @@ func _jealousy_and_mist() -> void:
 	a.moves.hit(p, e, Dex.move("burning_jealousy"), Vector3.FORWARD)
 	check(e.status == "burn", "Burning Jealousy queima quem subiu atributo")
 	e.clear_status()
-	_run(a, BattleMoveEffects.TURN + 0.1)
+	_run(a, BattleTurns.ROUND_SECS + 0.1)
 	a.moves.hit(p, e, Dex.move("burning_jealousy"), Vector3.FORWARD)
-	check(e.status == "", "só vale o último turno")
+	check(e.status == "", "só vale o turno (rodada) em que subiu")
 	var lo := Dex.move("lash_out")
 	check(near(float(fx.adjust_move(p, e, lo).power), 75.0, 0.1), "Lash Out normal")
 	a.moves.change_stage(p, "atk", -1, e)
@@ -828,15 +839,16 @@ func _taunt_and_sleep() -> void:
 	a.moves.hit(p, e, Dex.move("taunt"), Vector3.FORWARD)
 	check(not fx.usable(e, Dex.move("growl")), "Taunt bloqueia golpe de status")
 	check(fx.usable(e, Dex.move("tackle")), "Taunt deixa atacar")
-	_run(a, BattleMoveEffects.TAUNT_TURNS * BattleMoveEffects.TURN + 0.1)
-	check(fx.usable(e, Dex.move("growl")), "Taunt acaba")
+	for i in BattleMoveEffects.TAUNT_TURNS:
+		a.end_turn.run()
+	check(fx.usable(e, Dex.move("growl")), "Taunt acaba em 3 rodadas")
 	check(not fx.usable(p, Dex.move("fake_out")), "Fake Out só logo ao entrar")
 	fx.st(p).entered = fx.now
 	check(fx.usable(p, Dex.move("fake_out")), "Fake Out ao entrar")
 	p.moves = ["snore", "ember"]
 	check(not fx.usable(p, Dex.move("snore")), "Snore acordado falha")
 	p.apply_status("sleep")
-	p.status_t = 5.0
+	p.sleep_turns = 5
 	check(not a.moves.use(p, "ember"), "dormindo não solta golpe comum")
 	check(a.moves.use(p, "snore"), "Snore sai dormindo")
 	_run(a, 1.0)
@@ -846,8 +858,9 @@ func _taunt_and_sleep() -> void:
 	check(a.moves.use(p, "wish"), "Wish")
 	_run(a, 0.3)
 	check(p.hp == 10, "Wish ainda não cura")
-	_run(a, BattleMoveEffects.TURN)
-	check(p.hp >= mini(10 + p.max_hp / 2, p.max_hp), "Wish cura metade um turno depois")
+	a.end_turn.run()
+	a.end_turn.run()
+	check(p.hp >= mini(10 + p.max_hp / 2, p.max_hp), "Wish cura metade no fim do turno seguinte")
 	a.free()
 
 

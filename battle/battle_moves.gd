@@ -830,15 +830,16 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	)
 
 
-## Future Sight: avisa agora e o golpe cai ~2 turnos depois no alvo de então (o usuário fica livre).
+## Future Sight: avisa agora e o golpe cai no fim do 2º turno depois deste (BattleEndTurn), no alvo de
+## então (o usuário fica livre).
 func _future_sight(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> void:
 	user.popup("Previu o futuro!", Dex.type_color("psychic"))
-	arena.later(
-		maxf(BattleMoveEffects.FUTURE_DELAY - float(mv.get("windup", 1.0)), 0.0),
-		func() -> void:
-			if is_instance_valid(user) and user.alive():
-				_aoe_target(user, mv, user.aim_dir(), miss)
-	)
+	effects.add_future(user, mv, miss)
+
+
+## O Future Sight guardado chega (fim de turno): sai como área no alvo de agora.
+func land_future(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> void:
+	_aoe_target(user, mv, user.aim_dir(), miss)
 
 
 func _ground_immune(mv: Dictionary, t: BattleFighter) -> bool:

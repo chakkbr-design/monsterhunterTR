@@ -218,6 +218,48 @@
    }
   },
   {
+   "id": "sitrus_berry",
+   "name": "Sitrus Berry",
+   "category": "berries",
+   "price": 20,
+   "effect": {
+    "held": "sitrus"
+   },
+   "description": "If held by a Pokémon, it restores 1/4 of its max HP when its HP drops to half or below.",
+   "icon": {
+    "shape": "berry",
+    "color": "#e8c83a"
+   }
+  },
+  {
+   "id": "leftovers",
+   "name": "Leftovers",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "leftovers"
+   },
+   "description": "If held by a Pokémon, it restores 1/16 of its max HP at the end of every turn.",
+   "icon": {
+    "shape": "berry",
+    "color": "#d6d0b8"
+   }
+  },
+  {
+   "id": "black_sludge",
+   "name": "Black Sludge",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "black_sludge"
+   },
+   "description": "Restores 1/16 of max HP each turn to Poison types; others lose 1/8 of their max HP.",
+   "icon": {
+    "shape": "vial",
+    "color": "#3a2a4a"
+   }
+  },
+  {
    "id": "rare_candy",
    "name": "Rare Candy",
    "category": "medicine",

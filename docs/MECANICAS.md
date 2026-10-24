@@ -92,20 +92,33 @@ Force tira o efeito e dá 1,3x, Shield Dust bloqueia.
 
 ## 7. Status e duração
 
-| Status | Oficial | Jogo (`fighter.gd` `STATUS_TIME`, `_tick_status`) |
+Desde 2026-10-24 os status seguem o oficial: duração em turnos (= rodadas de `BattleTurns`) e dano só no
+fim de turno (`battle/battle_end_turn.gd`, uma vez por rodada; ver "Fim de turno (Gen 9)").
+
+| Status | Oficial | Jogo (`fighter.gd`, `battle_end_turn.gd`) |
 |---|---|---|
-| Queimadura | 1/16 por turno, físico 0,5x | 6 s, 1/16 por s, físico 0,5x na fórmula |
-| Veneno | 1/8 por turno (Toxic n/16) | 6 s, 1/12 por s |
-| Paralisia | Speed 0,5x, 25% não age | 6 s, Speed 0,5x, 20% de falhar o golpe |
-| Sono | 1-3 turnos | 3 s (acorda ao levar golpe com empurrão) |
-| Congelamento | 20% de descongelar por turno | não existe ainda |
-| Confusão | 2-5 turnos, 33% se acerta | 4 s, 33% de sair em direção aleatória |
-| Hesitar | só se o alvo age depois | 0,5 s parado |
-| Leech Seed | 1/8 por turno para o usuário | 6 s, 1/16 por s para quem plantou |
+| Queimadura | 1/16 por turno, físico 0,5x, não acaba sozinha | igual |
+| Veneno | 1/8 por turno, não acaba sozinho | igual |
+| Toxic | n/16 no n-ésimo turno (n até 15, zera na troca) | igual (`toxic_n`; fora da luta vira veneno comum) |
+| Paralisia | Speed 0,5x, 25% não age, não acaba sozinha | não acaba sozinha, Speed 0,5x; falhar o golpe segue em 20% (`BattleMoves.PARALYSIS_FAIL`, não mexido) |
+| Sono | 1-3 turnos (contador 2-4 que desce ao tentar agir); Rest 2 | igual (`sleep_turns`, `SLEEP_COUNTER`, `REST_COUNTER`); golpe não acorda |
+| Congelamento | 20% de descongelar a cada tentativa de agir; Fogo descongela | igual (`THAW_CHANCE`) |
+| Confusão | 2-5 turnos (contador desce ao tentar agir), 33% | contador 2-5 (`confusion_turns`); 33% de sair em direção aleatória |
+| Hesitar | só se o alvo age depois | 0,5 s parado (tempo real) |
+| Leech Seed | volátil, 1/8 por turno para quem plantou | igual (`seeded`, convive com outro status, sai na troca ou com Rapid Spin) |
+
+"Tentativa de agir": para quem segue a fila de `BattleTurns` (IA em campo), o contador desce quando a vez
+dele começa (`fighter.gd` `try_act`); quem acorda age na mesma vez, como no oficial. Quem não segue a
+fila (Pokémon no teclado, `turn_mode` false) conta no fim de cada rodada, menos a rodada em que o status
+começou (`round_count`). Mudou do tempo real antigo: o golpe com empurrão acordava; agora não acorda.
 
 Imunidades oficiais: Fogo não queima, Elétrico não paralisa, Veneno não envenena, Planta não pega
-Leech Seed (`battle_moves.gd` `STATUS_IMMUNE`). O dano por segundo acompanha o ritmo (`fighter.gd`
-`dot_scale`).
+Leech Seed (`battle_moves.gd` `STATUS_IMMUNE`).
+
+**Dano residual sem o ritmo.** Regra do Caio: o 0,75 (`DAMAGE_PACE`) vale só sobre o dano final dos
+golpes. Veneno, queimadura, Toxic, semente, Curse, Wrap/Bind, clima e Black Sludge (e as curas de fim de
+turno) usam o valor oficial puro: `fighter.dot_scale()` não entra mais neles. `dot_scale` ficou só no dano
+físico de tempo real (batida do arremesso em `battle_physics.gd`, chão queimado em `battle_field.gd`).
 
 ## 8. Regras de dupla
 
@@ -145,11 +158,14 @@ Burning Bulwark).
 
 **Jogo:** a defesa em tempo real é física: pular investida/terremoto, sair da área avisada, esquiva pela
 evasão, CLASH de duas investidas (`battle_arena.gd` `_clash`), Dig/Fly fora de alcance (abaixo). Os golpes
-de proteção (`battle_move_effects.gd`) viram janelas curtas: Protect 0,8 s (Feint quebra), Quick Guard
-1,2 s, Endure 0,8 s (aguenta com 1 HP), Wide Guard 0,8 s (golpes de vários alvos no lado). Counter/Mirror
-Coat (-5): postura de 1 s parado; o golpe físico/especial recebido nela volta 2x para quem bateu.
-Substitute: boneco com 1/4 do HP que leva dano e status até quebrar (som atravessa). Sem a chance
-reduzida do uso seguido.
+de proteção (`battle_move_effects.gd`) valem a rodada inteira, como o turno do oficial: do uso até o fim
+da rodada (`BattleEndTurn`, passo 17): Protect/Detect (Feint quebra), Quick Guard, Endure (aguenta com 1
+HP), Wide Guard (golpes de vários alvos no lado), e também Follow Me/Rage Powder e Roost. Protect/Detect
+em rodadas seguidas: chance 1, 1/3, 1/9... (`_stall_ok`), zera quando uma rodada passa sem usar (Detect
+ainda não existe nos dados; o handler `special: "protect"` já serve). Com `turn_mode` false a rodada é o
+relógio de `ROUND_SECS`. Counter/Mirror Coat (-5): postura de 1 s parado (tempo real); o golpe
+físico/especial recebido nela volta 2x para quem bateu. Substitute: boneco com 1/4 do HP que leva dano e
+status até quebrar (som atravessa).
 
 ## 10. Clima e terreno
 
@@ -158,17 +174,67 @@ tempestade de areia 1/16 por turno em quem não é Pedra/Terra/Aço e +50% Def. 
 +50% Def de Gelo. Terrenos 5 turnos, 1,3x no tipo para quem está no chão: Elétrico (sem sono), Grama
 (cura 1/16, Earthquake 0,5x), Psíquico (bloqueia prioridade), Névoa (Dragão 0,5x, sem status).
 
-**Jogo:** a fórmula já aceita clima (`Damage.weather_mult`) e terreno (`terrain_mult`), mas a arena ainda
-não tem clima de luta: Rain Dance sobe At. Esp. "Terreno" do jogo é outra coisa: marcas no chão que
-mudam o andar e às vezes queimam (cratera, buraco do Dig, poça, gelo, grama queimada, Spikes) em
+**Jogo:** clima de luta em `battle_abilities.gd` (`weather_now`): Rain Dance/Sunny Day/Sandstorm e
+Drought criam clima por 5 rodadas (`set_weather_rounds`), contadas no fim de turno; como no oficial a
+rodada conta antes do efeito, então no 5º fim de turno o clima acaba sem tirar HP (a areia tira 4 vezes).
+Chuva/sol 1,5x/0,5x; areia 1/16 por turno em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force,
+Magic Guard, Overcoat); neve (`hail`) da Gen 9 sem dano. `set_weather(kind, secs)` em segundos ficou só
+para testes; `arena.opts.weather` vale a luta toda. "Terreno" do jogo também são marcas no chão que mudam
+o andar e às vezes queimam (cratera, buraco do Dig, poça, gelo, grama queimada, Spikes) em
 `battle_field.gd`.
 
-Terrenos de golpe (`battle_move_effects.gd`, 5 turnos de 1,6 s, um tira o outro): Grama (cura 1/16 por
-turno, Planta 1,3x, Earthquake 0,5x), Elétrico (Elétrico 1,3x, ninguém no chão dorme), Névoa (no chão
-sem status nem confusão, Dragão 0,5x). Ice Spinner e Defog apagam. Rain Dance/Sunny Day/Sandstorm criam
-clima. Armadilhas: Spikes (marca no chão, 1/8 em quem pisa e não voa), Stealth Rock (pedras em volta do
-adversário, 1/8 x eficácia de Pedra, pega quem voa), Toxic Spikes; Rapid Spin tira as do adversário,
-Defog todas.
+Terrenos de golpe (`battle_move_effects.gd`, 5 rodadas, um tira o outro): Grama (cura 1/16 no fim de
+turno em quem está no chão, Planta 1,3x, Earthquake 0,5x), Elétrico (Elétrico 1,3x, ninguém no chão
+dorme), Névoa (no chão sem status nem confusão, Dragão 0,5x). Ice Spinner e Defog apagam. Telas e lado:
+Reflect/Light Screen/Safeguard/Mist 5 rodadas, Tailwind 4, Gravity 5, Trick Room 5
+(`BattleTurns.trick_room_rounds`). Armadilhas: Spikes (marca no chão, 1/8 em quem pisa e não voa),
+Stealth Rock (pedras em volta do adversário, 1/8 x eficácia de Pedra, pega quem voa), Toxic Spikes;
+Rapid Spin tira as do adversário (e a semente e o Wrap de quem usa), Defog todas.
+
+## Fim de turno (Gen 9)
+
+**Oficial:** depois que todos agiram, os efeitos residuais saem numa ordem fixa (Showdown "residual
+order"; dentro de cada passo pela Speed, Trick Room invertendo). Cada efeito com duração conta o turno
+antes de agir: no turno em que acaba, não age.
+
+**Jogo:** `battle/battle_end_turn.gd` (`arena.end_turn`), `run()` chamado UMA vez por rodada por
+`BattleTurns._end_round` -> `arena.end_of_round` (com `turn_mode` false, a cada `ROUND_SECS`). Mostra
+cada efeito na hora: popup no lutador ("-12 veneno", "+5 Leftovers"), clarão curto da cor do efeito no
+sprite (`fighter.residual_damage/residual_heal/flash`), aviso no log quando algo de campo acaba e a linha
+"Fim da rodada" no HUD (`warn`). `last_log` guarda os passos na ordem (testes).
+
+| # | Passo | Valor |
+|---|---|---|
+| 1 | Clima: conta a rodada; areia; Rain Dish, Dry Skin, Solar Power | areia 1/16; Rain Dish +1/16; Dry Skin +1/8 chuva, -1/8 sol; Solar Power -1/8 |
+| 2 | Future Sight cai (fim do 2º turno depois do uso) | dano do golpe |
+| 3 | Wish cura (fim do turno seguinte) | +1/2 do HP de quem desejou |
+| 4 | Por lutador: Grassy Terrain, Shed Skin, Leftovers / Black Sludge | +1/16; 1/3 de curar; +1/16; Black Sludge +1/16 no Veneno, -1/8 nos outros |
+| 5 | Aqua Ring | +1/16 |
+| 6 | Ingrain | +1/16 |
+| 7 | Leech Seed | -1/8, o mesmo HP vai para quem plantou (ou quem está no lugar dele) |
+| 8 | Veneno / Toxic (Poison Heal cura no lugar) | -1/8 / -n/16; Poison Heal +1/8 |
+| 9 | Queimadura | -1/16 |
+| 10 | Curse (Fantasma) | -1/4 até sair de campo |
+| 11 | Wrap/Bind, Fire Spin, Whirlpool, Sand Tomb... | -1/8 por 4-5 turnos; acaba se quem prendeu sai; não deixa fugir |
+| 12 | Fim de Taunt (3), Encore (3), Disable (4), Heal Block, Throat Chop (2); Yawn dorme | — |
+| 13 | Lado: Reflect, Light Screen, Safeguard, Mist (5), Tailwind (4) | — |
+| 14 | Campo: Trick Room (5), Gravity (5), terrenos (5) | — |
+| 15 | Uproar (3) | — |
+| 16 | Speed Boost (+1, não no turno em que entrou) e os adaptados Natural Cure, Regenerator 1/16, Pickup 2% | — |
+| 17 | Acaba o que vale só a rodada: Protect, Endure, Quick/Wide Guard, Roost, Follow Me (e conta o Laser Focus, 2) | — |
+| 18 | Sono/congelado/confusão de quem não segue a fila | — |
+
+Todo dano/cura residual: `floor(HP máx. x fração)`, mínimo 1 (Toxic: `floor(HP/16)` x n). Magic Guard
+segura o dano. Frutinhas seguradas agem na hora, como no oficial (não no fim de turno): Oran +10 e Sitrus
++1/4 com HP <= 1/2, Pecha contra veneno, Persim contra confusão (`BattleEndTurn.held_check`, chamado por
+`take_damage`/`apply_status`). Item segurado = `trainer_item` (o mesmo de Fling/Knock Off/Trick);
+Leftovers, Black Sludge e Sitrus Berry entraram em `data/items.json` (sem `hp`/`cure` no efeito, para a
+IA não "usar" como item do treinador nem aparecerem na lista do treino).
+
+Adaptado / fora do oficial: o turno é a rodada de `ROUND_SECS` (4 s); Natural Cure e Regenerator agem em
+campo; sono/confusão de quem não segue a fila contam no fim da rodada; Future Sight só cai se quem usou
+ainda está vivo. Não existem nos dados: Nightmare, Salt Cure, Hydration, Ice Body, Moody, Binding Band,
+Big Root, Detect (handler pronto). Sem Trick Room nos golpes (só `toggle_trick_room`).
 
 ## 11. Semi-invulnerável (Dig, Fly, Bounce, Dive)
 
@@ -215,6 +281,12 @@ Não existe empurrão.
 
 ## Testes
 
+`tests/battle/test_end_turn.gd`: fim de turno uma vez por rodada, valores oficiais (veneno, queimadura,
+Toxic, Leftovers, Black Sludge, frutinhas, Leech Seed, areia e imunidades, Curse, Wrap, Aqua Ring,
+Grassy), a ordem dos passos, a Speed dentro do passo (e o Trick Room), sono/confusão/congelado em
+tentativas, clima/Tailwind/telas/Trick Room/Gravity/Taunt/Disable em rodadas, Protect a rodada toda e o
+1/3 no uso seguido, Follow Me, Yawn, Wish, Future Sight e o dano residual sem o `damage_pace`.
+
 `tests/battle/test_gen9_physics.gd`: fórmula (spread, queimadura, Guts, pokeRound, clima), spread 0,75x
 no Earthquake, parceiro no `all_other_pokemon`, Swift nos dois, alvo único na dupla (cone, raio, multi-hit),
 mesmo dano no 1x1 e 2x2, empurrão por eficácia/crítico/peso, Whirlwind, batida na cerca e na caixa, Body
@@ -228,7 +300,8 @@ Poison Heal, dano da areia) age no fim de cada turno, também pela Speed. Lightn
 golpes de alvo único do tipo, ficam imunes e ganham +1 At. Esp.; golpes de vários alvos não são puxados.
 
 **Jogo (`battle/battle_abilities.gd`, `data/abilities.json`):** o turno é a rodada de `BattleTurns`
-(`ROUND_SECS`). A arena chama `on_round_end()` no fim de cada rodada; BattleTurns consulta
+(`ROUND_SECS`). O fim de turno é `BattleEndTurn.run()` (os passos 1, 4, 8 e 16 chamam as habilidades;
+`on_round_end()` faz só a parte delas); BattleTurns consulta
 `order_speed_mult(f)` e `priority_bonus(f, mv)` para a fila; `BattleMoves.hit` chama
 `redirect(user, target, mv)` antes de `immune`. A ordem de ativação usa `arena.turns.speed_order`
 (Trick Room inverte, empate no sorteio).
@@ -236,7 +309,7 @@ golpes de alvo único do tipo, ficam imunes e ganham +1 At. Esp.; golpes de vár
 | Habilidade | Segue o oficial | Adaptado ao tempo real / rodada |
 |---|---|---|
 | Intimidate | -1 Ataque em todos os inimigos ativos (os dois no 2x2), na entrada e na troca; Inner Focus, Oblivious, Own Tempo seguram; Defiant/Competitive tomam o -1 e ganham +2 | espera o inimigo estar em campo |
-| Drought | sol ao entrar, 5 turnos | 5 rodadas (`set_weather_rounds`); clima de golpe segue em segundos |
+| Drought | sol ao entrar, 5 turnos | 5 rodadas (`set_weather_rounds`), como o clima de golpe |
 | Cloud Nine, Frisk, Unnerve | anunciam ao entrar | Unnerve segura o item do treinador (não há frutinha) |
 | Lightning Rod, Storm Drain | puxam golpe de alvo único do tipo mirado no parceiro; imunes, +1 At. Esp.; Discharge/Bubble (vários alvos) não | — |
 | Speed Boost | +1 Speed no fim do turno, não no turno em que entrou | fim da rodada (antes: a cada 8 s) |
