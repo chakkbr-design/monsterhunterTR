@@ -3,12 +3,16 @@ extends Node3D
 ## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?,
 ##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada),
 ##        center? (Vector3 global: quadra num lugar certo), arena? (Vector2 [w, d]), trainer_node? (Node3D),
-##        arena_color? (Color)}.
+##        arena_color? (Color), tutorial? (bool: cartões de dica e lição da 1ª luta, battle_tutorial.gd)}.
 ## Quadra num lugar certo (o original: Battle.start_trainer_battle com opts.center; trainers.json "center"
 ## + "arena" no ginásio): ver _setup_court.
 ## Com `manual = true` nada anda sozinho: quem chama step(dt) (testes headless).
 
 signal finished(result: Dictionary)
+## Eventos que o tutorial ouve (o original: Game.battle_started, Moves.move_used, Moves.hit_landed).
+signal fight_started
+signal move_used(user: BattleFighter, mv: Dictionary)
+signal hit_landed(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 
 const ARENA_SIZE := 12.0
 const START_GAP := 6.0
@@ -62,6 +66,7 @@ const EXP_LEVEL_SECS := 0.7
 ## Velocidade da batalha das opções (o original: Lento 0.6x, o padrão; Rápido 1.0x).
 const BATTLE_SPEEDS := [0.6, 1.0]
 const SETTINGS := "res://ui/front/settings.gd"
+const TUTORIAL := preload("res://battle/battle_tutorial.gd")
 
 var manual := false
 var rng := RandomNumberGenerator.new()
@@ -123,6 +128,13 @@ var _last_exp: Array = []
 var _xp_shown := -1.0
 var _xp_level := 0
 var _revealed := true
+## Trava da lição do tutorial (battle.gd do original): só o golpe tut_move, andar só com tut_walk,
+## a IA parada com tut_hold_foe.
+var tut_locked := false
+var tut_move := -1
+var tut_walk := false
+var tut_hold_foe := false
+var tutorial: Node
 
 
 func _physics_process(delta: float) -> void:
@@ -159,6 +171,10 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
+	clear_tut_lock()
+	if bool(o.get("tutorial", false)) and tutorial == null:
+		tutorial = TUTORIAL.new(self)
+		add_child(tutorial)
 	var pi := _next_healthy(-1)
 	var ei := _next_enemy(-1)
 	if pi < 0 or ei < 0:
@@ -605,6 +621,7 @@ func step(dt: float) -> void:
 				state = "fight"
 				hud.intro_bars(false)
 				hud.fight_flash("Lutem!")
+				fight_started.emit()
 		"fight":
 			if not pause_open:
 				_fight_step(dt)
@@ -707,7 +724,7 @@ func _fight_step(dt: float) -> void:
 			if f.controller == "player":
 				want = _player_input(f)
 				speed = BattleFighter.PLAYER_SPEED
-			elif f.controller == "ai" and f.impact_t <= 0.0:
+			elif f.controller == "ai" and f.impact_t <= 0.0 and not tut_hold_foe:
 				want = f.ai.step(dt)
 		var before: Vector3 = f.position
 		f.drive(dt, want, speed)
@@ -762,6 +779,8 @@ func _player_input(f: BattleFighter) -> Vector3:
 	if Input.is_action_just_pressed("pause"):
 		open_pause()
 		return Vector3.ZERO
+	if tut_locked:
+		return _locked_input(f)
 	if Input.is_action_just_pressed("interact"):
 		open_menu("bag")
 		return Vector3.ZERO
@@ -783,6 +802,34 @@ func _player_input(f: BattleFighter) -> Vector3:
 	if Input.is_action_just_pressed("throw_ball"):
 		throw_ball()
 	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
+
+
+## Lição do tutorial (combatant.gd read_local_intent/apply_intent do original): só o golpe liberado,
+## sem pulo nem corrida, e parado a não ser que tut_walk.
+func _locked_input(f: BattleFighter) -> Vector3:
+	f.sprinting = false
+	var k := tut_move
+	if (
+		k >= 0
+		and k < mini(f.moves.size(), 4)
+		and Input.is_action_just_pressed("move_%d" % (k + 1))
+		and f.can_act()
+	):
+		if f.out_of_pp():
+			f.struggle()
+		else:
+			moves.use(f, String(f.moves[k]), true)
+	if not tut_walk:
+		return Vector3.ZERO
+	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
+
+
+func clear_tut_lock() -> void:
+	tut_locked = false
+	tut_move = -1
+	tut_walk = false
+	tut_hold_foe = false
 
 
 # --- Ações do jogador ---
@@ -1616,6 +1663,7 @@ func _end(outcome: String, delay: float, extra := {}) -> void:
 
 func _finish() -> void:
 	state = "done"
+	clear_tut_lock()
 	for f in fighters:
 		if is_instance_valid(f):
 			f.write_back()
@@ -1691,6 +1739,7 @@ func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 			"%s usou %s!" % [user.mon.display_name, String(mv.get("name", mv.get("id", "")))],
 			"move"
 		)
+	move_used.emit(user, mv)
 
 
 ## Popup de batalha: vai para o log e para o HUD (em tela, ancorado em `at`, local da arena).

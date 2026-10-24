@@ -814,6 +814,19 @@ func rival_battle() -> void:
 	if rival and p:
 		face_each_other(rival, p)
 	await say("{RIVAL}", ["Espere, {PLAYER}! Vamos ver qual Pokémon é mais forte!"])
+	# story.gd:437-445 do original: com "dicas de batalha", na 1ª vez o Oak vai até a borda da quadra
+	# e avisa que vai ensinar; a lição em si é o battle_tutorial.gd (opts.tutorial).
+	var oak := actor("oak")
+	if teaches_lesson() and oak:
+		var c := marker_pos(LAB, "rival_battle", p.global_position if p else Vector3.ZERO)
+		await oak_take_lesson_spot(oak, c)
+		await say(
+			OAK,
+			[
+				"{RIVAL} está sempre com tanta pressa.",
+				"{PLAYER}, esta é a sua primeira batalha.\nDeixe-me mostrar como se faz."
+			]
+		)
 	var enemies: Array = []
 	for e in StoryFlags.first_rival_party(Game.flags):
 		enemies.append(Mon.create(String(e[0]), int(e[1])))
@@ -824,7 +837,8 @@ func rival_battle() -> void:
 		"trainer_id": StoryFlags.RIVAL_TRAINER,
 		"trainer_class": "rival",  # prêmio 35 x nível, como o original (não o da Rota 22)
 		"can_run": false,
-		"scripted": true
+		"scripted": true,
+		"tutorial": true  # BattleTutorial.new() do original: sempre, ele decide lição ou cartões
 	}
 	var spot = world.marker(LAB, "rival_battle") if world and world.has_method("marker") else null
 	if spot is Node3D:
@@ -871,6 +885,33 @@ func rival_battle() -> void:
 		rival.queue_free()
 	pop_music()
 	end()
+
+
+## `teaches` do original (story.gd:437): dicas de batalha ligadas, sem autoplay, lição ainda não dada.
+func teaches_lesson() -> bool:
+	var st = load("res://ui/front/settings.gd")
+	var tips: bool = bool(st.load_cfg().get("battle_tips", true)) if st else true
+	return (
+		tips
+		and not auto_battle
+		and not Game.flags.has("tut_battle_lesson")
+		and not flag("rival_battle_done")
+	)
+
+
+## _oak_lesson_spot do original: canto de cima à direita da quadra, 0.7 m para fora no X e 1 m no Z.
+static func oak_lesson_spot(centre: Vector3) -> Vector3:
+	return centre + Vector3(RIVAL_ARENA.x * 0.5 + 0.7, 0, -(RIVAL_ARENA.y * 0.5 + 1.0))
+
+
+## _oak_take_lesson_spot do original: anda primeiro no X (na linha em que está), depois até o ponto,
+## e se vira para o centro da quadra.
+func oak_take_lesson_spot(oak: Node3D, centre: Vector3) -> void:
+	var top := oak_lesson_spot(centre)
+	await walk(oak, Vector3(top.x, oak.global_position.y, oak.global_position.z))
+	await walk(oak, top)
+	if oak.has_method("face"):
+		oak.face(centre)
 
 
 ## Game.heal_with_fade do original: pela RouteWorld (fade, cura, mensagem, jingle) quando existe.

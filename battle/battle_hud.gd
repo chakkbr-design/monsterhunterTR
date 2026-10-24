@@ -276,6 +276,34 @@ func card_text(which := "player") -> String:
 	return c.body.mon.display_name if c.body != null and c.visible else ""
 
 
+## Retângulos em tela para o holofote do tutorial (battle_hud.gd do original).
+func card_rect(which: String) -> Rect2:
+	var c: Control = _foe_card if which == "foe" else _player_card
+	if which == "ally":
+		c = _ally_card
+	return Rect2(c.position, c.size) if c else Rect2()
+
+
+func moves_rect() -> Rect2:
+	if _moves.is_empty():
+		return Rect2()
+	var r := Rect2(_moves[0].position, _moves[0].size)
+	for b in _moves:
+		r = r.merge(Rect2(b.position, b.size))
+	return r
+
+
+func move_rect(i: int) -> Rect2:
+	if i < 0 or i >= _moves.size():
+		return Rect2()
+	return Rect2(_moves[i].position, _moves[i].size)
+
+
+func foe_chips_rect() -> Rect2:
+	var c: Rect2 = _foe_card.chips
+	return Rect2(_foe_card.position + c.position, c.size) if c.size.x > 0.0 else Rect2()
+
+
 # ---------------------------------------------------------------------------
 
 
@@ -296,6 +324,8 @@ class FighterCard:
 	var tag := "SELVAGEM"
 	var balls: Array = []
 	var drawn_name := ""
+	## Onde os chips de estágio (▲▼) foram desenhados, local ao cartão (holofote do tutorial).
+	var chips := Rect2()
 	## >= 0: XP mostrado pela sequência de resultado (barra enchendo) e o nível que ela anuncia.
 	var script_xp := -1.0
 	var script_level := 0
@@ -479,7 +509,7 @@ class FighterCard:
 			tx += sw + gap
 		if body.confusion_t > 0.0:
 			tx += UiDraw.status_pill(self, Vector2(tx, CHIP_Y), "confusion", 10) + gap
-		tx += UiDraw.mod_chips(
+		var cw := UiDraw.mod_chips(
 			self,
 			Vector2(tx, CHIP_Y),
 			body.stages,
@@ -487,6 +517,8 @@ class FighterCard:
 			10,
 			x1 if foe else x1 - 60.0
 		)
+		chips = Rect2(tx, CHIP_Y, cw, 16.0) if cw > 0.0 else Rect2()
+		tx += cw
 		if body.stagger_t > 0.0:
 			UiDraw.text(
 				self, Vector2(tx + 2, CHIP_Y + 14.0), "EXAUSTO", 11, Color(1, 0.55, 0.35), 3

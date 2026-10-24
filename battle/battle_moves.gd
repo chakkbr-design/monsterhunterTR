@@ -312,6 +312,7 @@ func hit(
 		var eff := float(res.eff)
 		if eff == 0.0:
 			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+			_landed(user, target, mv)
 			return
 		var dmg := int(res.damage)
 		var hp_before := target.hp
@@ -362,6 +363,13 @@ func hit(
 					0.15,
 					"status"
 				)
+	_landed(user, target, mv)
+
+
+## Moves.hit_landed do original (o tutorial ouve pela arena).
+func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
+	if arena and arena.has_signal("hit_landed"):
+		arena.emit_signal("hit_landed", user, target, mv)
 
 
 func change_stage(c: BattleFighter, k: String, delta: int) -> void:
