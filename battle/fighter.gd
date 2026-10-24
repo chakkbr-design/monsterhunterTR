@@ -34,7 +34,17 @@ const LUNGE_SPEED := 10.0
 const LUNGE_TIME := 0.2
 const LUNGE_PREPARE := 0.15
 const STRUGGLE_CD := 1.0
-const STATUS_TIME := {"burn": 6.0, "poison": 6.0, "paralysis": 6.0, "sleep": 3.0, "leech": 6.0}
+const STATUS_TIME := {
+	"burn": 6.0,
+	"poison": 6.0,
+	"toxic": 6.0,
+	"paralysis": 6.0,
+	"sleep": 3.0,
+	"leech": 6.0,
+	"freeze": 2.5
+}
+## Toxic: o veneno piora a cada segundo (n/32 do HP no n-ésimo segundo; o comum tira 1/12 fixo).
+const TOXIC_STEP := 1.0 / 32.0
 const CONFUSION_TIME := 4.0
 const FLINCH_TIME := 0.5
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
@@ -48,7 +58,13 @@ const STRUGGLE := {
 	"knockback": 5
 }
 const STATUS_SHORT := {
-	"burn": "BRN", "poison": "PSN", "paralysis": "PAR", "sleep": "SLP", "leech": "SEED"
+	"burn": "BRN",
+	"poison": "PSN",
+	"toxic": "TOX",
+	"paralysis": "PAR",
+	"sleep": "SLP",
+	"leech": "SEED",
+	"freeze": "FRZ"
 }
 
 var arena: Node
@@ -101,6 +117,7 @@ var status := ""
 var status_t := 0.0
 var status_tick := 0.0
 var leech_source: BattleFighter
+var toxic_n := 0
 
 var prepare_t := 0.0
 var prepare_id := ""
@@ -354,7 +371,10 @@ func flat_to(t: Node3D) -> Vector3:
 
 
 func stat(k: String) -> float:
-	return float(stats.get(k, 10)) * StatCalc.stage_mult(int(stages.get(k, 0)))
+	var v := float(stats.get(k, 10)) * StatCalc.stage_mult(int(stages.get(k, 0)))
+	if k == "spe" and arena and arena.get("moves"):
+		v *= arena.moves.effects.speed_mult(self)  # Tailwind
+	return v
 
 
 func crit_stat(k: String, attacking: bool) -> float:
@@ -416,7 +436,14 @@ func height() -> float:
 
 
 func can_act() -> bool:
-	return alive() and stun_t <= 0.0 and stagger_t <= 0.0 and impact_t <= 0.0 and status != "sleep"
+	return (
+		alive()
+		and stun_t <= 0.0
+		and stagger_t <= 0.0
+		and impact_t <= 0.0
+		and status != "sleep"
+		and status != "freeze"
+	)
 
 
 func is_airborne() -> bool:
@@ -499,7 +526,8 @@ func can_jump() -> bool:
 		and lunge_t <= 0.0
 		and motion == ""
 		and launch_t <= 0.0
-	)
+		and not (arena and arena.get("moves") and arena.moves.effects.no_jump())
+	)  # Gravity
 
 
 func start_jump() -> bool:
@@ -612,6 +640,9 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 		leech_source = source
 	if s in Mon.PERSIST_STATUS:
 		mon.status = s
+	elif s == "toxic":
+		toxic_n = 0
+		mon.status = "poison"  # fora da luta o Toxic vira veneno comum (Gen 5+)
 	refresh_label()
 	return true
 
@@ -636,6 +667,13 @@ func _tick_status(dt: float) -> void:
 				_dot(maxi(1, int(max_hp / 16.0 * dot_scale())), "burn", Dex.type_color("fire"))
 			"poison":
 				_dot(maxi(1, int(max_hp / 12.0 * dot_scale())), "poison", Dex.type_color("poison"))
+			"toxic":
+				toxic_n += 1
+				_dot(
+					maxi(1, int(max_hp * TOXIC_STEP * toxic_n * dot_scale())),
+					"toxic",
+					Dex.type_color("poison")
+				)
 			"leech":
 				var d := maxi(1, int(max_hp / 16.0 * dot_scale()))
 				_dot(d, "leech", Dex.type_color("grass"))
@@ -890,8 +928,10 @@ func _tint() -> Color:
 	match status:
 		"burn":
 			c = c.lerp(Color(1, 0.3, 0.1), 0.35)
-		"poison":
-			c = c.lerp(Color(0.6, 0.2, 0.8), 0.35)
+		"poison", "toxic":
+			c = c.lerp(Color(0.6, 0.2, 0.8), 0.35 if status == "poison" else 0.5)
+		"freeze":
+			c = c.lerp(Color(0.6, 0.9, 1.0), 0.55)
 		"paralysis":
 			c = c.lerp(Color(1, 1, 0.2), 0.35)
 		"sleep":

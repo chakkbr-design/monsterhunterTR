@@ -153,6 +153,8 @@ func no_indirect(f: BattleFighter) -> bool:
 func ability_of(f: BattleFighter) -> String:
 	if not is_instance_valid(f) or f.mon == null:
 		return ""
+	if f.has_meta("ability_override"):  # Gastro Acid / Worry Seed
+		return String(f.get_meta("ability_override"))
 	return f.mon.ability
 
 
