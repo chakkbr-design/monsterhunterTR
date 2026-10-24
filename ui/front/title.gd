@@ -12,6 +12,8 @@ const Figure := preload("res://ui/front/figure.gd")
 const NameEntry := preload("res://ui/front/name_entry.gd")
 
 const WORLD_SCENE := "res://world/route_world.tscn"
+## Modo de treinamento: monta dois times e eles lutam sozinhos (ui/training/).
+const TRAINING_SCENE := "res://ui/training/training_setup.tscn"
 const START_SPAWN := {"interior": "player_room", "spawn": "bed"}
 const PROF_NAME := "PROF. CARVALHO"
 const SPLASH_TIME := 2.6
@@ -430,7 +432,7 @@ func _go_menu(at := "") -> void:
 	menu_items = []
 	if game != null and game.has_save():
 		menu_items.append("continue")
-	menu_items.append_array(["new", "options", "credits", "quit"])
+	menu_items.append_array(["new", "training", "options", "credits", "quit"])
 	cursor = maxi(0, menu_items.find(at))
 	_render()
 
@@ -444,6 +446,7 @@ func _go_options() -> void:
 const MENU_TEXT := {
 	"continue": "CONTINUAR",
 	"new": "NOVO JOGO",
+	"training": "MODO DE TREINAMENTO",
 	"options": "OPÇÕES",
 	"credits": "CRÉDITOS",
 	"quit": "SAIR"
@@ -737,11 +740,11 @@ func _continue() -> void:
 	_leave()
 
 
-func _leave() -> void:
+func _leave(scene := WORLD_SCENE) -> void:
 	state = "leaving"
 	var tw := create_tween()
 	tw.tween_property(_fade, "color:a", 1.0, fade_time)
-	tw.tween_callback(func(): change_scene.call(WORLD_SCENE))
+	tw.tween_callback(func(): change_scene.call(scene))
 
 
 # --- Entrada ---
@@ -816,6 +819,8 @@ func press(a: String) -> void:
 						_continue()
 					"new":
 						_start_new()
+					"training":
+						_leave(TRAINING_SCENE)
 					"options":
 						_go_options()
 					"credits":
