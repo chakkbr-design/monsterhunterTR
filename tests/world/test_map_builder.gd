@@ -146,7 +146,8 @@ func _world() -> void:
 		fake.name = "LearnMove"  # after set_script, which resets the name
 		root.add_child(fake)
 	var before := p.global_position
-	Input.action_press("move_forward")
+	# Away from the house: walking into its door now enters it (original door.gd body_entered).
+	Input.action_press("move_back")
 	await frames(30)
 	check(
 		p.global_position.distance_to(before) < 0.05,
@@ -160,7 +161,7 @@ func _world() -> void:
 	else:
 		fake.free()
 	await frames(30)
-	Input.action_release("move_forward")
+	Input.action_release("move_back")
 	check(p.global_position.distance_to(before) > 1.0, "world: walks again after LearnMove closes")
 
 	# Walk up Route 1's road from the Pallet gate: zone switches and grass/plateaus hold the player.

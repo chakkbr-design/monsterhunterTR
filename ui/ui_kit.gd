@@ -592,13 +592,25 @@ static func hp_color(m) -> Color:
 	return GREEN if f > 0.5 else (AMBER if f > 0.2 else RED)
 
 
+## Dinheiro como no original (GameState.format_money): "₽3000", sem separador de milhar.
+static func money_text(n: int) -> String:
+	return "₽%d" % n
+
+
 static func format_money(n: int) -> String:
-	var s := str(absi(n))
-	var out := ""
-	while s.length() > 3:
-		out = "." + s.substr(s.length() - 3) + out
-		s = s.substr(0, s.length() - 3)
-	return ("-" if n < 0 else "") + "$" + s + out
+	return money_text(n)
+
+
+## Linhas da tela de Opções (Settings.ROWS) com os valores de `d`; `cur` é a linha marcada.
+static func option_rows(box: Container, d: Dictionary, cur: int) -> void:
+	var S = preload("res://ui/front/settings.gd")
+	for i in S.ROWS.size():
+		var r: Array = S.ROWS[i]
+		var v = S.row_value(d, r[0])
+		var txt := ""
+		if r[2] == "choice":
+			txt = String(r[3][clampi(int(v), 0, r[3].size() - 1)])
+		box.add_child(option_row(r[1], r[2], v, txt, i == cur))
 
 
 static func format_time(secs: float) -> String:

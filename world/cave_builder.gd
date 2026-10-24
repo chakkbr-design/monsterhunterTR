@@ -45,6 +45,17 @@ const NPC_LINES := {
 const SIGN_LINES := {
 	"ZubatSign": ["Cuidado! O ZUBAT suga sangue!"],
 }
+## bg hidden items "<floor>:<x>,<y>" -> [uid of the original scene, hidden].
+const BG_ITEMS := {
+	"b1f:46,2": ["mmb1f_tiny1", false],
+	"b1f:26,2": ["mmb1f_tiny2", false],
+	"b1f:39,34": ["mmb1f_tiny3", false],
+	"b1f:24,35": ["mmb1f_big1", false],
+	"b1f:6,12": ["mmb1f_big2", false],
+	"b1f:25,34": ["mmb1f_big3", false],
+	"b2f:20,16": ["mmb2f_hidden_moon_stone", true],
+	"b2f:39,11": ["mmb2f_hidden_ether", true],
+}
 const EXIT_SIGN := [
 	"ROTA 4 - CERULEAN", "A estrada para Cerulean ainda está em obras.", "Continua..."
 ]
@@ -501,8 +512,11 @@ static func _banner_name(tr: WorldTrainer) -> void:
 
 static func _bg(room: InteriorRoom, fl: String) -> void:
 	for b in events(fl).get("bg", []):
+		if String(b.get("type", "")) == "hidden_item":
+			_bg_item(room, fl, b)
+			continue
 		if String(b.get("type", "")) != "sign":
-			continue  # hidden items: not built (like MapBuilder's hidden items)
+			continue
 		var tail := script_tail(String(b.get("script", "")))
 		_sign(
 			room,
@@ -511,6 +525,29 @@ static func _bg(room: InteriorRoom, fl: String) -> void:
 			PackedStringArray(SIGN_LINES.get(tail, ["..."])),
 			tile_local(fl, int(b.x), int(b.y))
 		)
+
+
+## FRLG hidden items as the original's rooms place them (MtMoonB1F/B2F.tscn, item_pickup.gd): the B1F
+## mushrooms lie in the open (ball_visible = false: no ball, but the prompt shows), the B2F Moon Stone
+## and Ether are hidden (no prompt, E on the spot).
+static func _bg_item(room: InteriorRoom, fl: String, b: Dictionary) -> void:
+	var key := "%s:%d,%d" % [fl, int(b.x), int(b.y)]
+	if not BG_ITEMS.has(key):
+		return
+	var d: Array = BG_ITEMS[key]
+	var id := String(b.get("item", "")).trim_prefix("ITEM_").to_lower()
+	if ItemBall.taken(d[0]) or Dex.item(id).is_empty():
+		return
+	var ib := ItemBall.new()
+	ib.name = "Item_%s" % d[0]
+	ib.npc_name = ""
+	ib.uid = d[0]
+	ib.item_id = id
+	ib.hidden = d[1]
+	ib.ball_visible = false
+	ib.body_height = 0.5
+	ib.position = tile_local(fl, int(b.x), int(b.y))
+	room.add_child(ib)
 
 
 static func _sign(

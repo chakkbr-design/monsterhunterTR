@@ -61,6 +61,7 @@ const BOARD_SCALE_HGSS := 0.6
 ## model's facade (its Door area 0.15 m out, the spawn 1.45 m past it). The port's door is a solid
 ## interactable, so it stays on the facade.
 const DOOR_SPAWN := 1.6
+const CUT_TREE_GROUP := "cut_tree"
 const HGSS_FLOWER_Y := 0.03
 const HGSS_FLOWER_SECONDS := 0.25
 const FLOWER_KINDS := [
@@ -1660,6 +1661,29 @@ static func fill_names(lines: Array) -> PackedStringArray:
 	return out
 
 
+## The original's cut_tree.gd: a sign with the billboard HGSS cut tree and a solid 1.4 x 1.8 x 1.4 box.
+## The demo never cuts it (no HM use in the field), so it always blocks the way.
+func _cut_tree(c: Dictionary) -> void:
+	var sp := SignPost.new()
+	sp.name = "Cut_%s" % String(c.get("uid", "tree"))
+	sp.npc_name = "Árvore"
+	sp.lines = PackedStringArray(
+		["Uma pequena árvore bloqueia o caminho.", "Parece que um Pokémon poderia cortá-la..."]
+	)
+	sp.color = Color(0.3, 0.55, 0.3)
+	sp.body_height = 1.8
+	sp.model = "hgss/common/cut_tree"
+	sp.model_scale = 0.8
+	sp.model_billboard = true
+	sp.model_tint = Color(0.74, 0.86, 0.72)
+	sp.verb = "E: Olhar"
+	sp.position = _at(c)
+	sp.add_to_group(CUT_TREE_GROUP)
+	add_child(sp)
+	_solid_box(sp.position + Vector3(0, 0.9, 0), Vector3(1.4, 1.8, 1.4))
+	_bump("cut_trees")
+
+
 func _people() -> void:
 	for s in data.get("signs", []):
 		var sp := SignPost.new()
@@ -1675,6 +1699,9 @@ func _people() -> void:
 		sp.rotation.y = facing_yaw(s.get("facing", 0))
 		add_child(sp)
 		_bump("signs")
+		await _tick()
+	for c in data.get("cut_trees", []):
+		_cut_tree(c)
 		await _tick()
 	for n in data.get("npcs", []):
 		if n.has("requires_flag") and not bool(Game.flags.get(String(n.requires_flag), false)):
@@ -1692,6 +1719,11 @@ func _people() -> void:
 		add_child(npc)
 		_bump("npcs")
 		await _tick()
+	for d in data.get("pets", []):  # trainer-owned mons that only talk (creature.gd trainer_owned)
+		var pet := PetMon.from_entry(d)
+		pet.position = _at(d)
+		add_child(pet)
+		_bump("pets")
 	for t in data.get("trainers", []):
 		var tr := WorldTrainer.new()
 		tr.name = String(t.get("node", "Trainer_%s" % t.id))
@@ -1713,7 +1745,7 @@ func _people() -> void:
 		add_child(hs)
 		_bump("heal_spots")
 	for it in data.get("items", []):
-		if bool(it.get("hidden", false)) or ItemBall.taken(String(it.uid)):
+		if ItemBall.taken(String(it.uid)):
 			continue
 		var ib := ItemBall.new()
 		ib.name = "Item_%s" % it.uid
@@ -1721,6 +1753,8 @@ func _people() -> void:
 		ib.uid = String(it.uid)
 		ib.item_id = String(it.get("item", "potion"))
 		ib.count = int(it.get("count", 1))
+		ib.hidden = bool(it.get("hidden", false))  # no ball, no prompt; E on the spot (item_pickup.gd)
+		ib.ball_visible = bool(it.get("ball_visible", true))
 		ib.color = Color(0.9, 0.2, 0.2)
 		ib.body_height = 0.5
 		ib.position = _at(it)

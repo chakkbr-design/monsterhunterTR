@@ -15,7 +15,8 @@ enum Behaviour { PASSIVE, FLEE, AGGRESSIVE }
 
 var mon: Mon
 var behaviour := Behaviour.PASSIVE
-var roams := true  ## false: stays put (pond swimmers)
+var roams := true  ## false: stays put
+var swimmer := false  ## pond mon (SpawnZone mode "swim"): swims about, never leaves the water
 var ambusher := false  ## jumped out of tall grass: never roams, always freed after its battle
 var peace_timer := 0.0
 var home := Vector3.ZERO
@@ -95,7 +96,7 @@ func _physics_process(delta: float) -> void:
 	if Game.is_busy() or ambusher or not roams or not visible:
 		velocity = Vector3.ZERO
 		return
-	var dir := _wander_logic(delta)
+	var dir := _swim_logic(delta) if swimmer else _wander_logic(delta)
 	velocity.x = dir.x * SPEED
 	velocity.z = dir.z * SPEED
 	velocity.y = -0.5 if is_on_floor() else velocity.y - OverworldPlayer.GRAVITY * delta
@@ -146,6 +147,41 @@ func _wander_logic(delta: float) -> Vector3:
 	var v := _wander_to - global_position
 	v.y = 0.0
 	return Vector3.ZERO if v.length() < 0.2 else v.normalized() * 0.6
+
+
+## SpawnZone "swim": water no longer blocks it, and its wander stays inside the water
+## (original spawn_zone.gd:79-86 + combatant swim).
+func make_swimmer() -> void:
+	swimmer = true
+	collision_mask = Overworld.WALL_LAYER
+
+
+func _in_water(at: Vector3) -> bool:
+	var pq := PhysicsPointQueryParameters3D.new()
+	pq.position = at + Vector3(0, 0.5, 0)
+	pq.collision_mask = SpawnZone.WATER_LAYER
+	return not get_world_3d().direct_space_state.intersect_point(pq, 1).is_empty()
+
+
+func _swim_logic(delta: float) -> Vector3:
+	_wander_t -= delta
+	if _wander_t <= 0.0:
+		_wander_t = randf_range(1.5, 3.5)
+		_wander_to = global_position
+		if randf() >= 0.35:
+			for i in 6:
+				var c := home + Vector3(randf_range(-3.0, 3.0), 0.0, randf_range(-3.0, 3.0))
+				if _in_water(c):
+					_wander_to = c
+					break
+	var v := _wander_to - global_position
+	v.y = 0.0
+	if v.length() < 0.2:
+		return Vector3.ZERO
+	if not _in_water(global_position + v.normalized() * 0.6):
+		_wander_to = global_position  # the shore: wait for the next goal
+		return Vector3.ZERO
+	return v.normalized() * 0.6
 
 
 ## Pop-up tween for grass ambushes.

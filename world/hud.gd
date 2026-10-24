@@ -2,13 +2,17 @@ class_name WorldHud
 extends CanvasLayer
 ## HUD do overworld no visual do original (hud.gd + party_orbs.gd): orbes da equipe no canto direito
 ## (anel de HP, anel de PP, nível), pílula com o nome do lugar, barra de dicas, aviso de interação,
-## mensagens rápidas e a caixa de diálogo com letreiro.
+## mensagens rápidas, o relógio do jogo embaixo do lugar ("SEG 9:00"), o aviso "Salvando…"
+## e a caixa de diálogo com letreiro (na velocidade do texto das Opções).
 ## API usada pelo mundo/história: set_prompt, toast, say, is_dialog_open, can_interact, sinal advanced.
 
 const Kit := preload("res://ui/ui_kit.gd")
+const Settings := preload("res://ui/front/settings.gd")
 const GROUP := "ow_hud"
 const REARM_S := 0.25  ## anti-repeat after a dialogue closes
-const TEXT_CPS := 55.0
+const TEXT_CPS := 45.0  ## "Médio", o padrão das Opções
+## Clock.DAYS do original.
+const DAYS := ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]
 
 signal advanced
 
@@ -28,6 +32,11 @@ var _closed_at := -100.0
 var _line_at := 0.0
 var _world: Node = null
 var _location := ""
+var _saving: Label
+var _game_bound: Node = null
+var _clock_text := ""
+## Configurações lidas (o diálogo usa a velocidade do texto); "" = ler do arquivo padrão.
+var settings_path := Settings.PATH
 
 
 ## Coluna de orbes da equipe (party_orbs do original).
@@ -51,6 +60,49 @@ class PartyOrbs:
 		custom_minimum_size = panel_size()
 		size = panel_size()
 
+	## PpWarning.state do original: 2 = descanso (o PP não paga o golpe mais barato),
+	## 1 = baixo (PP <= 40% ou menos que 2x o golpe mais caro), 0 = ok.
+	static func pp_state(pp: float, pp_base: float, costs: Array) -> int:
+		if pp <= 0.0:
+			return 2
+		var min_cost := INF
+		var max_cost := 0.0
+		for c in costs:
+			var cost := float(c)
+			if cost > 0.0:
+				min_cost = minf(min_cost, cost)
+				max_cost = maxf(max_cost, cost)
+		if not is_inf(min_cost) and pp < min_cost:
+			return 2
+		if pp <= pp_base * 0.4 or pp < 2.0 * max_cost:
+			return 1
+		return 0
+
+	static func pp_costs(m: Mon) -> Array:
+		var out: Array = []
+		for id in m.moves:
+			out.append(Dex.pp_cost(Dex.move(id)))
+		return out
+
+	## Selo "!" âmbar (PP baixo) ou "zZ" vermelho piscando (descanso), como party_orbs._draw_pp_badge.
+	func _draw_pp_badge(at: Vector2, m: Mon) -> void:
+		var K = preload("res://ui/ui_kit.gd")
+		var st := pp_state(m.pp, m.pp_base, pp_costs(m))
+		if st == 0:
+			return
+		var col: Color = K.AMBER if st == 1 else K.RED
+		var a := 1.0
+		if st == 2:
+			a = 0.5 + 0.5 * (0.5 + 0.5 * sin(_t * TAU / 2.0))
+		var glyph := "!" if st == 1 else "zZ"
+		var f: Font = K.body_font()
+		draw_circle(at, 9.0, Color(K.INK, 0.9))
+		draw_arc(at, 9.0, 0.0, TAU, 24, Color(col, a), 2.0, true)
+		var half := f.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x * 0.5
+		draw_string(
+			f, at + Vector2(-half, 4.0), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(col, a)
+		)
+
 	func panel_size() -> Vector2:
 		return Vector2(68, 6.0 * SLOT_GAP + 10.0)
 
@@ -70,6 +122,8 @@ class PartyOrbs:
 			_shown[i] = move_toward(shown, hp, delta * 8.0)
 			_flash[i] = maxf(float(_flash.get(i, 0.0)) - delta, 0.0)
 			key.append_array([m, m.species, m.hp, m.max_hp, m.pp, m.pp_base, m.status, m.level])
+			if m.hp > 0 and pp_state(m.pp, m.pp_base, pp_costs(m)) == 2:
+				moving = true
 		if moving or key != _key:
 			_key = key
 			queue_redraw()
@@ -114,8 +168,10 @@ class PartyOrbs:
 				)
 			elif m.status != "":
 				draw_circle(
-					c + Vector2(19, -19), 6.0, K.STATUS_TAGS.get(m.status, ["", K.AMBER])[1]
+					c + Vector2(-19, -19), 6.0, K.STATUS_TAGS.get(m.status, ["", K.AMBER])[1]
 				)
+			if not fainted:
+				_draw_pp_badge(c + Vector2(20, -20), m)
 			var f: Font = K.body_font()
 			var r := Rect2(c + Vector2(18, 20) - Vector2(13, 8), Vector2(26, 16))
 			draw_style_box(K.pill(Color(K.INK, 0.9), Color.TRANSPARENT, 7), r)
@@ -193,6 +249,19 @@ func _ready() -> void:
 	_toast.visible = false
 	root.add_child(_toast)
 
+	_saving = Label.new()
+	_saving.text = "● Salvando…"
+	_saving.add_theme_font_size_override("font_size", Kit.SIZE_SMALL)
+	_saving.add_theme_color_override("font_color", Kit.PAPER)
+	_saving.add_theme_color_override("font_outline_color", Kit.INK)
+	_saving.add_theme_constant_override("outline_size", 6)
+	_saving.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
+	_saving.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_saving.offset_left = -170
+	_saving.offset_top = -92  # acima da barra de dicas
+	_saving.modulate.a = 0.0
+	root.add_child(_saving)
+
 	_dlg = Kit.Dialog.new()
 	_dlg.cps = TEXT_CPS
 	_dlg.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -232,6 +301,8 @@ func _process(delta: float) -> void:
 	var g := get_node_or_null("/root/Game")
 	_orbs.refresh(g.party if g else [], delta)
 	_find_world()
+	_bind_game(g)
+	_refresh_clock(g)
 	if _toast_t > 0.0:
 		_toast_t -= delta
 		_toast.visible = _toast_t > 0.0
@@ -260,6 +331,52 @@ func _overlay_open() -> bool:
 		if n and n.has_method("is_open") and n.is_open():
 			return true
 	return false
+
+
+## Game.saved (contrato do autosave) mostra "● Salvando…" no canto, como hud.show_saving do original.
+func _bind_game(g: Node) -> void:
+	if g == _game_bound or g == null:
+		return
+	_game_bound = g
+	if g.has_signal("saved") and not g.saved.is_connected(show_saving):
+		g.saved.connect(show_saving)
+
+
+func show_saving() -> void:
+	if _saving == null:
+		return
+	_saving.modulate.a = 1.0
+	var tw := _saving.create_tween()
+	tw.tween_interval(1.0)
+	tw.tween_property(_saving, "modulate:a", 0.0, 0.4)
+
+
+## Relógio do jogo embaixo do nome do lugar ("SEG 9:00", Clock.format do original), lido do
+## TimeOfDay do mundo. O dia vem de day_index()/total_minutes se ele tiver; senão do tempo de jogo.
+func _refresh_clock(g: Node) -> void:
+	var tod: Node = get_tree().get_first_node_in_group("time_of_day") if is_inside_tree() else null
+	var text := ""
+	if tod != null and "minutes" in tod:
+		var mins := float(tod.minutes)
+		var day := 0
+		if tod.has_method("day_index"):
+			day = int(tod.day_index())
+		elif "total_minutes" in tod:
+			day = int(float(tod.total_minutes) / 1440.0)
+		elif g != null and "START_MIN" in tod:
+			var sc := float(tod.get("_scale")) if tod.get("_scale") != null else 20.0
+			day = int((float(tod.START_MIN) + float(g.play_time) * sc / 60.0) / 1440.0)
+		text = clock_format(day, mins)
+	if text != _clock_text:
+		_clock_text = text
+		_loc_sub.text = text
+		_loc_sub.visible = text != ""
+		_layout()
+
+
+static func clock_format(day: int, minutes: float) -> String:
+	var m := int(fposmod(minutes, 1440.0))
+	return "%s %d:%02d" % [DAYS[posmod(day, 7)], m / 60, m % 60]
 
 
 ## Liga ao location_changed da RouteWorld para mostrar o nome do lugar na pílula.
@@ -293,8 +410,10 @@ func _on_location_changed(kind: String, id: String) -> void:
 func set_location(text: String, sub := "") -> void:
 	_location = text
 	_loc_label.text = text
-	_loc_sub.text = sub
-	_loc_sub.visible = sub != ""
+	if sub != "":
+		_clock_text = sub
+	_loc_sub.text = sub if sub != "" else _clock_text
+	_loc_sub.visible = _loc_sub.text != ""
 	_loc.visible = text != ""
 	_layout()
 
@@ -345,6 +464,7 @@ func say(who: String, lines: PackedStringArray) -> void:
 	_open = true
 	_prompt.visible = false
 	_hint.visible = false
+	_dlg.cps = Settings.text_cps(Settings.load_cfg(settings_path))
 	for l in lines:
 		_dlg.show_line(who, l)
 		if l == lines[0]:

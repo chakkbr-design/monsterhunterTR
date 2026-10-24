@@ -6,6 +6,9 @@ extends WorldNpc
 var model := "hgss/common/sign_a"
 var model_scale := 0.8
 var model_rot := 180.0  ## world yaw of the model (deg), the map's "rot"
+var model_billboard := false  ## camera-facing foliage (cut trees)
+var model_tint := Color.WHITE
+var verb := "E: Ler"
 
 
 func _build_body() -> void:
@@ -13,7 +16,7 @@ func _build_body() -> void:
 		self,
 		model if model != "" else "hgss/common/sign_a",
 		global_position if is_inside_tree() else position,
-		{"scale": model_scale}
+		{"scale": model_scale, "billboard": model_billboard, "tint": model_tint}
 	)
 	if inst:
 		show_tag = false
@@ -37,4 +40,4 @@ func _build_body() -> void:
 
 
 func prompt() -> String:
-	return "E: Ler"
+	return verb

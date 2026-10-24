@@ -150,11 +150,9 @@ func _run() -> void:
 	learn._process(0.0)
 	check(learn.state == "", "LearnMove não abre no frame em que a Evolution fecha")
 	await frames(3)
-	check(learn.state == "pick" and learn._current().mon == m, "LearnMove abriu depois da evolução")
-	learn.press("back")
-	learn.press("left")
-	learn.press("ok")
-	learn.press("ok")
+	check(learn.state == "talk" and learn._current().mon == m, "LearnMove abriu depois da evolução")
+	for a in ["ok", "ok", "back", "ok", "ok"]:  # falas, NÃO apagar, SIM parar, fala final
+		learn.press(a)
 	check(learn.state == "" and game.pending_learns.is_empty(), "LearnMove resolvida")
 
 	# 5. Evolution espera a LearnMove aberta e não abre durante batalha.
@@ -162,13 +160,11 @@ func _run() -> void:
 	game.party = [q]
 	game.queue_learn(m, wanted)
 	learn._try_open()
-	check(learn.state == "pick", "LearnMove aberta (sem evolução pendente)")
+	check(learn.state == "talk", "LearnMove aberta (sem evolução pendente)")
 	request([q])
 	check(evo.state == "", "Evolution espera a LearnMove")
-	learn.press("back")
-	learn.press("left")
-	learn.press("ok")
-	learn.press("ok")
+	for a in ["ok", "ok", "back", "ok", "ok"]:  # falas, NÃO apagar, SIM parar, fala final
+		learn.press(a)
 	await frames(2)
 	check(evo.state == "intro" and evo.mon == q, "Evolution abriu depois da LearnMove")
 	evo.press("back")

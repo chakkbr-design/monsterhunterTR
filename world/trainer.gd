@@ -118,6 +118,9 @@ func _spot(p: OverworldPlayer) -> void:
 	p.face_toward(global_position)
 	face(p.global_position)
 	_alert.visible = true
+	var au := get_node_or_null("/root/Audio")  # the original's eyes-meet sting
+	if au and au.has_method("has_sfx") and au.has_sfx("spotted"):
+		au.sfx("spotted")
 	await get_tree().create_timer(0.7).timeout
 	_alert.visible = false
 	var to := p.global_position - global_position

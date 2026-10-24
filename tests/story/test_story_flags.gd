@@ -53,11 +53,20 @@ func _pure() -> void:
 	f.rival_battle_done = true
 	check(not StoryFlags.lab_has_rival(f), "rival saiu do lab")
 	check(
-		StoryFlags.interior_event(f, "player_house") == "mom_heal",
-		"casa depois da luta: Mamãe cura"
+		StoryFlags.interior_event(f, "player_house") == "",
+		"casa depois da luta: sem cena (Mamãe cura como NPC, como no original)"
 	)
-	f.mom_healed = true
-	check(StoryFlags.interior_event(f, "player_house") == "", "Mamãe cura uma vez só (cena)")
+	check(
+		"batalhou" in StoryFlags.daisy_lines(f)[0] and "Oi" in StoryFlags.daisy_lines({})[0],
+		"Margarida muda a fala depois da luta"
+	)
+	check(
+		(
+			"confia" in StoryFlags.lab_npc_lines(f, "aide_1")[0]
+			and "saiu" in StoryFlags.lab_npc_lines({}, "aide_1")[0]
+		),
+		"Pesquisador-chefe muda a fala depois do inicial"
+	)
 	check(StoryFlags.step(f) == "get_parcel", "passo: buscar encomenda")
 	check(StoryFlags.interior_event(f, "oak_lab") == "", "lab sem encomenda: nada")
 	f.has_parcel = true

@@ -24,7 +24,10 @@ const SFX_NAMES := [
 	"encounter",
 	"item_get",
 	"evolution",
-	"run_away"
+	"run_away",
+	"badge",
+	"caught",
+	"spotted"
 ]
 
 const NOTE_SEMI := {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
@@ -443,6 +446,67 @@ static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 				0.25,
 				{"wave": "noise", "f0": 6000.0, "f1": 1000.0, "vol": 0.15, "a": 0.05, "r": 0.06}
 			)
+		"badge":
+			# Insígnia ganha (o original: music/badge_get): fanfarra que sobe e segura o acorde.
+			b = _buf(2.0)
+			_arp(
+				b,
+				0,
+				["C5", "E5", "G5", "C6", "G5", "C6", "E6"],
+				0.1,
+				{"duty": 0.5, "vol": 0.2, "r": 0.05},
+				0.8
+			)
+			_arp(
+				b,
+				0,
+				["E4", "G4", "C5", "E5", "C5", "E5", "G5"],
+				0.1,
+				{"duty": 0.25, "vol": 0.1, "r": 0.05},
+				0.8
+			)
+			_arp(
+				b,
+				0,
+				["C3", "C3", "G3", "G3", "E3", "G3", "C4"],
+				0.1,
+				{"wave": "triangle", "vol": 0.32, "r": 0.05},
+				0.8
+			)
+		"caught":
+			# Captura (o original: music/caught): jingle curto de vitória.
+			b = _buf(1.9)
+			_arp(
+				b,
+				0,
+				["G5", "A5", "B5", "D6", "B5", "D6", "G6"],
+				0.11,
+				{"duty": 0.5, "vol": 0.19, "r": 0.05},
+				0.6
+			)
+			_arp(
+				b,
+				0,
+				["G3", "G3", "D4", "D4", "G3", "D4", "G4"],
+				0.11,
+				{"wave": "triangle", "vol": 0.32, "r": 0.05},
+				0.6
+			)
+		"spotted":
+			# Olhar do treinador (o original: music/eyes_meet): "!" subindo rápido e um golpe de ruído.
+			b = _buf(0.8)
+			_arp(b, 0, ["E5", "G#5", "B5", "E6"], 0.05, {"duty": 0.25, "vol": 0.2, "r": 0.03}, 0.35)
+			_arp(
+				b,
+				0,
+				["E3", "E3", "B3", "E4"],
+				0.05,
+				{"wave": "triangle", "vol": 0.3, "r": 0.03},
+				0.35
+			)
+			voice(
+				b, 0.2, 0.08, {"wave": "noise", "f0": 7000.0, "f1": 2000.0, "vol": 0.22, "r": 0.06}
+			)
 		_:
 			return null
 	return to_wav(b, false)
@@ -563,6 +627,50 @@ const TRACKS := {
 		"bass": "x.x.o.x.x.x.o.x.",
 		"arp": "a.a.a.a.a.a.a.a.",
 		"drums": "k.h.s.h.k.k.s.h."
+	},
+	"oak":
+	{
+		"bpm": 112,
+		"lead_duty": 0.5,
+		"chords": ["G", "C", "D", "G", "Em", "C", "A", "D"],
+		"melody":
+		"G4 . B4 . D5 . . . G5 . F#5 . E5 . D5 . | E5 . . . C5 . E5 . G5 . . . E5 . C5 . | D5 . F#5 . A5 . . . F#5 . E5 . D5 . . . | B4 . . . G4 . . . - . . . D5 . . . | E5 . G5 . B5 . . . A5 . G5 . F#5 . E5 . | G5 . . . E5 . C5 . E5 . G5 . C6 . . . | C#6 . . . A5 . E5 . A5 . B5 . C#6 . E6 . | D6 . . . . . A5 . F#5 . . . - . . .",
+		"bass": "x...o...x...o.o.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k...h.h.s...h.h."
+	},
+	"rival":
+	{
+		"bpm": 144,
+		"lead_duty": 0.25,
+		"chords": ["Am", "G", "F", "E", "Am", "G", "F", "E"],
+		"melody":
+		"A5 . . . E5 . A5 . C6 . B5 . A5 . G5 . | G5 . . . D5 . G5 . B5 . A5 . G5 . F5 . | F5 . A5 . C6 . . . A5 . F5 . C5 . F5 . | E5 . . . G#5 . . . B5 . . . - . E5 . | A5 . C6 . E6 . . . D6 . C6 . B5 . A5 . | B5 . . . G5 . D5 . G5 . A5 . B5 . D6 . | C6 . . . A5 . F5 . A5 . C6 . F6 . E6 . | E6 . . . . . B5 . G#5 . . . E5 . . .",
+		"bass": "x.x.o.x.x.x.o.8.",
+		"arp": "a.a.a.a.a.a.a.a.",
+		"drums": "k.h.s.hkk.h.s.hs"
+	},
+	"gym_leader":
+	{
+		"bpm": 176,
+		"lead_duty": 0.25,
+		"chords": ["Dm", "Dm", "Bb", "C", "Dm", "Gm", "A", "A"],
+		"melody":
+		"D6 . A5 . D6 . F6 . E6 . D6 . A5 . D6 . | F6 . . . E6 . D6 . C6 . D6 . E6 . F6 . | D6 . . . Bb5 . F5 . Bb5 . D6 . F6 . . . | E6 . . . C6 . G5 . C6 . E6 . G6 . . . | A6 . . . F6 . D6 . A5 . D6 . F6 . A6 . | G6 . . . D6 . Bb5 . G5 . Bb5 . D6 . G6 . | C#6 . . . E6 . A6 . G6 . F6 . E6 . C#6 . | A5 . . . . . . . E6 . C#6 . A5 . - .",
+		"bass": "x.x.x.x.x.x.8.o.",
+		"arp": "aaaaaaaaaaaaaaaa",
+		"drums": "k.hsk.hsk.hsk.hs"
+	},
+	"cave":
+	{
+		"bpm": 84,
+		"lead_duty": 0.125,
+		"chords": ["Em", "Em", "C", "B", "Em", "Am", "B", "B"],
+		"melody":
+		"E4 . . . . . G4 . . . B4 . . . . . | A4 . . . G4 . . . F#4 . . . - . . . | E4 . . . . . G4 . C5 . . . B4 . . . | B4 . . . . . . . D#5 . . . - . . . | G4 . . . . . B4 . E5 . . . D5 . . . | C5 . . . A4 . . . E4 . . . - . . . | F#4 . . . A4 . . . D#5 . . . F#5 . . . | E5 . . . . . . . - . . . . . . .",
+		"bass": "x.......x.......",
+		"arp": "a...a...a...a...",
+		"drums": "........h......."
 	},
 }
 

@@ -4,6 +4,8 @@ extends Node
 ## Ligações automáticas (sem mexer no mundo): Game.battle_started/battle_finished (música de batalha e vitória),
 ## sinal location_changed(kind, id) de qualquer nó que entrar na árvore (RouteWorld) e a cena de título.
 ## Outras partes chamam via preload("res://audio/cue.gd"), que não quebra sem este autoload.
+## Volumes: geral ("volume", barramento Master), música ("music") e efeitos ("sfx"), 0..100, do
+## user://settings.cfg (ui/front/settings.gd load_cfg). Relidos quando o arquivo muda ou por refresh_volumes().
 
 const Synth := preload("res://audio/synth.gd")
 const Settings := preload("res://ui/front/settings.gd")
@@ -12,6 +14,8 @@ const MUSIC_DB := -8.0
 const SFX_VOICES := 8
 ## O mesmo efeito não toca de novo antes disto (golpes em rajada).
 const SFX_GAP := 0.04
+## De quanto em quanto tempo olha se o settings.cfg mudou (volumes da tela de opções).
+const CFG_POLL := 0.5
 
 ## Injetável nos testes; senão /root/Game.
 var game: Node = null
@@ -19,6 +23,9 @@ var current_music := ""
 ## Faixa da zona/sala atual (volta depois da batalha).
 var zone_music := ""
 var in_battle := false
+## Volumes de música e efeitos (0..1) das opções.
+var music_vol := 1.0
+var sfx_vol := 1.0
 
 var _sfx: Dictionary = {}
 var _music_cache: Dictionary = {}
@@ -37,6 +44,8 @@ var _bound_game: Node = null
 var _mutex := Mutex.new()
 var _prewarm_task := -1
 var _quit := false
+var _cfg_t := 0.0
+var _cfg_mtime := -1
 
 
 func _ready() -> void:
@@ -59,11 +68,38 @@ func _ready() -> void:
 		_prewarm_task = WorkerThreadPool.add_task(_prewarm)
 
 
-## Volume geral do user://settings.cfg (mesmo formato do ui/front/settings.gd; só leitura).
+## Volumes do user://settings.cfg (mesmo formato do ui/front/settings.gd; só leitura).
 func _apply_volume() -> void:
-	var v := int(Settings.load_cfg().get("volume", 80))
+	refresh_volumes()
+
+
+## Aplica os volumes: `cfg` como o load_cfg() devolve (vazio = lê o arquivo). A tela de opções pode chamar
+## isto ao mudar um volume; sem isso o Audio percebe sozinho quando o settings.cfg é salvo.
+func refresh_volumes(cfg := {}) -> void:
+	var d: Dictionary = cfg if not cfg.is_empty() else Settings.load_cfg()
+	var v := clampi(int(d.get("volume", 80)), 0, 100)
 	AudioServer.set_bus_volume_db(0, linear_to_db(v / 100.0) if v > 0 else -80.0)
 	AudioServer.set_bus_mute(0, v == 0)
+	music_vol = clampi(int(d.get("music", 100)), 0, 100) / 100.0
+	sfx_vol = clampi(int(d.get("sfx", 100)), 0, 100) / 100.0
+	if _cur:
+		_set_gain(_cur, _cur_gain)
+	if _old and _old.playing:
+		_set_gain(_old, _old_gain)
+
+
+func _poll_cfg(dt: float) -> void:
+	_cfg_t -= dt
+	if _cfg_t > 0.0:
+		return
+	_cfg_t = CFG_POLL
+	var path := String(Settings.PATH)
+	var mt := FileAccess.get_modified_time(path) if FileAccess.file_exists(path) else 0
+	if mt != _cfg_mtime:
+		var first := _cfg_mtime < 0
+		_cfg_mtime = mt
+		if not first:
+			refresh_volumes()
 
 
 func _bind_game() -> void:
@@ -102,6 +138,8 @@ func sfx(sfx_name: String, volume_db := 0.0) -> void:
 	if now - float(_sfx_last.get(sfx_name, -1.0)) < SFX_GAP:
 		return
 	_sfx_last[sfx_name] = now
+	if sfx_vol <= 0.0:
+		return
 	# Voz livre primeiro; só corta um efeito tocando (estalo) quando todas estão ocupadas.
 	var n := _sfx_players.size()
 	for k in n:
@@ -111,7 +149,7 @@ func sfx(sfx_name: String, volume_db := 0.0) -> void:
 	var p := _sfx_players[_sfx_next]
 	_sfx_next = (_sfx_next + 1) % n
 	p.stream = st
-	p.volume_db = volume_db
+	p.volume_db = volume_db + linear_to_db(sfx_vol)
 	p.play()
 
 
@@ -192,10 +230,12 @@ func _swap_out(fade: float) -> void:
 
 
 func _set_gain(p: AudioStreamPlayer, g: float) -> void:
-	p.volume_db = MUSIC_DB + (linear_to_db(g) if g > 0.001 else -60.0)
+	var k := g * music_vol
+	p.volume_db = MUSIC_DB + (linear_to_db(k) if k > 0.001 else -80.0)
 
 
 func _process(dt: float) -> void:
+	_poll_cfg(dt)
 	if _cur.playing and _cur_gain < 1.0:
 		_cur_gain = minf(1.0, _cur_gain + dt / maxf(_fade_in, 0.001))
 		_set_gain(_cur, _cur_gain)
@@ -231,7 +271,9 @@ static func music_for(kind: String, id: String) -> String:
 			return "lab"
 		if id.contains("gym"):
 			return "gym"
-		if id.contains("forest") or id.begins_with("mt_moon_"):  # no cave track yet: the darkest one
+		if id.begins_with("mt_moon_"):
+			return "cave"  # o original: MtMoon1F/B1F/B2F -> music/cave
+		if id.contains("forest"):
 			return "forest"
 		return "town"
 	if id.contains("forest"):
@@ -267,17 +309,31 @@ func _on_battle_started() -> void:
 	in_battle = true
 	var kind: String = game.battle_kind() if game and game.has_method("battle_kind") else "wild"
 	if kind == "trainer":
-		music("battle_trainer", 0.15)
+		# O original (battle.gd:515-517): líder de ginásio tem tema próprio, senão o de treinador.
+		music("gym_leader" if _gym_leader_battle() else "battle_trainer", 0.15)
 	else:
 		sfx("encounter")
 		music("battle_wild", 0.15)
 
 
+func _gym_leader_battle() -> bool:
+	var o = game.get("_opts") if game else null
+	if not (o is Dictionary) or not Synth.TRACKS.has("gym_leader"):
+		return false
+	var id := String(o.get("trainer_id", ""))
+	return id != "" and String(Dex.trainer(id).get("class", "")) == "gym_leader"
+
+
 func _on_battle_finished(result: Dictionary) -> void:
 	in_battle = false
 	var outcome := String(result.get("outcome", ""))
-	if outcome == "win" or outcome == "caught":
+	if outcome == "win":
 		music("victory", 0.1)
 		_resume_t = Synth.track_secs(Synth.TRACKS.victory)
+	elif outcome == "caught":
+		# O original não toca vitória na captura: o jingle "caught" (já tocado na arena) e volta à zona.
+		# A arena já calou a música da batalha quando a bola fechou; a zona volta logo depois do jingle.
+		stop_music(0.1)
+		_resume_t = 0.6
 	else:
 		_resume_zone()

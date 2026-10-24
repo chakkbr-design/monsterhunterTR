@@ -1,5 +1,5 @@
 extends SceneTree
-## Integração Rodada 4: guia de Pewter leva ao ginásio, aviso da saída leste, Campista Liam e Brock
+## Integração Rodada 4: entrar em Pewter não dispara cena (o original não tem guia), aviso da saída leste, Campista Liam e Brock
 ## (batalha em autoplay) -> flags.badge_boulder + TM39 na bolsa.
 ## godot --headless --fixed-fps 60 --path . --script res://tests/story/test_story_pewter.gd
 
@@ -43,7 +43,6 @@ func _run() -> void:
 		"got_starter",
 		"starter_chosen",
 		"rival_battle_done",
-		"mom_healed",
 		"has_pokedex",
 		"parcel_delivered"
 	]:
@@ -72,34 +71,24 @@ func _run() -> void:
 	quit(1 if _fails > 0 else 0)
 
 
+## pewter-03: o Story.trigger do original não tem cena de guia; o Gym Guide de fora só fala.
 func _guide() -> void:
 	var seen: Array = []
 	story.cutscene_started.connect(func(id): seen.append(id))
 	check(
-		story.triggers().any(func(t): return t.event == "pewter_guide"),
-		"gatilho do guia de Pewter criado"
+		not story.triggers().any(func(t): return t.event == "pewter_guide"),
+		"sem gatilho de guia em Pewter"
 	)
 	check(
 		story.triggers().any(func(t): return t.event == "pewter_east_block"),
 		"gatilho da saída leste (pewter_city.json)"
 	)
 	Input.action_press("move_forward")
-	var started := await until(func(): return seen.has("pewter_guide"), 10.0)
+	await frames(90)
 	Input.action_release("move_forward")
-	check(started, "entrar em Pewter dispara o guia")
-	check(await until(func(): return not story.is_running(), 60.0), "cena do guia termina")
-	check(game.flags.get("pewter_guide_done", false), "flag pewter_guide_done")
-	var front: Vector3 = w.builders.pewter_city.arrivals.pw_gym_front
 	check(
-		Vector2(p.global_position.x - front.x, p.global_position.z - front.z).length() < 2.5,
-		"guia deixa o jogador na porta do ginásio (%s)" % p.global_position
+		seen.is_empty() and not story.is_running(), "entrar em Pewter não roda cena (%s)" % [seen]
 	)
-	await w.go_to_zone("pewter_city", "pw_south")
-	await frames(30)
-	Input.action_press("move_forward")
-	await frames(60)
-	Input.action_release("move_forward")
-	check(seen.count("pewter_guide") == 1, "o guia aparece uma vez só")
 
 
 func _east_block() -> void:
@@ -125,8 +114,15 @@ func _gym() -> void:
 	var money0: int = game.money
 	# Sobe pelo corredor central: o Liam vê e desafia.
 	Input.action_press("move_forward")
-	var spotted := await until(func(): return game.is_busy(), 10.0)
+	var spotted := await until(func(): return game.is_busy(), 4.0)
 	Input.action_release("move_forward")
+	if not spotted:
+		# Liam fora do corredor central (posição do original): entra na linha de visão dele.
+		var l3 := liam as Node3D
+		p.global_position = (
+			l3.global_position - l3.global_transform.basis.z * 2.5 + Vector3(0, 0.05, 0)
+		)
+		spotted = await until(func(): return game.is_busy(), 6.0)
 	check(spotted, "Campista Liam vê o jogador no corredor")
 	check(
 		await until(func(): return game.flags.get("trainer_camper_liam", false), 180.0),
@@ -166,8 +162,4 @@ func _gym() -> void:
 	talk.call()
 	check(await until(func(): return done[0], 20.0), "falar de novo termina")
 	check(not game.is_busy() and int(game.bag.get("tm39", 0)) == 1, "sem revanche nem TM repetido")
-	# Com a insígnia o guia não volta e o aviso leste vira "em construção".
-	check(
-		not load("res://story/story_flags.gd").pewter_guide_due(game.flags),
-		"guia não volta depois da insígnia"
-	)
+	# Com a insígnia o aviso leste não barra mais.

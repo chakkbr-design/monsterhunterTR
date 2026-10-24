@@ -54,7 +54,7 @@ func _spawn(away_from_player: bool) -> bool:
 		return false
 	var w := WildMon.spawn(Overworld.mon_from_entry(e, _rng), e, get_parent(), pos)
 	if mode == "swim":
-		w.roams = false  # bobs in place on the pond; engage it from the shore
+		w.make_swimmer()  # swims about the pond like the original; engage it from the shore
 	_alive.append(w)
 	return true
 

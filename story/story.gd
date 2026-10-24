@@ -17,16 +17,6 @@ const CLERK := "Vendedor"
 const HANDLED_EVENTS := ["oak_stop", "pewter_east_block"]
 const GYM := "pewter_gym"
 const BROCK := "brock"
-## Entrada sul de Pewter: o guia leva o jogador até o ginásio (uma vez, antes da insígnia).
-const PEWTER_GUIDE_TRIGGER := {
-	"node": "PewterGuideTrigger",
-	"event": "pewter_guide",
-	"pos": [0.0, -391.0],
-	"size": [14, 3, 2.0],
-	"blocks": ["pewter_guide_done", "badge_boulder"],
-	"y": 0.0
-}
-const GYM_FRONT := Vector3(-18.15, 0.0, -428.6)
 const TYPE_PT := {
 	"grass": "Planta", "fire": "Fogo", "water": "Água", "poison": "Veneno", "normal": "Normal"
 }
@@ -49,6 +39,25 @@ const MOON_CENTER := "pokemon_center_mt_moon"
 const MAGIKARP_PRICE := 500
 const SALESMAN := "Vendedor"
 const LAB_SPAWN := "door"
+## STARTER_QUESTIONS do original (story.gd:25-29).
+const STARTER_QUESTIONS := {
+	"Bulbasaur":
+	"Entendi! Você escolheu o BULBASAUR.\nEle é muito fácil de criar.\nEntão, {PLAYER}, você quer ficar com\no POKéMON do tipo PLANTA, BULBASAUR?",
+	"Charmander":
+	"Ah! Você escolheu o CHARMANDER.\nCrie-o com paciência.\nEntão, {PLAYER}, você fica com o\nPOKéMON do tipo FOGO, CHARMANDER?",
+	"Squirtle":
+	"Hum! Você escolheu o SQUIRTLE.\nVale a pena criá-lo.\nEntão, {PLAYER}, você decidiu pelo\nPOKéMON do tipo ÁGUA, SQUIRTLE?",
+}
+## Ajudante do Oak na guarita sul da Floresta (Action.GIFT do original): HM05 com 10 espécies capturadas.
+const AIDE_ROOM := "forest_gate_south"
+const AIDE_ROLE := "aide_hm05"
+const AIDE_CAUGHT := 10
+## Velhinho acordado de Viridian (NPC_OldManAwake, Action.TUTOR do original): aula de captura.
+const OLD_MAN_NODE := "NPC_OldManAwake"
+const OLD_MAN_ZONE := "viridian_city"
+const OLD_MAN_ROLE := "old_man"
+## Pokédex na mesa do fundo do lab (Lab/Props/Pokedex* do original): somem quando o Oak entrega.
+const DEX_PROPS := [Vector3(0.3, 0.88, -7.4), Vector3(0.9, 0.88, -7.4)]
 
 ## Testes e demo: avança o diálogo sozinho, responde perguntas (null = pergunta ao jogador),
 ## liga autoplay na batalha e acrescenta opts (seed, speed...).
@@ -99,6 +108,10 @@ func _process(_delta: float) -> void:
 
 func _on_node_added(n: Node) -> void:
 	# Conteúdo que o MapBuilder/InteriorRoom não constroem: cavernas, porta do Monte da Lua, estáticos.
+	if n is WorldNpc and n.name == OLD_MAN_NODE and not n.has_meta("role"):
+		# NPC do MapBuilder (sem papel): assim o gancho dos Interiores vale para ele.
+		n.set_meta("interior", OLD_MAN_ZONE)
+		n.set_meta("role", OLD_MAN_ROLE)
 	if n is InteriorRoom and n.def.has("cave"):
 		n.ready.connect(CaveBuilder.decorate.bind(n), CONNECT_ONE_SHOT)
 	elif n is MapBuilder:
@@ -136,10 +149,13 @@ func attach(w: Node3D) -> void:
 	for zone in RouteWorld.ZONES if w is RouteWorld else []:
 		for e in _zone_triggers(String(zone)):
 			_add_trigger(w, e)
-	if w is RouteWorld and RouteWorld.ZONES.has("pewter_city"):
-		_add_trigger(w, PEWTER_GUIDE_TRIGGER)
 	if w.has_method("set_interact_hook"):
 		w.set_interact_hook("player_house", "mom", _mom_hook)
+		w.set_interact_hook("rival_house", "daisy", _daisy_hook)
+		w.set_interact_hook(LAB, "aide_1", _lab_npc_hook)
+		w.set_interact_hook(LAB, "aide_2", _lab_npc_hook)
+		w.set_interact_hook(AIDE_ROOM, AIDE_ROLE, _aide_hook)
+		w.set_interact_hook(OLD_MAN_ZONE, OLD_MAN_ROLE, _old_man_hook)
 		w.set_interact_hook("mart_viridian", "clerk", _clerk_hook)
 		w.set_interact_hook(GYM, BROCK, _brock_hook)
 		w.set_interact_hook(MT_MOON_B2F, "miguel", _fossil_hook)
@@ -149,13 +165,10 @@ func attach(w: Node3D) -> void:
 	_sync_location.call_deferred()
 
 
-## Mamãe (NPC dos Interiores): antes do inicial só conversa; com a cena pendente, roda a cena.
-## Devolve true quando a história tratou a conversa (o NPC não cura/fala o padrão).
+## Mamãe (NPC dos Interiores): antes do inicial só conversa; depois cura como NPC comum
+## (Action.HEAL do original, sem cena própria). Devolve true quando a história tratou a conversa.
 func _mom_hook(_npc: Node) -> bool:
 	if is_running():
-		return true
-	if StoryFlags.interior_event(Game.flags, "player_house") == "mom_heal":
-		await mom_heal()
 		return true
 	if not flag("got_starter"):
 		await begin("talk_mom")
@@ -163,6 +176,100 @@ func _mom_hook(_npc: Node) -> bool:
 		end()
 		return true
 	return false
+
+
+## Margarida (Daisy do original, lines_for "Daisy"): a fala muda depois da luta com o rival.
+func _daisy_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	await begin("talk_daisy")
+	await say(String(npc.get("npc_name")), StoryFlags.daisy_lines(Game.flags))
+	end()
+	return true
+
+
+## Pesquisador-chefe (aide_1) e Assistente do lab (aide_2) com as falas do original; a do chefe
+## muda depois do inicial.
+func _lab_npc_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	var role := String(npc.get_meta("role", ""))
+	await begin("talk_" + role)
+	await say(StoryFlags.lab_npc_name(role), StoryFlags.lab_npc_lines(Game.flags, role))
+	end()
+	return true
+
+
+## Ajudante do Oak: fala e, com 10 espécies capturadas, dá o HM05 (falas novas depois disso).
+func _aide_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	await begin("talk_aide")
+	var lines: PackedStringArray = (
+		StoryFlags.aide_lines() if flag("hm05_flash") else PackedStringArray(npc.get("lines"))
+	)
+	await say(String(npc.get("npc_name")), lines)
+	end()
+	await aide_reward()
+	return true
+
+
+## aide_reward do original (story.gd:291-300).
+func aide_reward() -> void:
+	if is_running() or flag("hm05_flash") or Game.caught.size() < AIDE_CAUGHT:
+		return
+	await begin("aide_reward")
+	await give_item("hm_flash", 1, "o HM05 Flash")
+	set_flag("hm05_flash")
+	end()
+
+
+## Velhinho de Viridian: as falas do mapa e depois a aula (Action.TUTOR do original).
+func _old_man_hook(npc: Node) -> bool:
+	if is_running():
+		return true
+	var who := String(npc.get("npc_name"))
+	await begin("talk_old_man")
+	await say(who, PackedStringArray(npc.get("lines")))
+	end()
+	await old_man_lesson(who)
+	return true
+
+
+## old_man_lesson do original (story.gd:261-289): cartões de captura e a TEACHY TV.
+func old_man_lesson(who := "Velhinho") -> void:
+	if is_running():
+		return
+	await begin("old_man_lesson")
+	if flag("old_man_lesson"):
+		await say(
+			who,
+			[
+				"Bem, agora já tomei meu café, e era disso que eu precisava para começar o dia!",
+				"Mas fiz forte demais. Me deu dor de cabeça...",
+				"Aliás, você está completando a sua POKéDEX?",
+				"No começo, enfraqueça o POKéMON antes de tentar capturá-lo."
+			]
+		)
+		end()
+		return
+	if not await ask("Quer que eu mostre como capturar Pokémon?"):
+		await say(who, ["Ah... Bem, se precisar saber, volte quando quiser."])
+		end()
+		return
+	for card in StoryFlags.CATCH_CARDS:
+		await say(String(card[0]), [String(card[1])])
+	await say(who, ["Pronto! Diga, isso foi educativo, não foi?", "E tome, leve isto também."])
+	await give_item("teachy_tv", 1, "a TEACHY TV")
+	await say(
+		who,
+		[
+			"Se tiver alguma coisa que você não entenda, assista a ela.",
+			"Ela ensina o básico de ser um TREINADOR POKéMON."
+		]
+	)
+	set_flag("old_man_lesson")
+	end()
 
 
 func _clerk_hook(_npc: Node) -> bool:
@@ -232,8 +339,6 @@ func _run_event(ev: String) -> void:
 			await mart_parcel()
 		"parcel_deliver":
 			await parcel_deliver()
-		"mom_heal":
-			await mom_heal()
 
 
 ## Dispatch dos StoryTrigger.
@@ -246,9 +351,6 @@ func trigger(event: String, _source: Node = null) -> void:
 				await oak_stop()
 		"pewter_east_block":
 			await pewter_east_block()
-		"pewter_guide":
-			if StoryFlags.pewter_guide_due(Game.flags):
-				await pewter_guide()
 		"mt_moon_fossils":
 			if not flag(CaveBuilder.FOSSIL_FLAG):
 				await mt_moon_fossils()
@@ -299,6 +401,9 @@ func end() -> void:
 	if p:
 		p.locked = false
 	cutscene_finished.emit(id)
+	# cutscene.gd:36 do original: toda cena termina com SaveGame.autosave().
+	if world and is_instance_valid(world) and Game.has_method("autosave"):
+		Game.autosave(world)
 
 
 func say(who: String, lines: Variant) -> void:
@@ -358,7 +463,34 @@ func give_item(id: String, n := 1, label := "") -> void:
 	Game.add_item(id, n)
 	if label == "":
 		label = String(Dex.item(id).get("name", id))
+	sfx("item_get")
 	await say("", ["{PLAYER} recebeu %s!" % label])
+
+
+# --- Som (contrato de sons do Audio; nada acontece se a faixa ou o efeito ainda não existe) ---
+
+
+func sfx(id: String) -> void:
+	var au := get_node_or_null("/root/Audio")
+	if au and au.has_method("has_sfx") and au.has_sfx(id):
+		au.sfx(id)
+
+
+## Audio.push_music("story", ...) do original: troca a faixa enquanto a cena roda.
+func push_music(track: String, fade := 0.3) -> void:
+	var au := get_node_or_null("/root/Audio")
+	if au and au.has_method("music_stream") and au.music_stream(track) != null:
+		au.music(track, fade)
+
+
+## Audio.pop_music("story") do original: volta para a faixa do lugar.
+func pop_music(fade := 1.5) -> void:
+	var au := get_node_or_null("/root/Audio")
+	if au == null or not au.has_method("music"):
+		return
+	var zm := String(au.get("zone_music")) if au.get("zone_music") != null else ""
+	if zm != "" and not bool(au.get("in_battle")):
+		au.music(zm, fade)
 
 
 # --- Atores ---------------------------------------------------------------------------------------
@@ -427,6 +559,8 @@ func _populate(id: String) -> void:
 			var room: Node = world.interior(LAB) if world.has_method("interior") else null
 			if room and room.get_node_or_null(String(LAB_EXIT_TRIGGER.node)) == null:
 				room.add_child(StoryTrigger.from_entry(LAB_EXIT_TRIGGER))  # vive e morre com a sala
+			if room and not flag("has_pokedex"):
+				_add_dex_props(room)
 			var left := StoryFlags.balls_left(f, Game.STARTERS)
 			for i in Game.STARTERS.size():
 				var sp: String = Game.STARTERS[i]
@@ -444,6 +578,34 @@ func _populate(id: String) -> void:
 			_ensure_role("mom", "player_house")
 		"mart_viridian":
 			_ensure_role("clerk", "mart_viridian")
+
+
+## Duas Pokédex (caixinhas vermelhas) na mesa do fundo do lab, como os props Pokedex* do original.
+func _add_dex_props(room: Node) -> void:
+	for i in DEX_PROPS.size():
+		var nm: String = ["PokedexA", "PokedexB"][i]
+		if room.get_node_or_null(nm) != null:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.name = nm
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.28, 0.06, 0.38)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.82, 0.12, 0.14)
+		bm.material = mat
+		mi.mesh = bm
+		room.add_child(mi)
+		mi.position = DEX_PROPS[i]
+
+
+func _remove_dex_props() -> void:
+	var room: Node = world.interior(LAB) if world and world.has_method("interior") else null
+	if room == null:
+		return
+	for nm in ["PokedexA", "PokedexB"]:
+		var n := room.get_node_or_null(nm)
+		if n:
+			n.queue_free()
 
 
 ## NPC interagível (dos Interiores ou nosso) parado no marcador `role` da sala, ou null.
@@ -520,6 +682,7 @@ func oak_stop() -> void:
 		return
 	p.show_alert(true)
 	await wait(0.6)
+	push_music("oak")
 	await say(OAK, ["Espere! Não vá lá fora!"])
 	p.show_alert(false)
 	var oak := spawn_npc(
@@ -540,8 +703,10 @@ func oak_stop() -> void:
 	await walk(p, dest - Vector3(0, 0, 1.0))
 	set_flag("oak_stopped")
 	await _goto_interior(LAB, LAB_SPAWN)
+	push_music("oak", 0.0)  # a porta troca para a faixa do lab; a do Oak segue até o fim da cena
 	oak.queue_free()
 	await lab_intro()
+	pop_music()
 	end()
 
 
@@ -580,26 +745,25 @@ static func type_label(species: String) -> String:
 func pick_starter(b: StarterBall) -> void:
 	if is_running():
 		return
+	var sp := Dex.canon(b.species)
+	var nm := String(Dex.species(sp).get("name", sp))
 	if not StoryFlags.can_pick(Game.flags):
+		# story.gd:354-359 do original.
 		await begin("ball_locked")
-		await say(
-			"",
-			[
-				(
-					"São Poké Balls do Prof. Carvalho."
-					if not flag("got_starter")
-					else "É o Pokémon do {RIVAL}... melhor não mexer."
-				)
-			]
-		)
+		if flag("got_starter"):
+			await say(
+				"Poké Ball", ["É uma Poké Ball com %s dentro." % nm, "Ela espera outro treinador."]
+			)
+		else:
+			await say("Poké Ball", ["São POKé BALLS.\nTem POKéMON dentro delas!"])
 		end()
 		return
 	await begin("pick_starter")
-	var sp := Dex.canon(b.species)
-	var nm := String(Dex.species(sp).get("name", sp))
-	var yes := await ask(
-		"Então, {PLAYER}, você quer %s, o Pokémon do tipo %s?" % [nm, type_label(sp)], sp
+	Game.mark_seen(sp)  # o cartão já registra a espécie como vista, mesmo com NÃO
+	var q: String = STARTER_QUESTIONS.get(
+		sp, "Então, {PLAYER}, você quer %s, o Pokémon do tipo %s?" % [nm, type_label(sp)]
 	)
+	var yes := await ask(q, sp)
 	if not yes:
 		end()
 		return
@@ -608,6 +772,7 @@ func pick_starter(b: StarterBall) -> void:
 	set_flag("starter_chosen")
 	b.take()
 	await say("", ["{PLAYER} recebeu %s do Prof. Carvalho!" % nm])
+	await say(OAK, ["Este POKéMON é mesmo cheio de energia!"])
 	var rsp := String(Game.flags.get("rival_starter", ""))
 	var rival := actor("rival")
 	var rb := ball(rsp)
@@ -657,6 +822,7 @@ func rival_battle() -> void:
 	var opts := {
 		"kind": "trainer",
 		"trainer_id": StoryFlags.RIVAL_TRAINER,
+		"trainer_class": "rival",  # prêmio 35 x nível, como o original (não o da Rota 22)
 		"can_run": false,
 		"scripted": true
 	}
@@ -686,6 +852,16 @@ func rival_battle() -> void:
 		await say("{RIVAL}", ["O quê? Não acredito! Escolhi o Pokémon errado!"])
 	else:
 		await say("{RIVAL}", ["Isso! Meu Pokémon é demais!"])
+	# story.gd:475-484 do original: o Oak fala, cura com fade no próprio lab e o rival sai.
+	await say(
+		OAK,
+		[
+			"Se um POKéMON selvagem aparecer, o seu POKéMON pode lutar com ele.",
+			"Com ele ao seu lado, você deve conseguir chegar à próxima cidade."
+		]
+	)
+	await heal_with_fade()
+	push_music("rival")
 	await say(
 		"{RIVAL}",
 		["Vou treinar meu Pokémon e ficar ainda mais forte.", "{PLAYER}! Vovô! Até mais!"]
@@ -693,14 +869,20 @@ func rival_battle() -> void:
 	if rival:
 		await walk(rival, door_pos(LAB, rival.global_position + Vector3(0, 0, 6)))
 		rival.queue_free()
-	await say(
-		OAK,
-		[
-			"{PLAYER}, seu Pokémon deve estar cansado. Passe em casa: sua mãe cuida dele.",
-			"Depois siga para o norte, pela Rota 1, até a Cidade de Viridian."
-		]
-	)
+	pop_music()
 	end()
+
+
+## Game.heal_with_fade do original: pela RouteWorld (fade, cura, mensagem, jingle) quando existe.
+func heal_with_fade() -> void:
+	if world and is_instance_valid(world) and world.has_method("heal_with_fade"):
+		await world.heal_with_fade()
+		return
+	Game.heal_party()
+	var h := hud()
+	if h:
+		h.toast("Seu time foi curado!", 1.8)
+	sfx("heal")
 
 
 ## Ida do fade do original antes de trocar os treinadores de lugar (Transitions.fade 0 -> 1 em
@@ -729,22 +911,6 @@ func uncover() -> void:
 		Game.battle_started.disconnect(uncover)
 	if _cover:
 		_cover.color.a = 0.0
-
-
-## 3. Mamãe cura depois da primeira luta.
-func mom_heal() -> void:
-	await begin("mom_heal")
-	var mom := npc_at("player_house", "mom")
-	var p := player()
-	if mom and p:
-		await approach(p, mom, 1.4)
-	await say(
-		MOM, ["{PLAYER}! O Prof. Carvalho lhe deu um Pokémon? Que maravilha!", "Descanse um pouco."]
-	)
-	Game.heal_party()
-	await say(MOM, ["Pronto, seu time está cheio de energia!", "Vai para Viridian? Tome cuidado!"])
-	set_flag("mom_healed")
-	end()
 
 
 ## 4. Loja de Viridian: a encomenda do Oak.
@@ -784,15 +950,17 @@ func parcel_deliver() -> void:
 	await say(
 		OAK,
 		[
-			"Ah, {PLAYER}! Como vai o meu Pokémon?",
-			"Parece que ele já gosta muito de você.",
-			"O quê? Você tem algo para mim?"
+			"Ah, {PLAYER}! Como vai o meu velho POKéMON?",
+			"Bem, parece que ele está cada vez mais apegado a você.",
+			"Você deve ter talento como TREINADOR POKéMON.",
+			"O que é isso? Você tem algo para mim?"
 		]
 	)
 	Game.take_item(StoryFlags.PARCEL)
 	set_flag("has_parcel", false)
 	await say("", ["{PLAYER} entregou a ENCOMENDA DO PROF. CARVALHO."])
-	await say(OAK, ["Ah! É a Poké Ball especial que encomendei. Obrigado!"])
+	await say(OAK, ["Ah! É a POKé BALL especial!", "Eu tinha encomendado. Obrigado!"])
+	push_music("rival")
 	var rival := actor("rival")
 	if rival == null:
 		rival = _spawn_role(
@@ -800,41 +968,54 @@ func parcel_deliver() -> void:
 		)
 	if p:
 		await approach(rival, p, 1.4)
-	await say("{RIVAL}", ["Vovô! Para que me chamou?"])
+	await say("{RIVAL}", ["Quase esqueci!", "Para que você me chamou?"])
 	await say(
 		OAK,
 		[
 			"Ah, sim! Tenho um pedido para vocês dois.",
-			"Esta é a minha invenção, a Pokédex! Ela registra os Pokémon que vocês virem ou capturarem.",
-			"{PLAYER}, {RIVAL}: levem uma cada um."
+			"Ali na mesa está a minha invenção, a POKéDEX!",
+			"Ela registra sozinha os dados dos POKéMON que você vir ou capturar.",
+			"É uma enciclopédia de alta tecnologia!",
+			"{PLAYER} e {RIVAL}, levem estas com vocês."
 		]
 	)
-	await give_item(StoryFlags.POKEDEX, 1, "a POKÉDEX")
+	await give_item(StoryFlags.POKEDEX, 1, "a POKéDEX do PROF. CARVALHO")
 	set_flag("has_pokedex")
+	_remove_dex_props()
 	await say(
 		OAK,
 		[
-			"Para ter dados completos, é preciso capturar os Pokémon.",
-			"Aqui estão algumas ferramentas para isso."
+			"Só de ver um POKéMON não dá para ter dados detalhados sobre ele.",
+			"É preciso capturá-lo para ter os dados completos.",
+			"Então, aqui estão algumas ferramentas para capturar POKéMON selvagens."
 		]
 	)
-	await give_item("poke_ball", StoryFlags.DEX_BALLS, "%d POKÉ BALLS" % StoryFlags.DEX_BALLS)
+	await give_item("poke_ball", StoryFlags.DEX_BALLS, "%d POKé BALLS" % StoryFlags.DEX_BALLS)
 	await say(
 		OAK,
 		[
-			"Completar um guia de todos os Pokémon do mundo era o meu sonho.",
-			"Agora conto com vocês dois!"
+			"Fazer um guia completo de todos os POKéMON do mundo...",
+			"Esse era o meu sonho!",
+			"Mas estou velho demais. Não consigo mais fazer isso.",
+			"Então quero que vocês dois realizem o meu sonho por mim.",
+			"Vão, vocês dois.",
+			"Esta é uma grande empreitada na história dos POKéMON!"
 		]
 	)
+	push_music("rival")
 	await say(
 		"{RIVAL}",
 		[
-			"Pode deixar comigo, vovô!",
-			"{PLAYER}, nem precisa se esforçar. Eu vou completar a Pokédex primeiro! Hahaha!"
+			"Pode deixar, vovô! Deixe tudo comigo!",
+			"{PLAYER}, sinto dizer, mas você não vai ser necessário.",
+			"Já sei! Vou pegar um MAPA DA CIDADE emprestado com a minha irmã!",
+			"Vou dizer a ela para não emprestar um para você, {PLAYER}! Hahaha!",
+			"Nem se dê ao trabalho de passar lá em casa depois disso!"
 		]
 	)
 	await walk(rival, door_pos(LAB, rival.global_position + Vector3(0, 0, 6)))
 	rival.queue_free()
+	pop_music()
 	set_flag("parcel_delivered")
 	end()
 
@@ -869,40 +1050,6 @@ func pewter_east_block() -> void:
 	if p:
 		p.show_alert(false)
 		await walk(p, p.global_position + Vector3(-3.0, 0, 0))
-	end()
-
-
-## Chegada a Pewter: um garoto leva o jogador até a porta do ginásio.
-func pewter_guide() -> void:
-	await begin("pewter_guide")
-	var p := player()
-	if p == null:
-		end()
-		return
-	set_flag("pewter_guide_done")
-	var guide := spawn_npc(
-		"pewter_guide", "Garoto", p.global_position + Vector3(2.5, 0, -2.5), Color(0.85, 0.65, 0.3)
-	)
-	face_each_other(guide, p)
-	await say(
-		"Garoto",
-		[
-			"Ei, você! Você é um treinador?",
-			"O Líder do Ginásio de Pewter, Brock, está procurando desafiantes!",
-			"Venha, eu levo você até lá!"
-		]
-	)
-	# Pelo caminho central (x = 0) até a rua do ginásio, depois a oeste até a porta.
-	for wp in [Vector3(0.0, 0, -429.0), GYM_FRONT + Vector3(0, 0, 1.2)]:
-		guide.walk_to(Vector3(wp.x + 0.9, guide.global_position.y, wp.z - 0.9))
-		await walk(p, Vector3(wp.x, p.global_position.y, wp.z))
-	face_each_other(guide, p)
-	await say(
-		"Garoto", ["Aqui é o Ginásio de Pewter!", "Brock usa Pokémon do tipo Pedra. Boa sorte!"]
-	)
-	if is_instance_valid(guide):
-		await walk(guide, guide.global_position + Vector3(6.0, 0, 0))
-		guide.queue_free()
 	end()
 
 
@@ -951,8 +1098,8 @@ func brock_battle(npc: Node = null) -> Dictionary:
 		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(0, 1))
 		await give_item(String(def.get("gift", "tm39")), 1, "o TM39 (TUMBA DE PEDRAS)")
 		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(1))
-	elif String(r.get("outcome", "")) == "lose":
-		await say("Brock", ["Volte quando estiver mais preparado."])
+	# Derrota: o apagão da RouteWorld já levou o jogador ao ponto de cura; o original
+	# (trainer.gd:168) não diz nada depois.
 	if (
 		is_instance_valid(body)
 		and home.is_finite()
@@ -968,6 +1115,7 @@ func brock_battle(npc: Node = null) -> Dictionary:
 func award_badge(id: String, label: String) -> void:
 	set_flag("badge_" + id)
 	set_flag(id + "_badge")
+	sfx("badge")  # Audio.jingle("music/badge_get") do trainer.gd:235 do original
 	var h := hud()
 	if h:
 		h.toast("%s obtida!" % label, 3.0)
@@ -1115,11 +1263,11 @@ func magikarp_sale() -> void:
 		end()
 		return
 	if Game.money < MAGIKARP_PRICE:
-		await say(SALESMAN, ["Desculpe, garoto. Você não tem P%d." % MAGIKARP_PRICE])
+		await say(SALESMAN, ["Desculpe, garoto. Você não tem ₽%d." % MAGIKARP_PRICE])
 		end()
 		return
 	await say(SALESMAN, ["Ei, você aí! Tenho uma oferta imperdível!"])
-	if not await ask("Vendo um MAGIKARP por apenas P%d. Fechado?" % MAGIKARP_PRICE, "Magikarp"):
+	if not await ask("Vendo um MAGIKARP por apenas ₽%d. Fechado?" % MAGIKARP_PRICE, "Magikarp"):
 		await say(SALESMAN, ["Que pena. É uma pechincha de verdade!"])
 		end()
 		return

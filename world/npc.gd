@@ -12,6 +12,10 @@ const LAYER := 8
 @export var color := Color(0.3, 0.45, 0.85)
 @export var body_height := 1.6
 @export var sprite_sheet := ""  ## file in original/assets/sprites ("npc_oak.png"); "" = guess
+## Original npc.gd: wander_radius > 0 walks around home (new goal every 2-5 s, 40% stays, 1.4 m/s);
+## lying lays the sprite down (the sleepy old man). < 0 = read the map entry (`wander`, `lying`).
+@export var wander_radius := -1.0
+@export var lying := false
 
 const ROLE_SHEETS := {
 	"oak": "npc_oak",
@@ -81,6 +85,14 @@ var char_sprite: CharSprite
 var show_tag := true  ## floating name (placeholders only; sprites and models hide it)
 
 var _tag: Label3D
+var talking := false
+var _wander_home := Vector3.ZERO
+var _goal := Vector3.ZERO
+var _wander_t := 0.0
+var _col: CollisionShape3D
+
+const WANDER_SPEED := 1.4
+const WANDER_MASK := 1 | 2 | 4 | 16  # walls, player, wild mons, water
 
 
 static func make_alert(height: float) -> Label3D:
@@ -121,7 +133,13 @@ func _ready() -> void:
 	col.shape = cap
 	col.position.y = body_height * 0.5
 	add_child(col)
+	_col = col
 	_build_body()
+	_read_map_entry()
+	_wander_home = position
+	_goal = position
+	if lying:
+		_lie_down()
 	_tag = Label3D.new()
 	_tag.text = npc_name
 	_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -130,6 +148,80 @@ func _ready() -> void:
 	_tag.position.y = body_height + 0.35
 	_tag.visible = show_tag and char_sprite == null  # the original shows no floating names
 	add_child(_tag)
+
+
+## Map NPCs (MapBuilder): `wander` and `lying` of this NPC's entry in the zone JSON (matched by position).
+func _read_map_entry() -> void:
+	if wander_radius >= 0.0:
+		return
+	wander_radius = 0.0
+	var mb := get_parent()
+	if mb == null or not ("data" in mb) or not (mb.data is Dictionary):
+		return
+	for e in mb.data.get("npcs", []):
+		var at: Array = e.get("pos", [])
+		if (
+			at.size() == 2
+			and absf(float(at[0]) - position.x) < 0.05
+			and absf(float(at[1]) - position.z) < 0.05
+		):
+			wander_radius = float(e.get("wander", 0.0))
+			lying = lying or bool(e.get("lying", false))
+			return
+
+
+## Original _lie_down: sprite flat on its side (-90° in Z), darker, low wide box collider.
+func _lie_down() -> void:
+	if char_sprite:
+		char_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+		char_sprite.rotation = Vector3(0.0, 0.0, -PI * 0.5)
+		char_sprite.offset = Vector2.ZERO
+		char_sprite.position = Vector3(0, 0.35, 0)
+		char_sprite.modulate = Color(0.72, 0.72, 0.8)
+	if _col:
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.7, 0.6, 0.7)
+		_col.shape = box
+		_col.position = Vector3(0, 0.3, 0)
+	if _tag:
+		_tag.position.y = 0.9
+
+
+func _physics_process(delta: float) -> void:
+	if wander_radius <= 0.0 or talking or Game.is_busy():
+		return
+	_wander_t -= delta
+	if _wander_t <= 0.0:
+		_wander_t = randf_range(2.0, 5.0)
+		_goal = (
+			_wander_home
+			+ Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0)) * wander_radius
+		)
+		if randf() < 0.4:
+			_goal = position
+	var d := _goal - position
+	d.y = 0.0
+	if d.length() <= 0.15:
+		return
+	var step := d.normalized() * minf(WANDER_SPEED * delta, d.length())
+	var space := get_world_3d().direct_space_state
+	var from := global_position + Vector3(0, 0.6, 0)
+	var ahead := PhysicsRayQueryParameters3D.create(
+		from, from + d.normalized() * 0.55, WANDER_MASK, [get_rid()]
+	)
+	if not space.intersect_ray(ahead).is_empty():
+		_goal = position  # blocked (wall, player, pond): wait for the next goal
+		return
+	var to := global_position + step
+	var down := PhysicsRayQueryParameters3D.create(
+		to + Vector3.UP, to + Vector3.DOWN * 2.0, Overworld.WALL_LAYER, [get_rid()]
+	)
+	var hit := space.intersect_ray(down)
+	if hit.is_empty():
+		_goal = position
+		return
+	face(to)
+	global_position = Vector3(to.x, hit.position.y, to.z)
 
 
 ## Sheet for this NPC: explicit sprite_sheet, story role ("oak", "mom"...), interior role, name keyword.
@@ -189,10 +281,13 @@ func face(pos: Vector3) -> void:
 
 ## Called by the player on interact; the player stays locked until this returns.
 func interact(p: OverworldPlayer) -> void:
+	talking = true
 	face(p.global_position)
 	if has_meta("role") and await InteriorHooks.run(self):
+		talking = false
 		return
 	await say(lines)
+	talking = false
 
 
 func say(text: PackedStringArray) -> void:

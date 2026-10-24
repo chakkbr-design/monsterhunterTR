@@ -89,10 +89,12 @@ func _run() -> void:
 	game.party.clear()
 	await _start_in_bedroom()
 	await _rooms()
+	await _original_npcs()
 	await _stairs()
 	await _doors()
 	await _center()
 	await _mart()
+	await _clerk_gate()
 	await _indoor_safety()
 	await _save_position()
 	w.queue_free()
@@ -397,3 +399,103 @@ func _save_position() -> void:
 	)
 	ex = w.save_extra()
 	check(ex.get("zone") == "viridian_city", "save_extra outdoors (%s)" % ex)
+
+
+## Script check without naming the class (the test compiles before the autoloads).
+func _is(n: Node, script_file: String) -> bool:
+	return (
+		n != null and n.get_script() != null and n.get_script().resource_path.ends_with(script_file)
+	)
+
+
+## Rodada de correções (G3): salas iguais ao original (NPCs, Pokémon de estimação, Poção escondida).
+func _original_npcs() -> void:
+	var room = w.interior("player_room")
+	check(not room.npcs.has("pc"), "bedroom: no PC terminal (original Bedroom.tscn)")
+	var pot: Node = room.npcs.get("desk_potion")
+	check(
+		_is(pot, "room_hidden_item.gd") and pot.prompt() == "", "bedroom: hidden Potion at the desk"
+	)
+	if pot:
+		var before := int(game.bag.get("potion", 0))
+		await _talk(pot)
+		check(
+			(
+				int(game.bag.get("potion", 0)) == before + 1
+				and game.flags.get("item_bedroom_pc", false)
+			),
+			"hidden Potion found once (flag item_bedroom_pc)"
+		)
+	for e in [
+		["player_house", "pidgey", "Pidgey da Mamãe"],
+		["rival_house", "rattata", "Rattata da Margarida"],
+		["oak_lab", "pidgey", "Pidgey do Laboratório"]
+	]:
+		var pet: Node = w.interior(e[0]).npcs.get(e[1])
+		check(
+			_is(pet, "room_pet.gd") and pet.npc_name == e[2] and pet.lines.size() == 2,
+			"%s: pet %s" % [e[0], e[2]]
+		)
+	var want := {
+		"pokemon_center_viridian": ["nurse", "pc", "attendant", "traveller", "youngster"],
+		"mart_viridian": ["clerk", "girl", "old_man"],
+		"trainer_school_viridian": ["teacher", "student"],
+		"viridian_house": ["old_man", "girl"],
+		"forest_gate_south": ["woman_1", "woman_2", "aide_hm05"],
+		"forest_gate_north": ["youngster", "old_man", "cooltrainer"],
+		"pokemon_center_pewter": ["nurse", "pc"],
+		"mart_pewter": ["clerk"],
+		"pewter_museum": ["clerk"],
+		"pewter_house1": ["woman"],
+		"pewter_house2": ["girl"]
+	}
+	for id in want:
+		var got: Array = w.interior(id).npcs.keys()
+		got.sort()
+		var exp: Array = want[id].duplicate()
+		exp.sort()
+		check(got == exp, "%s: NPCs of the original (%s)" % [id, got])
+	var nurse = w.interior("pokemon_center_viridian").npcs.nurse
+	check(
+		nurse.lines.size() == 3 and nurse.after_heal_lines.size() == 1,
+		"nurse: lines before, after_heal_lines after the heal"
+	)
+
+
+## viridian-03: the shop only opens with the Pokédex (npc.gd Action.SHOP).
+func _clerk_gate() -> void:
+	await w.go_to_interior("mart_viridian", "counter")
+	await frames(5)
+	var clerk = w.interior("mart_viridian").npcs.clerk
+	var saved: Dictionary = game.flags.duplicate()
+	for f in [{}, {"got_starter": true, "has_parcel": true}]:
+		game.flags = f.duplicate()
+		if clerk.panel:
+			clerk.panel.queue_free()
+			clerk.panel = null
+		await _talk(clerk)
+		check(
+			clerk.panel == null or not clerk.panel.is_open(),
+			"no shop before the Pokédex (flags %s)" % [f]
+		)
+	game.flags = {"got_starter": true, "has_parcel": true, "has_pokedex": true}
+	var done := [false]
+	var run := func():
+		await clerk.interact(p)
+		done[0] = true
+	run.call()
+	var hud = get_first_node_in_group("ow_hud")
+	var opened := false
+	for i in 60:
+		await frames(10)
+		if clerk.panel and clerk.panel.is_open():
+			opened = true
+			clerk.panel.press("down")
+			clerk.panel.press("down")
+			clerk.panel.press("ok")
+		elif not done[0]:
+			hud.advanced.emit()
+		if done[0]:
+			break
+	check(opened and done[0], "with the Pokédex the shop opens")
+	game.flags = saved

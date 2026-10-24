@@ -1,34 +1,154 @@
 extends RefCounted
-## Opções do jogo em user://settings.cfg: volume geral (0..100) e tela cheia.
+## Opções do jogo em user://settings.cfg, como o settings.gd + options_screen.gd do original:
+## velocidade do texto e da batalha, música, som, janela, gráficos e dicas de batalha.
 ## Uso: const Settings := preload("res://ui/front/settings.gd")
+## load_cfg() devolve {text_speed 0..3, battle_speed 0..1, music 0..100, sfx 0..100, fullscreen,
+## quality 0..1, battle_tips} (e "volume", o volume geral antigo, só para compatibilidade).
 
 const PATH := "user://settings.cfg"
-const DEFAULTS := {"volume": 80, "fullscreen": false}
+const TEXT_SPEEDS := ["Lento", "Médio", "Rápido", "Instantâneo"]
+const TEXT_CPS := [25.0, 45.0, 90.0, 0.0]
+const BATTLE_SPEED_NAMES := ["Lento", "Rápido"]
+const BATTLE_SPEED_MULT := [0.6, 1.0]
+const WINDOW_MODES := ["Janela", "Tela cheia"]
+const QUALITY_NAMES := ["Baixo", "Alto"]
+const LOW_RENDER_SCALE := 0.75
+const DEFAULTS := {
+	"text_speed": 1,
+	"battle_speed": 0,
+	"music": 80,
+	"sfx": 100,
+	"fullscreen": false,
+	"quality": 1,
+	"battle_tips": true,
+	"volume": 80,
+}
+## Linhas da tela de Opções (título e menu de pausa), na ordem do original:
+## [chave, rótulo, tipo ("choice" "volume" "toggle" "action"), nomes das escolhas].
+const ROWS := [
+	["text_speed", "VELOC. DO TEXTO", "choice", TEXT_SPEEDS],
+	["battle_speed", "VELOC. DA BATALHA", "choice", BATTLE_SPEED_NAMES],
+	["music", "MÚSICA", "volume", []],
+	["sfx", "SOM", "volume", []],
+	["fullscreen", "JANELA", "choice", WINDOW_MODES],
+	["quality", "GRÁFICOS", "choice", QUALITY_NAMES],
+	["battle_tips", "DICAS DE BATALHA", "toggle", []],
+	["controls", "CONTROLES", "action", []],
+	["back", "VOLTAR", "action", []],
+]
 
 
 static func load_cfg(path := PATH) -> Dictionary:
 	var d := DEFAULTS.duplicate()
 	var cf := ConfigFile.new()
 	if cf.load(path) == OK:
+		d.text_speed = clampi(
+			int(cf.get_value("options", "text_speed", d.text_speed)), 0, TEXT_SPEEDS.size() - 1
+		)
+		d.battle_speed = clampi(
+			int(cf.get_value("options", "battle_speed", d.battle_speed)),
+			0,
+			BATTLE_SPEED_MULT.size() - 1
+		)
+		d.quality = clampi(
+			int(cf.get_value("options", "quality", d.quality)), 0, QUALITY_NAMES.size() - 1
+		)
+		d.battle_tips = bool(cf.get_value("options", "battle_tips", d.battle_tips))
 		d.volume = clampi(int(cf.get_value("audio", "volume", d.volume)), 0, 100)
+		d.music = clampi(int(cf.get_value("audio", "music", d.music)), 0, 100)
+		d.sfx = clampi(int(cf.get_value("audio", "sfx", d.sfx)), 0, 100)
 		d.fullscreen = bool(cf.get_value("video", "fullscreen", d.fullscreen))
 	return d
 
 
 static func save_cfg(d: Dictionary, path := PATH) -> bool:
 	var cf := ConfigFile.new()
-	cf.set_value("audio", "volume", int(d.get("volume", DEFAULTS.volume)))
+	for k in ["text_speed", "battle_speed", "quality"]:
+		cf.set_value("options", k, int(d.get(k, DEFAULTS[k])))
+	cf.set_value("options", "battle_tips", bool(d.get("battle_tips", DEFAULTS.battle_tips)))
+	for k in ["volume", "music", "sfx"]:
+		cf.set_value("audio", k, int(d.get(k, DEFAULTS[k])))
 	cf.set_value("video", "fullscreen", bool(d.get("fullscreen", DEFAULTS.fullscreen)))
 	return cf.save(path) == OK
 
 
-## Aplica no motor: volume no barramento Master e modo da janela (ignorado em headless).
+## Letras por segundo do diálogo (0 = instantâneo), como Settings.text_cps do original.
+static func text_cps(d: Dictionary) -> float:
+	return TEXT_CPS[clampi(int(d.get("text_speed", 1)), 0, TEXT_CPS.size() - 1)]
+
+
+## Multiplicador da batalha: Lento 0,6x (padrão) ou Rápido 1,0x.
+static func battle_speed_value(d: Dictionary) -> float:
+	return BATTLE_SPEED_MULT[clampi(int(d.get("battle_speed", 0)), 0, BATTLE_SPEED_MULT.size() - 1)]
+
+
+## Valor que a linha de opção desenha (índice da escolha, 0..10 do volume ou bool).
+static func row_value(d: Dictionary, key: String):
+	match key:
+		"music", "sfx":
+			return int(d.get(key, DEFAULTS[key])) / 10
+		"fullscreen":
+			return 1 if bool(d.get("fullscreen", false)) else 0
+		"battle_tips":
+			return bool(d.get("battle_tips", true))
+	return int(d.get(key, 0))
+
+
+## Muda a opção `key` com ←/→ (dir -1/+1) ou E (dir 0: avança a escolha, liga/desliga).
+## Devolve true se mudou (quem chama grava e aplica).
+static func change(d: Dictionary, key: String, dir: int) -> bool:
+	match key:
+		"music", "sfx":
+			if dir == 0:
+				return false
+			var v := clampi(int(d.get(key, DEFAULTS[key])) + 10 * dir, 0, 100)
+			if v == int(d.get(key, DEFAULTS[key])):
+				return false
+			d[key] = v
+			return true
+		"fullscreen", "battle_tips":
+			d[key] = not bool(d.get(key, DEFAULTS[key]))
+			return true
+		"text_speed", "battle_speed", "quality":
+			var n: int = (
+				{"text_speed": TEXT_SPEEDS, "battle_speed": BATTLE_SPEED_NAMES}
+				. get(key, QUALITY_NAMES)
+				. size()
+			)
+			var cur := int(d.get(key, DEFAULTS[key]))
+			var nv := posmod(cur + (dir if dir != 0 else 1), n)
+			if nv == cur:
+				return false
+			d[key] = nv
+			return true
+	return false
+
+
+## Aplica no motor: volumes nos barramentos Music/SFX/UI (se existirem; o Audio relê o arquivo),
+## modo da janela e qualidade da renderização (ignorados em headless).
 static func apply(d: Dictionary) -> void:
-	var v := clampi(int(d.get("volume", DEFAULTS.volume)), 0, 100)
-	AudioServer.set_bus_volume_db(0, linear_to_db(v / 100.0) if v > 0 else -80.0)
-	AudioServer.set_bus_mute(0, v == 0)
+	AudioServer.set_bus_volume_db(0, 0.0)
+	AudioServer.set_bus_mute(0, false)
+	for b in [["Music", "music"], ["SFX", "sfx"], ["UI", "sfx"]]:
+		var i := AudioServer.get_bus_index(b[0])
+		if i < 0:
+			continue
+		var v := clampi(int(d.get(b[1], DEFAULTS[b[1]])), 0, 100)
+		AudioServer.set_bus_volume_db(i, linear_to_db(v / 100.0) if v > 0 else -80.0)
+		AudioServer.set_bus_mute(i, v == 0)
+	var ml := Engine.get_main_loop() as SceneTree
+	var au: Node = ml.root.get_node_or_null("Audio") if ml else null
+	if au:
+		for m in ["apply_settings", "apply_volumes", "_apply_volume"]:
+			if au.has_method(m):
+				au.call(m)
+				break
 	if DisplayServer.get_name() == "headless":
 		return
+	var high := int(d.get("quality", 1)) >= 1
+	if ml:
+		ml.root.scaling_3d_scale = 1.0 if high else LOW_RENDER_SCALE
+		ml.root.msaa_3d = Viewport.MSAA_2X if high else Viewport.MSAA_DISABLED
 	var mode := DisplayServer.window_get_mode()
 	var full := (
 		mode == DisplayServer.WINDOW_MODE_FULLSCREEN

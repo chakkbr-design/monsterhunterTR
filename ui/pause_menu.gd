@@ -1,12 +1,37 @@
 extends CanvasLayer
 ## Menu de pausa do overworld (autoload PauseMenu), no visual do original (pause_menu, party_panel,
 ## summary_panel, bag_panel, pokedex_panel, trainer_card, options_screen, controls_screen):
-## Pokédex (com flags.has_pokedex), Pokémon, Bolsa, Cartão de Treinador, Salvar, Opções, Fechar.
+## Pokédex (com flags.has_pokedex), Pokémon, Bolsa, Cartão de Treinador, Salvar, Opções, Título.
 ## Abre com a ação "pause" (Esc) quando o Game não está ocupado. Não pausa a árvore:
 ## o jogador do overworld consulta PauseMenu.is_open() para não andar.
 
 const Kit := preload("res://ui/ui_kit.gd")
 const Settings := preload("res://ui/front/settings.gd")
+const TITLE_SCENE := "res://ui/front/title.tscn"
+## Ações de um Pokémon na tela da equipe (party_panel._show_actions do original).
+const PARTY_ACTS := [
+	["summary", "RESUMO"], ["switch", "TROCAR"], ["item", "ITEM"], ["cancel", "CANCELAR"]
+]
+## Mon.mood do original (faixas da amizade).
+const MOODS := [[70, "Desconfiado"], [150, "Contente"], [220, "Feliz"], [256, "Dedicado"]]
+## Tipo de entrega dos golpes (campo "kind" do moves.json), como o resumo do original mostra.
+const KINDS := {
+	"arc": "arco",
+	"projectile": "projétil",
+	"beam": "raio",
+	"dash": "investida",
+	"aoe_self": "área em volta",
+	"aoe_target": "área no alvo",
+	"debuff_aoe": "enfraquece em área",
+	"multi_arc": "arco múltiplo",
+	"self_buff": "reforço próprio",
+	"stream": "jato",
+	"homing": "teleguiado",
+	"clones": "clones",
+	"whip": "chicote",
+	"zone": "zona",
+}
+const MONTHS := ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
 const CATS := [
 	["medicine", "Remédios"],
 	["berries", "Frutas"],
@@ -59,7 +84,10 @@ const CONTROLS := [
 var game: Node = null
 var learn: Node = null
 var settings_path := Settings.PATH
-## "" fechado | "main" | "party" | "summary" | "bag" | "target" | "msg" | "dex" | "dex_entry" | "card" | "options" | "controls"
+## Troca de cena (Voltar ao título); o teste troca por uma função que só registra o caminho.
+var change_scene: Callable
+## "" fechado | "main" | "party" | "party_act" | "party_switch" | "party_item" | "summary" | "bag"
+## | "toss" | "target" | "msg" | "ask" | "dex" | "dex_entry" | "card" | "options" | "controls"
 var screen := ""
 var cursor := 0
 var message := ""
@@ -80,6 +108,19 @@ var _dex: Array = []
 var _opt_cur := 0
 var _settings: Dictionary = {}
 var _areas := {}
+var _act_cur := 0
+var _act_note := ""
+var _switch_from := -1
+var _pitem_cur := 0
+var _pitem_note := ""
+var _move_cur := 0
+var _move_held := -1
+var _bag_note := ""
+var _toss_qty := 1
+var _ask_text := ""
+var _ask_yes := true
+var _ask_then: Callable
+var _ask_back := "main"
 
 
 func _ready() -> void:
@@ -162,7 +203,7 @@ func entries() -> Array:
 	var out: Array = []
 	if game != null and game.flags.get("has_pokedex", false):
 		out.append("pokedex")
-	out.append_array(["pokemon", "bag", "trainer", "save", "options", "close"])
+	out.append_array(["pokemon", "bag", "trainer", "save", "options", "title"])
 	return out
 
 
@@ -180,7 +221,7 @@ func _entry_label(id: String) -> String:
 			return "SALVAR"
 		"options":
 			return "OPÇÕES"
-	return "FECHAR"
+	return "TÍTULO"
 
 
 func _unhandled_input(ev: InputEvent) -> void:
@@ -201,6 +242,14 @@ func _input(ev: InputEvent) -> void:
 	if screen == "" or _learn_open():
 		return
 	var a := Kit.nav(ev)
+	if (
+		a == ""
+		and ev is InputEventKey
+		and ev.pressed
+		and not ev.echo
+		and (ev.physical_keycode == KEY_Z or ev.keycode == KEY_Z)
+	):
+		a = "alt"  # pk_alt do original: jogar fora na Bolsa
 	if a == "":
 		return
 	get_viewport().set_input_as_handled()
@@ -230,6 +279,7 @@ func press(a: String) -> void:
 					"bag":
 						_cat = _first_cat()
 						_bag_cur = 0
+						_bag_note = ""
 						_go("bag")
 					"trainer":
 						card_front = true
@@ -240,25 +290,81 @@ func press(a: String) -> void:
 						_settings = Settings.load_cfg(settings_path)
 						_opt_cur = 0
 						_go("options")
-					"close":
-						close()
+					"title":
+						_ask(
+							"Voltar à tela de título? O progresso desde o último save será perdido.",
+							_to_title,
+							"main",
+							false
+						)
 						return
 		"party":
 			_party_cur = _step(_party_cur, a, game.party.size())
 			if a == "back":
 				_go("main")
 			elif a == "ok" and not game.party.is_empty():
-				summary_page = 0
-				_go("summary")
+				_act_cur = 0
+				_act_note = ""
+				_go("party_act")
+		"party_act":
+			_act_cur = _step(_act_cur, a, PARTY_ACTS.size())
+			if a == "back":
+				_go("party")
+			elif a == "ok":
+				match PARTY_ACTS[_act_cur][0]:
+					"summary":
+						summary_page = 0
+						_move_cur = 0
+						_move_held = -1
+						_go("summary")
+					"switch":
+						_switch_from = _party_cur
+						_go("party_switch")
+					"item":
+						_open_party_items("")
+					_:
+						_go("party")
+				return
+		"party_switch":
+			_party_cur = _step(_party_cur, a, game.party.size())
+			if a == "back":
+				_party_cur = _switch_from
+				_go("party_act")
+			elif a == "ok":
+				game.swap_party(_switch_from, _party_cur)
+				_party_cur = _switch_from
+				_switch_from = -1
+				_go("party")
+		"party_item":
+			var ids := _party_items()
+			_pitem_cur = _step(_pitem_cur, a, ids.size() + 1)
+			if a == "back" or (a == "ok" and _pitem_cur >= ids.size()):
+				_go("party_act")
+				return
+			if a == "ok":
+				var id: String = ids[_pitem_cur]
+				var m: Mon = game.party[_party_cur]
+				var text: String = game.use_item(id, m)
+				if text == "":
+					text = "%s não teria efeito em %s." % [Kit.item_name(id), m.display_name]
+				_open_party_items(text)
+				return
+			if a in ["up", "down"]:
+				_pitem_note = ""
 		"summary":
-			if a == "left":
-				_party_cur = posmod(_party_cur - 1, game.party.size())
-			elif a == "right":
-				_party_cur = posmod(_party_cur + 1, game.party.size())
+			if a == "left" or a == "right":
+				summary_page = posmod(
+					summary_page + (1 if a == "right" else -1), SUMMARY_PAGES.size()
+				)
+				_move_held = -1
+			elif summary_page == 2 and a in ["up", "down", "ok"]:
+				_summary_move_key(a)
 			elif a == "up":
-				summary_page = posmod(summary_page - 1, SUMMARY_PAGES.size())
+				_party_cur = posmod(_party_cur - 1, game.party.size())
+				_move_cur = 0
 			elif a == "down":
-				summary_page = posmod(summary_page + 1, SUMMARY_PAGES.size())
+				_party_cur = posmod(_party_cur + 1, game.party.size())
+				_move_cur = 0
 			elif a in ["back", "ok"]:
 				_go("party")
 		"bag":
@@ -271,17 +377,41 @@ func press(a: String) -> void:
 				_bag_cur = 0
 			var items := _items()
 			_bag_cur = _step(_bag_cur, a, items.size())
+			if a in ["left", "right", "up", "down"]:
+				_bag_note = ""
 			if a == "back":
 				_go("main")
 			elif a == "ok" and not items.is_empty():
 				_item = items[_bag_cur]
-				if not _usable_outside(_item):
-					_msg("Não dá para usar isso agora.", "bag")
-				elif game.party.is_empty():
-					_msg("Você não tem Pokémon.", "bag")
+				_bag_use(_item)
+				return
+			elif a == "alt" and not items.is_empty():
+				_item = items[_bag_cur]
+				if _cat_of(_item) in ["key", "tm"]:
+					_bag_note = "Isso é importante demais para jogar fora!"
 				else:
-					_party_cur = 0
-					_go("target")
+					_toss_qty = 1
+					_bag_note = ""
+					_go("toss")
+					return
+		"toss":
+			var top := maxi(int(game.bag.get(_item, 0)), 1)
+			if a == "up" or a == "right":
+				_toss_qty = clampi(_toss_qty + 1, 1, top)
+			elif a == "down" or a == "left":
+				_toss_qty = clampi(_toss_qty - 1, 1, top)
+			elif a == "back":
+				_go("bag")
+				return
+			elif a == "ok":
+				var n := mini(_toss_qty, int(game.bag.get(_item, 0)))
+				_ask(
+					"Jogar fora %d %s?" % [n, Kit.item_name(_item)],
+					_toss.bind(_item, n),
+					"bag",
+					true
+				)
+				return
 		"target":
 			_party_cur = _step(_party_cur, a, game.party.size())
 			if a == "back":
@@ -291,6 +421,15 @@ func press(a: String) -> void:
 		"msg":
 			if a in ["ok", "back"]:
 				_go(_back_to)
+		"ask":
+			if a in ["up", "down", "left", "right"]:
+				_ask_yes = not _ask_yes
+			elif a == "back" or (a == "ok" and not _ask_yes):
+				_go(_ask_back)
+				return
+			elif a == "ok":
+				_ask_then.call()
+				return
 		"dex":
 			if a == "up" or a == "down":
 				_dex_cur = _dex_step(_dex_cur, -1 if a == "up" else 1)
@@ -309,27 +448,145 @@ func press(a: String) -> void:
 			elif a == "back":
 				_go("main")
 		"options":
-			_opt_cur = _step(_opt_cur, a, 4)
-			if a == "back" or (a == "ok" and _opt_cur == 3):
+			_opt_cur = _step(_opt_cur, a, Settings.ROWS.size())
+			var key: String = Settings.ROWS[_opt_cur][0]
+			if a == "back" or (a == "ok" and key == "back"):
 				_go("main")
 				return
-			if _opt_cur == 0 and (a == "left" or a == "right"):
-				_settings.volume = clampi(
-					int(_settings.volume) + (10 if a == "right" else -10), 0, 100
-				)
-				_apply_settings()
-			elif _opt_cur == 1 and a in ["left", "right", "ok"]:
-				_settings.fullscreen = not _settings.fullscreen
-				_apply_settings()
-			elif _opt_cur == 2 and a in ["ok", "right"]:
-				_go("controls")
-				return
+			if key == "controls":
+				if a in ["ok", "right"]:
+					_go("controls")
+					return
+			elif a in ["left", "right", "ok"]:
+				var dir := 0 if a == "ok" else (1 if a == "right" else -1)
+				if Settings.change(_settings, key, dir):
+					_apply_settings()
 		"controls":
 			if a in ["back", "ok"]:
 				_go("options")
 				return
 	cursor = _cursor()
 	_render()
+
+
+## Página GOLPES do resumo: ↑/↓ escolhe o golpe; E segura e ↑/↓ troca a posição (summary_panel.move_selected).
+func _summary_move_key(a: String) -> void:
+	var m: Mon = game.party[_party_cur]
+	var n := mini(m.moves.size(), Mon.MAX_MOVES)
+	if n == 0:
+		return
+	if a == "ok":
+		_move_held = -1 if _move_held >= 0 else _move_cur
+		return
+	var d := -1 if a == "up" else 1
+	if _move_held >= 0:
+		var to := _move_held + d
+		if to < 0 or to >= n:
+			return
+		var tmp = m.moves[_move_held]
+		m.moves[_move_held] = m.moves[to]
+		m.moves[to] = tmp
+		_move_held = to
+		_move_cur = to
+	else:
+		_move_cur = clampi(_move_cur + d, 0, n - 1)
+
+
+## Pergunta SIM/NÃO por cima da tela `back` (o ask_yes_no do original). Sim chama `then`.
+func _ask(text: String, then: Callable, back: String, yes_first := true) -> void:
+	_ask_text = text
+	_ask_then = then
+	_ask_back = back
+	_ask_yes = yes_first
+	_go("ask")
+
+
+func _toss(id: String, n: int) -> void:
+	if n > 0 and game.take_item(id, n):
+		_bag_note = "Jogou fora %d %s." % [n, Kit.item_name(id)]
+	_fix_bag_cursor()
+	_go("bag")
+
+
+func _to_title() -> void:
+	close()
+	if game != null and "save_enabled" in game:
+		game.save_enabled = false
+	preload("res://ui/front/title.gd").boot_to_menu = true
+	if change_scene.is_valid():
+		change_scene.call(TITLE_SCENE)
+	elif is_inside_tree():
+		get_tree().change_scene_to_file(TITLE_SCENE)
+
+
+## Itens da Bolsa que dá para usar num Pokémon (ITEM na tela da equipe).
+func _party_items() -> Array:
+	var out: Array = []
+	for id in game.bag:
+		if int(game.bag[id]) > 0 and _usable_outside(id):
+			out.append(id)
+	out.sort_custom(func(x, y): return Kit.item_name(x) < Kit.item_name(y))
+	return out
+
+
+func _open_party_items(note: String) -> void:
+	if _party_items().is_empty():
+		_act_note = note if note != "" else "Nenhum item para usar num Pokémon."
+		_go("party_act")
+		return
+	_pitem_note = note
+	_pitem_cur = clampi(_pitem_cur, 0, _party_items().size())
+	_go("party_item")
+
+
+## E num item da Bolsa (bag_panel._on_chosen do original).
+func _bag_use(id: String) -> void:
+	var fx: Dictionary = Dex.item(id).get("effect", {})
+	if _cat_of(id) == "balls":
+		game.flags["selected_ball"] = id
+		_bag_note = "%s → bola da tecla Q na batalha." % Kit.item_name(id)
+		_go("bag")
+	elif fx.has("repel") and game.has_method("use_field_item"):
+		var t: String = game.use_field_item(id)
+		if t == "":
+			_msg("Não dá para usar isso agora.", "bag")
+			return
+		_bag_note = t
+		_fix_bag_cursor()
+		_go("bag")
+	elif fx.has("escape"):
+		_escape_rope(id)
+	elif not _usable_outside(id):
+		_msg("Não dá para usar isso agora.", "bag")
+	elif game.party.is_empty():
+		_msg("Você não tem Pokémon.", "bag")
+	else:
+		_party_cur = 0
+		_go("target")
+
+
+## Escape Rope: RouteWorld.escape_rope() (contrato); o item só sai da Bolsa se ela foi usada.
+func _escape_rope(id: String) -> void:
+	var w: Node = get_tree().get_first_node_in_group("ow_root") if is_inside_tree() else null
+	if w == null or not w.has_method("escape_rope"):
+		_msg("Não dá para usar isso agora.", "bag")
+		return
+	close()
+	var used: bool = await w.escape_rope()
+	if used:
+		game.take_item(id)
+	var hud := get_tree().get_first_node_in_group("ow_hud") if is_inside_tree() else null
+	if hud and hud.has_method("toast"):
+		hud.toast("Usou uma %s!" % Kit.item_name(id) if used else "Não dá para usar isso aqui.")
+
+
+func _fix_bag_cursor() -> void:
+	if not game.bag.has(_item):
+		_bag_cur = 0
+		if _items().is_empty():
+			var cats := _cats()
+			_cat = cats[0] if not cats.is_empty() else _cat
+	_bag_cur = clampi(_bag_cur, 0, maxi(_items().size() - 1, 0))
 
 
 func _step(cur: int, a: String, n: int) -> int:
@@ -358,9 +615,13 @@ func _cursor() -> int:
 	match screen:
 		"main":
 			return _main_cur
-		"party", "summary", "target":
+		"party", "summary", "target", "party_switch":
 			return _party_cur
-		"bag":
+		"party_act":
+			return _act_cur
+		"party_item":
+			return _pitem_cur
+		"bag", "toss":
 			return _bag_cur
 		"dex", "dex_entry":
 			return _dex_cur
@@ -569,19 +830,55 @@ func _dim(alpha := 0.45) -> void:
 
 func _render() -> void:
 	Kit.clear(_box)
-	var s := screen if screen != "msg" else _back_to
+	var s := screen
+	if screen == "msg":
+		s = _back_to
+	elif screen == "ask":
+		s = _ask_back
 	match s:
 		"main":
 			_render_main()
 		"party":
-			_render_party("Escolha um Pokémon.", "↑/↓ escolhe · E resumo · Esc volta")
+			_render_party("Escolha um Pokémon.", "↑/↓ escolhe · E confirma · Esc volta")
+		"party_act":
+			var m: Mon = game.party[_party_cur]
+			var acts: Array = []
+			for e in PARTY_ACTS:
+				acts.append(e[1])
+			_render_party(
+				m.display_name.to_upper() + ("   ·   segue você" if _party_cur == 0 else ""),
+				"↑/↓ escolhe · E confirma · Esc volta",
+				acts,
+				_act_cur,
+				_act_note
+			)
+		"party_switch":
+			_render_party(
+				"Mover %s para onde?" % game.party[_switch_from].display_name,
+				"↑/↓ escolhe · E troca · Esc volta",
+				[],
+				-1,
+				"Escolha outro lugar e confirme para trocar. O lugar 1 é o da frente."
+			)
+		"party_item":
+			var rows: Array = []
+			for id in _party_items():
+				rows.append("%s  ×%d" % [Kit.item_name(id), int(game.bag[id])])
+			rows.append("CANCELAR")
+			_render_party(
+				"Usar em %s:" % game.party[_party_cur].display_name,
+				"↑/↓ escolhe · E usa · Esc volta",
+				rows,
+				_pitem_cur,
+				_pitem_note
+			)
 		"target":
 			_render_party(
 				"Usar %s em qual Pokémon?" % Kit.item_name(_item), "↑/↓ escolhe · E usa · Esc volta"
 			)
 		"summary":
 			_render_summary()
-		"bag":
+		"bag", "toss":
 			_render_bag()
 		"dex":
 			_render_dex()
@@ -601,6 +898,17 @@ func _render() -> void:
 		d.size = Vector2(vp.x - 200, 130)
 		_box.add_child(d)
 		d.show_line("", message, true)
+	elif screen == "ask":
+		var vp := _vp()
+		var d := Kit.Dialog.new()
+		d.cps = 0.0
+		d.position = Vector2(100, vp.y - 160)
+		d.size = Vector2(vp.x - 200, 130)
+		_box.add_child(d)
+		d.show_line("", _ask_text, true)
+		var col := _add_win("", Vector2(vp.x - 290, vp.y - 290), Vector2(170, 0), 2)
+		col.add_child(Kit.row(["SIM"], [110], _ask_yes))
+		col.add_child(Kit.row(["NÃO"], [110], not _ask_yes))
 
 
 func _render_main() -> void:
@@ -618,7 +926,9 @@ func _render_main() -> void:
 		_hints("↑/↓ escolhe · E confirma · Esc fecha", Vector2(vp.x - 24, vp.y - 48), true)
 
 
-func _render_party(context: String, hint: String) -> void:
+func _render_party(
+	context: String, hint: String, list: Array = [], list_cur := -1, note := ""
+) -> void:
 	var vp := _vp()
 	_dim(0.3)
 	var pw := minf(640.0, vp.x - 520.0)
@@ -629,6 +939,7 @@ func _render_party(context: String, hint: String) -> void:
 	for i in game.party.size():
 		var r := Kit.PartyRow.new(game.party[i], rh)
 		r.selected = i == _party_cur
+		r.source = screen == "party_switch" and i == _switch_from
 		if screen == "target" or (screen == "msg" and _back_to == "target"):
 			r.note = "" if Items.can_use(_item, game.party[i]) else "sem efeito"
 		col.add_child(r)
@@ -636,6 +947,16 @@ func _render_party(context: String, hint: String) -> void:
 	var c := Kit.label(context, Kit.BLUE, Kit.SIZE_SMALL)
 	c.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(c)
+	if not list.is_empty():
+		var lv := VBoxContainer.new()
+		lv.add_theme_constant_override("separation", 2)
+		for i in list.size():
+			lv.add_child(Kit.row([String(list[i])], [280], i == list_cur))
+		side.add_child(lv)
+	if note != "":
+		var nl := Kit.label(note, Kit.INK, Kit.SIZE_SMALL)
+		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		side.add_child(nl)
 	if not game.party.is_empty():
 		var m: Mon = game.party[clampi(_party_cur, 0, game.party.size() - 1)]
 		var top := HBoxContainer.new()
@@ -714,11 +1035,13 @@ func _render_summary() -> void:
 			_summary_skills(body, m, sp)
 		_:
 			_summary_moves(body, m)
-	root.add_child(
-		Kit.hint(
-			"↑/↓ página · ←/→ Pokémon (%d/%d) · Esc volta" % [_party_cur + 1, game.party.size()]
+	var hint := "←/→ página · ↑/↓ Pokémon (%d/%d) · Esc volta" % [_party_cur + 1, game.party.size()]
+	if summary_page == 2:
+		hint = (
+			"↑/↓ escolhe · E %s · ←/→ página · Esc volta"
+			% ("solta" if _move_held >= 0 else "segura para trocar")
 		)
-	)
+	root.add_child(Kit.hint(hint))
 
 
 func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
@@ -726,37 +1049,45 @@ func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	card[0].size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(card[0])
 	var ab := Dex.ability(m.ability)
-	var nxt := (
-		"nível máximo"
-		if m.level >= Growth.MAX_LEVEL
-		else "%d para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
-	)
-	(
-		card[1]
-		. add_child(
-			(
-				Kit
-				. info_grid(
-					[
-						["Nº", "%03d" % int(sp.get("dex_no", 0))],
-						["Espécie", Dex.canon(m.species)],
-						["Treinador", String(game.player_name)],
-						["Natureza", Kit.nature_text(m.nature)],
-						[
-							"Habilidade",
-							(
-								String(ab.get("name", m.ability.capitalize()))
-								if m.ability != ""
-								else "—"
-							)
-						],
-						["XP", "%d  (%s)" % [m.xp, nxt]],
-						["Pokébola", Kit.item_name(m.ball)],
-					]
-				)
-			)
-		)
-	)
+	var types: Array = []
+	for t in m.types:
+		types.append(Kit.type_name(t).to_upper())
+	var rows := [
+		["Nº", "%03d" % int(sp.get("dex_no", 0))],
+		["TIPO", " / ".join(PackedStringArray(types)) if not types.is_empty() else "—"],
+		["TREINADOR", String(game.player_name)],
+		["Nº ID", trainer_id_text()],
+		["NATUREZA", Kit.nature_text(m.nature)],
+		["Humor", mood_text(int(m.friend))],
+		["HABILIDADE", String(ab.get("name", m.ability.capitalize())) if m.ability != "" else "—"],
+		["ENCONTRO", met_text(m)],
+		["ITEM", "Nenhum"],
+	]
+	card[1].add_child(Kit.info_grid(rows))
+
+
+## Nº ID do treinador (Game.trainer_id); o hash do nome só para save antigo sem o número.
+func trainer_id_text() -> String:
+	var id := int(game.get("trainer_id")) if game.get("trainer_id") != null else 0
+	if id <= 0:
+		id = absi(String(game.player_name).hash()) % 100000
+	return "%05d" % id
+
+
+static func mood_text(friend: int) -> String:
+	for b in MOODS:
+		if friend < int(b[0]):
+			return String(b[1])
+	return String(MOODS[-1][1])
+
+
+## "Nv 5 em ROTA 1" (Mon.met_level / met_zone, quando o Mon guardar; senão "—").
+static func met_text(m: Mon) -> String:
+	var zone = m.get("met_zone")
+	if zone == null or String(zone) == "":
+		return "—"
+	var lv := int(m.get("met_level")) if m.get("met_level") != null else 0
+	return ("Nv %d em %s" % [lv, zone]) if lv > 0 else ("Em %s" % zone)
 
 
 func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
@@ -812,11 +1143,18 @@ func _summary_moves(body: VBoxContainer, m: Mon) -> void:
 	if m.moves.is_empty():
 		body.add_child(Kit.label("Nenhum golpe.", Kit.DIM))
 		return
-	for id in m.moves:
+	_move_cur = clampi(_move_cur, 0, m.moves.size() - 1)
+	for i in m.moves.size():
+		var id: String = m.moves[i]
 		var mv := Dex.move(id)
 		var t := String(mv.get("type", "normal"))
 		var p := PanelContainer.new()
-		var sb := Kit.pill(Color("f0f1ea"), Kit.RIM, 8)
+		var on := i == _move_cur
+		var sb := Kit.pill(
+			Kit.RED_SOFT if on else Color("f0f1ea"),
+			Kit.GREEN if i == _move_held else (Kit.RED if on else Kit.RIM),
+			8
+		)
 		sb.set_content_margin_all(6)
 		sb.content_margin_left = 12
 		p.add_theme_stylebox_override("panel", sb)
@@ -824,21 +1162,26 @@ func _summary_moves(body: VBoxContainer, m: Mon) -> void:
 		v.add_theme_constant_override("separation", 0)
 		p.add_child(v)
 		var h := HBoxContainer.new()
-		h.add_theme_constant_override("separation", 14)
+		h.add_theme_constant_override("separation", 12)
 		v.add_child(h)
+		var cur := Kit.label("▶" if on else "  ", Kit.RED)
+		cur.custom_minimum_size.x = 16
+		h.add_child(cur)
 		var nm := Kit.label(Kit.move_name(id))
-		nm.custom_minimum_size.x = 190
+		nm.custom_minimum_size.x = 180
 		h.add_child(nm)
 		var tg := Kit.tag(Kit.type_name(t), Kit.type_col(t))
 		tg.custom_minimum_size.x = 96
 		h.add_child(tg)
 		var power := int(mv.get("power", 0))
 		var acc := int(mv.get("accuracy", 0))
+		var kind := String(mv.get("kind", ""))
 		for kv in [
 			["PP", "%d" % int(round(Dex.pp_cost(mv))), Kit.PP_BLUE],
 			["PODER", str(power) if power > 0 else "—", Kit.INK],
-			["PREC.", ("%d%%" % acc) if acc > 0 else "—", Kit.INK],
-			["", Kit.CATEGORIES.get(mv.get("category", ""), "?"), Kit.DIM]
+			["PREC.", ("%d%%" % acc) if mv.has("accuracy") else "—", Kit.INK],
+			["RECARGA", "%.1fs" % Dex.cooldown(mv), Kit.INK],
+			["", String(KINDS.get(kind, kind.replace("_", " "))), Kit.DIM]
 		]:
 			var l := Kit.label(("%s %s" % [kv[0], kv[1]]).strip_edges(), kv[2], Kit.SIZE_SMALL)
 			l.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
@@ -900,11 +1243,17 @@ func _render_bag() -> void:
 	v.add_child(list)
 	var items := _items()
 	var first := clampi(_bag_cur - 6, 0, maxi(items.size() - 8, 0))
+	var ball := String(game.flags.get("selected_ball", ""))
 	for i in range(first, mini(items.size(), first + 8)):
 		var id: String = items[i]
+		var tag := "   [Q]" if id == ball else ""
 		list.add_child(
 			Kit.row(
-				[Kit.ItemIcon.new(id, 30), Kit.item_name(id), ["×%d" % int(game.bag[id]), Kit.DIM]],
+				[
+					Kit.ItemIcon.new(id, 30),
+					Kit.item_name(id),
+					["×%d%s" % [int(game.bag[id]), tag], Kit.DIM]
+				],
 				[30, 380],
 				i == _bag_cur
 			)
@@ -918,19 +1267,46 @@ func _render_bag() -> void:
 	sb2.content_margin_bottom = 6
 	desc_box.add_theme_stylebox_override("panel", sb2)
 	desc_box.custom_minimum_size = Vector2(0, 62)
+	var sel_id: String = (
+		items[clampi(_bag_cur, 0, items.size() - 1)] if not items.is_empty() else ""
+	)
+	var tossing := screen == "toss" and sel_id != ""
+	var dv := VBoxContainer.new()
+	dv.add_theme_constant_override("separation", 2)
+	desc_box.add_child(dv)
 	var d := Kit.label(
 		(
-			String(Dex.item(items[clampi(_bag_cur, 0, items.size() - 1)]).get("description", ""))
-			if not items.is_empty()
-			else ""
+			("Jogar fora %s?" % Kit.item_name(sel_id))
+			if tossing
+			else String(Dex.item(sel_id).get("description", "")) if sel_id != "" else ""
 		),
 		Kit.INK,
 		Kit.SIZE_SMALL
 	)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_box.add_child(d)
+	dv.add_child(d)
+	if _bag_note != "":
+		var nl := Kit.label(_bag_note, Kit.AMBER, Kit.SIZE_SMALL)
+		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		dv.add_child(nl)
 	v.add_child(desc_box)
-	_hints("←/→ categoria · ↑/↓ item · E usa · Esc volta", Vector2(pos.x, pos.y + size.y + 10))
+	if tossing:
+		var tv := _add_win(
+			"JOGAR FORA", Vector2(pos.x + size.x - 256, pos.y + size.y - 196), Vector2(236, 96), 4
+		)
+		tv.add_child(Kit.label("Jogar fora quantos?", Kit.INK, Kit.SIZE_SMALL))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		row.add_child(Kit.label("▲▼", Kit.INK, 14))
+		row.add_child(Kit.ItemIcon.new(sel_id, 30))
+		row.add_child(Kit.label("× %d" % _toss_qty, Kit.INK, 26))
+		tv.add_child(row)
+		_hints("↑/↓ quantidade · E joga fora · Esc cancela", Vector2(pos.x, pos.y + size.y + 10))
+		return
+	_hints(
+		"←/→ categoria · ↑/↓ item · E usa · Z joga fora · Esc volta",
+		Vector2(pos.x, pos.y + size.y + 10)
+	)
 
 
 func _render_dex() -> void:
@@ -1130,17 +1506,15 @@ func _render_card() -> void:
 		var rows := [
 			["NOME", String(game.player_name)],
 			["RIVAL", String(game.rival_name)],
-			["Nº ID", "%05d" % (absi(String(game.player_name).hash()) % 100000)],
-			["DINHEIRO", Kit.format_money(int(game.money))]
+			["Nº ID", trainer_id_text()],
+			["DINHEIRO", Kit.money_text(int(game.money))]
 		]
 		if game.flags.get("has_pokedex", false):
 			rows.append(["POKéDEX", "%d capturados" % dex_counts().y])
-		rows.append(["TEMPO", Kit.format_time(float(game.play_time))])
-		var n := 0
-		for b in BADGES:
-			if has_badge(b[0]):
-				n += 1
-		rows.append(["INSÍGNIAS", str(n)])
+		rows.append(["TEMPO DE JOGO", Kit.format_time(float(game.play_time))])
+		var started := format_started(int(game.flags.get("started_at", 0)))
+		if started != "":
+			rows.append(["INÍCIO", started])
 		var g := Kit.info_grid(rows)
 		g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(g)
@@ -1169,19 +1543,18 @@ func _render_card() -> void:
 	v.add_child(Kit.hint("←/→ vira o cartão · Esc volta"))
 
 
+## "23 OUT 2026" (GameState.format_started do original); "" sem data.
+static func format_started(ts: int) -> String:
+	if ts <= 0:
+		return ""
+	var d := Time.get_datetime_dict_from_unix_time(ts)
+	return "%d %s %d" % [d.day, MONTHS[d.month - 1], d.year]
+
+
 func _render_options() -> void:
 	_dim()
-	var v := _centered("OPÇÕES", Vector2(600, 0), 6)
-	v.add_child(
-		Kit.option_row("VOLUME", "volume", int(_settings.get("volume", 80)) / 10, "", _opt_cur == 0)
-	)
-	v.add_child(
-		Kit.option_row(
-			"TELA CHEIA", "toggle", bool(_settings.get("fullscreen", false)), "", _opt_cur == 1
-		)
-	)
-	v.add_child(Kit.option_row("CONTROLES", "action", 0, "", _opt_cur == 2))
-	v.add_child(Kit.option_row("VOLTAR", "action", 0, "", _opt_cur == 3))
+	var v := _centered("OPÇÕES", Vector2(620, 0), 6)
+	Kit.option_rows(v, _settings, _opt_cur)
 	v.add_child(Kit.hint("↑/↓ escolhe · ←/→ muda · E abre · Esc volta"))
 
 
@@ -1189,6 +1562,11 @@ func _render_controls() -> void:
 	_dim()
 	var vp := _vp()
 	var v := _centered("CONTROLES", Vector2(minf(900.0, vp.x - 40.0), 0), 10)
+	controls_into(v)
+
+
+## Tabela de teclas (controls_screen do original); o título usa a mesma.
+static func controls_into(v: VBoxContainer) -> void:
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", 40)
 	v.add_child(cols)

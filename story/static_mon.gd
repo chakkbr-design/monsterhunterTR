@@ -3,10 +3,13 @@ extends WorldNpc
 ## Pokémon estático de um mapa (`statics` de data/maps/*.json: Pidgeotto na Rota 2, Fearow na Rota 2 norte,
 ## Primeape na Rota 22, Raticate na Rota 1, Butterfree e Beedrill na floresta...). Luta uma vez só:
 ## vencer ou capturar grava flags["static_<uid>"] e ele some; fugir ou perder deixa ele lá.
-## Visível: o jogador interage (E). `hidden`: fica escondido e pula na frente quando o jogador chega perto.
+## Visível: o E começa a luta direto. `hidden`: fica escondido e, uma vez só, pula 2,2 m à frente do
+## jogador e a luta começa sem fala (world/static_mon.gd do original). Depois de uma fuga fica visível.
 ## A batalha vai por Overworld.battle -> Game.request_battle ({kind: "wild", can_run: true, static_uid}).
 
 const AMBUSH_SIZE := Vector3(2.4, 3.0, 2.4)
+## BURST_DIST do original: o escondido aparece essa distância à frente do jogador.
+const BURST_DIST := 2.2
 
 var uid := ""
 var species := "Pidgey"
@@ -45,7 +48,6 @@ static func from_entry(e: Dictionary) -> StaticMon:
 func _ready() -> void:
 	var nm := String(Dex.species(Dex.canon(species)).get("name", species))
 	npc_name = "%s Nv%d" % [nm, level]
-	lines = PackedStringArray(["Um %s selvagem está bloqueando o caminho!" % nm])
 	body_height = 1.0
 	color = Color(0.85, 0.75, 0.4)
 	super._ready()
@@ -126,7 +128,6 @@ func _set_shown(on: bool) -> void:
 
 func interact(p: OverworldPlayer) -> void:
 	face(p.global_position)
-	await say(lines)
 	await fight()
 
 
@@ -145,12 +146,23 @@ func _on_body_entered(b: Node) -> void:
 	p.show_alert(true)
 	await get_tree().create_timer(0.6).timeout
 	p.show_alert(false)
+	var fwd := Vector3(p.facing.x, 0.0, p.facing.z)
+	if fwd.length() < 0.01:
+		fwd = Vector3.FORWARD
+	var target := p.global_position + fwd.normalized() * BURST_DIST
+	global_position = Vector3(target.x, global_position.y, target.z)
 	_set_shown(true)
 	face(p.global_position)
 	p.face_toward(global_position)
-	await say(
-		PackedStringArray(["Um %s selvagem pulou na sua frente!" % npc_name.get_slice(" Nv", 0)])
+	# Pulo de saída (0,2 s subindo, 0,22 s descendo, como o tween do original).
+	var tw := create_tween()
+	tw.tween_property(self, "global_position:y", global_position.y + 1.3, 0.2).set_trans(
+		Tween.TRANS_QUAD
 	)
+	tw.tween_property(self, "global_position:y", global_position.y, 0.22).set_trans(
+		Tween.TRANS_QUAD
+	)
+	await tw.finished
 	p.locked = false
 	await fight()
 
@@ -171,6 +183,5 @@ func fight() -> Dictionary:
 	if outcome == "win" or outcome == "caught":
 		Game.flags["static_" + uid] = true
 		queue_free()
-	elif hidden and is_instance_valid(self):
-		_set_shown(false)  # volta a se esconder; pula de novo na próxima passagem
+	# Fugiu: como o original (_fired continua true), ele fica visível no lugar; o E luta de novo.
 	return r

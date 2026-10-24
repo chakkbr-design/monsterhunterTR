@@ -1,5 +1,5 @@
 extends Control
-## Cena principal: abertura, título, menu (Continuar / Novo jogo / Opções / Sair) e a introdução
+## Cena principal: abertura, título, menu (Continuar / Novo jogo / Opções / Créditos / Sair) e a introdução
 ## do professor com escolha de gênero e nomes. Ver docs/CONTRATO.md (Rodada 3, Início de jogo).
 ## Teclado: setas/WASD navegam, E/Enter/Espaço confirmam, Esc/Q/Backspace voltam (controle: ui_*).
 ## Na entrada de nome as letras digitam; ali só as setas navegam.
@@ -15,6 +15,98 @@ const WORLD_SCENE := "res://world/route_world.tscn"
 const START_SPAWN := {"interior": "player_room", "spawn": "bed"}
 const PROF_NAME := "PROF. CARVALHO"
 const SPLASH_TIME := 2.6
+## Segundos parado na tela "Pressione Enter" até voltar à abertura (front_end.IDLE_TO_SPLASH).
+const IDLE_TO_SPLASH := 60.0
+const CREDITS_IDLE := 1.5
+const CREDITS_PAUSE := 3.0
+const CREDITS_SPEED := 30.0
+## Créditos do original (data/credits.json), traduzidos; a arte e o som usados aqui são os dele.
+## [título, linhas, [[nome, detalhe], ...]]
+const CREDITS := [
+	[
+		"JOGO ORIGINAL",
+		[
+			"Port pessoal do Pokemon Battle Arena 0.2.0 demo, sem fins comerciais. A arte, os sons e o desenho do jogo são do projeto original."
+		],
+		[]
+	],
+	[
+		"SPRITES DOS POKÉMON",
+		[
+			"Sprites de Pokémon Mystery Dungeon do PMD SpriteCollab — sprites.pmdcollab.org",
+			"Licença CC BY-NC 4.0"
+		],
+		[
+			[
+				"Spike Chunsoft",
+				"Beedrill, Caterpie, Diglett, Dugtrio, Fearow, Kakuna, Magikarp, Metapod, Nidoqueen, Nidoran F, Pidgeot, Pidgeotto, Pidgey, Pikachu, Poliwag, Poliwhirl, Poliwrath, Psyduck, Raichu, Sandshrew, Sandslash, Slowbro, Spearow, Squirtle, Venusaur"
+			],
+			["3P1C", "Sandshrew"],
+			["Deeshura", "Nidorina"],
+			["Emboarger", "Sandshrew"],
+			[
+				"Emmuffin",
+				"Blastoise, Butterfree, Charmander, Charmeleon, Geodude, Goldeen, Golem, Graveler, Gyarados, Mankey, Raticate, Sandslash, Seaking, Slowpoke, Wartortle, Weedle"
+			],
+			["Grimlin", "Raichu"],
+			["Gust", "Bulbasaur, Golduck, Ivysaur"],
+			["G〜", "Charizard, Nidoking, Onix"],
+			["JFain", "Pidgey"],
+			["Morei", "Golem"],
+			["NeonCityRain", "Primeape"],
+			["Prismatic", "Nidoran M, Nidorino"],
+			["ShyStarryRain", "Rattata"],
+			["Top_Kec", "Raichu"],
+		]
+	],
+	[
+		"EFEITOS DOS GOLPES",
+		[
+			"Coleção de recursos Pokémon Mystery Dungeon Origins (PMDCollab)",
+			"Efeitos de Pokémon Mystery Dungeon, Pokémon Ruby, Sapphire e Emerald e Pokémon Ranger"
+		],
+		[]
+	],
+	[
+		"MÚSICA E SOM",
+		[],
+		[
+			["Kenney", "Interface, UI, Impact, RPG, Digital e Sci-Fi Sounds, Music Jingles — CC0"],
+			["Aureolus_Omicron", "15 Melodic RPG Chiptunes — CC0"],
+			["AkitsukiShintai", "Sons dos golpes (pacote Pokémon HD-2D)"],
+			["Sons originais", "Gritos e efeitos sintetizados feitos para o jogo"],
+		]
+	],
+	[
+		"MODELOS 3D",
+		[],
+		[
+			["Kenney", "City Kit Suburban, Nature Kit, Fantasy Town Kit — CC0"],
+			[
+				"Pokémon HeartGold e SoulSilver",
+				"Modelos do mundo © Nintendo / Creatures Inc. / GAME FREAK inc."
+			],
+		]
+	],
+	[
+		"FONTES",
+		[],
+		[
+			["Nunito", "The Nunito Project Authors — SIL Open Font License 1.1"],
+			["Pixelify Sans", "The Pixelify Sans Project Authors — SIL Open Font License 1.1"],
+		]
+	],
+	[
+		"POKÉMON",
+		[
+			"Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc. Pokémon Mystery Dungeon © Spike Chunsoft. Este é um projeto de fã, gratuito e sem fins comerciais, sem ligação com eles e sem o apoio deles."
+		],
+		[]
+	],
+]
+
+## Volta direto ao menu (sem abertura), como o FrontEnd.boot_to_menu do original (menu de pausa > Título).
+static var boot_to_menu := false
 
 const INTRO := [
 	"Olá, olá! Que bom ver você por aqui!\nSeja bem-vindo ao mundo dos monstros!",
@@ -47,9 +139,11 @@ var change_scene: Callable
 var settings_path := Settings.PATH
 ## Segundos dos fades e letras por segundo do diálogo (testes aceleram).
 var fade_time := 0.6
-var text_speed := 50.0
+## Letras por segundo das falas; negativo = a velocidade do texto das Opções (0 = instantâneo).
+var text_speed := -1.0
 
-## "splash" "press" "menu" "options" "overwrite" "talk" "gender" "name" "rival" "confirm" "leaving"
+## "splash" "press" "menu" "options" "controls" "credits" "overwrite" "talk" "gender" "name" "rival"
+## "confirm" "leaving"
 var state := ""
 var settings: Dictionary = {}
 var menu_items: Array = []
@@ -65,6 +159,10 @@ var _line := 0
 var _chars := 0.0
 var _talk_then: Callable
 var _talk_back: Callable
+var _idle := 0.0
+var _credits_wait := 0.0
+var _credits_acc := 0.0
+var _loc_names := {}
 
 var _backdrop: Control
 var _title_box: VBoxContainer
@@ -89,6 +187,9 @@ var _more: Control
 var _ask: PanelContainer
 var _ask_box: VBoxContainer
 var _fade: ColorRect
+var _credits: Control
+var _credits_scroll: ScrollContainer
+var _controls: Control
 
 
 func _ready() -> void:
@@ -100,8 +201,14 @@ func _ready() -> void:
 		change_scene = func(path: String): get_tree().change_scene_to_file(path)
 	settings = Settings.load_cfg(settings_path)
 	Settings.apply(settings)
+	if text_speed < 0.0:
+		text_speed = Settings.text_cps(settings)
 	_build()
-	_go_splash()
+	if boot_to_menu:
+		boot_to_menu = false
+		_go_menu()
+	else:
+		_go_splash()
 
 
 # --- Montagem ---
@@ -228,6 +335,61 @@ func _build() -> void:
 	_more = Kit.hint("Enter continuar")
 	dv.add_child(_more)
 
+	# Créditos (credits_panel do original): janela no meio que rola sozinha.
+	_credits = _full(Control.new())
+	_credits.visible = false
+	add_child(_credits)
+	var cdim := _full(ColorRect.new())
+	cdim.color = Color(0, 0, 0, 0.45)
+	_credits.add_child(cdim)
+	var ccc := _full(CenterContainer.new())
+	_credits.add_child(ccc)
+	var cwin := Kit.Win.new("CRÉDITOS")
+	cwin.custom_minimum_size = Vector2(620, 534)
+	ccc.add_child(cwin)
+	var ccol := VBoxContainer.new()
+	ccol.add_theme_constant_override("separation", 14)
+	cwin.add_child(ccol)
+	_credits_scroll = ScrollContainer.new()
+	_credits_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_credits_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_credits_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ccol.add_child(_credits_scroll)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 24)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_credits_scroll.add_child(body)
+	for sec in CREDITS:
+		body.add_child(Kit.header(sec[0], Kit.BLUE))
+		for line in sec[1]:
+			var l := Kit.label(line, Kit.INK, Kit.SIZE_SMALL)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			body.add_child(l)
+		for e in sec[2]:
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 24)
+			var n := Kit.label(e[0], Kit.INK)
+			n.custom_minimum_size.x = 220
+			n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			n.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			row.add_child(n)
+			var dl := Kit.label(e[1], Kit.DIM, Kit.SIZE_SMALL)
+			dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			dl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			row.add_child(dl)
+			body.add_child(row)
+	var ch := Kit.hint("↑/↓ rola · Esc volta")
+	ch.size_flags_horizontal = Control.SIZE_SHRINK_END
+	ccol.add_child(ch)
+
+	# Controles (a mesma tabela do menu de pausa).
+	_controls = _full(CenterContainer.new())
+	_controls.visible = false
+	add_child(_controls)
+
 	_fade = _full(ColorRect.new())
 	_fade.color = Color(0, 0, 0, 0)
 	add_child(_fade)
@@ -251,6 +413,7 @@ func _go_splash() -> void:
 
 func _go_press() -> void:
 	state = "press"
+	_idle = 0.0
 	_show(true, false)
 	_press.visible = true
 	_menu_row.visible = false
@@ -267,7 +430,7 @@ func _go_menu(at := "") -> void:
 	menu_items = []
 	if game != null and game.has_save():
 		menu_items.append("continue")
-	menu_items.append_array(["new", "options", "quit"])
+	menu_items.append_array(["new", "options", "credits", "quit"])
 	cursor = maxi(0, menu_items.find(at))
 	_render()
 
@@ -279,8 +442,29 @@ func _go_options() -> void:
 
 
 const MENU_TEXT := {
-	"continue": "CONTINUAR", "new": "NOVO JOGO", "options": "OPÇÕES", "quit": "SAIR"
+	"continue": "CONTINUAR",
+	"new": "NOVO JOGO",
+	"options": "OPÇÕES",
+	"credits": "CRÉDITOS",
+	"quit": "SAIR"
 }
+
+
+func _go_credits() -> void:
+	state = "credits"
+	_credits_wait = CREDITS_IDLE
+	_credits_acc = 0.0
+	_credits_scroll.scroll_vertical = 0
+	_credits.visible = true
+
+
+func _go_controls() -> void:
+	state = "controls"
+	Kit.clear(_controls)
+	var w: Array = Kit.panel("CONTROLES", Vector2(minf(900.0, size.x - 40.0), 0), 10)
+	_controls.add_child(w[0])
+	preload("res://ui/pause_menu.gd").controls_into(w[1])
+	_controls.visible = true
 
 
 func _render() -> void:
@@ -297,20 +481,8 @@ func _render() -> void:
 				_fill_card()
 		"options":
 			_menu_box.add_child(Kit.header("OPÇÕES", Kit.BLUE, 20))
-			_menu_box.add_child(
-				Kit.option_row(
-					"VOLUME %d%%" % settings.volume,
-					"volume",
-					int(settings.volume) / 10,
-					"",
-					cursor == 0
-				)
-			)
-			_menu_box.add_child(
-				Kit.option_row("TELA CHEIA", "toggle", settings.fullscreen, "", cursor == 1)
-			)
-			_menu_box.add_child(Kit.option_row("VOLTAR", "action", 0, "", cursor == 2))
-			_menu_box.add_child(Kit.hint("Esquerda/direita ajustam · Esc volta"))
+			Kit.option_rows(_menu_box, settings, cursor)
+			_menu_box.add_child(Kit.hint("↑/↓ escolhe · ←/→ muda · E abre · Esc volta"))
 
 
 ## Resumo do save lido direto do arquivo (não mexe no Game).
@@ -323,13 +495,16 @@ func save_summary() -> Dictionary:
 	var d = JSON.parse_string(f.get_as_text())
 	if not d is Dictionary:
 		return {}
+	var party: Array = d.get("party", []) if d.get("party", []) is Array else []
 	var out := {
 		"name": String(d.get("player_name", "?")),
 		"money": int(d.get("money", 0)),
+		"time": Kit.format_time(float(d.get("play_time", 0.0))),
+		"count": party.size(),
+		"location": _save_location(d),
 		"lead": "",
 		"when": ""
 	}
-	var party: Array = d.get("party", [])
 	if not party.is_empty() and party[0] is Dictionary:
 		var m: Dictionary = party[0]
 		var sp := String(m.get("species", ""))
@@ -346,6 +521,28 @@ func save_summary() -> Dictionary:
 	return out
 
 
+## Nome do lugar do save (SaveGame.location_name do original): a zona, ou a zona em volta da sala.
+func _save_location(d: Dictionary) -> String:
+	var zone := String(d.get("zone", ""))
+	if zone == "" and d.has("interior"):
+		var room: Dictionary = InteriorDefs.ROOMS.get(String(d.interior), {})
+		zone = String(room.get("zone", ""))
+		if zone == "":
+			return String(room.get("name", "?"))
+	if zone == "":
+		return "?"
+	if not _loc_names.has(zone):
+		var nm := zone.capitalize()
+		var path := "res://data/maps/%s.json" % zone
+		if FileAccess.file_exists(path):
+			var m = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if m is Dictionary:
+				nm = String(m.get("name", nm))
+		_loc_names[zone] = nm
+	return String(_loc_names[zone])
+
+
+## Cartão do Continuar com as linhas do original (SaveGame.summary_rows): JOGADOR, TEMPO, POKéMON, LOCAL.
 func _fill_card() -> void:
 	var s := save_summary()
 	if s.is_empty():
@@ -353,11 +550,10 @@ func _fill_card() -> void:
 	_card.visible = true
 	var rows := [
 		["JOGADOR", s.name],
-		["PARCEIRO", s.lead if s.lead != "" else "nenhum"],
-		["DINHEIRO", Kit.format_money(int(s.money))]
+		["TEMPO", s.time],
+		["POKéMON", str(s.count)],
+		["LOCAL", s.location],
 	]
-	if s.when != "":
-		rows.append(["SALVO EM", s.when])
 	_card_box.add_child(Kit.info_grid(rows, 24))
 
 
@@ -386,8 +582,8 @@ func talk(lines: Array, then: Callable, back: Callable, rival := false) -> void:
 func _show_line() -> void:
 	_text.text = game.fill_names(_lines[_line]) if game != null else _lines[_line]
 	_chars = 0.0
-	_text.visible_characters = 0
-	_more.visible = false
+	_text.visible_characters = 0 if text_speed > 0.0 else -1
+	_more.visible = text_speed <= 0.0
 
 
 func _talk_ok() -> void:
@@ -523,8 +719,15 @@ func _render_ask(question: String, options: Array) -> void:
 func _finish_new_game() -> void:
 	if game != null:
 		game.new_game(player_name, rival_name, gender)
+		game.flags["started_at"] = int(Time.get_unix_time_from_system())
 		game.spawn_request = START_SPAWN.duplicate()
 	_leave()
+
+
+## Esc numa fala da introdução pula o resto (front_end._skip_intro): nomes e gênero que faltam
+## ficam no padrão e o jogo começa.
+func _skip_intro() -> void:
+	_finish_new_game()
 
 
 func _continue() -> void:
@@ -555,6 +758,18 @@ func _process(dt: float) -> void:
 		"press":
 			_blink_t += dt
 			_press.modulate.a = 0.45 + 0.55 * absf(cos(_blink_t * 2.5))
+			_idle += dt
+			if _idle > IDLE_TO_SPLASH:
+				_go_splash()
+		"credits":
+			if _credits_wait > 0.0:
+				_credits_wait -= dt
+			else:
+				_credits_acc += CREDITS_SPEED * dt
+				var step := int(_credits_acc)
+				if step > 0:
+					_credits_scroll.scroll_vertical += step
+					_credits_acc -= step
 		"talk":
 			if _text.visible_characters >= 0:
 				_chars += dt * text_speed
@@ -569,6 +784,8 @@ func _input(ev: InputEvent) -> void:
 		return
 	# A tela de título fica com todo o teclado (o PauseMenu não abre aqui).
 	get_viewport().set_input_as_handled()
+	if ev is InputEventKey and ev.pressed:
+		_idle = 0.0
 	if state == "leaving":
 		return
 	if state in ["name", "rival"]:
@@ -601,25 +818,41 @@ func press(a: String) -> void:
 						_start_new()
 					"options":
 						_go_options()
+					"credits":
+						_go_credits()
 					"quit":
 						get_tree().quit()
 			elif a == "back":
 				_go_press()
 		"options":
+			var key: String = Settings.ROWS[cursor][0]
 			if a == "up" or a == "down":
-				cursor = posmod(cursor + (1 if a == "down" else -1), 3)
-			elif a == "back" or (a == "ok" and cursor == 2):
+				cursor = posmod(cursor + (1 if a == "down" else -1), Settings.ROWS.size())
+			elif a == "back" or (a == "ok" and key == "back"):
 				_go_menu("options")
 				return
-			elif cursor == 0 and (a == "left" or a == "right"):
-				settings.volume = clampi(
-					int(settings.volume) + (10 if a == "right" else -10), 0, 100
-				)
-				_apply_settings()
-			elif cursor == 1 and a in ["left", "right", "ok"]:
-				settings.fullscreen = not settings.fullscreen
-				_apply_settings()
+			elif key == "controls":
+				if a in ["ok", "right"]:
+					_go_controls()
+					return
+			elif a in ["left", "right", "ok"]:
+				var dir := 0 if a == "ok" else (1 if a == "right" else -1)
+				if Settings.change(settings, key, dir):
+					_apply_settings()
 			_render()
+		"controls":
+			if a in ["ok", "back"]:
+				_controls.visible = false
+				state = "options"
+				_render()
+		"credits":
+			if a == "back":
+				_credits.visible = false
+				_go_menu("credits")
+			elif a == "up" or a == "down":
+				_credits_scroll.scroll_vertical += -60 if a == "up" else 60
+				_credits_acc = 0.0
+				_credits_wait = CREDITS_PAUSE
 		"overwrite":
 			if a == "up" or a == "down" or a == "left" or a == "right":
 				cursor = 1 - cursor
@@ -636,8 +869,8 @@ func press(a: String) -> void:
 		"talk":
 			if a == "ok":
 				_talk_ok()
-			elif a == "back" and _talk_back.is_valid():
-				_talk_back.call()
+			elif a == "back":
+				_skip_intro()
 		"gender":
 			if a == "left" or a == "right" or a == "up" or a == "down":
 				cursor = 1 - cursor

@@ -2,7 +2,8 @@ extends SceneTree
 ## Integração: abertura inteira na RouteWorld real (precisa da API dos Interiores).
 ## godot --headless --path . --script res://tests/story/test_story_opening.gd
 ## quarto -> sai de casa -> Oak barra no norte de Pallet -> laboratório -> Charmander ->
-## rival com Squirtle -> batalha (autoplay) -> Mamãe -> loja de Viridian (encomenda) -> lab -> Pokédex.
+## rival com Squirtle -> batalha (autoplay) -> cura no lab -> loja de Viridian (encomenda) -> lab -> Pokédex.
+## Também: autosave (porta e fim de cena), prêmio do rival 35 x 5, Pokédex vista ao abrir o cartão.
 
 const MAX_WAIT_S := 240.0
 
@@ -68,6 +69,10 @@ func _run() -> void:
 		"começa no quarto (%s)" % world.location_id
 	)
 	check(game.party.is_empty(), "jogo novo sem Pokémon (%d)" % game.party.size())
+	if FileAccess.file_exists(game.save_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(game.save_path))
+	var saves := [0]
+	game.saved.connect(func(): saves[0] += 1)
 	check(story.triggers().size() >= 1, "gatilho oak_stop criado a partir do pallet_town.json")
 
 	# Desce a escada e sai de casa.
@@ -118,6 +123,9 @@ func _run() -> void:
 		b != null and story.ball("Bulbasaur") != null and story.ball("Squirtle") != null,
 		"três Poké Balls na mesa"
 	)
+	check(saves[0] >= 1 and game.has_save(), "autosave depois da cena do Oak (%d)" % saves[0])
+	var lab_room: Node = world.interior("oak_lab")
+	check(lab_room.get_node_or_null("PokedexA") != null, "Pokédex na mesa do lab")
 	if b:
 		var m: Node3D = world.marker("oak_lab", "ball_2")
 		check(
@@ -128,6 +136,14 @@ func _run() -> void:
 	# Escolhe Charmander (como o E do jogador faria) -> rival pega Squirtle. A luta é na saída do lab.
 	var battles: Array = []
 	game.battle_finished.connect(func(r): battles.append(r))
+	# Cartão aberto e NÃO: a espécie já fica vista (story.gd:374 do original).
+	if story.ball("Bulbasaur"):
+		story.auto_answer = false
+		story.pick_starter(story.ball("Bulbasaur"))
+		await until(func(): return not story.is_running(), 10.0)
+		story.auto_answer = true
+	check(game.seen.has("Bulbasaur") and game.party.is_empty(), "NÃO no cartão: Bulbasaur visto")
+	var money0: int = game.money
 	if b:
 		p.global_position = b.global_position + Vector3(0, -0.8, 1.2)
 		p.locked = true
@@ -170,16 +186,14 @@ func _run() -> void:
 		"continua no lab (sem white-out)"
 	)
 	check(story.actor("rival") == null, "rival saiu")
+	check(game.party[0].hp == game.party[0].max_hp, "time curado no lab depois da luta")
+	if outcome == "win":
+		check(game.money == money0 + 35 * 5, "prêmio 35 x 5 (%d -> %d)" % [money0, game.money])
 
-	# Mamãe cura.
-	game.party[0].hp = 1
+	# Casa: sem cena automática da Mamãe.
 	await world.go_to_interior("player_house", "door")
 	await frames(3)
-	await until(func(): return not story.is_running() and game.flags.get("mom_healed", false), 20.0)
-	check(
-		game.flags.get("mom_healed", false) and game.party[0].hp == game.party[0].max_hp,
-		"Mamãe curou"
-	)
+	check(not story.is_running(), "casa sem cena depois da luta")
 
 	# Loja de Viridian -> encomenda.
 	await world.go_to_interior("mart_viridian", "door")
@@ -200,6 +214,8 @@ func _run() -> void:
 		"encomenda trocada pela Pokédex"
 	)
 	check(int(game.bag.get("poke_ball", 0)) == balls + 5, "5 Poké Balls")
+	await frames(2)
+	check(lab_room.get_node_or_null("PokedexA") == null, "Pokédex sumiram da mesa")
 	check(not story.is_running() and not p.locked, "nada travado no fim")
 
 	# Sair do lab e passar pelo norte de Pallet não chama mais o Oak.

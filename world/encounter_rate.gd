@@ -56,13 +56,14 @@ func battle_ended() -> void:
 
 
 ## Accumulates distance walked in grass; returns true when a step rolls an encounter.
-func walk(d: float, rate: float, rng: RandomNumberGenerator) -> bool:
+## blocked (Repel): the steps pass without any roll, like the original _grass_step.
+func walk(d: float, rate: float, rng: RandomNumberGenerator, blocked := false) -> bool:
 	_dist += d
 	if grace > 0.0:
 		grace = maxf(grace - d, 0.0)
 	while _dist >= STEP_M:
 		_dist -= STEP_M
-		if step(rate, rng):
+		if not blocked and step(rate, rng):
 			return true
 	return false
 

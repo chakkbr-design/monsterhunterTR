@@ -2,7 +2,7 @@ class_name StoryFlags
 extends RefCounted
 ## Regras puras do roteiro (sem cena): o que cada lugar dispara conforme Game.flags.
 ## Flags usadas: oak_stopped, got_starter (+ starter_chosen, compat. com os mapas), starter / rival_starter (Game),
-## rival_battle_done, rival_battle_won, mom_healed, has_parcel, has_pokedex, parcel_delivered.
+## rival_battle_done, rival_battle_won, has_parcel, has_pokedex, parcel_delivered, old_man_lesson, hm05_flash.
 
 const RIVAL_TRAINER := "rival_blue_route22"
 const RIVAL_FIRST_LEVEL := 5
@@ -70,9 +70,6 @@ static func interior_event(flags: Dictionary, id: String) -> String:
 				and not on(flags, "has_pokedex")
 			):
 				return "mart_parcel"
-		"player_house":
-			if on(flags, "rival_battle_done") and not on(flags, "mom_healed"):
-				return "mom_heal"
 	return ""
 
 
@@ -138,15 +135,69 @@ static func rival_lines(flags: Dictionary) -> PackedStringArray:
 	return PackedStringArray(["{PLAYER}? O vovô ainda não chegou. Que demora!"])
 
 
+## lines_for "Mom" do original (antes do inicial; depois ela só cura).
 static func mom_lines(flags: Dictionary) -> PackedStringArray:
 	if not on(flags, "got_starter"):
-		return PackedStringArray(["O Prof. Carvalho, aqui do lado, estava procurando você."])
+		return PackedStringArray(
+			[
+				"...Certo.\nTodo garoto sai de casa um dia.\nDisseram isso na TV.",
+				"Ah, sim. O PROF. CARVALHO, aqui do lado,\nestava procurando você."
+			]
+		)
 	return PackedStringArray(
 		["{PLAYER}! Descanse um pouco.", "Pronto, seu time está cheio de energia!"]
 	)
 
 
-## Pewter: o guia leva ao ginásio uma vez, e só antes da Insígnia da Rocha.
-## Flags: pewter_guide_done, badge_boulder (+ boulder_badge), rival2_done / rival2_won (Rota 22, via trainers.json).
-static func pewter_guide_due(flags: Dictionary) -> bool:
-	return not on(flags, "pewter_guide_done") and not on(flags, "badge_boulder")
+## lines_for "Daisy" do original (story.gd:85-88).
+static func daisy_lines(flags: Dictionary) -> PackedStringArray:
+	if on(flags, "rival_battle_done"):
+		return PackedStringArray(
+			["{PLAYER}, ouvi dizer que você\nbatalhou contra o {RIVAL}.", "Queria ter visto isso!"]
+		)
+	return PackedStringArray(["Oi, {PLAYER}!", "Meu irmão, {RIVAL}, está no\nlaboratório do vovô."])
+
+
+## NPCs do lab do original: Head Researcher (aide_1, story.gd:89-91) e Lab Aide (aide_2).
+static func lab_npc_name(role: String) -> String:
+	return "Pesquisador-chefe" if role == "aide_1" else "Assistente do lab"
+
+
+static func lab_npc_lines(flags: Dictionary, role: String) -> PackedStringArray:
+	if role == "aide_1":
+		if on(flags, "starter_chosen") or on(flags, "got_starter"):
+			return PackedStringArray(["Esse Pokémon já confia em você. Cuide bem dele!"])
+		return PackedStringArray(
+			[
+				"O professor? Ele saiu faz um tempinho...",
+				"Aquelas Poké Balls na mesa são para treinadores novos, mas só o Prof. Carvalho pode entregá-las."
+			]
+		)
+	return PackedStringArray(
+		[
+			"Estou anotando como os Pokémon reagem aos treinadores. Uns fogem, uns atacam, outros só observam.",
+			"Pokémon de treinador ficam calmos perto das pessoas. Tente falar com o Pidgey!"
+		]
+	)
+
+
+## Ajudante do Oak depois de dar o HM05 (lines_for "Aide", story.gd:114-117).
+static func aide_lines() -> PackedStringArray:
+	return PackedStringArray(["Como está indo a sua POKéDEX?", "Continue assim!"])
+
+
+## Cartões da aula do velhinho (catch_weaken/catch_status/catch_throw do battle_tutorial.gd).
+const CATCH_CARDS := [
+	[
+		"Enfraqueça primeiro",
+		"Um Pokémon com a vida cheia escapa da bola. Deixe o HP dele no amarelo ou no vermelho, mas sem desmaiar!"
+	],
+	[
+		"Status ajuda",
+		"Um Pokémon dormindo ou paralisado é bem mais fácil de capturar. Golpes como Sleep Powder ou Thunder Wave são os melhores amigos de um treinador."
+	],
+	[
+		"Lance a bola",
+		"Na batalha, aperte Q para lançar uma Poké Ball. Bolas melhores, chances melhores!"
+	],
+]

@@ -89,7 +89,9 @@ func _ready() -> void:
 	add_child(_body)
 	_build_shell()
 	for f in def.get("furniture", []):
-		var at := Vector3(float(f[1][0]), 0.0, float(f[1][1]))
+		var at := Vector3(
+			float(f[1][0]), float(f[1][2]) if f[1].size() > 2 else 0.0, float(f[1][1])
+		)
 		var sz := Vector3(float(f[2][0]), float(f[2][1]), float(f[2][2]))
 		var solid: bool = f.size() < 5 or bool(f[4])
 		if InteriorLook.furniture(
@@ -280,6 +282,16 @@ func _spawn_npc(n: Dictionary) -> void:
 			(npc as MartClerk).shop_id = String(n.get("shop", "viridian"))
 		"pc":
 			npc = PcTerminal.new()
+		"pet":
+			npc = RoomPet.new()
+			(npc as RoomPet).species = String(n.get("species", "Pidgey"))
+		"hidden_item":
+			if ItemBall.taken(String(n.get("uid", ""))):
+				return
+			npc = RoomHiddenItem.new()
+			(npc as RoomHiddenItem).uid = String(n.get("uid", ""))
+			(npc as RoomHiddenItem).item_id = String(n.get("item", "potion"))
+			(npc as RoomHiddenItem).count = int(n.get("count", 1))
 		"trainer":
 			npc = WorldTrainer.new()
 			(npc as WorldTrainer).trainer_id = String(n.get("trainer", ""))
@@ -292,6 +304,11 @@ func _spawn_npc(n: Dictionary) -> void:
 		for l in n.lines:
 			ls.append(String(l))
 		npc.lines = ls
+	if n.has("after_heal") and npc is CenterNurse:
+		var ah := PackedStringArray()
+		for l in n.after_heal:
+			ah.append(String(l))
+		(npc as CenterNurse).after_heal_lines = ah
 	if n.has("color"):
 		npc.color = Color(String(n.color))
 	if n.has("sprite"):

@@ -58,13 +58,15 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	if not opts.has("floor") and not _ground_under(p.global_position):
 		opts = opts.duplicate()
 		opts["floor"] = true  # the arena draws no floor of its own: give it one over empty space
+	var money_before := int(Game.money)
 	Game.battle_finished.connect(_capture, CONNECT_ONE_SHOT)
 	Game.request_battle(enemies, opts, self, p.global_position)
 	if _result.is_empty():
 		_result = await Game.battle_finished
 	var outcome := String(_result.get("outcome", "?"))
+	var whiteout: bool = outcome == "lose" and not opts.get("scripted", false)
 	var hud := hud_of(self)
-	if hud:
+	if hud and not whiteout:  # a real loss gets the original's white-out lines instead
 		var lines := PackedStringArray(
 			[
 				(
@@ -78,18 +80,17 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 				)
 			]
 		)
-		if _result.has("prize"):
-			lines.append("Ganhou P%d." % int(_result.prize))
+		# o prêmio já aparece no fim da batalha ("Você ganhou ₽X pela vitória!", battle_arena)
 		for e in _result.get("evolved", []):
 			lines.append("%s evoluiu para %s!" % e)
 		hud.toast(" ".join(lines), 3.5)
-	if outcome == "lose" and not opts.get("scripted", false):
-		_white_out(p)
+	if whiteout:
+		await _white_out(p, maxi(money_before - int(Game.money), 0))
 	return _result
 
 
-## Game already halved money and healed; send the player back to the heal spot.
-func _white_out(p: OverworldPlayer) -> void:
+## Game already took the money (`loss`) and healed; send the player back to the heal spot.
+func _white_out(p: OverworldPlayer, _loss := 0) -> void:
 	for n in get_tree().get_nodes_in_group(WorldNpc.GROUP):
 		if n is HealSpot:
 			p.global_position = n.global_transform * Vector3(0, 0.2, -1.5)

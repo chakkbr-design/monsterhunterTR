@@ -4,6 +4,8 @@ extends SceneTree
 
 const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
+## Abertura do treinador: "<NOME> quer lutar!" (1.2 s) + "<NOME> mandou X!" (1.2 s), como o original.
+const TRAINER_INTRO := 2.5
 
 var _fails := 0
 var _count := 0
@@ -25,6 +27,10 @@ func _initialize() -> void:
 	_control_swap()
 	for i in 3:
 		_two_vs_one(i)
+	_pause()
+	_trainer_lines()
+	_results()
+	_capture_pc_and_ball()
 	print("battle: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -198,7 +204,7 @@ func _capture() -> void:
 	var t := _arena(
 		[Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"kind": "trainer", "seed": 3}
 	)
-	_run(t, 1.3)
+	_run(t, TRAINER_INTRO)
 	check(not t.throw_ball() and not t.run_away(), "treinador: sem bola nem fuga")
 	_done(t)
 	var r := _arena([Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"seed": 3})
@@ -373,7 +379,7 @@ func _trainer_item() -> void:
 		{"kind": "trainer", "trainer_id": "brock", "seed": 9, "trainer_item": "super_potion"}
 	)
 	check(a.ally == null, "batalha de treinador é 1x1 (sem aliado)")
-	_run(a, 1.3)
+	_run(a, TRAINER_INTRO)
 	var e: BattleFighter = a.enemy
 	e.take_damage(int(e.max_hp * 0.5), Vector3.ZERO, 0.0)
 	_run(a, 0.3)
@@ -552,3 +558,165 @@ func _two_vs_one(i: int) -> void:
 	else:
 		check(party[0].is_fainted() and party[1].is_fainted(), "2x1 perdido com os dois desmaiados")
 	_done(a)
+
+
+# --- Pausa (Esc), falas do treinador, resultado do fim, captura com equipe cheia ---
+
+
+func _pause() -> void:
+	var a := _arena([Mon.create("charmander", 10)], [Mon.create("pidgey", 10)], {"seed": 4})
+	check(not a.open_pause(), "pausa não abre na abertura")
+	_run(a, 1.3)
+	check(a.open_pause() and a.pause_open, "Esc abre a pausa na luta")
+	var ids: Array = a.pause_items().map(func(it): return it.id)
+	check(ids == ["ally_mode", "run", "resume"], "itens da pausa sem aliado (%s)" % [ids])
+	var e: BattleFighter = a.enemy
+	var at := e.position
+	var hp := e.hp
+	_run(a, 2.0)
+	check(e.position == at and e.hp == hp, "a luta para com a pausa aberta")
+	a.step(DT)
+	check(a.hud.pause_text().contains("FUGIR"), "HUD mostra a lista da pausa")
+	a.choose_pause("resume")
+	check(not a.pause_open and a.state == "fight", "VOLTAR fecha a pausa")
+	a.open_pause()
+	a.choose_pause("run")
+	check(a.state == "ending" and a.result.outcome == "run", "FUGIR foge de selvagem")
+	_done(a)
+	var t := _arena(
+		[Mon.create("charmander", 10)], [Mon.create("pidgey", 3)], {"kind": "trainer", "seed": 3}
+	)
+	_run(t, TRAINER_INTRO)
+	t.open_pause()
+	t.choose_pause("run")
+	check(t.pause_open and t.state == "fight", "FUGIR recusa em treinador e a pausa fica aberta")
+	check(t.log_lines[-1].begins_with("Não! Não dá para fugir"), "aviso de treinador no log")
+	_done(t)
+	var party := [Mon.create("charmander", 12), Mon.create("squirtle", 12)]
+	var d := _arena(party, [Mon.create("rattata", 12)], {"seed": 21})
+	_run(d, 1.3)
+	d.open_pause()
+	ids = d.pause_items().map(func(it): return it.id)
+	check("control_other" in ids, "CONTROLAR O OUTRO com dois em campo")
+	var before: BattleFighter = d.player
+	d.choose_pause("control_other")
+	check(d.player != before and not d.pause_open, "CONTROLAR O OUTRO troca e fecha")
+	_done(d)
+
+
+func _trainer_lines() -> void:
+	var foes := [Mon.create("weedle", 3), Mon.create("caterpie", 3)]
+	var a := _arena(
+		[Mon.create("charmander", 20)],
+		foes,
+		{"kind": "trainer", "trainer_id": "bug_catcher_rick", "seed": 6}
+	)
+	var nm: String = a.trainer_name()
+	check(nm != "" and not nm.begins_with("O treinador"), "nome do treinador (%s)" % nm)
+	check(
+		a.hud.banner_text() == "%s quer lutar!" % nm, "faixa de desafio (%s)" % a.hud.banner_text()
+	)
+	check(not a.enemy.visible, "1º Pokémon só aparece depois do desafio")
+	_run(a, 1.3)
+	check(a.enemy.visible, "1º Pokémon aparece")
+	check(
+		a.hud.banner_text() == "%s mandou Weedle!" % nm,
+		"mandou com o nome (%s)" % a.hud.banner_text()
+	)
+	_run(a, 1.3)
+	check(a.state == "fight", "luta depois da abertura do treinador")
+	a.enemy.controller = "none"
+	a.enemy.take_damage(a.enemy.hp, Vector3.ZERO, 0.0)
+	a.step(DT)
+	check("Volte, Weedle!" in a.log_lines, "Volte, X! na troca")
+	_run(a, 0.6)
+	check(
+		("%s vai mandar Caterpie!" % nm) in a.log_lines,
+		"vai mandar com o nome (%s)" % [a.log_lines.slice(-3)]
+	)
+	_run(a, 1.5)
+	check(a.enemy.mon == foes[1] and a.enemy.visible, "manda o 2º Pokémon")
+	_done(a)
+	var r := _arena(
+		[Mon.create("charmander", 20)],
+		[Mon.create("pidgey", 3)],
+		{"kind": "trainer", "trainer_id": "rival_blue_route22", "seed": 6}
+	)
+	check(not r.trainer_name().contains("{RIVAL}"), "rival com nome (%s)" % r.trainer_name())
+	_done(r)
+
+
+func _results() -> void:
+	var g := _game_with({})
+	var mine := Mon.create("charmander", 5)
+	var a := _arena(
+		[mine],
+		[Mon.create("geodude", 12)],
+		{"kind": "trainer", "trainer_id": "brock", "seed": 2, "game": g}
+	)
+	_run(a, TRAINER_INTRO)
+	a.enemy.controller = "none"
+	a.enemy.last_hit_by = a.player
+	var lv0 := mine.level
+	a.enemy.take_damage(a.enemy.hp, Vector3.ZERO, 0.0)
+	a.step(DT)
+	check(a.state == "ending", "vitória entra no fim")
+	check(not a.log_lines.any(func(l): return l.begins_with("+")), "sem popup de EXP na hora")
+	var saw_fill := false
+	var t := 0.0
+	while a.state != "done" and t < 30.0:
+		a.step(DT)
+		t += DT
+		if a.state == "results" and a.hud._player_card.script_xp >= 0.0:
+			saw_fill = true
+	var lines: Array = a.log_lines
+	var gained := lines.filter(func(l): return l.contains(" ganhou ") and l.ends_with(" de EXP."))
+	check(gained.size() == 1, "linha de EXP no resultado (%s)" % [lines.slice(-6)])
+	check(saw_fill, "barra de EXP enche no cartão")
+	if mine.level > lv0:
+		check(
+			lines.has("%s subiu para o Nv %d!" % [mine.display_name, mine.level]),
+			"linha de nível no resultado"
+		)
+	var prize: int = g.trainer_payout("brock", 12)
+	check(
+		lines[-1] == "Você ganhou ₽%d pela vitória!" % prize,
+		"linha do prêmio por último (%s)" % lines[-1]
+	)
+	check(a.state == "done" and a.get_meta("got").outcome == "win", "resultado termina a batalha")
+	_done(a)
+	g.free()
+
+
+func _capture_pc_and_ball() -> void:
+	var g := _game_with({"poke_ball": 5, "great_ball": 2, "master_ball": 1})
+	for i in 6:
+		g.party.append(Mon.create("rattata", 5))
+	g.flags["selected_ball"] = "great_ball"
+	var a := _arena([g.party[0]], [Mon.create("pidgey", 3)], {"seed": 3, "game": g})
+	check(a._pick_ball() == "great_ball", "Q usa a bola escolhida na Bolsa")
+	g.flags["selected_ball"] = "master_ball"
+	_run(a, 1.3)
+	a.enemy.controller = "none"
+	check(a.throw_ball(), "joga a bola")
+	var t := 0.0
+	while a.state == "capture" and t < 10.0:
+		a.step(DT)
+		t += DT
+	var line := String(a.log_lines[-1])
+	check(
+		line.contains("foi capturado!") and line.ends_with("Pidgey foi mandado para o PC."),
+		"equipe cheia avisa o PC (%s)" % line
+	)
+	check(int(g.bag.get("master_ball", 0)) == 0, "gastou a bola escolhida")
+	_done(a)
+	g.free()
+	var b: Node = load(ARENA).instantiate()
+	b.manual = true
+	root.add_child(b)
+	b.start([Mon.create("charmander", 5)], [Mon.create("pidgey", 3)], {"seed": 1})
+	check(
+		b.fight_speed in [0.6, 1.0],
+		"sem opts.speed usa a velocidade das opções (%.1f)" % b.fight_speed
+	)
+	_done(b)

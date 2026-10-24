@@ -133,6 +133,7 @@ func go_to_interior(interior_id: String, spawn: String = "door") -> void:
 	_set_location("interior", interior_id)
 	await _fade_to(0.0)
 	traveling = false
+	_autosave()
 
 
 ## Fades out, builds the zone if needed, puts the player on its spawn (door arrivals included) and fades in.
@@ -150,6 +151,42 @@ func go_to_zone(zone: String, spawn: String) -> void:
 	_set_location("zone", zone)
 	await _fade_to(0.0)
 	traveling = false
+	_autosave()
+
+
+## Game.autosave (docs/CONTRATO.md): it saves only when nothing modal is open.
+func _autosave() -> void:
+	var g := get_node_or_null("/root/Game")
+	if g and g.has_method("autosave"):
+		g.autosave(self)
+
+
+## Original Game.heal_with_fade: fade out, heal the party, "Seu time foi curado!" (or msg) with the
+## heal jingle, 1.8 s of black, fade in.
+func heal_with_fade(msg := "") -> void:
+	await _fade_to(1.0, 0.35)
+	Game.heal_party()
+	var hud := hud_of(self)
+	if hud:
+		hud.toast(msg if msg != "" else "Seu time foi curado!", 2.5)
+	_sfx("heal")
+	await _hold(1.8)
+	await _fade_to(0.0, 0.35)
+
+
+## Original Game.use_escape_rope: anywhere outside a battle, ends the Repel and takes the player to the
+## last heal point (no healing). True if used; the caller removes the item.
+func escape_rope() -> bool:
+	var p := player_of(self)
+	if p == null or Game.is_busy() or traveling:
+		return false
+	if "repel_steps" in Game:
+		Game.repel_steps = 0
+	var was := p.locked
+	p.locked = true
+	await _go_heal_point(0.35, 0.0)
+	p.locked = was
+	return true
 
 
 ## Named point in a room (ball_1..3, oak, rival, clerk, nurse, mom, pc...). null if missing.
@@ -318,23 +355,76 @@ func _make_fade() -> void:
 	cl.add_child(_fade)
 
 
-func _fade_to(a: float) -> void:
+## secs < 0: the door fade (fade_time). fade_time 0 (tests) makes every fade instant.
+func _fade_to(a: float, secs := -1.0) -> void:
 	if _fade == null:
 		return
 	if fade_time <= 0.0:
 		_fade.color.a = a
 		return
 	var tw := create_tween()
-	tw.tween_property(_fade, "color:a", a, fade_time)
+	tw.tween_property(_fade, "color:a", a, fade_time if secs < 0.0 else secs)
 	await tw.finished
 
 
-## Lost a (non-scripted) battle: back to the last place that healed the party (Mom by default).
-func _white_out(_p: OverworldPlayer) -> void:
+## Black-screen pause of the original's heal / white-out (skipped with instant fades).
+func _hold(secs: float) -> void:
+	if fade_time > 0.0:
+		await get_tree().create_timer(secs).timeout
+
+
+func _sfx(id: String) -> void:
+	var au := get_node_or_null("/root/Audio")
+	if au and au.has_method("has_sfx") and au.has_sfx(id):
+		au.sfx(id)
+
+
+## Lost a (non-scripted) battle, like the original Game.whiteout (game.gd:696-729): the four lines
+## (out of Pokémon, the money lost, "... ... ... ...", home / Pokémon Center), the blackout jingle,
+## a 0.6 s fade, the last place that healed the party (Mom by default), the heal jingle, 1 s, fade in.
+func _white_out(p: OverworldPlayer, loss := 0) -> void:
+	var was := p.locked
+	p.locked = true
+	var nm := Game.player_name
+	var lines := PackedStringArray(["%s não tem mais Pokémon em condições de lutar!" % nm])
+	if loss > 0:
+		lines.append("%s entrou em pânico e perdeu ₽%d..." % [nm, loss])
+	lines.append("... ... ... ...")
+	lines.append(
+		(
+			"%s correu %s, protegendo os Pokémon exaustos de mais ferimentos..."
+			% [nm, "para casa" if _heal_id() == "player_house" else "para um Centro Pokémon"]
+		)
+	)
+	var hud := hud_of(self)
+	if hud:
+		await hud.say("", lines)
+	_sfx("blackout")
+	await _go_heal_point(0.6, 1.0, "heal")
+	p.locked = was
+
+
+## Interior of the last heal (Game.flags.last_heal, set by the nurse / Mom); player_house by default.
+func _heal_id() -> String:
 	var id := String(Game.flags.get("last_heal", "player_house"))
-	if not interiors.has(id):
-		id = "player_house"
-	go_to_interior(id, "counter" if interiors[id].has_spawn("counter") else "door")
+	return id if interiors.has(id) else "player_house"
+
+
+## Fade out (secs), put the player at the heal point's counter, optional jingle, hold, fade in.
+func _go_heal_point(secs: float, hold: float, jingle := "") -> void:
+	while traveling:
+		await get_tree().process_frame
+	traveling = true
+	await _fade_to(1.0, secs)
+	var id := _heal_id()
+	active_zone = interiors[id].outdoor_zone()  # like _start_interior: the room's own zone stays loaded
+	_place_in_interior(id, "counter" if interiors[id].has_spawn("counter") else "door")
+	_set_location("interior", id)
+	if jingle != "":
+		_sfx(jingle)
+	await _hold(hold)
+	await _fade_to(0.0, secs)
+	traveling = false
 
 
 # --- outdoor zones -------------------------------------------------------------------------------

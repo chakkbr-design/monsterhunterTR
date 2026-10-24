@@ -158,7 +158,10 @@ func _run() -> void:
 	check(
 		game.spawn_request == {"interior": "player_room", "spawn": "bed"}, "spawn_request no quarto"
 	)
-	check(game.party.is_empty() and game.flags.is_empty(), "jogo novo zerado")
+	check(
+		game.party.is_empty() and game.flags.keys() == ["started_at"],
+		"jogo novo zerado, com a data de início (%s)" % game.flags
+	)
 	t.queue_free()
 	await frames(2)
 
@@ -173,17 +176,44 @@ func _run() -> void:
 		await key(KEY_S)
 	await key(KEY_ENTER)
 	check(t.state == "options", "abre Opções")
-	await key(KEY_A)
-	await key(KEY_LEFT)
+	await key(KEY_A)  # velocidade do texto: Médio -> Lento
+	for i in 3:
+		await key(KEY_DOWN)
+	await key(KEY_LEFT)  # som 100 -> 90
 	await key(KEY_DOWN)
-	await key(KEY_ENTER)
+	await key(KEY_ENTER)  # janela -> tela cheia
 	var cfg := Settings.load_cfg(CFG)
 	check(
-		cfg.volume == 60 and cfg.fullscreen == true,
-		"settings.cfg: volume 60, tela cheia (%s)" % cfg
+		cfg.text_speed == 0 and cfg.sfx == 90 and cfg.fullscreen == true,
+		"settings.cfg: texto Lento, som 90, tela cheia (%s)" % cfg
 	)
+	check(Settings.text_cps(cfg) == 25.0, "texto Lento = 25 letras/s")
+	check(Settings.battle_speed_value(cfg) == 0.6, "batalha Lento = 0,6x")
+	for i in 3:
+		await key(KEY_DOWN)
+	check(Settings.ROWS[t.cursor][0] == "controls", "linha CONTROLES")
+	await key(KEY_ENTER)
+	check(t.state == "controls" and t._controls.visible, "abre os controles")
+	await key(KEY_ESCAPE)
+	check(t.state == "options", "Esc volta às opções")
 	await key(KEY_ESCAPE)
 	check(t.state == "menu", "Esc volta ao menu")
+	# Créditos.
+	check(t.menu_items[-2] == "credits", "CRÉDITOS antes de SAIR")
+	t.cursor = t.menu_items.find("credits")
+	await key(KEY_ENTER)
+	check(t.state == "credits" and t._credits.visible, "abre os créditos")
+	t._process(5.0)
+	t._process(1.0)
+	await frames(1)
+	check(t._credits_acc >= 0.0, "créditos rolam sozinhos")
+	await key(KEY_ESCAPE)
+	check(t.state == "menu" and not t._credits.visible, "Esc fecha os créditos")
+	# Parado 60 s no "Pressione Enter" volta à abertura.
+	await key(KEY_ESCAPE)
+	check(t.state == "press", "Esc volta ao Pressione Enter")
+	t._process(61.0)
+	check(t.state == "splash", "60 s parado volta à abertura")
 	t.queue_free()
 	await frames(2)
 	Settings.save_cfg({"volume": 25, "fullscreen": false}, CFG)
@@ -199,7 +229,10 @@ func _run() -> void:
 	# --- 3. Com save: Continuar aparece com o resumo e carrega ---
 	game.choose_starter("Charmander")
 	game.money = 1234
-	check(game.save_game({"pos": [1.0, 2.0, 3.0]}), "save de teste gravado")
+	game.play_time = 125.0
+	check(
+		game.save_game({"pos": [1.0, 2.0, 3.0], "interior": "player_room"}), "save de teste gravado"
+	)
 	game.new_game("X", "Y", "male")
 	t = make_title(game)
 	await frames(1)
@@ -210,6 +243,10 @@ func _run() -> void:
 	check(
 		s.get("name") == "Ana" and s.get("money") == 1234 and String(s.get("lead")).contains("5"),
 		"resumo do save: %s" % s
+	)
+	check(
+		s.get("time") == "0:02" and s.get("count") == 1 and s.get("location") == "CIDADE DE PALLET",
+		"cartão com TEMPO, POKéMON e LOCAL: %s" % s
 	)
 	check(t._card.visible, "cartão do save visível")
 	# Novo jogo com save pede confirmação; Não volta ao menu.
@@ -228,6 +265,31 @@ func _run() -> void:
 	)
 	check(game.last_save.get("pos", []) == [1.0, 2.0, 3.0], "last_save com a posição")
 	check(game.spawn_request.is_empty(), "Continuar não pede spawn")
+	t.queue_free()
+	await frames(2)
+
+	# --- 4. Esc na fala do professor pula a introdução (nomes padrão); boot_to_menu ---
+	_rm(SAVE)
+	t = make_title(game)
+	await frames(1)
+	t.press("ok")
+	t.press("ok")
+	check(t.menu_items[t.cursor] == "new", "sem save: Novo jogo")
+	await key(KEY_ENTER)
+	check(t.state == "talk", "fala do professor")
+	await key(KEY_ESCAPE)
+	await wait_scene()
+	check(
+		scene_to == "res://world/route_world.tscn" and game.player_name == "RED",
+		"Esc pula a introdução com os nomes padrão (%s)" % game.player_name
+	)
+	check(int(game.flags.get("started_at", 0)) > 0, "data de início gravada")
+	t.queue_free()
+	await frames(2)
+	preload("res://ui/front/title.gd").boot_to_menu = true
+	t = make_title(game)
+	await frames(1)
+	check(t.state == "menu", "boot_to_menu abre direto no menu")
 	t.queue_free()
 	await frames(2)
 

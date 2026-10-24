@@ -26,6 +26,7 @@ var _alert: Label3D
 var sprite: CharSprite  ## the original trainer sheet (walk / run), null = capsule placeholder
 var _phys_prev := Vector3.ZERO  ## body position at the last two physics ticks: the visuals are drawn
 var _phys_cur := Vector3.ZERO  ## between them so they don't step at the physics rate on faster screens
+var _step_t := 0.0  ## footstep clock: each footstep spends one Repel step (original player.gd:124-134)
 
 
 func _enter_tree() -> void:
@@ -145,12 +146,37 @@ func _physics_process(delta: float) -> void:
 	_model.rotation.y = lerp_angle(
 		_model.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-14.0 * delta)
 	)
+	var moving := dir.length() > 0.1
+	_footstep(delta, moving and active and is_on_floor(), Input.is_action_pressed("sprint"))
 	if active and not _grass.is_empty():
 		var moved := Vector2(global_position.x - before.x, global_position.z - before.z).length()
 		var patch: TallGrass = _grass[-1]
-		if enc.walk(moved, WildTable.rate(patch.table()), _rng):
+		if enc.walk(moved, WildTable.rate(patch.table()), _rng, _repelled()):
 			_ambush(patch)
 	_update_focus(active)
+
+
+## Original footstep cadence (0.32 s walking, 0.24 s running): each one spends a Repel step.
+func _footstep(delta: float, stepping: bool, running: bool) -> void:
+	var gap := 0.24 if running else 0.32
+	if not stepping:
+		_step_t = gap
+		return
+	_step_t += delta
+	if _step_t < gap:
+		return
+	_step_t = 0.0
+	var g := get_node_or_null("/root/Game")
+	if g and g.has_method("repel_step") and g.repel_step():
+		var hud := Overworld.hud_of(self)
+		if hud:
+			hud.toast("O efeito do Repel acabou.", 2.5)
+
+
+## Repel on: no tall-grass encounters at all (original player.gd:211, _grass_step).
+func _repelled() -> bool:
+	var g := get_node_or_null("/root/Game")
+	return g != null and g.has_method("repel_active") and g.repel_active()
 
 
 ## Where the player is drawn this frame (between the last two physics ticks). Camera and follower track this.

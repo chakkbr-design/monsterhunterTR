@@ -69,6 +69,8 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
 		user.popup("Paralisado!", Dex.type_color("electric"))
 		return true
+	if arena and arena.has_method("on_move_used"):
+		arena.on_move_used(user, mv)
 	var prepare := Dex.prepare_time(mv)
 	if exhausted:
 		_stagger_after(user, mv, prepare)

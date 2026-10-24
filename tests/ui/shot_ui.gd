@@ -17,7 +17,11 @@ func _shot(name: String) -> void:
 	for i in 4:
 		await process_frame
 	await RenderingServer.frame_post_draw
-	var path := "res://docs/screens/%s.png" % name
+	var dir := "res://docs/screens"
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--out="):
+			dir = a.substr(6)
+	var path := "%s/%s.png" % [dir, name]
 	root.get_texture().get_image().save_png(ProjectSettings.globalize_path(path))
 	print("saved ", path)
 
@@ -97,11 +101,27 @@ func _run() -> void:
 	menu.press("ok")  # POKéMON
 	await _shot("ui_party")
 	menu.press("ok")
+	await _shot("ui_party_actions")
+	menu.press("ok")
 	await _shot("ui_summary")
-	menu.press("down")
+	menu.press("right")
 	await _shot("ui_summary_skills")
+	menu.press("right")
 	menu.press("down")
+	menu.press("ok")
 	await _shot("ui_summary_moves")
+	menu.press("ok")
+	menu.press("back")
+	menu.press("ok")
+	menu.press("down")
+	menu.press("ok")
+	menu.press("down")
+	await _shot("ui_party_switch")
+	menu.press("back")
+	menu.press("down")
+	menu.press("ok")
+	await _shot("ui_party_item")
+	menu.press("back")
 	menu.press("back")
 	menu.press("back")
 	menu.press("up")
@@ -117,6 +137,17 @@ func _run() -> void:
 	menu.press("down")
 	menu.press("ok")  # BOLSA
 	await _shot("ui_bag")
+	menu.press("right")
+	menu.press("down")
+	menu.press("ok")  # escolhe a Great Ball
+	await _shot("ui_bag_ball")
+	menu.press("alt")
+	menu.press("up")
+	await _shot("ui_bag_toss")
+	menu.press("ok")
+	await _shot("ui_bag_toss_ask")
+	menu.press("right")
+	menu.press("ok")
 	menu.press("back")
 	menu.press("down")
 	menu.press("ok")  # cartão
@@ -128,8 +159,8 @@ func _run() -> void:
 	menu.press("down")
 	menu.press("ok")  # opções
 	await _shot("ui_options")
-	menu.press("down")
-	menu.press("down")
+	for i in 7:
+		menu.press("down")
 	menu.press("ok")
 	await _shot("ui_controls")
 	menu.press("back")
@@ -137,6 +168,11 @@ func _run() -> void:
 	menu.press("up")
 	menu.press("ok")  # salvar
 	await _shot("ui_save_msg")
+	menu.press("ok")
+	menu.press("down")
+	menu.press("down")
+	menu.press("ok")  # título
+	await _shot("ui_title_ask")
 	menu.close()
 	var m: Mon = game.party[0]
 	var nw := ""
@@ -149,6 +185,11 @@ func _run() -> void:
 	game.queue_learn(m, nw)
 	game.learn_requested.emit()
 	await _shot("ui_learn")
+	learn.press("ok")
+	learn.press("ok")
+	await _shot("ui_learn_ask")
+	learn.press("ok")
+	await _shot("ui_learn_pick")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_save_ui_shot.json"))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_settings_ui_shot.cfg"))
 	quit()

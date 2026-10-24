@@ -7,6 +7,8 @@ signal battle_finished(result: Dictionary)
 signal learn_requested
 ## Há Pokémon esperando a tela de evolução (ver pending_evolutions).
 signal evolution_requested
+## Autosave gravou (o HUD mostra "Salvando…").
+signal saved
 
 const ARENA_SCENE := "res://battle/battle_arena.tscn"
 const PARTY_MAX := 6
@@ -25,6 +27,10 @@ var player_gender := "male"
 var play_time := 0.0
 ## Número do Cartão de Treinador (sorteado no novo jogo).
 var trainer_id := 0
+## Passos que ainda faltam do Repel (salvo). Ver use_field_item.
+var repel_steps := 0
+## Autosave ligado (SaveGame.enabled do original): só depois de new_game/load_game.
+var save_enabled := false
 
 ## Iniciais oferecidos no laboratório, na ordem da mesa.
 const STARTERS := ["Bulbasaur", "Charmander", "Squirtle"]
@@ -59,11 +65,24 @@ var spawn_request: Dictionary = {}
 
 var _arena: Node = null
 
+## PP_WORLD_REGEN do original (game.gd:232): fora da batalha cada Pokémon da equipe recupera
+## 0,5% do PP base por segundo, mesmo dentro da bola.
+const PP_WORLD_REGEN := 0.005
+
 
 func _process(delta: float) -> void:
 	var s := get_tree().current_scene
 	if s and not s.scene_file_path.begins_with("res://ui/front/"):
 		play_time += delta
+		if not is_busy():
+			regen_pp(delta)
+
+
+## _regen_pp do original: devolve PP a quem está de pé e abaixo do máximo.
+func regen_pp(delta: float) -> void:
+	for m in party:
+		if m.hp > 0 and m.pp < m.pp_base:
+			m.pp = minf(m.pp_base, m.pp + m.pp_base * PP_WORLD_REGEN * delta)
 
 
 func _ready() -> void:
@@ -102,6 +121,7 @@ func add_mon(m: Mon) -> void:
 	if party.size() < PARTY_MAX:
 		party.append(m)
 	else:
+		m.heal_full()  # vai para a caixa curado, como deposit_to_box do original
 		pc.append(m)
 
 
@@ -122,6 +142,8 @@ func new_game(p_name: String, r_name: String, gender := "male") -> void:
 	player_gender = gender
 	play_time = 0.0
 	trainer_id = randi_range(10000, 99999)
+	repel_steps = 0
+	save_enabled = true
 
 
 ## Escolha do inicial: entra na equipe e define o do rival (flag rival_starter, lida pelo trainers.json).
@@ -162,14 +184,18 @@ func deposit(party_index: int) -> bool:
 			healthy += 1
 	if healthy == 0:
 		return false
-	pc.append(party.pop_at(party_index))
+	var m: Mon = party.pop_at(party_index)
+	m.heal_full()  # game_state.gd:296 do original: a caixa cura
+	pc.append(m)
 	return true
 
 
 func withdraw(pc_index: int) -> bool:
 	if pc_index < 0 or pc_index >= pc.size() or party.size() >= PARTY_MAX:
 		return false
-	party.append(pc.pop_at(pc_index))
+	var m: Mon = pc.pop_at(pc_index)
+	m.heal_full()  # game_state.gd:307 do original
+	party.append(m)
 	return true
 
 
@@ -263,7 +289,8 @@ func to_dict() -> Dictionary:
 		"rival_name": rival_name,
 		"player_gender": player_gender,
 		"play_time": play_time,
-		"trainer_id": trainer_id
+		"trainer_id": trainer_id,
+		"repel_steps": repel_steps
 	}
 
 
@@ -278,6 +305,7 @@ func from_dict(d: Dictionary) -> void:
 	player_gender = d.get("player_gender", "male")
 	play_time = float(d.get("play_time", 0.0))
 	trainer_id = int(d.get("trainer_id", 0))
+	repel_steps = maxi(int(d.get("repel_steps", 0)), 0)
 	seen = {}
 	caught = {}
 	pending_learns = []
@@ -315,11 +343,82 @@ func load_game() -> Dictionary:
 		return {}
 	from_dict(d)
 	last_save = d
+	save_enabled = true
 	return d
 
 
+## Autosave do original (SaveGame.autosave: fim de cada porta e de cada cena): grava com
+## world.save_extra() só se o jogo começou (save_enabled) e nada está no meio (batalha, cena,
+## diálogo, viagem, tela modal). Em teste headless nunca grava no save de verdade.
+func autosave(world: Node) -> void:
+	if not can_autosave(world):
+		return
+	if save_game(world.save_extra()):
+		saved.emit()
+
+
+func can_autosave(world: Node) -> bool:
+	if not save_enabled or is_busy() or world == null or not is_instance_valid(world):
+		return false
+	if not world.has_method("save_extra") or not world.is_inside_tree():
+		return false
+	if DisplayServer.get_name() == "headless" and save_path == "user://save.json":
+		return false
+	if bool(world.get("traveling")):
+		return false
+	var st := get_node_or_null("/root/Story")
+	if st and st.has_method("is_running") and st.is_running():
+		return false
+	for path in ["/root/LearnMove", "/root/PauseMenu", "/root/PCStorage", "/root/Evolution"]:
+		var n := get_node_or_null(path)
+		if n and n.has_method("is_open") and n.is_open():
+			return false
+	var hud := Overworld.hud_of(world) if world is Node3D else null
+	if hud and hud.has_method("is_dialog_open") and hud.is_dialog_open():
+		return false
+	return true
+
+
+# --- Repel (bag_panel.gd:279 e player.gd:131 do original) ---
+
+## Passos de cada item de campo do tipo Repel quando o items.json não diz.
+const REPEL_STEPS := {"repel": 100, "super_repel": 200, "max_repel": 250}
+
+
+## Usa um item de campo que não mira Pokémon (Repel). Tira da bolsa e devolve a mensagem;
+## "" se não é item de campo ou não há na bolsa.
+func use_field_item(id: String) -> String:
+	var fx: Dictionary = Dex.item(id).get("effect", {})
+	if not fx.has("repel") and not REPEL_STEPS.has(id):
+		return ""
+	if not take_item(id):
+		return ""
+	repel_steps = int(fx.get("repel", REPEL_STEPS.get(id, 100)))
+	return "Repel usado! Pokémon selvagens não vão aparecer por um tempo."
+
+
+func repel_active() -> bool:
+	return repel_steps > 0
+
+
+## O original (player.gd:211) não rola encontro nenhum com Repel ativo, seja qual for o nível.
+func repel_blocks(_level: int) -> bool:
+	return repel_active()
+
+
+## Um passo andado. true quando o Repel acabou agora ("O efeito do Repel acabou.").
+func repel_step() -> bool:
+	if repel_steps <= 0:
+		return false
+	repel_steps -= 1
+	return repel_steps == 0
+
+
 ## Prêmio por vencer um treinador: reward fixo do JSON ou base da classe x nível do último Pokémon.
-func trainer_payout(trainer_id: String, last_level: int) -> int:
+func trainer_payout(trainer_id: String, last_level: int, trainer_class := "") -> int:
+	if trainer_class != "":
+		# opts.trainer_class (1ª luta com o rival): base da classe x nível, como o original.
+		return int(TRAINER_PAYOUTS.get(trainer_class, 16)) * maxi(last_level, 1)
 	var t := Dex.trainer(trainer_id)
 	if t.has("reward"):
 		return int(t.reward)
@@ -394,14 +493,14 @@ func _finish(result: Dictionary) -> void:
 	elif outcome == "win" and _opts.get("kind") == "trainer":
 		var id := String(_opts.get("trainer_id", ""))
 		var last: int = _enemies[-1].level if not _enemies.is_empty() else 1
-		result.prize = trainer_payout(id, last)
+		result.prize = trainer_payout(id, last, String(_opts.get("trainer_class", "")))
 		money += result.prize
 		if not _opts.get("scripted", false):
 			flags["trainer_" + id] = true
 	elif outcome == "lose":
 		# Batalha de roteiro (opts.scripted): perder não custa dinheiro.
 		if not _opts.get("scripted", false):
-			money /= 2
+			money -= money / 2  # like the original (rounds the loss down)
 		heal_party()
 	result.evolved = _evolve_pending()
 	for x in result.get("exp", []):

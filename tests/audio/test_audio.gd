@@ -91,8 +91,14 @@ func _run() -> void:
 		"battle_trainer",
 		"victory",
 		"center",
-		"lab"
+		"lab",
+		"oak",
+		"rival",
+		"gym_leader",
+		"cave"
 	]
+	for n in ["heal", "item_get", "badge", "caught", "spotted"]:
+		check(Synth.SFX_NAMES.has(n), "efeito do contrato %s existe" % n)
 	for n in need:
 		check(Synth.TRACKS.has(n), "faixa %s existe" % n)
 	var t0 := Time.get_ticks_msec()
@@ -142,6 +148,7 @@ func _run() -> void:
 	check(AudioScript.music_for("interior", "oak_lab") == "lab", "lab -> lab")
 	check(AudioScript.music_for("interior", "pewter_gym") == "gym", "ginásio -> gym")
 	check(AudioScript.music_for("interior", "player_house") == "town", "casa -> town")
+	check(AudioScript.music_for("interior", "mt_moon_b1f") == "cave", "Mt. Moon -> cave")
 
 	# --- Autoload simulado ---
 	var game = load("res://core/game.gd").new()
@@ -198,6 +205,29 @@ func _run() -> void:
 	check(au.current_music == "route", "fugir volta direto para a zona")
 	game.battle_finished.emit({"outcome": "lose"})
 	check(au.current_music == "route", "perder volta para a zona")
+	game._opts = {"kind": "trainer", "trainer_id": "brock"}
+	game.battle_started.emit()
+	check(au.current_music == "gym_leader", "líder de ginásio -> gym_leader")
+	game.battle_finished.emit({"outcome": "run"})
+	game._opts = {"kind": "wild"}
+	game.battle_started.emit()
+	game.battle_finished.emit({"outcome": "caught"})
+	check(au.current_music != "victory", "captura não toca a vitória (o original: só o jingle)")
+	au._process(0.7)
+	check(au.current_music == "route", "depois da captura volta para a zona")
+
+	# Volumes separados de música e efeitos (settings music/sfx 0..100).
+	au._process(2.0)
+	au.refresh_volumes({"volume": 80, "music": 50, "sfx": 0})
+	check(
+		is_equal_approx(au.music_vol, 0.5) and au.sfx_vol == 0.0,
+		"volumes de música e efeitos lidos das opções"
+	)
+	check(
+		is_equal_approx(au._cur.volume_db, au.MUSIC_DB + linear_to_db(0.5)),
+		"música toca no volume da opção (%.1f dB)" % au._cur.volume_db
+	)
+	au.refresh_volumes({"volume": 80, "music": 100, "sfx": 100})
 
 	au.music("lab", 0.0)
 	check(au.current_music == "lab", "music() direto")

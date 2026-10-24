@@ -1,8 +1,10 @@
 class_name WorldTimeOfDay
 extends Node
 ## Port of the original time_of_day.gd + clock.gd + the look part of zone_streamer.gd.
-## - Clock: game minutes advance at data/time.json "scale" (20x) from 10:00, driven by
-##   Game.play_time so it survives saves; periods come from time.json.
+## - Clock (original clock.gd): game minutes advance at data/time.json "scale" (20x) from MON 9:00
+##   (game_state.gd DEFAULT_CLOCK_MINUTES 540), only while the player is free (stops with the menu,
+##   dialogue, cutscenes and door fades, clock.gd should_run). Kept in Game.flags["clock_minutes"]
+##   (saved); periods come from time.json. clock_label() is the HUD text ("SEG 9:00").
 ## - Look: on every location change the zone's `look` (data/world.json, same as the map JSON) picks
 ##   the environment (world/look/*.tres, converted from the original), sun energy, fog, ground tints
 ##   and the camera (distance / yaw / pitch / far). Interiors use interior_env.
@@ -14,7 +16,9 @@ const GROUP := "time_of_day"
 const DATA := "res://data/time_of_day.json"
 const TIME := "res://data/time.json"
 const DEFAULT_PERIOD := "midday"
-const START_MIN := 600.0  ## 10:00
+const START_MIN := 540.0  ## MON 9:00 (original DEFAULT_CLOCK_MINUTES)
+const CLOCK_FLAG := "clock_minutes"
+const DAYS := ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]  ## original clock.gd DAYS (MON..SUN)
 const DEFAULT_SUN := 1.6
 const INDOOR_SUN := 1.1
 const CAVE_SUN := 0.12  ## roofless cave rooms: the sun must not light them like a house
@@ -27,7 +31,8 @@ static var forced_period := ""  ## tests / screenshots
 var presets := {}
 var blend_secs := 25.0
 var period := DEFAULT_PERIOD
-var minutes := START_MIN
+var minutes := START_MIN  ## time of day, 0..1440
+var total := START_MIN  ## minutes since the week began (day of the week = total / 1440)
 var indoor := false
 var look: Dictionary = {}
 
@@ -71,6 +76,7 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
 		if a.begins_with("--period="):
 			forced_period = a.substr(9)
+	_load_clock()
 	_tick_clock()
 	period = _period_now()
 
@@ -80,10 +86,60 @@ func clock_text() -> String:
 	return "%02d:%02d" % [int(minutes / 60.0) % 24, int(minutes) % 60]
 
 
-func _tick_clock() -> void:
+## HUD clock like the original Clock.format: "SEG 9:00".
+func clock_label() -> String:
+	return format_clock(total)
+
+
+static func format_clock(m: float) -> String:
+	var day := int(fposmod(m, 10080.0) / 1440.0)
+	var hm := fposmod(m, 1440.0)
+	return "%s %d:%02d" % [DAYS[day], int(hm / 60.0), int(hm) % 60]
+
+
+## Day index since the start (weather picks its day by it).
+func day() -> int:
+	return int(total / 1440.0)
+
+
+## Reads the saved clock (old saves without it: the old play_time clock, so the hour doesn't jump).
+func _load_clock() -> void:
 	var g := get_node_or_null("/root/Game")
-	var played := float(g.play_time) if g else 0.0
-	minutes = fmod(START_MIN + played * _scale / 60.0, 1440.0)
+	if g == null:
+		return
+	var v = g.flags.get(CLOCK_FLAG)
+	if v is float or v is int:
+		total = float(v)
+	else:
+		total = START_MIN + float(g.play_time) * _scale / 60.0 if g.play_time > 0.0 else START_MIN
+		g.flags[CLOCK_FLAG] = total
+
+
+## Original clock.gd should_run: a player on the map and no menu, dialogue, cutscene or transition.
+func should_run() -> bool:
+	var p := get_tree().get_first_node_in_group(OverworldPlayer.GROUP) as OverworldPlayer
+	if p == null or p.ui_blocking():
+		return false
+	var hud := get_tree().get_first_node_in_group(WorldHud.GROUP) as WorldHud
+	if hud and hud.is_dialog_open():
+		return false
+	var ow := get_parent()
+	return not (ow and "traveling" in ow and ow.traveling)
+
+
+func _advance(delta: float) -> void:
+	var g := get_node_or_null("/root/Game")
+	if g == null:
+		return
+	if g.flags.get(CLOCK_FLAG) is float or g.flags.get(CLOCK_FLAG) is int:
+		total = float(g.flags[CLOCK_FLAG])  # a load or a script may have changed it
+	if should_run():
+		total += delta / maxf(Engine.time_scale, 0.0001) * _scale / 60.0
+		g.flags[CLOCK_FLAG] = total
+
+
+func _tick_clock() -> void:
+	minutes = fposmod(total, 1440.0)
 	RenderingServer.global_shader_parameter_set("weather_time", minutes)
 
 
@@ -191,6 +247,7 @@ func shafts_mult() -> float:
 
 
 func _process(delta: float) -> void:
+	_advance(delta)
 	_check -= delta
 	if _check <= 0.0:
 		_check = 1.0

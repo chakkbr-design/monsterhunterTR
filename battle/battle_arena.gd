@@ -52,6 +52,16 @@ const FIXED_CAM_FOV := 30.0
 ## Corpo do mon contra paredes e móveis (o original: CharacterBody3D, cápsula r 0.35, camadas 1|2).
 const BODY_R := 0.35
 const SOLID_MASK := 1
+## Abertura do treinador (o original: "<NOME> wants to battle!" por 1.2 s antes de jogar a bola).
+const TRAINER_CHALLENGE := 1.2
+## Troca do treinador (o original: "Come back" e recolhe em Game.RECALL_SECS; "is about to send out" 1.4 s).
+const RECALL_SECS := 0.45
+## Resultado do fim (o original _results_sequence): auto-avanço sem jogador; tempo de encher um nível de EXP.
+const RESULT_AUTO := 0.35
+const EXP_LEVEL_SECS := 0.7
+## Velocidade da batalha das opções (o original: Lento 0.6x, o padrão; Rápido 1.0x).
+const BATTLE_SPEEDS := [0.6, 1.0]
+const SETTINGS := "res://ui/front/settings.gd"
 
 var manual := false
 var rng := RandomNumberGenerator.new()
@@ -103,6 +113,16 @@ var _built := false
 var _court_color := ARENA_LINE
 var _cam_focus := Vector3.ZERO  ## câmera parada (quadra fixa): ponto que ela olha
 var _probe: PhysicsShapeQueryParameters3D
+## Pausa da batalha (Esc; o original: pause_menu.gd _battle_items com a luta parada).
+var pause_open := false
+var pause_sel := 0
+## Sequência de resultado do fim (EXP, nível, golpes, prêmio), um passo por vez.
+var _results: Array = []
+var _beat := {}
+var _last_exp: Array = []
+var _xp_shown := -1.0
+var _xp_level := 0
+var _revealed := true
 
 
 func _physics_process(delta: float) -> void:
@@ -121,7 +141,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	party = player_party
 	enemies = enemy_list
 	kind = String(o.get("kind", "wild"))
-	fight_speed = float(o.get("speed", DEFAULT_SPEED))
+	fight_speed = float(o.get("speed", _settings_speed()))
 	if o.has("seed"):
 		rng.seed = int(o.seed)
 	else:
@@ -151,18 +171,42 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 			_send_ally(ai_i, player_spot + Vector3(1.6, 0, 0.4))
 	_send_enemy(ei)
 	var e: Mon = enemies[ei]
-	hud.banner(
-		(
-			("Um %s selvagem apareceu!" % e.display_name)
-			if kind == "wild"
-			else ("O treinador mandou %s!" % e.display_name)
-		),
-		INTRO_TIME
-	)
+	if kind == "wild":
+		hud.banner("Um %s selvagem apareceu!" % e.display_name, INTRO_TIME)
+	else:
+		# Como o original: primeiro o desafio, depois a bola com o 1º Pokémon.
+		_revealed = false
+		enemy.visible = false
+		hud.banner("%s quer lutar!" % trainer_name(), TRAINER_CHALLENGE)
 	state = "intro"
 	_state_t = 0.0
 	hud.intro_bars(true)
 	_update_camera(1.0)
+
+
+## Velocidade das opções (battle_speed 0 = Lento 0.6x, 1 = Rápido 1.0x) quando opts não traz speed.
+static func _settings_speed() -> float:
+	if not ResourceLoader.exists(SETTINGS):
+		return DEFAULT_SPEED
+	var st = load(SETTINGS)
+	var cfg: Dictionary = st.load_cfg() if st else {}
+	var i := clampi(int(cfg.get("battle_speed", 0)), 0, BATTLE_SPEEDS.size() - 1)
+	return float(BATTLE_SPEEDS[i])
+
+
+## Nome de exibição do treinador ("Caçador de Insetos Rick", "Líder Brock", o nome do rival).
+func trainer_name() -> String:
+	if opts.has("trainer_name"):
+		return String(opts.trainer_name)
+	var id := String(opts.get("trainer_id", ""))
+	var def := Dex.trainer(id)
+	if def.is_empty():
+		return "O treinador"
+	var n := TrainerText.display_name(id, def)
+	var g := _game()
+	if g and g.has_method("fill_names"):
+		n = g.fill_names(n)
+	return n.replace("{RIVAL}", "Rival")
 
 
 # --- Montagem ---
@@ -455,6 +499,7 @@ func _send_player(i: int, at: Vector3) -> void:
 	player.set_meta("party_index", i)
 	_bind()
 	player.popup("Vai, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	say("Vai, %s!" % player.mon.display_name)
 
 
 func _send_ally(i: int, at: Vector3) -> void:
@@ -462,6 +507,7 @@ func _send_ally(i: int, at: Vector3) -> void:
 	ally.set_meta("party_index", i)
 	_bind()
 	ally.popup("Vai, %s!" % ally.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
+	say("Vai, %s!" % ally.mon.display_name)
 
 
 func _send_enemy(i: int) -> void:
@@ -547,22 +593,34 @@ func step(dt: float) -> void:
 	if state == "idle" or state == "done":
 		return
 	var raw := dt
-	dt *= fight_speed * (MODAL_SLOW if menu != "" else 1.0)
+	# Pausa aberta: a luta para (o original: fight_speed 0 com _battle_paused).
+	dt *= fight_speed * (0.0 if pause_open else (MODAL_SLOW if menu != "" else 1.0))
 	_state_t += dt
 	_tick_fx(raw)
 	match state:
 		"intro":
-			if _state_t >= INTRO_TIME:
+			if not _revealed and _state_t >= TRAINER_CHALLENGE:
+				_reveal_trainer_mon()
+			if _state_t >= INTRO_TIME + (TRAINER_CHALLENGE if kind == "trainer" else 0.0):
 				state = "fight"
 				hud.intro_bars(false)
 				hud.fight_flash("Lutem!")
 		"fight":
-			_fight_step(dt)
+			if not pause_open:
+				_fight_step(dt)
+			elif not manual:
+				_pause_input()
 		"capture":
 			_capture_step(dt)
 		"ending":
 			if _state_t >= _end_delay:
-				_finish()
+				_results = _build_results() if result.get("outcome") == "win" else []
+				if _results.is_empty():
+					_finish()
+					return
+				state = "results"
+		"results":
+			if _results_step(raw):
 				return
 	if state == "done":
 		return
@@ -572,7 +630,7 @@ func step(dt: float) -> void:
 	_update_camera(raw)
 	hud.refresh(
 		player,
-		enemy,
+		enemy if _revealed else null,  # o cartão do adversário só depois da bola
 		raw,
 		ally,
 		{
@@ -580,9 +638,29 @@ func step(dt: float) -> void:
 			"item_cd": item_cd,
 			"menu": _menu_text() if menu != "" else "",
 			"foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
-			"foe_balls": _foe_balls()
+			"foe_balls": _foe_balls(),
+			"pause": _pause_text() if pause_open else "",
+			"exp_script":
+			(
+				{"mon": _beat.get("mon"), "xp": _xp_shown, "level": _xp_level}
+				if _xp_shown >= 0.0
+				else {}
+			)
 		}
 	)
+
+
+## Fim da abertura do treinador: a bola cai e o 1º Pokémon aparece ("<NOME> mandou X!").
+func _reveal_trainer_mon() -> void:
+	_revealed = true
+	if not is_instance_valid(enemy):
+		return
+	enemy.visible = true
+	if vfx and enemy.is_inside_tree():
+		vfx.puff(enemy.to_global(Vector3(0, 0.45, 0)), 1.6)
+	var line := "%s mandou %s!" % [trainer_name(), enemy.mon.display_name]
+	hud.banner(line, INTRO_TIME)
+	say(line, "trainer")
 
 
 ## Animação dos sprites e efeitos (só visual).
@@ -681,6 +759,9 @@ func _player_input(f: BattleFighter) -> Vector3:
 		f.sprinting = false
 		_menu_input()
 		return Vector3.ZERO
+	if Input.is_action_just_pressed("pause"):
+		open_pause()
+		return Vector3.ZERO
 	if Input.is_action_just_pressed("interact"):
 		open_menu("bag")
 		return Vector3.ZERO
@@ -698,8 +779,7 @@ func _player_input(f: BattleFighter) -> Vector3:
 				moves.use(f, String(f.moves[k]), true)
 	if Input.is_action_just_pressed("swap_mon"):
 		swap()
-	if Input.is_action_just_pressed("run_away"):
-		run_away()
+	# Fugir não tem tecla, como no original: é o FUGIR da pausa (Esc).
 	if Input.is_action_just_pressed("throw_ball"):
 		throw_ball()
 	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
@@ -777,8 +857,85 @@ func cycle_ally_mode() -> int:
 	ally_mode = (ally_mode + 1) % ALLY_MODE_NAMES.size()
 	if is_instance_valid(ally) and ally.active():
 		ally.popup(ALLY_MODE_NAMES[ally_mode], ALLY_MODE_COLORS[ally_mode], 1.0, 0.9)
-	hud.banner("Modo do aliado: %s" % ALLY_MODE_NAMES[ally_mode], 1.0)
+	say("Modo do aliado: %s" % ALLY_MODE_NAMES[ally_mode])
 	return ally_mode
+
+
+# --- Pausa da batalha (Esc) ---
+
+
+## O original (pause_menu.gd can_open): só na luta, fora da abertura, do fim e da captura.
+func open_pause() -> bool:
+	if state != "fight" or pause_open:
+		return false
+	close_menu()
+	pause_open = true
+	pause_sel = 0
+	if is_instance_valid(player):
+		player.sprinting = false
+	preload("res://audio/cue.gd").sfx("ui_confirm")
+	return true
+
+
+func close_pause() -> void:
+	if not pause_open:
+		return
+	pause_open = false
+	preload("res://audio/cue.gd").sfx("ui_back")
+
+
+## _battle_items do original: MODO DO ALIADO, CONTROLAR O OUTRO (com dois em campo), FUGIR, VOLTAR.
+func pause_items() -> Array:
+	var items: Array = [
+		{"id": "ally_mode", "label": "MODO DO ALIADO: %s" % ALLY_MODE_NAMES[ally_mode]}
+	]
+	if is_instance_valid(ally) and ally.active() and is_instance_valid(player) and player.active():
+		items.append({"id": "control_other", "label": "CONTROLAR O OUTRO"})
+	items.append({"id": "run", "label": "FUGIR"})
+	items.append({"id": "resume", "label": "VOLTAR"})
+	return items
+
+
+func choose_pause(id: String) -> void:
+	match id:
+		"ally_mode":
+			cycle_ally_mode()
+		"control_other":
+			swap_control()
+			close_pause()
+		"run":
+			if kind != "wild" or not opts.get("can_run", true):
+				run_away()  # só o aviso: a pausa fica aberta, como no original
+				return
+			pause_open = false
+			run_away()
+		"resume":
+			close_pause()
+
+
+func _pause_input() -> void:
+	var items := pause_items()
+	pause_sel = clampi(pause_sel, 0, items.size() - 1)
+	if Input.is_action_just_pressed("pause"):
+		close_pause()
+		return
+	if Input.is_action_just_pressed("move_forward"):
+		pause_sel = wrapi(pause_sel - 1, 0, items.size())
+		preload("res://audio/cue.gd").sfx("ui_move")
+	if Input.is_action_just_pressed("move_back"):
+		pause_sel = wrapi(pause_sel + 1, 0, items.size())
+		preload("res://audio/cue.gd").sfx("ui_move")
+	if Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("jump"):
+		choose_pause(String(items[pause_sel].id))
+
+
+func _pause_text() -> String:
+	var items := pause_items()
+	pause_sel = clampi(pause_sel, 0, items.size() - 1)
+	var lines: Array = []
+	for k in items.size():
+		lines.append(("> " if k == pause_sel else "   ") + String(items[k].label))
+	return "\n".join(lines)
 
 
 # --- Itens na batalha ---
@@ -821,12 +978,12 @@ func use_item(id: String, m: Mon = null) -> bool:
 		m = player.mon
 	var g := _game()
 	if g == null or int(g.bag.get(id, 0)) <= 0:
-		hud.banner("Acabou %s!" % Dex.item(id).get("name", id), 1.2)
+		say("Acabou %s!" % Dex.item(id).get("name", id), "item")
 		return false
 	if item_cd > 0.0:
 		return false
 	if player.stagger_t > 0.0:
-		hud.banner("Exausto demais para usar item!", 1.2)
+		say("Exausto demais para usar item!", "item")
 		return false
 	var f := _active_fighter_of(m)
 	var fx: Dictionary = Dex.item(id).get("effect", {})
@@ -835,20 +992,20 @@ func use_item(id: String, m: Mon = null) -> bool:
 	if f and String(fx.get("cure", "")) == "confusion" and f.confusion_t > 0.0:
 		f.confusion_t = 0.0  # confusão só existe na luta: o núcleo não a vê no Mon
 		g.take_item(id)
-		text = "%s snapped out of confusion!" % m.display_name
+		text = "%s saiu da confusão!" % m.display_name
 	else:
 		if f:
 			m.hp = f.hp
 		text = g.use_item(id, m)
 		if text == "":
-			hud.banner("Não vai ter efeito.", 1.2)
+			say("Não vai ter efeito.", "item")
 			return false
 		if f:
 			f.sync_after_item()
 	item_cd = ITEM_CD
 	player.gcd_t = maxf(player.gcd_t, Dex.GLOBAL_COOLDOWN)
 	close_menu()
-	hud.banner("Usou %s! %s" % [Dex.item(id).get("name", id), text], 1.8)
+	say("Usou %s! %s" % [Dex.item(id).get("name", id), text], "item")
 	preload("res://audio/cue.gd").sfx("heal")
 	if f:
 		if m.hp > before:
@@ -905,15 +1062,13 @@ func _support_heal() -> void:
 		return
 	player.sync_after_item()
 	item_cd = ITEM_CD
-	hud.banner(
-		"%s used a %s! %s" % [ally.mon.display_name, Dex.item(id).get("name", id), text], 1.8
-	)
+	say("%s usou %s! %s" % [ally.mon.display_name, Dex.item(id).get("name", id), text], "item")
 	player.popup("+%d HP" % (player.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
 	fx_disc(player.position, 0.9, Color(0.6, 1.0, 0.65), 0.5)
 
 
 func item_used_by_trainer(f: BattleFighter, item_name: String) -> void:
-	hud.banner("O treinador usou %s em %s!" % [item_name, f.mon.display_name], 1.4)
+	say("%s usou %s em %s!" % [trainer_name(), item_name, f.mon.display_name], "trainer")
 
 
 # --- Menu rápido (bolsa / party) ---
@@ -1031,7 +1186,7 @@ func run_away() -> bool:
 	if state != "fight":
 		return false
 	if kind != "wild" or not opts.get("can_run", true):
-		hud.banner(
+		say(
 			(
 				"Não! Não dá para fugir de batalha de treinador!"
 				if kind != "wild"
@@ -1039,7 +1194,7 @@ func run_away() -> bool:
 			)
 		)
 		return false
-	hud.banner("Fugiu em segurança!", 1.0)
+	say("Fugiu em segurança!")
 	preload("res://audio/cue.gd").sfx("run_away")
 	_end("run", 0.6)
 	return true
@@ -1057,6 +1212,11 @@ func _pick_ball() -> String:
 	var g := _game()
 	if g == null:
 		return String(opts.get("ball", "poke_ball"))
+	# A bola escolhida na Bolsa (Game.flags.selected_ball) vem primeiro, se ainda houver.
+	var flags = g.get("flags")
+	var chosen := String(flags.get("selected_ball", "")) if flags is Dictionary else ""
+	if chosen != "" and int(g.bag.get(chosen, 0)) > 0:
+		return chosen
 	var order: Array = BALL_ORDER.duplicate()
 	for id in Capture.ball_ids():
 		if not order.has(id):
@@ -1076,11 +1236,11 @@ func throw_ball() -> bool:
 		or not player.alive()
 	):
 		if kind != "wild" and state == "fight":
-			hud.banner("Não dá para capturar Pokémon de treinador!")
+			say("O treinador bloqueou a bola! Não seja ladrão!", "trainer")
 		return false
 	var ball_id := _pick_ball()
 	if ball_id == "":
-		hud.banner("Acabaram as Poké Balls!")
+		say("Você não tem Poké Balls!", "item")
 		return false
 	var g := _game()
 	if g:
@@ -1100,7 +1260,7 @@ func throw_ball() -> bool:
 		"to": enemy.position + Vector3(0, 0.16, 0),
 		"shown": mini(int(res.shakes), 3)
 	}
-	hud.banner("Vai, %s!" % Dex.item(ball_id).get("name", "Ball"), 0.8)
+	say("Você jogou uma %s!" % Dex.item(ball_id).get("name", "Poké Ball"), "item")
 	preload("res://audio/cue.gd").sfx("ball_throw")
 	state = "capture"
 	_state_t = 0.0
@@ -1146,8 +1306,20 @@ func _capture_step(_dt: float) -> void:
 	ball.set_glow(Color.WHITE, 0.0)
 	if _capture.res.caught:
 		enemy.mon.ball = _capture.id
-		hud.banner("Peguei! %s foi capturado!" % enemy.mon.display_name, 2.0)
-		preload("res://audio/cue.gd").sfx("catch_ok")
+		# O original (progression.gd:94-100): com a equipe cheia avisa que foi para o PC.
+		var nm := enemy.mon.display_name
+		var line := "Peguei! %s foi capturado!" % nm
+		if _party_full():
+			line += " %s foi mandado para o PC." % nm
+		hud.banner(line, 2.0)
+		say(line, "catch")
+		# Jingle de captura do original (music/caught); sem ele, o efeito antigo.
+		var au := preload("res://audio/cue.gd").audio()
+		if au and au.has_method("has_sfx") and au.has_sfx("caught"):
+			au.stop_music(0.3)
+			au.sfx("caught")
+		else:
+			preload("res://audio/cue.gd").sfx("catch_ok")
 		ball.set_glow(Color(1, 1, 0.8), 4.0)
 		if vfx and ball.is_inside_tree():
 			var at := ball.global_position + Vector3(0, 0.25, 0)
@@ -1161,7 +1333,7 @@ func _capture_step(_dt: float) -> void:
 		enemy.look.scale_mult = 1.0
 	if vfx and enemy.is_inside_tree():
 		vfx.puff(enemy.to_global(Vector3(0, 0.5, 0)), 1.8)
-	hud.banner(Capture.fail_line(int(_capture.res.shakes)), 1.4)
+	say(Capture.fail_line(int(_capture.res.shakes)), "catch")
 	preload("res://audio/cue.gd").sfx("catch_fail")
 	_capture = {}
 	state = "fight"
@@ -1196,26 +1368,34 @@ func _enemy_fainted(f: BattleFighter) -> void:
 	_award_exp(f.mon)
 	var nxt := _next_enemy(enemy_index)
 	if kind == "trainer" and nxt >= 0:
-		hud.banner("O treinador vai mandar %s!" % enemies[nxt].display_name, NEXT_TRAINER_MON)
+		# O original (_send_trainer_mon): "Come back, X!" e recolhe; depois "<NOME> is about to send out Y!".
+		say("Volte, %s!" % f.mon.display_name, "trainer")
 		later(
-			NEXT_TRAINER_MON,
+			RECALL_SECS,
 			func() -> void:
-				_recall(f)
-				_send_enemy(nxt)
+				if fighters.has(f):
+					_recall(f)
+				var line := "%s vai mandar %s!" % [trainer_name(), enemies[nxt].display_name]
+				hud.banner(line, NEXT_TRAINER_MON)
+				say(line, "trainer")
 		)
+		later(RECALL_SECS + NEXT_TRAINER_MON, func() -> void: _send_enemy(nxt))
 		return
-	hud.banner(
+	say(
 		(
-			("%s selvagem desmaiou! Você venceu!" % f.mon.display_name)
+			("%s selvagem desmaiou!" % f.mon.display_name)
 			if kind == "wild"
-			else "Você venceu o treinador!"
+			else ("%s de %s desmaiou!" % [f.mon.display_name, trainer_name()])
 		),
-		2.0
+		"info" if kind == "wild" else "trainer"
 	)
 	_end("win", 2.0)
 
 
+## EXP sem aviso na hora (o original: Progression.award_exp(..., quiet = true)); o fim da batalha mostra
+## a última leva em _build_results, como o _results_sequence do original.
 func _award_exp(defeated: Mon) -> void:
+	_last_exp = []
 	var receivers: Array = _participants.values().filter(func(m): return not m.is_fainted())
 	if receivers.is_empty():
 		return
@@ -1224,22 +1404,157 @@ func _award_exp(defeated: Mon) -> void:
 			1, int(defeated.exp_yield(m.level, kind == "trainer") / float(receivers.size()))
 		)
 		var events: Array = m.add_exp(amount)
-		exp_log.append({"mon": m, "amount": amount, "events": events})
+		var entry := {"mon": m, "amount": amount, "events": events}
+		exp_log.append(entry)
+		_last_exp.append(entry)
 		var f := _fighter_of(m)
 		if f:
-			f.popup("+%d EXP" % amount, Color(0.7, 1.0, 0.7), 1.0, 1.0)
-			for e in events:
-				if e.type == "level":
-					f.popup("Subiu para o Nv %d!" % e.level, Color(1, 1, 0.5), 1.2, 1.3)
-					preload("res://audio/cue.gd").sfx("level_up")
-				elif e.type == "move" and e.learned:
-					f.popup(
-						"Aprendeu %s!" % Dex.move(e.move).get("name", e.move),
-						Color(0.7, 0.9, 1.0),
-						1.0,
-						1.5
-					)
 			_sync_from_mon(f)
+
+
+# --- Resultado do fim (EXP, nível, prêmio) ---
+
+
+## Passos do _results_sequence do original para a última leva de EXP e o prêmio. Cada passo:
+## {mon?, start? (xp de partida), fill? (xp alvo), level?, text?, kind?, sfx?, confirm?, end?}.
+func _build_results() -> Array:
+	var out: Array = []
+	for r in _last_exp:
+		var m: Mon = r.mon
+		if _fighter_of(m) == null:
+			continue  # sem cartão em campo: o original pula (card_for == null)
+		var gain := int(r.amount)
+		out.append(
+			{
+				"mon": m,
+				"start": float(m.xp - gain),
+				"text": "%s ganhou %d de EXP." % [m.display_name, gain],
+				"kind": "exp"
+			}
+		)
+		var evs: Array = r.events
+		var ei := 0
+		while ei < evs.size():
+			var e: Dictionary = evs[ei]
+			ei += 1
+			if e.type != "level":
+				continue
+			var lv := int(e.level)
+			out.append(
+				{
+					"mon": m,
+					"fill": float(Growth.exp_for_level(m.growth, lv)),
+					"level": lv,
+					"text": "%s subiu para o Nv %d!" % [m.display_name, lv],
+					"kind": "level",
+					"sfx": "level_up",
+					"confirm": true
+				}
+			)
+			while ei < evs.size() and evs[ei].type == "move":
+				var me: Dictionary = evs[ei]
+				ei += 1
+				if me.learned:
+					var mv := String(Dex.move(me.move).get("name", me.move))
+					out.append(
+						{
+							"mon": m,
+							"text": "%s aprendeu %s!" % [m.display_name, mv],
+							"kind": "level",
+							"confirm": true
+						}
+					)
+		out.append({"mon": m, "fill": float(m.xp), "confirm": true, "end": true})
+	var prize := _prize()
+	if prize > 0:
+		out.append(
+			{"text": "Você ganhou ₽%d pela vitória!" % prize, "kind": "money", "confirm": true}
+		)
+	return out
+
+
+## Prêmio da vitória contra treinador (o mesmo cálculo de Game._finish, que é quem paga).
+func _prize() -> int:
+	if kind != "trainer" or enemies.is_empty():
+		return 0
+	var g := _game()
+	if g == null or not g.has_method("trainer_payout"):
+		return 0
+	return int(g.trainer_payout(String(opts.get("trainer_id", "")), int(enemies[-1].level)))
+
+
+func _party_full() -> bool:
+	var g := _game()
+	if g == null:
+		return false
+	var cap := int(g.get("PARTY_MAX")) if g.get("PARTY_MAX") != null else 6
+	return g.party.size() >= cap
+
+
+## Sem jogador (testes, autoplay) a confirmação passa sozinha, como o original com Debug.auto_dialog.
+func _auto_confirm() -> bool:
+	return manual or bool(opts.get("autoplay", false))
+
+
+func _confirm_pressed() -> bool:
+	return (
+		not manual
+		and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("ui_accept"))
+	)
+
+
+## Um quadro da sequência de resultado. true quando acabou e a batalha terminou.
+func _results_step(raw: float) -> bool:
+	if _beat.is_empty():
+		if _results.is_empty():
+			_xp_shown = -1.0
+			hud.log_hint("")
+			_finish()
+			return true
+		_beat = _results.pop_front()
+	var b := _beat
+	var m: Mon = b.get("mon")
+	if not b.has("_go"):
+		b["_go"] = true
+		if b.has("start"):
+			_xp_shown = float(b.start)
+			_xp_level = Growth.level_for_exp(m.growth, int(_xp_shown))
+		if b.has("text") and not b.has("fill"):
+			say(String(b.text), String(b.get("kind", "info")))
+	if b.has("fill") and not b.has("_filled"):
+		var target := float(b.fill)
+		var lv := Growth.level_for_exp(m.growth, int(_xp_shown))
+		var span := float(
+			Growth.exp_for_level(m.growth, lv + 1) - Growth.exp_for_level(m.growth, lv)
+		)
+		_xp_shown = minf(_xp_shown + maxf(span, 1.0) / EXP_LEVEL_SECS * raw, target)
+		if _xp_shown < target and not _confirm_pressed():
+			return false
+		_xp_shown = target
+		b["_filled"] = true
+		if b.has("level"):
+			_xp_level = int(b.level)
+		if b.has("sfx"):
+			preload("res://audio/cue.gd").sfx(String(b.sfx))
+		if b.has("text"):
+			say(String(b.text), String(b.get("kind", "info")))
+		b["_t"] = 0.0
+		return false  # o E que pulou o enchimento não confirma a linha
+	if b.get("confirm", false):
+		b["_t"] = float(b.get("_t", 0.0)) + raw
+		hud.log_hint("E", "continuar")
+		var done := (
+			float(b._t) >= RESULT_AUTO
+			if _auto_confirm()
+			else (float(b._t) > 0.0 and _confirm_pressed())
+		)
+		if not done:
+			return false
+		hud.log_hint("")
+	if b.get("end", false):
+		_xp_shown = -1.0
+	_beat = {}
+	return false
 
 
 func _fighter_of(m: Mon) -> BattleFighter:
@@ -1257,6 +1572,7 @@ func _sync_from_mon(f: BattleFighter) -> void:
 
 
 func _player_fainted(f: BattleFighter) -> void:
+	say("%s desmaiou!" % f.mon.display_name, "faint")
 	if f == ally or (f == player and is_instance_valid(ally) and ally.active()):
 		# Ainda sobra um mon em campo: se era o controlado, o controle passa para o aliado. Ninguém novo entra.
 		if f == player:
@@ -1277,7 +1593,7 @@ func _player_fainted(f: BattleFighter) -> void:
 		return
 	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
 	if nxt < 0:
-		hud.banner("Você não tem mais Pokémon para lutar!", 2.0)
+		say("Você não tem mais Pokémon para lutar!", "faint")
 		_end("lose", 2.0)
 		return
 	var at := f.position
@@ -1356,6 +1672,25 @@ func _update_camera(dt: float) -> void:
 
 
 # --- Efeitos placeholder ---
+
+
+## Mensagem da faixa de log da batalha (o original: battle_log.gd recebe todo Game._msg na batalha).
+## kind dá a cor da marca: info, move, faint, exp, level, money, catch, item, trainer.
+func say(text: String, kind_name := "info") -> void:
+	log_lines.append(text)
+	if log_lines.size() > LOG_MAX:
+		log_lines.pop_front()
+	if hud:
+		hud.log_push(text, kind_name)
+
+
+## O original (battle_log.gd _on_move_used): "X usou Y!" para golpe do adversário e golpe de status.
+func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
+	if user.side == 1 or String(mv.get("category", "")) == "status":
+		say(
+			"%s usou %s!" % [user.mon.display_name, String(mv.get("name", mv.get("id", "")))],
+			"move"
+		)
 
 
 ## Popup de batalha: vai para o log e para o HUD (em tela, ancorado em `at`, local da arena).

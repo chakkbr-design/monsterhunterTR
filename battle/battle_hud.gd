@@ -16,7 +16,8 @@ const MOVE_DX := 92.0
 const MOVE_DY := 68.0
 const DIAMOND_AT := Vector2(-182.0, -134.0)
 const BAR_H := 72.0
-const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  R foge  Z/C câmera"
+const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  Z/C câmera  Esc pausa"
+const PAUSE_W := 300.0
 
 var _root: Control
 var _player_card: FighterCard
@@ -29,6 +30,9 @@ var _pops: Control
 var _menu: Label
 var _menu_bg: PanelContainer
 var _help: Label
+var _log: BattleLogLine
+var _pause_bg: PanelContainer
+var _pause: Label
 
 
 func _init() -> void:
@@ -101,6 +105,30 @@ func _init() -> void:
 	_menu_bg.add_child(_menu)
 	_menu_bg.visible = false
 	_root.add_child(_menu_bg)
+	_log = BattleLogLine.new()
+	_place(
+		_log,
+		Vector2(0.5, 0),
+		Vector2(BattleLogLine.MAX_W + 220.0, BattleLogLine.H),
+		Vector2(0, BattleLogLine.TOP + BattleLogLine.H * 0.5)
+	)
+	# Pausa da batalha no canto de cima à direita, como a janela do pause_menu.gd do original.
+	_pause_bg = PanelContainer.new()
+	_pause_bg.anchor_left = 1.0
+	_pause_bg.anchor_right = 1.0
+	_pause_bg.offset_left = -PAUSE_W - 24.0
+	_pause_bg.offset_right = -24.0
+	_pause_bg.offset_top = 24.0
+	var psb := UiDraw.glass_box(0.92, 12)
+	psb.set_content_margin_all(16)
+	_pause_bg.add_theme_stylebox_override("panel", psb)
+	_pause = Label.new()
+	_pause.add_theme_font_override("font", UiDraw.title_font())
+	_pause.add_theme_font_size_override("font_size", 20)
+	_pause.add_theme_constant_override("line_spacing", 6)
+	_pause_bg.add_child(_pause)
+	_pause_bg.visible = false
+	_root.add_child(_pause_bg)
 
 
 func _place(c: Control, anchor: Vector2, size_px: Vector2, center: Vector2) -> void:
@@ -122,6 +150,25 @@ func banner(text: String, secs := 1.6) -> void:
 
 func banner_text() -> String:
 	return _banner.text if _banner.t > 0.0 else ""
+
+
+## Faixa de log da batalha (porte do battle_log.gd): última linha, com marca de cor por tipo.
+func log_push(text: String, kind := "info") -> void:
+	_log.push(text, kind)
+
+
+func log_text() -> String:
+	return _log.last_text()
+
+
+## Dica de tecla na faixa de log ("E continuar" no resultado); text "" limpa.
+func log_hint(glyph: String, text := "") -> void:
+	_log.hint_glyph = glyph if text != "" else ""
+	_log.hint_text = text
+
+
+func pause_text() -> String:
+	return _pause.text if _pause_bg.visible else ""
 
 
 ## Faixas pretas de cinema (introdução da batalha).
@@ -186,6 +233,12 @@ func refresh(
 ) -> void:
 	_banner.step(dt)
 	_intro.step(dt)
+	# A faixa de log some enquanto a pílula de banner (abertura, troca do treinador) está no mesmo lugar.
+	_log.hidden_by_banner = _banner.t > 0.0
+	_log.step(dt)
+	var pt := String(info.get("pause", ""))
+	_pause_bg.visible = pt != ""
+	_pause.text = pt
 	for p in _pops.get_children():
 		p.step(dt)
 	_player_card.body = player if is_instance_valid(player) else null
@@ -196,7 +249,13 @@ func refresh(
 	_ally_card.body = ally if has_ally else null
 	_ally_card.mode = String(info.get("ally_mode", ""))
 	_ally_card.visible = has_ally
+	# Resultado do fim: a barra de EXP do cartão enche sob o controle da arena (begin_scripted/fill_to).
+	var xs: Dictionary = info.get("exp_script", {})
 	for c in [_player_card, _foe_card]:
+		c.script_xp = -1.0
+		if not xs.is_empty() and c.body != null and c.body.mon == xs.get("mon"):
+			c.script_xp = float(xs.xp)
+			c.script_level = int(xs.level)
 		c.visible = c.body != null
 		c.step(dt)
 	_ally_card.queue_redraw()
@@ -237,6 +296,9 @@ class FighterCard:
 	var tag := "SELVAGEM"
 	var balls: Array = []
 	var drawn_name := ""
+	## >= 0: XP mostrado pela sequência de resultado (barra enchendo) e o nível que ela anuncia.
+	var script_xp := -1.0
+	var script_level := 0
 	var _mon: Mon
 	var _hp_ratio := 1.0
 	var _ghost := 1.0
@@ -266,9 +328,16 @@ class FighterCard:
 
 	func _exp_ratio() -> float:
 		var m := body.mon
-		var lo := float(Growth.exp_for_level(m.growth, m.level))
-		var hi := float(Growth.exp_for_level(m.growth, m.level + 1))
-		return clampf((float(m.xp) - lo) / maxf(hi - lo, 1.0), 0.0, 1.0)
+		var xp := float(m.xp)
+		var lvl := m.level
+		if script_xp >= 0.0:
+			xp = script_xp
+			lvl = Growth.level_for_exp(m.growth, int(xp))
+		if lvl >= Growth.MAX_LEVEL:
+			return 1.0
+		var lo := float(Growth.exp_for_level(m.growth, lvl))
+		var hi := float(Growth.exp_for_level(m.growth, lvl + 1))
+		return clampf((xp - lo) / maxf(hi - lo, 1.0), 0.0, 1.0)
 
 	func _draw() -> void:
 		var r := Rect2(Vector2.ZERO, size)
@@ -299,7 +368,7 @@ class FighterCard:
 		var x1 := size.x - 98.0 if foe else size.x - 16.0
 		var tf := UiDraw.title_font()
 		drawn_name = body.mon.display_name
-		var lv := "Lv %d" % body.level
+		var lv := "Lv %d" % (script_level if script_xp >= 0.0 and script_level > 0 else body.level)
 		var lvw := UiDraw.text_width(lv, 18, tf)
 		if foe:
 			UiDraw.text(
@@ -877,3 +946,97 @@ class Pop:
 			-1.0,
 			UiDraw.title_font()
 		)
+
+
+## Faixa de log da batalha (porte do battle_log.gd do original): pílula escura no topo, uma linha (a última),
+## marca de cor por tipo e, no resultado do fim, a dica de tecla para continuar.
+class BattleLogLine:
+	extends Control
+	const MAX_ENTRIES := 8
+	const MAX_W := 560.0
+	const PAD := 14.0
+	const CHIP := 4.0
+	const CHIP_GAP := 8.0
+	const H := 32.0
+	const TOP := 116.0
+	const FONT_SIZE := 18
+	const APPEAR := 0.25
+
+	var entries: Array = []
+	var hint_glyph := ""
+	var hint_text := ""
+	var hidden_by_banner := false
+	var _age := APPEAR
+	var _a := 0.0
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func push(text: String, kind := "info") -> void:
+		entries.append({"text": text, "kind": kind})
+		while entries.size() > MAX_ENTRIES:
+			entries.pop_front()
+		_age = 0.0
+		queue_redraw()
+
+	func last_text() -> String:
+		return String(entries[-1].text) if not entries.is_empty() else ""
+
+	func step(dt: float) -> void:
+		_age += dt
+		var want := 0.0 if hidden_by_banner or entries.is_empty() else 1.0
+		_a = move_toward(_a, want, dt / 0.25)
+		queue_redraw()
+
+	static func chip_color(kind: String) -> Color:
+		match kind:
+			"exp":
+				return UiDraw.PP_BLUE
+			"level", "money":
+				return UiDraw.AMBER
+			"faint":
+				return UiDraw.RED
+			"catch", "item":
+				return UiDraw.GREEN
+			"move":
+				return UiDraw.PAPER
+			"trainer":
+				return UiDraw.RED.lightened(0.35)
+		return UiDraw.DIM
+
+	func _fit(s: String) -> String:
+		if UiDraw.text_width(s, FONT_SIZE) <= MAX_W:
+			return s
+		while s.length() > 1 and UiDraw.text_width(s + "…", FONT_SIZE) > MAX_W:
+			s = s.substr(0, s.length() - 1)
+		return s + "…"
+
+	func _draw() -> void:
+		if entries.is_empty() or _a <= 0.01:
+			return
+		var s := _fit(last_text())
+		var a := _a * (0.55 + 0.45 * clampf(_age / APPEAR, 0.0, 1.0))
+		var hint_w := 0.0
+		if hint_text != "":
+			hint_w = UiDraw.text_width(hint_text, 14) + 40.0
+		var w := minf(UiDraw.text_width(s, FONT_SIZE) + PAD * 2.0 + CHIP + CHIP_GAP, MAX_W) + hint_w
+		var x := size.x * 0.5 - w * 0.5
+		var y := size.y * 0.5 - H * 0.5
+		UiDraw.rounded(self, Rect2(x, y, w, H), Color(UiDraw.INK, 0.88 * a), 16)
+		draw_rect(
+			Rect2(x + PAD, y + 8.0, CHIP, H - 16.0), Color(chip_color(String(entries[-1].kind)), a)
+		)
+		UiDraw.text(
+			self,
+			Vector2(x + PAD + CHIP + CHIP_GAP, y + H * 0.5 + 6.0),
+			s,
+			FONT_SIZE,
+			Color(UiDraw.PAPER, a),
+			3
+		)
+		if hint_text != "":
+			var hx := x + w - PAD - UiDraw.text_width(hint_text, 14)
+			UiDraw.key_pill(self, Vector2(hx - 16.0, y + H * 0.5), hint_glyph, 18)
+			UiDraw.text(
+				self, Vector2(hx, y + H * 0.5 + 5.0), hint_text, 14, Color(UiDraw.PAPER, a), 3
+			)

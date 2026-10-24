@@ -104,6 +104,66 @@ func _initialize() -> void:
 	fails += int(rc.level != 16 or rc.species != "Ivysaur")
 	game.new_game("A", "B")
 	fails += int(not game.pending_evolutions.is_empty() or not game.pending_learns.is_empty())
+	fails += _rodada6(game)
 	game.free()
 	print("game: %d falhas" % fails)
 	quit(1 if fails else 0)
+
+
+## Correções da jogada comparada: PP no mundo, PC cura, Repel, prêmio do 1º rival, autosave.
+func _rodada6(game) -> int:
+	var fails := 0
+	var a := Mon.create("pidgey", 5)
+	a.pp = 5.0
+	game.party = [a]
+	game.regen_pp(20.0)
+	fails += _ok(
+		is_equal_approx(a.pp, minf(a.pp_base, 5.0 + a.pp_base * 0.005 * 20.0)), "PP volta 0,5%/s"
+	)
+	var hurt := Mon.create("rattata", 5)
+	hurt.hp = 1
+	hurt.status = "poison"
+	game.party = [Mon.create("pidgey", 5), hurt]
+	game.pc = []
+	game.deposit(1)
+	fails += _ok(game.pc[0].hp == game.pc[0].max_hp and game.pc[0].status == "", "depositar cura")
+	game.pc[0].hp = 2
+	game.withdraw(0)
+	fails += _ok(game.party[1].hp == game.party[1].max_hp, "sacar cura")
+	game.bag = {"repel": 1}
+	game.repel_steps = 0
+	var msg: String = game.use_field_item("repel")
+	fails += _ok(
+		msg != "" and game.repel_steps == 100 and not game.bag.has("repel"), "Repel 100 passos"
+	)
+	fails += _ok(game.use_field_item("potion") == "", "poção não é item de campo")
+	fails += _ok(game.repel_active() and game.repel_blocks(50), "Repel bloqueia encontros")
+	game.repel_steps = 2
+	fails += _ok(
+		not game.repel_step() and game.repel_step() and not game.repel_active(), "Repel acaba"
+	)
+	game.repel_steps = 7
+	var d: Dictionary = game.to_dict()
+	game.from_dict(d)
+	fails += _ok(game.repel_steps == 7, "repel_steps salvo")
+	var m0: int = game.money
+	game._opts = {
+		"kind": "trainer",
+		"trainer_id": "rival_blue_route22",
+		"trainer_class": "rival",
+		"scripted": true
+	}
+	game._enemies = [Mon.create("squirtle", 5)]
+	game._finish({"outcome": "win"})
+	fails += _ok(game.money == m0 + 175, "1º rival paga 35 x 5 (%d)" % (game.money - m0))
+	var g2 = load("res://core/game.gd").new()
+	fails += _ok(not g2.save_enabled, "autosave desligado antes do novo jogo")
+	g2.free()
+	fails += _ok(game.save_enabled and not game.can_autosave(null), "autosave sem mundo não grava")
+	return fails
+
+
+func _ok(cond: bool, what: String) -> int:
+	if not cond:
+		print("FAIL " + what)
+	return 0 if cond else 1

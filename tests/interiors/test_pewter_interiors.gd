@@ -247,7 +247,7 @@ func _center() -> void:
 	# PC terminals open PCStorage when the autoload exists.
 	var pcs: Node = root.get_node_or_null("PCStorage")
 	check(pcs != null, "PCStorage autoload present")
-	for room in ["pokemon_center_pewter", "pokemon_center_viridian", "player_room"]:
+	for room in ["pokemon_center_pewter", "pokemon_center_viridian"]:
 		var pc: Node = w.interior(room).npcs.get("pc")
 		if pc == null or pcs == null:
 			check(false, "%s has a PC" % room)
@@ -279,6 +279,14 @@ func _mart_and_gym() -> void:
 		liam != null and liam.trainer_id == "camper_liam" and liam.sight > 0.0,
 		"Camper Liam guards the aisle"
 	)
+	# pewter-06: Liam watches only the west strip (looking north), the centre aisle is free.
+	if liam:
+		var lp: Vector3 = gym.to_local(liam.global_position)
+		var look: Vector3 = -liam.global_transform.basis.z
+		check(
+			lp.x < -4.0 and look.z < -0.9 and absf(lp.x) - 0.9 > 0.5,
+			"Liam on the west side looking north (%s, %s)" % [lp, look]
+		)
 	check(
 		brock.get_meta("role") == "brock" and brock.get_meta("interior") == "pewter_gym",
 		"Brock carries the hook role"
