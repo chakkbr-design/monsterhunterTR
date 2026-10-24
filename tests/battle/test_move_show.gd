@@ -5,6 +5,10 @@ extends SceneTree
 
 const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
+## Golpes que derrubam o próprio usuário (a luta acabaria no meio do teste).
+const SACRIFICE := [
+	"healing_wish", "memento", "explosion", "self_destruct", "final_gambit", "lunar_dance"
+]
 const NEW_MOVES := "res://tests/battle/gen9_new_moves.txt"
 
 var _fails := 0
@@ -148,6 +152,8 @@ func _arena_moves() -> void:
 	for m in mj.get("moves", []):
 		var mv: Dictionary = Dex.move(String(m.id)).duplicate(true)
 		if mv.is_empty() or mv.get("kind") == "clones" or mv.get("self_destruct", false):
+			continue
+		if String(mv.id) in SACRIFICE or String(mv.get("special", "")) in SACRIFICE:
 			continue
 		mv.accuracy = 0
 		p.position = Vector3(-1.0, 0, 0)

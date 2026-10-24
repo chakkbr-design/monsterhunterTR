@@ -336,6 +336,8 @@ func _blink_drop(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	if user.look:
 		user.look.visible = true
 	user.hidden = ""
+	if arena.vfx and arena.vfx.has_method("blink"):
+		arena.vfx.blink(user)
 	user.start_motion(
 		"leap", at, 0.14, 0.0, null, _land_strike.bind(user, mv, miss), 0.0, Callable(), 1.3
 	)
