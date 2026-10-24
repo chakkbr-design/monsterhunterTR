@@ -354,7 +354,7 @@ func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> voi
 	if _marks.has(tid):
 		_marks[tid].m.erase(r.mark)
 	var col := Dex.type_color(String(r.color))
-	_banner(target, String(r.name), col)
+	_notify(String(r.name), col)
 	arena.fx_disc(target.pos2(target.position), 1.2, col * Color(1, 1, 1, 0.6), 0.35)
 	_pixel_burst(target, String(r.color), 2.0 if not r.has("area") else float(r.area[1]) * 1.6)
 	if String(r.id) == "freeze":
@@ -398,9 +398,8 @@ func _resonates(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 	)
 
 
-func _hit_resonance(_user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
+func _hit_resonance(_user: BattleFighter, _target: BattleFighter, mv: Dictionary) -> void:
 	var col := Dex.type_color(String(mv.get("type", "normal")))
-	_banner(target, "Ressonância!", col)
 	_notify("Ressonância!", col)
 
 
@@ -425,15 +424,10 @@ func _add_sync(side: int, v: float) -> void:
 # --- Efeitos ---
 
 
-func _banner(target: BattleFighter, text: String, col: Color) -> void:
-	if is_instance_valid(target):
-		target.popup(text, col, 1.5, 0.9, "crit")
-	_notify(text, col)
-
-
+## Reações, Ressonância e combos de dupla avisam embaixo da arena (BattleHUD.warn), nunca sobre o Pokémon.
 func _notify(text: String, col: Color) -> void:
-	if arena.hud and arena.hud.has_method("combo"):
-		arena.hud.combo(text, col)
+	if arena.hud and arena.hud.has_method("warn"):
+		arena.hud.warn(text, col)
 
 
 func _status(user: BattleFighter, target: BattleFighter, st: String) -> void:
@@ -541,10 +535,7 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 	_duo_cd[u1.side] = DUO_COOLDOWN
 	_used.clear()
 	_add_sync(u1.side, 0.0)
-	var text := "COMBO! %s" % String(duo.name)
-	u1.popup(text, col, 1.5, 0.9, "crit")
-	u2.popup(String(duo.name), col, 1.2, 0.9, "crit")
-	_notify(text, col)
+	_notify("COMBO! %s" % String(duo.name), col)
 	arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	_pixel_burst_key(u1, "sparkle", 1.4, 0.5)

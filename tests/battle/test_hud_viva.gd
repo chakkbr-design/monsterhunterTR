@@ -24,7 +24,7 @@ func _initialize() -> void:
 	e.stages["atk"] = 2
 	e.stages["spe"] = -1
 	check(BattleHUD.VivaTags.stage_tags(e).size() == 2, "tags de estágio")
-	check(BattleHUD.VivaTags.stage_tags(e)[0].text == "ATK↑2", "texto ATK↑2")
+	check(BattleHUD.VivaTags.stage_tags(e)[0].text == "+2 ATK", "texto +2 ATK")
 	var extra := {
 		"foe2": p,
 		"commands": {"player": "LIVRE", "ally": "OFENSIVO"},

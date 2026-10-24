@@ -187,13 +187,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	user.facing = dir
-	user.popup(
-		String(mv.get("name", mv.get("id", "?"))),
-		Dex.type_color(String(mv.get("type", "normal"))).lightened(0.3),
-		1.0,
-		0.75,
-		"move"
-	)
+	# O nome do golpe não aparece sobre o Pokémon: fica na lateral (BattleHUD.callout, em on_move_used).
 	if kind == "arc" or kind == "multi_arc":
 		user.start_arc_step(dir)
 	if mv.has("magnitude"):
@@ -506,18 +500,13 @@ func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 		return
 	var cur := int(c.stages.get(k, 0))
 	var nv := clampi(cur + delta, -6, 6)
-	var name := String(STAT_NAMES.get(k, k))
+	var short := BattleHUD.VivaTags.short_stat(k)
 	if nv == cur:
-		c.popup("%s não %s mais!" % [name, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
+		c.popup("%s não %s mais!" % [short, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
 		return
 	c.stages[k] = nv
-	var word := (
-		("subiu" if absi(delta) == 1 else "subiu muito")
-		if delta > 0
-		else ("caiu" if absi(delta) == 1 else "caiu muito")
-	)
 	c.popup(
-		"%s %s!" % [name, word],
+		BattleHUD.VivaTags.stage_text(k, nv - cur),
 		Color(0.6, 0.9, 1.0) if delta > 0 else Color(1.0, 0.6, 0.6),
 		1.0,
 		0.15,
