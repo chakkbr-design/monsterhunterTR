@@ -274,10 +274,11 @@ func _paralysis_secs() -> void:
 	check(f.apply_status("paralysis"), "paralisou")
 	_run(a, 6.0)
 	check(f.status == "paralysis", "ainda paralisado em 6 s")
+	# A luta só conta o tempo de campo (a entrada e as pausas de impacto não contam).
+	var left := f.par_t
+	check(left > 3.0 and left < 9.0, "contou o tempo de campo (%.2f)" % left)
 	var nf: BattleFighter = a.switch_out(f)
-	check(
-		f.mon.par_left > 3.0 and f.mon.par_left < 4.5, "guardou o que falta (%.2f)" % f.mon.par_left
-	)
+	check(is_equal_approx(f.mon.par_left, left), "guardou o que falta (%.2f)" % f.mon.par_left)
 	var m: Mon = f.mon
 	for k in 6:
 		if nf == null or nf.mon == m:
@@ -286,9 +287,13 @@ func _paralysis_secs() -> void:
 	check(nf != null and nf.mon == m and nf.status == "paralysis", "voltou paralisado")
 	if nf:
 		nf.immortal = true
-		_run(a, 3.0)
+		check(is_equal_approx(nf.par_t, left), "voltou com o tempo que faltava (%.2f)" % nf.par_t)
+		_run(a, left - 1.0)
 		check(nf.status == "paralysis", "ainda paralisado com o tempo que faltava")
-		_run(a, 2.0)
+		var t := 0.0
+		while nf.status == "paralysis" and t < 10.0:
+			a.step(DT)
+			t += DT
 		check(nf.status != "paralysis", "paralisia acabou nos 10 s de campo somados")
 	var g: BattleFighter = a.ally
 	g.immortal = true
