@@ -178,6 +178,18 @@ func _still(me := "charmander", foe := "rattata", lv := 30, foe_lv := 30) -> Nod
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.player.controller = "none"
+	# Um golpe que a IA já soltou (investida, Sucker Punch) termina; depois tudo volta ao zero.
+	_run(a, 1.5)
+	for f in [a.player, a.enemy]:
+		f.hp = f.max_hp
+		f.clear_status()
+		f.confusion_t = 0.0
+		f.trap_t = 0.0
+		f.evasion_t = 0.0
+		for k in f.stages:
+			f.stages[k] = 0
+		f.knock = Vector3.ZERO
+		_ready_all(f)
 	return a
 
 
