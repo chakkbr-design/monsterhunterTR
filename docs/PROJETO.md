@@ -56,7 +56,7 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 - Resultado com HP final de cada Pokémon, duração, semente e placar da série; "Rodar série" faz N lutas seguidas (com semente fixa, a luta k usa semente + k) e "Copiar registro" copia o log da luta.
 
 ### Progressão e sistemas
-- 82 espécies, 142 golpes, 32 treinadores, 30 itens + 5 bolas, 22 tabelas de encontro (tudo em `data/`).
+- 86 espécies, 239 golpes (os Pokémon 1-51 com dados da Gen 9: stats, learnsets, habilidades normais e ocultas; ver docs/MECANICAS.md), 32 treinadores, 30 itens + 5 bolas, 22 tabelas de encontro (tudo em `data/`).
 - Stats, naturezas, IVs, EVs, 6 curvas de XP, evolução por nível (tela animada, dá para cancelar) e por pedra, aprender e esquecer golpes, TMs, Rare Candy.
 - Equipe de 6, PC com 8 caixas de 30, loja (compra e venda, Premier Ball de brinde), dinheiro e prêmio de treinador, Pokédex (vistos e capturados), Cartão de Treinador com insígnias, tempo de jogo, save e continuar.
 - Telas no visual do original: título, novo jogo com teclado de nomes, menu de pausa (Pokédex, Pokémon, Bolsa, Cartão, Salvar, Opções, Controles), resumo em 3 páginas, PC, evolução, aprender golpe, HUD.
