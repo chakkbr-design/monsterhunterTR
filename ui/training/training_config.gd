@@ -3,11 +3,17 @@ extends RefCounted
 ## Formato (salvo em user://training.json, nunca no save do jogo):
 ##   {sides: [{name, item, think_scale, mons: [Mon.to_dict() + "hp_pct"]}, {...}],
 ##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite)}
+## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
+## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
+## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
 ## Uso: const Cfg := preload("res://ui/training/training_config.gd")
 
 const PATH := "user://training.json"
-## Arquivo em uso (os testes trocam para não mexer no do jogador).
+const TEAMS_PATH := "user://training_teams.json"
+const TEAM_SLOTS := 10
+## Arquivos em uso (os testes trocam para não mexer nos do jogador).
 static var path := PATH
+static var teams_path := TEAMS_PATH
 const SIDES := 2
 const PARTY_MAX := 6
 ## Quadra fixa do treino: 16 x 10 (a quadra padrão da arena é 10 x 6).
@@ -69,8 +75,13 @@ static func mon_entry(species: String, level: int) -> Dictionary:
 
 
 ## Mon pronto para a luta a partir de uma entrada (HP pelo hp_pct, sem evoluir no meio da luta).
+## IVs e EVs ficam sempre em 31 e 0, mesmo numa config antiga que tenha outros valores.
 static func build_mon(d: Dictionary) -> Mon:
 	var m := Mon.from_dict(d.duplicate(true))
+	m.ivs = {}
+	for s in StatCalc.STATS:
+		m.ivs[s] = StatCalc.IV_MAX
+	m.evs = StatCalc.zero_evs()
 	m.moves = m.moves.filter(func(id): return not Dex.move(String(id)).is_empty())
 	if m.moves.is_empty():
 		m.moves = Dex.moves_at(m.species, m.level)
@@ -142,6 +153,62 @@ static func save_config(cfg: Dictionary) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(cfg, "\t"))
+
+
+## Golpes que a espécie aprende: [{id, level}], level 0 = a qualquer nível (evolução, TM, ovo,
+## tutor, kit padrão). Lê do species.json: learnset [[nível, id]], evo_moves, tm, egg, tutor, moves.
+## Só golpes que existem no moves.json; ordem: por nível, depois pelo nome.
+static func learnable_moves(sp: String) -> Array:
+	var d := Dex.species(sp)
+	var lv := {}
+	for key in ["evo_moves", "tm", "egg", "tutor", "moves"]:
+		for id in d.get(key, []):
+			lv[String(id)] = 0
+	for e in d.get("learnset", []):
+		var id := String(e[1])
+		if not lv.has(id) or int(e[0]) < int(lv[id]):
+			lv[id] = int(e[0])
+	var out: Array = []
+	for id in lv:
+		if not Dex.move(id).is_empty():
+			out.append({"id": id, "level": lv[id]})
+	out.sort_custom(func(a, b): return [a.level, String(a.id)] < [b.level, String(b.id)])
+	return out
+
+
+## Nível em que a espécie aprende o golpe (0 = qualquer nível; -1 = não aprende).
+static func learn_level(sp: String, id: String) -> int:
+	for e in learnable_moves(sp):
+		if e.id == id:
+			return int(e.level)
+	return -1
+
+
+static func load_teams() -> Array:
+	var out: Array = []
+	var d = null
+	if FileAccess.file_exists(teams_path):
+		var f := FileAccess.open(teams_path, FileAccess.READ)
+		d = JSON.parse_string(f.get_as_text()) if f else null
+	var got: Array = d.get("slots", []) if d is Dictionary and d.get("slots") is Array else []
+	for k in TEAM_SLOTS:
+		var e = got[k] if k < got.size() else {}
+		out.append(e if e is Dictionary and e.get("mons") is Array else {})
+	return out
+
+
+## Grava o lado `team` (cópia) no slot k; {} apaga o slot.
+static func save_team(k: int, team: Dictionary) -> void:
+	if k < 0 or k >= TEAM_SLOTS:
+		return
+	var all := load_teams()
+	var t := team.duplicate(true)
+	if not t.is_empty():
+		t["saved_at"] = Time.get_datetime_string_from_system(false, true)
+	all[k] = t
+	var f := FileAccess.open(teams_path, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"slots": all}, "	"))
 
 
 ## Itens que a IA usa como item do treinador (BattleAI.want_trainer_item: cura de HP ou de status).
