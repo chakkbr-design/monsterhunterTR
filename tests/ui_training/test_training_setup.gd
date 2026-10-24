@@ -205,17 +205,18 @@ func _run() -> void:
 	check(int(entry(scr).ivs.def) == StatCalc.IV_MAX, "todos os IVs 31")
 
 	# --- Times: adicionar, duplicar (sem compartilhar), subir, remover ---
+	# O padrão já tem 2 Pokémon no Time B (2x2).
 	scr.add_mon(1)
-	check(scr.cfg.sides[1].mons.size() == 2 and scr.side == 1 and scr.slot == 1, "adiciona no B")
+	check(scr.cfg.sides[1].mons.size() == 3 and scr.side == 1 and scr.slot == 2, "adiciona no B")
 	scr.set_level(30)
-	scr.duplicate_mon(1, 1)
-	check(scr.cfg.sides[1].mons.size() == 3 and scr.slot == 2, "duplica o Pokémon")
+	scr.duplicate_mon(1, 2)
+	check(scr.cfg.sides[1].mons.size() == 4 and scr.slot == 3, "duplica o Pokémon")
 	scr.set_level(77)
-	check(int(scr.cfg.sides[1].mons[1].level) == 30, "cópia não compartilha a entrada")
-	scr.move_mon(1, 2, -1)
-	check(int(scr.cfg.sides[1].mons[1].level) == 77 and scr.slot == 1, "sobe na ordem")
-	scr.remove_mon(1, 1)
-	check(scr.cfg.sides[1].mons.size() == 2, "remove o Pokémon")
+	check(int(scr.cfg.sides[1].mons[2].level) == 30, "cópia não compartilha a entrada")
+	scr.move_mon(1, 3, -1)
+	check(int(scr.cfg.sides[1].mons[2].level) == 77 and scr.slot == 2, "sobe na ordem")
+	scr.remove_mon(1, 2)
+	check(scr.cfg.sides[1].mons.size() == 3, "remove o Pokémon")
 	for i in 10:
 		scr.add_mon(0)
 	check(scr.cfg.sides[0].mons.size() == Cfg.PARTY_MAX, "time no máximo de %d" % Cfg.PARTY_MAX)
@@ -263,7 +264,7 @@ func _run() -> void:
 	check(scene_to == scr.TITLE_SCENE and Title.boot_to_menu, "Voltar ao título abre o menu")
 	Title.boot_to_menu = false
 	scr.reset_default()
-	check(scr.cfg.sides[0].mons.size() == 1, "restaurar padrão")
+	check(scr.cfg.sides[0].mons.size() == 2, "restaurar padrão")
 
 	scr.queue_free()
 	await frames(2)
