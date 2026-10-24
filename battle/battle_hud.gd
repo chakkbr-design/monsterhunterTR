@@ -11,6 +11,9 @@ const CARD_MARGIN := 14.0
 const CARD_TOP := 12.0
 const ALLY_W := 340.0
 const ALLY_H := 40.0
+## Espaço para a faixa de marcas/estágios entre os cartões empilhados.
+const ALLY_DROP := 24.0
+const FOE2_GAP := 22.0
 const MOVE_R := 42.0
 const MOVE_DX := 92.0
 const MOVE_DY := 68.0
@@ -22,6 +25,8 @@ const PAUSE_W := 300.0
 var _root: Control
 var _player_card: FighterCard
 var _foe_card: FighterCard
+var _foe2_card: FighterCard
+var _viva: VivaLayer
 var _ally_card: AllyCard
 var _moves: Array = []
 var _banner: BannerPill
@@ -56,6 +61,14 @@ func _init() -> void:
 		Vector2(CARD_W, CARD_H),
 		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 0.5)
 	)
+	_foe2_card = FighterCard.new()
+	_foe2_card.foe = true
+	_place(
+		_foe2_card,
+		Vector2(1, 0),
+		Vector2(CARD_W, CARD_H),
+		Vector2(-CARD_MARGIN - CARD_W * 0.5, CARD_TOP + CARD_H * 1.5 + FOE2_GAP)
+	)
 	_player_card = FighterCard.new()
 	_place(
 		_player_card,
@@ -68,7 +81,7 @@ func _init() -> void:
 		_ally_card,
 		Vector2(0, 0),
 		Vector2(ALLY_W, ALLY_H),
-		Vector2(CARD_MARGIN + ALLY_W * 0.5, CARD_TOP + CARD_H + 6.0 + ALLY_H * 0.5)
+		Vector2(CARD_MARGIN + ALLY_W * 0.5, CARD_TOP + CARD_H + ALLY_DROP + ALLY_H * 0.5)
 	)
 	var offs := [
 		Vector2(0, MOVE_DY), Vector2(MOVE_DX, 0), Vector2(-MOVE_DX, 0), Vector2(0, -MOVE_DY)
@@ -95,7 +108,7 @@ func _init() -> void:
 	_root.add_child(_help)
 	_menu_bg = PanelContainer.new()
 	_menu_bg.offset_left = CARD_MARGIN
-	_menu_bg.offset_top = CARD_TOP + CARD_H + ALLY_H + 20
+	_menu_bg.offset_top = CARD_TOP + CARD_H + ALLY_H + 20 + ALLY_DROP - 6.0
 	var msb := UiDraw.glass_box(0.86, 12)
 	msb.set_content_margin_all(12)
 	_menu_bg.add_theme_stylebox_override("panel", msb)
@@ -129,6 +142,9 @@ func _init() -> void:
 	_pause_bg.add_child(_pause)
 	_pause_bg.visible = false
 	_root.add_child(_pause_bg)
+	_viva = VivaLayer.new()
+	_root.add_child(_viva)
+	_viva.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
 func _place(c: Control, anchor: Vector2, size_px: Vector2, center: Vector2) -> void:
@@ -227,12 +243,51 @@ static func guess_style(text: String) -> String:
 	return "info"
 
 
+## "Batalha Viva": balão grande com o nome do golpe, do lado do usuário (1.0 s). Novo substitui o do lado.
+func callout(f: BattleFighter, text: String, col: Color) -> void:
+	if is_instance_valid(f):
+		_viva.add_callout(f.side, text, col)
+
+
+## Faixa diagonal de impacto ("NOCAUTE!", "CRÍTICO!"); a arena congela a luta, o HUD só desenha.
+func cut_in(text: String, col: Color, secs := 0.4) -> void:
+	_viva.start_cut(text, col, secs)
+
+
+## Popup grande central (reações, golpes de dupla), 0.8 s.
+func combo(text: String, col: Color) -> void:
+	_viva.start_combo(text, col)
+
+
+## Faixa "[Pokémon] — [HABILIDADE]" do lado do lutador (1.2 s).
+func ability_banner(f: BattleFighter, ability_name: String) -> void:
+	if is_instance_valid(f):
+		_viva.add_ability(f.side, "%s — %s" % [f.mon.display_name, ability_name])
+
+
+func callout_text(side: int) -> String:
+	return _viva.callout_text(side)
+
+
+func cut_in_text() -> String:
+	return _viva.cut_text()
+
+
+func ability_text(side: int) -> String:
+	return _viva.ability_text(side)
+
+
+func sync_shown(side: int) -> float:
+	return _viva.sync_shown[clampi(side, 0, 1)]
+
+
 ## info: {ally_mode, item_cd, menu, foe_tag, foe_balls: Array[bool]}.
 func refresh(
 	player: BattleFighter, enemy: BattleFighter, dt: float, ally: BattleFighter = null, info := {}
 ) -> void:
 	_banner.step(dt)
 	_intro.step(dt)
+	_viva.step(dt, info.get("sync", [0.0, 0.0]))
 	# A faixa de log some enquanto a pílula de banner (abertura, troca do treinador) está no mesmo lugar.
 	_log.hidden_by_banner = _banner.t > 0.0
 	_log.step(dt)
@@ -248,16 +303,28 @@ func refresh(
 	var has_ally := is_instance_valid(ally) and ally.active()
 	_ally_card.body = ally if has_ally else null
 	_ally_card.mode = String(info.get("ally_mode", ""))
+	var foe2: Variant = info.get("foe2")
+	_foe2_card.body = foe2 if is_instance_valid(foe2) and foe2.active() else null
+	_foe2_card.tag = _foe_card.tag
+	var cmds: Dictionary = info.get("commands", {})
+	var obey: Dictionary = info.get("obey", {})
+	var marks: Dictionary = info.get("marks", {})
+	_player_card.cmd = String(cmds.get("player", ""))
+	_player_card.obey = bool(obey.get("player", true))
+	_ally_card.cmd = String(cmds.get("ally", ""))
+	_ally_card.obey = bool(obey.get("ally", true))
 	_ally_card.visible = has_ally
 	# Resultado do fim: a barra de EXP do cartão enche sob o controle da arena (begin_scripted/fill_to).
 	var xs: Dictionary = info.get("exp_script", {})
-	for c in [_player_card, _foe_card]:
+	for c in [_player_card, _foe_card, _foe2_card]:
 		c.script_xp = -1.0
 		if not xs.is_empty() and c.body != null and c.body.mon == xs.get("mon"):
 			c.script_xp = float(xs.xp)
 			c.script_level = int(xs.level)
 		c.visible = c.body != null
+		c.marks = _marks_of(marks, c.body)
 		c.step(dt)
+	_ally_card.marks = _marks_of(marks, _ally_card.body)
 	_ally_card.queue_redraw()
 	var icd := float(info.get("item_cd", 0.0))
 	_help.text = HELP + ("   item %.1fs" % icd if icd > 0.0 else "")
@@ -270,9 +337,19 @@ func refresh(
 		b.queue_redraw()
 
 
+func _marks_of(marks: Dictionary, f: BattleFighter) -> Array:
+	if f == null:
+		return []
+	return marks.get(f.get_instance_id(), [])
+
+
 ## Para testes: o que os cartões mostram.
 func card_text(which := "player") -> String:
-	var c: FighterCard = _foe_card if which == "foe" else _player_card
+	var c: FighterCard = _player_card
+	if which == "foe":
+		c = _foe_card
+	elif which == "foe2":
+		c = _foe2_card
 	return c.body.mon.display_name if c.body != null and c.visible else ""
 
 
@@ -281,6 +358,8 @@ func card_rect(which: String) -> Rect2:
 	var c: Control = _foe_card if which == "foe" else _player_card
 	if which == "ally":
 		c = _ally_card
+	elif which == "foe2":
+		c = _foe2_card
 	return Rect2(c.position, c.size) if c else Rect2()
 
 
@@ -324,6 +403,9 @@ class FighterCard:
 	var tag := "SELVAGEM"
 	var balls: Array = []
 	var drawn_name := ""
+	var cmd := ""
+	var obey := true
+	var marks: Array = []
 	## Onde os chips de estágio (▲▼) foram desenhados, local ao cartão (holofote do tutorial).
 	var chips := Rect2()
 	## >= 0: XP mostrado pela sequência de resultado (barra enchendo) e o nível que ela anuncia.
@@ -373,6 +455,7 @@ class FighterCard:
 		var r := Rect2(Vector2.ZERO, size)
 		if body == null:
 			return
+		VivaTags.draw_strip(self, body, 98.0 if not foe else 16.0, size, marks, cmd, obey, foe)
 		var types: Array = body.types
 		var accent: Color = Dex.type_color(String(types[0]) if not types.is_empty() else "normal")
 		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 4), r.size), Color(0, 0, 0, 0.35), 14)
@@ -540,11 +623,15 @@ class AllyCard:
 	extends Control
 	var body: BattleFighter
 	var mode := ""
+	var cmd := ""
+	var obey := true
+	var marks: Array = []
 
 	func _draw() -> void:
 		if body == null:
 			return
 		var r := Rect2(Vector2.ZERO, size)
+		VivaTags.draw_strip(self, body, 44.0, size, marks, cmd, obey, false)
 		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.3), 12)
 		UiDraw.glass(self, r, 0.7, 12)
 		var icon := PokemonSprites.icon_fitted(body.mon.species, 32)
@@ -632,7 +719,7 @@ class MoveButton:
 		var id := String(body.moves[index])
 		var mv := Dex.move(id)
 		var tcol := Dex.type_color(String(mv.get("type", "normal")))
-		var cost := Dex.pp_cost(mv)
+		var cost: float = body.pp_cost_of(mv)
 		var afford := body.pp_max >= cost
 		var tired := body.stamina < Dex.fatigue(mv)
 		draw_circle(c, r, Color(UiDraw.INK, 0.88) if afford else Color(0.1, 0.1, 0.12, 0.92))
@@ -1072,3 +1159,287 @@ class BattleLogLine:
 			UiDraw.text(
 				self, Vector2(hx, y + H * 0.5 + 5.0), hint_text, 14, Color(UiDraw.PAPER, a), 3
 			)
+
+
+## Etiqueta de comando, chips de marcas e tags de estágio dos cartões ("Batalha Viva").
+class VivaTags:
+	const CMD_COL := {
+		"OFENSIVO": Color(0.91, 0.35, 0.28),
+		"DEFENSIVO": Color(0.3, 0.55, 0.92),
+		"SUPORTE": Color(0.3, 0.7, 0.4),
+		"LIVRE": Color(0.6, 0.63, 0.68)
+	}
+	const STAGE_TAG := {
+		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "VEL", "acc": "PREC"
+	}
+	const FS := 10
+	const H := 14.0
+
+	## Tags "ATK↑2" a partir de f.stages (≠ 0): [{text, up}].
+	static func stage_tags(f: BattleFighter) -> Array:
+		var out: Array = []
+		for k in STAGE_TAG:
+			var v := int(f.stages.get(k, 0))
+			if v != 0:
+				out.append(
+					{"text": "%s%s%d" % [STAGE_TAG[k], "↑" if v > 0 else "↓", absi(v)], "up": v > 0}
+				)
+		return out
+
+	static func chip(ci: CanvasItem, pos: Vector2, s: String, col: Color, filled := false) -> float:
+		var w := UiDraw.text_width(s, FS) + 10.0
+		var r := Rect2(pos, Vector2(w, H))
+		UiDraw.rounded(
+			ci, r, Color(col, 0.9) if filled else Color(UiDraw.INK, 0.9), H * 0.5, 1.5, col
+		)
+		UiDraw.text(
+			ci, pos + Vector2(5.0, H - 3.5), s, FS, UiDraw.INK if filled else col.lightened(0.25), 0
+		)
+		return w + 4.0
+
+	static func draw_strip(
+		ci: CanvasItem,
+		f: BattleFighter,
+		x0: float,
+		card: Vector2,
+		marks: Array,
+		cmd: String,
+		obey: bool,
+		_foe: bool
+	) -> void:
+		if cmd != "":
+			var c: Color = CMD_COL.get(cmd, CMD_COL["LIVRE"])
+			chip(
+				ci,
+				Vector2(card.x - 124.0 if _foe else x0 + 150.0, -7.0),
+				cmd + ("" if obey else " ?"),
+				c,
+				true
+			)
+		var x := x0
+		var y := card.y - 1.0
+		for m in marks:
+			var col: Variant = m.get("color", Color.WHITE)
+			x += chip(
+				ci,
+				Vector2(x, y),
+				String(m.get("name", m.get("id", ""))),
+				col if col is Color else Color.WHITE
+			)
+		for t in stage_tags(f):
+			x += chip(
+				ci, Vector2(x, y), String(t.text), UiDraw.COL_BUFF if t.up else UiDraw.COL_DEBUFF
+			)
+
+
+## Camada de efeitos de tela: sintonia, balões de golpe, faixas de habilidade, cut-in e combo.
+class VivaLayer:
+	extends Control
+	const CALLOUT_LIFE := 1.0
+	const ABILITY_LIFE := 1.2
+	const COMBO_LIFE := 0.8
+	const SKEW := -0.2
+
+	var sync_shown := [0.0, 0.0]
+	var _sync := [0.0, 0.0]
+	var _time := 0.0
+	var _callouts := [{}, {}]
+	var _abilities := [{}, {}]
+	var _cut := {}
+	var _combo := {}
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func add_callout(side: int, text: String, col: Color) -> void:
+		_callouts[clampi(side, 0, 1)] = {"text": text, "col": col, "age": 0.0}
+
+	func add_ability(side: int, text: String) -> void:
+		_abilities[clampi(side, 0, 1)] = {"text": text, "age": 0.0}
+
+	func start_cut(text: String, col: Color, secs: float) -> void:
+		_cut = {"text": text, "col": col, "age": 0.0, "life": maxf(secs, 0.05)}
+
+	func start_combo(text: String, col: Color) -> void:
+		_combo = {"text": text, "col": col, "age": 0.0}
+
+	func callout_text(side: int) -> String:
+		var c: Dictionary = _callouts[clampi(side, 0, 1)]
+		return String(c.get("text", ""))
+
+	func ability_text(side: int) -> String:
+		var c: Dictionary = _abilities[clampi(side, 0, 1)]
+		return String(c.get("text", ""))
+
+	func cut_text() -> String:
+		return String(_cut.get("text", ""))
+
+	func _age(d: Dictionary, life: float, dt: float) -> Dictionary:
+		if d.is_empty():
+			return d
+		d.age += dt
+		return {} if d.age >= life else d
+
+	func step(dt: float, sync: Array) -> void:
+		_time += dt
+		for i in 2:
+			_callouts[i] = _age(_callouts[i], CALLOUT_LIFE, dt)
+			_abilities[i] = _age(_abilities[i], ABILITY_LIFE, dt)
+			_sync[i] = clampf(float(sync[i]) if sync.size() > i else 0.0, 0.0, 1.0)
+			sync_shown[i] = move_toward(sync_shown[i], _sync[i], dt * 2.5)
+		_combo = _age(_combo, COMBO_LIFE, dt)
+		_cut = _age(_cut, float(_cut.get("life", 0.4)), dt)
+		queue_redraw()
+
+	func _big(pos: Vector2, t: String, fs: int, c: Color, outline := 10) -> void:
+		var f := UiDraw.heavy_font()
+		draw_string_outline(
+			f, pos, t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, outline, Color(0, 0, 0, 0.9)
+		)
+		draw_string(f, pos, t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c)
+
+	func _wid(t: String, fs: int) -> float:
+		return UiDraw.heavy_font().get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+
+	func _draw() -> void:
+		_draw_sync()
+		for i in 2:
+			_draw_ability(i)
+		for i in 2:
+			_draw_callout(i)
+		_draw_combo()
+		_draw_cut()
+
+	func _draw_sync() -> void:
+		for i in 2:
+			var v: float = sync_shown[i]
+			if v <= 0.01:
+				continue
+			var full: bool = v >= 0.999
+			var w := BattleHUD.CARD_W
+			var x := BattleHUD.CARD_MARGIN if i == 0 else size.x - BattleHUD.CARD_MARGIN - w
+			var h := 4.0 + (2.0 * (0.5 + 0.5 * sin(_time * 14.0)) if full else 0.0)
+			var col := UiDraw.AMBER if full else UiDraw.PP_BLUE
+			if full:
+				col = col.lightened(0.3 * (0.5 + 0.5 * sin(_time * 14.0)))
+			UiDraw.rounded(self, Rect2(x, 4.0, w, h), Color(0, 0, 0, 0.45), 2)
+			UiDraw.rounded(self, Rect2(x, 4.0, w * v, h), col, 2)
+			if full and fmod(_time, 0.5) < 0.32:
+				var tw := UiDraw.text_width("SINTONIA!", 11)
+				UiDraw.text(
+					self, Vector2(x + w * 0.5 - tw * 0.5, 17.0), "SINTONIA!", 11, UiDraw.AMBER, 3
+				)
+
+	func _draw_callout(side: int) -> void:
+		var c: Dictionary = _callouts[side]
+		if c.is_empty():
+			return
+		var age: float = c.age
+		var fs := 44
+		var t: String = c.text
+		var col: Color = c.col
+		var w := _wid(t, fs) + 70.0
+		var k := ease(clampf(age / 0.16, 0.0, 1.0), 0.3)
+		var a := clampf((CALLOUT_LIFE - age) / 0.2, 0.0, 1.0)
+		var sc := lerpf(1.35, 1.0, k)
+		var y := size.y - 220.0 if side == 0 else 190.0
+		var x := 28.0 if side == 0 else size.x - 28.0 - w
+		x += (1.0 - k) * (-260.0 if side == 0 else 260.0)
+		draw_set_transform(Vector2(x + w * 0.5, y), 0.0, Vector2(sc, sc))
+		var sk := 20.0
+		var pts := PackedVector2Array(
+			[
+				Vector2(-w * 0.5 + sk, -34),
+				Vector2(w * 0.5 + sk, -34),
+				Vector2(w * 0.5 - sk, 34),
+				Vector2(-w * 0.5 - sk, 34)
+			]
+		)
+		var shadow := pts.duplicate()
+		for i in shadow.size():
+			shadow[i] += Vector2(0, 5)
+		draw_colored_polygon(shadow, Color(0, 0, 0, 0.4 * a))
+		draw_colored_polygon(pts, Color(UiDraw.INK, 0.92 * a))
+		draw_polyline(pts + PackedVector2Array([pts[0]]), Color(col, a), 4.0, true)
+		draw_set_transform_matrix(
+			Transform2D(Vector2(sc, 0), Vector2(SKEW * sc, sc), Vector2(x + w * 0.5, y))
+		)
+		_big(Vector2(-_wid(t, fs) * 0.5, fs * 0.35), t, fs, Color(col.lightened(0.55), a), 8)
+		draw_set_transform(Vector2.ZERO)
+
+	func _draw_ability(side: int) -> void:
+		var c: Dictionary = _abilities[side]
+		if c.is_empty():
+			return
+		var age: float = c.age
+		var t: String = c.text
+		var fs := 24
+		var tf := UiDraw.title_font()
+		var w := UiDraw.text_width(t, fs, tf) + 60.0
+		var k := ease(clampf(age / 0.2, 0.0, 1.0), 0.3)
+		var a := clampf((ABILITY_LIFE - age) / 0.25, 0.0, 1.0)
+		var y := size.y * 0.5 + 40.0 if side == 0 else size.y * 0.5 - 100.0
+		var home := 0.0 if side == 0 else size.x - w
+		var from := -w if side == 0 else size.x
+		var r := Rect2(lerpf(from, home, k), y, w, 44.0)
+		UiDraw.rounded(self, Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35 * a), 8)
+		UiDraw.rounded(self, r, Color(UiDraw.INK, 0.9 * a), 8, 2.0, Color(UiDraw.AMBER, 0.9 * a))
+		UiDraw.text(
+			self,
+			r.position + Vector2(30.0, 30.0),
+			t,
+			fs,
+			Color(UiDraw.PAPER, a),
+			4,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1.0,
+			tf
+		)
+
+	func _draw_combo() -> void:
+		if _combo.is_empty():
+			return
+		var age: float = _combo.age
+		var t: String = _combo.text
+		var col: Color = _combo.col
+		var sc := 1.0
+		if age < 0.1:
+			sc = lerpf(0.4, 1.25, age / 0.1)
+		elif age < 0.2:
+			sc = lerpf(1.25, 1.0, (age - 0.1) / 0.1)
+		var a := clampf((COMBO_LIFE - age) / 0.2, 0.0, 1.0)
+		var fs := 72
+		draw_set_transform_matrix(
+			Transform2D(Vector2(sc, 0), Vector2(SKEW * sc, sc), Vector2(size.x * 0.5, size.y * 0.4))
+		)
+		_big(Vector2(-_wid(t, fs) * 0.5, fs * 0.35), t, fs, Color(col, a), 14)
+		draw_set_transform(Vector2.ZERO)
+
+	func _draw_cut() -> void:
+		if _cut.is_empty():
+			return
+		var age: float = _cut.age
+		var life: float = _cut.life
+		var col: Color = _cut.col
+		var t: String = _cut.text
+		var k := ease(clampf(age / 0.1, 0.0, 1.0), 0.3)
+		var a := clampf((life - age) / 0.08, 0.0, 1.0)
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.3 * a))
+		var c := size * 0.5
+		var ang := -0.2
+		var bw := size.length() * 1.2
+		var bh := 170.0 * k
+		draw_set_transform(c, ang, Vector2.ONE)
+		draw_rect(Rect2(-bw * 0.5, -bh * 0.5 - 8.0, bw, bh + 16.0), Color(1, 1, 1, 0.9 * a))
+		draw_rect(Rect2(-bw * 0.5, -bh * 0.5, bw, bh), Color(col.darkened(0.45), a))
+		# Linhas de velocidade correndo pela faixa.
+		for i in 16:
+			var ly := -bh * 0.5 + fmod(float(i) * 37.0, bh)
+			var len_px := 160.0 + fmod(float(i) * 71.0, 240.0)
+			var lx := fmod(float(i) * 233.0 + _time * 2600.0, bw + len_px) - bw * 0.5 - len_px
+			draw_line(Vector2(lx, ly), Vector2(lx + len_px, ly), Color(1, 1, 1, 0.45 * a), 3.0)
+		var fs := 104
+		var shake := Vector2(sin(age * 90.0), cos(age * 70.0)) * 3.0 * (1.0 - k)
+		var slide := (1.0 - k) * -420.0
+		_big(Vector2(-_wid(t, fs) * 0.5 + slide, fs * 0.35) + shake, t, fs, Color(1, 1, 1, a), 16)
+		draw_set_transform(Vector2.ZERO)

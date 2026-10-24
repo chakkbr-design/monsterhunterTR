@@ -18,6 +18,7 @@ const KEYS := {
 	"run_away": [KEY_R],
 	"pause": [KEY_ESCAPE],
 	"ally_mode": [KEY_F],
+	"player_mode": [KEY_G],
 	# Fora da batalha (controls.gd setup do original): F dá comida ao companheiro; 1-6 mandam e
 	# recolhem cada Pokémon da equipe.
 	"feed": [KEY_F],

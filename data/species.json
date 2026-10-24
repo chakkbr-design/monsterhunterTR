@@ -2,7 +2,8 @@
   "_doc": "Real species. base = base stats; learnset = [[level, move], ...] limited to moves in moves.json (Gen 3 order); evo_moves = moves taught the moment the species evolves (the Gen 7+ \"Evo.\" rule): always learned, whatever the level, on top of any learnset entry at the current level; filled from Bulbapedia/PokeAPI Gen VII plus FRLG's evolution-level repeats, limited to moves in moves.json (see docs/bugs/B41); moves = default kit for test labs. Sprites: drop files in assets/pokemon/<slug>/ (see assets/pokemon/README.md); 'sprite' + 'placeholder_tint' are the fallback until then. base_exp = experience yield; growth = experience curve (medium_fast / medium_slow / fast / slow / erratic / fluctuating); evolution = {level, into} for level-up; {method: item|trade, item?, into} for stone/trade evolutions (data only, never fire on level-up). gender_ratio = female chance 0..1 (-1 = genderless), from pret/pokefirered species_info.h. placeholder_scale enlarges the placeholder sprite. jump_height = hop height in metres computed from weight_kg/height_m by tools/gen_jump_heights.py (small and light = springy); 0 = cannot jump. jump_height_override wins for outliers. locomotion = ground|hover|fly: ground walks and jumps; hover floats a little (no jump, ground aoe misses, dashes hit); fly is always airborne (no jump, ground aoe and dashes miss). Set by tools/gen_locomotion.py, pending approval. swimmer = moves in water (all Water types, D63); fish = flops slowly on land and never leaves the water (the rod fish); pad = may take a floating battle platform (the gym buoys; Staryu yes, Goldeen no). abilities = Gen 3 ability slots in order from pret/pokefirered species_info.h (one entry = one ability, two = a 50/50 slot; ids in data/abilities.json, display only).",
   "Bulbasaur": {
     "abilities": [
-      "overgrow"
+      "overgrow",
+      "chlorophyll"
     ],
     "types": [
       "grass",
@@ -87,7 +88,8 @@
   },
   "Ivysaur": {
     "abilities": [
-      "overgrow"
+      "overgrow",
+      "chlorophyll"
     ],
     "types": [
       "grass",
@@ -172,7 +174,8 @@
   },
   "Venusaur": {
     "abilities": [
-      "overgrow"
+      "overgrow",
+      "thick_fat"
     ],
     "types": [
       "grass",
@@ -253,7 +256,8 @@
   },
   "Charmander": {
     "abilities": [
-      "blaze"
+      "blaze",
+      "flame_body"
     ],
     "types": [
       "fire"
@@ -324,7 +328,8 @@
   },
   "Charmeleon": {
     "abilities": [
-      "blaze"
+      "blaze",
+      "flame_body"
     ],
     "types": [
       "fire"
@@ -394,7 +399,9 @@
   },
   "Charizard": {
     "abilities": [
-      "blaze"
+      "blaze",
+      "gale_wings",
+      "tough_claws"
     ],
     "types": [
       "fire",
@@ -467,7 +474,8 @@
   },
   "Squirtle": {
     "abilities": [
-      "torrent"
+      "torrent",
+      "rough_skin"
     ],
     "types": [
       "water"
@@ -544,7 +552,8 @@
   },
   "Wartortle": {
     "abilities": [
-      "torrent"
+      "torrent",
+      "rough_skin"
     ],
     "types": [
       "water"
@@ -624,7 +633,9 @@
   },
   "Blastoise": {
     "abilities": [
-      "torrent"
+      "torrent",
+      "rough_skin",
+      "sturdy"
     ],
     "types": [
       "water"
@@ -699,7 +710,9 @@
   },
   "Pidgey": {
     "abilities": [
-      "keen_eye"
+      "keen_eye",
+      "big_pecks",
+      "gale_wings"
     ],
     "types": [
       "normal",
@@ -773,7 +786,9 @@
   },
   "Pidgeotto": {
     "abilities": [
-      "keen_eye"
+      "keen_eye",
+      "big_pecks",
+      "gale_wings"
     ],
     "types": [
       "normal",
@@ -846,7 +861,9 @@
   },
   "Pidgeot": {
     "abilities": [
-      "keen_eye"
+      "keen_eye",
+      "big_pecks",
+      "sniper"
     ],
     "types": [
       "normal",
@@ -916,7 +933,8 @@
   "Rattata": {
     "abilities": [
       "run_away",
-      "guts"
+      "guts",
+      "quick_feet"
     ],
     "types": [
       "normal"
@@ -986,7 +1004,8 @@
   "Raticate": {
     "abilities": [
       "run_away",
-      "guts"
+      "guts",
+      "quick_feet"
     ],
     "types": [
       "normal"
@@ -1055,7 +1074,8 @@
   },
   "Caterpie": {
     "abilities": [
-      "shield_dust"
+      "shield_dust",
+      "run_away"
     ],
     "types": [
       "bug"
@@ -1108,7 +1128,8 @@
   },
   "Metapod": {
     "abilities": [
-      "shed_skin"
+      "shed_skin",
+      "battle_armor"
     ],
     "types": [
       "bug"
@@ -1161,7 +1182,9 @@
   },
   "Butterfree": {
     "abilities": [
-      "compound_eyes"
+      "compound_eyes",
+      "serene_grace",
+      "prankster"
     ],
     "types": [
       "bug",
@@ -1238,7 +1261,8 @@
   },
   "Weedle": {
     "abilities": [
-      "shield_dust"
+      "shield_dust",
+      "run_away"
     ],
     "types": [
       "bug",
@@ -1292,7 +1316,8 @@
   },
   "Kakuna": {
     "abilities": [
-      "shed_skin"
+      "shed_skin",
+      "battle_armor"
     ],
     "types": [
       "bug",
@@ -1346,7 +1371,9 @@
   },
   "Beedrill": {
     "abilities": [
-      "swarm"
+      "swarm",
+      "sniper",
+      "technician"
     ],
     "types": [
       "bug",
@@ -1414,7 +1441,9 @@
   },
   "Pikachu": {
     "abilities": [
-      "static"
+      "static",
+      "lightning_rod",
+      "speed_boost"
     ],
     "types": [
       "electric"
@@ -1490,7 +1519,9 @@
   },
   "Raichu": {
     "abilities": [
-      "static"
+      "static",
+      "lightning_rod",
+      "speed_boost"
     ],
     "types": [
       "electric"
@@ -1552,7 +1583,9 @@
   },
   "Spearow": {
     "abilities": [
-      "keen_eye"
+      "keen_eye",
+      "sniper",
+      "super_luck"
     ],
     "types": [
       "normal",
@@ -1627,7 +1660,9 @@
   },
   "Fearow": {
     "abilities": [
-      "keen_eye"
+      "keen_eye",
+      "sniper",
+      "super_luck"
     ],
     "types": [
       "normal",
@@ -1692,7 +1727,9 @@
   },
   "Mankey": {
     "abilities": [
-      "vital_spirit"
+      "vital_spirit",
+      "defiant",
+      "steadfast"
     ],
     "types": [
       "fighting"
@@ -1766,7 +1803,9 @@
   },
   "Primeape": {
     "abilities": [
-      "vital_spirit"
+      "vital_spirit",
+      "defiant",
+      "moxie"
     ],
     "types": [
       "fighting"
@@ -1845,7 +1884,8 @@
   "Psyduck": {
     "abilities": [
       "damp",
-      "cloud_nine"
+      "cloud_nine",
+      "swift_swim"
     ],
     "types": [
       "water"
@@ -1919,7 +1959,8 @@
   "Golduck": {
     "abilities": [
       "damp",
-      "cloud_nine"
+      "cloud_nine",
+      "swift_swim"
     ],
     "types": [
       "water"
@@ -1990,7 +2031,8 @@
   "Slowpoke": {
     "abilities": [
       "oblivious",
-      "own_tempo"
+      "own_tempo",
+      "regenerator"
     ],
     "types": [
       "water",
@@ -2069,7 +2111,8 @@
   "Slowbro": {
     "abilities": [
       "oblivious",
-      "own_tempo"
+      "own_tempo",
+      "regenerator"
     ],
     "types": [
       "water",
@@ -2148,7 +2191,8 @@
   "Poliwag": {
     "abilities": [
       "water_absorb",
-      "damp"
+      "damp",
+      "swift_swim"
     ],
     "types": [
       "water"
@@ -2219,7 +2263,8 @@
   "Poliwhirl": {
     "abilities": [
       "water_absorb",
-      "damp"
+      "damp",
+      "swift_swim"
     ],
     "types": [
       "water"
@@ -2290,7 +2335,8 @@
   "Poliwrath": {
     "abilities": [
       "water_absorb",
-      "damp"
+      "damp",
+      "iron_fist"
     ],
     "types": [
       "water",
@@ -2359,7 +2405,8 @@
   "Goldeen": {
     "abilities": [
       "swift_swim",
-      "water_veil"
+      "water_veil",
+      "serene_grace"
     ],
     "types": [
       "water"
@@ -2434,7 +2481,8 @@
   "Seaking": {
     "abilities": [
       "swift_swim",
-      "water_veil"
+      "water_veil",
+      "storm_drain"
     ],
     "types": [
       "water"
@@ -2506,7 +2554,8 @@
   },
   "Magikarp": {
     "abilities": [
-      "swift_swim"
+      "swift_swim",
+      "unburden"
     ],
     "types": [
       "water"
@@ -2561,7 +2610,9 @@
   },
   "Gyarados": {
     "abilities": [
-      "intimidate"
+      "intimidate",
+      "moxie",
+      "sturdy"
     ],
     "types": [
       "water",
@@ -2624,7 +2675,8 @@
   "Diglett": {
     "abilities": [
       "sand_veil",
-      "arena_trap"
+      "arena_trap",
+      "hyper_cutter"
     ],
     "types": [
       "ground"
@@ -2702,7 +2754,8 @@
   "Dugtrio": {
     "abilities": [
       "sand_veil",
-      "arena_trap"
+      "arena_trap",
+      "hyper_cutter"
     ],
     "types": [
       "ground"
@@ -2782,7 +2835,9 @@
   },
   "Nidoran F": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "hustle",
+      "rough_skin"
     ],
     "types": [
       "poison"
@@ -2859,7 +2914,9 @@
   },
   "Nidorina": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "hustle",
+      "rough_skin"
     ],
     "types": [
       "poison"
@@ -2935,7 +2992,9 @@
   },
   "Nidoqueen": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "sheer_force",
+      "rough_skin"
     ],
     "types": [
       "poison",
@@ -3004,7 +3063,9 @@
   },
   "Nidoran M": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "hustle",
+      "competitive"
     ],
     "types": [
       "poison"
@@ -3081,7 +3142,9 @@
   },
   "Nidorino": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "hustle",
+      "competitive"
     ],
     "types": [
       "poison"
@@ -3157,7 +3220,9 @@
   },
   "Nidoking": {
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "sheer_force",
+      "competitive"
     ],
     "types": [
       "poison",
@@ -3371,7 +3436,8 @@
   "Golem": {
     "abilities": [
       "rock_head",
-      "sturdy"
+      "sturdy",
+      "filter"
     ],
     "types": [
       "rock",
@@ -3440,7 +3506,8 @@
   "Onix": {
     "abilities": [
       "rock_head",
-      "sturdy"
+      "sturdy",
+      "multiscale"
     ],
     "types": [
       "rock",
@@ -3511,7 +3578,8 @@
   },
   "Sandshrew": {
     "abilities": [
-      "sand_veil"
+      "sand_veil",
+      "rough_skin"
     ],
     "types": [
       "ground"
@@ -3581,7 +3649,9 @@
   },
   "Sandslash": {
     "abilities": [
-      "sand_veil"
+      "sand_veil",
+      "tough_claws",
+      "rough_skin"
     ],
     "types": [
       "ground"
@@ -3703,7 +3773,8 @@
       "into": "Golbat"
     },
     "abilities": [
-      "inner_focus"
+      "inner_focus",
+      "super_luck"
     ],
     "gender_ratio": 0.5,
     "dex_no": 41,
@@ -3775,7 +3846,9 @@
     "placeholder_tint": "#8f5fc0",
     "placeholder_scale": 1.3,
     "abilities": [
-      "inner_focus"
+      "inner_focus",
+      "super_luck",
+      "gale_wings"
     ],
     "gender_ratio": 0.5,
     "dex_no": 42,
@@ -3849,7 +3922,9 @@
       "into": "Parasect"
     },
     "abilities": [
-      "effect_spore"
+      "effect_spore",
+      "natural_cure",
+      "tough_claws"
     ],
     "gender_ratio": 0.5,
     "dex_no": 46,
@@ -3914,7 +3989,9 @@
     "placeholder_tint": "#c86a3a",
     "placeholder_scale": 1.25,
     "abilities": [
-      "effect_spore"
+      "effect_spore",
+      "natural_cure",
+      "tough_claws"
     ],
     "gender_ratio": 0.5,
     "dex_no": 47,
@@ -3994,7 +4071,9 @@
       "into": "Clefable"
     },
     "abilities": [
-      "cute_charm"
+      "cute_charm",
+      "friend_guard",
+      "natural_cure"
     ],
     "gender_ratio": 0.75,
     "dex_no": 35,
@@ -4050,7 +4129,9 @@
     "placeholder_tint": "#e8a8c8",
     "placeholder_scale": 1.4,
     "abilities": [
-      "cute_charm"
+      "cute_charm",
+      "friend_guard",
+      "marvel_scale"
     ],
     "gender_ratio": 0.75,
     "dex_no": 36,
@@ -4125,7 +4206,9 @@
       "into": "Wigglytuff"
     },
     "abilities": [
-      "cute_charm"
+      "cute_charm",
+      "friend_guard",
+      "competitive"
     ],
     "gender_ratio": 0.75,
     "dex_no": 39,
@@ -4185,7 +4268,9 @@
     "placeholder_tint": "#e890b8",
     "placeholder_scale": 1.4,
     "abilities": [
-      "cute_charm"
+      "cute_charm",
+      "friend_guard",
+      "thick_fat"
     ],
     "gender_ratio": 0.75,
     "dex_no": 40,
@@ -4261,7 +4346,8 @@
     },
     "abilities": [
       "magnet_pull",
-      "sturdy"
+      "sturdy",
+      "plus"
     ],
     "gender_ratio": -1.0,
     "dex_no": 81,
@@ -4331,7 +4417,8 @@
     "placeholder_scale": 1.35,
     "abilities": [
       "magnet_pull",
-      "sturdy"
+      "sturdy",
+      "minus"
     ],
     "gender_ratio": -1.0,
     "dex_no": 82,
@@ -4400,7 +4487,8 @@
     },
     "abilities": [
       "soundproof",
-      "static"
+      "static",
+      "volt_absorb"
     ],
     "gender_ratio": -1.0,
     "dex_no": 100,
@@ -4467,7 +4555,8 @@
     "placeholder_scale": 1.35,
     "abilities": [
       "soundproof",
-      "static"
+      "static",
+      "motor_drive"
     ],
     "gender_ratio": -1.0,
     "dex_no": 101,
@@ -4542,7 +4631,8 @@
       "into": "Gloom"
     },
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper"
     ],
     "gender_ratio": 0.5,
     "dex_no": 43,
@@ -4618,7 +4708,8 @@
       "into": "Vileplume"
     },
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper"
     ],
     "gender_ratio": 0.5,
     "dex_no": 44,
@@ -4678,7 +4769,9 @@
     "placeholder_tint": "#d84a6a",
     "placeholder_scale": 1.5,
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper",
+      "regenerator"
     ],
     "gender_ratio": 0.5,
     "dex_no": 45,
@@ -4759,7 +4852,8 @@
       "into": "Weepinbell"
     },
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper"
     ],
     "gender_ratio": 0.5,
     "dex_no": 69,
@@ -4840,7 +4934,8 @@
       "into": "Victreebel"
     },
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper"
     ],
     "gender_ratio": 0.5,
     "dex_no": 70,
@@ -4905,7 +5000,9 @@
     "placeholder_tint": "#98b028",
     "placeholder_scale": 1.5,
     "abilities": [
-      "chlorophyll"
+      "chlorophyll",
+      "sap_sipper",
+      "reckless"
     ],
     "gender_ratio": 0.5,
     "dex_no": 71,
@@ -4983,7 +5080,8 @@
     },
     "abilities": [
       "stench",
-      "sticky_hold"
+      "sticky_hold",
+      "poison_heal"
     ],
     "gender_ratio": 0.5,
     "dex_no": 88,
@@ -5056,7 +5154,8 @@
     "placeholder_scale": 1.4,
     "abilities": [
       "stench",
-      "sticky_hold"
+      "sticky_hold",
+      "poison_heal"
     ],
     "gender_ratio": 0.5,
     "dex_no": 89,
@@ -5131,7 +5230,8 @@
       "into": "Weezing"
     },
     "abilities": [
-      "levitate"
+      "levitate",
+      "aftermath"
     ],
     "gender_ratio": 0.5,
     "dex_no": 109,
@@ -5201,7 +5301,9 @@
     "placeholder_tint": "#9060b8",
     "placeholder_scale": 1.4,
     "abilities": [
-      "levitate"
+      "levitate",
+      "aftermath",
+      "clear_body"
     ],
     "gender_ratio": 0.5,
     "dex_no": 110,
@@ -5276,7 +5378,8 @@
     },
     "abilities": [
       "intimidate",
-      "shed_skin"
+      "shed_skin",
+      "unburden"
     ],
     "gender_ratio": 0.5,
     "dex_no": 23,
@@ -5343,7 +5446,8 @@
     "placeholder_scale": 1.45,
     "abilities": [
       "intimidate",
-      "shed_skin"
+      "shed_skin",
+      "unburden"
     ],
     "gender_ratio": 0.5,
     "dex_no": 24,
@@ -5416,7 +5520,8 @@
     "weight_kg": 34.5,
     "abilities": [
       "illuminate",
-      "natural_cure"
+      "natural_cure",
+      "pickup"
     ],
     "swimmer": true,
     "swim_sink": 0.3,
@@ -5483,7 +5588,8 @@
     "weight_kg": 80.0,
     "abilities": [
       "illuminate",
-      "natural_cure"
+      "natural_cure",
+      "pickup"
     ],
     "swimmer": true,
     "swim_sink": 0.32,
@@ -5547,7 +5653,8 @@
     "height_m": 0.4,
     "weight_kg": 8.0,
     "abilities": [
-      "swift_swim"
+      "swift_swim",
+      "sniper"
     ],
     "swimmer": true,
     "swim_sink": 0.2,
@@ -5616,7 +5723,9 @@
     "height_m": 0.3,
     "weight_kg": 4.0,
     "abilities": [
-      "shell_armor"
+      "shell_armor",
+      "battle_armor",
+      "rough_skin"
     ],
     "swimmer": true,
     "swim_sink": 0.5,
@@ -5684,7 +5793,9 @@
     "height_m": 1.2,
     "weight_kg": 25.0,
     "abilities": [
-      "poison_point"
+      "poison_point",
+      "sniper",
+      "tinted_lens"
     ],
     "swimmer": true,
     "swim_sink": 0.25,
@@ -5755,7 +5866,9 @@
     "height_m": 1.8,
     "weight_kg": 152.0,
     "abilities": [
-      "swift_swim"
+      "swift_swim",
+      "sniper",
+      "adaptability"
     ],
     "swimmer": true,
     "swim_sink": 0.3,
@@ -5815,7 +5928,9 @@
     "height_m": 1.5,
     "weight_kg": 132.5,
     "abilities": [
-      "shell_armor"
+      "shell_armor",
+      "battle_armor",
+      "multiscale"
     ],
     "swimmer": true,
     "swim_sink": 0.5,

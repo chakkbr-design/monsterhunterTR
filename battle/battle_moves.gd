@@ -24,6 +24,19 @@ const STATUS_WORDS := {
 	"confusion": "CONFUSO!"
 }
 const PARALYSIS_FAIL := 0.2
+## Ritmo +-5% nos cooldowns; golpe de prioridade (Quick Attack) sai quase sem preparo e com GCD menor.
+const JITTER := 0.05
+const PRIORITY_PREPARE := 0.04
+const PRIORITY_GCD := 0.6
+## Ritmo da luta (Batalha Viva, "rápido": 15-30 s por Pokémon): a fórmula Gen 3 fica igual e o dano
+## final é escalado por arena.damage_pace (padrão DAMAGE_PACE, opts.damage_pace muda).
+const DAMAGE_PACE := 0.5
+const DOUBLES_PACE := 0.7
+## Cobrir o parceiro com HP baixo: distância máxima e chance por golpe.
+const COVER_DIST := 2.5
+const COVER_CHANCE := 0.35
+## Entregas que já avisam o terreno com o próprio raio (as outras avisam no ponto do acerto).
+const AREA_KINDS := ["aoe_self", "aoe_target", "zone"]
 const CONFUSION_CHANCE := 0.33
 const AI_ROLL_MEAN := 0.925
 
@@ -38,7 +51,7 @@ func _init(a: Node, r: RandomNumberGenerator) -> void:
 
 func can_afford(user: BattleFighter, id: String, careful := true) -> bool:
 	var mv := Dex.move(id)
-	if mv.is_empty() or user.pp_max < Dex.pp_cost(mv):
+	if mv.is_empty() or user.pp_max < user.pp_cost_of(mv):
 		return false
 	return not careful or user.stamina >= Dex.fatigue(mv) or rng.randf() < 0.1
 
@@ -57,21 +70,31 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 		or not user.may_start(mv)
 	):
 		return false
-	var cost := Dex.pp_cost(mv)
+	var cost := user.pp_cost_of(mv)
 	if user.pp_max < cost:
 		if feedback:
 			user.popup("PP insuficiente!", Color(1, 0.6, 0.4))
 		return false
 	var exhausted := user.spend(cost, Dex.fatigue(mv))
 	var sf := user.speed_factor()
-	user.move_cd[id] = Dex.cooldown(mv) / sf
-	user.gcd_t = Dex.GLOBAL_COOLDOWN / sf
+	if arena.abilities and arena.abilities.has_method("cast_speed_mult"):
+		sf *= arena.abilities.cast_speed_mult(user, mv)
+	var jit := 1.0 + rng.randf_range(-JITTER, JITTER)
+	user.move_cd[id] = Dex.cooldown(mv) / sf * jit
+	user.gcd_t = (
+		Dex.GLOBAL_COOLDOWN / sf * (PRIORITY_GCD if int(mv.get("priority", 0)) > 0 else 1.0)
+	)
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
 		user.popup("Paralisado!", Dex.type_color("electric"))
 		return true
 	if arena and arena.has_method("on_move_used"):
 		arena.on_move_used(user, mv)
 	var prepare := Dex.prepare_time(mv)
+	if int(mv.get("priority", 0)) > 0:
+		prepare = minf(prepare, PRIORITY_PREPARE)
+	elif prepare > 0.0:
+		prepare /= maxf(sf, 0.5)
+		_telegraph_prepare(user, mv, prepare)
 	if exhausted:
 		_stagger_after(user, mv, prepare)
 	if prepare <= 0.0:
@@ -79,6 +102,33 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	else:
 		user.begin_prepare(id, prepare, deliver.bind(user, mv))
 	return true
+
+
+## Investida e golpe de perto avisam enquanto preparam (a IA do outro lado pode sair da frente).
+func _telegraph_prepare(user: BattleFighter, mv: Dictionary, prepare: float) -> void:
+	var kind := String(mv.get("kind", ""))
+	if kind == "dash":
+		arena.telegraph(
+			{
+				"kind": "line",
+				"side": user.side,
+				"t": prepare + 0.15,
+				"from": user.pos2(user.position),
+				"dir": user.aim_dir(),
+				"len": float(mv.get("range", 3.0)) + 0.6,
+				"w": 1.2
+			}
+		)
+	elif kind in ["arc", "multi_arc"]:
+		arena.telegraph(
+			{
+				"kind": "disc",
+				"side": user.side,
+				"t": prepare + 0.1,
+				"at": user.pos2(user.position) + user.aim_dir() * 0.8,
+				"r": float(mv.get("range", 1.8)) * 0.8
+			}
+		)
 
 
 func _stagger_after(user: BattleFighter, mv: Dictionary, prepare: float) -> void:
@@ -119,6 +169,8 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 	var kind := String(mv.get("kind", ""))
 	var acc := float(mv.get("accuracy", 0.0))
 	var eff_acc := acc * acc_mult(int(user.stages.get("acc", 0)))
+	if arena.abilities:
+		eff_acc *= arena.abilities.acc_mult(user)
 	if (
 		aimed
 		and acc > 0.0
@@ -183,6 +235,8 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 			user.evasion_t = float(mv.get("duration", 5.0))
 			user.evasion = float(mv.get("evasion", 0.4))
 			user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
+			if arena.field:
+				arena.field.spawn_clones(user, mv)
 		_:
 			_arc(user, mv, dir, miss)
 
@@ -262,9 +316,9 @@ func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 	if eff <= 0.0:
 		return 0.0
 	var kind := String(mv.get("kind", ""))
-	if kind == "dash" and target.is_airborne():
+	if kind == "dash" and target.height() > 0.0:
 		var lift := user.jump_height if user.jump_height > 0.0 else 0.0
-		if target.air_h - lift >= user.dash_reach():
+		if target.height() - lift - user.height() >= user.dash_reach():
 			return 0.0
 	if (
 		kind in ["aoe_self", "aoe_target"]
@@ -280,7 +334,7 @@ func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 	var hits := float(mv.get("hits", mv.get("count", 1)))
 	var base := ((2.0 * float(user.level) / 5.0 + 2.0) * power * a / maxf(d, 1.0)) / 50.0 + 2.0
 	var stab := 1.5 if mv.get("type") in user.types else 1.0
-	var score := base * hits * stab * eff * AI_ROLL_MEAN * hit_chance(user, mv)
+	var score := base * hits * stab * eff * AI_ROLL_MEAN * hit_chance(user, mv) * pace()
 	if bool(mv.get("self_destruct", false)):
 		score *= clampf(1.0 - float(user.hp) / maxf(float(user.max_hp), 1.0), 0.0, 1.0)
 	return score
@@ -301,7 +355,17 @@ func hit(
 		return
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
 		target.popup("Errou!", Color(0.9, 0.9, 1.0))
+		if arena.field:
+			arena.field.on_evaded(target)
 		return
+	if arena.field and arena.field.absorb_hit(user, target, mv):
+		return
+	target = _cover(user, target, mv)
+	if arena.abilities and arena.abilities.immune(user, target, mv):
+		_landed(user, target, mv)
+		return
+	if arena.field and not String(mv.get("kind", "")) in AREA_KINDS:
+		arena.field.on_move_landed(user, mv, target.pos2(target.position), 0.8)
 	var power := float(mv.get("power", 0)) * power_scale
 	if power > 0.0:
 		var m := mv
@@ -315,6 +379,11 @@ func hit(
 			_landed(user, target, mv)
 			return
 		var dmg := int(res.damage)
+		var mult := extra_mult(user, target, mv) * pace()
+		if mult != 1.0:
+			dmg = maxi(1, int(round(float(dmg) * mult)))
+		if arena.abilities:
+			dmg = arena.abilities.adjust_damage(user, target, mv, dmg)
 		var hp_before := target.hp
 		target.last_hit_by = user
 		target.take_damage(
@@ -323,6 +392,10 @@ func hit(
 			float(mv.get("knockback", 4.0)),
 			{"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
+		if arena.combos:
+			arena.combos.on_hit(user, target, mv, dmg)
+		if arena.abilities:
+			arena.abilities.on_hit(user, target, mv, dmg)
 		if dmg >= hp_before and arena.has_method("on_knocked_out"):
 			arena.on_knocked_out(user, target)  # Moves.knocked_out do original
 		if mv.has("drain") and user.alive():
@@ -357,6 +430,8 @@ func hit(
 			var st := String(ef.status)
 			if STATUS_IMMUNE.get(st, "-") in target.types:
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
+			elif arena.abilities and arena.abilities.blocks_status(target, st):
+				pass
 			elif target.apply_status(st, user):
 				target.popup(
 					String(STATUS_WORDS.get(st, st.to_upper() + "!")),
@@ -368,6 +443,38 @@ func hit(
 	_landed(user, target, mv)
 
 
+func pace() -> float:
+	var p = arena.get("damage_pace")
+	return float(p) if p != null else 1.0
+
+
+## Cobrir: o parceiro em DEFENSIVO (ou Muralha no LIVRE) perto do alvo se joga na frente às vezes e
+## leva o golpe no lugar dele (o vídeo 2x2 de Mt. Silver).
+func _cover(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> BattleFighter:
+	if float(mv.get("power", 0)) <= 0.0 or mv.get("combo", false) or target.ai == null:
+		return target
+	var p := target.ai.partner()
+	if p == null or not p.can_act() or p.flat_to(target).length() > COVER_DIST:
+		return target
+	var cmd := p.ai.ally_mode()
+	var guard := cmd == BattleAI.DEFEND or (cmd == BattleAI.FREE and p.profile == "wall")
+	if not guard or float(target.hp) > float(target.max_hp) * 0.6 or rng.randf() >= COVER_CHANCE:
+		return target
+	p.position = target.position.lerp(user.position, 0.25)
+	p.popup("Protegeu %s!" % target.mon.display_name, Color(0.6, 0.85, 1.0), 1.1, 0.9)
+	return p
+
+
+## Combos (marcas, Ressonância, dupla) e habilidades no fim da fórmula de dano.
+func extra_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	var m := 1.0
+	if arena.combos:
+		m *= arena.combos.damage_mult(user, target, mv)
+	if arena.abilities:
+		m *= arena.abilities.damage_mult(user, target, mv)
+	return m
+
+
 ## Moves.hit_landed do original (o tutorial ouve pela arena).
 func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
 	if arena and arena.has_signal("hit_landed"):
@@ -376,6 +483,13 @@ func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 
 func change_stage(c: BattleFighter, k: String, delta: int) -> void:
 	if delta == 0 or not is_instance_valid(c):
+		return
+	if (
+		delta < 0
+		and arena.abilities
+		and arena.abilities.has_method("blocks_stage_drop")
+		and arena.abilities.blocks_stage_drop(c, k)
+	):
 		return
 	var cur := int(c.stages.get(k, 0))
 	var nv := clampi(cur + delta, -6, 6)
@@ -562,6 +676,17 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	var r := float(mv.get("range", 14.0))
 	var w := float(mv.get("width", 0.8))
 	user.root_t = maxf(user.root_t, windup + 0.25 + float(mv.get("root", 1.0)))
+	arena.telegraph(
+		{
+			"kind": "line",
+			"side": user.side,
+			"t": windup + 0.1,
+			"from": user.pos2(user.position),
+			"dir": dir,
+			"len": r,
+			"w": w
+		}
+	)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_beam(
 		user.position + Vector3(0, 0.05, 0), dir, r, w, col * Color(1, 1, 1, 0.35), windup
@@ -584,6 +709,10 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 				var along := to.dot(dir)
 				if along > -0.5 and along < r and (to - dir * along).length() < w / 2.0 + 0.5:
 					hit(user, t, mv, dir)
+			if mv.has("recharge") and user.alive():
+				# MUST RECHARGE: parado e vulnerável depois do golpe (Hyper Beam).
+				user.stun_t = maxf(user.stun_t, float(mv.recharge))
+				user.popup("Precisa recarregar!", Color(1, 0.7, 0.4), 1.0, 0.9)
 	)
 
 
@@ -597,12 +726,23 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 	user.root_t = maxf(user.root_t, windup + 0.1)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_disc(user.position, radius, col * Color(1, 1, 1, 0.3), windup)
+	arena.telegraph(
+		{
+			"kind": "disc",
+			"side": user.side,
+			"t": windup,
+			"at": user.pos2(user.position),
+			"r": radius
+		}
+	)
 	arena.later(
 		windup,
 		func() -> void:
 			if not is_instance_valid(user) or not user.alive():
 				return
 			arena.fx_disc(user.position, radius, col, 0.25)
+			if arena.field:
+				arena.field.on_move_landed(user, mv, user.pos2(user.position), radius)
 			for t in targets_of(user):
 				var to := user.flat_to(t)
 				if to.length() <= radius and not _ground_immune(mv, t):
@@ -636,12 +776,15 @@ func _aoe_target(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	var at := _area_point(user, mv, dir, miss)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_disc(at, radius, col * Color(1, 1, 1, 0.3), windup)
+	arena.telegraph({"kind": "disc", "side": user.side, "t": windup, "at": at, "r": radius})
 	arena.later(
 		windup,
 		func() -> void:
 			if not is_instance_valid(user) or not user.alive():
 				return
 			arena.fx_disc(at, radius, col, 0.25)
+			if arena.field:
+				arena.field.on_move_landed(user, mv, at, radius)
 			if arena.vfx and arena.is_inside_tree():
 				arena.vfx.sky_bolt(String(mv.get("id", "")), arena.to_global(at))
 			for t in targets_of(user):
@@ -661,6 +804,8 @@ func _zone(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	var dur := float(mv.get("duration", 4.0))
 	var tick := float(mv.get("tick", 0.5))
 	arena.fx_disc(at, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.45), dur)
+	if arena.field:
+		arena.field.on_move_landed(user, mv, at, radius)
 	_zone_tick(user, mv, at, radius, tick, int(ceil(dur / tick)))
 
 

@@ -49,9 +49,16 @@ const NATURES := {
 	"quirky": [],
 }
 
-const BATTLE_SPEED_EDGE := 0.2
-
-const BATTLE_SPEED_SCALE := 5.0
+## Fator de Speed da luta (Batalha Viva): 1 + 0,35 * ln(meu / dele), limitado a 0,7..1,45.
+## O dobro da Speed dá ~1,24x no ritmo (cooldowns, stamina); metade dá ~0,76x.
+const BATTLE_SPEED_K := 0.35
+const BATTLE_SPEED_MIN := 0.7
+const BATTLE_SPEED_MAX := 1.45
+## Velocidade de andar absoluta (m/s) pela Speed efetiva: base + k * Speed, limitada.
+const WALK_BASE := 3.0
+const WALK_K := 0.012
+const WALK_MIN := 2.4
+const WALK_MAX := 5.6
 
 
 static func stat(s: String, base: int, iv: int, ev: int, level: int, nature: String) -> int:
@@ -111,8 +118,12 @@ static func stage_mult(stage: int) -> float:
 
 
 static func battle_speed_factor(mine: float, theirs: float) -> float:
-	var d := (mine - theirs) / BATTLE_SPEED_SCALE
-	return 1.0 + BATTLE_SPEED_EDGE * signf(d) * (1.0 - exp(-d * d))
+	var k := 1.0 + BATTLE_SPEED_K * log(maxf(mine, 1.0) / maxf(theirs, 1.0))
+	return clampf(k, BATTLE_SPEED_MIN, BATTLE_SPEED_MAX)
+
+
+static func walk_speed(spe: float) -> float:
+	return clampf(WALK_BASE + WALK_K * spe, WALK_MIN, WALK_MAX)
 
 
 static func acc_stage_mult(stage: int) -> float:

@@ -1,0 +1,16 @@
+{
+  "_doc": "Golpes de dupla. types = par de tipos (any = qualquer; o outro tipo do par precisa ser diferente). effect: aoe (dano em area no alvo), field (campo que fica 'duration' s e bate a cada 'tick'), buff_team (stat do time sobe por 'dur' s), debuff_foes (stat dos inimigos na area cai). Campos opcionais: status {id, chance}, root, heal (fracao do HP maximo do time).",
+  "duo_moves": [
+    {"id": "sea_of_fire", "name": "Mar de Chamas", "types": ["fire", "grass"], "type": "fire", "power": 22, "radius": 2.6, "effect": "field", "duration": 4.0, "tick": 0.5, "status": {"id": "burn", "chance": 0.25}},
+    {"id": "rainbow", "name": "Arco-íris", "types": ["water", "fire"], "type": "water", "power": 45, "radius": 2.2, "effect": "buff_team", "stat": "spe", "stages": 1, "dur": 6.0, "heal": 0.1},
+    {"id": "swamp", "name": "Pântano", "types": ["grass", "water"], "type": "grass", "power": 18, "radius": 2.8, "effect": "field", "duration": 5.0, "tick": 0.6, "slow": 1},
+    {"id": "thunderstorm", "name": "Tempestade Elétrica", "types": ["electric", "water"], "type": "electric", "power": 75, "radius": 2.6, "effect": "aoe", "status": {"id": "paralysis", "chance": 0.5}},
+    {"id": "stone_wall", "name": "Muralha de Pedra", "types": ["rock", "ground"], "type": "rock", "power": 65, "radius": 2.4, "effect": "aoe", "root": 1.5},
+    {"id": "fire_pillar", "name": "Pilar de Fogo", "types": ["fire", "ground"], "type": "fire", "power": 75, "radius": 2.0, "effect": "aoe", "status": {"id": "burn", "chance": 0.4}},
+    {"id": "plasma", "name": "Plasma", "types": ["fire", "electric"], "type": "fire", "power": 80, "radius": 2.2, "effect": "aoe"},
+    {"id": "deep_frost", "name": "Geada Profunda", "types": ["ice", "water"], "type": "ice", "power": 55, "radius": 2.6, "effect": "debuff_foes", "stat": "spe", "stages": -1, "dur": 5.0, "root": 1.2},
+    {"id": "night_terror", "name": "Terror Noturno", "types": ["psychic", "ghost"], "type": "psychic", "power": 60, "radius": 2.4, "effect": "aoe", "status": {"id": "confusion", "chance": 0.7}},
+    {"id": "toxic_mist", "name": "Névoa Tóxica", "types": ["poison", "grass"], "type": "poison", "power": 18, "radius": 2.6, "effect": "field", "duration": 4.5, "tick": 0.6, "status": {"id": "poison", "chance": 0.35}},
+    {"id": "tailwind", "name": "Vento de Cauda", "types": ["flying", "any"], "type": "flying", "power": 40, "radius": 2.2, "effect": "buff_team", "stat": "spe", "stages": 1, "dur": 8.0}
+  ]
+}

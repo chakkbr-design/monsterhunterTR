@@ -31,8 +31,11 @@ func _stats() -> void:
 	check(is_equal_approx(StatCalc.acc_stage_mult(-3), 0.5), "estágio de precisão")
 	check(
 		(
-			StatCalc.battle_speed_factor(100, 50) <= 1.2
-			and StatCalc.battle_speed_factor(50, 100) >= 0.8
+			StatCalc.battle_speed_factor(100, 50) > 1.2
+			and StatCalc.battle_speed_factor(100, 50) < 1.3
+			and StatCalc.battle_speed_factor(50, 100) < 0.8
+			and StatCalc.battle_speed_factor(500, 10) == 1.45
+			and StatCalc.battle_speed_factor(10, 500) == 0.7
 		),
 		"fator de speed limitado"
 	)

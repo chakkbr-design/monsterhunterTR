@@ -1,151 +1,448 @@
 {
-  "_doc": "Gen 3 (FireRed/LeafGreen) abilities: id -> in-game FRLG name and description (pret/pokefirered src/data/text/abilities.h). A Mon stores only its ability slot (scripts/stats/mon.gd ability_slot); names/descriptions are display only for now, no battle effects.",
+  "_doc": "Abilities: id -> name/desc (en) + desc_pt. Gen 3 (FireRed/LeafGreen) ones from pret/pokefirered src/data/text/abilities.h plus newer-gen additions for real-time and double battles. A Mon stores only its ability slot (core/mon.gd ability_slot); effects live in battle/battle_abilities.gd.",
   "arena_trap": {
     "name": "ARENA TRAP",
-    "desc": "Prevents fleeing."
+    "desc": "Prevents fleeing.",
+    "desc_pt": "Inimigos terrestres andam mais devagar."
   },
   "blaze": {
     "name": "BLAZE",
-    "desc": "Ups FIRE moves in a pinch."
+    "desc": "Ups FIRE moves in a pinch.",
+    "desc_pt": "Fogo x1,5 com HP baixo."
   },
   "chlorophyll": {
     "name": "CHLOROPHYLL",
-    "desc": "Raises SPEED in sunshine."
+    "desc": "Raises SPEED in sunshine.",
+    "desc_pt": "Anda um pouco mais rápido (sem clima)."
   },
   "cloud_nine": {
     "name": "CLOUD NINE",
-    "desc": "Negates weather effects."
+    "desc": "Negates weather effects.",
+    "desc_pt": "Sem clima no jogo: sem efeito."
   },
   "cute_charm": {
     "name": "CUTE CHARM",
-    "desc": "Infatuates on contact."
+    "desc": "Infatuates on contact.",
+    "desc_pt": "30% de enfeitiçar quem encosta."
   },
   "compound_eyes": {
     "name": "COMPOUND EYES",
-    "desc": "Raises accuracy."
+    "desc": "Raises accuracy.",
+    "desc_pt": "Precisão x1,3."
   },
   "damp": {
     "name": "DAMP",
-    "desc": "Prevents self-destruction."
+    "desc": "Prevents self-destruction.",
+    "desc_pt": "Reduz dano de autodestruição."
   },
   "effect_spore": {
     "name": "EFFECT SPORE",
-    "desc": "Leaves spores on contact."
+    "desc": "Leaves spores on contact.",
+    "desc_pt": "30% de esporos ao contato."
   },
   "guts": {
     "name": "GUTS",
-    "desc": "Ups ATTACK if suffering."
+    "desc": "Ups ATTACK if suffering.",
+    "desc_pt": "Ataque x1,5 com status."
   },
   "inner_focus": {
     "name": "INNER FOCUS",
-    "desc": "Prevents flinching."
+    "desc": "Prevents flinching.",
+    "desc_pt": "Não hesita nem se intimida."
   },
   "intimidate": {
     "name": "INTIMIDATE",
-    "desc": "Lowers the foe's ATTACK."
+    "desc": "Lowers the foe's ATTACK.",
+    "desc_pt": "Ao entrar, baixa o Ataque dos inimigos."
   },
   "keen_eye": {
     "name": "KEEN EYE",
-    "desc": "Prevents loss of accuracy."
+    "desc": "Prevents loss of accuracy.",
+    "desc_pt": "A precisão não cai."
   },
   "levitate": {
     "name": "LEVITATE",
-    "desc": "Not hit by GROUND attacks."
+    "desc": "Not hit by GROUND attacks.",
+    "desc_pt": "Imune a golpes de terra."
   },
   "magnet_pull": {
     "name": "MAGNET PULL",
-    "desc": "Traps STEEL-type POKéMON."
+    "desc": "Traps STEEL-type POKéMON.",
+    "desc_pt": "Inimigos de aço andam mais devagar."
   },
   "oblivious": {
     "name": "OBLIVIOUS",
-    "desc": "Prevents attraction."
+    "desc": "Prevents attraction.",
+    "desc_pt": "Imune a charme e intimidação."
   },
   "overgrow": {
     "name": "OVERGROW",
-    "desc": "Ups GRASS moves in a pinch."
+    "desc": "Ups GRASS moves in a pinch.",
+    "desc_pt": "Planta x1,5 com HP baixo."
   },
   "own_tempo": {
     "name": "OWN TEMPO",
-    "desc": "Prevents confusion."
+    "desc": "Prevents confusion.",
+    "desc_pt": "Não fica confuso."
   },
   "poison_point": {
     "name": "POISON POINT",
-    "desc": "Poisons foe on contact."
+    "desc": "Poisons foe on contact.",
+    "desc_pt": "30% de envenenar ao contato."
   },
   "rock_head": {
     "name": "ROCK HEAD",
-    "desc": "Prevents recoil damage."
+    "desc": "Prevents recoil damage.",
+    "desc_pt": "Cansaço dura menos."
   },
   "run_away": {
     "name": "RUN AWAY",
-    "desc": "Makes escaping easier."
+    "desc": "Makes escaping easier.",
+    "desc_pt": "Anda um pouco mais rápido."
   },
   "sand_veil": {
     "name": "SAND VEIL",
-    "desc": "Ups evasion in a sandstorm."
+    "desc": "Ups evasion in a sandstorm.",
+    "desc_pt": "Chance leve de esquivar."
   },
   "shed_skin": {
     "name": "SHED SKIN",
-    "desc": "Heals the body by shedding."
+    "desc": "Heals the body by shedding.",
+    "desc_pt": "33% de curar status a cada 3 s."
   },
   "shield_dust": {
     "name": "SHIELD DUST",
-    "desc": "Prevents added effects."
+    "desc": "Prevents added effects.",
+    "desc_pt": "Bloqueia efeitos extras de golpes."
   },
   "shell_armor": {
     "name": "SHELL ARMOR",
-    "desc": "Blocks critical hits."
+    "desc": "Blocks critical hits.",
+    "desc_pt": "Casca dura: dano recebido -10%."
   },
   "soundproof": {
     "name": "SOUNDPROOF",
-    "desc": "Avoids sound-based moves."
+    "desc": "Avoids sound-based moves.",
+    "desc_pt": "Imune a golpes de som."
   },
   "static": {
     "name": "STATIC",
-    "desc": "Paralyzes on contact."
+    "desc": "Paralyzes on contact.",
+    "desc_pt": "30% de paralisar ao contato."
   },
   "stench": {
     "name": "STENCH",
-    "desc": "Helps repel wild POKéMON."
+    "desc": "Helps repel wild POKéMON.",
+    "desc_pt": "10% de fazer o alvo hesitar."
   },
   "sticky_hold": {
     "name": "STICKY HOLD",
-    "desc": "Prevents item theft."
+    "desc": "Prevents item theft.",
+    "desc_pt": "Não é roubado (Thief)."
   },
   "sturdy": {
     "name": "STURDY",
-    "desc": "Negates 1-hit KO attacks."
+    "desc": "Negates 1-hit KO attacks.",
+    "desc_pt": "Com HP cheio, sobrevive com 1."
   },
   "swarm": {
     "name": "SWARM",
-    "desc": "Ups BUG moves in a pinch."
+    "desc": "Ups BUG moves in a pinch.",
+    "desc_pt": "Inseto x1,5 com HP baixo."
   },
   "swift_swim": {
     "name": "SWIFT SWIM",
-    "desc": "Raises SPEED in rain."
+    "desc": "Raises SPEED in rain.",
+    "desc_pt": "Anda um pouco mais rápido (sem chuva)."
   },
   "torrent": {
     "name": "TORRENT",
-    "desc": "Ups WATER moves in a pinch."
+    "desc": "Ups WATER moves in a pinch.",
+    "desc_pt": "Água x1,5 com HP baixo."
   },
   "vital_spirit": {
     "name": "VITAL SPIRIT",
-    "desc": "Prevents sleep."
+    "desc": "Prevents sleep.",
+    "desc_pt": "Não dorme."
   },
   "water_absorb": {
     "name": "WATER ABSORB",
-    "desc": "Changes water into HP."
+    "desc": "Changes water into HP.",
+    "desc_pt": "Golpes de água curam 25%."
   },
   "water_veil": {
     "name": "WATER VEIL",
-    "desc": "Prevents burns."
+    "desc": "Prevents burns.",
+    "desc_pt": "Não se queima."
   },
   "illuminate": {
     "name": "ILLUMINATE",
-    "desc": "Encounter rate increases."
+    "desc": "Encounter rate increases.",
+    "desc_pt": "Precisão x1,05."
   },
   "natural_cure": {
     "name": "NATURAL CURE",
-    "desc": "Heals upon switching out."
+    "desc": "Heals upon switching out.",
+    "desc_pt": "Cura status sozinho após 2 s."
+  },
+  "speed_boost": {
+    "name": "SPEED BOOST",
+    "desc": "Raises SPEED every 8 seconds.",
+    "desc_pt": "+1 Velocidade a cada 8 s."
+  },
+  "technician": {
+    "name": "TECHNICIAN",
+    "desc": "Powers up weak moves.",
+    "desc_pt": "Golpes fracos (poder 60 ou menos) x1,5."
+  },
+  "adaptability": {
+    "name": "ADAPTABILITY",
+    "desc": "Powers up same-type moves.",
+    "desc_pt": "Bônus do mesmo tipo maior (x1,33)."
+  },
+  "sheer_force": {
+    "name": "SHEER FORCE",
+    "desc": "Moves with extra effects hit harder.",
+    "desc_pt": "Golpes com efeito extra x1,3."
+  },
+  "multiscale": {
+    "name": "MULTISCALE",
+    "desc": "Halves damage at full HP.",
+    "desc_pt": "Dano pela metade com HP cheio."
+  },
+  "regenerator": {
+    "name": "REGENERATOR",
+    "desc": "Slowly restores HP in battle.",
+    "desc_pt": "Cura 4% do HP a cada 3 s."
+  },
+  "friend_guard": {
+    "name": "FRIEND GUARD",
+    "desc": "Reduces damage to the partner.",
+    "desc_pt": "O parceiro toma -25% de dano."
+  },
+  "plus": {
+    "name": "PLUS",
+    "desc": "Boosts SP. ATK with a PLUS/MINUS partner.",
+    "desc_pt": "At. Esp. x1,5 com parceiro Plus/Minus."
+  },
+  "minus": {
+    "name": "MINUS",
+    "desc": "Boosts SP. ATK with a PLUS/MINUS partner.",
+    "desc_pt": "At. Esp. x1,5 com parceiro Plus/Minus."
+  },
+  "telepathy": {
+    "name": "TELEPATHY",
+    "desc": "Dodges the partner's attacks.",
+    "desc_pt": "Não toma dano do parceiro."
+  },
+  "flash_fire": {
+    "name": "FLASH FIRE",
+    "desc": "Absorbs FIRE moves and powers up.",
+    "desc_pt": "Absorve fogo e fica com fogo x1,5."
+  },
+  "lightning_rod": {
+    "name": "LIGHTNING ROD",
+    "desc": "Draws in ELECTRIC moves for SP. ATK.",
+    "desc_pt": "Atrai e absorve elétrico: +1 At. Esp."
+  },
+  "storm_drain": {
+    "name": "STORM DRAIN",
+    "desc": "Draws in WATER moves for SP. ATK.",
+    "desc_pt": "Atrai e absorve água: +1 At. Esp."
+  },
+  "volt_absorb": {
+    "name": "VOLT ABSORB",
+    "desc": "ELECTRIC moves restore HP.",
+    "desc_pt": "Golpes elétricos curam 25%."
+  },
+  "motor_drive": {
+    "name": "MOTOR DRIVE",
+    "desc": "ELECTRIC moves raise SPEED.",
+    "desc_pt": "Elétrico não causa dano: +1 Velocidade."
+  },
+  "sap_sipper": {
+    "name": "SAP SIPPER",
+    "desc": "GRASS moves raise ATTACK.",
+    "desc_pt": "Planta não causa dano: +1 Ataque."
+  },
+  "moxie": {
+    "name": "MOXIE",
+    "desc": "A KO raises ATTACK.",
+    "desc_pt": "Nocautear dá +1 Ataque."
+  },
+  "defiant": {
+    "name": "DEFIANT",
+    "desc": "Stat drops sharply raise ATTACK.",
+    "desc_pt": "Se um atributo cai, +2 Ataque."
+  },
+  "competitive": {
+    "name": "COMPETITIVE",
+    "desc": "Stat drops sharply raise SP. ATK.",
+    "desc_pt": "Se um atributo cai, +2 At. Esp."
+  },
+  "justified": {
+    "name": "JUSTIFIED",
+    "desc": "DARK hits raise ATTACK.",
+    "desc_pt": "Golpe sombrio acertado: +1 Ataque."
+  },
+  "iron_fist": {
+    "name": "IRON FIST",
+    "desc": "Powers up punching moves.",
+    "desc_pt": "Golpes de punho x1,3."
+  },
+  "strong_jaw": {
+    "name": "STRONG JAW",
+    "desc": "Powers up biting moves.",
+    "desc_pt": "Mordidas x1,5."
+  },
+  "tough_claws": {
+    "name": "TOUGH CLAWS",
+    "desc": "Powers up contact moves.",
+    "desc_pt": "Golpes de contato x1,3."
+  },
+  "reckless": {
+    "name": "RECKLESS",
+    "desc": "Powers up risky moves.",
+    "desc_pt": "Golpes arriscados x1,2."
+  },
+  "skill_link": {
+    "name": "SKILL LINK",
+    "desc": "Multi-hit moves hit harder.",
+    "desc_pt": "Golpes múltiplos x1,2."
+  },
+  "serene_grace": {
+    "name": "SERENE GRACE",
+    "desc": "Extra effects happen more often.",
+    "desc_pt": "Efeitos extras quase dobram de chance."
+  },
+  "prankster": {
+    "name": "PRANKSTER",
+    "desc": "Status moves are cast faster.",
+    "desc_pt": "Golpes de status saem mais rápido."
+  },
+  "unburden": {
+    "name": "UNBURDEN",
+    "desc": "Raises SPEED after using an item.",
+    "desc_pt": "Usou o item: +2 Velocidade."
+  },
+  "gale_wings": {
+    "name": "GALE WINGS",
+    "desc": "FLYING moves are cast faster.",
+    "desc_pt": "Golpes voadores saem mais rápido."
+  },
+  "quick_feet": {
+    "name": "QUICK FEET",
+    "desc": "Moves faster with a status.",
+    "desc_pt": "Com status, anda e age mais rápido."
+  },
+  "sniper": {
+    "name": "SNIPER",
+    "desc": "Ranged hits from afar do more.",
+    "desc_pt": "Tiros de longe x1,4."
+  },
+  "super_luck": {
+    "name": "SUPER LUCK",
+    "desc": "Raises critical hit chance.",
+    "desc_pt": "Mais chance de crítico."
+  },
+  "pickup": {
+    "name": "PICKUP",
+    "desc": "Finds a little HP now and then.",
+    "desc_pt": "Recupera 5% do HP a cada 10 s."
+  },
+  "flame_body": {
+    "name": "FLAME BODY",
+    "desc": "May burn on contact.",
+    "desc_pt": "30% de queimar ao contato."
+  },
+  "thick_fat": {
+    "name": "THICK FAT",
+    "desc": "Halves FIRE and ICE damage.",
+    "desc_pt": "Fogo e gelo causam metade."
+  },
+  "clear_body": {
+    "name": "CLEAR BODY",
+    "desc": "Stats cannot be lowered.",
+    "desc_pt": "Atributos não caem."
+  },
+  "hyper_cutter": {
+    "name": "HYPER CUTTER",
+    "desc": "ATTACK cannot be lowered.",
+    "desc_pt": "O Ataque não cai."
+  },
+  "big_pecks": {
+    "name": "BIG PECKS",
+    "desc": "DEFENSE cannot be lowered.",
+    "desc_pt": "A Defesa não cai."
+  },
+  "battle_armor": {
+    "name": "BATTLE ARMOR",
+    "desc": "Hard armor: -10% damage taken.",
+    "desc_pt": "Armadura: dano recebido -10%."
+  },
+  "huge_power": {
+    "name": "HUGE POWER",
+    "desc": "Boosts physical attacks.",
+    "desc_pt": "Golpes físicos x1,5."
+  },
+  "hustle": {
+    "name": "HUSTLE",
+    "desc": "Boosts physical attacks, less accurate.",
+    "desc_pt": "Físico x1,2, precisão x0,9."
+  },
+  "rough_skin": {
+    "name": "ROUGH SKIN",
+    "desc": "Hurts attackers on contact.",
+    "desc_pt": "Quem encosta perde 1/16 do HP."
+  },
+  "no_guard": {
+    "name": "NO GUARD",
+    "desc": "Raises accuracy a lot.",
+    "desc_pt": "Precisão x1,4."
+  },
+  "tinted_lens": {
+    "name": "TINTED LENS",
+    "desc": "Powers up resisted hits.",
+    "desc_pt": "Golpes pouco efetivos x1,5."
+  },
+  "filter": {
+    "name": "FILTER",
+    "desc": "Weakens super-effective hits.",
+    "desc_pt": "Super efetivos causam -25%."
+  },
+  "marvel_scale": {
+    "name": "MARVEL SCALE",
+    "desc": "Sturdy when suffering a status.",
+    "desc_pt": "Com status, dano recebido -33%."
+  },
+  "poison_heal": {
+    "name": "POISON HEAL",
+    "desc": "Poison restores HP.",
+    "desc_pt": "Envenenado, cura 8% a cada 2 s."
+  },
+  "steadfast": {
+    "name": "STEADFAST",
+    "desc": "Flinching raises SPEED.",
+    "desc_pt": "Hesitar dá +1 Velocidade."
+  },
+  "aftermath": {
+    "name": "AFTERMATH",
+    "desc": "Hurts the one that knocks it out.",
+    "desc_pt": "Quem nocautear perde 1/4 do HP."
+  },
+  "limber": {
+    "name": "LIMBER",
+    "desc": "Cannot be paralyzed.",
+    "desc_pt": "Não se paralisa."
+  },
+  "insomnia": {
+    "name": "INSOMNIA",
+    "desc": "Cannot fall asleep.",
+    "desc_pt": "Não dorme."
+  },
+  "immunity": {
+    "name": "IMMUNITY",
+    "desc": "Cannot be poisoned.",
+    "desc_pt": "Não se envenena."
   }
 }

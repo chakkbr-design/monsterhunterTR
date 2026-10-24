@@ -59,6 +59,10 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 		opts["speed"] = 1.0  # the rules are timed at 1x (the game plays at the original's 0.6)
 	if not opts.has("auto_battle"):
 		opts["auto_battle"] = false  # these suites drive the player's mon by hand
+	if not opts.has("damage_pace"):
+		opts["damage_pace"] = 1.0  # regras no ritmo original (a Batalha Viva escala dano e PP juntos)
+	if not opts.has("field_objects"):
+		opts["field_objects"] = false  # caixas e pedras da Batalha Viva mexem no rng das regras
 	a.start(party, enemies, opts)
 	return a
 
@@ -123,13 +127,16 @@ func _cooldowns() -> void:
 	var pp0 := p.pp_max
 	check(a.moves.use(p, "ember"), "usa ember")
 	check(near(p.pp_max, pp0 - Dex.pp_cost(mv), 0.001), "debita PP")
-	check(near(p.move_cd["ember"], Dex.cooldown(mv) / sf, 0.001), "cooldown por golpe / fator")
+	check(
+		near(p.move_cd["ember"], Dex.cooldown(mv) / sf, Dex.cooldown(mv) / sf * 0.051),
+		"cooldown por golpe / fator (+-5%)"
+	)
 	check(near(p.gcd_t, 1.0 / sf, 0.001), "GCD 1 s / fator")
 	check(not a.moves.use(p, "scratch"), "GCD bloqueia outro golpe")
 	_run(a, 1.0 / sf + 0.4)  # o hit-stop do acerto congela os timers do atacante
 	check(not a.moves.use(p, "ember"), "cooldown do golpe ainda ativo")
 	check(a.moves.use(p, "scratch"), "outro golpe depois do GCD")
-	_run(a, Dex.cooldown(mv) / sf)
+	_run(a, Dex.cooldown(mv) / sf * 1.06)
 	check(a.moves.use(p, "ember"), "ember volta após cooldown")
 	p.pp_max = 0.5
 	_run(a, 10.0)
@@ -181,10 +188,7 @@ func _status() -> void:
 	e.controller = "ai"
 	e.drive(0.5, Vector3.RIGHT, 2.0)
 	var moved := (e.position - pos).length()
-	check(
-		near(moved, 2.0 * 0.5 * 0.5 * e.speed_factor(), 0.05),
-		"paralisia corta velocidade pela metade"
-	)
+	check(near(moved, 2.0 * 0.5 * 0.5, 0.05), "paralisia corta velocidade pela metade")
 	_done(a)
 
 
@@ -419,6 +423,8 @@ func _ally_modes() -> void:
 		is_instance_valid(a.ally) and a.ally.mon != a.player.mon and a.ally.controller == "ai",
 		"selvagem 2x1: aliado IA entra"
 	)
+	check(a.ally_mode == BattleAI.FREE, "comando padrão LIVRE")
+	a.ally_mode = BattleAI.ATTACK
 	check(a.cycle_ally_mode() == BattleAI.DEFEND, "F alterna ATTACK -> DEFEND")
 	a.ally.moves = []  # só posicionamento
 	a.ally.position = Vector3(4, 0, 4)
@@ -444,6 +450,7 @@ func _ally_modes() -> void:
 	var g := _game_with({"potion": 1, "super_potion": 1})
 	var b := _ally_arena(g)
 	b.ally.moves = []  # não derruba o selvagem durante o teste
+	b.ally_mode = BattleAI.ATTACK
 	b.cycle_ally_mode()
 	check(b.cycle_ally_mode() == BattleAI.SUPPORT, "F alterna DEFEND -> SUPPORT")
 	var bp: BattleFighter = b.player

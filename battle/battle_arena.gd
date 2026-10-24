@@ -40,13 +40,30 @@ const ITEM_CD := 3.0
 const SUPPORT_HEAL_AT := 0.5
 const MODAL_SLOW := 0.2
 const CONTROL_SWAP_CD := 0.3
-const ALLY_MODE_NAMES := ["ATAQUE", "DEFESA", "SUPORTE"]
-const ALLY_MODE_COLORS := [Color(1.0, 0.5, 0.4), Color(0.5, 0.75, 1.0), Color(0.55, 1.0, 0.6)]
+## Comandos por Pokémon (BattleAI.ATTACK/DEFEND/SUPPORT/FREE): F muda o do aliado, G o do controlado.
+const ALLY_MODE_NAMES := ["OFENSIVO", "DEFENSIVO", "SUPORTE", "LIVRE"]
+const ALLY_MODE_COLORS := [
+	Color(1.0, 0.5, 0.4), Color(0.5, 0.75, 1.0), Color(0.55, 1.0, 0.6), Color(0.85, 0.85, 0.85)
+]
+## O comando chega ao Pokémon depois de um tempo pela amizade (0,8 s com 0, 0,3 s com 255); amizade
+## baixa às vezes ignora ("?") e só obedece depois de CMD_IGNORE_SECS. Novo comando só depois de CMD_CD.
+const CMD_DELAY_MAX := 0.8
+const CMD_DELAY_MIN := 0.3
+const CMD_CD := 1.2
+const CMD_IGNORE_SECS := 2.0
+## Amizade ganha por vencer (cada participante de pé) e por obedecer um comando.
+const FRIEND_WIN := 3
+const FRIEND_OBEY := 1
+## Cena de impacto (KO, combo, crítico supereficaz): a luta congela por CUT_IN_SECS, no máx. 1 a cada CUT_IN_GAP.
+const CUT_IN_SECS := 0.4
+const CUT_IN_GAP := 2.5
+## Dupla de treinador: distância lateral entre os dois mons de cada lado.
+const DOUBLES_GAP := 1.8
 const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 ## Quadra fixa, valores do original (battle.gd start_trainer_battle / start_battle, battle_arena.gd):
 ## sem `arena` o tamanho é 10 x 6; os treinadores ficam 0.3 m fora da borda no eixo X (jogador a oeste);
 ## o 1º mon do adversário cai a 40% do caminho até ele e o do jogador 1.5 m à frente do jogador.
-const FIXED_ARENA := Vector2(10, 6)
+const FIXED_ARENA := Vector2(14, 8)
 const TRAINER_STAND_OFF := 0.3
 const FOE_THROW := 0.4
 const LEAD_STEP := 1.5
@@ -78,6 +95,9 @@ const EVOLUTION := "/root/Evolution"
 var manual := false
 var rng := RandomNumberGenerator.new()
 var moves: BattleMoves
+var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintonia
+var field: BattleField  ## terreno que muda, objetos, clones
+var abilities: BattleAbilities  ## efeitos das habilidades
 var hud: BattleHUD
 var vfx: BattleVfx
 var fight_speed := DEFAULT_SPEED
@@ -88,7 +108,24 @@ var enemies: Array = []
 var enemy_index := 0
 var player: BattleFighter  # o mon que o jogador controla
 var ally: BattleFighter  # 2º mon do jogador (IA), só em batalha selvagem
-var ally_mode := 0  # BattleAI.ATTACK / DEFEND / SUPPORT
+var ally_mode := 3  # comando do aliado: BattleAI.ATTACK / DEFEND / SUPPORT / FREE
+var player_mode := 3  # comando do controlado (na batalha automática)
+## Sem ninguém no teclado (autoplay, treino) os dois lados trocam de comando sozinhos (BattleAI._auto_command).
+var auto_commands := false
+var obey := {"player": true, "ally": true}
+var _cmd_cd := {"player": 0.0, "ally": 0.0}
+## Golpes avisados no chão para a IA desviar: {id, kind "disc"|"line", side, t, at, r | from, dir, len, w}.
+var telegraphs: Array = []
+var _tele_n := 0
+var _cut_t := 0.0
+var _cut_gap := 0.0
+## 2x2 de treinador: os dois lados com dois em campo; enemy2 é o 2º do adversário.
+var doubles := false
+## Escala do dano final (ritmo da luta; BattleMoves.DAMAGE_PACE).
+var damage_pace := BattleMoves.DAMAGE_PACE
+var enemy2: BattleFighter
+var _pending: Array = []  ## Mons do jogador já chamados para entrar (ainda não em campo)
+var _enemy_pending := 0
 var item_cd := 0.0  # cooldown global de itens (bolsa rápida e cura do SUPPORT)
 var menu := ""  # "" | "bag" | "party" (abre com interact; a luta fica a MODAL_SLOW)
 var menu_sel := 0
@@ -101,7 +138,7 @@ var result := {}
 var exp_log: Array = []
 var log_lines: Array = []
 var hits := 0
-var rect := Rect2(-ARENA_SIZE / 2.0, -ARENA_SIZE / 2.0, ARENA_SIZE, ARENA_SIZE)
+var rect := Rect2(-ARENA_SIZE * 0.7, -ARENA_SIZE / 2.0, ARENA_SIZE * 1.4, ARENA_SIZE)
 var fixed := false  ## quadra num lugar certo (opts.center ou "center" do trainers.json)
 ## Luta de treino (Battle.training do original): o selvagem é um boneco parado e imortal no nível do
 ## controlado, cada KO dá os EVs dele a quem acertou, bola não pega e só termina com FUGIR.
@@ -181,19 +218,38 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	else:
 		rng.randomize()
 	moves = BattleMoves.new(self, rng)
+	combos = BattleCombos.new(self)
+	field = BattleField.new(self)
+	abilities = BattleAbilities.new(self)
 	if kind == "trainer":
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
 		_think_scale = float(tr.get("ai_think_scale", 1.0))
 		_trainer_item = String(o.get("trainer_item", tr.get("item", "")))
 	_think_scale = float(o.get("enemy_think_scale", _think_scale))
-	# Selvagem: até BATTLE_SIZE mons do jogador (2x1). Treinador: sempre 1x1.
-	_battle_size = (
-		1 if kind != "wild" else clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
-	)
+	# Selvagem: até BATTLE_SIZE mons do jogador (2x1). Treinador: 2x2 com "doubles" no trainers.json
+	# (o ginásio sempre) ou opts.battle_size 2 (treino); senão 1x1.
+	if kind == "wild":
+		_battle_size = clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
+	else:
+		var tr2 := Dex.trainer(String(o.get("trainer_id", "")))
+		var want := int(o.get("battle_size", 2 if bool(tr2.get("doubles", false)) else 1))
+		_battle_size = clampi(want, 1, BATTLE_SIZE)
+	if kind == "trainer" and _battle_size >= 2:
+		# Dupla só com dois de pé do lado do jogador; senão é 1x1 (o adversário manda um por vez).
+		var up := party.filter(func(m): return not m.is_fainted()).size()
+		var foes := enemy_list.filter(func(m): return not m.is_fainted()).size()
+		if up < 2 or foes < 2:
+			_battle_size = 1
+	doubles = kind == "trainer" and _battle_size >= 2
+	# Na dupla cada um apanha de dois: o dano anda mais devagar para o Pokémon durar o mesmo tanto.
+	var pace_def := BattleMoves.DAMAGE_PACE * (BattleMoves.DOUBLES_PACE if doubles else 1.0)
+	damage_pace = float(o.get("damage_pace", pace_def))
+	auto_commands = bool(o.get("auto_commands", o.get("autoplay", false)))
 	if not InputMap.has_action("move_1"):
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
+	field.setup()
 	clear_tut_lock()
 	# A lição e os cartões ensinam as teclas de golpe: não valem com a batalha automática.
 	if bool(o.get("tutorial", false)) and _player_ctrl() != "ai" and tutorial == null:
@@ -213,12 +269,22 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	if _track_out and kind != "wild":
 		# Treinador: os outros fora da bola voltam para ela (start_trainer_battle do original).
 		_out = _out.filter(func(m): return m == party[pi])
-	_send_player(pi, player_spot)
+	var lat := _lateral()
+	_send_player(pi, player_spot - lat * (DOUBLES_GAP * 0.5 if doubles else 0.0))
 	if _battle_size >= 2:
-		var ai_i := _out_ally(pi) if _track_out else _next_healthy(pi)
+		var ai_i := _out_ally(pi) if _track_out and not doubles else _next_healthy(pi)
 		if ai_i >= 0:
-			_send_ally(ai_i, player_spot + Vector3(1.6, 0, 0.4))
-	_send_enemy(ei)
+			var at := (
+				player_spot + lat * DOUBLES_GAP * 0.5
+				if doubles
+				else player_spot + Vector3(1.6, 0, 0.4)
+			)
+			_send_ally(ai_i, _nearest_free(at) if fixed else at)
+	_send_enemy(ei, 0)
+	if doubles:
+		var ei2 := _next_enemy(ei)
+		if ei2 >= 0:
+			_send_enemy(ei2, 1)
 	var e: Mon = enemies[ei]
 	if kind == "wild":
 		hud.banner("Um %s selvagem apareceu!" % e.display_name, INTRO_TIME)
@@ -226,6 +292,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		# Como o original: primeiro o desafio, depois a bola com o 1º Pokémon.
 		_revealed = false
 		enemy.visible = false
+		if is_instance_valid(enemy2):
+			enemy2.visible = false
 		hud.banner("%s quer lutar!" % trainer_name(), TRAINER_CHALLENGE)
 	state = "intro"
 	_state_t = 0.0
@@ -522,7 +590,7 @@ static func _court_texture() -> ImageTexture:
 
 ## Próximo mon da party com HP que ainda não está em campo.
 func _next_healthy(after: int) -> int:
-	var busy := _field_mons()
+	var busy := _field_mons() + _pending
 	for k in party.size():
 		var i := (after + 1 + k) % party.size()
 		if i != after and not party[i].is_fainted() and not busy.has(party[i]):
@@ -592,6 +660,8 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	fighters.append(f)
 	if vfx and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
+	if abilities:
+		abilities.on_enter(f)
 	return f
 
 
@@ -625,12 +695,29 @@ func _side_a_ai(f: BattleFighter) -> void:
 	f.trainer_item = String(opts.get("player_item", ""))
 
 
-func _send_enemy(i: int) -> void:
-	enemy_index = i
-	enemy = _spawn(enemies[i], 1, "ai", enemy_spot)
-	enemy.ai.think_scale = _think_scale
-	enemy.ai.think = WILD_OPENING_DELAY if kind == "wild" else TRAINER_SWAP_HOLD
-	enemy.trainer_item = _trainer_item if kind == "trainer" else ""
+## Lado da quadra perpendicular ao eixo (para separar os dois mons de cada lado na dupla).
+func _lateral() -> Vector3:
+	return axis.cross(Vector3.UP).normalized()
+
+
+func _send_enemy(i: int, slot := 0) -> void:
+	enemy_index = maxi(enemy_index, i)
+	var at := enemy_spot
+	if doubles:
+		at = enemy_spot + _lateral() * DOUBLES_GAP * (0.5 if slot == 1 else -0.5)
+		if fixed:
+			at = _nearest_free(at)
+	var f := _spawn(enemies[i], 1, "ai", at)
+	if slot == 1:
+		enemy2 = f
+	else:
+		enemy = f
+	f.ai.think_scale = _think_scale
+	f.ai.think = WILD_OPENING_DELAY if kind == "wild" else TRAINER_SWAP_HOLD
+	f.trainer_item = _trainer_item if kind == "trainer" else ""
+	if slot == 1:
+		_bind()
+		return
 	if training:  # o original: Mode.DUMMY (dummy_style 0 fica parado), sem golpes, imortal
 		enemy.controller = "dummy"
 		enemy.immortal = true
@@ -674,18 +761,45 @@ func on_knocked_out(user: BattleFighter, target: BattleFighter) -> void:
 
 
 ## Reaponta oponentes: os mons do jogador miram o inimigo; o inimigo mira o controlado
-## (o selvagem reavalia sozinho entre os dois em BattleAI.pick_target).
+## (o selvagem reavalia sozinho entre os dois em BattleAI.pick_target). Na dupla cada um fica com o
+## alvo atual se ele segue em campo, senão pega o mais perto (a IA reavalia depois).
 func _bind() -> void:
-	if not is_instance_valid(enemy):
+	if not is_instance_valid(enemy) and not is_instance_valid(enemy2):
 		return
+	var foes: Array = [enemy, enemy2].filter(func(e): return is_instance_valid(e) and e.active())
+	if foes.is_empty() and is_instance_valid(enemy):
+		foes = [enemy]
 	for f in [player, ally]:
 		if is_instance_valid(f) and f.active():
-			f.opponent = enemy
-			if enemy.alive():
-				_participants[f.mon.get_instance_id()] = f.mon
-	var cur := enemy.opponent
-	if kind != "wild" or not (is_instance_valid(cur) and cur.active() and cur.side == 0):
-		enemy.opponent = player if is_instance_valid(player) and player.active() else ally
+			var cur0: BattleFighter = f.opponent
+			if not doubles or not (is_instance_valid(cur0) and cur0.active() and cur0.side == 1):
+				f.opponent = _nearest(f, foes)
+			for e in foes:
+				if e.alive():
+					_participants[f.mon.get_instance_id()] = f.mon
+	var mine: Array = [player, ally].filter(func(x): return is_instance_valid(x) and x.active())
+	for e in [enemy, enemy2]:
+		if not is_instance_valid(e):
+			continue
+		var cur: BattleFighter = e.opponent
+		var keep: bool = is_instance_valid(cur) and cur.active() and cur.side == 0
+		if doubles and keep:
+			continue
+		if doubles and not mine.is_empty():
+			e.opponent = _nearest(e, mine)
+		elif kind != "wild" or not keep:
+			e.opponent = player if is_instance_valid(player) and player.active() else ally
+
+
+func _nearest(f: BattleFighter, cands: Array) -> BattleFighter:
+	var best: BattleFighter = null
+	var bd := INF
+	for c in cands:
+		var d := f.flat_to(c).length()
+		if d < bd:
+			bd = d
+			best = c
+	return best
 
 
 func targets_of(user: BattleFighter) -> Array:
@@ -698,6 +812,24 @@ func targets_of(user: BattleFighter) -> Array:
 
 func later(delay: float, cb: Callable) -> void:
 	_events.append({"t": delay, "cb": cb})
+
+
+## Registra um golpe avisado (a IA de quem está do outro lado tenta sair da área antes de ele cair).
+func telegraph(e: Dictionary) -> void:
+	_tele_n += 1
+	e["id"] = _tele_n
+	telegraphs.append(e)
+
+
+## Cena de impacto: o HUD desenha a faixa e a luta congela um instante (no máx. uma a cada CUT_IN_GAP).
+func cut_in(text: String, col: Color, secs := CUT_IN_SECS) -> bool:
+	if _cut_gap > 0.0:
+		return false
+	_cut_gap = CUT_IN_GAP
+	_cut_t = secs
+	if hud and hud.has_method("cut_in"):
+		hud.cut_in(text, col, secs)
+	return true
 
 
 func edge_push(f: BattleFighter) -> Vector3:
@@ -790,6 +922,11 @@ func step(dt: float) -> void:
 		ally,
 		{
 			"ally_mode": ALLY_MODE_NAMES[ally_mode],
+			"foe2": enemy2 if _revealed and is_instance_valid(enemy2) and enemy2.on_field else null,
+			"commands": _commands_info(),
+			"obey": obey,
+			"sync": [combos.sync_of(0), combos.sync_of(1)] if combos else [0.0, 0.0],
+			"marks": _marks_info(),
 			"item_cd": item_cd,
 			"menu": _menu_text() if menu != "" else "",
 			"foe_tag": "SELVAGEM" if kind == "wild" else "TREINADOR",
@@ -805,6 +942,31 @@ func step(dt: float) -> void:
 	)
 
 
+func _commands_info() -> Dictionary:
+	var out := {}
+	for slot in ["player", "ally"]:
+		var f: BattleFighter = player if slot == "player" else ally
+		if not is_instance_valid(f):
+			continue
+		var m := ally_mode if slot == "ally" else player_mode
+		if auto_commands:
+			m = f.command
+		out[slot] = ALLY_MODE_NAMES[clampi(m, 0, ALLY_MODE_NAMES.size() - 1)]
+	return out
+
+
+func _marks_info() -> Dictionary:
+	var out := {}
+	if combos == null:
+		return out
+	for f in fighters:
+		if is_instance_valid(f) and f.active():
+			var mk: Array = combos.marks_of(f)
+			if not mk.is_empty():
+				out[f.get_instance_id()] = mk
+	return out
+
+
 ## Fim da abertura do treinador: a bola cai e o 1º Pokémon aparece ("<NOME> mandou X!").
 func _reveal_trainer_mon() -> void:
 	_revealed = true
@@ -814,6 +976,13 @@ func _reveal_trainer_mon() -> void:
 	if vfx and enemy.is_inside_tree():
 		vfx.puff(enemy.to_global(Vector3(0, 0.45, 0)), 1.6)
 	var line := "%s mandou %s!" % [trainer_name(), enemy.mon.display_name]
+	if is_instance_valid(enemy2):
+		enemy2.visible = true
+		if vfx and enemy2.is_inside_tree():
+			vfx.puff(enemy2.to_global(Vector3(0, 0.45, 0)), 1.6)
+		line = (
+			"%s mandou %s e %s!" % [trainer_name(), enemy.mon.display_name, enemy2.mon.display_name]
+		)
 	hud.banner(line, INTRO_TIME)
 	say(line, "trainer")
 
@@ -837,6 +1006,16 @@ func _foe_balls() -> Array:
 
 
 func _fight_step(dt: float) -> void:
+	_cut_gap = maxf(_cut_gap - dt, 0.0)
+	if _cut_t > 0.0:
+		_cut_t -= dt
+		return
+	for e in telegraphs.duplicate():
+		e.t -= dt
+		if e.t <= 0.0:
+			telegraphs.erase(e)
+	for k in _cmd_cd:
+		_cmd_cd[k] = maxf(float(_cmd_cd[k]) - dt, 0.0)
 	var evs := _events
 	_events = []
 	for e in evs:
@@ -850,6 +1029,9 @@ func _fight_step(dt: float) -> void:
 	_swap_cd = maxf(_swap_cd - dt, 0.0)
 	item_cd = maxf(item_cd - dt, 0.0)
 	_support_heal()
+	combos.tick(dt)
+	field.tick(dt)
+	abilities.tick(dt)
 	for f in fighters:
 		if f.on_field:
 			f.tick(dt)
@@ -857,11 +1039,10 @@ func _fight_step(dt: float) -> void:
 		if not f.on_field or state != "fight":
 			continue
 		var want := Vector3.ZERO
-		var speed := BattleFighter.AI_SPEED
+		var speed: float = f.walk_speed()
 		if f.alive():
 			if f.controller == "player":
 				want = _player_input(f)
-				speed = BattleFighter.PLAYER_SPEED
 			elif f.controller == "ai" and f.impact_t <= 0.0 and not tut_hold_foe:
 				if f == player and _human():
 					_commands(f)
@@ -869,17 +1050,49 @@ func _fight_step(dt: float) -> void:
 					want = f.ai.step(dt)
 		var before: Vector3 = f.position
 		f.drive(dt, want, speed)
+		if field:
+			f.position += field.push_out(f)
 		if fixed:
 			_block_solid(f, before)
 		var bounds := rect.grow(-0.5)
 		f.position.x = clampf(f.position.x, bounds.position.x, bounds.end.x)
 		f.position.z = clampf(f.position.z, bounds.position.y, bounds.end.y)
 	_separate()
+	_clash()
 	for p in projectiles:
 		p.step(dt, self)
 	for p in projectiles.filter(func(q): return q.done):
 		projectiles.erase(p)
 		p.queue_free()
+
+
+## CLASH: duas investidas de lados opostos se encontram de frente: as duas param, os dois são
+## empurrados para trás e ninguém toma dano.
+func _clash() -> void:
+	for a in fighters:
+		if not (a.side == 0 and a.active() and a.dash_t > 0.0):
+			continue
+		for b in fighters:
+			if b.side != 1 or not b.active() or b.dash_t <= 0.0:
+				continue
+			var d: Vector3 = a.flat_to(b)
+			if d.length() > BattleFighter.HIT_RANGE + 0.3 or a.dash_dir.dot(b.dash_dir) > -0.5:
+				continue
+			a.dash_t = 0.0
+			b.dash_t = 0.0
+			a.dash_hit = true
+			b.dash_hit = true
+			var n: Vector3 = d.normalized() if d.length() > 0.01 else axis
+			a.knock = -n * 7.0
+			b.knock = n * 7.0
+			a.stun_t = maxf(a.stun_t, 0.25)
+			b.stun_t = maxf(b.stun_t, 0.25)
+			var mid: Vector3 = (a.position + b.position) * 0.5
+			popup(mid + Vector3(0, 1.4, 0), "CLASH!", Color(1, 0.95, 0.6), 1.6, "crit")
+			fx_disc(mid * Vector3(1, 0, 1), 1.2, Color(1, 0.95, 0.7, 0.8), 0.3)
+			preload("res://audio/cue.gd").sfx("hit_super")
+			say("CLASH! %s e %s se chocaram!" % [a.mon.display_name, b.mon.display_name])
+			cut_in("CLASH!", Color(1, 0.9, 0.5), 0.3)
 
 
 func _separate() -> void:
@@ -898,6 +1111,19 @@ func _separate() -> void:
 				var push := (min_d - d.length()) * 0.5
 				a.position -= n * push
 				b.position += n * push
+
+
+var _g_was_down := false
+
+
+## G: comando do controlado (na batalha automática o controlado também é IA).
+func _player_mode_pressed() -> bool:
+	if InputMap.has_action("player_mode"):
+		return Input.is_action_just_pressed("player_mode")
+	var down := Input.is_physical_key_pressed(KEY_G)
+	var hit := down and not _g_was_down
+	_g_was_down = down
+	return hit
 
 
 ## `ally_mode` (F) vem do núcleo; sem a ação, lê a tecla F direto.
@@ -947,6 +1173,8 @@ func _commands(f: BattleFighter) -> bool:
 		return false
 	if _ally_mode_pressed():
 		cycle_ally_mode()
+	if _player_mode_pressed():
+		cycle_player_mode()
 	if Input.is_action_just_pressed("swap_mon"):
 		swap()
 	# Fugir não tem tecla, como no original: é o FUGIR da pausa (Esc).
@@ -1053,11 +1281,60 @@ func send_in(i: int, as_ally := false) -> bool:
 
 
 func cycle_ally_mode() -> int:
-	ally_mode = (ally_mode + 1) % ALLY_MODE_NAMES.size()
-	if is_instance_valid(ally) and ally.active():
-		ally.popup(ALLY_MODE_NAMES[ally_mode], ALLY_MODE_COLORS[ally_mode], 1.0, 0.9)
-	say("Modo do aliado: %s" % ALLY_MODE_NAMES[ally_mode])
-	return ally_mode
+	return order("ally", (ally_mode + 1) % ALLY_MODE_NAMES.size())
+
+
+func cycle_player_mode() -> int:
+	return order("player", (player_mode + 1) % ALLY_MODE_NAMES.size())
+
+
+## Dá o comando `mode` ao mon do slot ("player" ou "ally"). Com alguém no teclado ele chega depois de um
+## tempo pela amizade, e amizade baixa pode ignorar um pouco ("?"). Sem teclado (testes) vale na hora.
+func order(slot: String, mode: int) -> int:
+	var f: BattleFighter = ally if slot == "ally" else player
+	var cur := ally_mode if slot == "ally" else player_mode
+	if _human() and float(_cmd_cd.get(slot, 0.0)) > 0.0:
+		return cur
+	_cmd_cd[slot] = CMD_CD
+	say("%s: %s!" % ["Aliado" if slot == "ally" else "Você", ALLY_MODE_NAMES[mode]])
+	if not _human() or not is_instance_valid(f) or not f.active():
+		_set_mode(slot, mode, f)
+		return mode
+	var fr := int(f.mon.friend)
+	var delay := lerpf(CMD_DELAY_MAX, CMD_DELAY_MIN, clampf(fr / 255.0, 0.0, 1.0))
+	obey[slot] = true
+	if rng.randf() < ignore_chance(fr):
+		obey[slot] = false
+		f.popup("?", Color(1, 0.85, 0.4), 1.4, 0.9)
+		say("%s não está ouvindo..." % f.mon.display_name)
+		delay += CMD_IGNORE_SECS
+	later(delay, func() -> void: _set_mode(slot, mode, f))
+	return mode
+
+
+## Chance de ignorar um comando pela amizade (Desconfiado 30%, Contente 10%, Feliz 3%, Devotado 0).
+static func ignore_chance(friend: int) -> float:
+	if friend < 70:
+		return 0.3
+	if friend < 150:
+		return 0.1
+	if friend < 220:
+		return 0.03
+	return 0.0
+
+
+func _set_mode(slot: String, mode: int, f: BattleFighter) -> void:
+	if slot == "ally":
+		ally_mode = mode
+	else:
+		player_mode = mode
+	var ok := bool(obey.get(slot, true))
+	obey[slot] = true
+	if is_instance_valid(f) and f.active():
+		f.command = mode
+		f.popup(ALLY_MODE_NAMES[mode], ALLY_MODE_COLORS[mode], 1.0, 0.9)
+		if ok and _human() and rng.randf() < 0.25:
+			f.mon.set_friend(f.mon.friend + FRIEND_OBEY)
 
 
 # --- Pausa da batalha (Esc) ---
@@ -1088,6 +1365,8 @@ func pause_items() -> Array:
 	var items: Array = [
 		{"id": "ally_mode", "label": "MODO DO ALIADO: %s" % ALLY_MODE_NAMES[ally_mode]}
 	]
+	if _player_ctrl() == "ai":
+		items.append({"id": "player_mode", "label": "COMANDO: %s" % ALLY_MODE_NAMES[player_mode]})
 	if is_instance_valid(ally) and ally.active() and is_instance_valid(player) and player.active():
 		items.append({"id": "control_other", "label": "CONTROLAR O OUTRO"})
 	items.append({"id": "run", "label": "FUGIR"})
@@ -1099,6 +1378,8 @@ func choose_pause(id: String) -> void:
 	match id:
 		"ally_mode":
 			cycle_ally_mode()
+		"player_mode":
+			cycle_player_mode()
 		"control_other":
 			swap_control()
 			close_pause()
@@ -1239,7 +1520,7 @@ func best_heal_item(missing: int) -> String:
 
 ## SUPPORT: o aliado usa o melhor item de cura no controlado quando ele cai abaixo de 50% de HP.
 func _support_heal() -> void:
-	if ally_mode != BattleAI.SUPPORT or item_cd > 0.0:
+	if item_cd > 0.0 or not is_instance_valid(ally) or ally.ai.ally_mode() != BattleAI.SUPPORT:
 		return
 	if not (
 		is_instance_valid(ally)
@@ -1574,6 +1855,37 @@ func _enemy_fainted(f: BattleFighter) -> void:
 			_sync_from_mon(killer)
 	_award_exp(f.mon)
 	var nxt := _next_enemy(enemy_index)
+	var slot := 1 if f == enemy2 else 0
+	if doubles and nxt >= 0:
+		enemy_index = nxt  # reservado: o outro desmaio não manda o mesmo
+		_enemy_pending += 1
+		say("Volte, %s!" % f.mon.display_name, "trainer")
+		later(
+			RECALL_SECS,
+			func() -> void:
+				if fighters.has(f):
+					_recall(f)
+				var line := "%s vai mandar %s!" % [trainer_name(), enemies[nxt].display_name]
+				hud.banner(line, NEXT_TRAINER_MON)
+				say(line, "trainer")
+		)
+		later(
+			RECALL_SECS + NEXT_TRAINER_MON,
+			func() -> void:
+				_enemy_pending -= 1
+				if state == "fight":
+					_send_enemy(nxt, slot)
+		)
+		return
+	if doubles and _enemy_pending == 0:
+		_last_stand(f)
+	if doubles and (_enemy_pending > 0 or _other_enemy_up(f)):
+		say("%s de %s desmaiou!" % [f.mon.display_name, trainer_name()], "trainer")
+		if f == enemy and is_instance_valid(enemy2) and enemy2.active() and _enemy_pending == 0:
+			enemy = enemy2
+			enemy2 = null
+		_bind()
+		return
 	if kind == "trainer" and nxt >= 0:
 		# O original (_send_trainer_mon): "Come back, X!" e recolhe; depois "<NOME> is about to send out Y!".
 		say("Volte, %s!" % f.mon.display_name, "trainer")
@@ -1597,6 +1909,24 @@ func _enemy_fainted(f: BattleFighter) -> void:
 		"info" if kind == "wild" else "trainer"
 	)
 	_end("win", 2.0)
+
+
+## Dupla: quem fica sozinho em campo ganha +1 de Ataque e At. Esp. ("Última esperança!").
+func _last_stand(f: BattleFighter) -> void:
+	var p := f.ai.partner() if f.ai else null
+	if p == null or p.has_meta("last_stand"):
+		return
+	p.set_meta("last_stand", true)
+	moves.change_stage(p, "atk", 1)
+	moves.change_stage(p, "spa", 1)
+	p.popup("Última esperança!", Color(1, 0.8, 0.4), 1.2, 1.1)
+
+
+func _other_enemy_up(f: BattleFighter) -> bool:
+	for e in [enemy, enemy2]:
+		if is_instance_valid(e) and e != f and e.active():
+			return true
+	return false
 
 
 ## EXP sem aviso na hora (o original: Progression.award_exp(..., quiet = true)); o fim da batalha mostra
@@ -1848,6 +2178,10 @@ func _player_fainted(f: BattleFighter) -> void:
 	if f.mon.has_method("set_friend"):
 		f.mon.set_friend(f.mon.friend - FAINT_LOSS)
 	say("%s desmaiou!" % f.mon.display_name, "faint")
+	if doubles and _doubles_refill(f):
+		return
+	if doubles:
+		_last_stand(f)
 	if f == ally or (f == player and is_instance_valid(ally) and ally.active()):
 		# Ainda sobra um mon em campo: se era o controlado, o controle passa para o aliado. Ninguém novo entra.
 		if f == player:
@@ -1881,7 +2215,45 @@ func _player_fainted(f: BattleFighter) -> void:
 	)
 
 
+## 2x2: o lugar de quem desmaiou é preenchido pelo próximo da equipe (o outro segue lutando).
+## false = ninguém para entrar (segue a regra de sempre).
+func _doubles_refill(f: BattleFighter) -> bool:
+	var nxt := _next_healthy(int(f.get_meta("party_index", 0)))
+	if nxt < 0:
+		return false
+	var m: Mon = party[nxt]
+	_pending.append(m)
+	var as_ally := f == ally
+	if f == player and is_instance_valid(ally) and ally.active():
+		# O controle passa para quem ficou; o novo entra no lugar do aliado.
+		player = ally
+		player.controller = _player_ctrl()
+		ally = null
+		as_ally = true
+	var at := f.position
+	at.y = 0.0
+	later(
+		FAINT_CLEAR,
+		func() -> void:
+			_pending.erase(m)
+			if fighters.has(f):
+				_recall(f)
+			if state != "fight" or m.is_fainted():
+				return
+			if as_ally and is_instance_valid(player) and player.active():
+				_send_ally(party.find(m), at)
+			else:
+				_send_player(party.find(m), at)
+	)
+	_bind()
+	return true
+
+
 func _end(outcome: String, delay: float, extra := {}) -> void:
+	if outcome == "win" and _rewards() and not training:
+		for m in _participants.values():
+			if not m.is_fainted():
+				m.set_friend(m.friend + FRIEND_WIN)
 	result = {"outcome": outcome}
 	result.merge(extra)
 	state = "ending"
@@ -1899,6 +2271,8 @@ func _finish() -> void:
 		p.queue_free()
 	projectiles.clear()
 	_events.clear()
+	if field:
+		field.clear()
 	if _capture.has("ball") and is_instance_valid(_capture.ball):
 		_capture.ball.queue_free()
 	if vfx:
@@ -1961,6 +2335,14 @@ func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 		say(
 			"%s usou %s!" % [user.mon.display_name, String(mv.get("name", mv.get("id", "")))],
 			"move"
+		)
+	if combos:
+		combos.on_move_used(user, mv)
+	if hud and hud.has_method("callout"):
+		hud.callout(
+			user,
+			String(mv.get("name", mv.get("id", ""))),
+			Dex.type_color(String(mv.get("type", "normal")))
 		)
 	move_used.emit(user, mv)
 

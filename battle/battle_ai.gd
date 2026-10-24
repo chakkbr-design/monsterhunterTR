@@ -1,7 +1,10 @@
 class_name BattleAI
 extends RefCounted
-## IA de luta: intervalo de decisão, golpe com menos acertos até o KO, banda de distância com strafe,
-## punição na recuperação do oponente, esquiva lateral/pulo contra dash e sprint ao se aproximar.
+## IA de luta (Batalha Viva): escolhe o golpe que quer usar (intenção), anda até a faixa de distância
+## dele, bate e recua pelo perfil (BattleProfile); obedece ao comando do treinador (Ofensivo, Defensivo,
+## Suporte, Livre); desvia de golpe avisado (área, raio, projétil, investida) com reação pela Speed;
+## Fúria ou Pânico com HP baixo pela Natureza. Mantém do original o golpe com menos acertos até o KO,
+## punição na recuperação do oponente, pulo contra dash/terremoto e sprint ao se aproximar.
 
 const THINK_MIN := 1.2
 const THINK_MAX := 2.0
@@ -42,8 +45,22 @@ const TARGET_STICKY := 0.5
 const GUARD_DIST := 1.5
 const ATTACK_THINK := 0.75
 const DEFEND_BUFF_CHANCE := 0.5
-## Modos do aliado (iguais aos da arena).
-enum { ATTACK, DEFEND, SUPPORT }
+## Reação a golpe avisado: base (s) dividida pelo fator de Speed e vezes think_scale.
+const REACT_BASE := 0.28
+const DODGE_RUN := 0.45
+const PROJ_LOOK := 4.5
+## HP baixo: Fúria (agressivo) ou Pânico (medroso) pela Natureza; neutro tira a sorte.
+const MOOD_HP := 0.25
+const FURY_THINK := 0.6
+const PANIC_THINK := 1.3
+## Variação de ritmo para a luta não ficar previsível (+-5%).
+const JITTER := 0.05
+## Comando: Ofensivo encurta a faixa e o recuo; Defensivo alonga e esquiva melhor.
+const CMD_BAND := [0.75, 1.25, 1.35, 1.0]
+const CMD_RETREAT := [0.4, 1.5, 1.2, 1.0]
+const CMD_DODGE := [0.0, 0.2, 0.1, 0.0]
+## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
+enum { ATTACK, DEFEND, SUPPORT, FREE }
 
 var f: BattleFighter
 var retarget_t := 0.0
@@ -60,6 +77,12 @@ var jump_done := false
 var sprint_want := false
 var sprint_seen := false
 var react_t := 0.0
+var intent := ""
+var retreat_t := 0.0
+var threat_id := -1
+var threat_ok := false
+var threat_wait := 0.0
+var auto_cmd_t := 0.0
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -149,8 +172,8 @@ func move_ready(d: float) -> bool:
 ## Um passo de IA: devolve a direção desejada e ajusta f.sprinting; pode disparar golpes.
 func step(dt: float) -> Vector3:
 	f.sprinting = false
-	if f.side == 1 and f.arena.kind == "wild":
-		pick_target(dt)
+	pick_target(dt)
+	_auto_command(dt)
 	var opp := f.opponent
 	if not is_instance_valid(opp) or not opp.active():
 		return Vector3.ZERO
@@ -158,81 +181,272 @@ func step(dt: float) -> Vector3:
 		use_trainer_item()
 		recover_t = RECOVER
 		return Vector3.ZERO
-	if recover_t > 0.0:
-		recover_t -= dt
-		think -= dt
-		return Vector3.ZERO
+	_mood()
 	var to_o := f.flat_to(opp)
 	var d := to_o.length()
 	var dir := to_o / maxf(d, 0.001)
+	var mode := ally_mode()
+	if _rng().randf() < 0.004 * float(_p("strafe", 0.5)) + 0.001:
+		strafe *= -1.0
+	var side_v := Vector3(-dir.z, 0.0, dir.x) * strafe
+	var dodge := _dodge(dt, d, side_v)
+	if dodge != Vector3.ZERO:
+		f.sprinting = f.can_sprint(true)
+		return dodge
+	if recover_t > 0.0:
+		recover_t -= dt
+		think -= dt
+		retreat_t -= dt
+		return _retreat_move(dir, side_v, d)
 	if not f.moves.is_empty():
 		var punish := _punish(d)
 		if not punish:
 			punished = false
 		think -= dt
-		var fire := think <= 0.0
+		if think <= 0.0 and intent == "":
+			intent = _plan()
+			if intent == "":
+				think = THINK_RETRY * think_scale
+		var fire := intent != "" and in_range(intent, d) and _ready(intent)
 		if punish and not punished and tactic_on:
 			fire = true
 			punished = true
 		if fire and f.can_act():
 			tactic_on = _tactic_ok()
 			var used := _use_best_move(d)
-			think = (
-				(_rng().randf_range(THINK_MIN, THINK_MAX) if used else THINK_RETRY)
-				* think_scale
-				* (ATTACK_THINK if ally_mode() == ATTACK else 1.0)
-			)
+			if used:
+				think = _think_secs()
+				retreat_t = (
+					float(_p("retreat", 0.5))
+					* CMD_RETREAT[mode]
+					* (0.3 if f.mood_state == "fury" else 1.0)
+				)
+				recover_t = maxf(recover_t, retreat_t)
+				intent = ""
+			elif intent != "" and not _ready(intent):
+				intent = ""
 	if f.out_of_pp() and d > 1.4:
 		return dir
-	if ally_mode() == DEFEND:
+	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
 		var guard := guard_steer()
 		if guard != Vector3.INF:
 			return guard
-	if _rng().randf() < 0.002:
-		strafe *= -1.0
-	var side_v := Vector3(-dir.z, 0.0, dir.x) * strafe
-	var b := band()
-	if ally_mode() == SUPPORT:
-		b = Vector2(b.y * 0.9, b.y * 1.25)
-	var r := reach()
+	var b := _band()
 	var low := float(f.hp) <= float(f.max_hp) * LOW_HP
-	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low else b
-	var slip := opp.root_t > 0.0 and d < b.y + 1.0
+	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low and f.mood_state != "fury" else b
+	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == ""
 	var want: Vector3
+	var st := float(_p("strafe", 0.5))
 	if slip:
 		want = (side_v - dir * 0.4).normalized()
 	elif d > kite.y:
-		want = (dir + side_v * 0.3).normalized()
+		want = (dir + side_v * 0.3 * st).normalized()
 	elif d < kite.x:
 		want = (-dir + side_v * 0.5).normalized() * (1.0 if low else 0.8)
-	elif move_ready(d) and tactic_on:
-		want = Vector3.ZERO
+	elif intent != "" and in_range(intent, d) and tactic_on:
+		want = side_v * 0.15 * st
 	elif tactic_on:
 		var centre := (b.x + b.y) * 0.5
 		var radial := dir * clampf((centre - d) / maxf(b.y - b.x, 0.1), -1.0, 1.0)
-		want = (side_v * WAIT_STRAFE + radial * WAIT_RADIAL).normalized()
+		want = (side_v * (0.3 + WAIT_STRAFE * st) + radial * WAIT_RADIAL).normalized()
 	else:
 		want = side_v * 0.35
-	want += f.arena.edge_push(f)
+	want += f.arena.edge_push(f) + _ally_spread()
 	if want.length() > 1.0:
 		want = want.normalized()
+	_fly(d)
+	var r := reach()
 	var closing := d > kite.y and (r <= MELEE_BAND or d > r + FAR_GAP)
-	var reason := closing or slip or (low and d < b.y)
-	var dodge := _dodge(dt, d, side_v)
-	if dodge != Vector3.ZERO:
-		f.sprinting = f.can_sprint(true)
-		return dodge
+	var reason := (closing and float(_p("sprint", 1.0)) >= 0.5) or slip or (low and d < b.y)
+	if mode == ATTACK and d > b.y:
+		reason = true
 	if _try_jump(dt, d):
 		return want
 	f.sprinting = _sprint(dt, reason) and f.can_sprint(want.length() > 0.1)
 	return want
 
 
-## Modo do aliado (ATTACK/DEFEND/SUPPORT) se este lutador é o aliado IA do jogador; senão -1.
+func _think_secs() -> float:
+	var k := think_scale * float(_p("think", 1.0))
+	if ally_mode() == ATTACK:
+		k *= ATTACK_THINK
+	if f.mood_state == "fury":
+		k *= FURY_THINK
+	elif f.mood_state == "panic":
+		k *= PANIC_THINK
+	return (
+		_rng().randf_range(THINK_MIN, THINK_MAX) * k * (1.0 + _rng().randf_range(-JITTER, JITTER))
+	)
+
+
+## Golpe pronto (cooldown, GCD e fôlego), sem olhar a distância.
+func _ready(id: String) -> bool:
+	return (
+		f.gcd_t <= 0.0 and float(f.move_cd.get(id, 0.0)) <= 0.0 and f.arena.moves.can_afford(f, id)
+	)
+
+
+## Intenção: o golpe que vai buscar agora (o mesmo critério de pick, sem olhar a distância).
+func _plan() -> String:
+	if f.out_of_pp():
+		return ""
+	var avail: Array = f.moves.filter(func(id): return _ready(String(id)))
+	if avail.is_empty():
+		return ""
+	if _immune_only(avail) and _has_connecting_move():
+		avail = avail.filter(func(id): return _dmg(id) > 0.0)
+		if avail.is_empty():
+			return ""
+	return pick(avail)
+
+
+## Faixa de distância: a do golpe pretendido; sem intenção, a do perfil. Comando e ânimo mexem nela.
+func _band() -> Vector2:
+	var pb: Vector2 = _p("band", Vector2(1.8, 3.0))
+	var b := pb
+	if intent != "":
+		var r := move_reach(intent)
+		if r < INF:
+			var hi := maxf(r * 0.85, 0.7)
+			b = Vector2(minf(pb.x, hi * 0.6), minf(maxf(pb.y, hi * 0.7), hi))
+	var mode := ally_mode()
+	b *= CMD_BAND[mode]
+	if mode == SUPPORT:
+		b = Vector2(maxf(b.x, 3.5), maxf(b.y, 5.0))
+	if f.mood_state == "fury":
+		b *= 0.7
+	elif f.mood_state == "panic":
+		b *= 1.4
+	b.x = maxf(b.x, 0.6)
+	b.y = maxf(b.y, b.x + 0.5)
+	return b
+
+
+## Até onde o golpe chega (INF = buff, não precisa de distância).
+func move_reach(id: String) -> float:
+	var mv := Dex.move(id)
+	match String(mv.get("kind", "")):
+		"dash", "arc", "multi_arc", "whip":
+			return float(mv.get("range", 2.0)) + 0.6
+		"aoe_self", "debuff_aoe":
+			return float(mv.get("radius", 3.0))
+		"stream":
+			return float(mv.get("range", 5.0))
+		"self_buff", "clones":
+			return INF
+		_:
+			return float(mv.get("range", 10.0))
+
+
+## Depois de bater: recua até retreat_to pelo perfil (o Brigão quase não recua; o Atirador some).
+func _retreat_move(dir: Vector3, side_v: Vector3, d: float) -> Vector3:
+	if retreat_t <= 0.0 or not f.can_act():
+		return Vector3.ZERO
+	var to: float = float(_p("retreat_to", 3.0)) * CMD_BAND[ally_mode()]
+	if d >= to:
+		return side_v * 0.5
+	var w := (-dir + side_v * 0.6 * float(_p("strafe", 0.5))).normalized()
+	w += f.arena.edge_push(f)
+	return w.normalized() if w.length() > 1.0 else w
+
+
+## Voador: cruza alto e desce para atacar ou quando está cansado.
+func _fly(_d: float) -> void:
+	var h := float(_p("fly", 0.0))
+	if h <= 0.0:
+		f.fly_target = 0.0
+		return
+	var tired := f.stamina < f.pp_max * 0.2 or f.gcd_t > 0.0
+	f.fly_target = BattleFighter.DIVE_H if tired or recover_t > 0.0 else h
+
+
+## Em dupla os parceiros não se embolam: empurra para longe do parceiro perto demais.
+func _ally_spread() -> Vector3:
+	var p := partner()
+	if p == null:
+		return Vector3.ZERO
+	var to := f.flat_to(p)
+	var dd := to.length()
+	if dd > 2.2 or dd < 0.01:
+		return Vector3.ZERO
+	return -to / dd * (2.2 - dd) * 0.5
+
+
+func partner() -> BattleFighter:
+	for o in f.arena.fighters:
+		if o != f and is_instance_valid(o) and o.side == f.side and o.active():
+			return o
+	return null
+
+
+func _partner_hurt() -> bool:
+	var p := partner()
+	return p != null and float(p.hp) < float(p.max_hp) * 0.5
+
+
+## HP baixo: uma vez por luta entra em Fúria (agressivo) ou Pânico (medroso) pela Natureza.
+func _mood() -> void:
+	if f.mood_state != "" or float(f.hp) > float(f.max_hp) * MOOD_HP or not f.alive():
+		return
+	var t := BattleProfile.temper(f.mon)
+	if t == 0:
+		t = 1 if _rng().randf() < 0.5 else -1
+	f.mood_state = "fury" if t > 0 else "panic"
+	if f.mood_state == "fury":
+		f.popup("FÚRIA!", Color(1, 0.35, 0.25), 1.2, 0.9)
+	else:
+		f.popup("PÂNICO!", Color(0.6, 0.75, 1.0), 1.2, 0.9)
+	if f.arena.has_method("say"):
+		f.arena.say(
+			(
+				"%s entrou em %s!"
+				% [f.mon.display_name, "fúria" if f.mood_state == "fury" else "pânico"]
+			)
+		)
+
+
+## Treinador adversário (e o lado A no autoplay) troca o comando sozinho a cada 5-8 s pela situação.
+func _auto_command(dt: float) -> void:
+	if f.side == 0 and f.arena.get("ally") == f:
+		return
+	if f.side == 0 and f.arena.get("player") == f and f.arena.get("player_mode") != null:
+		return
+	if f.arena.get("kind") == "wild":
+		f.command = FREE
+		return
+	auto_cmd_t -= dt
+	if auto_cmd_t > 0.0:
+		return
+	auto_cmd_t = _rng().randf_range(5.0, 8.0)
+	var hp := float(f.hp) / maxf(f.max_hp, 1)
+	var opp := f.opponent
+	var cmd := FREE
+	if hp < 0.3:
+		cmd = DEFEND
+	elif is_instance_valid(opp) and float(opp.hp) / maxf(opp.max_hp, 1) < 0.35:
+		cmd = ATTACK
+	elif _partner_hurt() and f.moves.any(func(id): return is_support_move(String(id))):
+		cmd = SUPPORT
+	elif _rng().randf() < 0.3:
+		cmd = ATTACK
+	if cmd != f.command:
+		f.command = cmd
+
+
+## Comando atual (ATTACK/DEFEND/SUPPORT/FREE): o aliado e o controlado do jogador seguem os comandos
+## da arena (F e G); os outros usam o próprio f.command (o treinador escolhe sozinho).
 func ally_mode() -> int:
-	if f.side != 0 or f.arena == null or f.arena.get("ally") != f:
-		return -1
-	return int(f.arena.ally_mode)
+	if f.arena == null:
+		return FREE
+	if f.side == 0 and f.arena.get("ally") == f:
+		return int(f.arena.ally_mode)
+	if f.side == 0 and f.arena.get("player") == f and f.arena.get("player_mode") != null:
+		return int(f.arena.player_mode)
+	return f.command
+
+
+func _p(k: String, def = 0.0):
+	return f.prof.get(k, def)
 
 
 func is_support_move(id: String) -> bool:
@@ -277,7 +491,8 @@ func guard_steer() -> Vector3:
 	return v.normalized() * minf(1.0, v.length())
 
 
-## Selvagem em 2x1: reavalia o alvo a cada 2-4 s (distância, último a acertar, HP baixo, alvo atual, tanque DEFEND).
+## Com mais de um alvo (2x1, 2x2): reavalia a cada 2-4 s (distância, último a acertar, HP baixo, alvo atual,
+## tanque DEFEND e, no treinador, quem toma mais dano).
 func pick_target(dt: float) -> void:
 	var cands: Array = f.arena.targets_of(f)
 	var cur := f.opponent
@@ -303,6 +518,12 @@ func pick_target(dt: float) -> void:
 			w += TARGET_STICKY
 		if t == f.arena.get("ally") and int(f.arena.ally_mode) == DEFEND:
 			w += 2.0
+		if f.arena.get("kind") != "wild":
+			# Treinador: prefere quem toma mais dano dos seus golpes (tipo, defesa).
+			var best_d := 0.0
+			for id in f.moves:
+				best_d = maxf(best_d, f.arena.moves.expected_damage(f, t, Dex.move(String(id))))
+			w += clampf(best_d / maxf(float(t.hp), 1.0), 0.0, 1.5)
 		w += rng.randf() * 0.2
 		if w > best_w:
 			best_w = w
@@ -366,7 +587,8 @@ func _use_best_move(d: float) -> bool:
 		return false
 	if _immune_only(avail) and _has_connecting_move():
 		return false
-	if f.arena.moves.use(f, pick(avail)):
+	var id := intent if intent in avail else pick(avail)
+	if f.arena.moves.use(f, id):
 		recover_t = RECOVER
 		return true
 	return false
@@ -506,16 +728,86 @@ func _can_clear(att: BattleFighter) -> bool:
 
 
 func _dodge(dt: float, d: float, side_v: Vector3) -> Vector3:
-	var incoming := _incoming_body_attack(d) != Vector3.ZERO and not _can_clear(f.opponent)
-	if not incoming or not f.can_act():
+	if not f.can_act() or f.root_t > 0.0:
 		dodge_t = 0.0
 		return Vector3.ZERO
-	if dodge_t <= 0.0:
-		if not tactic_on:
-			return Vector3.ZERO
-		dodge_t = DODGE_TIME
-	dodge_t -= dt
-	return side_v.normalized()
+	var incoming := _incoming_body_attack(d) != Vector3.ZERO and not _can_clear(f.opponent)
+	if incoming:
+		if dodge_t <= 0.0:
+			if not tactic_on:
+				return Vector3.ZERO
+			dodge_t = DODGE_TIME
+		dodge_t -= dt
+		return side_v.normalized()
+	dodge_t = 0.0
+	return _dodge_threat(dt, side_v)
+
+
+## Golpe avisado (área no chão, raio, investida preparada) ou projétil vindo: sai da frente se o
+## reflexo deixar. A chance e o tempo de reação vêm do perfil, do comando e da Speed.
+func _dodge_threat(dt: float, side_v: Vector3) -> Vector3:
+	var got := _threat()
+	if got.is_empty():
+		threat_id = -1
+		return Vector3.ZERO
+	if int(got.id) != threat_id:
+		threat_id = int(got.id)
+		var sf := f.speed_factor()
+		var chance: float = (float(_p("dodge", 0.5)) + CMD_DODGE[ally_mode()]) * sf
+		if f.mood_state == "panic":
+			chance += 0.15
+		chance = clampf(chance / maxf(think_scale, 0.3), 0.05, 0.95)
+		threat_ok = _rng().randf() < chance
+		threat_wait = REACT_BASE / sf * think_scale
+	if not threat_ok:
+		return Vector3.ZERO
+	threat_wait -= dt
+	if threat_wait > 0.0:
+		return Vector3.ZERO
+	var esc: Vector3 = got.away
+	if esc.length() < 0.1:
+		esc = side_v
+	return (esc.normalized() + f.arena.edge_push(f)).normalized()
+
+
+## A ameaça mais perto de mim: {id, away}. Vazio = nada vindo.
+func _threat() -> Dictionary:
+	var me := f.pos2(f.position)
+	var tele = f.arena.get("telegraphs")
+	if tele is Array:
+		for e in tele:
+			if int(e.side) == f.side or float(e.t) <= 0.0:
+				continue
+			if e.kind == "disc":
+				var to: Vector3 = me - e.at
+				if to.length() < float(e.r) + 0.5:
+					return {"id": int(e.id), "away": to}
+			else:
+				var rel: Vector3 = me - e.from
+				var dv: Vector3 = e.dir
+				var along := rel.dot(dv)
+				var perp := rel - dv * along
+				if along > -0.5 and along < float(e.len) and perp.length() < float(e.w) * 0.5 + 0.6:
+					return {
+						"id": int(e.id),
+						"away": perp if perp.length() > 0.05 else Vector3(-dv.z, 0, dv.x)
+					}
+	for p in f.arena.projectiles:
+		if p.done or not is_instance_valid(p.user) or p.user.side == f.side:
+			continue
+		var v: Vector3 = Vector3(p.vel.x, 0, p.vel.z)
+		if v.length() < 0.1:
+			continue
+		var vd := v.normalized()
+		var rel2: Vector3 = me - f.pos2(p.position)
+		var ahead := rel2.dot(vd)
+		var off := rel2 - vd * ahead
+		if ahead > 0.0 and ahead < PROJ_LOOK and off.length() < BattleProjectile.HIT_RADIUS + 0.45:
+			return {
+				"id": p.get_instance_id(),
+				"away": off if off.length() > 0.05 else Vector3(-vd.z, 0, vd.x)
+			}
+	return {}
 
 
 func _jump_threat(d: float) -> String:

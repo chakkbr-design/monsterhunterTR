@@ -1,5 +1,5 @@
 {
-  "_doc": "Overworld trainers. party = [[species, level], ...]; a species '@flag' is read from Game.flags at battle time (the Route 22 rival's starter). class = a GameState.TRAINER_PAYOUTS key; sight = metres (0 = never spots you, talk to fight); sprite is a sheet in assets/sprites/ in the 3x4 npc_*.png layout. Display name on banners = '<CLASS> <NAME>' (see Trainers.display_name). Real trainers: FRLG data from the Bulbapedia references only. Optional fields: display_name (full banner name, overrides <CLASS> <NAME>), reward (exact FRLG prize, overrides base x level), intro/defeat/after/lose lines, requires_flag / hidden_by_flag, scripted (loss does not white-out), arena [w, d] + center (a scene marker name) for gym battles, arena_color (the ground decal tint, stone grey in the gym), ai_think_scale, badge (awarded on win + '<badge>_badge' flag), done_flag / won_flag (set after any/winning battle), leave_after + leave_to [x, z] (the trainer walks off and is freed).",
+  "_doc": "Overworld trainers. party = [[species, level], ...]; a species '@flag' is read from Game.flags at battle time (the Route 22 rival's starter). class = a GameState.TRAINER_PAYOUTS key; sight = metres (0 = never spots you, talk to fight); sprite is a sheet in assets/sprites/ in the 3x4 npc_*.png layout. Display name on banners = '<CLASS> <NAME>' (see Trainers.display_name). Real trainers: FRLG data from the Bulbapedia references only. Optional fields: display_name (full banner name, overrides <CLASS> <NAME>), reward (exact FRLG prize, overrides base x level), intro/defeat/after/lose lines, requires_flag / hidden_by_flag, scripted (loss does not white-out), arena [w, d] + center (a scene marker name) for gym battles, arena_color (the ground decal tint, stone grey in the gym), ai_think_scale, badge (awarded on win + '<badge>_badge' flag), done_flag / won_flag (set after any/winning battle), doubles (2x2 battle when the player has two healthy: Batalha Viva; gyms always), leave_after + leave_to [x, z] (the trainer walks off and is freed).",
   "test_youngster": {
     "class": "youngster",
     "name": "TEST",
@@ -53,6 +53,7 @@
     "ai_think_scale": 1.3
   },
   "bug_catcher_doug": {
+    "doubles": true,
     "class": "bug_catcher",
     "name": "Doug",
     "sprite": "npc_bug_catcher.png",
@@ -166,6 +167,7 @@
     "ai_think_scale": 1.3
   },
   "camper_liam": {
+    "doubles": true,
     "class": "camper",
     "name": "Liam",
     "sprite": "npc_camper.png",
@@ -200,6 +202,7 @@
     ]
   },
   "brock": {
+    "doubles": true,
     "class": "gym_leader",
     "name": "Brock",
     "sprite": "npc_brock.png",
@@ -258,6 +261,7 @@
     "item": "super_potion"
   },
   "misty": {
+    "doubles": true,
     "class": "gym_leader",
     "name": "Misty",
     "sprite": "npc_cooltrainer_f.png",
@@ -359,6 +363,7 @@
     "item": "potion"
   },
   "lass_janice": {
+    "doubles": true,
     "class": "lass",
     "name": "Janice",
     "sprite": "npc_lass.png",
@@ -444,6 +449,7 @@
     ]
   },
   "bug_catcher_greg": {
+    "doubles": true,
     "class": "bug_catcher",
     "name": "Greg",
     "sprite": "npc_bug_catcher.png",
@@ -630,6 +636,7 @@
     "ai_think_scale": 1.3
   },
   "super_nerd_jovan": {
+    "doubles": true,
     "class": "super_nerd",
     "name": "Jovan",
     "display_name": "Supernerd Jovan",
@@ -658,6 +665,7 @@
     "ai_think_scale": 1.1
   },
   "lass_miriam": {
+    "doubles": true,
     "class": "lass",
     "name": "Miriam",
     "sprite": "npc_lass.png",
@@ -741,6 +749,7 @@
     ]
   },
   "hiker_marcos": {
+    "doubles": true,
     "class": "hiker",
     "name": "Marcos",
     "sprite": "npc_hiker.png",
@@ -800,6 +809,7 @@
     "ai_think_scale": 1.1
   },
   "rocket_2": {
+    "doubles": true,
     "class": "team_rocket",
     "name": "Recruta",
     "display_name": "Recruta da Equipe Rocket",
@@ -888,6 +898,7 @@
     "ai_think_scale": 1.1
   },
   "super_nerd_miguel": {
+    "doubles": true,
     "class": "super_nerd",
     "name": "Miguel",
     "display_name": "Supernerd Miguel",
@@ -921,6 +932,7 @@
     "ai_think_scale": 1
   },
   "swimmer_luis": {
+    "doubles": true,
     "class": "swimmer",
     "name": "Luis",
     "display_name": "Nadador Luis",
@@ -954,6 +966,7 @@
     ]
   },
   "picnicker_diana": {
+    "doubles": true,
     "class": "picnicker",
     "name": "Diana",
     "display_name": "Piqueniqueira Diana",

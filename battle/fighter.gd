@@ -10,6 +10,14 @@ const SPRINT_DRAIN := 0.3
 const SPRINT_MULT := 1.6
 const PLAYER_SPEED := 4.5
 const AI_SPEED := 2.5 * 1.4
+## Quem o jogador controla anda um pouco mais que a IA na mesma Speed.
+const PLAYER_WALK_MULT := 1.15
+## Voo (perfil Voador): altura de cruzeiro e mergulho para atacar.
+const FLY_RISE := 2.2
+const DIVE_H := 0.15
+## Amizade Devotado: chance de aguentar um golpe fatal com 1 HP (uma vez por luta).
+const ENDURE_FRIEND := 220
+const ENDURE_CHANCE := 0.25
 const JUMP_G := 23.8
 const JUMP_HEIGHT_DEFAULT := 0.9
 const JUMP_STAMINA := 0.15
@@ -55,6 +63,14 @@ var trainer_item := ""
 var item_used := false
 ## Boneco do acampamento de treino (creature.gd immortal do original): no KO o HP volta cheio.
 var immortal := false
+## Batalha Viva: perfil de movimento (BattleProfile), comando atual, voo e estado de ânimo.
+var profile := "brawler"
+var prof := {}
+var command := 3  # BattleAI.FREE
+var fly_h := 0.0
+var fly_target := 0.0
+var endured := false
+var mood_state := ""  # "" | "fury" | "panic"
 
 var moves: Array = []
 var types: Array = []
@@ -126,6 +142,7 @@ var _status_fx: FxSprite
 var _status_fx_id := ""
 var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
+var _ring: MeshInstance3D
 var _spawn_t := 0.0
 
 const SPAWN_GROW := 0.25  ## game.gd send_out: escala 0.05 -> 1.15 em 0.15 s, -> 1.0 em 0.1 s
@@ -154,8 +171,20 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
 	if m.status in Mon.PERSIST_STATUS:
 		apply_status(m.status)
+	_set_profile()
 	ai = BattleAI.new(self)
 	_build_visual()
+
+
+func _set_profile() -> void:
+	var bias := ""
+	var ab = arena.get("abilities") if arena else null
+	if ab and ab.has_method("profile_bias"):
+		bias = String(ab.profile_bias(self))
+	profile = BattleProfile.pick(mon, moves, bias)
+	prof = BattleProfile.params(profile)
+	fly_target = float(prof.get("fly", 0.0))
+	fly_h = fly_target
 
 
 func _build_visual() -> void:
@@ -168,6 +197,24 @@ func _build_visual() -> void:
 	add_child(look)
 	look.facing = facing
 	# Como o original (creature.tscn): só o Sprite3D, que projeta sombra de verdade; sem disco nem anel.
+	# Na dupla vai um anel no chão (amarelo = seu lado, vermelho = adversário) para ler quem é quem.
+	if arena and bool(arena.get("doubles")):
+		var ring := MeshInstance3D.new()
+		var tm := TorusMesh.new()
+		tm.inner_radius = 0.42
+		tm.outer_radius = 0.5
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(1, 0.85, 0.3, 0.7) if side == 0 else Color(1, 0.35, 0.3, 0.7)
+		tm.material = mat
+		ring.mesh = tm
+		ring.scale = Vector3(1, 0.05, 1)
+		ring.position.y = 0.03
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ring.name = "SideRing"
+		add_child(ring)
+		_ring = ring
 	_spawn_t = SPAWN_GROW
 	refresh_label()
 
@@ -220,6 +267,9 @@ func visual_step(dt: float) -> void:
 			st = "airborne"
 	look.state = st
 	look.tick(vdt)
+	if _ring:
+		_ring.visible = alive() and on_field
+		_ring.position.y = 0.03 - position.y  # fica no chão mesmo pulando ou voando
 	var tint := _tint()
 	if _flash_t > 0.0:
 		_flash_t -= dt
@@ -308,10 +358,34 @@ func damage_profile() -> Dictionary:
 	return d
 
 
+## Speed efetiva para o ritmo: paralisia corta pela metade (Gen 3 corta para 1/4 no turno).
+func eff_spe() -> float:
+	return stat("spe") * (0.5 if status == "paralysis" else 1.0)
+
+
 func speed_factor() -> float:
 	if is_instance_valid(opponent) and opponent.active():
-		return StatCalc.battle_speed_factor(stat("spe"), opponent.stat("spe"))
+		return StatCalc.battle_speed_factor(eff_spe(), opponent.eff_spe())
 	return 1.0
+
+
+## Velocidade de andar absoluta (m/s) pela Speed, chão e habilidade (paralisia é aplicada em drive).
+func walk_speed() -> float:
+	var v := StatCalc.walk_speed(stat("spe"))
+	if controller == "player":
+		v *= PLAYER_WALK_MULT
+	if arena:
+		if arena.get("field"):
+			v *= arena.field.move_mult(self)
+		var ab = arena.get("abilities")
+		if ab and ab.has_method("walk_mult"):
+			v *= ab.walk_mult(self)
+	return v
+
+
+## Altura do corpo acima do chão (pulo + voo).
+func height() -> float:
+	return air_h + fly_h
 
 
 func can_act() -> bool:
@@ -326,12 +400,21 @@ func may_start(mv: Dictionary) -> bool:
 	return not is_airborne() or bool(mv.get("allowed_midair", true))
 
 
+## PP gasto pelo golpe: escala com o ritmo da luta (arena.damage_pace), para o mesmo número de
+## golpes por nocaute de antes caber no PP.
+func pp_cost_of(mv: Dictionary) -> float:
+	var k := 1.0
+	if arena and arena.get("moves"):
+		k = arena.moves.pace()
+	return Dex.pp_cost(mv) * k
+
+
 func min_move_cost() -> float:
 	var best := INF
 	for id in moves:
 		var mv := Dex.move(id)
 		if not mv.is_empty():
-			best = minf(best, Dex.pp_cost(mv))
+			best = minf(best, pp_cost_of(mv))
 	return best if best < INF else 1.0
 
 
@@ -343,9 +426,9 @@ func dash_reach() -> float:
 	return look_h * DASH_REACH_FACTOR
 
 
-## Dash/lunge passa por baixo de um alvo alto o bastante no ar.
+## Dash/lunge passa por baixo de um alvo alto o bastante no ar (pulo ou voo).
 func passes_under(t: BattleFighter) -> bool:
-	return t.is_airborne() and (t.air_h - air_h) >= dash_reach()
+	return t.height() - height() >= dash_reach()
 
 
 func aim_dir() -> Vector3:
@@ -569,6 +652,8 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 	var hp_before := hp
 	var imp := 0.0
 	var src: BattleFighter = opts.get("source")
+	if amount >= hp and has_dir and _endure():
+		amount = hp - 1
 	if has_dir and is_instance_valid(src):
 		imp = impact_secs(
 			float(amount) / float(maxi(max_hp, 1)),
@@ -603,6 +688,21 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 			return imp
 		_faint()
 	return imp
+
+
+## Amizade alta: aguenta o golpe fatal com 1 HP (uma vez por luta), como o carinho do Gen 6.
+func _endure() -> bool:
+	if endured or immortal or hp <= 1 or side != 0 or arena == null:
+		return false
+	if int(mon.get("friend") if mon.get("friend") != null else 0) < ENDURE_FRIEND:
+		return false
+	if arena.rng.randf() >= ENDURE_CHANCE:
+		return false
+	endured = true
+	popup("Aguentou firme por você!", Color(1, 0.75, 0.85), 1.1, 0.9)
+	if arena.has_method("cut_in"):
+		arena.cut_in("AGUENTOU!", Color(1, 0.6, 0.75))
+	return true
 
 
 func _faint() -> void:
@@ -683,7 +783,6 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 	if impact_t > 0.0 or not alive():
 		velocity = Vector3.ZERO
 		return
-	speed *= speed_factor()
 	if status == "paralysis":
 		speed *= 0.5
 	if sprinting:
@@ -731,7 +830,11 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 	knock = knock.move_toward(Vector3.ZERO, KNOCK_DECAY * dt)
 	position.x += velocity.x * dt
 	position.z += velocity.z * dt
-	position.y = air_h
+	var fly_want := fly_target
+	if dash_t > 0.0 or lunge_t > 0.0 or arc_step_t > 0.0 or prepare_t > 0.0 or not can_act():
+		fly_want = minf(fly_want, DIVE_H)
+	fly_h = move_toward(fly_h, fly_want if alive() else 0.0, FLY_RISE * dt)
+	position.y = air_h + fly_h
 	if facing.length() > 0.01:
 		rotation.y = atan2(-facing.x, -facing.z)
 
@@ -794,6 +897,7 @@ func refresh_species() -> void:
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
 	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
+	_set_profile()
 	if look and look.species != mon.species:
 		look.species = mon.species
 
