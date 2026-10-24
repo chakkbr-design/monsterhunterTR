@@ -36,9 +36,14 @@ static func default_config() -> Dictionary:
 				"name": "Time A",
 				"item": "",
 				"think_scale": 1.0,
-				"mons": [mon_entry("Charmander", 15)]
+				"mons": [mon_entry("Bulbasaur", 15), mon_entry("Geodude", 15)]
 			},
-			{"name": "Time B", "item": "", "think_scale": 1.0, "mons": [mon_entry("Squirtle", 15)]},
+			{
+				"name": "Time B",
+				"item": "",
+				"think_scale": 1.0,
+				"mons": [mon_entry("Charmander", 15), mon_entry("Pikachu", 15)]
+			},
 		],
 		"speed": 1.0,
 		"seed": -1,
