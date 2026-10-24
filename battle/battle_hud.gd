@@ -22,6 +22,14 @@ const DIAMOND_AT := Vector2(-182.0, -134.0)
 const BAR_H := 72.0
 const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  Esc pausa"
 const PAUSE_W := 300.0
+## Pílulas de modo (OFENSIVO..LIVRE) em coluna ao lado do cartão: fora do meio da tela, sem tapar a luta.
+const MODE_W := 84.0
+const MODE_H := 16.0
+const MODE_GAP := 2.0
+const MODE_X := CARD_MARGIN + CARD_W + 8.0
+
+## Clique numa pílula de modo: slot "player"/"ally", mode = índice em BattleHUD.arena_script().ALLY_MODE_NAMES.
+signal mode_clicked(slot: String, mode: int)
 
 var _root: Control
 var _player_card: FighterCard
@@ -39,6 +47,7 @@ var _help: Label
 var _log: BattleLogLine
 var _pause_bg: PanelContainer
 var _pause: Label
+var _mode_btns := {"player": [], "ally": []}
 
 
 func _init() -> void:
@@ -77,6 +86,8 @@ func _init() -> void:
 		Vector2(0, 0),
 		Vector2(CARD_MARGIN + CARD_W * 0.5, CARD_TOP + CARD_H * 1.5 + ROW_GAP)
 	)
+	_make_mode_buttons("player", CARD_TOP)
+	_make_mode_buttons("ally", CARD_TOP + CARD_H + ROW_GAP)
 	var offs := [
 		Vector2(0, MOVE_DY), Vector2(MOVE_DX, 0), Vector2(-MOVE_DX, 0), Vector2(0, -MOVE_DY)
 	]
@@ -159,6 +170,26 @@ func _place(c: Control, anchor: Vector2, size_px: Vector2, center: Vector2) -> v
 	c.offset_right = center.x + size_px.x * 0.5
 	c.offset_top = center.y - size_px.y * 0.5
 	c.offset_bottom = center.y + size_px.y * 0.5
+
+
+## A arena não tem class_name (e carrega o HUD): o script dela só é lido na hora de usar, sem preload circular.
+static func arena_script() -> GDScript:
+	return load("res://battle/battle_arena.gd")
+
+
+func _make_mode_buttons(slot: String, top: float) -> void:
+	for i in BattleHUD.arena_script().ALLY_MODE_NAMES.size():
+		var b := ModeButton.new()
+		b.slot = slot
+		b.mode = i
+		b.hud = self
+		_root.add_child(b)
+		b.offset_left = MODE_X
+		b.offset_right = MODE_X + MODE_W
+		b.offset_top = top + i * (MODE_H + MODE_GAP)
+		b.offset_bottom = b.offset_top + MODE_H
+		b.visible = false
+		_mode_btns[slot].append(b)
 
 
 ## Cartão reduzido por CARD_K: a origem fica no canto de cima à esquerda (pivô padrão), então o centro visual é `center`.
@@ -354,6 +385,13 @@ func refresh(
 		c.visible = c.body != null
 		c.marks = _marks_of(marks, c.body)
 		c.step(dt)
+	var cur := {"player": _player_card.cmd, "ally": _ally_card.cmd}
+	var shown := {"player": _player_card.body != null, "ally": has_ally}
+	for slot in _mode_btns:
+		for b in _mode_btns[slot]:
+			b.visible = shown[slot]
+			b.current = cur[slot] == BattleHUD.arena_script().ALLY_MODE_NAMES[b.mode]
+			b.queue_redraw()
 	var icd := float(info.get("item_cd", 0.0))
 	_help.text = HELP + ("   item %.1fs" % icd if icd > 0.0 else "")
 	var mt := String(info.get("menu", ""))
@@ -369,6 +407,36 @@ func _marks_of(marks: Dictionary, f: BattleFighter) -> Array:
 	if f == null:
 		return []
 	return marks.get(f.get_instance_id(), [])
+
+
+func mode_buttons_visible(slot: String) -> bool:
+	var l: Array = _mode_btns.get(slot, [])
+	return not l.is_empty() and l[0].visible
+
+
+func mode_button_rect(slot: String, mode: int) -> Rect2:
+	var l: Array = _mode_btns.get(slot, [])
+	if mode < 0 or mode >= l.size():
+		return Rect2()
+	return Rect2(l[mode].position, l[mode].size)
+
+
+## Nome do modo destacado ("" se nenhum).
+func highlighted_mode(slot: String) -> String:
+	for b in _mode_btns.get(slot, []):
+		if b.current:
+			return BattleHUD.arena_script().ALLY_MODE_NAMES[b.mode]
+	return ""
+
+
+## Simula o clique numa pílula.
+func press_mode(slot: String, mode: int) -> void:
+	if (
+		_mode_btns.has(slot)
+		and mode >= 0
+		and mode < BattleHUD.arena_script().ALLY_MODE_NAMES.size()
+	):
+		mode_clicked.emit(slot, mode)
 
 
 ## Para testes: o que os cartões mostram.
@@ -654,6 +722,41 @@ class FighterCard:
 					Color(0.89, 0.21, 0.17),
 					not bool(balls[i])
 				)
+
+
+class ModeButton:
+	extends Control
+	var slot := ""
+	var mode := 0
+	var current := false
+	var hud: BattleHUD
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		focus_mode = Control.FOCUS_NONE
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	func _gui_input(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+			accept_event()
+			hud.mode_clicked.emit(slot, mode)
+
+	func _draw() -> void:
+		var col: Color = BattleHUD.arena_script().ALLY_MODE_COLORS[mode]
+		var r := Rect2(Vector2.ZERO, size)
+		if current:
+			UiDraw.rounded(self, r, Color(col, 0.85), 8.0, 1.0, Color(1, 1, 1, 0.7))
+		else:
+			UiDraw.rounded(self, r, Color(UiDraw.INK, 0.55), 8.0, 1.0, Color(col, 0.35))
+		var tc := Color(0.08, 0.08, 0.1) if current else Color(col, 0.9)
+		UiDraw.text_center(
+			self,
+			Vector2(size.x * 0.5, size.y - 4.0),
+			BattleHUD.arena_script().ALLY_MODE_NAMES[mode],
+			10,
+			tc,
+			0
+		)
 
 
 class MoveButton:
