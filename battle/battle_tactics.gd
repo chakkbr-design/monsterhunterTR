@@ -35,8 +35,8 @@ const SAFE_HP := 0.6
 const NOISE := 0.08
 const NOISE_STATUS := 0.35
 ## Buff: SETUP_REL x a pontuação do melhor ataque (peso 0,4 de BattleAI.status_weight = 1), vezes o
-## quanto a rodada é segura; com o ruído maior do status ele vence o ataque em ~1 de 4 rodadas seguras.
-const SETUP_REL := 0.85
+## quanto a rodada é segura; com o ruído maior do status ele vence o ataque em cerca de 1 de 4 rodadas seguras.
+const SETUP_REL := 0.9
 ## Outros status: entram com chance peso x OTHER_CHANCE valendo OTHER_SCORE.
 const OTHER_CHANCE := 1.2
 const OTHER_SCORE := 0.5

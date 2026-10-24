@@ -46,7 +46,7 @@ o maior vence (ruído de ±8% no ataque e no Protect, ±35% nos outros status). 
 - **Tailwind** com alguém do meu lado mais lento e sem Tailwind/Trick Room; **Trick Room** só com o meu
   lado mais lento; **Helping Hand** quando faz o parceiro derrubar; **Follow Me/Rage Powder** com o parceiro
   ameaçado e eu com HP; **Thunder Wave** nunca no Terra.
-- **Buff:** 0,85 x o melhor ataque da rodada, vezes o quanto a rodada é segura; metade se já derrubo alguém
+- **Buff:** 0,9 x o melhor ataque da rodada, vezes o quanto a rodada é segura; metade se já derrubo alguém
   em 2 golpes. Os outros status (telas, Taunt, Spikes) entram às vezes, pelo peso antigo.
 - **Comando** (OFENSIVO/DEFENSIVO/SUPORTE/LIVRE), **Natureza** (temperamento de `BattleProfile`) e
   **ânimo** (Fúria/Pânico) multiplicam no fim. O nível da IA (`think_scale`) dá a chance de erro.

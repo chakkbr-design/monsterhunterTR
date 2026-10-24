@@ -64,7 +64,10 @@ func _still2(mine: Array, theirs: Array, seed_n := 3, extra := {}) -> Node:
 	var tai: bool = bool(o.get("trainer_ai", true))
 	o["trainer_ai"] = false  # ninguém troca sozinho enquanto o teste monta a cena
 	var a := _arena(_mons(mine), _mons(theirs), o)
-	_run(a, 3.0)
+	for i in int(3.0 / DT):
+		a.step(DT)
+		for f in a.fighters:
+			f.controller = "none"  # ninguém luta enquanto a cena entra (sem acaso de quem bateu)
 	if tai:
 		a.trainer_ai = {0: BattleTrainerAI.new(a, 0), 1: BattleTrainerAI.new(a, 1)}
 	for f in a.fighters:
@@ -345,9 +348,19 @@ func _switch_in_battle() -> void:
 	for f in _side(a, 1):
 		f.controller = "none"  # a decisão é do treinador; ninguém cai enquanto isso
 	var tr: BattleTrainerAI = a.trainer_ai[1]
+	check(
+		ch != null and not tr.switch_for(ch, _side(a, 0)).is_empty(), "Charmander em matchup ruim"
+	)
+	for k in 20:  # a decisão tem chance (nível da IA); tenta até pedir
+		if tr.switches > 0:
+			break
+		tr.round_start()
+	check(tr.switches == 1 and not a.pending_switch(1).is_empty(), "pediu a troca na arena")
+	var r: int = a.turns.round_n
 	var t := 0.0
-	while tr.switches == 0 and t < 30.0 and a.state == "fight":
+	while a.turns.round_n <= r + 1 and t < 20.0:
 		a.step(DT)
 		t += DT
-	check(tr.switches >= 1, "o treinador trocou durante a luta (%.1fs)" % t)
+	check(ch != null and not ch.on_field, "o Charmander saiu no começo da rodada")
+	check(_side(a, 1).any(func(f): return f.mon.species == "Bulbasaur"), "entrou o Bulbasaur")
 	a.free()
