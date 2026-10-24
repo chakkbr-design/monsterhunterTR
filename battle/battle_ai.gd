@@ -139,6 +139,8 @@ var spot_t := 0.0
 var round_k := 0
 var fired := false
 var acted_round := -1
+## Metade da vez já passou esperando fôlego: solta mesmo cansado (fica exausto) em vez de perder a vez.
+var careless := false
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -351,6 +353,7 @@ func _free_fire(dt: float, d: float) -> void:
 ## solta. Sem nada pronto passa a vez; sem PP vai no Desespero de perto.
 func _turn_fire(dt: float, d: float, turns) -> void:
 	aim_t += dt
+	careless = turns.turn_t >= BattleTurns.TURN_MAX * 0.5
 	if not f.can_act():
 		return
 	if not fired and think > 0.0:
@@ -397,6 +400,7 @@ func _ready_soon(secs: float) -> bool:
 
 func _after_fire(mode: int) -> void:
 	fired = true
+	careless = false
 	var turns = f.arena.get("turns")
 	acted_round = turns.round_n if turns != null else -1
 	idle_t = 0.0
@@ -412,6 +416,7 @@ func _after_fire(mode: int) -> void:
 ## Começo da vez (BattleTurns): zera a mira.
 func on_turn() -> void:
 	aim_t = 0.0
+	careless = false
 
 
 ## Tempo parado mirando antes de soltar na vez (pensamento, perfil, comando e ânimo).
@@ -440,7 +445,9 @@ func _think_secs() -> float:
 ## Golpe pronto (cooldown, GCD e fôlego), sem olhar a distância.
 func _ready(id: String) -> bool:
 	return (
-		f.gcd_t <= 0.0 and float(f.move_cd.get(id, 0.0)) <= 0.0 and f.arena.moves.can_afford(f, id)
+		f.gcd_t <= 0.0
+		and float(f.move_cd.get(id, 0.0)) <= 0.0
+		and f.arena.moves.can_afford(f, id, not careless)
 	)
 
 
@@ -770,7 +777,7 @@ func _use_best_move(d: float) -> bool:
 				f.gcd_t <= 0.0
 				and float(f.move_cd.get(id, 0.0)) <= 0.0
 				and in_range(id, d)
-				and f.arena.moves.can_afford(f, id)
+				and f.arena.moves.can_afford(f, id, not careless)
 			)
 	)
 	if avail.is_empty():
