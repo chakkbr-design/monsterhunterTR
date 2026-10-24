@@ -259,6 +259,14 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	abilities = BattleAbilities.new(self)
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)))
 	end_turn = BattleEndTurn.new(self)
+	# IA do treinador (BattleTrainerAI): o adversário treinador e, sem ninguém no teclado (autoplay,
+	# treino), o lado do jogador. opts.trainer_ai = false desliga ([lado 0, lado 1] por lado).
+	trainer_ai = {}
+	var tai = o.get("trainer_ai", true)
+	if kind == "trainer" and BattleTactics.side_on(tai, 1):
+		trainer_ai[1] = BattleTrainerAI.new(self, 1)
+	if bool(o.get("autoplay", false)) and BattleTactics.side_on(tai, 0):
+		trainer_ai[0] = BattleTrainerAI.new(self, 0)
 	if kind == "trainer":
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
 		_think_scale = float(tr.get("ai_think_scale", 1.0))

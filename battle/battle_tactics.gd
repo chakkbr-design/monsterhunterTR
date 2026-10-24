@@ -20,7 +20,7 @@ const SUPPORT_VALUE := 0.25
 const SUPPORT_SPECIALS := ["tailwind", "follow_me", "helping_hand", "trick_room", "fake_out"]
 ## Foco: os dois juntos derrubam (bônus) ou o parceiro já derruba sozinho (o meu golpe vale menos).
 const FOCUS_BONUS := 0.6
-const OVERKILL_MULT := 0.35
+const OVERKILL_MULT := 0.05
 ## Alvo que deve usar Protect agora (ameaçado e com Protect livre): golpe de alvo único vale menos.
 const PROTECT_GUESS := 0.8
 ## Acertar o parceiro (Earthquake) custa CUT_PARTNER x a fração de HP dele; derrubar o parceiro, mais.
@@ -64,12 +64,19 @@ func _init(battle_ai) -> void:
 
 
 ## Ligado para todo lutador de treinador e do jogador; o selvagem segue a IA antiga.
-## opts.vgc_ai = false desliga (testes antigos).
+## opts.vgc_ai = false desliga (testes antigos); [true, false] liga só no lado 0 (comparar com a antiga).
 static func enabled_for(fighter: BattleFighter) -> bool:
 	var a = fighter.arena
-	if a == null or not bool(a.get("opts").get("vgc_ai", true)):
+	if a == null or not side_on(a.get("opts").get("vgc_ai", true), fighter.side):
 		return false
 	return not (String(a.get("kind")) == "wild" and fighter.side == 1)
+
+
+## Opção por lado: bool vale para os dois; Array [lado 0, lado 1].
+static func side_on(v, side: int) -> bool:
+	if v is Array:
+		return side < v.size() and bool(v[side])
+	return bool(v)
 
 
 func _round() -> int:
@@ -158,11 +165,17 @@ func best_on(user: BattleFighter, t: BattleFighter) -> float:
 	return b
 
 
-## Dano que `me` deve levar nesta rodada: o melhor golpe de cada inimigo nele.
+## Dano que `me` deve levar nesta rodada: o melhor golpe de um inimigo e metade do segundo (na dupla
+## os dois nem sempre miram nele).
 func incoming(me: BattleFighter) -> float:
-	var tot := 0.0
+	var list: Array = []
 	for foe in f.arena.targets_of(me):
-		tot += best_on(foe, me)
+		list.append(best_on(foe, me))
+	list.sort()
+	list.reverse()
+	var tot := 0.0
+	for k in list.size():
+		tot += float(list[k]) * (1.0 if k == 0 else 0.5)
 	return tot
 
 
@@ -295,7 +308,7 @@ func _score_damage(id: String, mv: Dictionary, ctx: Dictionary) -> Dictionary:
 		if pint != "" and p.opponent == real and float(Dex.move(pint).get("power", 0)) > 0.0:
 			var pd := _dmg(p, real, Dex.move(pint))
 			if pd >= float(real.hp) * 1.05:
-				s *= OVERKILL_MULT
+				s = OVERKILL_MULT * val  # sobra: só vale se o golpe do parceiro falhar
 			elif pd + d >= float(real.hp):
 				s += FOCUS_BONUS * val
 		if _likely_protect(real, p):
@@ -346,7 +359,7 @@ func _score_status(id: String, mv: Dictionary, ctx: Dictionary) -> Dictionary:
 					slow += 1
 			if slow == 0:
 				return no
-			return {"score": 0.35 + 0.35 * slow + (0.2 if ai.round_k <= 1 else 0.0), "target": null}
+			return {"score": 0.45 + 0.35 * slow + (0.3 if ai.round_k <= 1 else 0.0), "target": null}
 		"trick_room":
 			var tr: bool = f.arena.turns.trick_room() if f.arena.get("turns") != null else false
 			var slower := 0
