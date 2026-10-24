@@ -17,6 +17,10 @@ signal finished(result: Dictionary)
 signal fight_started
 signal move_used(user: BattleFighter, mv: Dictionary)
 signal hit_landed(user: BattleFighter, target: BattleFighter, mv: Dictionary)
+## Batalha Viva (medidas do treino): esquiva. what = "body" (saiu de lado da investida), "area"
+## (saiu da área/raio/projétil avisado), "jump" (pulou), "evasion" (errou pela evasão), "under"
+## (a investida passou por baixo de quem estava no ar).
+signal dodged(f: BattleFighter, what: String)
 
 const ARENA_SIZE := 12.0
 const START_GAP := 6.0

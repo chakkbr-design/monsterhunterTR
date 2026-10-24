@@ -31,7 +31,7 @@ const PRIORITY_GCD := 0.6
 ## Ritmo da luta (Batalha Viva, "rápido": 15-30 s por Pokémon): a fórmula Gen 3 fica igual e o dano
 ## final é escalado por arena.damage_pace (padrão DAMAGE_PACE, opts.damage_pace muda).
 const DAMAGE_PACE := 0.5
-const DOUBLES_PACE := 0.7
+const DOUBLES_PACE := 0.5
 ## Cobrir o parceiro com HP baixo: distância máxima e chance por golpe.
 const COVER_DIST := 2.5
 const COVER_CHANCE := 0.35
@@ -355,6 +355,7 @@ func hit(
 		return
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
 		target.popup("Errou!", Color(0.9, 0.9, 1.0))
+		_dodged(target, "evasion")
 		if arena.field:
 			arena.field.on_evaded(target)
 		return
@@ -441,6 +442,11 @@ func hit(
 					"status"
 				)
 	_landed(user, target, mv)
+
+
+func _dodged(f: BattleFighter, what: String) -> void:
+	if arena.has_signal("dodged"):
+		arena.emit_signal("dodged", f, what)
 
 
 func pace() -> float:

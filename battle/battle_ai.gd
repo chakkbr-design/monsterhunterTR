@@ -737,6 +737,7 @@ func _dodge(dt: float, d: float, side_v: Vector3) -> Vector3:
 			if not tactic_on:
 				return Vector3.ZERO
 			dodge_t = DODGE_TIME
+			_emit_dodge("body")
 		dodge_t -= dt
 		return side_v.normalized()
 	dodge_t = 0.0
@@ -761,9 +762,12 @@ func _dodge_threat(dt: float, side_v: Vector3) -> Vector3:
 		threat_wait = REACT_BASE / sf * think_scale
 	if not threat_ok:
 		return Vector3.ZERO
+	var was := threat_wait
 	threat_wait -= dt
 	if threat_wait > 0.0:
 		return Vector3.ZERO
+	if was > 0.0:
+		_emit_dodge("area")
 	var esc: Vector3 = got.away
 	if esc.length() < 0.1:
 		esc = side_v
@@ -859,8 +863,14 @@ func _try_jump(dt: float, d: float) -> bool:
 		return false
 	if f.start_jump():
 		jump_done = true
+		_emit_dodge("jump")
 		return true
 	return false
+
+
+func _emit_dodge(what: String) -> void:
+	if f.arena.has_signal("dodged"):
+		f.arena.emit_signal("dodged", f, what)
 
 
 func _sprint(dt: float, reason: bool) -> bool:

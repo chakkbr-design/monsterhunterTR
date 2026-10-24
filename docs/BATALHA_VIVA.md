@@ -8,7 +8,7 @@ Os números são ponto de partida: o Caio balanceia pelo modo de treinamento.
 | Sistema | Onde | Resumo |
 |---|---|---|
 | Speed | `core/stat_calc.gd` | Fator `1 + 0,35·ln(minha/dele)`, limitado a 0,7–1,45 (cooldowns, GCD, fôlego, reflexo). Andar absoluto `3,0 + 0,012·Speed` m/s (2,4–5,6). Paralisia corta a Speed do fator pela metade. |
-| Ritmo | `battle/battle_moves.gd` | A fórmula Gen 3 não mudou. O dano final é escalado por `damage_pace` (0,5; na dupla 0,35) e o PP gasto também, para o mesmo número de golpes por nocaute caber no PP. `opts.damage_pace` muda. Meta: 15–30 s por Pokémon. |
+| Ritmo | `battle/battle_moves.gd` | A fórmula Gen 3 não mudou. O dano final é escalado por `damage_pace` (0,5; na dupla 0,25) e o PP gasto também, para o mesmo número de golpes por nocaute caber no PP. `opts.damage_pace` muda. Meta: 15–30 s por Pokémon. |
 | Prioridade | `data/moves.json` | `"priority": 1` (Quick Attack) sai quase sem preparo e com GCD 0,6x. |
 | Perfis | `battle/battle_profile.gd` | Brigão, Atirador, Escaramuçador, Muralha, Trapaceiro, Voador, escolhidos pelos stats base e golpes, puxados pela Natureza (stat que sobe) e pela habilidade (`profile_bias`). Correção por espécie em `data/battle_profiles.json`. |
 | IA | `battle/battle_ai.gd` | Ciclo intenção → aproximação → golpe → recuo: escolhe o golpe antes, anda até a faixa dele e recua pelo perfil. Desvia de área avisada, raio, investida preparada e projétil, com chance e reação pela Speed. Fúria ou Pânico com HP abaixo de 25% (pela Natureza). ±5% de variação nos cooldowns e no pensamento. |

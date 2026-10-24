@@ -865,6 +865,8 @@ func _check_dash_hit() -> void:
 			if not dash_dodged.has(t.get_instance_id()):
 				dash_dodged[t.get_instance_id()] = true
 				t.popup("DESVIOU!", Color(0.75, 0.9, 1.0))
+				if arena.has_signal("dodged"):
+					arena.emit_signal("dodged", t, "under")
 			continue
 		dash_hit = true
 		dash_t = 0.0
