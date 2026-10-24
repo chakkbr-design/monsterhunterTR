@@ -73,6 +73,13 @@ func _modes(a: Node) -> void:
 	hud.press_mode("player", 2)
 	hud.press_mode("ally", 3)
 	check(_got == [["player", 2], ["ally", 3]], "press_mode emite o sinal")
+	# A arena ouve o clique como as teclas F/G (sem teclado o comando vale na hora).
+	check(a.player_mode == 2, "clique muda o modo do controlado na arena (%d)" % a.player_mode)
+	a.step(DT)
+	check(
+		hud.highlighted_mode("player") == a.get_script().ALLY_MODE_NAMES[2],
+		"botão reflete o clique"
+	)
 	var b = hud._mode_btns["player"][1]
 	check(
 		b.mouse_filter == Control.MOUSE_FILTER_STOP and b.focus_mode == Control.FOCUS_NONE,

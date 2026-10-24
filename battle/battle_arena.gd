@@ -368,6 +368,8 @@ func _build() -> void:
 	_cam.make_current()
 	hud = BattleHUD.new()
 	add_child(hud)
+	# Botões de modo na tela (OFENSIVO/DEFENSIVO/SUPORTE/LIVRE): mesmo caminho das teclas F/G.
+	hud.mode_clicked.connect(func(slot: String, mode: int) -> void: order(slot, mode))
 
 
 ## Quadra do original (battle_arena.gd): quadrado dourado com cantos marcados, sobre o chão do mundo.
