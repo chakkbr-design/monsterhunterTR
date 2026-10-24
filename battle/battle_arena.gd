@@ -1961,7 +1961,7 @@ func _active_fighter_of(m: Mon) -> BattleFighter:
 
 
 ## Usa `id` da bolsa no mon `m` (padrão: o controlado). Custa o cooldown global de itens (3 s)
-## e trava os golpes do controlado por 1 GCD. Bloqueado com o controlado exausto (stagger).
+## e trava os golpes do controlado por 1 GCD.
 func use_item(id: String, m: Mon = null) -> bool:
 	if state != "fight" or not is_instance_valid(player):
 		return false
@@ -1972,9 +1972,6 @@ func use_item(id: String, m: Mon = null) -> bool:
 		say("Acabou %s!" % Dex.item(id).get("name", id), "item")
 		return false
 	if item_cd > 0.0:
-		return false
-	if player.stagger_t > 0.0:
-		say("Exausto demais para usar item!", "item")
 		return false
 	var f := _active_fighter_of(m)
 	var fx: Dictionary = Dex.item(id).get("effect", {})

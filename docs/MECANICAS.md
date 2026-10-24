@@ -71,7 +71,7 @@ e o seguinte. Item do treinador entra como prioridade +6. Adaptado: a Speed deci
 cada um ataca; quem entra no meio da rodada espera a próxima; quem não consegue soltar em `TURN_MAX` passa.
 Por cima da fila continuam valendo: `"priority" > 0` sai quase sem preparo (0,04 s) e com GCD 0,6x, e a
 prioridade negativa prepara mais devagar (`battle_moves.gd` `use`). Speed segue como fator de ritmo
-(`StatCalc.battle_speed_factor`: cooldown, GCD, fôlego, reflexo da IA) e velocidade de andar.
+(`StatCalc.battle_speed_factor`: cooldown, GCD, reflexo da IA) e velocidade de andar.
 
 ## 5. Precisão, evasão e estágios
 

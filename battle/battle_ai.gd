@@ -28,9 +28,6 @@ const JUMP_MISS_QUAD := 0.475
 const JUMP_MISS_MAX := 0.52
 const JUMP_LATE := 0.25
 const JUMP_CLEAR := 0.95
-const JUMP_RESERVE := 0.1
-const SPRINT_MIN := 0.4
-const SPRINT_KEEP := 0.15
 const SPRINT_REACT := 0.35
 const SLOP_BASE := 0.8
 const SLOP_MAX := 1.0
@@ -136,8 +133,6 @@ var acted_round := -1
 ## Voltando para a posição depois de bater (rodadas) / protegendo o parceiro (DEFENSIVO) fora dela.
 var returning := false
 var guarding := false
-## Metade da vez já passou esperando fôlego: solta mesmo cansado (fica exausto) em vez de perder a vez.
-var careless := false
 ## Escolha de golpe e alvo no estilo VGC (BattleTactics); null no selvagem e com opts.vgc_ai = false.
 var tactics: BattleTactics = null
 var _tactics_checked := false
@@ -218,11 +213,7 @@ func move_ready(d: float) -> bool:
 	if f.moves.is_empty() or f.gcd_t > 0.0:
 		return false
 	for id in f.moves:
-		if (
-			float(f.move_cd.get(id, 0.0)) <= 0.0
-			and in_range(id, d)
-			and f.stamina >= Dex.fatigue(Dex.move(id))
-		):
+		if float(f.move_cd.get(id, 0.0)) <= 0.0 and in_range(id, d):
 			return true
 	return false
 
@@ -356,7 +347,6 @@ func _free_fire(dt: float, d: float) -> void:
 ## solta. Sem nada pronto passa a vez; sem PP vai no Desespero de perto.
 func _turn_fire(dt: float, d: float, turns) -> void:
 	aim_t += dt
-	careless = turns.turn_t >= BattleTurns.TURN_MAX * 0.5
 	if not f.can_act():
 		return
 	if not fired and think > 0.0:
@@ -404,7 +394,6 @@ func _ready_soon(secs: float) -> bool:
 func _after_fire(mode: int) -> void:
 	fired = true
 	returning = true
-	careless = false
 	var turns = f.arena.get("turns")
 	acted_round = turns.round_n if turns != null else -1
 	idle_t = 0.0
@@ -419,7 +408,6 @@ func _after_fire(mode: int) -> void:
 ## Começo da vez (BattleTurns): zera a mira.
 func on_turn() -> void:
 	aim_t = 0.0
-	careless = false
 
 
 ## Tempo parado mirando antes de soltar na vez (pensamento, perfil, comando e ânimo).
@@ -445,12 +433,10 @@ func _think_secs() -> float:
 	)
 
 
-## Golpe pronto (cooldown, GCD e fôlego), sem olhar a distância.
+## Golpe pronto (cooldown e GCD), sem olhar a distância.
 func _ready(id: String) -> bool:
 	return (
-		f.gcd_t <= 0.0
-		and float(f.move_cd.get(id, 0.0)) <= 0.0
-		and f.arena.moves.can_afford(f, id, not careless)
+		f.gcd_t <= 0.0 and float(f.move_cd.get(id, 0.0)) <= 0.0 and f.arena.moves.can_afford(f, id)
 	)
 
 
@@ -534,13 +520,13 @@ func _retreat_move(dir: Vector3, side_v: Vector3, d: float) -> Vector3:
 	return w.normalized() if w.length() > 1.0 else w
 
 
-## Voador: cruza alto e desce para atacar ou quando está cansado.
+## Voador: cruza alto e desce para atacar ou esperando a recarga.
 func _fly(_d: float) -> void:
 	var h := float(_p("fly", 0.0))
 	if h <= 0.0:
 		f.fly_target = 0.0
 		return
-	var tired := f.stamina < f.pp_max * 0.2 or f.gcd_t > 0.0
+	var tired := f.gcd_t > 0.0
 	var turns = f.arena.get("turns")
 	var low := false
 	if turns != null and turns.on:
@@ -800,7 +786,7 @@ func _use_best_move(d: float) -> bool:
 				f.gcd_t <= 0.0
 				and float(f.move_cd.get(id, 0.0)) <= 0.0
 				and in_range(id, d)
-				and f.arena.moves.can_afford(f, id, not careless)
+				and f.arena.moves.can_afford(f, id)
 			)
 	)
 	if avail.is_empty():
@@ -1114,7 +1100,7 @@ func _turn_move(dt: float, d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 	if in_range(intent, d * (1.0 if is_contact(intent) else 1.05)):
 		return Vector3.ZERO  # para e mira
 	var want := (dir + _spread_all(true) * 0.5).limit_length(1.0)
-	f.sprinting = d > 3.0 and f.can_sprint(true) and f.stamina > f.pp_max * SPRINT_MIN
+	f.sprinting = d > 3.0 and f.can_sprint(true)
 	return want
 
 
@@ -1133,7 +1119,7 @@ func _go_home(side_v: Vector3) -> Vector3:
 	if v.length() < HOME_NEAR:
 		return side_v * 0.08 * float(_p("strafe", 0.5))
 	if v.length() > HOME_RUN and f.can_sprint(true):
-		f.sprinting = f.stamina > f.pp_max * SPRINT_MIN
+		f.sprinting = true
 	return (v.normalized() * clampf(v.length(), 0.35, 1.0) + _spread_all(false) * 0.5).limit_length(
 		1.0
 	)
@@ -1354,7 +1340,7 @@ func _try_jump(dt: float, d: float) -> bool:
 	if jump_done or f.air_t > 0.0 or f.land_t > 0.0 or f.dash_t > 0.0 or f.lunge_t > 0.0:
 		return false
 	jump_at -= dt
-	if jump_at > 0.0 or f.stamina < f.pp_max * (BattleFighter.JUMP_STAMINA + JUMP_RESERVE):
+	if jump_at > 0.0:
 		return false
 	if f.start_jump():
 		jump_done = true
@@ -1369,16 +1355,12 @@ func _emit_dodge(what: String) -> void:
 
 
 func _sprint(dt: float, reason: bool) -> bool:
-	var pool := f.stamina / maxf(f.pp_max, 0.001)
-	if sprint_want and not (reason and pool > SPRINT_KEEP):
+	if not reason:
 		sprint_want = false
-	if not reason or pool <= 0.0:
 		sprint_seen = false
 		return false
 	if sprint_want:
 		return true
-	if pool < SPRINT_MIN:
-		return false
 	if not sprint_seen:
 		sprint_seen = true
 		react_t = SPRINT_REACT * maxf(think_scale, 0.05)

@@ -12,7 +12,7 @@ var _count := 0
 
 
 func _initialize() -> void:
-	_stamina()
+	_jump()
 	_cooldowns()
 	_status()
 	_capture()
@@ -84,38 +84,15 @@ func _done(a: Node) -> void:
 	a.free()
 
 
-func _stamina() -> void:
+func _jump() -> void:
 	var a := _still()
 	var p: BattleFighter = a.player
 	check(a.state == "fight", "intro termina em luta")
-	var sf := p.speed_factor()
-	p.stamina = 0.0
-	_run(a, 1.0)
-	check(
-		near(p.stamina, p.pp_max * 0.2 * sf, 0.6),
-		"stamina regenera 20%%/s x fator (%.2f)" % p.stamina
-	)
-	p.stamina = p.pp_max
-	p.sprinting = true
-	_run(a, 1.0)
-	check(near(p.stamina, p.pp_max * 0.7, 0.6), "sprint drena 30%%/s (%.2f)" % p.stamina)
-	p.sprinting = false
-	p.stamina = p.pp_max
 	check(p.start_jump(), "pula")
-	check(near(p.stamina, p.pp_max * 0.85, 0.01), "pulo custa 15%")
 	check(near(p.air_t, sqrt(8.0 * p.jump_height / 23.8), 0.001), "tempo de pulo sqrt(8h/g)")
 	check(not p.start_jump(), "não pula no ar")
 	_run(a, p.jump_time + 0.05)
 	check(p.air_t == 0.0 and p.land_t > 0.0, "pousa com lag")
-	# Exaustão: stamina negativa depois do golpe => stagger 2 s.
-	_run(a, 1.0)
-	p.stamina = 1.0
-	check(a.moves.use(p, "scratch"), "usa scratch cansado")
-	check(p.stamina < 0.0, "stamina negativa")
-	_run(a, 0.5)
-	check(p.stagger_t > 1.0 and not p.can_act(), "stagger após o golpe")
-	_run(a, 2.0)
-	check(p.stagger_t == 0.0 and p.can_act(), "stagger dura 2 s")
 	_done(a)
 
 
@@ -188,6 +165,7 @@ func _status() -> void:
 	e.apply_status("paralysis")
 	var pos := e.position
 	e.controller = "ai"
+	e.sprinting = false  # sem estamina a corrida da IA não acaba sozinha
 	e.drive(0.5, Vector3.RIGHT, 2.0)
 	var moved := (e.position - pos).length()
 	check(near(moved, 2.0 * 0.5 * 0.5, 0.05), "paralisia corta velocidade pela metade")
@@ -256,7 +234,6 @@ func _recall_stops_combo() -> void:
 	a.player.position = Vector3(0, 0, 0.6)
 	a.enemy.position = Vector3(0, 0, -4.0)  # longe: o 1º golpe não acerta (sem hit-stop)
 	var old: BattleFighter = a.player
-	old.stamina = old.pp_max
 	var mv := Dex.move("fury_swipes").duplicate()
 	mv.accuracy = 0  # sem erro aleatório
 	a.moves.deliver(old, mv)
@@ -365,12 +342,6 @@ func _items() -> void:
 	)
 	check(not a.use_item("potion"), "cooldown de item bloqueia outro uso")
 	_run(a, 3.1)
-	p.stagger()
-	check(
-		not a.use_item("potion") and int(g.bag.get("potion", 0)) == 1,
-		"exausto (stagger) não usa item"
-	)
-	_run(a, 2.1)
 	var al: BattleFighter = a.ally
 	al.apply_status("poison")
 	check(a.use_item("antidote", al.mon), "antídoto no aliado (mon escolhido da party)")

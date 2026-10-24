@@ -138,7 +138,6 @@ const MIN_STATUS_COOLDOWN_VIVA := 8.0
 const STRONG_BP := 70.0
 const STRONG_BP_SPAN := 80.0
 const GLOBAL_COOLDOWN := 1.0
-const FATIGUE_ANCHORS := [[5.0, 50.0], [10.0, 35.0], [40.0, 10.0]]
 const PREPARE_BY_KIND := {
 	"dash": 0.18,
 	"arc": 0.15,
@@ -169,28 +168,6 @@ static func pp_cost(mv: Dictionary) -> float:
 	if mv.get("kind", "") == "stream":
 		total *= maxf(1.0, float(mv.get("duration", 1.0)) / float(mv.get("tick", 0.15)))
 	return clampf(ceilf(total / 20.0), 1.0, 12.0)
-
-
-## Custo de stamina do golpe.
-static func fatigue(mv: Dictionary) -> float:
-	if mv.has("fatigue"):
-		return float(mv.fatigue)
-	if mv.has("uses"):
-		return fatigue_for_uses(float(mv.uses))
-	return pp_cost(mv) * 10.0
-
-
-static func fatigue_for_uses(uses: float) -> float:
-	var u := maxf(1.0, uses)
-	if u <= float(FATIGUE_ANCHORS[0][0]):
-		return float(FATIGUE_ANCHORS[0][1])
-	for i in range(1, FATIGUE_ANCHORS.size()):
-		var lo: Array = FATIGUE_ANCHORS[i - 1]
-		var hi: Array = FATIGUE_ANCHORS[i]
-		if u <= float(hi[0]):
-			var t := (log(u) - log(float(lo[0]))) / (log(float(hi[0])) - log(float(lo[0])))
-			return lerpf(float(lo[1]), float(hi[1]), t)
-	return float(FATIGUE_ANCHORS[-1][1])
 
 
 static func prepare_time(mv: Dictionary) -> float:

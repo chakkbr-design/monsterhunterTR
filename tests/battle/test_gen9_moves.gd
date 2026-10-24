@@ -208,7 +208,6 @@ func _still(me := "charmander", foe := "rattata", lv := 30, foe_lv := 30) -> Nod
 func _ready_all(f: BattleFighter) -> void:
 	f.move_cd.clear()
 	f.gcd_t = 0.0
-	f.stamina = f.pp_max
 	f.stun_t = 0.0
 	f.impact_t = 0.0
 

@@ -50,7 +50,7 @@ const NATURES := {
 }
 
 ## Fator de Speed da luta (Batalha Viva): 1 + 0,35 * ln(meu / dele), limitado a 0,7..1,45.
-## O dobro da Speed dá ~1,24x no ritmo (cooldowns, stamina); metade dá ~0,76x.
+## O dobro da Speed dá ~1,24x no ritmo (cooldowns); metade dá ~0,76x.
 const BATTLE_SPEED_K := 0.35
 const BATTLE_SPEED_MIN := 0.7
 const BATTLE_SPEED_MAX := 1.45

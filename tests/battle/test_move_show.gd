@@ -161,7 +161,6 @@ func _arena_moves() -> void:
 		e.position = Vector3(1.0 if mv.kind in ["arc", "multi_arc"] else 2.5, 0, 0)
 		p.hp = p.max_hp
 		e.hp = e.max_hp
-		p.stamina = p.pp_max
 		e.status = ""
 		p.status = ""
 		var before: int = a.vfx.spawned

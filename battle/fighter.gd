@@ -1,12 +1,10 @@
 class_name BattleFighter
 extends Node3D
-## Lutador em tempo real: embrulha um Mon com HP, stamina/PP, cooldowns, estágios, status, pulo, dash e lunge.
+## Lutador em tempo real: embrulha um Mon com HP, PP, cooldowns, estágios, status, pulo, dash e lunge.
 ## Toda a lógica roda em tick()/drive() chamados pela arena, então dá para simular sem tempo real.
 
 signal fainted(f: BattleFighter)
 
-const PP_REGEN := 0.2
-const SPRINT_DRAIN := 0.3
 const SPRINT_MULT := 1.6
 const PLAYER_SPEED := 4.5
 const AI_SPEED := 2.5 * 1.4
@@ -20,9 +18,7 @@ const ENDURE_FRIEND := 220
 const ENDURE_CHANCE := 0.25
 const JUMP_G := 23.8
 const JUMP_HEIGHT_DEFAULT := 0.9
-const JUMP_STAMINA := 0.15
 const JUMP_LAND := 0.3
-const STAGGER_TIME := 2.0
 const PREPARE_STUN := 0.25
 const KNOCKBACK_SCALE := 0.5
 const KNOCK_DECAY := 30.0
@@ -102,13 +98,11 @@ var hp := 1
 var max_hp := 1
 var pp_base := 100.0
 var pp_max := 100.0
-var stamina := 100.0
 
 var move_cd := {}
 var gcd_t := 0.0
 var root_t := 0.0
 var stun_t := 0.0
-var stagger_t := 0.0
 var trap_t := 0.0
 var land_t := 0.0
 var impact_t := 0.0
@@ -219,7 +213,6 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 	hp = clampi(m.hp, 0, max_hp)
 	pp_base = m.pp_base
 	pp_max = clampf(m.pp, 0.0, pp_base)
-	stamina = pp_max
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
 	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
@@ -316,9 +309,7 @@ func visual_step(dt: float) -> void:
 		look.facing = facing
 	var st := ""
 	if alive():
-		if stagger_t > 0.0:
-			st = "stagger"
-		elif status == "sleep":
+		if status == "sleep":
 			st = "sleep"
 		elif prepare_t > 0.0:
 			st = "prepare"
@@ -460,7 +451,6 @@ func can_act() -> bool:
 	return (
 		alive()
 		and stun_t <= 0.0
-		and stagger_t <= 0.0
 		and impact_t <= 0.0
 		and (status != "sleep" or sleep_act_t > 0.0)
 		and status != "freeze"
@@ -515,19 +505,9 @@ func aim_dir() -> Vector3:
 # --- Recursos ---
 
 
-func spend(cost: float, tired: float) -> bool:
+func spend(cost: float) -> void:
 	pp_max -= cost
-	stamina = minf(stamina - tired, pp_max)
 	mon.pp = pp_max
-	return stamina < 0.0
-
-
-func stagger() -> void:
-	stagger_t = STAGGER_TIME
-	stamina = 0.0
-	sprinting = false
-	popup("Exausto!", Color(1, 0.75, 0.35))
-	refresh_label()
 
 
 func can_jump() -> bool:
@@ -536,7 +516,6 @@ func can_jump() -> bool:
 		and root_t <= 0.0
 		and can_act()
 		and trap_t <= 0.0
-		and stamina > 0.0
 		and air_t <= 0.0
 		and land_t <= 0.0
 		and dash_t <= 0.0
@@ -552,12 +531,11 @@ func start_jump() -> bool:
 		return false
 	air_t = jump_time
 	air_h = 0.0
-	stamina = maxf(stamina - pp_max * JUMP_STAMINA, 0.0)
 	return true
 
 
 func can_sprint(moving: bool) -> bool:
-	return moving and can_act() and root_t <= 0.0 and trap_t <= 0.0 and stamina > 0.0
+	return moving and can_act() and root_t <= 0.0 and trap_t <= 0.0
 
 
 # --- Preparação (windup enraizado antes de soltar o golpe) ---
@@ -938,7 +916,7 @@ func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15, style := "")
 # --- Por frame ---
 
 
-## Avança timers e stamina (o status conta em turnos: try_act e BattleEndTurn). dt já escalado.
+## Avança timers (o status conta em turnos: try_act e BattleEndTurn). dt já escalado.
 func tick(dt: float) -> void:
 	if alive():
 		_check_turn()
@@ -968,19 +946,6 @@ func tick(dt: float) -> void:
 			root_t = 0.0
 			if can_act():
 				cb.call()
-	if stagger_t > 0.0:
-		stagger_t = maxf(stagger_t - dt, 0.0)
-		stamina = 0.0
-		if stagger_t == 0.0:
-			refresh_label()
-	elif sprinting:
-		stamina = maxf(stamina - pp_max * SPRINT_DRAIN * dt, 0.0)
-		if stamina <= 0.0:
-			sprinting = false
-	elif stamina < pp_max:
-		stamina = minf(pp_max, stamina + pp_max * PP_REGEN * speed_factor() * dt)
-	elif stamina > pp_max:
-		stamina = pp_max
 
 
 ## Move o corpo. want = direção desejada (comprimento <= 1), speed = m/s base.
@@ -1059,8 +1024,6 @@ func _tint() -> Color:
 			c = c.lerp(Color(1, 1, 0.2), 0.35)
 		"sleep":
 			c = c.darkened(0.4)
-	if stagger_t > 0.0:
-		c = c * Color(0.7, 0.7, 0.85)
 	return c
 
 

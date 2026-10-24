@@ -127,7 +127,6 @@ func _moves_fx() -> void:
 			continue
 		p.hp = p.max_hp
 		e.hp = e.max_hp
-		p.stamina = p.pp_max
 		var before: int = a.vfx.spawned
 		a.moves.deliver(p, mv)
 		var peak: int = a.vfx.spawned
@@ -168,7 +167,6 @@ func _review_fx() -> void:
 			sfx.global_position.distance_to(cam) < base.distance_to(cam) - 0.2,
 			"efeito de status à frente do sprite"
 		)
-	p.stamina = p.pp_max
 	a.moves.deliver(p, Dex.move("flamethrower"))
 	_run(a, 0.2)
 	var jets: Array = a.vfx.nodes.filter(

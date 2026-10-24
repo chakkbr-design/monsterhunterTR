@@ -64,14 +64,12 @@ func _init(a: Node, r: RandomNumberGenerator) -> void:
 	effects = BattleMoveEffects.new(a, r)
 
 
-func can_afford(user: BattleFighter, id: String, careful := true) -> bool:
+func can_afford(user: BattleFighter, id: String) -> bool:
 	var mv := Dex.move(id)
-	if mv.is_empty() or user.pp_max < user.pp_cost_of(mv) or not effects.usable(user, mv):
-		return false
-	return not careful or user.stamina >= Dex.fatigue(mv) or rng.randf() < 0.1
+	return not mv.is_empty() and user.pp_max >= user.pp_cost_of(mv) and effects.usable(user, mv)
 
 
-## Checa, debita PP/stamina, aplica cooldowns e solta (ou prepara) o golpe. Falso se não saiu.
+## Checa, debita PP, aplica cooldowns e solta (ou prepara) o golpe. Falso se não saiu.
 func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	var mv := effects.move_for(user, Dex.move(id))
 	var asleep := user.status == "sleep"
@@ -97,7 +95,7 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 		if feedback:
 			user.popup("PP insuficiente!", Color(1, 0.6, 0.4))
 		return false
-	var exhausted := user.spend(cost, Dex.fatigue(mv))
+	user.spend(cost)
 	var sf := user.speed_factor()
 	if arena.abilities and arena.abilities.has_method("cast_speed_mult"):
 		sf *= arena.abilities.cast_speed_mult(user, mv)
@@ -120,8 +118,6 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	elif prepare > 0.0:
 		prepare /= maxf(sf, 0.5)
 		_telegraph_prepare(user, mv, prepare)
-	if exhausted:
-		_stagger_after(user, mv, prepare)
 	if asleep:
 		# Snore/Sleep Talk: o lutador age dormindo só enquanto o golpe sai.
 		user.sleep_act_t = maxf(
@@ -160,18 +156,6 @@ func _telegraph_prepare(user: BattleFighter, mv: Dictionary, prepare: float) -> 
 				"r": float(mv.get("range", 1.8)) * 0.8
 			}
 		)
-
-
-func _stagger_after(user: BattleFighter, mv: Dictionary, prepare: float) -> void:
-	var delay := prepare + float(mv.get("windup", 0.0)) + float(mv.get("duration", 0.0)) + 0.25
-	if mv.get("kind", "") == "dash":
-		delay = prepare + float(mv.get("range", 3.0)) / float(mv.get("speed", 12.0)) + 0.1
-	arena.later(
-		delay,
-		func() -> void:
-			if is_instance_valid(user) and user.alive():
-				user.stagger()
-	)
 
 
 func acc_mult(stage: int) -> float:

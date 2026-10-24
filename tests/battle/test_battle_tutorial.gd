@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_battle_tutorial.gd
 ## Tutorial da batalha (porte do ui/battle_tutorial.gd): lição do Prof. Carvalho na 1ª luta com o
-## rival e cartões de dica (start, cooldown, dodge, stat, stamina, hp), flags tut_* e "dicas de batalha".
+## rival e cartões de dica (start, cooldown, dodge, stat, hp), flags tut_* e "dicas de batalha".
 ## Arena com step(dt) manual; o _process do tutorial é chamado à mão.
 
 const ARENA := "res://battle/battle_arena.tscn"
@@ -178,18 +178,14 @@ func _cards() -> void:
 	a.moves.use(a.enemy, "tackle")
 	check(t.current_card() == "dodge", "cartão dodge")
 	t._close()
-	# Stamina e HP baixos (o hp com Poção na bolsa ensina a usar).
-	a.player.stamina = a.player.pp_max * 0.2
+	# HP baixo (o hp com Poção na bolsa ensina a usar).
 	a.player.hp = int(a.player.max_hp * 0.4)
 	_tick(t, DT)
-	check(t.current_card() == "stamina", "cartão stamina")
-	check(t._queue.has("hp"), "hp na fila")
-	t._close()
-	check(t.current_card() == "hp", "cartão hp depois")
+	check(t.current_card() == "hp", "cartão hp")
 	check(t._body.text.contains("Aperte E"), "hp com Poção: " + t._body.text)
 	t._close()
 	check(not paused, "fila vazia despausa")
-	for id in ["start", "cooldown", "dodge", "stat", "stamina", "hp"]:
+	for id in ["start", "cooldown", "dodge", "stat", "hp"]:
 		check(g.flags.get("tut_" + id, false), "flag tut_" + id)
 	# Visto não volta.
 	a.player.gcd_t = 0.0

@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Tutorial da batalha, porte do ui/battle_tutorial.gd do original: cartões de dica (start, cooldown,
-## dodge, stat, stamina, hp) disparados pelos eventos da arena, e a LIÇÃO guiada do Prof. Carvalho na
+## dodge, stat, hp) disparados pelos eventos da arena, e a LIÇÃO guiada do Prof. Carvalho na
 ## primeira luta com o rival (holofote nos cartões e nos golpes, golpes travados, adversário parado).
 ## A arena cria este nó quando opts.tutorial é verdadeiro (Story.rival_battle) e ele some no fim da luta.
 ## Flags: tut_<id> (cartão já visto) e tut_battle_lesson (lição dada). Respeita "dicas de batalha".
@@ -11,7 +11,7 @@ signal card_closed(id: String)
 const Kit := preload("res://ui/ui_kit.gd")
 const SETTINGS := "res://ui/front/settings.gd"
 
-const CARD_IDS := ["start", "cooldown", "dodge", "stat", "stamina", "hp"]
+const CARD_IDS := ["start", "cooldown", "dodge", "stat", "hp"]
 
 const LESSON := ["intro", "your_hp", "foe_hp", "moves", "stat", "attack"]
 const LESSON_LIVE := ["moves", "stat", "attack"]
@@ -23,10 +23,9 @@ const AUTO_DISMISS := 1.0
 
 const TITLES := {
 	"start": "Batalhas em tempo real",
-	"cooldown": "Stamina e recarga",
+	"cooldown": "Recarga",
 	"dodge": "Desvie!",
 	"stat": "Mudanças de atributo",
-	"stamina": "Pouca stamina",
 	"hp": "Pouco HP",
 }
 ## Textos do original traduzidos, com as teclas deste port (golpes 1-4, bolsa E, Shift corre).
@@ -34,13 +33,10 @@ const BODIES := {
 	"start":
 	"As batalhas acontecem em tempo real! Mova o seu Pokémon com WASD e mantenha distância.\nAperte 1, 2, 3 ou 4 para usar um golpe.",
 	"cooldown":
-	"Todo golpe gasta stamina (a parte clara da barra de PP) e depois recarrega: o botão fica escuro até ficar pronto. Depois de qualquer golpe, todos os seus golpes descansam um instante, então não dá para soltar dois de uma vez. Gaste demais e o seu Pokémon fica exausto!",
-	"dodge":
-	"Lá vem! Segure Shift enquanto anda para correr e sair do caminho. Correr gasta stamina, então guarde para desviar.",
+	"Todo golpe gasta PP e depois recarrega: o botão fica escuro até ficar pronto. Depois de qualquer golpe, todos os seus golpes descansam um instante, então não dá para soltar dois de uma vez.",
+	"dodge": "Lá vem! Segure Shift enquanto anda para correr e sair do caminho.",
 	"stat":
 	"Os chips ▼ no cartão mostram os atributos que caíram, e os ▲, os que subiram. Eles voltam ao normal quando a batalha acaba.",
-	"stamina":
-	"A stamina do seu Pokémon está quase no fim. Segure os golpes um instante que ela se recupera sozinha. Correr também gasta stamina.",
 	"hp":
 	"Seu Pokémon está ferido! Mais tarde você vai poder curá-lo no meio da batalha com Poções, pela bolsa (E).",
 }
@@ -430,8 +426,6 @@ func _process(delta: float) -> void:
 	var p = _partner()
 	if p == null:
 		return
-	if float(p.pp_max) > 0.0 and float(p.stamina) < 0.3 * float(p.pp_max):
-		_trigger("stamina")
 	if int(p.max_hp) > 0 and int(p.hp) < 0.5 * float(p.max_hp):
 		_trigger("hp")
 

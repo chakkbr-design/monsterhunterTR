@@ -1,7 +1,7 @@
 class_name BattleHUD
 extends CanvasLayer
 ## HUD da batalha no visual do original (ui/battle_hud.gd + fx_popups.gd + battle_intro.gd):
-## cartões de lutador (retrato, nome, Lv, tipos, status, HP com rastro, PP/stamina, EXP), cartão do aliado,
+## cartões de lutador (retrato, nome, Lv, tipos, status, HP com rastro, PP, EXP), cartão do aliado,
 ## golpes em losango, banner em pílula, faixas de introdução + "Lutem!", popups de dano em tela e menu rápido.
 ## API usada pela arena: banner(text, secs), refresh(player, enemy, dt, ally, info), add_popup(...), intro_bars(on), fight_flash().
 
@@ -656,14 +656,7 @@ class FighterCard:
 			3
 		)
 		var base := maxf(body.pp_base, 1.0)
-		UiDraw.bar(
-			self,
-			Rect2(x0, PP_ROW_Y, PP_W, 6),
-			maxf(body.stamina, 0.0) / base,
-			UiDraw.PP_BLUE if body.stagger_t <= 0.0 else Color(1.0, 0.6, 0.2),
-			body.pp_max / base,
-			Color(0.2, 0.3, 0.55)
-		)
+		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), body.pp_max / base, UiDraw.PP_BLUE)
 		UiDraw.bar(
 			self,
 			Rect2(x0 + PP_W + 6.0, PP_ROW_Y, EXP_W, 6),
@@ -709,10 +702,6 @@ class FighterCard:
 		)
 		chips = Rect2(tx, CHIP_Y, cw, 16.0) if cw > 0.0 else Rect2()
 		tx += cw
-		if body.stagger_t > 0.0:
-			UiDraw.text(
-				self, Vector2(tx + 2, CHIP_Y + 14.0), "EXAUSTO", 11, Color(1, 0.55, 0.35), 3
-			)
 		if foe:
 			UiDraw.text(self, Vector2(x0, CHIP_Y + 13.0), tag, 10, Color(1, 1, 1, 0.45), 0)
 			var bx := x0 + UiDraw.text_width(tag, 10) + 8.0
@@ -816,7 +805,6 @@ class MoveButton:
 		var tcol := Dex.type_color(String(mv.get("type", "normal")))
 		var cost: float = body.pp_cost_of(mv)
 		var afford := body.pp_max >= cost
-		var tired := body.stamina < Dex.fatigue(mv)
 		draw_circle(c, r, Color(UiDraw.INK, 0.88) if afford else Color(0.1, 0.1, 0.12, 0.92))
 		draw_arc(c, r - 2.0, 0.0, TAU, 48, tcol, 3.5, true)
 		var cd := float(body.move_cd.get(id, 0.0))
@@ -847,8 +835,6 @@ class MoveButton:
 		var cost_col := UiDraw.PP_BLUE
 		if not afford:
 			cost_col = Color(1, 0.4, 0.35)
-		elif tired:
-			cost_col = Color(1, 0.7, 0.3)
 		UiDraw.text_center(
 			self, Vector2(c.x, c.y + r - 14.0), "%d PP" % int(round(cost)), 10, cost_col, 3
 		)

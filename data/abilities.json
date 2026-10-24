@@ -93,7 +93,7 @@
   "rock_head": {
     "name": "ROCK HEAD",
     "desc": "Prevents recoil damage.",
-    "desc_pt": "Cansaço dura menos."
+    "desc_pt": "Não sofre dano de recuo."
   },
   "run_away": {
     "name": "RUN AWAY",

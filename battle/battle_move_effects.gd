@@ -507,7 +507,6 @@ func sleep_move(f: BattleFighter, mv: Dictionary) -> bool:
 		and String(mv.get("special", "")) in SLEEP_MOVES
 		and f.alive()
 		and f.stun_t <= 0.0
-		and f.stagger_t <= 0.0
 		and f.impact_t <= 0.0
 	)
 
@@ -1157,7 +1156,6 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			else:
 				var cut := 4.0 * target.pp_cost_of(Dex.move(last))
 				target.pp_max = maxf(target.pp_max - cut, 0.0)
-				target.stamina = minf(target.stamina, target.pp_max)
 				target.mon.pp = target.pp_max
 				target.popup(
 					"PP de %s caiu!" % Dex.move(last).get("name", last), Color(0.8, 0.6, 0.9)

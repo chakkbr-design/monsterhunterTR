@@ -1218,7 +1218,6 @@ func _shoot(a: Node, mv: Dictionary, single: bool) -> Array:
 	e.status = ""
 	e.confusion_t = 0.0
 	p.status = ""
-	p.stamina = p.pp_max
 	p.facing = (e.position - p.position).normalized()
 	await _steps(a, 0.1)
 	_label.text = "%s  (%s, %s)" % [String(mv.id), String(mv.kind), String(mv.type)]

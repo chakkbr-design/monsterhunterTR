@@ -1131,10 +1131,6 @@ func _tick_fighter(f: BattleFighter) -> void:
 			if f.evasion_t <= 0.0 and weather_now() == "sand":
 				f.evasion = 0.2
 				f.evasion_t = 0.5
-		"rock_head":
-			if f.stagger_t > 1.2:
-				f.stagger_t = 1.2
-				_fire(f)
 
 
 ## Quedas de atributo: Clear Body & cia. desfazem; Defiant/Competitive reagem.

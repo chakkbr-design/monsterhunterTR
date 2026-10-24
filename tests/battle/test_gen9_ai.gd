@@ -244,7 +244,6 @@ func _struggle_deadlock() -> void:
 	e.controller = "ai"
 	for f in [p, e]:
 		f.pp_max = 0.0
-		f.stamina = 0.0
 	check(p.out_of_pp() and e.out_of_pp(), "os dois sem PP")
 	var hp0 := p.hp + e.hp
 	_run(a, 12.0)
