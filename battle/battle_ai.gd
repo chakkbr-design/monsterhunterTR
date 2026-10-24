@@ -99,6 +99,15 @@ const CENTRE_PULL := 0.7
 ## ENERGY_WAIT s para ter energia; volta a fechar a distância quando a caminhada até o alcance cobre a
 ## espera. REPEAT_AVOID = chance de não repetir o último golpe quando há outro pronto.
 const ENERGY_WAIT := 0.8
+## Relevo (BattleTerrain), no modo de energia: chance de quem atira de longe querer o alto (Atirador e
+## Voador mais), de trocar para golpe de Terra/Pedra/Lutador com o alvo em cima do relevo, e até onde
+## vai buscar esconderijo para descansar.
+const HIGH_WANT := 0.45
+const HIGH_WANT_RANGED := 0.8
+const HIGH_MIN_REACH := 4.5
+const TOPPLE_PICK := 0.7
+const COVER_MAX := 7.0
+const POND_MAX := 6.0
 const ENERGY_KEEP := 1.0
 const REPEAT_AVOID := 0.8
 ## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
@@ -144,6 +153,8 @@ var guarding := false
 ## Escolha de golpe e alvo no estilo VGC (BattleTactics); null no selvagem e com opts.vgc_ai = false.
 var tactics: BattleTactics = null
 var _tactics_checked := false
+## Este lutador gosta do alto (sorteado uma vez, pelo perfil).
+var _likes_high := -1
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -281,6 +292,9 @@ func step(dt: float) -> Vector3:
 		var ew := _energy_steer(d, dir, side_v)
 		if ew != Vector3.INF:
 			return ew
+		var tw := _terrain_steer(d)
+		if tw != Vector3.INF:
+			return tw
 	if queued:
 		return _turn_move(dt, d, dir, side_v)
 	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
@@ -550,6 +564,19 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 		return Vector3.INF  # já dá para ir: chega no alcance com a barra cheia o bastante
 	var keep := BattleEnergy.REST_DIST + ENERGY_KEEP
 	var want: Vector3
+	var hide := _rest_spot()
+	if hide != Vector3.INF:
+		# Descansa atrás de pico/caixa/pedra (para tiro e raio) ou, sendo de Água, no lago.
+		var to_h := hide - f.pos2(f.position)
+		want = (
+			to_h.normalized() * clampf(to_h.length(), 0.0, 1.0)
+			if to_h.length() > 0.3
+			else Vector3.ZERO
+		)
+		f.sprinting = d < keep and f.can_sprint(true)
+		want += _ally_spread() * 0.5
+		_fly(d)
+		return want.normalized() if want.length() > 1.0 else want
 	if d < keep:
 		want = (-dir + side_v * 0.5 * float(_p("strafe", 0.5))).normalized()
 		if _wall_dist(f.pos2(f.position)) < WALL_KEEP:
@@ -562,6 +589,75 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 	want += f.arena.edge_push(f) + _ally_spread()
 	_fly(d)
 	return want.normalized() if want.length() > 1.0 else want
+
+
+## Relevo no modo de energia: quem vai atirar de longe sobe no morro/pico mais perto de onde o alvo
+## fica ao alcance e atira de lá (do alto acerta mais). INF = segue a faixa normal.
+func _terrain_steer(d: float) -> Vector3:
+	var ter = f.arena.get("terrain")
+	if ter == null or ter.obstacles.is_empty() or intent == "" or is_contact(intent):
+		return Vector3.INF
+	var r := move_reach(intent)
+	if r == INF or r < HIGH_MIN_REACH or not _wants_high():
+		return Vector3.INF
+	if float(f.hp) <= float(f.max_hp) * LOW_HP and f.mood_state != "fury":
+		return Vector3.INF
+	var opp := f.opponent
+	if ter.on_high(f) and not ter.obstacle_under(f).is_empty() and d <= r * 0.9:
+		_fly(d)
+		return Vector3.ZERO  # no alto e com o alvo ao alcance: fica e atira
+	var spot: Vector3 = ter.high_spot(f, opp, r)
+	if spot == Vector3.INF:
+		return Vector3.INF
+	var to := spot - f.pos2(f.position)
+	if to.length() > 3.0:
+		f.sprinting = f.can_sprint(true)
+	_fly(d)
+	return (to.normalized() + f.arena.edge_push(f) * 0.5).limit_length(1.0)
+
+
+## Já no alto, com golpe de longe e o alvo não colado: fica lá em cima.
+func _holds_high(d: float) -> bool:
+	var ter = f.arena.get("terrain")
+	if ter == null or not f.energy_mode or not ter.on_high(f) or ter.obstacle_under(f).is_empty():
+		return false
+	if not _wants_high() or d < MELEE_BAND:
+		return false
+	return f.moves.any(
+		func(id): return not is_contact(String(id)) and move_reach(String(id)) >= HIGH_MIN_REACH
+	)
+
+
+func _wants_high() -> bool:
+	if _likes_high < 0:
+		var p := (
+			HIGH_WANT_RANGED
+			if f.profile in ["shooter", "flyer"] or "flying" in f.types
+			else HIGH_WANT
+		)
+		_likes_high = 1 if _rng().randf() < p else 0
+	return _likes_high == 1
+
+
+## Onde descansar: no lago (Água) ou atrás de cobertura em relação ao inimigo mais perto. INF = nada.
+func _rest_spot() -> Vector3:
+	var ter = f.arena.get("terrain")
+	if ter == null or not ter.has_cover():
+		return Vector3.INF
+	if ter.swimmer(f):
+		for o in ter.obstacles:
+			if o.kind == "pond" and (o.pos - f.pos2(f.position)).length() < POND_MAX:
+				return o.pos
+	var foe: BattleFighter = null
+	var best := INF
+	for g in f.arena.targets_of(f):
+		var dd := f.flat_to(g).length()
+		if dd < best:
+			best = dd
+			foe = g
+	if foe == null:
+		return Vector3.INF
+	return ter.cover_spot(f, foe.position, COVER_MAX)
 
 
 func _stays_fighting() -> bool:
@@ -582,6 +678,8 @@ func _retreat_move(dir: Vector3, side_v: Vector3, d: float) -> Vector3:
 		return _go_home(side_v)  # rodadas: depois de bater volta para a posição dele
 	if retreat_t <= 0.0:
 		return Vector3.ZERO
+	if _holds_high(d):
+		return Vector3.ZERO  # atirando do alto: não desce para recuar
 	var to: float = float(_p("retreat_to", 3.0)) * CMD_BAND[ally_mode()]
 	if d >= to:
 		return side_v * 0.5
@@ -919,6 +1017,20 @@ func pick(avail: Array) -> String:
 	if f.energy_mode and avail.size() > 1 and last_move in avail:
 		if _rng().randf() < REPEAT_AVOID:
 			avail = avail.filter(func(id): return String(id) != last_move)
+	var ter = f.arena.get("terrain") if f.arena else null
+	if f.energy_mode and ter and ter.topple_target(f.opponent) and _rng().randf() < TOPPLE_PICK:
+		# Alvo em cima do morro/pico: golpe de Terra, Pedra ou Lutador derruba o relevo com ele.
+		var brk: Array = avail.filter(
+			func(id):
+				var mv := Dex.move(String(id))
+				return (
+					String(mv.get("type", "")) in BattleTerrain.BREAKERS
+					and float(mv.get("power", 0)) > 0.0
+					and _dmg(String(id)) > 0.0
+				)
+		)
+		if not brk.is_empty():
+			return String(brk[_rng().randi() % brk.size()])
 	var tac := _tactics()
 	if tac != null:
 		var chosen := tac.choose(avail)

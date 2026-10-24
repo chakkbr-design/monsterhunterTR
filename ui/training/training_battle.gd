@@ -1,6 +1,6 @@
 extends Node3D
 ## Modo de treinamento: a luta automática entre os dois times montados em training_setup.
-## Arena fixa de Cfg.ARENA (16 x 10), as duas IAs lutando sozinhas
+## Arena fixa de Cfg.ARENA (24 x 14, com relevo), as duas IAs lutando sozinhas
 ## (opts.autoplay), sem mexer no save nem na equipe do jogo. Com p1_control "manual" o Time A é
 ## do teclado (só na luta única; a série sempre roda com IA). No fim mostra o vencedor e o
 ## placar da série.
@@ -11,11 +11,12 @@ const Kit := preload("res://ui/ui_kit.gd")
 const ARENA_SCENE := "res://battle/battle_arena.tscn"
 const SETUP_SCENE := "res://ui/training/training_setup.tscn"
 const TITLE_SCENE := "res://ui/front/title.tscn"
-## A câmera fixa da arena (14 m, fov 30) foi feita para a quadra de 10 x 6; esta tem o dobro:
-## a câmera olha 2 m para cá do centro e abre o fov para os quatro cantos caberem na tela.
+## A câmera fixa da arena (14 m, fov 30) foi feita para a quadra de 10 x 6; esta é bem maior:
+## a câmera abre o fov, se afasta na proporção da quadra (14 m para 16 de largura) e olha um pouco
+## para cá do centro, para os quatro cantos e os treinadores caberem na tela.
 const CAM_FOV := 60.0
-const CAM_FOCUS := Vector3(0, 0, 2)
-const CAM_DIST := 14.0
+const CAM_FOCUS := Vector3(0, 0, Cfg.ARENA.y * 0.2)
+const CAM_DIST := 14.0 * Cfg.ARENA.x / 16.0
 const CAM_PITCH := deg_to_rad(30.0)
 const GROUND := Color(0.36, 0.55, 0.3)
 const DIRT := Color(0.62, 0.52, 0.38)
@@ -215,6 +216,8 @@ func _fit_camera() -> void:
 		cam.fov = CAM_FOV
 	if arena.get("_cam_focus") != null:
 		arena.set("_cam_focus", CAM_FOCUS)
+	if arena.get("cam_dist") != null:
+		arena.set("cam_dist", CAM_DIST)
 
 
 ## Limite de tempo (cfg.time_limit, segundos de jogo): a luta termina sem vencedor ("timeout").

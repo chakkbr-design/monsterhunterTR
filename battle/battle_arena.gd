@@ -83,6 +83,8 @@ const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 ## o 1º mon do adversário cai a 40% do caminho até ele e o do jogador 1.5 m à frente do jogador.
 const FIXED_ARENA := Vector2(14, 8)
 const TRAINER_STAND_OFF := 0.3
+## Quadra espelhada (opts.mirror_court, o treino): treinador a TRAINER_OUT m fora da linha de fundo.
+const TRAINER_OUT := 0.8
 const FOE_THROW := 0.4
 const LEAD_STEP := 1.5
 const FIXED_FADE := 0.25
@@ -115,6 +117,7 @@ var rng := RandomNumberGenerator.new()
 var moves: BattleMoves
 var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintonia
 var field: BattleField  ## terreno que muda, objetos, clones
+var terrain: BattleTerrain  ## relevo 3D (morros, picos, lagos), opts.terrain
 var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
@@ -200,6 +203,9 @@ var _f_was_down := false
 var _built := false
 var _court_color := ARENA_LINE
 var _cam_focus := Vector3.ZERO  ## câmera parada (quadra fixa): ponto que ela olha
+var cam_dist := FIXED_CAM_DIST  ## distância da câmera parada (o treino afasta na quadra grande)
+## Onde fica cada treinador (local) quando a quadra fixa decidiu; senão trainer_spot calcula.
+var _stand_at := {}
 var _probe: PhysicsShapeQueryParameters3D
 ## Pausa da batalha (Esc; o original: pause_menu.gd _battle_items com a luta parada).
 var pause_open := false
@@ -260,6 +266,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	moves = BattleMoves.new(self, rng)
 	combos = BattleCombos.new(self)
 	field = BattleField.new(self)
+	terrain = BattleTerrain.new(self)
 	abilities = BattleAbilities.new(self)
 	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
@@ -301,6 +308,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	_setup_court(o)
 	_build()
 	_setup_stands()
+	terrain.setup()
 	field.setup()
 	clear_tut_lock()
 	# A lição e os cartões ensinam as teclas de golpe: não valem com a batalha automática.
@@ -469,6 +477,15 @@ func _setup_court(o: Dictionary) -> void:
 	enemy_spot = _nearest_free(axis * spread * FOE_THROW)
 	player_spot = _nearest_free(me + axis * LEAD_STEP)
 	_cam_focus = (me + enemy_spot) * 0.5
+	if bool(o.get("mirror_court", false)):
+		# Treino: os dois lados iguais. Treinador no meio de cada fundo, fora da área de luta
+		# (TRAINER_OUT m depois da linha); os Pokémon entram a um quarto da quadra de cada lado.
+		me = -axis * (sz.x * 0.5 + TRAINER_OUT)
+		them = -me
+		player_spot = -axis * sz.x * 0.25
+		enemy_spot = -player_spot
+		_cam_focus = Vector3.ZERO
+	_stand_at = {0: me, 1: them}
 	var p := get_tree().get_first_node_in_group(OverworldPlayer.GROUP) as Node3D
 	var t := _trainer_body(o)
 	if p or t:
@@ -990,6 +1007,8 @@ func _obstacle_push(f: BattleFighter) -> Vector3:
 ## Onde o treinador do lado fica (local da arena): o corpo do mundo, se a quadra o pôs lá; senão
 ## TRAINER_BACK m atrás da posição do lado, meio de lado para não tapar a câmera.
 func trainer_spot(side: int) -> Vector3:
+	if _stand_at.has(side) and not (_stands.get(side) is Node3D and not _stand_owned.has(side)):
+		return _stand_at[side]
 	var n = _stands.get(side)
 	if n is Node3D and is_instance_valid(n) and n.is_inside_tree() and is_inside_tree():
 		var l := to_local((n as Node3D).global_position)
@@ -1497,6 +1516,7 @@ func _fight_step(dt: float) -> void:
 	_support_heal()
 	combos.tick(dt)
 	field.tick(dt)
+	terrain.tick(dt)
 	abilities.tick(dt)
 	moves.effects.tick(dt)
 	turns.tick(dt)
@@ -1515,11 +1535,12 @@ func _fight_step(dt: float) -> void:
 				if f == player and _human():
 					_commands(f)
 				if f.controller == "ai" and f.on_field:
-					want = f.ai.step(dt)
+					want = terrain.steer(f, f.ai.step(dt))
 		var before: Vector3 = f.position
 		f.drive(dt, want, speed)
 		if field:
 			f.position += field.push_out(f)
+		terrain.settle(f, dt)
 		if fixed:
 			_block_solid(f, before)
 		var bounds := rect.grow(-0.5)
@@ -2852,7 +2873,7 @@ func _update_camera(dt: float) -> void:
 		return
 	if fixed:
 		# Como o original numa quadra fixa: câmera parada (focus_fixed), sem giro manual.
-		var off := Vector3(0, sin(FIXED_CAM_PITCH), cos(FIXED_CAM_PITCH)) * FIXED_CAM_DIST
+		var off := Vector3(0, sin(FIXED_CAM_PITCH), cos(FIXED_CAM_PITCH)) * cam_dist
 		_cam.position = _cam.position.lerp(
 			_cam_focus + off.rotated(Vector3.UP, _yaw), clampf(dt * 6.0, 0.0, 1.0)
 		)

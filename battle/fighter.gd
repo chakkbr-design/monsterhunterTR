@@ -86,6 +86,8 @@ var prof := {}
 var command := 3  # BattleAI.FREE
 var fly_h := 0.0
 var fly_target := 0.0
+## Altura do chão sob o lutador (BattleTerrain: morro, pico); 0 = chão da quadra.
+var ground_y := 0.0
 var endured := false
 ## Fração de dano que sobrou no ritmo baixo (damage_pace < 1), somada no próximo golpe.
 var dmg_carry := 0.0
@@ -338,7 +340,7 @@ func visual_step(dt: float) -> void:
 	look.tick(vdt)
 	if _ring:
 		_ring.visible = alive() and on_field
-		_ring.position.y = 0.03 - position.y  # fica no chão mesmo pulando ou voando
+		_ring.position.y = 0.03 + ground_y - position.y  # fica no chão mesmo pulando ou voando
 	var tint := _tint()
 	if _flash_t > 0.0:
 		_flash_t -= dt
@@ -453,6 +455,8 @@ func walk_speed() -> float:
 	if arena:
 		if arena.get("field"):
 			v *= arena.field.move_mult(self)
+		if arena.get("terrain"):
+			v *= arena.terrain.move_mult(self)
 		var ab = arena.get("abilities")
 		if ab and ab.has_method("walk_mult"):
 			v *= ab.walk_mult(self)
@@ -1036,7 +1040,7 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 	if dash_t > 0.0 or lunge_t > 0.0 or arc_step_t > 0.0 or prepare_t > 0.0 or not can_act():
 		fly_want = minf(fly_want, DIVE_H)
 	fly_h = move_toward(fly_h, fly_want if alive() else 0.0, FLY_RISE * dt)
-	position.y = air_h + fly_h
+	position.y = ground_y + air_h + fly_h
 	if facing.length() > 0.01:
 		rotation.y = atan2(-facing.x, -facing.z)
 
@@ -1151,7 +1155,7 @@ func _motion_step(dt: float) -> void:
 				position += to.normalized() * stp
 			position.y = 0.0
 		_:
-			position.y = 0.0
+			position.y = ground_y
 	var v := pos2(position - before) / maxf(dt, 0.0001)
 	velocity = v
 	if v.length() > 0.5:
@@ -1164,7 +1168,7 @@ func _motion_step(dt: float) -> void:
 		motion_cb = Callable()
 		motion_tick = Callable()
 		motion_target = null
-		position.y = air_h + fly_h
+		position.y = ground_y + air_h + fly_h
 		if cb.is_valid():
 			cb.call()
 
@@ -1177,12 +1181,12 @@ func _launch_step(dt: float) -> void:
 	knock = Vector3.ZERO
 	if arena and arena.get("moves") and arena.moves.phys.crash_check(self, next):
 		velocity = Vector3.ZERO
-		position.y = air_h + fly_h
+		position.y = ground_y + air_h + fly_h
 		return
 	position.x = next.x
 	position.z = next.z
 	var s := 1.0 - launch_t / maxf(launch_total, 0.001)
-	position.y = air_h + fly_h + launch_lift * 4.0 * s * (1.0 - s)
+	position.y = ground_y + air_h + fly_h + launch_lift * 4.0 * s * (1.0 - s)
 	velocity = v
 
 

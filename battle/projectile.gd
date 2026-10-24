@@ -76,6 +76,10 @@ func step(dt: float, arena: Node) -> void:
 	if lob > 0.0:
 		var s := clampf(travelled / lob_len, 0.0, 1.0)
 		position.y = _start.y + lob * 4.0 * s * (1.0 - s)
+	if arena.get("terrain") and arena.terrain.blocks_shot(position):
+		arena.terrain.on_shot_blocked(user, mv, position)  # pico, morro, caixa ou pedra na frente
+		done = true
+		return
 	for t in arena.targets_of(user):
 		if t == miss_target:
 			continue

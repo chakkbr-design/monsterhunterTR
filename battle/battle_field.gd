@@ -58,12 +58,19 @@ func setup() -> void:
 			)
 			if _spot_ok(p):
 				_add_object(p)
+				if bool(arena.opts.get("mirror_court", false)) and _spot_ok(-p):
+					_add_object(-p)  # quadra espelhada (treino): o mesmo objeto do outro lado
 				break
 
 
 func _spot_ok(p: Vector3) -> bool:
 	if p.length() < OBJ_KEEP:
 		return false
+	var ter = arena.get("terrain")
+	if ter:
+		for t in ter.obstacles:
+			if _flat(p - t.pos).length() < float(t.r) + 1.0:
+				return false
 	for s in [arena.player_spot, arena.enemy_spot]:
 		if _flat(p - s).length() < OBJ_KEEP:
 			return false
@@ -75,11 +82,9 @@ func _spot_ok(p: Vector3) -> bool:
 
 func _add_object(p: Vector3) -> void:
 	var rock: bool = arena.rng.randf() < 0.5
-	var mi: Node3D = PixelFx.prop("objects/rock.png" if rock else "objects/crate.png", 1.0, 32)
-	if mi != null:
-		mi.position = p
-	else:
-		mi = _mesh_object(rock, p)
+	# Objeto 3D com textura de pixel art (BattleTerrain) no lugar do sprite.
+	var mi: Node3D = BattleTerrain.rock_node() if rock else BattleTerrain.crate_node()
+	mi.position = p
 	arena.add_child(mi)
 	(
 		objects
@@ -94,27 +99,6 @@ func _add_object(p: Vector3) -> void:
 			}
 		)
 	)
-
-
-## Visual antigo (fallback sem arte): esfera cinza ou caixa marrom.
-func _mesh_object(rock: bool, p: Vector3) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var mat := StandardMaterial3D.new()
-	if rock:
-		var m := SphereMesh.new()
-		m.radius = 0.5
-		m.height = 0.8
-		mi.mesh = m
-		mat.albedo_color = Color(0.5, 0.48, 0.45)
-		mi.position = p + Vector3(0, 0.3, 0)
-	else:
-		var m := BoxMesh.new()
-		m.size = Vector3(0.8, 0.8, 0.8)
-		mi.mesh = m
-		mat.albedo_color = Color(0.62, 0.42, 0.22)
-		mi.position = p + Vector3(0, 0.4, 0)
-	mi.material_override = mat
-	return mi
 
 
 static func _flat(v: Vector3) -> Vector3:
@@ -169,7 +153,7 @@ func _tick_marks(dt: float) -> void:
 
 ## Spikes só pegam quem pisa (Voador, Levitate e quem está no ar passam por cima).
 func _on_ground(f: BattleFighter) -> bool:
-	if f.position.y > 0.3:
+	if f.height() > 0.3:
 		return false
 	return not arena.get("moves") or arena.moves.effects.grounded(f)
 
@@ -190,6 +174,8 @@ func _drop_mark(m: Dictionary) -> void:
 ## Um golpe chegou em `at` (local da arena, y = 0) com raio `radius`: pode deixar marca no chão.
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
 	_hit_objects(at, radius)
+	if arena.get("terrain"):
+		arena.terrain.on_move_landed(user, mv, at, radius)
 	var kind := _mark_for(mv)
 	if kind == "":
 		return
@@ -309,22 +295,15 @@ func _hit_objects(at: Vector3, radius: float) -> void:
 
 func _break(o: Dictionary) -> void:
 	objects.erase(o)
-	var col := Color(0.6, 0.45, 0.3)
 	if is_instance_valid(o.node):
-		if o.node is MeshInstance3D:
-			col = o.node.material_override.albedo_color
 		o.node.queue_free()
 	for i in 6:
-		var mi: Node3D = null
-		if i < 4:
-			mi = PixelFx.prop(
-				"objects/debris_rock.png" if o.rock else "objects/debris_crate.png", 0.3, 32
-			)
-		if mi != null:
-			mi.position = o.pos + Vector3(0, 0.4, 0)
-		else:
-			mi = _shard_box(col)
-			mi.position = o.pos + Vector3(0, 0.4, 0)
+		# Cacos 3D com a textura do objeto.
+		var mi: Node3D = BattleTerrain._box(
+			Vector3.ONE * arena.rng.randf_range(0.1, 0.2),
+			BattleTerrain.tex("stone" if o.rock else "crate")
+		)
+		mi.position = o.pos + Vector3(0, 0.4, 0)
 		arena.add_child(mi)
 		var v := Vector3(
 			arena.rng.randf_range(-2, 2), arena.rng.randf_range(2, 4), arena.rng.randf_range(-2, 2)
@@ -335,17 +314,6 @@ func _break(o: Dictionary) -> void:
 		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.5, 0), 1.3, 0.4)
 	if o.berry:
 		_add_berry(o.pos)
-
-
-func _shard_box(col: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var b := BoxMesh.new()
-	b.size = Vector3.ONE * 0.12
-	mi.mesh = b
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = col
-	mi.material_override = mat
-	return mi
 
 
 func _add_berry(p: Vector3) -> void:

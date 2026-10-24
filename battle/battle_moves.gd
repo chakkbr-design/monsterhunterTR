@@ -189,6 +189,8 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 	var eff_acc := acc * acc_mult(int(user.stages.get("acc", 0)))
 	if arena.abilities:
 		eff_acc *= arena.abilities.acc_mult(user)
+	if arena.get("terrain"):
+		eff_acc *= arena.terrain.acc_mult(user, mv, aimed)  # do alto acerta mais
 	if (
 		aimed
 		and acc > 0.0
@@ -814,6 +816,11 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 			for t in _victims(user, mv, user.position):
 				if t == miss:
 					continue
+				if (
+					arena.get("terrain")
+					and arena.terrain.shot_block(user.position, t.position) < INF
+				):
+					continue  # o raio para no pico, na caixa ou na pedra
 				var to := user.flat_to(t)
 				var along := to.dot(dir)
 				if along > -0.5 and along < r and (to - dir * along).length() < w / 2.0 + 0.5:

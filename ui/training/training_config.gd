@@ -22,8 +22,8 @@ const SIDES := 2
 const PARTY_MAX := 6
 ## Nível de todo Pokémon do treino (build_mon força este nível).
 const LEVEL := 50
-## Quadra fixa do treino: 16 x 10 (a quadra padrão da arena é 10 x 6).
-const ARENA := Vector2(16, 10)
+## Quadra fixa do treino: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
+const ARENA := Vector2(24, 14)
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
 const TURBO_STEPS := 12
@@ -148,6 +148,8 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"no_rewards": true,
 		"battle_size": clampi(int(cfg.get("battle_size", 2)), 1, 2),
 		"battle_mode": battle_mode(cfg),
+		"terrain": bool(cfg.get("terrain", true)),
+		"mirror_court": true,
 	}
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)
