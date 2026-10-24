@@ -63,12 +63,15 @@ func _init(battle_ai) -> void:
 	f = battle_ai.f
 
 
-## Ligado para todo lutador de treinador e do jogador; o selvagem segue a IA antiga.
+## Ligado para todo lutador de treinador e do jogador, com rodadas; o selvagem segue a IA antiga.
 ## opts.vgc_ai = false desliga (testes antigos); [true, false] liga só no lado 0 (comparar com a antiga).
 static func enabled_for(fighter: BattleFighter) -> bool:
 	var a = fighter.arena
 	if a == null or not side_on(a.get("opts").get("vgc_ai", true), fighter.side):
 		return false
+	var turns = a.get("turns")
+	if turns == null or not turns.on:
+		return false  # ritmo antigo (sem rodadas): a IA antiga
 	return not (String(a.get("kind")) == "wild" and fighter.side == 1)
 
 

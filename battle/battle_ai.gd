@@ -728,7 +728,8 @@ func want_trainer_item() -> bool:
 	if f.trainer_item == "" or f.item_used or not f.alive():
 		return false
 	var tai = f.arena.get("trainer_ai")
-	if tai is Dictionary and tai.has(f.side):
+	var rounds = f.arena.get("turns")
+	if tai is Dictionary and tai.has(f.side) and rounds != null and rounds.on:
 		return false  # o item sai pela IA do treinador (BattleTrainerAI) no começo da rodada
 	var e: Dictionary = Dex.item(f.trainer_item).get("effect", {})
 	if e.has("hp"):
