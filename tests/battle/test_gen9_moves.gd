@@ -896,7 +896,8 @@ func _ai_fight(i: int) -> void:
 	a_mon.moves = m[1]
 	var b_mon := Mon.create(m[2], 25)
 	b_mon.moves = m[3]
-	var a := _arena([a_mon], [b_mon], {"seed": 300 + i, "autoplay": true})
+	# Variedade de golpes no tempo da luta: ritmo antigo (sem a fila de rodadas).
+	var a := _arena([a_mon], [b_mon], {"seed": 300 + i, "autoplay": true, "turn_mode": false})
 	var used := {}
 	a.move_used.connect(func(_u, mv: Dictionary) -> void: used[String(mv.id)] = true)
 	var t := 0.0

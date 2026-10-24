@@ -190,6 +190,14 @@ func done(f: BattleFighter, what := "move") -> void:
 	_last_action = clock
 
 
+## Nada pronto na vez (tudo em cooldown): passa sem abrir a folga.
+func pass_turn(f: BattleFighter) -> void:
+	if not on or f != current:
+		return
+	_record(f, "pass")
+	current = null
+
+
 func _record(f: BattleFighter, what: String) -> void:
 	history.append(
 		{

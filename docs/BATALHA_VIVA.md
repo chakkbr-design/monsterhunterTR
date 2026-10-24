@@ -19,11 +19,20 @@ Os números são ponto de partida: o Caio balanceia pelo modo de treinamento.
 | Combos | `battle/battle_combos.gd`, `data/duo_moves.json` | Marcas de tipo (3 s), 11 reações quando o parceiro acerta o alvo marcado (até 1,5x, ICD 2,5 s), Ressonância (mesmo tipo em 1 s, +25%), Sintonia por lado e 11 golpes de dupla. |
 | Terreno | `battle/battle_field.gd` | Cratera, buraco, poça, gelo, grama queimada, pó, Spikes; 2–4 caixas/pedras que quebram e às vezes soltam frutinha; clones do Double Team que absorvem golpe. `opts.field_objects: false` desliga os objetos. |
 | Habilidades | `battle/battle_abilities.gd`, `data/abilities.json` | 86 habilidades com efeito (48 novas, todas com `desc_pt`), 1–3 por espécie, faixa no HUD quando agem. |
+| Rodadas | `battle/battle_turns.gd`, `battle_ai.gd` | Rodada de `ROUND_SECS` (4,0 s) pela Speed (opção A do Caio). No começo dela a IA escolhe o golpe; a fila sai pela prioridade do golpe (`"priority"` dos dados, +habilidade) e, na faixa, pela Speed efetiva (estágios, paralisia, Tailwind, habilidade; Trick Room inverte; empate no sorteio). Cada um solta UM golpe na vez dele, com `MOVE_GAP` (0,8 s) de folga entre golpes; quem não consegue em `TURN_MAX` (2,2 s) passa. Recarga, sono, item do treinador e troca gastam a vez; quem entra no meio espera a próxima rodada. Cooldowns e GCD continuam valendo. Vale no 1x1, no 2x2 e no treino (o Pokémon guiado pelo teclado, com `auto_battle` desligado, e o boneco do treino ficam fora da fila). `opts.turn_mode: false` volta ao ritmo antigo (só testes velhos). Anel + seta brilhando em quem é o próximo (`battle_arena.gd` `_place_turn_mark`). Fim de rodada chama `BattleAbilities.on_round_end`. |
+| Uso do campo | `battle/battle_ai.gd` | Fora da vez a IA pontua 10 pontos em volta do alvo a cada ~1 s (longe da parede, na faixa, linha livre ou cobertura atrás de caixa/pedra com HP baixo ou Atirador, sem poça/gelo/grama queimada/Spikes, espaço de todos os lutadores, dupla lado a lado e de frente, centro para a Muralha) e anda até o melhor. Encurralado foge rodeando; quem bate perto da parede volta para o centro. Atirador rodeia de longe, Escaramuçador entra e sai, Brigão se reposiciona, Voador troca de lado e voa alto numa rodada e baixo na outra (desce na vez e depois de bater). Quem é o alvo da vez fica e reage com o desvio que já existe. |
 | Espetáculo | `battle/battle_hud.gd`, arena | Balão com o nome do golpe por lado, cena de impacto (a luta congela 0,4 s; no máx. 1 a cada 2,5 s), CLASH (duas investidas de frente se anulam), "Precisa recarregar!" depois do Hyper Beam, cobrir o parceiro com HP baixo (DEFENSIVO ou Muralha), cartões 2x2, etiquetas de comando, marcas e estágios, barra de Sintonia. |
 
 ## Testes novos
 
-`tests/battle/test_doubles.gd`, `test_combos.gd`, `test_field.gd`, `test_abilities.gd`, `test_hud_viva.gd`.
+`tests/battle/test_doubles.gd`, `test_combos.gd`, `test_field.gd`, `test_abilities.gd`, `test_hud_viva.gd`,
+`test_turns.gd` (ordem pela Speed, prioridade, Trick Room, empate, um golpe por rodada, folga mínima, marcador) e
+`test_field_use.gd` (simulação headless: canto até 10% do tempo, parede até 30%, parceiros sem embolar).
+Testes de regra que dependem do ritmo antigo passam `"turn_mode": false` (item do treinador na hora em `test_battle.gd`,
+variedade de golpes em `test_gen9_moves.gd`).
+
+**Constantes para o Caio ajustar:** `ROUND_SECS` (duração mínima da rodada, 4,0 s) e `MOVE_GAP` (folga entre golpes,
+0,8 s) no topo de `battle/battle_turns.gd`; `TURN_MAX` (2,2 s) é quanto a vez espera antes de passar.
 `tests/battle/test_battle.gd` roda as regras no ritmo original (`damage_pace` 1,0, sem caixas no campo).
 
 ## Ainda não feito

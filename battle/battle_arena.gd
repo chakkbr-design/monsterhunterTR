@@ -103,6 +103,8 @@ var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintoni
 var field: BattleField  ## terreno que muda, objetos, clones
 var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
+var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
+var _turn_pulse := 0.0
 var hud: BattleHUD
 var vfx: BattleVfx
 var fight_speed := DEFAULT_SPEED
@@ -1005,6 +1007,65 @@ func _visual_step(dt: float) -> void:
 			f.visual_step(dt)
 	if vfx:
 		vfx.tick(dt)
+	_place_turn_mark(dt)
+
+
+## Marcador de vez: anel no chão e seta sobre a cabeça de quem solta o próximo golpe (o alvo tem tempo
+## de ver e desviar). Amarelo = lado do jogador, vermelho = adversário; brilha mais na vez de fato.
+func _place_turn_mark(dt: float) -> void:
+	var who: BattleFighter = turns.next_up() if turns and state == "fight" else null
+	if who == null or not is_instance_valid(who) or not who.visible:
+		if _turn_mark:
+			_turn_mark.visible = false
+		return
+	if _turn_mark == null:
+		_turn_mark = _build_turn_mark()
+	_turn_pulse += dt
+	var live := turns.can_fire(who)
+	var col := Color(1.0, 0.9, 0.35) if who.side == 0 else Color(1.0, 0.4, 0.35)
+	col.a = (0.95 if live else 0.55) * (0.75 + 0.25 * sin(_turn_pulse * 9.0))
+	for c in _turn_mark.get_children():
+		(c as MeshInstance3D).material_override.albedo_color = col
+	_turn_mark.visible = true
+	_turn_mark.position = Vector3(who.position.x, 0.0, who.position.z)
+	var ring: Node3D = _turn_mark.get_node("Ring")
+	var k := 1.0 + 0.08 * sin(_turn_pulse * 6.0)
+	ring.scale = Vector3(k, 0.05, k)
+	var arrow: Node3D = _turn_mark.get_node("Arrow")
+	arrow.position.y = who.position.y + who.look_h + 0.55 + 0.08 * sin(_turn_pulse * 5.0)
+
+
+func _build_turn_mark() -> Node3D:
+	var root := Node3D.new()
+	root.name = "TurnMark"
+	add_child(root)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.55
+	tm.outer_radius = 0.66
+	var ring := MeshInstance3D.new()
+	ring.name = "Ring"
+	ring.mesh = tm
+	ring.material_override = mat
+	ring.position.y = 0.05
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(ring)
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.16
+	cm.bottom_radius = 0.0
+	cm.height = 0.3
+	cm.radial_segments = 4
+	var arrow := MeshInstance3D.new()
+	arrow.name = "Arrow"
+	arrow.mesh = cm
+	arrow.material_override = mat.duplicate()
+	arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(arrow)
+	ring.scale = Vector3(1, 0.05, 1)
+	return root
 
 
 func _foe_balls() -> Array:

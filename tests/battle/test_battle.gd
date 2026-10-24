@@ -385,7 +385,14 @@ func _trainer_item() -> void:
 	var a := _arena(
 		party,
 		foes,
-		{"kind": "trainer", "trainer_id": "brock", "seed": 9, "trainer_item": "super_potion"}
+		# Regra do item na hora (sem a fila de rodadas, em que o item espera a vez).
+		{
+			"kind": "trainer",
+			"trainer_id": "brock",
+			"seed": 9,
+			"trainer_item": "super_potion",
+			"turn_mode": false
+		}
 	)
 	check(a.ally == null, "batalha de treinador é 1x1 (sem aliado)")
 	_run(a, TRAINER_INTRO)

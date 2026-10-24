@@ -83,6 +83,25 @@ const DECLINE_LOCK := 1.5
 const CMD_BAND := [0.75, 1.25, 1.35, 1.0]
 const CMD_RETREAT := [0.4, 1.5, 1.2, 1.0]
 const CMD_DODGE := [0.0, 0.2, 0.1, 0.0]
+## Rodadas (BattleTurns): na vez, mira AIM_BASE s (x pensamento) antes de soltar.
+const AIM_BASE := 0.15
+## Uso do campo fora da vez: a cada SPOT_EVERY s pontua SPOT_N pontos e anda até o melhor.
+const SPOT_EVERY := 1.0
+const SPOT_N := 10
+const SPOT_REACHED := 0.35
+## Longe da parede (m) e espaço mínimo de aliado e de inimigo (todos os lutadores, não só o parceiro).
+const WALL_KEEP := 2.0
+const SPACE_ALLY := 2.4
+const SPACE_FOE := 1.8
+## Encurralado: a menos de CORNER_M da parede com inimigo a menos de CORNER_FOE foge rodeando.
+const CORNER_M := 1.6
+const CORNER_FOE := 3.2
+## Depois de bater perto da parede volta para o centro.
+const CENTRE_PULL := 0.7
+## Terreno que atrapalha (poça, gelo, grama queimada, Spikes, cratera, buraco): o tipo imune não liga.
+const BAD_GROUND := {
+	"puddle": "water", "ice": "ice", "scorch": "fire", "spikes": "", "crater": "", "hole": ""
+}
 ## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
 enum { ATTACK, DEFEND, SUPPORT, FREE }
 
@@ -113,6 +132,13 @@ var idle_t := 0.0
 var status_lock_t := 0.0
 ## Golpes de uma vez por luta já usados (Focus Energy).
 var used_once := {}
+## Rodadas: tempo mirando na vez, ponto escolhido no campo e quando reavaliar, rodadas vistas.
+var aim_t := 0.0
+var spot := Vector3.INF
+var spot_t := 0.0
+var round_k := 0
+var fired := false
+var acted_round := -1
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -200,6 +226,7 @@ func move_ready(d: float) -> bool:
 
 
 ## Um passo de IA: devolve a direção desejada e ajusta f.sprinting; pode disparar golpes.
+## Com a fila de rodadas (BattleTurns) só solta golpe na vez dele; fora dela escolhe um ponto no campo.
 func step(dt: float) -> Vector3:
 	f.sprinting = false
 	status_lock_t = maxf(status_lock_t - dt, 0.0)
@@ -208,9 +235,15 @@ func step(dt: float) -> Vector3:
 	var opp := f.opponent
 	if not is_instance_valid(opp) or not opp.active():
 		return Vector3.ZERO
-	if want_trainer_item():
+	var turns = f.arena.get("turns")
+	var queued: bool = turns != null and turns.on and turns.tracked(f)
+	var my_turn: bool = not queued or turns.can_fire(f)
+	var up_next: bool = queued and turns.is_turn(f)
+	if want_trainer_item() and my_turn:
 		use_trainer_item()
 		recover_t = RECOVER
+		if queued:
+			turns.done(f, "item")
 		return Vector3.ZERO
 	if f.status == "sleep":
 		_sleep_move(f.flat_to(opp).length())
@@ -233,53 +266,25 @@ func step(dt: float) -> Vector3:
 		retreat_t -= dt
 		return _retreat_move(dir, side_v, d)
 	if not f.moves.is_empty():
-		var punish := _punish(d)
-		if not punish:
-			punished = false
-		think -= dt
-		if think <= 0.0 and intent == "":
-			intent = _plan()
-			if intent == "":
-				think = THINK_RETRY * think_scale
-		var rush := _rush_move(d)
-		if rush != "":
-			intent = rush
-		var fire := (
-			intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
-		)
-		if punish and not punished and tactic_on:
-			fire = true
-			punished = true
-		# Sem PP: Desespero de perto (os dois sem PP ficavam rodando sem bater até o fim do tempo).
-		if f.out_of_pp() and d < 2.2:
-			fire = true
-		if fire and f.can_act():
-			tactic_on = _tactic_ok()
-			var used := _use_best_move(d)
-			if used:
-				idle_t = 0.0
-				think = _think_secs()
-				retreat_t = (
-					float(_p("retreat", 0.5))
-					* CMD_RETREAT[mode]
-					* (0.3 if f.mood_state == "fury" else 1.0)
-				)
-				recover_t = maxf(recover_t, retreat_t)
-				intent = ""
-			elif intent != "" and not _ready(intent):
-				intent = ""
-	if f.out_of_pp() and d > 1.4:
+		if queued:
+			if my_turn:
+				_turn_fire(dt, d, turns)
+		else:
+			_free_fire(dt, d)
+	if f.out_of_pp() and d > 1.4 and (not queued or up_next):
 		return dir
+	if queued and not up_next:
+		return _off_turn(dt, d, dir, side_v)
 	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
 		var guard := guard_steer()
 		if guard != Vector3.INF:
 			return guard
 	idle_t += dt
-	var stall := idle_t > STALL_SECS
+	var stall := idle_t > STALL_SECS and not queued
 	var b := _band() * (0.7 if stall else 1.0)
-	var low := float(f.hp) <= float(f.max_hp) * LOW_HP and not stall
+	var low := float(f.hp) <= float(f.max_hp) * LOW_HP and not stall and not queued
 	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low and f.mood_state != "fury" else b
-	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == ""
+	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == "" and not queued
 	var want: Vector3
 	var st := float(_p("strafe", 0.5))
 	if slip:
@@ -288,27 +293,135 @@ func step(dt: float) -> Vector3:
 		want = (dir + side_v * 0.3 * st).normalized()
 	elif d < kite.x:
 		want = (-dir + side_v * 0.5).normalized() * (1.0 if low else 0.8)
-	elif intent != "" and in_range(intent, d) and tactic_on:
-		want = side_v * 0.15 * st
+	elif intent != "" and in_range(intent, d) and (tactic_on or queued):
+		want = side_v * (0.0 if queued else 0.15 * st)
 	elif tactic_on:
 		var centre := (b.x + b.y) * 0.5
 		var radial := dir * clampf((centre - d) / maxf(b.y - b.x, 0.1), -1.0, 1.0)
 		want = (side_v * (0.3 + WAIT_STRAFE * st) + radial * WAIT_RADIAL).normalized()
 	else:
 		want = side_v * 0.35
-	want += f.arena.edge_push(f) + _ally_spread()
+	want += f.arena.edge_push(f) + (_spread_all(true) if queued else _ally_spread())
 	if want.length() > 1.0:
 		want = want.normalized()
 	_fly(d)
 	var r := reach()
 	var closing := d > kite.y and (r <= MELEE_BAND or d > r + FAR_GAP)
 	var reason := (closing and float(_p("sprint", 1.0)) >= 0.5) or slip or (low and d < b.y)
-	if (mode == ATTACK or stall) and d > b.y:
+	if (mode == ATTACK or stall or up_next) and d > b.y:
 		reason = true
 	if _try_jump(dt, d):
 		return want
 	f.sprinting = _sprint(dt, reason) and f.can_sprint(want.length() > 0.1)
 	return want
+
+
+## Ritmo antigo (fila desligada): pensa THINK_MIN-MAX s, solta quando o golpe está pronto e ao alcance,
+## pune a recuperação do oponente.
+func _free_fire(dt: float, d: float) -> void:
+	var opp := f.opponent
+	var mode := ally_mode()
+	var punish := _punish(d)
+	if not punish:
+		punished = false
+	think -= dt
+	if think <= 0.0 and intent == "":
+		intent = _plan()
+		if intent == "":
+			think = THINK_RETRY * think_scale
+	var rush := _rush_move(d)
+	if rush != "":
+		intent = rush
+	var fire := intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
+	if punish and not punished and tactic_on:
+		fire = true
+		punished = true
+	# Sem PP: Desespero de perto (os dois sem PP ficavam rodando sem bater até o fim do tempo).
+	if f.out_of_pp() and d < 2.2:
+		fire = true
+	if fire and f.can_act():
+		tactic_on = _tactic_ok()
+		if _use_best_move(d):
+			_after_fire(mode)
+		elif intent != "" and not _ready(intent):
+			intent = ""
+
+
+## Vez dele na fila: refaz a intenção se ela não está pronta, para, mira (AIM_BASE pelo pensamento) e
+## solta. Sem nada pronto passa a vez; sem PP vai no Desespero de perto.
+func _turn_fire(dt: float, d: float, turns) -> void:
+	aim_t += dt
+	if not f.can_act():
+		return
+	if not fired and think > 0.0:
+		think -= dt  # segura a abertura (o selvagem e a bola do treinador) como no ritmo antigo
+		return
+	if f.out_of_pp():
+		if d < 2.2 and f.struggle():
+			idle_t = 0.0
+			recover_t = RECOVER
+			turns.done(f, "struggle")
+		return
+	if intent == "" or not _ready(intent) or not status_ok(intent, _has_connecting_move()):
+		intent = _plan()
+		if intent == "":
+			# Fôlego voltando ou cooldown acabando dentro da vez: espera; senão passa a vez.
+			if not _ready_soon(maxf(BattleTurns.TURN_MAX - turns.turn_t, 0.0)):
+				turns.pass_turn(f)
+			return
+	var rush := _rush_move(d)
+	if rush != "":
+		intent = rush
+	if aim_t < _aim_secs():
+		return
+	if not (in_range(intent, d) and _ready(intent) and _reaches(f.opponent, intent)):
+		return
+	tactic_on = _tactic_ok()
+	if _use_best_move(d):
+		turns.done(f, "move")
+		_after_fire(ally_mode())
+
+
+## Algum golpe fica pronto em `secs` s (cooldown e GCD acabam; o fôlego volta sozinho).
+func _ready_soon(secs: float) -> bool:
+	for id in f.moves:
+		var mv := Dex.move(String(id))
+		if mv.is_empty() or f.pp_max < f.pp_cost_of(mv):
+			continue
+		if not f.arena.moves.effects.usable(f, mv):
+			continue
+		if maxf(float(f.move_cd.get(id, 0.0)), f.gcd_t) < secs:
+			return true
+	return false
+
+
+func _after_fire(mode: int) -> void:
+	fired = true
+	var turns = f.arena.get("turns")
+	acted_round = turns.round_n if turns != null else -1
+	idle_t = 0.0
+	think = _think_secs()
+	retreat_t = (
+		float(_p("retreat", 0.5)) * CMD_RETREAT[mode] * (0.3 if f.mood_state == "fury" else 1.0)
+	)
+	recover_t = maxf(recover_t, retreat_t)
+	intent = ""
+	spot_t = 0.0
+
+
+## Começo da vez (BattleTurns): zera a mira.
+func on_turn() -> void:
+	aim_t = 0.0
+
+
+## Tempo parado mirando antes de soltar na vez (pensamento, perfil, comando e ânimo).
+func _aim_secs() -> float:
+	var k := think_scale * float(_p("think", 1.0))
+	if ally_mode() == ATTACK:
+		k *= ATTACK_THINK
+	if f.mood_state == "fury":
+		k *= FURY_THINK
+	return AIM_BASE * k
 
 
 func _think_secs() -> float:
@@ -331,10 +444,13 @@ func _ready(id: String) -> bool:
 	)
 
 
-## Começo da rodada (BattleTurns): escolhe a intenção que entra na fila (a prioridade dela conta).
+## Começo da rodada (BattleTurns): escolhe a intenção que entra na fila (a prioridade dela conta) e
+## um ponto novo no campo; o Voador troca de altura.
 func plan_round() -> void:
 	if is_instance_valid(f.opponent) and f.opponent.active():
 		intent = _plan()
+	spot_t = 0.0
+	round_k += 1
 
 
 ## Intenção: o golpe que vai buscar agora (o mesmo critério de pick, sem olhar a distância).
@@ -397,6 +513,9 @@ func _retreat_move(dir: Vector3, side_v: Vector3, d: float) -> Vector3:
 	if d >= to:
 		return side_v * 0.5
 	var w := (-dir + side_v * 0.6 * float(_p("strafe", 0.5))).normalized()
+	# Quem bateu perto da parede (ou encurralou alguém) volta para o centro, rodeando o alvo.
+	if _wall_dist(f.pos2(f.position)) < WALL_KEEP + 1.0:
+		w = (w + _to_centre() * CENTRE_PULL * 1.5).normalized()
 	w += f.arena.edge_push(f)
 	return w.normalized() if w.length() > 1.0 else w
 
@@ -408,7 +527,13 @@ func _fly(_d: float) -> void:
 		f.fly_target = 0.0
 		return
 	var tired := f.stamina < f.pp_max * 0.2 or f.gcd_t > 0.0
-	f.fly_target = BattleFighter.DIVE_H if tired or recover_t > 0.0 else h
+	var turns = f.arena.get("turns")
+	var low := false
+	if turns != null and turns.on:
+		# Rodadas: voa alto numa rodada e baixo na outra; desce para a vez dele e fica baixo depois de
+		# bater até a rodada acabar (quem está no chão também tem a chance dele).
+		low = turns.is_turn(f) or round_k % 2 == 0 or acted_round == turns.round_n
+	f.fly_target = BattleFighter.DIVE_H if tired or recover_t > 0.0 or low else h
 
 
 ## Em dupla os parceiros não se embolam: empurra para longe do parceiro perto demais.
@@ -904,6 +1029,237 @@ func _status_lands(opp: BattleFighter, st: String, powder: bool) -> bool:
 	if st in ["poison", "toxic"] and "steel" in opp.types:
 		return false
 	return opp.status == "" and not BattleMoves.STATUS_IMMUNE.get(st, "-") in opp.types
+
+
+# --- Uso do campo (fora da vez) ---
+
+
+## Fora da vez: foge do canto rodeando, segura o parceiro (DEFENSIVO) ou anda até o melhor ponto.
+func _off_turn(dt: float, d: float, _dir: Vector3, side_v: Vector3) -> Vector3:
+	_fly(d)
+	var esc := corner_escape()
+	if esc != Vector3.ZERO:
+		f.sprinting = f.can_sprint(true) and f.stamina > f.pp_max * SPRINT_MIN
+		return esc
+	var actor := _actor_on_me()
+	if actor != null:
+		# Alguém do outro lado está na vez mirando em mim: fico e reajo só com o desvio (esquiva, pulo).
+		spot_t = 0.0
+		_try_jump(dt, d)
+		return (side_v * 0.1 + _spread_all(false, actor)).limit_length(1.0)
+	var mode := ally_mode()
+	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
+		var guard := guard_steer()
+		if guard != Vector3.INF:
+			return (guard + _spread_all(false)).limit_length(1.0)
+	spot_t -= dt
+	var me := f.pos2(f.position)
+	if spot == Vector3.INF or spot_t <= 0.0:
+		spot = pick_spot()
+		spot_t = SPOT_EVERY * _rng().randf_range(0.8, 1.2)
+	var v := spot - me
+	var want: Vector3
+	if v.length() < SPOT_REACHED:
+		want = side_v * 0.12 * float(_p("strafe", 0.5))
+	else:
+		want = v.normalized() * clampf(v.length(), 0.35, 1.0)
+	want += _spread_all(false) + f.arena.edge_push(f)
+	_try_jump(dt, d)
+	return want.limit_length(1.0)
+
+
+## Inimigo com a vez (ou o próximo) mirando em mim, perto o bastante para o golpe dele chegar.
+func _actor_on_me() -> BattleFighter:
+	var turns = f.arena.get("turns")
+	var a: BattleFighter = turns.next_up() if turns != null else null
+	if a == null or a.side == f.side or a.opponent != f or a.ai == null:
+		return null
+	var r := a.ai.move_reach(a.ai.intent) if a.ai.intent != "" else a.ai.reach()
+	return a if f.flat_to(a).length() <= minf(r, 8.0) + 2.0 else null
+
+
+## Distância até a parede mais perto da quadra (m).
+func _wall_dist(p: Vector3) -> float:
+	var r: Rect2 = f.arena.rect
+	return minf(minf(p.x - r.position.x, r.end.x - p.x), minf(p.z - r.position.y, r.end.y - p.z))
+
+
+func _to_centre() -> Vector3:
+	var c: Vector2 = f.arena.rect.get_center()
+	var v := Vector3(c.x, 0.0, c.y) - f.pos2(f.position)
+	return v.normalized() if v.length() > 0.01 else Vector3.ZERO
+
+
+## Perto da parede com inimigo perto: sai pelo lado aberto rodeando o inimigo (não reto para trás).
+func corner_escape() -> Vector3:
+	var me := f.pos2(f.position)
+	if _wall_dist(me) >= CORNER_M:
+		return Vector3.ZERO
+	var foe: BattleFighter = null
+	var best := CORNER_FOE
+	for g in f.arena.targets_of(f):
+		var dd := f.flat_to(g).length()
+		if dd < best:
+			best = dd
+			foe = g
+	if foe == null:
+		return Vector3.ZERO
+	var away := -f.flat_to(foe).normalized()
+	var tang := Vector3(-away.z, 0.0, away.x)
+	var to_c := _to_centre()
+	if tang.dot(to_c) < 0.0:
+		tang = -tang
+	return (tang * 0.8 + to_c * 0.6 + away * 0.2).normalized()
+
+
+## Espaço de todos os lutadores (aliado SPACE_ALLY, inimigo SPACE_FOE). Na vez o alvo não conta.
+func _spread_all(on_turn: bool, skip: BattleFighter = null) -> Vector3:
+	var out := Vector3.ZERO
+	for g in f.arena.fighters:
+		if g == f or g == skip or not is_instance_valid(g) or not g.active():
+			continue
+		if on_turn and g == f.opponent:
+			continue
+		var lim := SPACE_ALLY if g.side == f.side else SPACE_FOE
+		var to := f.flat_to(g)
+		var dd := to.length()
+		if dd >= lim or dd < 0.01:
+			continue
+		out -= to / dd * (lim - dd) / lim
+	return out
+
+
+## Faixa de distância fora da vez, pelo perfil: o Atirador rodeia de longe, o Escaramuçador sai depois
+## de entrar, o Brigão se reposiciona perto, a Muralha segura o centro na faixa do golpe.
+func spot_band() -> Vector2:
+	var b := _band()
+	match f.profile:
+		"shooter":
+			b = Vector2(maxf(b.x, 4.5), maxf(b.y, 6.5))
+		"skirmisher":
+			b = Vector2(4.0, 5.5)
+		"brawler":
+			b = Vector2(SPACE_FOE, 3.0)
+		"flyer":
+			b = Vector2(2.5, 4.5)
+	if float(f.hp) <= float(f.max_hp) * LOW_HP and f.mood_state != "fury":
+		b *= 1.3
+	b.x = maxf(b.x, SPACE_FOE)
+	b.y = maxf(b.y, b.x + 0.5)
+	return b
+
+
+## Pontua SPOT_N pontos em volta do alvo (e ficar onde está) e devolve o melhor.
+func pick_spot() -> Vector3:
+	var me := f.pos2(f.position)
+	var o := f.pos2(f.opponent.position)
+	var b := spot_band()
+	var base := atan2(me.z - o.z, me.x - o.x)
+	var rng := _rng()
+	var best := me
+	var best_s := score_spot(me, b) + 0.3
+	for i in SPOT_N:
+		var off := lerpf(-1.4, 1.4, float(i) / float(SPOT_N - 1))
+		match f.profile:
+			"shooter":
+				off = absf(off) * strafe  # rodeia sempre para o mesmo lado
+			"flyer":
+				if round_k % 2 == 1:
+					off += PI * 0.6 * strafe  # troca de lado
+		var ang := base + off + rng.randf_range(-0.1, 0.1)
+		var dist := rng.randf_range(b.x, b.y)
+		var p := o + Vector3(cos(ang), 0.0, sin(ang)) * dist
+		var s := score_spot(p, b)
+		if s > best_s:
+			best_s = s
+			best = p
+	return best
+
+
+## Nota de um ponto: longe da parede, na faixa, linha livre (ou cobertura com HP baixo/Atirador), sem
+## terreno ruim, com espaço, lado a lado com o parceiro, centro para a Muralha e pouco a andar.
+func score_spot(p: Vector3, b: Vector2) -> float:
+	var s := 0.0
+	var me := f.pos2(f.position)
+	var o := f.pos2(f.opponent.position)
+	var r: Rect2 = f.arena.rect
+	var wd := _wall_dist(p)
+	if wd < WALL_KEEP:
+		s -= (WALL_KEEP - wd) * 3.0
+	if not r.grow(-0.5).has_point(Vector2(p.x, p.z)):
+		s -= 20.0
+	var dd := p.distance_to(o)
+	if dd < b.x:
+		s -= (b.x - dd) * 1.2
+	elif dd > b.y:
+		s -= (dd - b.y) * 1.0
+	var hide := (
+		(float(f.hp) <= float(f.max_hp) * LOW_HP and f.mood_state != "fury")
+		or f.profile == "shooter"
+	)
+	if hide and _cover_near(p, o):
+		s += 1.2
+	elif _line_blocked(p, o):
+		s -= 1.5
+	var field = f.arena.get("field")
+	if field:
+		var ground := String(field.terrain_at(p))
+		if BAD_GROUND.has(ground) and not String(BAD_GROUND[ground]) in f.types:
+			s -= 2.0
+	for g in f.arena.fighters:
+		if g == f or not is_instance_valid(g) or not g.active():
+			continue
+		var lim := SPACE_ALLY if g.side == f.side else SPACE_FOE
+		var gd := p.distance_to(f.pos2(g.position))
+		if gd < lim:
+			s -= (lim - gd) * 2.0
+	var mate := partner()
+	if mate != null:
+		# Dupla lado a lado e de frente para a outra: mesma profundidade no eixo da quadra que o
+		# parceiro e afastado dele de lado.
+		var axis: Vector3 = f.arena.axis
+		var mp := f.pos2(mate.position)
+		s -= absf((p - mp).dot(axis)) * 0.35
+		var lat := absf((p - mp).cross(axis).y)
+		if lat < SPACE_ALLY:
+			s -= (SPACE_ALLY - lat) * 0.6
+	if f.profile == "wall":
+		s -= Vector2(p.x, p.z).distance_to(r.get_center()) * 0.4
+	s -= me.distance_to(p) * 0.15
+	return s
+
+
+## Caixa/pedra no caminho entre p e o alvo.
+func _line_blocked(p: Vector3, o: Vector3) -> bool:
+	var field = f.arena.get("field")
+	if field == null:
+		return false
+	var seg := o - p
+	var n := seg.length()
+	if n < 0.01:
+		return false
+	var u := seg / n
+	for ob in field.objects:
+		var rel: Vector3 = Vector3(ob.pos.x, 0.0, ob.pos.z) - p
+		var along := rel.dot(u)
+		if along > 0.3 and along < n - 0.3 and (rel - u * along).length() < BattleField.OBJ_R + 0.2:
+			return true
+	return false
+
+
+## Cobertura: caixa/pedra a até 1,6 m de p, do lado do alvo, meio fora da linha (dá para atirar).
+func _cover_near(p: Vector3, o: Vector3) -> bool:
+	var field = f.arena.get("field")
+	if field == null:
+		return false
+	var u := (o - p).normalized()
+	for ob in field.objects:
+		var rel: Vector3 = Vector3(ob.pos.x, 0.0, ob.pos.z) - p
+		var along := rel.dot(u)
+		var perp := (rel - u * along).length()
+		if along > 0.3 and along < 1.6 and perp > 0.4 and perp < 1.4:
+			return true
+	return false
 
 
 # --- Esquiva ---

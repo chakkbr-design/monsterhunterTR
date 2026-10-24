@@ -229,8 +229,11 @@ func _hold_foe() -> void:
 	var pos: Vector3 = a.enemy.position
 	var hp: int = a.player.hp
 	_run(a, 3.0)
+	# No chão: o Voador pode terminar de descer para a vez dele (a altura não é a IA andando).
+	var flat := Vector3(1, 0, 1)
 	check(
-		a.enemy.position.distance_to(pos) < 0.01 and a.player.hp == hp, "tut_hold_foe segura a IA"
+		(a.enemy.position * flat).distance_to(pos * flat) < 0.01 and a.player.hp == hp,
+		"tut_hold_foe segura a IA"
 	)
 	a.tut_hold_foe = false
 	_run(a, 4.0)

@@ -62,9 +62,16 @@ a resistência a Fantasma e Sombrio).
 Jet/Sucker Punch +1, Extreme Speed +2, Fake Out +3, Protect/Detect +4, Helping Hand +5, Whirlwind/Roar/
 Dragon Tail/Circle Throw -6.
 
-**Jogo:** não há turnos. `"priority" > 0` sai quase sem preparo (0,04 s) e com GCD 0,6x
-(`battle_moves.gd` `use`). Speed vira o fator de ritmo (`StatCalc.battle_speed_factor`: cooldown,
-GCD, fôlego, reflexo da IA) e a velocidade de andar. Prioridade negativa ainda não atrasa nada.
+**Jogo:** rodadas em tempo real (`battle/battle_turns.gd`, desde 2026-10-24). No começo de cada rodada
+(`ROUND_SECS` = 4 s) a IA escolhe o golpe; a fila sai como no oficial: prioridade do golpe (maior antes,
+mais o bônus da habilidade em `BattleAbilities.priority_bonus`), depois a Speed efetiva (estágios,
+paralisia 0,5x, Tailwind 2x, `BattleAbilities.order_speed_mult`), Trick Room invertendo dentro da faixa e
+empate no sorteio. Cada lutador solta um golpe por rodada, na vez dele, com `MOVE_GAP` (0,8 s) entre um golpe
+e o seguinte. Item do treinador entra como prioridade +6. Adaptado: a Speed decide a ordem, não quantas vezes
+cada um ataca; quem entra no meio da rodada espera a próxima; quem não consegue soltar em `TURN_MAX` passa.
+Por cima da fila continuam valendo: `"priority" > 0` sai quase sem preparo (0,04 s) e com GCD 0,6x, e a
+prioridade negativa prepara mais devagar (`battle_moves.gd` `use`). Speed segue como fator de ritmo
+(`StatCalc.battle_speed_factor`: cooldown, GCD, fôlego, reflexo da IA) e velocidade de andar.
 
 ## 5. Precisão, evasão e estágios
 

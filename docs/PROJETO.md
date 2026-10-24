@@ -1,6 +1,6 @@
 # PokmemonLike — estado do projeto
 
-Atualizado em 2026-10-23. Jogo em Godot 4.7 (GDScript), feito a partir do estudo do *Pokemon Battle Arena 0.2.0 demo* (fan game em Godot).
+Atualizado em 2026-10-24. Jogo em Godot 4.7 (GDScript), feito a partir do estudo do *Pokemon Battle Arena 0.2.0 demo* (fan game em Godot).
 **Uso pessoal, não publicar**: usa a arte extraída do original (pasta `original/`, fora do git) e a marca Pokémon.
 
 ## Onde está cada coisa
@@ -46,6 +46,7 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 ### Batalha (tempo real, como o original)
 - Arena no próprio mapa. Stamina, cooldown por golpe e global, pool único de PP, fator de Speed, estágios de stat, status com duração em segundos (queimado, envenenado, paralisado, dormindo, confuso, semente, hesitar).
 - 14 tipos de entrega de golpe (investida, arco, projétil, raio, área, corrente etc.), acerto geométrico, dano da fórmula oficial Gen 5+ (spread 0,75x na dupla, golpe de alvo único acerta um só), empurrão pela eficácia, arremesso com batida na cerca/caixa, Body Slam pulando em cima, Aerial Ace, Dig por baixo da terra (`battle/battle_physics.gd`, detalhes em `docs/MECANICAS.md`).
+- Rodadas pela Speed (`battle/battle_turns.gd`): a cada ~4 s a fila sai pela prioridade do golpe e pela Speed (Trick Room inverte), cada Pokémon solta um golpe na vez dele com 0,8 s de folga entre golpes, e um anel com seta marca quem é o próximo. Fora da vez a IA escolhe um ponto no campo (longe da parede, cobertura, sem terreno ruim, dupla lado a lado). Detalhes em `docs/BATALHA_VIVA.md`.
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 
@@ -83,7 +84,7 @@ Flags de história em `Game.flags`: `got_starter`, `rival_starter`, `has_parcel`
 
 ## Testes
 
-23 suítes headless, todas passando na última rodada (core, game, battle, battle_visual, gfx, audio, ui, ui_front, ui_pc, ui_evolution, ui_training ×2, world ×4, interiors ×2, story ×3, content ×2). O teste do Mt. Moon leva de 10 a 15 minutos.
+Suítes headless em `tests/` (todas as `test_*.gd`), todas passando na última rodada (core, game, battle, gfx, audio, ui, ui_front, ui_pc, ui_evolution, ui_training, world, interiors, story, content). Novas da rodada pela Speed: `tests/battle/test_turns.gd` e `tests/battle/test_field_use.gd`. O teste do Mt. Moon leva de 10 a 15 minutos.
 
 ```bash
 "/c/Users/User/Desktop/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe" --headless --fixed-fps 60 --path . --script res://tests/core/test_core.gd < /dev/null
