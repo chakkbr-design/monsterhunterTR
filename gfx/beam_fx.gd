@@ -43,7 +43,8 @@ static func axis_of(beam_id: String) -> String:
 
 
 static func _part(beam_id: String, part: String, frames: int) -> Dictionary:
-	var path := DIR + beam_id.to_lower() + "/" + part + ".png"
+	var folder := String(beams().get(beam_id, {}).get("dir", beam_id))  # "dir": arte de outro raio, só com outro tint
+	var path := DIR + folder.to_lower() + "/" + part + ".png"
 	if frames < 1:
 		return {}
 	if not _tex.has(path):
