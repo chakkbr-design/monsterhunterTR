@@ -3,7 +3,8 @@ extends Node3D
 ## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?,
 ##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada),
 ##        center? (Vector3 global: quadra num lugar certo), arena? (Vector2 [w, d]), trainer_node? (Node3D),
-##        arena_color? (Color), tutorial? (bool: cartões de dica e lição da 1ª luta, battle_tutorial.gd)}.
+##        arena_color? (Color), tutorial? (bool: cartões de dica e lição da 1ª luta, battle_tutorial.gd),
+##        training? (bool: luta de treino do acampamento), card? (textura do boneco)}.
 ## Quadra num lugar certo (o original: Battle.start_trainer_battle com opts.center; trainers.json "center"
 ## + "arena" no ginásio): ver _setup_court.
 ## Com `manual = true` nada anda sozinho: quem chama step(dt) (testes headless).
@@ -95,6 +96,9 @@ var log_lines: Array = []
 var hits := 0
 var rect := Rect2(-ARENA_SIZE / 2.0, -ARENA_SIZE / 2.0, ARENA_SIZE, ARENA_SIZE)
 var fixed := false  ## quadra num lugar certo (opts.center ou "center" do trainers.json)
+## Luta de treino (Battle.training do original): o selvagem é um boneco parado e imortal no nível do
+## controlado, cada KO dá os EVs dele a quem acertou, bola não pega e só termina com FUGIR.
+var training := false
 var axis := Vector3(0, 0, -1)  ## do lado do jogador para o do adversário
 var player_spot := Vector3(0, 0, START_GAP / 2.0)  ## onde cai o 1º mon do jogador (local)
 var enemy_spot := Vector3(0, 0, -START_GAP / 2.0)  ## onde o adversário joga os mons (local)
@@ -159,6 +163,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	party = player_party
 	enemies = enemy_list
 	kind = String(o.get("kind", "wild"))
+	training = kind == "wild" and bool(o.get("training", false))
 	fight_speed = float(o.get("speed", _settings_speed()))
 	if o.has("seed"):
 		rng.seed = int(o.seed)
@@ -318,6 +323,9 @@ func _setup_court(o: Dictionary) -> void:
 	fixed = true
 	global_position = c
 	rect = Rect2(-sz * 0.5, sz)
+	if training:
+		_setup_training_court()
+		return
 	axis = Vector3.RIGHT
 	var spread: float = maxf(sz.x, sz.y) * 0.5 + TRAINER_STAND_OFF
 	var me := -axis * spread
@@ -333,6 +341,25 @@ func _setup_court(o: Dictionary) -> void:
 		_place_body(p, me, them)
 	if t:
 		_place_body(t, them, me)
+
+
+## Selvagem com centro fixo (wild_arena_center do original, só o treino usa): o jogador fica onde está,
+## o boneco aparece no centro e o 1º mon sai a 1,5 m do jogador na direção do centro, dentro da quadra.
+func _setup_training_court() -> void:
+	var p := get_tree().get_first_node_in_group(OverworldPlayer.GROUP) as Node3D
+	var me := to_local(p.global_position) if p else Vector3(rect.position.x, 0, 0)
+	me.y = 0.0
+	var to_mid := -me
+	var lead := me + (to_mid.normalized() * 1.5 if to_mid.length() > 0.01 else Vector3(0, 0, 1.5))
+	var inner := rect.grow(-0.5)
+	lead.x = clampf(lead.x, inner.position.x, inner.end.x)
+	lead.z = clampf(lead.z, inner.position.y, inner.end.y)
+	player_spot = _nearest_free(lead)
+	enemy_spot = _nearest_free(Vector3.ZERO)
+	var d := enemy_spot - player_spot
+	d.y = 0.0
+	axis = d.normalized() if d.length() > 0.01 else Vector3.RIGHT
+	_cam_focus = (player_spot + enemy_spot) * 0.5
 
 
 ## Marcador da sala atual com esse nome (o original procura o nó na cena); as salas daqui chamam o
@@ -549,6 +576,7 @@ func _send_player(i: int, at: Vector3) -> void:
 	player = _spawn(party[i], 0, _player_ctrl(), at)
 	player.set_meta("party_index", i)
 	_bind()
+	_sync_board_level()
 	player.popup("Vai, %s!" % player.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 	say("Vai, %s!" % player.mon.display_name)
 
@@ -569,8 +597,44 @@ func _send_enemy(i: int) -> void:
 	enemy.ai.think_scale = _think_scale
 	enemy.ai.think = WILD_OPENING_DELAY if kind == "wild" else TRAINER_SWAP_HOLD
 	enemy.trainer_item = _trainer_item if kind == "trainer" else ""
+	if training:  # o original: Mode.DUMMY (dummy_style 0 fica parado), sem golpes, imortal
+		enemy.controller = "dummy"
+		enemy.immortal = true
+		var card = load(String(opts.get("card", ""))) if opts.has("card") else null
+		if card is Texture2D and enemy.look:
+			enemy.look.apply_card(card)
 	_participants.clear()
 	_bind()
+	_sync_board_level()
+
+
+## Boneco do treino no nível do mon controlado, curado (_sync_board_level do original).
+func _sync_board_level() -> void:
+	if not training or not is_instance_valid(enemy) or not is_instance_valid(player):
+		return
+	var lv: int = player.mon.level
+	if enemy.mon.level == lv:
+		return
+	enemy.mon.level = lv
+	enemy.mon.recalc()
+	enemy.mon.heal_full()
+	_sync_from_mon(enemy)
+
+
+## Golpe que zerou o HP do alvo (Moves.knocked_out): no treino quem acertou o boneco ganha os EVs dele
+## (Battle._on_knocked_out + gain_evs_from do original).
+func on_knocked_out(user: BattleFighter, target: BattleFighter) -> void:
+	if not training or target != enemy or not is_instance_valid(user) or user.side != 0:
+		return
+	var got := user.mon.add_evs(enemy.mon.ev_yield())
+	if got.is_empty():
+		return
+	_sync_from_mon(user)
+	var names: Dictionary = preload("res://ui/ui_kit.gd").STATS
+	var parts: Array = []
+	for s in got:
+		parts.append("+%d EV %s" % [got[s], names.get(s, String(s).to_upper())])
+	user.popup("  ".join(parts), Color(0.6, 1.0, 0.8), 0.8)
 
 
 ## Reaponta oponentes: os mons do jogador miram o inimigo; o inimigo mira o controlado
@@ -894,6 +958,7 @@ func swap_control() -> bool:
 	var old := player
 	player = ally
 	ally = old
+	_sync_board_level()
 	for f in [player, ally]:
 		f.sprinting = false
 		f.velocity = Vector3.ZERO
@@ -1312,6 +1377,9 @@ func _pick_ball() -> String:
 
 
 func throw_ball() -> bool:
+	if training and state == "fight":
+		say("É um boneco: Poké Bolas não adiantam!", "item")
+		return false
 	if (
 		state != "fight"
 		or kind != "wild"
