@@ -64,6 +64,11 @@ func _still(mine: Mon, foe: Mon, opts := {}) -> Node:
 	var a := _arena([mine], [foe], opts)
 	_run(a, 1.3)
 	a.enemy.controller = "none"
+	a.player.controller = "none"
+	# investida longa já lançada termina antes de medir
+	_run(a, 1.5)
+	a.player.heal(a.player.max_hp)
+	a.enemy.heal(a.enemy.max_hp)
 	return a
 
 

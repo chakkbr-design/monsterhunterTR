@@ -145,6 +145,11 @@ func _init(a: Node) -> void:
 # --- Utilidades ---
 
 
+## Magic Guard: sem dano indireto (veneno, queimadura, semente).
+func no_indirect(f: BattleFighter) -> bool:
+	return ability_of(f) == "magic_guard"
+
+
 func ability_of(f: BattleFighter) -> String:
 	if not is_instance_valid(f) or f.mon == null:
 		return ""

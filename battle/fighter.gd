@@ -654,6 +654,9 @@ func dot_scale() -> float:
 
 
 func _dot(amount: int, why: String, col: Color) -> void:
+	var ab = arena.get("abilities") if arena else null
+	if ab and ab.has_method("no_indirect") and ab.no_indirect(self):
+		return
 	popup("-%d %s" % [amount, why], col, 0.8)
 	take_damage(amount, Vector3.ZERO, 0.0)
 
