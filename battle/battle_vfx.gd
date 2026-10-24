@@ -7,10 +7,12 @@ var arena: Node3D
 var nodes: Array = []  # FxSprite / BeamFx / emissores com tick(dt) -> bool
 var enabled := true
 var spawned := 0  # total de efeitos criados (testes)
+var show: MoveShow  # espetáculo procedural por cima do PMD (gfx/move_show.gd)
 
 
 func _init(a: Node3D) -> void:
 	arena = a
+	show = MoveShow.new(self)
 
 
 func cam() -> Camera3D:
@@ -100,6 +102,7 @@ func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "user")
 	if not r.is_empty():
 		pmd(String(r.fx), _center(user), dir, r)
+	show.on_cast(user, mv, dir)
 
 
 ## Ao acertar: papel "hit" ou um impacto padrão (tingido pelo tipo nos especiais).
@@ -129,6 +132,7 @@ func on_hit(
 	pmd(String(r.fx), at, dir, r)
 	if crit or eff > 1.0:
 		pmd("hit_neutral", at, dir, {"scale": 1.6, "tint": Color(1, 0.9, 0.5)})
+	show.on_hit(user, target, mv, dir, crit, eff)
 
 
 ## Raio no eixo "aim" (hyper_beam, hydro_pump, solar_beam, psybeam...). Sem entrada: raio tingido pelo tipo.
@@ -155,10 +159,13 @@ func beam(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, dur:
 		_track(b)
 
 
-## Raio do céu (thunder) no ponto.
-func sky_bolt(move_id: String, at: Vector3, dur := 0.6) -> void:
+## Raio do céu (thunder) no ponto. A arena chama isto quando qualquer golpe em área no alvo cai:
+## além do raio (só quem tem "beam" de eixo "sky"), toca o "land" do look do golpe.
+func sky_bolt(move_id: String, at: Vector3, dur := 0.6, notify := true) -> void:
 	if not enabled or not arena.is_inside_tree():
 		return
+	if notify:
+		show.landed(move_id, at)
 	var id := BeamFx.beam_for(move_id)
 	if id == "":
 		return
@@ -207,8 +214,11 @@ func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -
 
 ## Visual de projétil: papel "travel" (PMD em laço) ou uma orbe brilhante do tipo.
 func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
+	show.projectile_trail(p, mv)
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "travel")
 	if not r.is_empty() and attach(p, String(r.fx), dir, r) != null:
+		return
+	if PmdFx.move_roles(String(mv.get("id", ""))).get("look", {}).get("orb", "") != "":
 		return
 	var mi := MeshInstance3D.new()
 	var sm := SphereMesh.new()
@@ -245,6 +255,7 @@ func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 	var id := String(st.get("up" if up else "down", ""))
 	if id != "" and is_instance_valid(f):
 		pmd(id, _center(f, 0.45), Vector3.FORWARD, {"billboard": true})
+	show.stat_change(f, key, up)
 
 
 ## Efeito de status em laço preso ao lutador ("status" do move_fx.json).
@@ -256,6 +267,84 @@ func status_look(f: BattleFighter, status: String) -> FxSprite:
 	r.billboard = true
 	var k := 1.05 if status in ["sleep", "confusion"] else 0.55
 	return attach(f, String(r.fx), Vector3.FORWARD, r, Vector3(0, f.visual_height() * k, 0))
+
+
+# --- Cavar (a mecânica chama via has_method) ---
+
+
+## Rastro de terra que avança pelo chão de `from` até `to` (coordenadas locais da arena, como
+## fighter.position) em `duration` s, com terra levantando.
+func dig_trail(user: BattleFighter, from: Vector3, to: Vector3, duration: float) -> void:
+	show.dig_trail(user, from, to, duration)
+
+
+## O lutador entrou no chão: buraco e terra espirrando.
+func burrow(user: BattleFighter) -> void:
+	show.burrow(user)
+
+
+## O lutador saiu do chão: estouro de terra, pedras e anel de poeira.
+func unburrow(user: BattleFighter) -> void:
+	show.unburrow(user)
+
+
+## Lutador arremessado bateu na cerca/caixa/pedra/parede (`at` local da arena): poeira e estrelinhas.
+func crash(f: BattleFighter, at: Vector3, what: String) -> void:
+	show.crash(f, at, what)
+
+
+## Arremesso forte (Whirlwind, Roar, Dragon Tail, contato 80+): rastro de vento enquanto voa.
+func launch(f: BattleFighter, dir: Vector3, dist: float) -> void:
+	show.launch(f, dir, dist)
+
+
+## Reapareceu de repente (Aerial Ace "blink"): flash e linhas onde surge.
+func blink(f: BattleFighter) -> void:
+	show.blink(f)
+
+
+# --- Campo, clima e escudos (a mecânica dos golpes chama via has_method) ---
+
+
+func protect_shield(f: BattleFighter, secs: float) -> void:
+	show.protect_shield(f, secs)
+
+
+## Follow Me / Rage Powder.
+func spotlight(f: BattleFighter, secs: float) -> void:
+	show.spotlight(f, secs)
+
+
+## light_screen, reflect, safeguard, quick_guard, tailwind sobre o lado `side`.
+func screen(side: int, kind: String, secs: float) -> void:
+	show.screen(side, kind, secs)
+
+
+## sun, rain, sand, hail.
+func weather(kind: String, secs: float) -> void:
+	show.weather(kind, secs)
+
+
+## "grassy".
+func terrain(kind: String, secs: float) -> void:
+	show.terrain(kind, secs)
+
+
+func gravity(secs: float) -> void:
+	show.gravity(secs)
+
+
+func haze(user: BattleFighter) -> void:
+	show.haze(user)
+
+
+## `at` local da arena.
+func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
+	show.toxic_spikes(side, at, r, life)
+
+
+func heal(f: BattleFighter) -> void:
+	show.heal(f)
 
 
 ## Fumaça ao entrar em campo / sair da bola.
