@@ -1,6 +1,6 @@
 extends Node3D
 ## Modo de treinamento: a luta automática entre os dois times montados em training_setup.
-## Arena fixa com o dobro da quadra padrão (Cfg.ARENA), as duas IAs lutando sozinhas
+## Arena fixa de Cfg.ARENA (16 x 10), as duas IAs lutando sozinhas
 ## (opts.autoplay), sem mexer no save nem na equipe do jogo. No fim mostra o vencedor e o
 ## placar da série.
 ## Esc para a luta e volta para a tela de montar.

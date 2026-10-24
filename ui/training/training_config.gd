@@ -10,8 +10,8 @@ const PATH := "user://training.json"
 static var path := PATH
 const SIDES := 2
 const PARTY_MAX := 6
-## Quadra fixa do treino: o dobro da quadra padrão da arena (FIXED_ARENA 10 x 6).
-const ARENA := Vector2(20, 12)
+## Quadra fixa do treino: 16 x 10 (a quadra padrão da arena é 10 x 6).
+const ARENA := Vector2(16, 10)
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
 const TURBO_STEPS := 12
