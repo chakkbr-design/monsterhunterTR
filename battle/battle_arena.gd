@@ -1,6 +1,8 @@
 extends Node3D
 ## Arena de batalha em tempo real. Contrato: start(player_party, enemies, opts) e signal finished(result).
-## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, autoplay? (IA controla o jogador), seed?, speed?,
+## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, auto_battle? (padrão true: IA luta pelo jogador,
+##        que ainda usa bolsa/bola/troca/pausa), autoplay? (IA e sem jogador: confirmações passam sozinhas),
+##        player_think_scale?, player_item?, enemy_think_scale? (ajustes da IA por lado), seed?, speed?,
 ##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada),
 ##        center? (Vector3 global: quadra num lugar certo), arena? (Vector2 [w, d]), trainer_node? (Node3D),
 ##        arena_color? (Color), tutorial? (bool: cartões de dica e lição da 1ª luta, battle_tutorial.gd),
@@ -182,6 +184,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
 		_think_scale = float(tr.get("ai_think_scale", 1.0))
 		_trainer_item = String(o.get("trainer_item", tr.get("item", "")))
+	_think_scale = float(o.get("enemy_think_scale", _think_scale))
 	# Selvagem: até BATTLE_SIZE mons do jogador (2x1). Treinador: sempre 1x1.
 	_battle_size = (
 		1 if kind != "wild" else clampi(int(o.get("battle_size", BATTLE_SIZE)), 1, BATTLE_SIZE)
@@ -191,7 +194,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	_setup_court(o)
 	_build()
 	clear_tut_lock()
-	if bool(o.get("tutorial", false)) and tutorial == null:
+	# A lição e os cartões ensinam as teclas de golpe: não valem com a batalha automática.
+	if bool(o.get("tutorial", false)) and _player_ctrl() != "ai" and tutorial == null:
 		tutorial = TUTORIAL.new(self)
 		add_child(tutorial)
 	_track_out = o.get("out") is Array
@@ -552,8 +556,15 @@ func _field_mons() -> Array:
 	return out
 
 
+## Batalha automática (opts.auto_battle, ligada por padrão): o mon do jogador luta com a mesma IA
+## do adversário; o jogador ainda usa bolsa, bola, troca e pausa. autoplay = IA e ninguém no teclado.
 func _player_ctrl() -> String:
-	return "ai" if opts.get("autoplay", false) else "player"
+	return "ai" if opts.get("autoplay", false) or opts.get("auto_battle", true) else "player"
+
+
+## Tem alguém no teclado (fora de testes manuais e do autoplay).
+func _human() -> bool:
+	return not manual and not bool(opts.get("autoplay", false))
 
 
 func _next_enemy(after: int) -> int:
@@ -582,6 +593,7 @@ func _send_player(i: int, at: Vector3) -> void:
 	if _track_out and not _out.has(party[i]):
 		_out.append(party[i])
 	player = _spawn(party[i], 0, _player_ctrl(), at)
+	_side_a_ai(player)
 	player.set_meta("party_index", i)
 	_bind()
 	_sync_board_level()
@@ -593,10 +605,18 @@ func _send_ally(i: int, at: Vector3) -> void:
 	if _track_out and not _out.has(party[i]):
 		_out.append(party[i])
 	ally = _spawn(party[i], 0, "ai", at)
+	_side_a_ai(ally)
 	ally.set_meta("party_index", i)
 	_bind()
 	ally.popup("Vai, %s!" % ally.mon.display_name, Color(0.7, 0.9, 1.0), 1.0, 0.8)
 	say("Vai, %s!" % ally.mon.display_name)
+
+
+## IA do lado do jogador igual à do adversário, com os ajustes do lado A: opts.player_think_scale e
+## opts.player_item (item de uso único por mon, como o do treinador).
+func _side_a_ai(f: BattleFighter) -> void:
+	f.ai.think_scale = float(opts.get("player_think_scale", 1.0))
+	f.trainer_item = String(opts.get("player_item", ""))
 
 
 func _send_enemy(i: int) -> void:
@@ -835,7 +855,10 @@ func _fight_step(dt: float) -> void:
 				want = _player_input(f)
 				speed = BattleFighter.PLAYER_SPEED
 			elif f.controller == "ai" and f.impact_t <= 0.0 and not tut_hold_foe:
-				want = f.ai.step(dt)
+				if f == player and _human():
+					_commands(f)
+				if f.controller == "ai" and f.on_field:
+					want = f.ai.step(dt)
 		var before: Vector3 = f.position
 		f.drive(dt, want, speed)
 		if fixed:
@@ -882,20 +905,10 @@ func _ally_mode_pressed() -> bool:
 func _player_input(f: BattleFighter) -> Vector3:
 	if manual:
 		return Vector3.ZERO
-	if menu != "":
-		f.sprinting = false
-		_menu_input()
-		return Vector3.ZERO
-	if Input.is_action_just_pressed("pause"):
-		open_pause()
+	if not _commands(f):
 		return Vector3.ZERO
 	if tut_locked:
 		return _locked_input(f)
-	if Input.is_action_just_pressed("interact"):
-		open_menu("bag")
-		return Vector3.ZERO
-	if _ally_mode_pressed():
-		cycle_ally_mode()
 	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if Input.is_action_just_pressed("jump"):
 		f.start_jump()
@@ -906,12 +919,32 @@ func _player_input(f: BattleFighter) -> Vector3:
 				f.struggle()
 			else:
 				moves.use(f, String(f.moves[k]), true)
+	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
+
+
+## Comandos do treinador, que valem também na batalha automática: pausa (Esc), bolsa (E), modo do
+## aliado (F), troca (Tab) e bola (Q). false quando o quadro foi para um menu (sem andar nem golpe).
+func _commands(f: BattleFighter) -> bool:
+	if menu != "":
+		f.sprinting = false
+		_menu_input()
+		return false
+	if Input.is_action_just_pressed("pause"):
+		open_pause()
+		return false
+	if tut_locked:
+		return true
+	if Input.is_action_just_pressed("interact"):
+		open_menu("bag")
+		return false
+	if _ally_mode_pressed():
+		cycle_ally_mode()
 	if Input.is_action_just_pressed("swap_mon"):
 		swap()
 	# Fugir não tem tecla, como no original: é o FUGIR da pausa (Esc).
 	if Input.is_action_just_pressed("throw_ball"):
 		throw_ball()
-	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
+	return true
 
 
 ## Lição do tutorial (combatant.gd read_local_intent/apply_intent do original): só o golpe liberado,
@@ -1226,6 +1259,9 @@ func _support_heal() -> void:
 
 
 func item_used_by_trainer(f: BattleFighter, item_name: String) -> void:
+	if f.side == 0:
+		say("%s usou %s!" % [f.mon.display_name, item_name], "item")
+		return
 	say("%s usou %s em %s!" % [trainer_name(), item_name, f.mon.display_name], "trainer")
 
 

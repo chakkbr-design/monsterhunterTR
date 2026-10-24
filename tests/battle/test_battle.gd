@@ -31,6 +31,7 @@ func _initialize() -> void:
 	_trainer_lines()
 	_results()
 	_capture_pc_and_ball()
+	_auto_battle()
 	print("battle: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -55,6 +56,8 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	a.set_meta("got", got)
 	if not opts.has("speed"):
 		opts["speed"] = 1.0  # the rules are timed at 1x (the game plays at the original's 0.6)
+	if not opts.has("auto_battle"):
+		opts["auto_battle"] = false  # these suites drive the player's mon by hand
 	a.start(party, enemies, opts)
 	return a
 
@@ -720,3 +723,43 @@ func _capture_pc_and_ball() -> void:
 		"sem opts.speed usa a velocidade das opções (%.1f)" % b.fight_speed
 	)
 	_done(b)
+
+
+## Batalha automática (padrão do jogo): sem autoplay o mon do jogador já luta com a IA, troca sozinho
+## quando desmaia e usa os ajustes do lado A (player_think_scale, player_item, enemy_think_scale).
+func _auto_battle() -> void:
+	var party := [Mon.create("charmander", 7), Mon.create("squirtle", 7)]
+	var foes := [Mon.create("geodude", 12), Mon.create("onix", 12)]
+	var a := _arena(
+		party,
+		foes,
+		{
+			"kind": "trainer",
+			"trainer_name": "Time B",
+			"seed": 9,
+			"auto_battle": true,
+			"tutorial": true,
+			"player_think_scale": 0.5,
+			"player_item": "potion",
+			"enemy_think_scale": 1.3,
+		}
+	)
+	_run(a, 1.5)
+	check(a.player.controller == "ai", "batalha automática: IA controla o mon do jogador")
+	check(a.tutorial == null, "batalha automática: sem lição de teclas")
+	check(near(a.player.ai.think_scale, 0.5, 0.001), "player_think_scale no lado A")
+	check(a.player.trainer_item == "potion", "player_item no lado A")
+	check(near(a.enemy.ai.think_scale, 1.3, 0.001), "enemy_think_scale no lado B")
+	var t := 0.0
+	var sent := {}
+	while a.state != "done" and t < 600.0:
+		a.step(DT)
+		t += DT
+		if is_instance_valid(a.player):
+			sent[a.player.mon] = true
+			check(a.player.controller == "ai", "o mon que entra também é IA")
+	var outcome := String(a.get_meta("got").get("outcome", "none"))
+	check(outcome in ["win", "lose"], "batalha automática termina (%s em %.1f s)" % [outcome, t])
+	check(sent.size() == 2 or outcome == "win", "troca sozinha quando o mon desmaia")
+	check(party.any(func(m): return m.hp > 0) or outcome == "lose", "resultado coerente")
+	_done(a)

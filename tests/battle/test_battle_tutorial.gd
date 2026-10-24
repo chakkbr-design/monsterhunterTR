@@ -50,6 +50,7 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	opts["speed"] = 1.0
 	opts["seed"] = 7
 	opts["tutorial"] = true
+	opts["auto_battle"] = false
 	a.start(party, enemies, opts)
 	return a
 
