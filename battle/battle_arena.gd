@@ -1039,6 +1039,7 @@ func _fight_step(dt: float) -> void:
 	combos.tick(dt)
 	field.tick(dt)
 	abilities.tick(dt)
+	moves.effects.tick(dt)
 	for f in fighters:
 		if f.on_field:
 			f.tick(dt)
@@ -1280,6 +1281,9 @@ func send_in(i: int, as_ally := false) -> bool:
 		if not is_instance_valid(player) or not player.alive():
 			return false
 		if player.dash_t > 0.0 or player.lunge_t > 0.0 or player.root_t > 0.0:
+			return false
+		if moves.effects.cant_escape(player):  # Mean Look
+			player.popup("Não pode sair!", Color(0.8, 0.6, 0.9))
 			return false
 		var at := player.position
 		at.y = 0.0
@@ -1687,6 +1691,9 @@ func run_away() -> bool:
 				else "Não dá para fugir!"
 			)
 		)
+		return false
+	if is_instance_valid(player) and moves.effects.cant_escape(player):
+		say("Não dá para fugir: %s está preso!" % player.mon.display_name)
 		return false
 	say("Fugiu em segurança!")
 	preload("res://audio/cue.gd").sfx("run_away")

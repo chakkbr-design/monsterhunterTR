@@ -4,7 +4,12 @@ extends RefCounted
 
 const MISSABLE := ["dash", "arc", "multi_arc", "whip", "projectile", "beam", "aoe_target", "zone"]
 const STATUS_IMMUNE := {
-	"burn": "fire", "poison": "poison", "paralysis": "electric", "leech": "grass"
+	"burn": "fire",
+	"poison": "poison",
+	"toxic": "poison",
+	"paralysis": "electric",
+	"leech": "grass",
+	"freeze": "ice"
 }
 const STAT_NAMES := {
 	"atk": "Ataque",
@@ -17,6 +22,8 @@ const STAT_NAMES := {
 const STATUS_WORDS := {
 	"burn": "QUEIMADO!",
 	"poison": "ENVENENADO!",
+	"toxic": "MUITO ENVENENADO!",
+	"freeze": "CONGELADO!",
 	"paralysis": "PARALISADO!",
 	"sleep": "DORMINDO!",
 	"leech": "SEMEADO!",
@@ -43,16 +50,19 @@ const AI_ROLL_MEAN := 0.925
 
 var arena: Node
 var rng: RandomNumberGenerator
+## Mecânicas da Gen 9 que não cabem no kind (proteção, recuo, poder variável, campo...).
+var effects: BattleMoveEffects
 
 
 func _init(a: Node, r: RandomNumberGenerator) -> void:
 	arena = a
 	rng = r
+	effects = BattleMoveEffects.new(a, r)
 
 
 func can_afford(user: BattleFighter, id: String, careful := true) -> bool:
 	var mv := Dex.move(id)
-	if mv.is_empty() or user.pp_max < user.pp_cost_of(mv):
+	if mv.is_empty() or user.pp_max < user.pp_cost_of(mv) or not effects.usable(user, mv):
 		return false
 	return not careful or user.stamina >= Dex.fatigue(mv) or rng.randf() < 0.1
 
@@ -71,6 +81,8 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 		or not user.may_start(mv)
 	):
 		return false
+	if not effects.usable(user, mv, feedback):
+		return false
 	var cost := user.pp_cost_of(mv)
 	if user.pp_max < cost:
 		if feedback:
@@ -88,9 +100,10 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
 		user.popup("Paralisado!", Dex.type_color("electric"))
 		return true
+	effects.on_use(user, mv)
 	if arena and arena.has_method("on_move_used"):
 		arena.on_move_used(user, mv)
-	var prepare := Dex.prepare_time(mv)
+	var prepare := Dex.prepare_time(mv) + effects.priority_delay(user, mv)
 	if int(mv.get("priority", 0)) > 0:
 		prepare = minf(prepare, PRIORITY_PREPARE)
 	elif prepare > 0.0:
@@ -168,7 +181,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 	)
 	var miss: BattleFighter = null
 	var kind := String(mv.get("kind", ""))
-	var acc := float(mv.get("accuracy", 0.0))
+	var acc := effects.accuracy_of(user, mv)
 	var eff_acc := acc * acc_mult(int(user.stages.get("acc", 0)))
 	if arena.abilities:
 		eff_acc *= arena.abilities.acc_mult(user)
@@ -202,6 +215,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		mv = mv.duplicate()
 		mv.power = int(roll[1])
 		user.popup("Magnitude %d" % int(roll[0]), Dex.type_color(String(mv.type)), 1.0, 1.0)
+	mv = effects.roll_hits(mv)
 	user.cast_move = mv
 	user.cast_n += 1
 	_cast_visual(user, mv, dir)
@@ -310,7 +324,10 @@ func _roll_magnitude(table: Array) -> Array:
 func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	if not is_instance_valid(target) or not target.alive():
 		return 0.0
-	var power := float(mv.get("power", 0.0))
+	var exact := effects.expected_exact(user, target, mv)
+	if exact >= 0.0:
+		return exact
+	var power := effects.ai_power(user, target, mv)
 	if power <= 0.0:
 		return 0.0
 	var eff := Dex.effectiveness(String(mv.get("type", "")), target.types)
@@ -354,6 +371,9 @@ func hit(
 ) -> void:
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
+	if effects.blocks_hit(user, target, mv):
+		_landed(user, target, mv)
+		return
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
 		target.popup("Errou!", Color(0.9, 0.9, 1.0))
 		_dodged(target, "evasion")
@@ -368,13 +388,21 @@ func hit(
 		return
 	if arena.field and not String(mv.get("kind", "")) in AREA_KINDS:
 		arena.field.on_move_landed(user, mv, target.pos2(target.position), 0.8)
+	if effects.exact_hit(user, target, mv, dir):
+		_landed(user, target, mv)
+		return
 	var power := float(mv.get("power", 0)) * power_scale
+	var dealt := 0
 	if power > 0.0:
 		var m := mv
 		if power_scale != 1.0:
 			m = mv.duplicate()
 			m.power = power
-		var res := Damage.compute(user.damage_profile(), target.damage_profile(), m, rng)
+		m = effects.adjust_move(user, target, m)
+		var res := Damage.compute(
+			user.damage_profile(), effects.defender_profile(user, target, m), m, rng
+		)
+		effects.on_damage_roll(user, target, m, res)
 		var eff := float(res.eff)
 		if eff == 0.0:
 			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
@@ -400,6 +428,7 @@ func hit(
 			float(mv.get("knockback", 4.0)),
 			{"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
+		dealt = dmg
 		if arena.combos:
 			arena.combos.on_hit(user, target, mv, dmg)
 		if arena.abilities:
@@ -432,7 +461,12 @@ func hit(
 		if arena.vfx:
 			arena.vfx.on_hit(user, target, mv, dir, res.crit, eff)
 	var ef = mv.get("effect")
-	if ef is Dictionary and target.alive() and rng.randf() < float(ef.get("chance", 0.0)):
+	if (
+		ef is Dictionary
+		and target.alive()
+		and not effects.sheer_force(user, mv)
+		and rng.randf() < float(ef.get("chance", 0.0))
+	):
 		if ef.has("stat"):
 			change_stage(user if ef.get("self", false) else target, String(ef.stat), int(ef.stages))
 		else:
@@ -440,6 +474,8 @@ func hit(
 			if STATUS_IMMUNE.get(st, "-") in target.types:
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
 			elif arena.abilities and arena.abilities.blocks_status(target, st):
+				pass
+			elif effects.blocks_status(user, target, st):
 				pass
 			elif target.apply_status(st, user):
 				target.popup(
@@ -449,6 +485,7 @@ func hit(
 					0.15,
 					"status"
 				)
+	effects.after_hit(user, target, mv, dealt)
 	_landed(user, target, mv)
 
 
@@ -486,6 +523,7 @@ func extra_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> f
 		m *= arena.combos.damage_mult(user, target, mv)
 	if arena.abilities:
 		m *= arena.abilities.damage_mult(user, target, mv)
+	m *= effects.damage_mult(user, target, mv)
 	return m
 
 
@@ -731,7 +769,7 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 
 
 func _ground_immune(mv: Dictionary, t: BattleFighter) -> bool:
-	return String(mv.get("type", "")) == "ground" and t.is_airborne()
+	return String(mv.get("type", "")) == "ground" and t.is_airborne() and not effects.no_jump()
 
 
 func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
@@ -836,6 +874,8 @@ func _zone_tick(
 
 
 func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
+	if effects.self_move(user, mv):
+		return
 	var st := String(mv.get("stat", ""))
 	if st == "crit":
 		var before := user.crit_stage
@@ -865,5 +905,5 @@ func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 		0.3
 	)
 	for t in targets_of(user):
-		if user.flat_to(t).length() <= radius:
+		if user.flat_to(t).length() <= radius and not effects.blocks_hit(user, t, mv):
 			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)))

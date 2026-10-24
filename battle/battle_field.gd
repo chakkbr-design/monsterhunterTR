@@ -369,6 +369,7 @@ func _tick_objects(dt: float) -> void:
 				if is_instance_valid(f) and f.active() and _flat(f.position - b.pos).length() < 0.7:
 					var n := maxi(1, int(f.max_hp / 10.0))
 					f.heal(n)
+					f.set_meta("ate_berry", true)  # Belch
 					f.popup("+%d Frutinha" % n, Color(0.5, 1.0, 0.5), 0.8)
 					taken = true
 					break

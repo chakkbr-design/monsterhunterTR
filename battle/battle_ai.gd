@@ -676,6 +676,9 @@ func _worth_status(id: String, has_damage: bool) -> bool:
 	var mv := Dex.move(id)
 	if float(mv.get("power", 0)) > 0.0:
 		return false
+	var special = f.arena.moves.effects.ai_worth(f, mv)
+	if special != null:
+		return bool(special)
 	if float(f.hp) / maxf(f.max_hp, 1) < KIT_LOW_HP:
 		return false
 	var stack_ok := not has_damage or error_chance() >= KIT_STAT_SLOP

@@ -67,8 +67,24 @@
         "seed_bomb"
       ],
       [
+        21,
+        "take_down"
+      ],
+      [
         24,
         "sweet_scent"
+      ],
+      [
+        27,
+        "synthesis"
+      ],
+      [
+        30,
+        "worry_seed"
+      ],
+      [
+        33,
+        "power_whip"
       ],
       [
         36,
@@ -95,18 +111,31 @@
       "tips": 1
     },
     "tm": [
+      "acid_spray",
       "body_slam",
       "bullet_seed",
+      "charm",
       "curse",
+      "double_edge",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
+      "protect",
+      "rest",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "take_down",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "chlorophyll",
     "learnset_version": "scarlet-violet",
     "egg": [
       "curse",
-      "petal_dance"
+      "petal_dance",
+      "toxic"
     ]
   },
   "Ivysaur": {
@@ -179,8 +208,24 @@
         "seed_bomb"
       ],
       [
+        25,
+        "take_down"
+      ],
+      [
         30,
         "sweet_scent"
+      ],
+      [
+        35,
+        "synthesis"
+      ],
+      [
+        40,
+        "worry_seed"
+      ],
+      [
+        45,
+        "power_whip"
       ],
       [
         50,
@@ -207,18 +252,31 @@
       "tips": 2
     },
     "tm": [
+      "acid_spray",
       "body_slam",
       "bullet_seed",
+      "charm",
       "curse",
+      "double_edge",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
+      "protect",
+      "rest",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "take_down",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "chlorophyll",
     "learnset_version": "scarlet-violet",
     "egg": [
       "curse",
-      "petal_dance"
+      "petal_dance",
+      "toxic"
     ]
   },
   "Venusaur": {
@@ -295,8 +353,24 @@
         "seed_bomb"
       ],
       [
+        25,
+        "take_down"
+      ],
+      [
         30,
         "sweet_scent"
+      ],
+      [
+        37,
+        "synthesis"
+      ],
+      [
+        44,
+        "worry_seed"
+      ],
+      [
+        51,
+        "power_whip"
       ],
       [
         58,
@@ -319,23 +393,41 @@
       "tips": 3
     },
     "tm": [
+      "acid_spray",
       "body_slam",
+      "bulldoze",
       "bullet_seed",
+      "charm",
       "curse",
+      "double_edge",
       "earth_power",
       "earthquake",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
       "hyper_beam",
+      "petal_blizzard",
       "poison_jab",
+      "protect",
+      "rest",
       "scary_face",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "take_down",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "chlorophyll",
     "learnset_version": "scarlet-violet",
     "egg": [
       "curse",
-      "petal_dance"
+      "petal_dance",
+      "toxic"
+    ],
+    "evo_moves": [
+      "petal_blizzard"
     ]
   },
   "Charmander": {
@@ -402,6 +494,18 @@
       [
         28,
         "scary_face"
+      ],
+      [
+        32,
+        "fire_spin"
+      ],
+      [
+        36,
+        "inferno"
+      ],
+      [
+        40,
+        "flare_blitz"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -427,14 +531,22 @@
       "dragon_claw",
       "fire_blast",
       "fire_fang",
+      "fire_spin",
       "flamethrower",
+      "flare_blitz",
       "heat_wave",
       "helping_hand",
       "metal_claw",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "scary_face",
-      "swift"
+      "swift",
+      "swords_dance",
+      "take_down",
+      "thunder_punch",
+      "will_o_wisp"
     ],
     "hidden_ability": "solar_power",
     "learnset_version": "scarlet-violet",
@@ -511,6 +623,14 @@
       [
         37,
         "scary_face"
+      ],
+      [
+        48,
+        "inferno"
+      ],
+      [
+        54,
+        "flare_blitz"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -535,13 +655,21 @@
       "dragon_claw",
       "fire_blast",
       "fire_fang",
+      "fire_spin",
       "flamethrower",
+      "flare_blitz",
       "heat_wave",
       "helping_hand",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "scary_face",
-      "swift"
+      "swift",
+      "swords_dance",
+      "take_down",
+      "thunder_punch",
+      "will_o_wisp"
     ],
     "hidden_ability": "solar_power",
     "learnset_version": "scarlet-violet",
@@ -626,6 +754,18 @@
       [
         39,
         "scary_face"
+      ],
+      [
+        46,
+        "fire_spin"
+      ],
+      [
+        54,
+        "inferno"
+      ],
+      [
+        62,
+        "flare_blitz"
       ]
     ],
     "evo_moves": [
@@ -645,24 +785,36 @@
     "fly_height": 1.6,
     "tm": [
       "aerial_ace",
+      "air_cutter",
       "air_slash",
       "body_slam",
+      "bulldoze",
       "crunch",
       "dig",
+      "double_edge",
       "dragon_claw",
       "earthquake",
       "fire_blast",
       "fire_fang",
+      "fire_spin",
       "flamethrower",
+      "flare_blitz",
       "heat_wave",
       "helping_hand",
       "hurricane",
       "hyper_beam",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
+      "sandstorm",
       "scary_face",
       "solar_beam",
-      "swift"
+      "swift",
+      "swords_dance",
+      "take_down",
+      "thunder_punch",
+      "will_o_wisp"
     ],
     "hidden_ability": "solar_power",
     "learnset_version": "scarlet-violet",
@@ -732,6 +884,10 @@
         "water_pulse"
       ],
       [
+        18,
+        "protect"
+      ],
+      [
         21,
         "rain_dance"
       ],
@@ -740,8 +896,20 @@
         "aqua_tail"
       ],
       [
+        27,
+        "shell_smash"
+      ],
+      [
+        30,
+        "iron_defense"
+      ],
+      [
         33,
         "hydro_pump"
+      ],
+      [
+        36,
+        "wave_crash"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -763,16 +931,25 @@
     "tm": [
       "body_slam",
       "dig",
+      "double_edge",
+      "gyro_ball",
+      "haze",
       "helping_hand",
       "hydro_pump",
+      "iron_defense",
+      "protect",
       "rain_dance",
-      "water_pulse"
+      "rest",
+      "take_down",
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "rain_dish",
     "learnset_version": "scarlet-violet",
     "egg": [
       "aqua_jet",
       "flail",
+      "life_dew",
       "yawn"
     ]
   },
@@ -839,6 +1016,10 @@
         "water_pulse"
       ],
       [
+        20,
+        "protect"
+      ],
+      [
         25,
         "rain_dance"
       ],
@@ -847,8 +1028,20 @@
         "aqua_tail"
       ],
       [
+        35,
+        "shell_smash"
+      ],
+      [
+        40,
+        "iron_defense"
+      ],
+      [
         45,
         "hydro_pump"
+      ],
+      [
+        50,
+        "wave_crash"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -869,16 +1062,25 @@
     "tm": [
       "body_slam",
       "dig",
+      "double_edge",
+      "gyro_ball",
+      "haze",
       "helping_hand",
       "hydro_pump",
+      "iron_defense",
+      "protect",
       "rain_dance",
-      "water_pulse"
+      "rest",
+      "take_down",
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "rain_dish",
     "learnset_version": "scarlet-violet",
     "egg": [
       "aqua_jet",
       "flail",
+      "life_dew",
       "yawn"
     ]
   },
@@ -944,6 +1146,10 @@
         "water_pulse"
       ],
       [
+        20,
+        "protect"
+      ],
+      [
         25,
         "rain_dance"
       ],
@@ -952,8 +1158,20 @@
         "aqua_tail"
       ],
       [
+        35,
+        "shell_smash"
+      ],
+      [
+        42,
+        "iron_defense"
+      ],
+      [
         49,
         "hydro_pump"
+      ],
+      [
+        56,
+        "wave_crash"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -971,22 +1189,35 @@
       "body_slam",
       "crunch",
       "dig",
+      "double_edge",
       "earthquake",
+      "flash_cannon",
+      "gyro_ball",
+      "haze",
       "helping_hand",
       "hydro_pump",
       "hyper_beam",
+      "iron_defense",
+      "protect",
       "rain_dance",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "scary_face",
-      "water_pulse"
+      "take_down",
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "rain_dish",
     "learnset_version": "scarlet-violet",
     "egg": [
       "aqua_jet",
       "flail",
+      "life_dew",
       "yawn"
+    ],
+    "evo_moves": [
+      "flash_cannon"
     ]
   },
   "Pidgey": {
@@ -1045,8 +1276,24 @@
         "twister"
       ],
       [
+        25,
+        "feather_dance"
+      ],
+      [
+        29,
+        "agility"
+      ],
+      [
         33,
         "wing_attack"
+      ],
+      [
+        37,
+        "roost"
+      ],
+      [
+        41,
+        "tailwind"
       ],
       [
         45,
@@ -1080,12 +1327,17 @@
     "tm": [
       "aerial_ace",
       "double_team",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "roost",
       "thief"
     ],
     "hidden_ability": "big_pecks",
     "learnset_version": "brilliant-diamond-shining-pearl",
     "egg": [
+      "air_cutter",
       "air_slash"
     ]
   },
@@ -1155,8 +1407,24 @@
         "twister"
       ],
       [
+        27,
+        "feather_dance"
+      ],
+      [
+        32,
+        "agility"
+      ],
+      [
         37,
         "wing_attack"
+      ],
+      [
+        42,
+        "roost"
+      ],
+      [
+        47,
+        "tailwind"
       ],
       [
         52,
@@ -1190,7 +1458,11 @@
     "tm": [
       "aerial_ace",
       "double_team",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "roost",
       "thief"
     ],
     "hidden_ability": "big_pecks",
@@ -1270,8 +1542,24 @@
         "twister"
       ],
       [
+        27,
+        "feather_dance"
+      ],
+      [
+        32,
+        "agility"
+      ],
+      [
         38,
         "wing_attack"
+      ],
+      [
+        44,
+        "roost"
+      ],
+      [
+        50,
+        "tailwind"
       ],
       [
         56,
@@ -1302,7 +1590,11 @@
       "aerial_ace",
       "double_team",
       "hyper_beam",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "roost",
       "thief"
     ],
     "hidden_ability": "big_pecks",
@@ -1359,6 +1651,18 @@
         "bite"
       ],
       [
+        13,
+        "laser_focus"
+      ],
+      [
+        16,
+        "take_down"
+      ],
+      [
+        19,
+        "assurance"
+      ],
+      [
         22,
         "crunch"
       ],
@@ -1369,6 +1673,14 @@
       [
         28,
         "super_fang"
+      ],
+      [
+        31,
+        "double_edge"
+      ],
+      [
+        34,
+        "endeavor"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -1391,7 +1703,11 @@
       "dig",
       "double_team",
       "iron_tail",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "sludge_bomb",
       "thief",
       "thunder",
       "thunder_wave",
@@ -1451,6 +1767,10 @@
       ],
       [
         1,
+        "swords_dance"
+      ],
+      [
+        1,
         "tackle"
       ],
       [
@@ -1470,6 +1790,18 @@
         "bite"
       ],
       [
+        13,
+        "laser_focus"
+      ],
+      [
+        16,
+        "take_down"
+      ],
+      [
+        19,
+        "assurance"
+      ],
+      [
         24,
         "crunch"
       ],
@@ -1480,6 +1812,14 @@
       [
         34,
         "super_fang"
+      ],
+      [
+        39,
+        "double_edge"
+      ],
+      [
+        44,
+        "endeavor"
       ]
     ],
     "evo_moves": [
@@ -1501,7 +1841,12 @@
       "double_team",
       "hyper_beam",
       "iron_tail",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "sludge_bomb",
+      "swords_dance",
       "thief",
       "thunder",
       "thunder_wave",
@@ -1534,7 +1879,8 @@
     "pp": 85,
     "moves": [
       "tackle",
-      "string_shot"
+      "string_shot",
+      "bug_bite"
     ],
     "learnset": [
       [
@@ -1544,6 +1890,10 @@
       [
         1,
         "tackle"
+      ],
+      [
+        9,
+        "bug_bite"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -1616,7 +1966,9 @@
     "jump_height": 0.0,
     "shape": "squiggle",
     "locomotion": "ground",
-    "tm": [],
+    "tm": [
+      "iron_defense"
+    ],
     "learnset_version": "sword-shield"
   },
   "Butterfree": {
@@ -1650,6 +2002,10 @@
       "poison_powder"
     ],
     "learnset": [
+      [
+        1,
+        "bug_bite"
+      ],
       [
         1,
         "gust"
@@ -1699,8 +2055,24 @@
         "air_slash"
       ],
       [
+        28,
+        "safeguard"
+      ],
+      [
         32,
         "bug_buzz"
+      ],
+      [
+        36,
+        "tailwind"
+      ],
+      [
+        40,
+        "rage_powder"
+      ],
+      [
+        44,
+        "quiver_dance"
       ]
     ],
     "evo_moves": [
@@ -1723,12 +2095,20 @@
     "tm": [
       "air_slash",
       "bug_buzz",
+      "giga_drain",
       "hurricane",
       "hyper_beam",
+      "iron_defense",
+      "protect",
+      "psychic",
       "rain_dance",
+      "rest",
+      "round",
+      "safeguard",
       "solar_beam",
       "swift",
-      "thief"
+      "thief",
+      "venoshock"
     ],
     "hidden_ability": "tinted_lens",
     "learnset_version": "sword-shield"
@@ -1758,7 +2138,8 @@
     "pp": 90,
     "moves": [
       "string_shot",
-      "poison_sting"
+      "poison_sting",
+      "bug_bite"
     ],
     "learnset": [
       [
@@ -1768,6 +2149,10 @@
       [
         1,
         "string_shot"
+      ],
+      [
+        9,
+        "bug_bite"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -1877,6 +2262,10 @@
     "learnset": [
       [
         1,
+        "bug_bite"
+      ],
+      [
+        1,
         "fury_attack"
       ],
       [
@@ -1892,6 +2281,14 @@
         "string_shot"
       ],
       [
+        11,
+        "fury_cutter"
+      ],
+      [
+        14,
+        "laser_focus"
+      ],
+      [
         17,
         "poison_sting"
       ],
@@ -1900,12 +2297,36 @@
         "focus_energy"
       ],
       [
+        23,
+        "venoshock"
+      ],
+      [
+        26,
+        "assurance"
+      ],
+      [
+        29,
+        "toxic_spikes"
+      ],
+      [
         32,
         "pin_missile"
       ],
       [
         35,
         "poison_jab"
+      ],
+      [
+        38,
+        "agility"
+      ],
+      [
+        41,
+        "endeavor"
+      ],
+      [
+        44,
+        "fell_stinger"
       ]
     ],
     "evo_moves": [
@@ -1927,10 +2348,17 @@
     "tm": [
       "aerial_ace",
       "double_team",
+      "giga_drain",
       "hyper_beam",
       "poison_jab",
+      "protect",
+      "rest",
+      "roost",
+      "sludge_bomb",
       "solar_beam",
-      "thief"
+      "swords_dance",
+      "thief",
+      "x_scissor"
     ],
     "hidden_ability": "sniper",
     "learnset_version": "brilliant-diamond-shining-pearl"
@@ -1966,11 +2394,31 @@
     "learnset": [
       [
         1,
+        "charm"
+      ],
+      [
+        1,
         "growl"
       ],
       [
         1,
+        "nasty_plot"
+      ],
+      [
+        1,
+        "nuzzle"
+      ],
+      [
+        1,
+        "play_nice"
+      ],
+      [
+        1,
         "quick_attack"
+      ],
+      [
+        1,
+        "sweet_kiss"
       ],
       [
         1,
@@ -1993,16 +2441,32 @@
         "electro_ball"
       ],
       [
+        16,
+        "feint"
+      ],
+      [
         20,
         "spark"
+      ],
+      [
+        24,
+        "agility"
       ],
       [
         28,
         "iron_tail"
       ],
       [
+        32,
+        "discharge"
+      ],
+      [
         36,
         "thunderbolt"
+      ],
+      [
+        40,
+        "light_screen"
       ],
       [
         44,
@@ -2027,16 +2491,27 @@
     "shape": "quadruped",
     "locomotion": "ground",
     "tm": [
+      "agility",
       "body_slam",
       "charge",
+      "charm",
       "dig",
+      "disarming_voice",
       "electro_ball",
       "encore",
+      "endeavor",
       "helping_hand",
+      "light_screen",
+      "nasty_plot",
+      "play_rough",
+      "protect",
       "rain_dance",
+      "rest",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt"
     ],
@@ -2074,11 +2549,27 @@
     "learnset": [
       [
         1,
+        "agility"
+      ],
+      [
+        1,
+        "charm"
+      ],
+      [
+        1,
+        "discharge"
+      ],
+      [
+        1,
         "double_team"
       ],
       [
         1,
         "electro_ball"
+      ],
+      [
+        1,
+        "feint"
       ],
       [
         1,
@@ -2090,11 +2581,31 @@
       ],
       [
         1,
+        "light_screen"
+      ],
+      [
+        1,
+        "nasty_plot"
+      ],
+      [
+        1,
+        "nuzzle"
+      ],
+      [
+        1,
+        "play_nice"
+      ],
+      [
+        1,
         "quick_attack"
       ],
       [
         1,
         "spark"
+      ],
+      [
+        1,
+        "sweet_kiss"
       ],
       [
         1,
@@ -2130,22 +2641,36 @@
     "shape": "upright",
     "locomotion": "ground",
     "tm": [
+      "agility",
       "body_slam",
       "charge",
+      "charm",
       "dig",
+      "disarming_voice",
       "electro_ball",
       "encore",
+      "endeavor",
       "helping_hand",
       "hyper_beam",
+      "light_screen",
+      "nasty_plot",
+      "play_rough",
+      "protect",
       "rain_dance",
+      "rest",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt"
     ],
     "hidden_ability": "lightning_rod",
-    "learnset_version": "scarlet-violet"
+    "learnset_version": "scarlet-violet",
+    "evo_moves": [
+      "thunder_punch"
+    ]
   },
   "Spearow": {
     "abilities": [
@@ -2190,6 +2715,10 @@
         "leer"
       ],
       [
+        8,
+        "assurance"
+      ],
+      [
         11,
         "fury_attack"
       ],
@@ -2202,8 +2731,20 @@
         "wing_attack"
       ],
       [
+        22,
+        "take_down"
+      ],
+      [
+        25,
+        "agility"
+      ],
+      [
         29,
         "focus_energy"
+      ],
+      [
+        32,
+        "roost"
       ],
       [
         36,
@@ -2230,13 +2771,18 @@
     "tm": [
       "aerial_ace",
       "double_team",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "roost",
       "thief"
     ],
     "hidden_ability": "sniper",
     "learnset_version": "brilliant-diamond-shining-pearl",
     "egg": [
       "astonish",
+      "feather_dance",
       "quick_attack",
       "scary_face",
       "tri_attack",
@@ -2290,8 +2836,16 @@
         "peck"
       ],
       [
+        1,
+        "pluck"
+      ],
+      [
         4,
         "leer"
+      ],
+      [
+        8,
+        "assurance"
       ],
       [
         11,
@@ -2306,8 +2860,20 @@
         "wing_attack"
       ],
       [
+        23,
+        "take_down"
+      ],
+      [
+        27,
+        "agility"
+      ],
+      [
         32,
         "focus_energy"
+      ],
+      [
+        36,
+        "roost"
       ],
       [
         41,
@@ -2336,7 +2902,11 @@
       "aerial_ace",
       "double_team",
       "hyper_beam",
+      "pluck",
+      "protect",
       "rain_dance",
+      "rest",
+      "roost",
       "thief"
     ],
     "hidden_ability": "sniper",
@@ -3340,12 +3910,20 @@
         "mud_slap"
       ],
       [
+        16,
+        "bulldoze"
+      ],
+      [
         20,
         "sucker_punch"
       ],
       [
         24,
         "slash"
+      ],
+      [
+        28,
+        "sandstorm"
       ],
       [
         32,
@@ -3358,6 +3936,10 @@
       [
         40,
         "earthquake"
+      ],
+      [
+        44,
+        "fissure"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3377,17 +3959,28 @@
     "shape": "blob",
     "locomotion": "ground",
     "tm": [
+      "agility",
       "body_slam",
+      "bulldoze",
+      "charm",
       "curse",
       "dig",
+      "double_edge",
       "earth_power",
       "earthquake",
+      "endeavor",
       "helping_hand",
       "mud_slap",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "sand_tomb",
+      "sandstorm",
+      "sludge_bomb",
       "stone_edge",
+      "swords_dance",
+      "take_down",
       "thief"
     ],
     "hidden_ability": "sand_force",
@@ -3433,6 +4026,10 @@
       ],
       [
         1,
+        "night_slash"
+      ],
+      [
+        1,
         "sand_attack"
       ],
       [
@@ -3448,12 +4045,20 @@
         "mud_slap"
       ],
       [
+        16,
+        "bulldoze"
+      ],
+      [
         20,
         "sucker_punch"
       ],
       [
         24,
         "slash"
+      ],
+      [
+        30,
+        "sandstorm"
       ],
       [
         36,
@@ -3466,6 +4071,10 @@
       [
         48,
         "earthquake"
+      ],
+      [
+        54,
+        "fissure"
       ]
     ],
     "evo_moves": [
@@ -3485,17 +4094,28 @@
     "shape": "heads",
     "locomotion": "ground",
     "tm": [
+      "agility",
       "body_slam",
+      "bulldoze",
+      "charm",
       "curse",
       "dig",
+      "double_edge",
       "earth_power",
       "earthquake",
+      "endeavor",
       "hyper_beam",
       "mud_slap",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "sand_tomb",
+      "sandstorm",
+      "sludge_bomb",
       "stone_edge",
+      "swords_dance",
+      "take_down",
       "thief"
     ],
     "hidden_ability": "sand_force",
@@ -3554,6 +4174,10 @@
         "fury_swipes"
       ],
       [
+        20,
+        "toxic_spikes"
+      ],
+      [
         25,
         "double_kick"
       ],
@@ -3564,6 +4188,14 @@
       [
         35,
         "helping_hand"
+      ],
+      [
+        40,
+        "toxic"
+      ],
+      [
+        45,
+        "flatter"
       ],
       [
         50,
@@ -3590,6 +4222,7 @@
     "locomotion": "ground",
     "tm": [
       "body_slam",
+      "charm",
       "crunch",
       "dig",
       "earth_power",
@@ -3597,17 +4230,25 @@
       "helping_hand",
       "iron_tail",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
+      "sludge_bomb",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "hustle",
     "learnset_version": "sword-shield",
     "egg": [
       "disable",
+      "poison_fang",
       "skull_bash",
-      "supersonic"
+      "supersonic",
+      "take_down"
     ]
   },
   "Nidorina": {
@@ -3668,6 +4309,10 @@
         "fury_swipes"
       ],
       [
+        22,
+        "toxic_spikes"
+      ],
+      [
         29,
         "double_kick"
       ],
@@ -3678,6 +4323,14 @@
       [
         43,
         "helping_hand"
+      ],
+      [
+        50,
+        "toxic"
+      ],
+      [
+        57,
+        "flatter"
       ],
       [
         64,
@@ -3701,6 +4354,7 @@
     "locomotion": "ground",
     "tm": [
       "body_slam",
+      "charm",
       "crunch",
       "dig",
       "earth_power",
@@ -3708,10 +4362,16 @@
       "helping_hand",
       "iron_tail",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
+      "sludge_bomb",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "hustle",
     "learnset_version": "sword-shield"
@@ -3767,6 +4427,10 @@
       ],
       [
         1,
+        "flatter"
+      ],
+      [
+        1,
         "fury_swipes"
       ],
       [
@@ -3787,7 +4451,19 @@
       ],
       [
         1,
+        "superpower"
+      ],
+      [
+        1,
         "tail_whip"
+      ],
+      [
+        1,
+        "toxic"
+      ],
+      [
+        1,
+        "toxic_spikes"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -3803,6 +4479,8 @@
     "locomotion": "ground",
     "tm": [
       "body_slam",
+      "bulldoze",
+      "charm",
       "crunch",
       "dig",
       "drill_run",
@@ -3815,17 +4493,29 @@
       "hyper_beam",
       "iron_tail",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
       "rock_slide",
       "rock_tomb",
+      "round",
       "sand_tomb",
+      "sandstorm",
+      "sludge_bomb",
       "stone_edge",
+      "superpower",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunder_punch",
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "sheer_force",
-    "learnset_version": "sword-shield"
+    "learnset_version": "sword-shield",
+    "evo_moves": [
+      "superpower"
+    ]
   },
   "Nidoran M": {
     "abilities": [
@@ -3880,6 +4570,10 @@
         "fury_attack"
       ],
       [
+        20,
+        "toxic_spikes"
+      ],
+      [
         25,
         "double_kick"
       ],
@@ -3890,6 +4584,14 @@
       [
         35,
         "helping_hand"
+      ],
+      [
+        40,
+        "toxic"
+      ],
+      [
+        45,
+        "flatter"
       ],
       [
         50,
@@ -3923,10 +4625,16 @@
       "helping_hand",
       "iron_tail",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
+      "sludge_bomb",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "hustle",
     "learnset_version": "sword-shield",
@@ -3935,6 +4643,7 @@
       "disable",
       "sucker_punch",
       "supersonic",
+      "take_down",
       "thrash"
     ]
   },
@@ -3996,6 +4705,10 @@
         "fury_attack"
       ],
       [
+        22,
+        "toxic_spikes"
+      ],
+      [
         29,
         "double_kick"
       ],
@@ -4006,6 +4719,14 @@
       [
         43,
         "helping_hand"
+      ],
+      [
+        50,
+        "toxic"
+      ],
+      [
+        57,
+        "flatter"
       ],
       [
         64,
@@ -4036,10 +4757,16 @@
       "helping_hand",
       "iron_tail",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
+      "sludge_bomb",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "hustle",
     "learnset_version": "sword-shield"
@@ -4087,6 +4814,10 @@
       ],
       [
         1,
+        "flatter"
+      ],
+      [
+        1,
         "focus_energy"
       ],
       [
@@ -4120,6 +4851,14 @@
       [
         1,
         "poison_sting"
+      ],
+      [
+        1,
+        "toxic"
+      ],
+      [
+        1,
+        "toxic_spikes"
       ]
     ],
     "evo_moves": [
@@ -4138,6 +4877,7 @@
     "locomotion": "ground",
     "tm": [
       "body_slam",
+      "bulldoze",
       "dig",
       "drill_run",
       "earth_power",
@@ -4150,14 +4890,23 @@
       "iron_tail",
       "megahorn",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
       "rock_slide",
       "rock_tomb",
+      "round",
       "sand_tomb",
+      "sandstorm",
+      "sludge_bomb",
       "stone_edge",
+      "superpower",
       "thief",
       "thunder",
-      "thunderbolt"
+      "thunder_punch",
+      "thunderbolt",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "sheer_force",
     "learnset_version": "sword-shield"
@@ -4501,8 +5250,16 @@
         "rollout"
       ],
       [
+        12,
+        "fury_cutter"
+      ],
+      [
         15,
         "rapid_spin"
+      ],
+      [
+        18,
+        "bulldoze"
       ],
       [
         21,
@@ -4513,12 +5270,28 @@
         "fury_swipes"
       ],
       [
+        27,
+        "agility"
+      ],
+      [
         30,
         "slash"
       ],
       [
         33,
         "dig"
+      ],
+      [
+        36,
+        "gyro_ball"
+      ],
+      [
+        39,
+        "swords_dance"
+      ],
+      [
+        42,
+        "sandstorm"
       ],
       [
         45,
@@ -4541,30 +5314,42 @@
     "locomotion": "ground",
     "tm": [
       "aerial_ace",
+      "agility",
       "body_slam",
+      "bulldoze",
       "curse",
       "dig",
+      "double_edge",
       "earth_power",
       "earthquake",
+      "endeavor",
+      "gyro_ball",
       "leech_life",
       "low_kick",
       "metal_claw",
       "mud_slap",
       "poison_jab",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "sand_tomb",
+      "sandstorm",
       "stone_edge",
       "super_fang",
       "swift",
-      "thief"
+      "swords_dance",
+      "take_down",
+      "thief",
+      "x_scissor"
     ],
     "hidden_ability": "sand_rush",
     "learnset_version": "scarlet-violet",
     "egg": [
       "flail",
       "metal_claw",
-      "mud_slap"
+      "mud_slap",
+      "night_slash"
     ]
   },
   "Sandslash": {
@@ -4623,8 +5408,16 @@
         "rollout"
       ],
       [
+        12,
+        "fury_cutter"
+      ],
+      [
         15,
         "rapid_spin"
+      ],
+      [
+        18,
+        "bulldoze"
       ],
       [
         21,
@@ -4647,6 +5440,18 @@
         "dig"
       ],
       [
+        46,
+        "gyro_ball"
+      ],
+      [
+        51,
+        "swords_dance"
+      ],
+      [
+        56,
+        "sandstorm"
+      ],
+      [
         61,
         "earthquake"
       ]
@@ -4664,32 +5469,45 @@
     "locomotion": "ground",
     "tm": [
       "aerial_ace",
+      "agility",
       "body_slam",
+      "bulldoze",
       "curse",
       "dig",
+      "double_edge",
       "drill_run",
       "earth_power",
       "earthquake",
+      "endeavor",
+      "gunk_shot",
+      "gyro_ball",
       "hyper_beam",
       "leech_life",
       "low_kick",
       "metal_claw",
       "mud_slap",
       "poison_jab",
+      "protect",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "sand_tomb",
+      "sandstorm",
       "stone_edge",
       "super_fang",
       "swift",
-      "thief"
+      "swords_dance",
+      "take_down",
+      "thief",
+      "x_scissor"
     ],
     "hidden_ability": "sand_rush",
     "learnset_version": "scarlet-violet",
     "egg": [
       "flail",
       "metal_claw",
-      "mud_slap"
+      "mud_slap",
+      "night_slash"
     ]
   },
   "Zubat": {
@@ -4733,8 +5551,36 @@
         "astonish"
       ],
       [
+        10,
+        "mean_look"
+      ],
+      [
+        15,
+        "poison_fang"
+      ],
+      [
+        20,
+        "quick_guard"
+      ],
+      [
+        25,
+        "air_cutter"
+      ],
+      [
         30,
         "bite"
+      ],
+      [
+        35,
+        "haze"
+      ],
+      [
+        40,
+        "venoshock"
+      ],
+      [
+        45,
+        "confuse_ray"
       ],
       [
         50,
@@ -4765,13 +5611,23 @@
     "jump_height": 0.39,
     "fly_height": 0.85,
     "tm": [
+      "agility",
       "air_slash",
+      "assurance",
       "crunch",
+      "giga_drain",
       "heat_wave",
       "leech_life",
+      "nasty_plot",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
+      "sludge_bomb",
       "swift",
-      "thief"
+      "thief",
+      "venoshock",
+      "zen_headbutt"
     ],
     "hidden_ability": "infiltrator",
     "learnset_version": "sword-shield",
@@ -4822,6 +5678,10 @@
       ],
       [
         1,
+        "mean_look"
+      ],
+      [
+        1,
         "screech"
       ],
       [
@@ -4829,8 +5689,32 @@
         "supersonic"
       ],
       [
+        15,
+        "poison_fang"
+      ],
+      [
+        20,
+        "quick_guard"
+      ],
+      [
+        27,
+        "air_cutter"
+      ],
+      [
         34,
         "bite"
+      ],
+      [
+        41,
+        "haze"
+      ],
+      [
+        48,
+        "venoshock"
+      ],
+      [
+        55,
+        "confuse_ray"
       ],
       [
         62,
@@ -4858,15 +5742,25 @@
     "jump_height": 0.83,
     "fly_height": 1.6,
     "tm": [
+      "agility",
       "air_slash",
+      "assurance",
       "crunch",
+      "giga_drain",
       "heat_wave",
       "hyper_beam",
       "leech_life",
+      "nasty_plot",
+      "protect",
       "rain_dance",
+      "rest",
+      "round",
       "screech",
+      "sludge_bomb",
       "swift",
-      "thief"
+      "thief",
+      "venoshock",
+      "zen_headbutt"
     ],
     "hidden_ability": "infiltrator",
     "learnset_version": "sword-shield",
@@ -4920,6 +5814,10 @@
         "absorb"
       ],
       [
+        17,
+        "fury_cutter"
+      ],
+      [
         22,
         "spore"
       ],
@@ -4930,6 +5828,22 @@
       [
         33,
         "growth"
+      ],
+      [
+        38,
+        "giga_drain"
+      ],
+      [
+        43,
+        "aromatherapy"
+      ],
+      [
+        49,
+        "rage_powder"
+      ],
+      [
+        54,
+        "x_scissor"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -4956,13 +5870,25 @@
       "bullet_seed",
       "dig",
       "double_team",
+      "giga_drain",
+      "light_screen",
+      "protect",
+      "rest",
+      "sludge_bomb",
       "solar_beam",
-      "thief"
+      "swords_dance",
+      "thief",
+      "x_scissor"
     ],
     "hidden_ability": "damp",
     "learnset_version": "brilliant-diamond-shining-pearl",
     "egg": [
+      "agility",
+      "bug_bite",
+      "cross_poison",
+      "fell_stinger",
       "flail",
+      "grassy_terrain",
       "leech_seed",
       "metal_claw",
       "psybeam",
@@ -5005,6 +5931,10 @@
       ],
       [
         1,
+        "cross_poison"
+      ],
+      [
+        1,
         "poison_powder"
       ],
       [
@@ -5028,6 +5958,10 @@
         "absorb"
       ],
       [
+        17,
+        "fury_cutter"
+      ],
+      [
         22,
         "spore"
       ],
@@ -5038,6 +5972,22 @@
       [
         37,
         "growth"
+      ],
+      [
+        44,
+        "giga_drain"
+      ],
+      [
+        51,
+        "aromatherapy"
+      ],
+      [
+        59,
+        "rage_powder"
+      ],
+      [
+        66,
+        "x_scissor"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -5061,9 +6011,16 @@
       "bullet_seed",
       "dig",
       "double_team",
+      "giga_drain",
       "hyper_beam",
+      "light_screen",
+      "protect",
+      "rest",
+      "sludge_bomb",
       "solar_beam",
-      "thief"
+      "swords_dance",
+      "thief",
+      "x_scissor"
     ],
     "hidden_ability": "damp",
     "learnset_version": "brilliant-diamond-shining-pearl"
@@ -5097,7 +6054,19 @@
     "learnset": [
       [
         1,
+        "charm"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
         "defense_curl"
+      ],
+      [
+        1,
+        "disarming_voice"
       ],
       [
         1,
@@ -5116,8 +6085,56 @@
         "splash"
       ],
       [
+        1,
+        "sweet_kiss"
+      ],
+      [
+        4,
+        "stored_power"
+      ],
+      [
         8,
         "encore"
+      ],
+      [
+        12,
+        "after_you"
+      ],
+      [
+        16,
+        "life_dew"
+      ],
+      [
+        20,
+        "metronome"
+      ],
+      [
+        24,
+        "moonlight"
+      ],
+      [
+        28,
+        "gravity"
+      ],
+      [
+        32,
+        "meteor_mash"
+      ],
+      [
+        36,
+        "follow_me"
+      ],
+      [
+        40,
+        "cosmic_power"
+      ],
+      [
+        44,
+        "moonblast"
+      ],
+      [
+        48,
+        "healing_wish"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -5142,20 +6159,37 @@
     "jump_height": 0.3,
     "tm": [
       "body_slam",
+      "charm",
       "dig",
+      "disarming_voice",
+      "double_edge",
       "encore",
+      "endeavor",
       "fire_blast",
       "flamethrower",
+      "gravity",
       "helping_hand",
+      "hyper_voice",
+      "imprison",
+      "light_screen",
+      "metronome",
+      "play_rough",
+      "protect",
       "psybeam",
+      "psychic",
       "rain_dance",
+      "rest",
       "solar_beam",
+      "stored_power",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt",
-      "water_pulse"
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "friend_guard",
     "learnset_version": "scarlet-violet"
@@ -5180,8 +6214,30 @@
     "pp": 130,
     "base_exp": 217,
     "growth": "fast",
-    "moves": [],
-    "learnset": [],
+    "moves": [
+      "moonblast",
+      "metronome",
+      "meteor_mash",
+      "life_dew"
+    ],
+    "learnset": [
+      [
+        1,
+        "life_dew"
+      ],
+      [
+        1,
+        "meteor_mash"
+      ],
+      [
+        1,
+        "metronome"
+      ],
+      [
+        1,
+        "moonblast"
+      ]
+    ],
     "sprite": "res://assets/sprites/critter_purple.png",
     "placeholder_tint": "#e8a8c8",
     "placeholder_scale": 1.4,
@@ -5200,31 +6256,59 @@
     "jump_height": 0.42,
     "tm": [
       "body_slam",
+      "charm",
       "dig",
+      "disarming_voice",
+      "double_edge",
       "encore",
+      "endeavor",
       "fire_blast",
       "flamethrower",
+      "gravity",
       "helping_hand",
       "hyper_beam",
+      "hyper_voice",
+      "imprison",
+      "light_screen",
+      "metronome",
+      "play_rough",
+      "protect",
       "psybeam",
+      "psychic",
       "rain_dance",
+      "rest",
       "solar_beam",
+      "stored_power",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt",
-      "water_pulse"
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "unaware",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "after_you",
+      "charm",
+      "copycat",
+      "cosmic_power",
       "defense_curl",
+      "disarming_voice",
       "encore",
+      "follow_me",
+      "gravity",
       "growl",
+      "healing_wish",
+      "moonlight",
       "pound",
       "sing",
-      "splash"
+      "splash",
+      "stored_power",
+      "sweet_kiss"
     ]
   },
   "Jigglypuff": {
@@ -5257,11 +6341,23 @@
     "learnset": [
       [
         1,
+        "charm"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
         "defense_curl"
       ],
       [
         1,
         "disable"
+      ],
+      [
+        1,
+        "disarming_voice"
       ],
       [
         1,
@@ -5272,8 +6368,56 @@
         "sing"
       ],
       [
+        1,
+        "sweet_kiss"
+      ],
+      [
+        4,
+        "echoed_voice"
+      ],
+      [
+        8,
+        "covet"
+      ],
+      [
+        12,
+        "spit_up"
+      ],
+      [
+        12,
+        "stockpile"
+      ],
+      [
+        12,
+        "swallow"
+      ],
+      [
+        16,
+        "round"
+      ],
+      [
+        20,
+        "rest"
+      ],
+      [
         24,
         "body_slam"
+      ],
+      [
+        28,
+        "mimic"
+      ],
+      [
+        32,
+        "gyro_ball"
+      ],
+      [
+        36,
+        "hyper_voice"
+      ],
+      [
+        44,
+        "double_edge"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -5298,19 +6442,38 @@
     "jump_height": 0.0,
     "tm": [
       "body_slam",
+      "charm",
       "dig",
+      "disarming_voice",
+      "double_edge",
       "encore",
+      "endeavor",
       "fire_blast",
       "flamethrower",
+      "gravity",
+      "gyro_ball",
       "helping_hand",
+      "hyper_voice",
+      "light_screen",
+      "metronome",
+      "nasty_plot",
+      "play_rough",
+      "protect",
+      "psychic",
       "rain_dance",
+      "rest",
+      "sandstorm",
       "solar_beam",
+      "stored_power",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt",
-      "water_pulse"
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "friend_guard",
     "learnset_version": "scarlet-violet"
@@ -5349,6 +6512,18 @@
       ],
       [
         1,
+        "charm"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
+        "covet"
+      ],
+      [
+        1,
         "defense_curl"
       ],
       [
@@ -5357,11 +6532,63 @@
       ],
       [
         1,
+        "disarming_voice"
+      ],
+      [
+        1,
+        "double_edge"
+      ],
+      [
+        1,
+        "echoed_voice"
+      ],
+      [
+        1,
+        "gyro_ball"
+      ],
+      [
+        1,
+        "hyper_voice"
+      ],
+      [
+        1,
+        "mimic"
+      ],
+      [
+        1,
         "pound"
       ],
       [
         1,
+        "rest"
+      ],
+      [
+        1,
+        "round"
+      ],
+      [
+        1,
         "sing"
+      ],
+      [
+        1,
+        "spit_up"
+      ],
+      [
+        1,
+        "stockpile"
+      ],
+      [
+        1,
+        "swallow"
+      ],
+      [
+        1,
+        "sweet_kiss"
+      ],
+      [
+        5,
+        "play_rough"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -5382,20 +6609,39 @@
     "jump_height": 0.3,
     "tm": [
       "body_slam",
+      "charm",
       "dig",
+      "disarming_voice",
+      "double_edge",
       "encore",
+      "endeavor",
       "fire_blast",
       "flamethrower",
+      "gravity",
+      "gyro_ball",
       "helping_hand",
       "hyper_beam",
+      "hyper_voice",
+      "light_screen",
+      "metronome",
+      "nasty_plot",
+      "play_rough",
+      "protect",
+      "psychic",
       "rain_dance",
+      "rest",
+      "sandstorm",
       "solar_beam",
+      "stored_power",
       "swift",
+      "take_down",
       "thief",
       "thunder",
+      "thunder_punch",
       "thunder_wave",
       "thunderbolt",
-      "water_pulse"
+      "water_pulse",
+      "zen_headbutt"
     ],
     "hidden_ability": "frisk",
     "learnset_version": "scarlet-violet"
@@ -5747,6 +6993,26 @@
         "sleep_powder"
       ],
       [
+        20,
+        "giga_drain"
+      ],
+      [
+        24,
+        "toxic"
+      ],
+      [
+        28,
+        "moonblast"
+      ],
+      [
+        32,
+        "grassy_terrain"
+      ],
+      [
+        36,
+        "moonlight"
+      ],
+      [
         40,
         "petal_dance"
       ]
@@ -5770,17 +7036,29 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
       "bullet_seed",
+      "charm",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
+      "protect",
+      "rest",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "run_away",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "after_you",
       "flail",
       "leech_seed",
-      "razor_leaf"
+      "razor_leaf",
+      "synthesis"
     ]
   },
   "Gloom": {
@@ -5844,6 +7122,26 @@
         "sleep_powder"
       ],
       [
+        20,
+        "giga_drain"
+      ],
+      [
+        26,
+        "toxic"
+      ],
+      [
+        32,
+        "moonblast"
+      ],
+      [
+        38,
+        "grassy_terrain"
+      ],
+      [
+        44,
+        "moonlight"
+      ],
+      [
         50,
         "petal_dance"
       ]
@@ -5869,17 +7167,30 @@
     "locomotion": "ground",
     "jump_height": 0.3,
     "tm": [
+      "acid_spray",
       "bullet_seed",
+      "charm",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
+      "petal_blizzard",
+      "protect",
+      "rest",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "stench",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "after_you",
       "flail",
       "leech_seed",
-      "razor_leaf"
+      "razor_leaf",
+      "synthesis"
     ]
   },
   "Vileplume": {
@@ -5920,11 +7231,27 @@
       ],
       [
         1,
+        "giga_drain"
+      ],
+      [
+        1,
+        "grassy_terrain"
+      ],
+      [
+        1,
         "growth"
       ],
       [
         1,
         "mega_drain"
+      ],
+      [
+        1,
+        "moonblast"
+      ],
+      [
+        1,
+        "moonlight"
       ],
       [
         1,
@@ -5945,6 +7272,10 @@
       [
         1,
         "sweet_scent"
+      ],
+      [
+        1,
+        "toxic"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -5963,19 +7294,35 @@
     "locomotion": "ground",
     "jump_height": 0.35,
     "tm": [
+      "acid_spray",
       "body_slam",
       "bullet_seed",
+      "charm",
+      "giga_drain",
+      "grassy_terrain",
       "helping_hand",
       "hyper_beam",
+      "petal_blizzard",
+      "protect",
+      "rest",
       "seed_bomb",
-      "solar_beam"
+      "sludge_bomb",
+      "solar_beam",
+      "swords_dance",
+      "toxic",
+      "venoshock"
     ],
     "hidden_ability": "effect_spore",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "after_you",
       "flail",
       "leech_seed",
-      "razor_leaf"
+      "razor_leaf",
+      "synthesis"
+    ],
+    "evo_moves": [
+      "petal_blizzard"
     ]
   },
   "Bellsprout": {
@@ -6562,6 +7909,46 @@
       [
         20,
         "acid"
+      ],
+      [
+        25,
+        "spit_up"
+      ],
+      [
+        25,
+        "stockpile"
+      ],
+      [
+        25,
+        "swallow"
+      ],
+      [
+        28,
+        "acid_spray"
+      ],
+      [
+        33,
+        "sludge_bomb"
+      ],
+      [
+        36,
+        "gastro_acid"
+      ],
+      [
+        38,
+        "belch"
+      ],
+      [
+        41,
+        "haze"
+      ],
+      [
+        44,
+        "coil"
+      ],
+      [
+        49,
+        "gunk_shot"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -6584,24 +7971,39 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
       "crunch",
       "dig",
+      "double_edge",
       "earthquake",
       "fire_fang",
+      "giga_drain",
+      "gunk_shot",
+      "haze",
       "leech_life",
       "mud_slap",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "scary_face",
       "seed_bomb",
-      "thief"
+      "sludge_bomb",
+      "spite",
+      "take_down",
+      "thief",
+      "toxic",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "unnerve",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "poison_fang",
       "scary_face",
+      "spite",
       "sucker_punch"
     ]
   },
@@ -6642,11 +8044,19 @@
       ],
       [
         1,
+        "ice_fang"
+      ],
+      [
+        1,
         "leer"
       ],
       [
         1,
         "poison_sting"
+      ],
+      [
+        1,
+        "thunder_fang"
       ],
       [
         1,
@@ -6663,6 +8073,46 @@
       [
         20,
         "acid"
+      ],
+      [
+        27,
+        "spit_up"
+      ],
+      [
+        27,
+        "stockpile"
+      ],
+      [
+        27,
+        "swallow"
+      ],
+      [
+        32,
+        "acid_spray"
+      ],
+      [
+        39,
+        "sludge_bomb"
+      ],
+      [
+        44,
+        "gastro_acid"
+      ],
+      [
+        48,
+        "belch"
+      ],
+      [
+        51,
+        "haze"
+      ],
+      [
+        56,
+        "coil"
+      ],
+      [
+        63,
+        "gunk_shot"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -6685,26 +8135,44 @@
     "locomotion": "ground",
     "jump_height": 0.0,
     "tm": [
+      "acid_spray",
       "body_slam",
+      "bulldoze",
       "crunch",
       "dig",
+      "double_edge",
       "earthquake",
       "fire_fang",
+      "giga_drain",
+      "gunk_shot",
+      "haze",
       "hyper_beam",
+      "ice_fang",
       "leech_life",
       "mud_slap",
       "poison_jab",
+      "protect",
       "rain_dance",
+      "rest",
       "rock_slide",
       "rock_tomb",
       "scary_face",
       "seed_bomb",
-      "thief"
+      "sludge_bomb",
+      "spite",
+      "take_down",
+      "thief",
+      "thunder_fang",
+      "toxic",
+      "toxic_spikes",
+      "venoshock"
     ],
     "hidden_ability": "unnerve",
     "learnset_version": "scarlet-violet",
     "egg": [
+      "poison_fang",
       "scary_face",
+      "spite",
       "sucker_punch"
     ]
   },
@@ -7226,8 +8694,44 @@
         "quick_attack"
       ],
       [
+        12,
+        "spite"
+      ],
+      [
+        16,
+        "incinerate"
+      ],
+      [
+        20,
+        "confuse_ray"
+      ],
+      [
+        24,
+        "will_o_wisp"
+      ],
+      [
+        28,
+        "extrasensory"
+      ],
+      [
         32,
         "flamethrower"
+      ],
+      [
+        36,
+        "imprison"
+      ],
+      [
+        40,
+        "fire_spin"
+      ],
+      [
+        44,
+        "safeguard"
+      ],
+      [
+        48,
+        "inferno"
       ],
       [
         52,
@@ -7236,17 +8740,32 @@
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "agility",
       "body_slam",
+      "charm",
+      "confuse_ray",
       "dig",
+      "double_edge",
       "encore",
       "fire_blast",
+      "fire_spin",
       "flamethrower",
+      "flare_blitz",
       "heat_wave",
       "helping_hand",
-      "swift"
+      "imprison",
+      "nasty_plot",
+      "protect",
+      "rest",
+      "spite",
+      "swift",
+      "take_down",
+      "will_o_wisp",
+      "zen_headbutt"
     ],
     "egg": [
       "flail",
+      "healing_wish",
       "hypnosis"
     ],
     "moves": [
@@ -7312,19 +8831,35 @@
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "agility",
       "body_slam",
+      "charm",
+      "confuse_ray",
       "dig",
+      "double_edge",
       "encore",
       "fire_blast",
+      "fire_spin",
       "flamethrower",
+      "flare_blitz",
       "heat_wave",
       "helping_hand",
       "hyper_beam",
+      "imprison",
+      "nasty_plot",
+      "protect",
+      "rest",
       "solar_beam",
-      "swift"
+      "spite",
+      "stored_power",
+      "swift",
+      "take_down",
+      "will_o_wisp",
+      "zen_headbutt"
     ],
     "egg": [
       "flail",
+      "healing_wish",
       "hypnosis"
     ],
     "moves": [
@@ -7409,19 +8944,51 @@
       [
         35,
         "leech_life"
+      ],
+      [
+        37,
+        "zen_headbutt"
+      ],
+      [
+        41,
+        "poison_fang"
+      ],
+      [
+        47,
+        "psychic"
       ]
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "acid_spray",
+      "agility",
+      "bug_bite",
       "bug_buzz",
+      "confuse_ray",
+      "endeavor",
+      "giga_drain",
       "leech_life",
+      "protect",
       "psybeam",
+      "psychic",
+      "rest",
+      "sludge_bomb",
       "solar_beam",
       "swift",
-      "thief"
+      "take_down",
+      "thief",
+      "toxic",
+      "toxic_spikes",
+      "venoshock",
+      "zen_headbutt"
     ],
     "egg": [
-      "screech"
+      "agility",
+      "bug_bite",
+      "rage_powder",
+      "screech",
+      "toxic_spikes",
+      "venoshock"
     ],
     "moves": [
       "leech_life",
@@ -7479,6 +9046,10 @@
       ],
       [
         1,
+        "quiver_dance"
+      ],
+      [
+        1,
         "supersonic"
       ],
       [
@@ -7512,6 +9083,18 @@
       [
         37,
         "leech_life"
+      ],
+      [
+        41,
+        "zen_headbutt"
+      ],
+      [
+        47,
+        "poison_fang"
+      ],
+      [
+        55,
+        "psychic"
       ]
     ],
     "evo_moves": [
@@ -7519,14 +9102,31 @@
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "acid_spray",
+      "agility",
+      "air_cutter",
       "air_slash",
+      "bug_bite",
       "bug_buzz",
+      "confuse_ray",
+      "double_edge",
+      "endeavor",
+      "giga_drain",
       "hyper_beam",
       "leech_life",
+      "protect",
       "psybeam",
+      "psychic",
+      "rest",
+      "sludge_bomb",
       "solar_beam",
       "swift",
-      "thief"
+      "take_down",
+      "thief",
+      "toxic",
+      "toxic_spikes",
+      "venoshock",
+      "zen_headbutt"
     ],
     "moves": [
       "leech_life",
