@@ -2,10 +2,16 @@ class_name BattleAbilities
 extends RefCounted
 ## Efeitos das habilidades (data/abilities.json) na luta em tempo real, com a faixa de habilidade no HUD.
 ## A arena cria um por luta (arena.abilities) e chama os ganchos abaixo.
-## Extras que a arena/moves/IA podem consultar: walk_mult(f), cast_speed_mult(f, mv), profile_bias(f),
+## Regras oficiais (Gen 9, VGC) adaptadas à rodada (BattleTurns): o "fim de turno" do oficial é
+## on_round_end() (Speed Boost, Shed Skin, clima, Poison Heal...), "ao entrar" dispara na troca e na
+## substituição, em ordem pela Speed (do mais rápido ao mais lento; Trick Room inverte).
+## Extras que a arena/moves/IA/turnos podem consultar: walk_mult(f), cast_speed_mult(f, mv),
+## order_speed_mult(f), priority_bonus(f, mv), redirect(user, target, mv), profile_bias(f),
 ## blocks_stage_drop(f, stat).
-## Clima: `weather_now()` ("" | sun | rain | sand | hail) vem de set_weather() (golpe ou habilidade, com
-## duração em segundos) ou de arena.opts.weather (a arena toda, sem fim). Cloud Nine/Air Lock o suprimem.
+## Clima: `weather_now()` ("" | sun | rain | sand | hail) vem de set_weather() (golpe, com duração em
+## segundos), de set_weather_rounds() (habilidade, 5 rodadas como os 5 turnos do oficial) ou de
+## arena.opts.weather (a arena toda, sem fim). Cloud Nine/Air Lock o suprimem. "hail" é a neve da Gen 9
+## (sem dano).
 
 const PINCH := {"blaze": "fire", "torrent": "water", "overgrow": "grass", "swarm": "bug"}
 const PINCH_MULT := 1.5
@@ -18,24 +24,84 @@ const CONTACT_STATUS := {
 	"flame_body": ["burn"],
 	"effect_spore": ["poison", "paralysis", "sleep"],
 }
+## Golpes de som oficiais (Soundproof).
 const SOUND_MOVES := [
-	"growl", "sing", "supersonic", "screech", "metal_sound", "bug_buzz", "sonic_boom", "hyper_beam"
+	"growl",
+	"sing",
+	"supersonic",
+	"screech",
+	"metal_sound",
+	"bug_buzz",
+	"hyper_voice",
+	"disarming_voice",
+	"echoed_voice",
+	"round",
+	"roar",
+	"snore",
+	"uproar",
+	"perish_song",
+	"grass_whistle",
+	"heal_bell",
+	"boomburst",
+	"noble_roar",
+	"parting_shot",
+	"relic_song",
+	"sparkling_aria",
+	"overdrive",
+	"torch_song",
+	"alluring_voice",
+	"psychic_noise",
+	"chatter",
+	"clanging_scales",
 ]
+## Golpes de soco oficiais (Iron Fist).
 const PUNCH_MOVES := [
-	"karate_chop",
-	"cross_chop",
-	"close_combat",
-	"submission",
-	"rage",
-	"double_slap",
-	"pound",
-	"metal_claw"
+	"thunder_punch",
+	"fire_punch",
+	"ice_punch",
+	"mega_punch",
+	"comet_punch",
+	"dizzy_punch",
+	"dynamic_punch",
+	"mach_punch",
+	"bullet_punch",
+	"drain_punch",
+	"focus_punch",
+	"power_up_punch",
+	"shadow_punch",
+	"hammer_arm",
+	"sky_uppercut",
+	"meteor_mash",
+	"ice_hammer",
+	"jet_punch",
+	"rage_fist",
+	"double_iron_bash",
+	"plasma_fists",
+	"headlong_rush",
+	"wicked_blow",
+	"surging_strikes",
 ]
-const BITE_MOVES := ["bite", "crunch", "fire_fang", "hyper_fang", "super_fang"]
-const RECKLESS_MOVES := ["submission", "volt_tackle", "thrash", "self_destruct", "flail"]
-## Habilidades que seguram a intimidação.
+## Mordidas oficiais (Strong Jaw).
+const BITE_MOVES := [
+	"bite",
+	"crunch",
+	"fire_fang",
+	"ice_fang",
+	"thunder_fang",
+	"poison_fang",
+	"hyper_fang",
+	"psychic_fangs",
+	"jaw_lock",
+	"fishious_rend",
+]
+## Reckless: golpes com recuo ("recoil" nos dados) e os de queda (erro machuca).
+const RECKLESS_MOVES := ["jump_kick", "high_jump_kick", "axe_kick", "supercell_slam", "head_smash"]
+## Golpes que explodem (Damp impede).
+const EXPLODE_MOVES := ["self_destruct", "explosion", "misty_explosion", "mind_blown"]
+## Habilidades que seguram a intimidação (Gen 8+) e as que não deixam o Ataque cair.
+## Defiant/Competitive não seguram: tomam o -1 e reagem com +2.
 const INTIMIDATE_PROOF := [
-	"inner_focus", "oblivious", "own_tempo", "clear_body", "hyper_cutter", "defiant", "competitive"
+	"inner_focus", "oblivious", "own_tempo", "scrappy", "clear_body", "hyper_cutter"
 ]
 ## Status bloqueado por habilidade.
 const BLOCKS := {
@@ -52,12 +118,15 @@ const KEEP_STAT := {
 	"clear_body": [],
 	"hyper_cutter": ["atk"],
 	"keen_eye": ["acc"],
+	"illuminate": ["acc"],
 	"big_pecks": ["def"],
 }
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
-## Clima (tempo real): duração do que uma habilidade/golpe cria e o intervalo do "turno" do clima.
+## Habilidades que agem ao entrar (troca, substituição, começo da luta), em ordem pela Speed.
+const ENTRY := ["intimidate", "drought", "frisk", "unnerve", "cloud_nine", "air_lock"]
+## Clima: duração padrão (s) do que um golpe cria e rodadas do que uma habilidade cria (5 turnos).
 const WEATHER_SECS := 25.0
-const WEATHER_TICK := 2.0
+const WEATHER_ROUNDS := 5
 const WEATHER_ALIAS := {
 	"sunny": "sun",
 	"sunny_day": "sun",
@@ -71,7 +140,12 @@ const WEATHER_ALIAS := {
 }
 const SANDPROOF_TYPES := ["rock", "ground", "steel"]
 const SANDPROOF := ["sand_rush", "sand_force", "sand_veil", "magic_guard", "overcoat"]
-const DOT_STATUS := ["burn", "poison", "leech"]
+const DOT_STATUS := ["burn", "poison", "toxic", "leech"]
+## Speed na ordem da rodada (oficial) e no andar/preparo (tempo real) dos que dobram a Speed.
+const SPEED_DOUBLE := 2.0
+const SPEED_WALK := 1.5
+## No Guard: os golpes dele não erram (multiplicador de precisão que passa de 100%).
+const NO_GUARD_ACC := 100.0
 const BANNER_GAP := 3.0
 const POPUP_GAP := 1.0
 const COL_DEFAULT := Color(1.0, 0.85, 0.4)
@@ -129,13 +203,19 @@ var arena: Node
 ## Faixas realmente mostradas (depois do limite de 3 s) e a última, para testes.
 var banners_shown := 0
 var last_banner := ""
+## Fins de rodada já passados (on_round_end).
+var rounds := 0
+## Ordem da última ativação "ao entrar" e do último fim de rodada (para testes).
+var last_entry_order: Array = []
+var last_round_order: Array = []
 
 var _now := 0.0
-var _st := {}  ## id do lutador -> estado (timers, marcas)
-var _pending_intimidate: Array = []
-var _pending_enter: Array = []  ## Drought, Frisk: precisam de campo/inimigo prontos
+var _st := {}  ## id do lutador -> estado (marcas)
+var _pending_enter: Array = []  ## Intimidate, Drought, Frisk...: precisam de campo/inimigo prontos
+var _field := {}  ## id -> lutador ativo no frame anterior (para ver quem saiu na troca)
 var weather := ""  ## clima criado por golpe/habilidade
-var weather_t := 0.0
+var weather_t := 0.0  ## segundos restantes (-1 = sem fim em segundos)
+var weather_rounds := 0  ## rodadas restantes do clima de habilidade (0 = não conta rodada)
 
 
 func _init(a: Node) -> void:
@@ -165,13 +245,9 @@ func _state(f: BattleFighter) -> Dictionary:
 			"banner": -99.0,
 			"popup": -99.0,
 			"stages": f.stages.duplicate(),
-			"status_age": 0.0,
-			"shed": 0.0,
-			"regen": 0.0,
-			"speed": 0.0,
+			"enter_round": rounds,
 			"unburdened": f.item_used,
 			"flash": false,
-			"wx": 0.0,
 			"item": "",
 		}
 	return _st[id]
@@ -190,6 +266,27 @@ func _is_contact(mv: Dictionary) -> bool:
 
 func _is_sound(mv: Dictionary) -> bool:
 	return bool(mv.get("sound", false)) or String(mv.get("id", "")) in SOUND_MOVES
+
+
+## Alguém ativo em campo com a habilidade `a`.
+func _on_field(a: String) -> BattleFighter:
+	for g in arena.fighters:
+		if is_instance_valid(g) and g.active() and ability_of(g) == a:
+			return g
+	return null
+
+
+## Ordem pela Speed (a da rodada: BattleTurns.speed_order, com Trick Room e sorteio no empate);
+## sem turnos, pela Speed efetiva com order_speed_mult.
+func _by_speed(list: Array) -> Array:
+	var t = arena.get("turns")
+	if t and t.has_method("speed_order"):
+		return t.speed_order(list)
+	var out := list.filter(func(f): return is_instance_valid(f))
+	out.sort_custom(
+		func(a, b): return a.eff_spe() * order_speed_mult(a) > b.eff_spe() * order_speed_mult(b)
+	)
+	return out
 
 
 ## Mostra a habilidade agindo: popup curto (no máx. 1/s) e faixa no HUD (no máx. 1 a cada 3 s).
@@ -227,16 +324,35 @@ func _roll(chance: float) -> bool:
 # --- Ganchos ---
 
 
-## Lutador entrou em campo (Intimidate etc.).
+## Lutador entrou em campo (começo, troca ou substituição): Intimidate, Drought, Frisk...
+## A ativação espera o campo pronto e sai em ordem pela Speed no próximo frame de luta.
 func on_enter(f: BattleFighter) -> void:
 	var a := ability_of(f)
-	_state(f)
-	if a == "intimidate":
-		_pending_intimidate.append(f)
-	elif a == "super_luck":
+	var s := _state(f)
+	s.enter_round = rounds
+	if a == "super_luck":
 		f.crit_stage += 1
-	elif a in ["drought", "frisk"]:
+	elif a in ENTRY:
 		_pending_enter.append(f)
+
+
+## Ativação ao entrar. Falso = ainda não há inimigo em campo (tenta de novo no próximo frame).
+func _entry(f: BattleFighter) -> bool:
+	match ability_of(f):
+		"intimidate":
+			return _do_intimidate(f)
+		"drought":
+			set_weather_rounds("sun")
+			_fire(f, Color(1.0, 0.75, 0.3))
+		"frisk":
+			return _do_frisk(f)
+		"unnerve":
+			if arena.targets_of(f).is_empty():
+				return false
+			_fire(f, Color(0.75, 0.6, 0.9))
+		"cloud_nine", "air_lock":
+			_fire(f, Color(0.8, 0.9, 1.0))
+	return true
 
 
 # --- Clima ---
@@ -245,18 +361,31 @@ func on_enter(f: BattleFighter) -> void:
 ## Cria clima por `secs` s (-1 = sem fim). Devolve falso se já há o mesmo clima ativo.
 func set_weather(kind: String, secs := WEATHER_SECS) -> bool:
 	kind = String(WEATHER_ALIAS.get(kind, kind))
-	if kind == "" or (weather == kind and (weather_t > 0.0 or weather_t < 0.0)):
+	if kind == "" or _weather_on(kind):
 		return false
 	weather = kind
 	weather_t = secs
+	weather_rounds = 0
 	return true
 
 
+## Clima de habilidade (Drought): dura `n` rodadas, como os 5 turnos do oficial.
+func set_weather_rounds(kind: String, n := WEATHER_ROUNDS) -> bool:
+	kind = String(WEATHER_ALIAS.get(kind, kind))
+	if kind == "" or _weather_on(kind):
+		return false
+	weather = kind
+	weather_t = -1.0
+	weather_rounds = n
+	return true
+
+
+func _weather_on(kind: String) -> bool:
+	return weather == kind and (weather_t != 0.0 or weather_rounds > 0)
+
+
 func _suppressed() -> bool:
-	for g in arena.fighters:
-		if is_instance_valid(g) and g.active() and ability_of(g) in ["cloud_nine", "air_lock"]:
-			return true
-	return false
+	return _on_field("cloud_nine") != null or _on_field("air_lock") != null
 
 
 ## Clima que vale agora ("" = nenhum ou suprimido por Cloud Nine).
@@ -271,7 +400,7 @@ func weather_now() -> String:
 	return w
 
 
-## Frisk: mostra o item do inimigo.
+## Frisk: mostra o item dos inimigos.
 func _do_frisk(f: BattleFighter) -> bool:
 	var foes: Array = arena.targets_of(f)
 	if foes.is_empty():
@@ -291,7 +420,7 @@ func _do_frisk(f: BattleFighter) -> bool:
 	return true
 
 
-## Intimidate: -1 ATK nos inimigos ativos. Falso se ainda não há inimigo em campo.
+## Intimidate: -1 ATK em todos os inimigos ativos (os dois no 2x2). Falso se ainda não há inimigo.
 func _do_intimidate(f: BattleFighter) -> bool:
 	var foes: Array = arena.targets_of(f)
 	if foes.is_empty():
@@ -303,6 +432,9 @@ func _do_intimidate(f: BattleFighter) -> bool:
 		else:
 			arena.moves.change_stage(t, "atk", -1)
 	return true
+
+
+# --- Dano ---
 
 
 ## Multiplicadores de dano de cada lado (sem efeitos colaterais).
@@ -330,22 +462,23 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 				um *= 1.5
 		"huge_power":
 			if cat == "physical":
-				um *= 1.5
+				um *= 2.0
 		"hustle":
 			if cat == "physical":
-				um *= 1.2
+				um *= 1.5
 		"technician":
 			if power > 0.0 and power <= 60.0:
 				um *= 1.5
 		"adaptability":
+			# STAB 2,0 no lugar de 1,5
 			if power > 0.0 and type in user.types:
-				um *= 1.33
+				um *= 4.0 / 3.0
 		"sheer_force":
 			if mv.get("effect") is Dictionary:
 				um *= 1.3
 		"iron_fist":
 			if id in PUNCH_MOVES:
-				um *= 1.3
+				um *= 1.2
 		"strong_jaw":
 			if id in BITE_MOVES:
 				um *= 1.5
@@ -353,7 +486,7 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 			if _is_contact(mv):
 				um *= 1.3
 		"reckless":
-			if id in RECKLESS_MOVES:
+			if mv.has("recoil") or id in RECKLESS_MOVES:
 				um *= 1.2
 		"skill_link":
 			if kind == "multi_arc":
@@ -371,7 +504,7 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 					um *= 1.5
 		"tinted_lens":
 			if power > 0.0 and Dex.effectiveness(type, target.types) < 1.0:
-				um *= 1.5
+				um *= 2.0
 		"solar_power":
 			if cat == "special" and wx == "sun":
 				um *= 1.5
@@ -398,14 +531,12 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		"shell_armor", "battle_armor":
 			tm *= 0.9
 		"marvel_scale":
-			if target.status != "":
-				tm *= 0.67
+			# Defesa x1,5 com status: só no físico
+			if target.status != "" and cat == "physical":
+				tm *= 2.0 / 3.0
 		"filter":
 			if power > 0.0 and Dex.effectiveness(type, target.types) > 1.0:
 				tm *= 0.75
-		"damp":
-			if id == "self_destruct":
-				tm *= 0.5
 		"dry_skin":
 			if type == "fire":
 				tm *= 1.25
@@ -426,26 +557,63 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 	return float(m.user) * float(m.target)
 
 
+# --- Alvo e imunidade ---
+
+
+## Habilidade que puxa golpes de alvo único do tipo (Lightning Rod, Storm Drain) ou "".
+static func _rod_for(type: String) -> String:
+	match type:
+		"electric":
+			return "lightning_rod"
+		"water":
+			return "storm_drain"
+	return ""
+
+
+## Para-raios / Dreno no 2x2: golpe inimigo de ALVO ÚNICO do tipo mirado no parceiro vai para o
+## portador (que absorve em immune()). Golpe de vários alvos (Discharge, Bubble...) não é puxado.
+## BattleMoves.hit chama antes de immune(); devolve quem leva o golpe.
+func redirect(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> BattleFighter:
+	if not is_instance_valid(user) or not is_instance_valid(target) or user.side == target.side:
+		return target
+	if BattleMoves.multi_target(mv) != "":
+		return target
+	var rod := _rod_for(String(mv.get("type", "")))
+	if rod == "" or ability_of(target) == rod:
+		return target
+	var p := partner_of(target)
+	if p != null and ability_of(p) == rod:
+		return p
+	return target
+
+
 ## true = o alvo é imune a este golpe pela habilidade (Levitate, Water Absorb, Soundproof...).
 func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 	var type := String(mv.get("type", "normal"))
 	var id := String(mv.get("id", ""))
-	if _absorbs(target, target, type):
+	var cat := String(mv.get("category", ""))
+	# Damp: ninguém explode enquanto ele está em campo.
+	if id in EXPLODE_MOVES:
+		var d := _on_field("damp")
+		if d != null:
+			_fire(d)
+			return true
+	# Prankster: o golpe de status acelerado não pega em inimigo Sombrio (Gen 7+).
+	if (
+		ability_of(user) == "prankster"
+		and cat == "status"
+		and user.side != target.side
+		and "dark" in target.types
+	):
+		target.popup("Não afeta...", Color(0.7, 0.7, 0.7))
 		return true
-	# Para-raios / Dreno: o parceiro do portador atrai o golpe e absorve por ele.
-	var p := partner_of(target)
-	if p != null and user.side != target.side and _absorbs(p, target, type):
+	if _absorbs(target, type):
 		return true
 	match ability_of(target):
 		"wonder_skin":
 			# golpe de status de inimigo: precisão cai para 50%
 			var acc := float(mv.get("accuracy", 0.0))
-			if (
-				String(mv.get("category", "")) == "status"
-				and user.side != target.side
-				and acc > 50.0
-				and _roll(0.5)
-			):
+			if cat == "status" and user.side != target.side and acc > 50.0 and _roll(0.5):
 				_fire(target)
 				return true
 		"levitate":
@@ -460,25 +628,18 @@ func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 			if id == "thief":
 				_fire(target)
 				return true
-		"damp":
-			if id == "self_destruct":
-				_fire(target)
-				return true
 		"telepathy":
-			if user.side == target.side and user != target:
+			# não leva golpe de dano do parceiro (Earthquake, Discharge...)
+			if user.side == target.side and user != target and float(mv.get("power", 0)) > 0.0:
 				_fire(target)
 				return true
 	return false
 
 
-## Habilidades que absorvem um tipo. `hit` é quem foi atingido; se não for o portador, só vale
-## Para-raios/Dreno (que puxam o golpe do parceiro).
-func _absorbs(owner: BattleFighter, hit: BattleFighter, type: String) -> bool:
-	var oa := ability_of(owner)
-	if hit != owner and not oa in ["lightning_rod", "storm_drain"]:
-		return false
+## Habilidades que absorvem um tipo (o golpe não causa dano).
+func _absorbs(owner: BattleFighter, type: String) -> bool:
 	var col := Dex.type_color(type)
-	match oa:
+	match ability_of(owner):
 		"water_absorb":
 			if type == "water":
 				_heal_pct(owner, 0.25)
@@ -546,8 +707,12 @@ func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: in
 		if CONTACT_STATUS.has(ta) and _roll(CONTACT_CHANCE):
 			var opts: Array = CONTACT_STATUS[ta]
 			var st := String(opts[arena.rng.randi() % opts.size()])
+			var spore_proof: bool = (
+				ta == "effect_spore" and ("grass" in user.types or ua == "overcoat")
+			)
 			if (
-				not BattleMoves.STATUS_IMMUNE.get(st, "-") in user.types
+				not spore_proof
+				and not BattleMoves.STATUS_IMMUNE.get(st, "-") in user.types
 				and not blocks_status(user, st)
 				and user.apply_status(st, target)
 			):
@@ -556,12 +721,12 @@ func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: in
 					String(BattleMoves.STATUS_WORDS.get(st, st.to_upper() + "!")),
 					Color(1, 0.9, 0.6)
 				)
-		elif ta == "cute_charm" and ua != "oblivious" and _roll(CONTACT_CHANCE):
+		elif ta == "cute_charm" and ua != "oblivious" and _attracts(user, target):
 			user.gcd_t += 1.2
 			user.popup("Enfeitiçado!", Color(1.0, 0.55, 0.75))
 			_fire(target, Color(1.0, 0.55, 0.75))
 		elif ta == "rough_skin" and ua != "magic_guard":
-			var chip := maxi(1, int(user.max_hp / 16.0))
+			var chip := maxi(1, int(user.max_hp / 8.0))
 			_fire(target)
 			user.popup("-%d" % chip, Color(0.8, 0.6, 0.4), 0.8)
 			user.take_damage(chip, Vector3.ZERO, 0.0)
@@ -577,9 +742,22 @@ func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: in
 		if ua == "moxie":
 			_stage_up(user, "atk", 1)
 			_fire(user)
-		if ta == "aftermath" and user.alive() and ua != "magic_guard":
+		if (
+			ta == "aftermath"
+			and contact
+			and user.alive()
+			and ua != "magic_guard"
+			and _on_field("damp") == null
+		):
 			_fire(target)
 			user.take_damage(maxi(1, int(user.max_hp / 4.0)), Vector3.ZERO, 0.0)
+
+
+## Cute Charm: 30% ao contato, só entre sexos opostos (sem sexo não se enfeitiça).
+func _attracts(user: BattleFighter, target: BattleFighter) -> bool:
+	var g1: String = user.mon.gender
+	var g2: String = target.mon.gender
+	return g1 != "" and g2 != "" and g1 != g2 and _roll(CONTACT_CHANCE)
 
 
 ## Serene Grace: segunda chance para o efeito extra do golpe.
@@ -622,7 +800,7 @@ func blocks_stage_drop(f: BattleFighter, k: String) -> bool:
 	return keys.is_empty() or k in keys
 
 
-## Multiplicador de precisão do usuário (Compound Eyes).
+## Multiplicador de precisão do usuário (Compound Eyes, Hustle, No Guard).
 func acc_mult(f: BattleFighter) -> float:
 	match ability_of(f):
 		"compound_eyes":
@@ -630,10 +808,43 @@ func acc_mult(f: BattleFighter) -> float:
 		"illuminate":
 			return 1.05
 		"no_guard":
-			return 1.4
+			return NO_GUARD_ACC
 		"hustle":
-			return 0.9
+			return 0.8
 	return 1.0
+
+
+# --- Speed: ordem da rodada, andar e preparo ---
+
+
+## Multiplicador da Speed na ordem da rodada (BattleTurns.order_speed, por cima de eff_spe):
+## Chlorophyll/Swift Swim/Sand Rush 2x no clima, Quick Feet 1,5x com status (e sem o corte da
+## paralisia), Unburden 2x depois de usar o item.
+func order_speed_mult(f: BattleFighter) -> float:
+	var a := ability_of(f)
+	if _weather_speed(a):
+		return SPEED_DOUBLE
+	match a:
+		"quick_feet":
+			if f.status != "":
+				return 1.5 * (2.0 if f.status == "paralysis" else 1.0)
+		"unburden":
+			if f.item_used:
+				return SPEED_DOUBLE
+	return 1.0
+
+
+## Prioridade extra do golpe (BattleTurns.priority_of): Prankster +1 em status, Gale Wings +1 em
+## Voador com HP cheio (Gen 7+).
+func priority_bonus(f: BattleFighter, mv: Dictionary) -> int:
+	match ability_of(f):
+		"prankster":
+			if String(mv.get("category", "")) == "status":
+				return 1
+		"gale_wings":
+			if String(mv.get("type", "")) == "flying" and f.hp >= f.max_hp:
+				return 1
+	return 0
 
 
 ## Multiplicador da velocidade de andar (a arena aplica em Fighter.drive).
@@ -646,7 +857,11 @@ func walk_mult(f: BattleFighter) -> float:
 		"quick_feet":
 			if f.status != "":
 				m *= 1.3
-	m *= _weather_speed(a)
+		"unburden":
+			if f.item_used:
+				m *= SPEED_WALK
+	if _weather_speed(a):
+		m *= SPEED_WALK
 	for t in arena.targets_of(f):
 		var ta := ability_of(t)
 		if ta == "arena_trap" and not f.is_airborne() and a != "levitate":
@@ -656,30 +871,28 @@ func walk_mult(f: BattleFighter) -> float:
 	return m
 
 
-## Speed dobrada no clima certo (Chlorophyll no sol, Swift Swim na chuva, Sand Rush na areia),
-## expressa como x1,5 no andar e no preparo dos golpes.
-func _weather_speed(a: String) -> float:
+## Speed dobrada no clima certo (Chlorophyll no sol, Swift Swim na chuva, Sand Rush na areia).
+func _weather_speed(a: String) -> bool:
 	var wx := weather_now()
-	if (
+	return (
 		(a == "chlorophyll" and wx == "sun")
 		or (a == "swift_swim" and wx == "rain")
 		or (a == "sand_rush" and wx == "sand")
-	):
-		return 1.5
-	return 1.0
+	)
 
 
-## Multiplicador da velocidade de lançar o golpe (Prankster etc.): >1 = sai mais rápido.
+## Multiplicador da velocidade de lançar o golpe (o preparo em tempo real): >1 = sai mais rápido.
+## A ordem da rodada vem de order_speed_mult/priority_bonus.
 func cast_speed_mult(f: BattleFighter, mv: Dictionary) -> float:
-	var ws := _weather_speed(ability_of(f))
-	if ws > 1.0:
-		return ws
-	match ability_of(f):
+	var a := ability_of(f)
+	if _weather_speed(a) or (a == "unburden" and f.item_used):
+		return SPEED_WALK
+	match a:
 		"prankster":
 			if String(mv.get("category", "")) == "status":
 				return 1.5
 		"gale_wings":
-			if String(mv.get("type", "")) == "flying":
+			if String(mv.get("type", "")) == "flying" and f.hp >= f.max_hp:
 				return 1.4
 		"quick_feet":
 			if f.status != "":
@@ -692,28 +905,148 @@ func profile_bias(f: BattleFighter) -> String:
 	return String(PROFILES.get(ability_of(f), ""))
 
 
+# --- Fim de rodada (o "fim de turno" do oficial) ---
+
+
+## Fim de cada rodada (BattleTurns, a cada ROUND_SECS s também sem a fila): clima (areia, Rain Dish,
+## Dry Skin, Solar Power), Speed Boost, Shed Skin, Natural Cure, Regenerator, Poison Heal, Pickup, em
+## ordem pela Speed. Depois conta a rodada do clima de habilidade.
+func on_round_end() -> void:
+	var live: Array = arena.fighters.filter(func(g): return is_instance_valid(g) and g.active())
+	last_round_order = _by_speed(live)
+	for f in last_round_order:
+		if is_instance_valid(f) and f.active():
+			_round_fighter(f)
+	if weather_rounds > 0:
+		weather_rounds -= 1
+		if weather_rounds == 0:
+			weather = ""
+			weather_t = 0.0
+	rounds += 1
+
+
+func _round_fighter(f: BattleFighter) -> void:
+	var a := ability_of(f)
+	var s := _state(f)
+	_weather_round(f, a)
+	if not f.alive() or a == "":
+		return
+	match a:
+		"speed_boost":
+			# não na rodada em que entrou (oficial: não no turno da troca)
+			if int(s.enter_round) < rounds and int(f.stages.get("spe", 0)) < 6:
+				_stage_up(f, "spe", 1)
+				_fire(f)
+		"shed_skin":
+			if f.status in Mon.PERSIST_STATUS + ["toxic"] and _roll(1.0 / 3.0):
+				f.clear_status()
+				_fire(f)
+		"natural_cure":
+			# oficial: cura ao sair; em campo (tempo real) cura no fim da rodada
+			if f.status in Mon.PERSIST_STATUS + ["toxic"]:
+				f.clear_status()
+				_fire(f, Color(0.6, 1.0, 0.7))
+		"regenerator":
+			# oficial: 1/3 ao sair; em campo, 1/16 por rodada
+			_round_heal(f, 1.0 / 16.0)
+		"pickup":
+			_round_heal(f, 0.02)
+		"poison_heal":
+			if f.status in ["poison", "toxic"]:
+				_round_heal(f, 1.0 / 8.0)
+
+
+func _round_heal(f: BattleFighter, pct: float) -> void:
+	if f.hp < f.max_hp:
+		_heal_pct(f, pct)
+		_fire(f, Color(0.5, 1.0, 0.6))
+
+
+## Clima no fim da rodada: Rain Dish 1/16, Dry Skin +1/8 na chuva e -1/8 no sol, Solar Power -1/8,
+## areia -1/16 em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force, Magic Guard, Overcoat).
+## A neve (hail) da Gen 9 não tira HP.
+func _weather_round(f: BattleFighter, a: String) -> void:
+	var guard := a == "magic_guard"
+	match weather_now():
+		"rain":
+			if a == "rain_dish":
+				_round_heal(f, 1.0 / 16.0)
+			elif a == "dry_skin":
+				_round_heal(f, 1.0 / 8.0)
+		"sun":
+			if a in ["dry_skin", "solar_power"] and not guard:
+				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3))
+				_fire(f, Color(1.0, 0.75, 0.3))
+		"sand":
+			if not _sand_proof(f, a):
+				_weather_chip(f, 1.0 / 16.0, Color(0.8, 0.7, 0.4))
+
+
+func _sand_proof(f: BattleFighter, a: String) -> bool:
+	if a in SANDPROOF:
+		return true
+	for t in f.types:
+		if t in SANDPROOF_TYPES:
+			return true
+	return false
+
+
+func _weather_chip(f: BattleFighter, pct: float, col: Color) -> void:
+	var d := maxi(1, int(float(f.max_hp) * pct * f.dot_scale()))
+	f.popup("-%d" % d, col, 0.8)
+	f.take_damage(d, Vector3.ZERO, 0.0)
+
+
+# --- Troca ---
+
+
+## Saiu de campo vivo (troca): Natural Cure cura o status, Regenerator cura 1/3 do HP (oficial).
+func _switched_out(f: BattleFighter) -> void:
+	match ability_of(f):
+		"natural_cure":
+			if f.status != "" or f.mon.status != "":
+				f.clear_status()
+				_fire(f, Color(0.6, 1.0, 0.7))
+		"regenerator":
+			var m: Mon = f.mon
+			if m.hp > 0 and m.hp < m.max_hp:
+				m.hp = mini(m.max_hp, m.hp + maxi(1, int(m.max_hp / 3.0)))
+				f.hp = m.hp
+				_fire(f, Color(0.5, 1.0, 0.6))
+
+
+## Quem estava em campo e saiu vivo (arena._recall) foi trocado.
+func _watch_switches() -> void:
+	for id in _field.keys():
+		var f = _field[id]
+		if not is_instance_valid(f):
+			_field.erase(id)
+		elif not f.on_field:
+			_field.erase(id)
+			if f.hp > 0:
+				_switched_out(f)
+	for f in arena.fighters:
+		if is_instance_valid(f) and f.active():
+			_field[f.get_instance_id()] = f
+
+
 # --- Por frame ---
 
 
 func tick(dt: float) -> void:
 	_now += dt
-	if not _pending_intimidate.is_empty() and arena.state == "fight":
-		var keep: Array = []
-		for f in _pending_intimidate:
-			if is_instance_valid(f) and f.active() and not _do_intimidate(f):
-				keep.append(f)
-		_pending_intimidate = keep
+	_watch_switches()
 	if not _pending_enter.is_empty() and arena.state == "fight":
-		var keep2: Array = []
-		for f in _pending_enter:
+		var keep: Array = []
+		last_entry_order = []
+		for f in _by_speed(_pending_enter):
 			if not is_instance_valid(f) or not f.active():
 				continue
-			if ability_of(f) == "drought":
-				set_weather("sun")
-				_fire(f, Color(1.0, 0.75, 0.3))
-			elif not _do_frisk(f):
-				keep2.append(f)
-		_pending_enter = keep2
+			if _entry(f):
+				last_entry_order.append(f)
+			else:
+				keep.append(f)
+		_pending_enter = keep
 	if weather_t > 0.0:
 		weather_t -= dt
 		if weather_t <= 0.0:
@@ -722,7 +1055,7 @@ func tick(dt: float) -> void:
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active():
 			_unnerve(f)
-			_tick_fighter(f, dt)
+			_tick_fighter(f)
 
 
 ## Unnerve: enquanto há um inimigo com Unnerve em campo, o item do treinador não é usado.
@@ -743,99 +1076,21 @@ func _unnerve(f: BattleFighter) -> void:
 		s.item = ""
 
 
-## Efeitos do clima a cada WEATHER_TICK s (Rain Dish, Dry Skin, Solar Power, areia/granizo).
-func _weather_tick(f: BattleFighter, a: String, s: Dictionary, dt: float) -> void:
-	var wx := weather_now()
-	if wx == "":
-		s.wx = 0.0
-		return
-	s.wx = float(s.wx) + dt
-	if float(s.wx) < WEATHER_TICK:
-		return
-	s.wx = 0.0
-	var guard := a == "magic_guard"
-	match wx:
-		"rain":
-			if a == "rain_dish":
-				_heal_pct(f, 1.0 / 16.0)
-				_fire(f, Color(0.5, 0.7, 1.0))
-			elif a == "dry_skin":
-				_heal_pct(f, 1.0 / 8.0)
-				_fire(f, Color(0.5, 0.7, 1.0))
-		"sun":
-			if a in ["dry_skin", "solar_power"] and not guard:
-				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3))
-				_fire(f, Color(1.0, 0.75, 0.3))
-		"sand":
-			if not _sand_proof(f, a):
-				_weather_chip(f, 1.0 / 16.0, Color(0.8, 0.7, 0.4))
-		"hail":
-			if not guard and not "ice" in f.types:
-				_weather_chip(f, 1.0 / 16.0, Color(0.7, 0.9, 1.0))
-
-
-func _sand_proof(f: BattleFighter, a: String) -> bool:
-	if a in SANDPROOF:
-		return true
-	for t in f.types:
-		if t in SANDPROOF_TYPES:
-			return true
-	return false
-
-
-func _weather_chip(f: BattleFighter, pct: float, col: Color) -> void:
-	var d := maxi(1, int(float(f.max_hp) * pct * f.dot_scale()))
-	f.popup("-%d" % d, col, 0.8)
-	f.take_damage(d, Vector3.ZERO, 0.0)
-
-
-func _tick_fighter(f: BattleFighter, dt: float) -> void:
+## Efeitos contínuos (não são de fim de turno no oficial): estágios, esquiva, Magic Guard...
+func _tick_fighter(f: BattleFighter) -> void:
 	var a := ability_of(f)
 	if a == "":
 		return
 	var s := _state(f)
 	_watch_stages(f, a, s)
-	_weather_tick(f, a, s, dt)
 	if f.confusion_t > 0.0 and a == "tangled_feet" and f.evasion_t <= 0.0:
 		f.evasion = 0.2
 		f.evasion_t = 0.5
 	match a:
-		"speed_boost":
-			s.speed = float(s.speed) + dt
-			if s.speed >= 8.0:
-				s.speed = 0.0
-				if int(f.stages.get("spe", 0)) < 6:
-					_stage_up(f, "spe", 1)
-					_fire(f)
-		"regenerator":
-			_slow_heal(f, s, dt, 3.0, 0.04)
-		"pickup":
-			_slow_heal(f, s, dt, 10.0, 0.05)
-		"poison_heal":
-			if f.status == "poison":
-				_slow_heal(f, s, dt, 2.0, 0.08)
 		"unburden":
 			if f.item_used and not s.unburdened:
 				s.unburdened = true
-				_stage_up(f, "spe", 2)
 				_fire(f)
-		"shed_skin":
-			if f.status != "":
-				s.shed = float(s.shed) + dt
-				if s.shed >= 3.0:
-					s.shed = 0.0
-					if _roll(0.33):
-						f.clear_status()
-						_fire(f)
-		"natural_cure":
-			if f.status != "":
-				s.status_age = float(s.status_age) + dt
-				if s.status_age >= 2.0:
-					s.status_age = 0.0
-					f.clear_status()
-					_fire(f, Color(0.6, 1.0, 0.7))
-			else:
-				s.status_age = 0.0
 		"sand_veil":
 			if f.evasion_t <= 0.0 and weather_now() == "sand":
 				f.evasion = 0.2
@@ -844,19 +1099,14 @@ func _tick_fighter(f: BattleFighter, dt: float) -> void:
 			# sem dano indireto: veneno, queimadura e semente não tiram HP
 			if f.status in DOT_STATUS:
 				f.status_tick = maxf(f.status_tick, 0.5)
+		"poison_heal":
+			# o veneno não tira HP (cura no fim da rodada)
+			if f.status in ["poison", "toxic"]:
+				f.status_tick = maxf(f.status_tick, 0.5)
 		"rock_head":
 			if f.stagger_t > 1.2:
 				f.stagger_t = 1.2
 				_fire(f)
-
-
-func _slow_heal(f: BattleFighter, s: Dictionary, dt: float, every: float, pct: float) -> void:
-	s.regen = float(s.regen) + dt
-	if s.regen >= every:
-		s.regen = 0.0
-		if f.hp < f.max_hp:
-			_heal_pct(f, pct)
-			_fire(f, Color(0.5, 1.0, 0.6))
 
 
 ## Quedas de atributo: Clear Body & cia. desfazem; Defiant/Competitive reagem.

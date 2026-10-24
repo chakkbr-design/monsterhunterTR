@@ -1,5 +1,5 @@
 {
-  "_doc": "Abilities: id -> name/desc (en) + desc_pt. Gen 3 (FireRed/LeafGreen) ones from pret/pokefirered src/data/text/abilities.h plus newer-gen additions for real-time and double battles. A Mon stores only its ability slot (core/mon.gd ability_slot); effects live in battle/battle_abilities.gd. Clima (Drought, Chlorophyll, Sand Rush...): BattleAbilities.weather_now() = sun/rain/sand/hail, criado por set_weather(kind, secs) (Drought dura 25 s) ou fixo em arena.opts.weather; Cloud Nine suprime.",
+  "_doc": "Abilities: id -> name/desc (en) + desc_pt. Gen 3 (FireRed/LeafGreen) ones from pret/pokefirered src/data/text/abilities.h plus newer-gen additions for real-time and double battles. A Mon stores only its ability slot (core/mon.gd ability_slot); effects live in battle/battle_abilities.gd. Clima (Drought, Chlorophyll, Sand Rush...): BattleAbilities.weather_now() = sun/rain/sand/hail, criado por set_weather(kind, secs) (golpe), set_weather_rounds(kind, n) (Drought, 5 rodadas) ou fixo em arena.opts.weather; Cloud Nine suprime. Efeitos de fim de turno do oficial agem em BattleAbilities.on_round_end() (fim de cada rodada de BattleTurns).",
   "arena_trap": {
     "name": "ARENA TRAP",
     "desc": "Prevents fleeing.",
@@ -13,17 +13,17 @@
   "chlorophyll": {
     "name": "CHLOROPHYLL",
     "desc": "Boosts Speed in sunshine.",
-    "desc_pt": "No sol, Speed dobrada (anda e prepara golpes x1,5)."
+    "desc_pt": "No sol, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
   },
   "cloud_nine": {
     "name": "CLOUD NINE",
     "desc": "Eliminates the effects of weather.",
-    "desc_pt": "Enquanto está em campo, o clima não tem efeito em ninguém."
+    "desc_pt": "Ao entrar, anuncia; enquanto está em campo, o clima não tem efeito em ninguém."
   },
   "cute_charm": {
     "name": "CUTE CHARM",
     "desc": "Infatuates on contact.",
-    "desc_pt": "30% de enfeitiçar quem encosta."
+    "desc_pt": "30% de enfeitiçar quem encosta, se for do sexo oposto."
   },
   "compound_eyes": {
     "name": "COMPOUND EYES",
@@ -33,12 +33,12 @@
   "damp": {
     "name": "DAMP",
     "desc": "Prevents self-destruction.",
-    "desc_pt": "Impede Autodestruição por perto (imune e dano x0,5)."
+    "desc_pt": "Enquanto está em campo, ninguém consegue explodir (Autodestruição falha) e Aftermath não age."
   },
   "effect_spore": {
     "name": "EFFECT SPORE",
     "desc": "Leaves spores on contact.",
-    "desc_pt": "30% de esporos ao contato."
+    "desc_pt": "30% de esporos ao contato (Planta não pega)."
   },
   "guts": {
     "name": "GUTS",
@@ -53,7 +53,7 @@
   "intimidate": {
     "name": "INTIMIDATE",
     "desc": "Lowers the foe's ATTACK.",
-    "desc_pt": "Ao entrar, baixa o Ataque dos inimigos."
+    "desc_pt": "Ao entrar (também na troca), baixa o Ataque de todos os inimigos em campo (os dois no 2x2)."
   },
   "keen_eye": {
     "name": "KEEN EYE",
@@ -107,8 +107,8 @@
   },
   "shed_skin": {
     "name": "SHED SKIN",
-    "desc": "Heals the body by shedding.",
-    "desc_pt": "33% de curar status a cada 3 s."
+    "desc": "May heal its status at the end of each round.",
+    "desc_pt": "No fim de cada rodada, 1/3 de chance de curar o status."
   },
   "shield_dust": {
     "name": "SHIELD DUST",
@@ -153,7 +153,7 @@
   "swift_swim": {
     "name": "SWIFT SWIM",
     "desc": "Boosts Speed in rain.",
-    "desc_pt": "Na chuva, Speed dobrada (anda e prepara golpes x1,5)."
+    "desc_pt": "Na chuva, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
   },
   "torrent": {
     "name": "TORRENT",
@@ -177,18 +177,18 @@
   },
   "illuminate": {
     "name": "ILLUMINATE",
-    "desc": "Encounter rate increases.",
-    "desc_pt": "Precisão x1,05."
+    "desc": "Prevents loss of accuracy.",
+    "desc_pt": "A precisão não cai e mira um pouco melhor (x1,05)."
   },
   "natural_cure": {
     "name": "NATURAL CURE",
     "desc": "Heals upon switching out.",
-    "desc_pt": "Cura status sozinho após 2 s."
+    "desc_pt": "Cura o status ao sair na troca; em campo, cura no fim da rodada."
   },
   "speed_boost": {
     "name": "SPEED BOOST",
-    "desc": "Raises SPEED every 8 seconds.",
-    "desc_pt": "+1 Velocidade a cada 8 s."
+    "desc": "Raises Speed at the end of each round.",
+    "desc_pt": "+1 Velocidade no fim de cada rodada (não na rodada em que entrou)."
   },
   "technician": {
     "name": "TECHNICIAN",
@@ -198,7 +198,7 @@
   "adaptability": {
     "name": "ADAPTABILITY",
     "desc": "Powers up same-type moves.",
-    "desc_pt": "Bônus do mesmo tipo maior (x1,33)."
+    "desc_pt": "Bônus do mesmo tipo x2 no lugar de x1,5."
   },
   "sheer_force": {
     "name": "SHEER FORCE",
@@ -212,13 +212,13 @@
   },
   "regenerator": {
     "name": "REGENERATOR",
-    "desc": "Slowly restores HP in battle.",
-    "desc_pt": "Cura 4% do HP a cada 3 s."
+    "desc": "Restores 1/3 HP when switching out; a little each round on the field.",
+    "desc_pt": "Cura 1/3 do HP ao sair na troca; em campo, 1/16 no fim de cada rodada."
   },
   "friend_guard": {
     "name": "FRIEND GUARD",
     "desc": "Reduces damage to the partner.",
-    "desc_pt": "O parceiro toma -25% de dano."
+    "desc_pt": "O parceiro toma 25% menos dano."
   },
   "plus": {
     "name": "PLUS",
@@ -233,7 +233,7 @@
   "telepathy": {
     "name": "TELEPATHY",
     "desc": "Dodges the partner's attacks.",
-    "desc_pt": "Não toma dano do parceiro."
+    "desc_pt": "Não toma dano dos golpes do parceiro."
   },
   "flash_fire": {
     "name": "FLASH FIRE",
@@ -243,12 +243,12 @@
   "lightning_rod": {
     "name": "LIGHTNING ROD",
     "desc": "Draws in ELECTRIC moves for SP. ATK.",
-    "desc_pt": "Atrai e absorve elétrico: +1 At. Esp."
+    "desc_pt": "Puxa golpes elétricos de alvo único mirados no parceiro; absorve elétrico: sem dano e +1 At. Esp."
   },
   "storm_drain": {
     "name": "STORM DRAIN",
     "desc": "Draws in WATER moves for SP. ATK.",
-    "desc_pt": "Atrai e absorve água: +1 At. Esp."
+    "desc_pt": "Puxa golpes de água de alvo único mirados no parceiro; absorve água: sem dano e +1 At. Esp."
   },
   "volt_absorb": {
     "name": "VOLT ABSORB",
@@ -273,12 +273,12 @@
   "defiant": {
     "name": "DEFIANT",
     "desc": "Stat drops sharply raise ATTACK.",
-    "desc_pt": "Se um atributo cai, +2 Ataque."
+    "desc_pt": "Se um atributo cai (também pela Intimidate), +2 Ataque."
   },
   "competitive": {
     "name": "COMPETITIVE",
     "desc": "Stat drops sharply raise SP. ATK.",
-    "desc_pt": "Se um atributo cai, +2 At. Esp."
+    "desc_pt": "Se um atributo cai (também pela Intimidate), +2 At. Esp."
   },
   "justified": {
     "name": "JUSTIFIED",
@@ -288,7 +288,7 @@
   "iron_fist": {
     "name": "IRON FIST",
     "desc": "Powers up punching moves.",
-    "desc_pt": "Golpes de punho x1,3."
+    "desc_pt": "Golpes de soco x1,2."
   },
   "strong_jaw": {
     "name": "STRONG JAW",
@@ -303,7 +303,7 @@
   "reckless": {
     "name": "RECKLESS",
     "desc": "Powers up risky moves.",
-    "desc_pt": "Golpes arriscados x1,2."
+    "desc_pt": "Golpes com recuo ou de queda x1,2."
   },
   "skill_link": {
     "name": "SKILL LINK",
@@ -317,23 +317,23 @@
   },
   "prankster": {
     "name": "PRANKSTER",
-    "desc": "Status moves are cast faster.",
-    "desc_pt": "Golpes de status saem mais rápido."
+    "desc": "Gives priority to status moves.",
+    "desc_pt": "Golpes de status com +1 de prioridade na rodada (e preparo mais rápido); não pegam em inimigo Sombrio."
   },
   "unburden": {
     "name": "UNBURDEN",
-    "desc": "Raises SPEED after using an item.",
-    "desc_pt": "Usou o item: +2 Velocidade."
+    "desc": "Doubles Speed after using an item.",
+    "desc_pt": "Usou o item: Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
   },
   "gale_wings": {
     "name": "GALE WINGS",
-    "desc": "FLYING moves are cast faster.",
-    "desc_pt": "Golpes voadores saem mais rápido."
+    "desc": "Gives priority to Flying moves at full HP.",
+    "desc_pt": "Com HP cheio, golpes voadores com +1 de prioridade na rodada (e preparo mais rápido)."
   },
   "quick_feet": {
     "name": "QUICK FEET",
     "desc": "Moves faster with a status.",
-    "desc_pt": "Com status, anda e age mais rápido."
+    "desc_pt": "Com status, Speed x1,5 na ordem da rodada (sem o corte da paralisia), anda e age mais rápido."
   },
   "sniper": {
     "name": "SNIPER",
@@ -347,8 +347,8 @@
   },
   "pickup": {
     "name": "PICKUP",
-    "desc": "Finds a little HP now and then.",
-    "desc_pt": "Recupera 5% do HP a cada 10 s."
+    "desc": "Finds a little HP at the end of each round.",
+    "desc_pt": "Recupera 2% do HP no fim de cada rodada."
   },
   "flame_body": {
     "name": "FLAME BODY",
@@ -382,28 +382,28 @@
   },
   "huge_power": {
     "name": "HUGE POWER",
-    "desc": "Boosts physical attacks.",
-    "desc_pt": "Golpes físicos x1,5."
+    "desc": "Doubles the Pokémon's Attack stat.",
+    "desc_pt": "Golpes físicos x2."
   },
   "hustle": {
     "name": "HUSTLE",
-    "desc": "Boosts physical attacks, less accurate.",
-    "desc_pt": "Físico x1,2, precisão x0,9."
+    "desc": "Boosts Attack, but lowers accuracy.",
+    "desc_pt": "Físico x1,5, precisão x0,8."
   },
   "rough_skin": {
     "name": "ROUGH SKIN",
     "desc": "Hurts attackers on contact.",
-    "desc_pt": "Quem encosta perde 1/16 do HP."
+    "desc_pt": "Quem encosta perde 1/8 do HP."
   },
   "no_guard": {
     "name": "NO GUARD",
-    "desc": "Raises accuracy a lot.",
-    "desc_pt": "Precisão x1,4."
+    "desc": "The Pokémon's moves never miss.",
+    "desc_pt": "Os golpes dele não erram."
   },
   "tinted_lens": {
     "name": "TINTED LENS",
     "desc": "Powers up resisted hits.",
-    "desc_pt": "Golpes pouco efetivos x1,5."
+    "desc_pt": "Golpes pouco efetivos x2."
   },
   "filter": {
     "name": "FILTER",
@@ -413,12 +413,12 @@
   "marvel_scale": {
     "name": "MARVEL SCALE",
     "desc": "Sturdy when suffering a status.",
-    "desc_pt": "Com status, dano recebido -33%."
+    "desc_pt": "Com status, dano físico recebido x2/3 (Defesa x1,5)."
   },
   "poison_heal": {
     "name": "POISON HEAL",
     "desc": "Poison restores HP.",
-    "desc_pt": "Envenenado, cura 8% a cada 2 s."
+    "desc_pt": "Envenenado, não perde HP e cura 1/8 no fim de cada rodada."
   },
   "steadfast": {
     "name": "STEADFAST",
@@ -428,7 +428,7 @@
   "aftermath": {
     "name": "AFTERMATH",
     "desc": "Hurts the one that knocks it out.",
-    "desc_pt": "Quem nocautear perde 1/4 do HP."
+    "desc_pt": "Quem o nocautear com golpe de contato perde 1/4 do HP."
   },
   "limber": {
     "name": "LIMBER",
@@ -448,12 +448,12 @@
   "drought": {
     "name": "DROUGHT",
     "desc": "Turns the sunlight harsh when the Pokémon enters a battle.",
-    "desc_pt": "Ao entrar, abre o sol por 25 s: Fogo x1,5, Água x0,5, Clorofila acelera."
+    "desc_pt": "Ao entrar, abre o sol por 5 rodadas: Fogo x1,5, Água x0,5, Clorofila acelera."
   },
   "dry_skin": {
     "name": "DRY SKIN",
     "desc": "Restores HP in rain or when hit by Water moves; hurts in harsh sunlight; Fire moves hurt more.",
-    "desc_pt": "Água absorvida cura 25%. Chuva cura 1/8 do HP a cada 2 s, sol tira 1/8. Fogo causa x1,25."
+    "desc_pt": "Água absorvida cura 25%. No fim da rodada, chuva cura 1/8 do HP e sol tira 1/8. Fogo causa x1,25."
   },
   "frisk": {
     "name": "FRISK",
@@ -473,7 +473,7 @@
   "rain_dish": {
     "name": "RAIN DISH",
     "desc": "The Pokémon gradually regains HP in rain.",
-    "desc_pt": "Na chuva, recupera 1/16 do HP a cada 2 s."
+    "desc_pt": "Na chuva, recupera 1/16 do HP no fim de cada rodada."
   },
   "rivalry": {
     "name": "RIVALRY",
@@ -488,12 +488,12 @@
   "sand_rush": {
     "name": "SAND RUSH",
     "desc": "Boosts the Pokémon's Speed in a sandstorm.",
-    "desc_pt": "Na tempestade de areia, Speed dobrada (anda e prepara golpes x1,5) e não sofre a areia."
+    "desc_pt": "Na tempestade de areia, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5) e não sofre a areia."
   },
   "solar_power": {
     "name": "SOLAR POWER",
     "desc": "In harsh sunlight, Sp. Atk is boosted, but HP decreases every turn.",
-    "desc_pt": "No sol, At. Esp. x1,5, mas perde 1/8 do HP a cada 2 s."
+    "desc_pt": "No sol, At. Esp. x1,5, mas perde 1/8 do HP no fim de cada rodada."
   },
   "tangled_feet": {
     "name": "TANGLED FEET",
@@ -508,7 +508,7 @@
   "unnerve": {
     "name": "UNNERVE",
     "desc": "Unnerves opposing Pokémon and makes them unable to eat Berries.",
-    "desc_pt": "Enquanto está em campo, os inimigos não conseguem usar o item do treinador."
+    "desc_pt": "Ao entrar, anuncia; enquanto está em campo, os inimigos não conseguem usar o item do treinador."
   },
   "wonder_skin": {
     "name": "WONDER SKIN",

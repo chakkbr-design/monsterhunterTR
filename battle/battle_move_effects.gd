@@ -1518,6 +1518,18 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				user.position + Vector3(0, 1.6, 0), "Gravidade intensa!", Dex.type_color("psychic")
 			)
 			_vfx("gravity", [FIELD_TURNS * TURN])
+		"trick_room":
+			# Trick Room (-7 no oficial): a ordem da rodada inverte; usar de novo desliga
+			var t = arena.get("turns")
+			if t and t.has_method("toggle_trick_room"):
+				var on: bool = t.toggle_trick_room()
+				arena.popup(
+					user.position + Vector3(0, 1.6, 0),
+					"Dimensões distorcidas!" if on else "As dimensões voltaram ao normal!",
+					Dex.type_color("psychic")
+				)
+			else:
+				_fail(user)
 		"grassy_terrain":
 			_set_terrain("grassy", user, "Campo de grama!", "grass")
 		"electric_terrain":

@@ -418,6 +418,8 @@ func hit(
 	if arena.field and arena.field.absorb_hit(user, target, mv):
 		return
 	target = _cover(user, target, mv)
+	if arena.abilities and arena.abilities.has_method("redirect"):
+		target = arena.abilities.redirect(user, target, mv)  # Lightning Rod / Storm Drain
 	if arena.abilities and arena.abilities.immune(user, target, mv):
 		_landed(user, target, mv)
 		return

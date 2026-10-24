@@ -124,9 +124,20 @@ func _drought_and_speed() -> void:
 	check(ab.banners_shown >= 1 and ab.last_banner == "DROUGHT", "Drought mostra a faixa")
 	check(ab.walk_mult(a.enemy) == 1.5, "Chlorophyll: x1,5 no sol (%f)" % ab.walk_mult(a.enemy))
 	check(ab.cast_speed_mult(a.enemy, Dex.move("tackle")) == 1.5, "Chlorophyll: preparo x1,5")
-	ab.weather = ""
-	ab.weather_t = 0.0
+	check(ab.order_speed_mult(a.enemy) == 2.0, "Chlorophyll: Speed 2x na ordem da rodada no sol")
+	check(
+		is_equal_approx(BattleTurns.order_speed(a.enemy), a.enemy.eff_spe() * 2.0),
+		"BattleTurns.order_speed usa o Chlorophyll"
+	)
+	check(ab.order_speed_mult(a.player) == 1.0, "sem Chlorophyll, ordem normal")
+	# Drought: 5 rodadas de sol
+	for i in 4:
+		ab.on_round_end()
+	check(ab.weather_now() == "sun", "Drought: sol ainda na 4ª rodada")
+	ab.on_round_end()
+	check(ab.weather_now() == "", "Drought: o sol acaba depois de 5 rodadas")
 	check(ab.walk_mult(a.enemy) == 1.0, "Chlorophyll: nada sem sol")
+	check(ab.order_speed_mult(a.enemy) == 1.0, "Chlorophyll: ordem normal sem sol")
 	a.free()
 	var c := _still(Mon.create("pidgey", 20), _mon("psyduck", "cloud_nine"))
 	c.abilities.set_weather("sun", 30.0)
@@ -152,7 +163,9 @@ func _sand() -> void:
 		"Sand Force: só Pedra/Terra/Aço"
 	)
 	var h: int = a.player.hp
-	_run(a, 5.0)
+	check(ab.order_speed_mult(a.player) == 2.0, "Sand Rush: Speed 2x na ordem na areia")
+	ab.on_round_end()
+	_run(a, BattleTurns.ROUND_SECS + 0.5)
 	check(
 		a.player.hp == h and a.enemy.hp == a.enemy.max_hp,
 		"Sand Rush/Force e tipo Terra não sofrem a areia"
@@ -168,9 +181,26 @@ func _sand() -> void:
 	c.abilities.set_weather("sand", 30.0)
 	var pid: BattleFighter = c.player
 	var h2 := pid.hp
-	_run(c, 4.5)
-	check(pid.hp < h2, "areia tira HP de quem não é imune (%d -> %d)" % [h2, pid.hp])
+	c.abilities.on_round_end()
+	check(
+		pid.hp == h2 - maxi(1, int(pid.max_hp / 16.0 * pid.dot_scale())),
+		"areia tira 1/16 no fim da rodada de quem não é imune (%d -> %d)" % [h2, pid.hp]
+	)
+	# rodando a luta: tira de novo no fim da rodada, não a cada 2 s
+	var h3 := pid.hp
+	_run(c, 1.0)
+	var mid := pid.hp
+	_run(c, BattleTurns.ROUND_SECS + 0.5)
+	check(pid.hp < h3, "areia: a luta chega ao fim da rodada (%d -> %d)" % [h3, pid.hp])
+	check(mid >= h3 - maxi(1, int(pid.max_hp / 16.0)), "areia: no máx. um corte por rodada")
 	c.free()
+	# neve (Gen 9) não tira HP
+	var d := _still(Mon.create("pidgey", 20), Mon.create("rattata", 20))
+	d.abilities.set_weather("snow", 30.0)
+	var h4: int = d.player.hp
+	d.abilities.on_round_end()
+	check(d.player.hp == h4, "neve (hail) não tira HP na Gen 9")
+	d.free()
 
 
 func _rain_sun() -> void:
@@ -181,9 +211,16 @@ func _rain_sun() -> void:
 	var p0: int = a.player.hp
 	var e0: int = a.enemy.hp
 	ab.set_weather("rain", 30.0)
-	_run(a, 4.5)
-	check(a.player.hp > p0, "Rain Dish cura na chuva")
-	check(a.enemy.hp > e0, "Dry Skin cura na chuva")
+	ab.on_round_end()
+	check(
+		a.player.hp == p0 + maxi(1, int(a.player.max_hp / 16.0)),
+		"Rain Dish cura 1/16 na chuva no fim da rodada"
+	)
+	check(
+		a.enemy.hp == e0 + maxi(1, int(a.enemy.max_hp / 8.0)),
+		"Dry Skin cura 1/8 na chuva no fim da rodada"
+	)
+	e0 = a.enemy.hp
 	check(
 		ab.immune(a.player, a.enemy, Dex.move("water_gun")) and a.enemy.hp > e0,
 		"Dry Skin absorve Água"
@@ -194,8 +231,8 @@ func _rain_sun() -> void:
 	)
 	ab.set_weather("sun", 30.0)
 	e0 = a.enemy.hp
-	_run(a, 4.5)
-	check(a.enemy.hp < e0, "Dry Skin perde HP no sol")
+	ab.on_round_end()
+	check(a.enemy.hp < e0, "Dry Skin perde HP no sol no fim da rodada")
 	a.free()
 	var b := _still(_mon("charmander", "solar_power"), Mon.create("pidgey", 20))
 	var ab2: BattleAbilities = b.abilities
@@ -209,9 +246,51 @@ func _rain_sun() -> void:
 	)
 	check(ab2.damage_mult(b.player, b.enemy, tackle) == no_sun, "Solar Power só no especial")
 	var h := int(b.player.hp)
-	_run(b, 4.5)
-	check(b.player.hp < h, "Solar Power custa HP no sol")
+	b.abilities.on_round_end()
+	check(
+		b.player.hp == h - maxi(1, int(b.player.max_hp / 8.0 * b.player.dot_scale())),
+		"Solar Power custa 1/8 no sol no fim da rodada"
+	)
 	b.free()
+	_round_status()
+
+
+## Fim de rodada: Poison Heal, Natural Cure, Shed Skin; Damp na explosão.
+func _round_status() -> void:
+	var a := _still(_mon("grimer", "poison_heal"), Mon.create("pidgey", 20))
+	var g: BattleFighter = a.player
+	g.hp = int(g.max_hp / 2.0)
+	g.status = ""
+	g.apply_status("poison", a.enemy)
+	var h := g.hp
+	_run(a, 1.5)
+	check(g.hp >= h, "Poison Heal: o veneno não tira HP (%d -> %d)" % [h, g.hp])
+	h = g.hp
+	a.abilities.on_round_end()
+	check(g.hp == h + maxi(1, int(g.max_hp / 8.0)), "Poison Heal: +1/8 no fim da rodada")
+	a.free()
+	var b := _still(_mon("staryu", "natural_cure"), Mon.create("pidgey", 20))
+	b.player.apply_status("burn", b.enemy)
+	check(b.player.status == "burn", "queimou")
+	b.abilities.on_round_end()
+	check(b.player.status == "", "Natural Cure: cura o status no fim da rodada")
+	b.free()
+	var c := _still(_mon("metapod", "shed_skin"), Mon.create("pidgey", 20))
+	var n := 0
+	for i in 60:
+		c.player.clear_status()
+		c.player.apply_status("paralysis", c.enemy)
+		c.abilities.on_round_end()
+		if c.player.status == "":
+			n += 1
+	check(n > 8 and n < 35, "Shed Skin: ~1/3 por rodada (%d/60)" % n)
+	c.free()
+	var d := _still(Mon.create("pidgey", 20), _mon("psyduck", "damp"))
+	check(
+		d.abilities.immune(d.enemy, d.player, Dex.move("self_destruct")),
+		"Damp: ninguém explode em campo"
+	)
+	d.free()
 
 
 func _rivalry() -> void:

@@ -219,3 +219,38 @@ Não existe empurrão.
 no Earthquake, parceiro no `all_other_pokemon`, Swift nos dois, alvo único na dupla (cone, raio, multi-hit),
 mesmo dano no 1x1 e 2x2, empurrão por eficácia/crítico/peso, Whirlwind, batida na cerca e na caixa, Body
 Slam, Earthquake pulando, Aerial Ace, Dig e a IA.
+
+## Habilidades (Gen 9 / VGC)
+
+**Oficial:** "ao entrar" (Intimidate, Drought, Frisk, Unnerve, Cloud Nine) age na entrada e na troca, do
+mais rápido ao mais lento; "fim de turno" (Speed Boost, Shed Skin, Rain Dish, Dry Skin, Solar Power,
+Poison Heal, dano da areia) age no fim de cada turno, também pela Speed. Lightning Rod/Storm Drain puxam
+golpes de alvo único do tipo, ficam imunes e ganham +1 At. Esp.; golpes de vários alvos não são puxados.
+
+**Jogo (`battle/battle_abilities.gd`, `data/abilities.json`):** o turno é a rodada de `BattleTurns`
+(`ROUND_SECS`). A arena chama `on_round_end()` no fim de cada rodada; BattleTurns consulta
+`order_speed_mult(f)` e `priority_bonus(f, mv)` para a fila; `BattleMoves.hit` chama
+`redirect(user, target, mv)` antes de `immune`. A ordem de ativação usa `arena.turns.speed_order`
+(Trick Room inverte, empate no sorteio).
+
+| Habilidade | Segue o oficial | Adaptado ao tempo real / rodada |
+|---|---|---|
+| Intimidate | -1 Ataque em todos os inimigos ativos (os dois no 2x2), na entrada e na troca; Inner Focus, Oblivious, Own Tempo seguram; Defiant/Competitive tomam o -1 e ganham +2 | espera o inimigo estar em campo |
+| Drought | sol ao entrar, 5 turnos | 5 rodadas (`set_weather_rounds`); clima de golpe segue em segundos |
+| Cloud Nine, Frisk, Unnerve | anunciam ao entrar | Unnerve segura o item do treinador (não há frutinha) |
+| Lightning Rod, Storm Drain | puxam golpe de alvo único do tipo mirado no parceiro; imunes, +1 At. Esp.; Discharge/Bubble (vários alvos) não | — |
+| Speed Boost | +1 Speed no fim do turno, não no turno em que entrou | fim da rodada (antes: a cada 8 s) |
+| Shed Skin, Rain Dish, Dry Skin, Solar Power, Poison Heal, areia | 1/3; 1/16; chuva +1/8, sol -1/8; -1/8; +1/8 sem dano de veneno; -1/16 | fim da rodada (antes: timers de 2–3 s); neve (hail) da Gen 9 sem dano |
+| Natural Cure, Regenerator | curam status / 1/3 do HP ao sair na troca | em campo: Natural Cure cura no fim da rodada; Regenerator 1/16 por rodada |
+| Chlorophyll, Swift Swim, Sand Rush, Unburden, Quick Feet | Speed 2x (Quick Feet 1,5x, sem o corte da paralisia) na ordem | andar e preparo x1,5 (`walk_mult`, `cast_speed_mult`) |
+| Prankster, Gale Wings | +1 de prioridade (status; Voador com HP cheio); Prankster não pega em Sombrio | preparo do golpe mais rápido também |
+| Friend Guard, Plus/Minus, Telepathy | parceiro 0,75x de dano; At. Esp. 1,5x com parceiro Plus/Minus; imune a golpe de dano do parceiro | Infiltrator ignora o Friend Guard (inventado) |
+| Damp | ninguém explode com ele em campo; bloqueia Aftermath | o usuário da Autodestruição ainda cai |
+| Multiplicadores | Huge Power 2x, Hustle 1,5x/precisão 0,8, Iron Fist 1,2x (só socos), Strong Jaw (mordidas), Reckless (recuo e queda), Tinted Lens 2x, Marvel Scale só no físico, Rough Skin 1/8, Aftermath só no contato, Cute Charm só sexo oposto, Effect Spore não pega em Planta, Soundproof com a lista oficial | — |
+| Inventadas (Arena Trap, Magnet Pull, Run Away, Shell/Battle Armor, Rock Head, Sniper, Skill Link, Pickup, Sand Veil, Tangled Feet, Illuminate, No Guard) | — | efeitos contínuos valem contra todos os inimigos no 2x2; Pickup cura 2% por rodada; No Guard só nos golpes dele |
+
+Supressão: Cloud Nine/Air Lock anulam o clima; Gastro Acid/Worry Seed trocam a habilidade por
+`ability_override`. Mold Breaker/Teravolt/Turboblaze, Healer, Power of Alchemy, Receiver, Slush Rush e
+Triage não existem nos dados. Trick Room não existe nos golpes; o handler `special: "trick_room"` já
+chama `arena.turns.toggle_trick_room()` (`battle_move_effects.gd`). Testes:
+`tests/battle/test_abilities.gd` e `test_gen9_abilities.gd`.
