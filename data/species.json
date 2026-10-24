@@ -32,11 +32,11 @@
     "learnset": [
       [
         1,
-        "growl"
+        "tackle"
       ],
       [
         1,
-        "tackle"
+        "growl"
       ],
       [
         3,
@@ -173,11 +173,7 @@
     "learnset": [
       [
         1,
-        "growl"
-      ],
-      [
-        1,
-        "growth"
+        "vine_whip"
       ],
       [
         1,
@@ -185,7 +181,11 @@
       ],
       [
         1,
-        "vine_whip"
+        "growl"
+      ],
+      [
+        1,
+        "growth"
       ],
       [
         9,
@@ -314,6 +314,14 @@
     "learnset": [
       [
         1,
+        "vine_whip"
+      ],
+      [
+        1,
+        "tackle"
+      ],
+      [
+        1,
         "growl"
       ],
       [
@@ -323,14 +331,6 @@
       [
         1,
         "petal_dance"
-      ],
-      [
-        1,
-        "tackle"
-      ],
-      [
-        1,
-        "vine_whip"
       ],
       [
         9,
@@ -461,11 +461,11 @@
     "learnset": [
       [
         1,
-        "growl"
+        "scratch"
       ],
       [
         1,
-        "scratch"
+        "growl"
       ],
       [
         4,
@@ -590,7 +590,7 @@
     "learnset": [
       [
         1,
-        "ember"
+        "scratch"
       ],
       [
         1,
@@ -598,7 +598,7 @@
       ],
       [
         1,
-        "scratch"
+        "ember"
       ],
       [
         1,
@@ -713,11 +713,7 @@
     "learnset": [
       [
         1,
-        "dragon_claw"
-      ],
-      [
-        1,
-        "ember"
+        "scratch"
       ],
       [
         1,
@@ -725,15 +721,19 @@
       ],
       [
         1,
-        "heat_wave"
-      ],
-      [
-        1,
-        "scratch"
+        "ember"
       ],
       [
         1,
         "smokescreen"
+      ],
+      [
+        1,
+        "heat_wave"
+      ],
+      [
+        1,
+        "dragon_claw"
       ],
       [
         12,
@@ -1507,7 +1507,11 @@
       ],
       [
         1,
-        "hurricane"
+        "sand_attack"
+      ],
+      [
+        1,
+        "tackle"
       ],
       [
         1,
@@ -1515,11 +1519,7 @@
       ],
       [
         1,
-        "sand_attack"
-      ],
-      [
-        1,
-        "tackle"
+        "hurricane"
       ],
       [
         5,
@@ -1755,18 +1755,6 @@
     "learnset": [
       [
         1,
-        "focus_energy"
-      ],
-      [
-        1,
-        "quick_attack"
-      ],
-      [
-        1,
-        "scary_face"
-      ],
-      [
-        1,
         "swords_dance"
       ],
       [
@@ -1776,6 +1764,18 @@
       [
         1,
         "tail_whip"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        1,
+        "focus_energy"
+      ],
+      [
+        1,
+        "scary_face"
       ],
       [
         4,
@@ -1885,11 +1885,11 @@
     "learnset": [
       [
         1,
-        "string_shot"
+        "tackle"
       ],
       [
         1,
-        "tackle"
+        "string_shot"
       ],
       [
         9,
@@ -2004,15 +2004,11 @@
     "learnset": [
       [
         1,
-        "bug_bite"
-      ],
-      [
-        1,
         "gust"
       ],
       [
         1,
-        "harden"
+        "tackle"
       ],
       [
         1,
@@ -2020,7 +2016,11 @@
       ],
       [
         1,
-        "tackle"
+        "harden"
+      ],
+      [
+        1,
+        "bug_bite"
       ],
       [
         4,
@@ -2036,11 +2036,11 @@
       ],
       [
         12,
-        "sleep_powder"
+        "stun_spore"
       ],
       [
         12,
-        "stun_spore"
+        "sleep_powder"
       ],
       [
         16,
@@ -2262,15 +2262,7 @@
     "learnset": [
       [
         1,
-        "bug_bite"
-      ],
-      [
-        1,
         "fury_attack"
-      ],
-      [
-        1,
-        "harden"
       ],
       [
         1,
@@ -2279,6 +2271,14 @@
       [
         1,
         "string_shot"
+      ],
+      [
+        1,
+        "harden"
+      ],
+      [
+        1,
+        "bug_bite"
       ],
       [
         11,
@@ -2394,7 +2394,7 @@
     "learnset": [
       [
         1,
-        "charm"
+        "tail_whip"
       ],
       [
         1,
@@ -2402,15 +2402,7 @@
       ],
       [
         1,
-        "nasty_plot"
-      ],
-      [
-        1,
-        "nuzzle"
-      ],
-      [
-        1,
-        "play_nice"
+        "thunder_shock"
       ],
       [
         1,
@@ -2422,11 +2414,19 @@
       ],
       [
         1,
-        "tail_whip"
+        "charm"
       ],
       [
         1,
-        "thunder_shock"
+        "nasty_plot"
+      ],
+      [
+        1,
+        "play_nice"
+      ],
+      [
+        1,
+        "nuzzle"
       ],
       [
         4,
@@ -2549,71 +2549,11 @@
     "learnset": [
       [
         1,
-        "agility"
-      ],
-      [
-        1,
-        "charm"
-      ],
-      [
-        1,
-        "discharge"
-      ],
-      [
-        1,
-        "double_team"
-      ],
-      [
-        1,
-        "electro_ball"
-      ],
-      [
-        1,
-        "feint"
-      ],
-      [
-        1,
-        "growl"
-      ],
-      [
-        1,
-        "iron_tail"
-      ],
-      [
-        1,
-        "light_screen"
-      ],
-      [
-        1,
-        "nasty_plot"
-      ],
-      [
-        1,
-        "nuzzle"
-      ],
-      [
-        1,
-        "play_nice"
-      ],
-      [
-        1,
-        "quick_attack"
-      ],
-      [
-        1,
-        "spark"
-      ],
-      [
-        1,
-        "sweet_kiss"
-      ],
-      [
-        1,
         "tail_whip"
       ],
       [
         1,
-        "thunder"
+        "growl"
       ],
       [
         1,
@@ -2622,6 +2562,66 @@
       [
         1,
         "thunder_wave"
+      ],
+      [
+        1,
+        "thunder"
+      ],
+      [
+        1,
+        "agility"
+      ],
+      [
+        1,
+        "quick_attack"
+      ],
+      [
+        1,
+        "double_team"
+      ],
+      [
+        1,
+        "light_screen"
+      ],
+      [
+        1,
+        "sweet_kiss"
+      ],
+      [
+        1,
+        "charm"
+      ],
+      [
+        1,
+        "spark"
+      ],
+      [
+        1,
+        "iron_tail"
+      ],
+      [
+        1,
+        "feint"
+      ],
+      [
+        1,
+        "nasty_plot"
+      ],
+      [
+        1,
+        "discharge"
+      ],
+      [
+        1,
+        "electro_ball"
+      ],
+      [
+        1,
+        "play_nice"
+      ],
+      [
+        1,
+        "nuzzle"
       ],
       [
         5,
@@ -2821,15 +2821,11 @@
     "learnset": [
       [
         1,
-        "drill_run"
+        "leer"
       ],
       [
         1,
         "growl"
-      ],
-      [
-        1,
-        "leer"
       ],
       [
         1,
@@ -2838,6 +2834,10 @@
       [
         1,
         "pluck"
+      ],
+      [
+        1,
+        "drill_run"
       ],
       [
         4,
@@ -3891,11 +3891,11 @@
     "learnset": [
       [
         1,
-        "sand_attack"
+        "scratch"
       ],
       [
         1,
-        "scratch"
+        "sand_attack"
       ],
       [
         4,
@@ -4018,15 +4018,7 @@
     "learnset": [
       [
         1,
-        "astonish"
-      ],
-      [
-        1,
-        "growl"
-      ],
-      [
-        1,
-        "night_slash"
+        "scratch"
       ],
       [
         1,
@@ -4034,11 +4026,19 @@
       ],
       [
         1,
-        "scratch"
+        "growl"
       ],
       [
         1,
         "tri_attack"
+      ],
+      [
+        1,
+        "astonish"
+      ],
+      [
+        1,
+        "night_slash"
       ],
       [
         12,
@@ -4155,11 +4155,11 @@
     "learnset": [
       [
         1,
-        "growl"
+        "poison_sting"
       ],
       [
         1,
-        "poison_sting"
+        "growl"
       ],
       [
         5,
@@ -4290,7 +4290,11 @@
     "learnset": [
       [
         1,
-        "growl"
+        "scratch"
+      ],
+      [
+        1,
+        "tail_whip"
       ],
       [
         1,
@@ -4298,11 +4302,7 @@
       ],
       [
         1,
-        "scratch"
-      ],
-      [
-        1,
-        "tail_whip"
+        "growl"
       ],
       [
         15,
@@ -4411,11 +4411,7 @@
     "learnset": [
       [
         1,
-        "bite"
-      ],
-      [
-        1,
-        "crunch"
+        "scratch"
       ],
       [
         1,
@@ -4423,23 +4419,7 @@
       ],
       [
         1,
-        "earth_power"
-      ],
-      [
-        1,
-        "flatter"
-      ],
-      [
-        1,
-        "fury_swipes"
-      ],
-      [
-        1,
-        "growl"
-      ],
-      [
-        1,
-        "helping_hand"
+        "tail_whip"
       ],
       [
         1,
@@ -4447,15 +4427,11 @@
       ],
       [
         1,
-        "scratch"
+        "bite"
       ],
       [
         1,
-        "superpower"
-      ],
-      [
-        1,
-        "tail_whip"
+        "growl"
       ],
       [
         1,
@@ -4463,7 +4439,31 @@
       ],
       [
         1,
+        "fury_swipes"
+      ],
+      [
+        1,
+        "crunch"
+      ],
+      [
+        1,
+        "flatter"
+      ],
+      [
+        1,
+        "helping_hand"
+      ],
+      [
+        1,
+        "superpower"
+      ],
+      [
+        1,
         "toxic_spikes"
+      ],
+      [
+        1,
+        "earth_power"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -4551,11 +4551,11 @@
     "learnset": [
       [
         1,
-        "leer"
+        "poison_sting"
       ],
       [
         1,
-        "poison_sting"
+        "leer"
       ],
       [
         5,
@@ -4686,7 +4686,7 @@
     "learnset": [
       [
         1,
-        "focus_energy"
+        "poison_sting"
       ],
       [
         1,
@@ -4698,7 +4698,7 @@
       ],
       [
         1,
-        "poison_sting"
+        "focus_energy"
       ],
       [
         15,
@@ -4810,15 +4810,7 @@
       ],
       [
         1,
-        "earth_power"
-      ],
-      [
-        1,
-        "flatter"
-      ],
-      [
-        1,
-        "focus_energy"
+        "horn_attack"
       ],
       [
         1,
@@ -4826,11 +4818,7 @@
       ],
       [
         1,
-        "helping_hand"
-      ],
-      [
-        1,
-        "horn_attack"
+        "poison_sting"
       ],
       [
         1,
@@ -4838,19 +4826,7 @@
       ],
       [
         1,
-        "megahorn"
-      ],
-      [
-        1,
         "peck"
-      ],
-      [
-        1,
-        "poison_jab"
-      ],
-      [
-        1,
-        "poison_sting"
       ],
       [
         1,
@@ -4858,7 +4834,31 @@
       ],
       [
         1,
+        "focus_energy"
+      ],
+      [
+        1,
+        "megahorn"
+      ],
+      [
+        1,
+        "flatter"
+      ],
+      [
+        1,
+        "helping_hand"
+      ],
+      [
+        1,
         "toxic_spikes"
+      ],
+      [
+        1,
+        "poison_jab"
+      ],
+      [
+        1,
+        "earth_power"
       ]
     ],
     "evo_moves": [
@@ -5231,11 +5231,11 @@
     "learnset": [
       [
         1,
-        "defense_curl"
+        "scratch"
       ],
       [
         1,
-        "scratch"
+        "defense_curl"
       ],
       [
         3,
@@ -5385,15 +5385,7 @@
     "learnset": [
       [
         1,
-        "crush_claw"
-      ],
-      [
-        1,
-        "defense_curl"
-      ],
-      [
-        1,
-        "poison_sting"
+        "scratch"
       ],
       [
         1,
@@ -5401,7 +5393,15 @@
       ],
       [
         1,
-        "scratch"
+        "poison_sting"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
+        "crush_claw"
       ],
       [
         9,
@@ -5540,11 +5540,11 @@
     "learnset": [
       [
         1,
-        "absorb"
+        "supersonic"
       ],
       [
         1,
-        "supersonic"
+        "absorb"
       ],
       [
         5,
@@ -5670,15 +5670,11 @@
     "learnset": [
       [
         1,
+        "supersonic"
+      ],
+      [
+        1,
         "absorb"
-      ],
-      [
-        1,
-        "astonish"
-      ],
-      [
-        1,
-        "mean_look"
       ],
       [
         1,
@@ -5686,7 +5682,11 @@
       ],
       [
         1,
-        "supersonic"
+        "mean_look"
+      ],
+      [
+        1,
+        "astonish"
       ],
       [
         15,
@@ -5927,11 +5927,11 @@
     "learnset": [
       [
         1,
-        "absorb"
+        "scratch"
       ],
       [
         1,
-        "cross_poison"
+        "absorb"
       ],
       [
         1,
@@ -5939,11 +5939,11 @@
       ],
       [
         1,
-        "scratch"
+        "stun_spore"
       ],
       [
         1,
-        "stun_spore"
+        "cross_poison"
       ],
       [
         6,
@@ -6054,19 +6054,7 @@
     "learnset": [
       [
         1,
-        "charm"
-      ],
-      [
-        1,
-        "copycat"
-      ],
-      [
-        1,
-        "defense_curl"
-      ],
-      [
-        1,
-        "disarming_voice"
+        "pound"
       ],
       [
         1,
@@ -6074,11 +6062,11 @@
       ],
       [
         1,
-        "pound"
+        "sing"
       ],
       [
         1,
-        "sing"
+        "defense_curl"
       ],
       [
         1,
@@ -6087,6 +6075,18 @@
       [
         1,
         "sweet_kiss"
+      ],
+      [
+        1,
+        "charm"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
+        "disarming_voice"
       ],
       [
         4,
@@ -6223,7 +6223,7 @@
     "learnset": [
       [
         1,
-        "life_dew"
+        "metronome"
       ],
       [
         1,
@@ -6231,11 +6231,11 @@
       ],
       [
         1,
-        "metronome"
+        "moonblast"
       ],
       [
         1,
-        "moonblast"
+        "life_dew"
       ]
     ],
     "sprite": "res://assets/sprites/critter_purple.png",
@@ -6341,26 +6341,6 @@
     "learnset": [
       [
         1,
-        "charm"
-      ],
-      [
-        1,
-        "copycat"
-      ],
-      [
-        1,
-        "defense_curl"
-      ],
-      [
-        1,
-        "disable"
-      ],
-      [
-        1,
-        "disarming_voice"
-      ],
-      [
-        1,
         "pound"
       ],
       [
@@ -6369,7 +6349,27 @@
       ],
       [
         1,
+        "disable"
+      ],
+      [
+        1,
+        "defense_curl"
+      ],
+      [
+        1,
         "sweet_kiss"
+      ],
+      [
+        1,
+        "charm"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
+        "disarming_voice"
       ],
       [
         4,
@@ -6381,11 +6381,11 @@
       ],
       [
         12,
-        "spit_up"
+        "stockpile"
       ],
       [
         12,
-        "stockpile"
+        "spit_up"
       ],
       [
         12,
@@ -6508,31 +6508,11 @@
     "learnset": [
       [
         1,
+        "pound"
+      ],
+      [
+        1,
         "body_slam"
-      ],
-      [
-        1,
-        "charm"
-      ],
-      [
-        1,
-        "copycat"
-      ],
-      [
-        1,
-        "covet"
-      ],
-      [
-        1,
-        "defense_curl"
-      ],
-      [
-        1,
-        "disable"
-      ],
-      [
-        1,
-        "disarming_voice"
       ],
       [
         1,
@@ -6540,15 +6520,11 @@
       ],
       [
         1,
-        "echoed_voice"
+        "sing"
       ],
       [
         1,
-        "gyro_ball"
-      ],
-      [
-        1,
-        "hyper_voice"
+        "disable"
       ],
       [
         1,
@@ -6556,7 +6532,7 @@
       ],
       [
         1,
-        "pound"
+        "defense_curl"
       ],
       [
         1,
@@ -6564,15 +6540,11 @@
       ],
       [
         1,
-        "round"
+        "sweet_kiss"
       ],
       [
         1,
-        "sing"
-      ],
-      [
-        1,
-        "spit_up"
+        "charm"
       ],
       [
         1,
@@ -6580,11 +6552,39 @@
       ],
       [
         1,
+        "spit_up"
+      ],
+      [
+        1,
         "swallow"
       ],
       [
         1,
-        "sweet_kiss"
+        "hyper_voice"
+      ],
+      [
+        1,
+        "covet"
+      ],
+      [
+        1,
+        "gyro_ball"
+      ],
+      [
+        1,
+        "copycat"
+      ],
+      [
+        1,
+        "round"
+      ],
+      [
+        1,
+        "echoed_voice"
+      ],
+      [
+        1,
+        "disarming_voice"
       ],
       [
         5,
@@ -7091,11 +7091,11 @@
     "learnset": [
       [
         1,
-        "absorb"
+        "acid"
       ],
       [
         1,
-        "acid"
+        "absorb"
       ],
       [
         1,
@@ -7223,23 +7223,11 @@
     "learnset": [
       [
         1,
-        "absorb"
-      ],
-      [
-        1,
         "acid"
       ],
       [
         1,
-        "giga_drain"
-      ],
-      [
-        1,
-        "grassy_terrain"
-      ],
-      [
-        1,
-        "growth"
+        "absorb"
       ],
       [
         1,
@@ -7247,15 +7235,7 @@
       ],
       [
         1,
-        "moonblast"
-      ],
-      [
-        1,
-        "moonlight"
-      ],
-      [
-        1,
-        "petal_dance"
+        "growth"
       ],
       [
         1,
@@ -7263,11 +7243,23 @@
       ],
       [
         1,
+        "stun_spore"
+      ],
+      [
+        1,
         "sleep_powder"
       ],
       [
         1,
-        "stun_spore"
+        "petal_dance"
+      ],
+      [
+        1,
+        "toxic"
+      ],
+      [
+        1,
+        "giga_drain"
       ],
       [
         1,
@@ -7275,7 +7267,15 @@
       ],
       [
         1,
-        "toxic"
+        "moonlight"
+      ],
+      [
+        1,
+        "grassy_terrain"
+      ],
+      [
+        1,
+        "moonblast"
       ]
     ],
     "sprite": "res://assets/sprites/critter_green.png",
@@ -7884,11 +7884,11 @@
     "learnset": [
       [
         1,
-        "leer"
+        "wrap"
       ],
       [
         1,
-        "wrap"
+        "leer"
       ],
       [
         4,
@@ -7912,11 +7912,11 @@
       ],
       [
         25,
-        "spit_up"
+        "stockpile"
       ],
       [
         25,
-        "stockpile"
+        "spit_up"
       ],
       [
         25,
@@ -8036,19 +8036,7 @@
     "learnset": [
       [
         1,
-        "bite"
-      ],
-      [
-        1,
-        "fire_fang"
-      ],
-      [
-        1,
-        "ice_fang"
-      ],
-      [
-        1,
-        "leer"
+        "wrap"
       ],
       [
         1,
@@ -8056,11 +8044,23 @@
       ],
       [
         1,
+        "leer"
+      ],
+      [
+        1,
+        "bite"
+      ],
+      [
+        1,
         "thunder_fang"
       ],
       [
         1,
-        "wrap"
+        "ice_fang"
+      ],
+      [
+        1,
+        "fire_fang"
       ],
       [
         12,
@@ -8076,11 +8076,11 @@
       ],
       [
         27,
-        "spit_up"
+        "stockpile"
       ],
       [
         27,
-        "stockpile"
+        "spit_up"
       ],
       [
         27,
@@ -8679,11 +8679,11 @@
     "learnset": [
       [
         1,
-        "ember"
+        "tail_whip"
       ],
       [
         1,
-        "tail_whip"
+        "ember"
       ],
       [
         4,
@@ -8818,15 +8818,15 @@
     "learnset": [
       [
         1,
+        "tail_whip"
+      ],
+      [
+        1,
         "flamethrower"
       ],
       [
         1,
         "quick_attack"
-      ],
-      [
-        1,
-        "tail_whip"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -8907,11 +8907,11 @@
     "learnset": [
       [
         1,
-        "disable"
+        "tackle"
       ],
       [
         1,
-        "tackle"
+        "disable"
       ],
       [
         5,
@@ -9042,11 +9042,7 @@
     "learnset": [
       [
         1,
-        "disable"
-      ],
-      [
-        1,
-        "quiver_dance"
+        "tackle"
       ],
       [
         1,
@@ -9054,7 +9050,11 @@
       ],
       [
         1,
-        "tackle"
+        "disable"
+      ],
+      [
+        1,
+        "quiver_dance"
       ],
       [
         11,

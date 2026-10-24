@@ -81,7 +81,7 @@ func _initialize() -> void:
 	ev.add_exp(Growth.exp_for_level(ev.growth, 16) - ev.xp)
 	game.resolve_evolution(ev, false)
 	fails += int(ev.species != "Charmander" or ev.evolution_target() != "")
-	# Pedra com 4 golpes: o golpe da evolução vai para a fila, a Pokédex marca a evolução e o texto usa o nome antigo.
+	# Pedra com 4 golpes: sem golpe de evolução nada entra na fila, a Pokédex marca a evolução e o texto usa o nome antigo.
 	var c2 := Mon.create("clefairy", 20)
 	c2.moves = ["pound", "growl", "sing", "double_slap"]
 	game.pending_learns = []
@@ -91,8 +91,8 @@ func _initialize() -> void:
 		(
 			not stone_msg.begins_with("Clefairy")
 			or not game.caught.has("Clefable")
-			or game.pending_learns.size() != 1
-			or game.pending_learns[0].move != "minimize"
+			# Gen 9: Clefable não tem golpe de evolução (só os de nível 1)
+			or not game.pending_learns.is_empty()
 		)
 	)
 	game.pending_learns = []

@@ -54,7 +54,9 @@ def latest_vg(p, method):
     for mv in p["moves"]:
         for d in mv["version_group_details"]:
             if d["move_learn_method"]["name"] == method:
-                by.setdefault(d["version_group"]["name"], []).append((d["level_learned_at"], mv["move"]["name"]))
+                # empate de nível: ordem do número do golpe (Scratch antes de Growl, como no jogo)
+                no = int(mv["move"]["url"].rstrip("/").split("/")[-1])
+                by.setdefault(d["version_group"]["name"], []).append((d["level_learned_at"], no, mv["move"]["name"]))
     for vg in PREF:
         if vg in by:
             return vg, by[vg]
@@ -136,7 +138,7 @@ def main():
             e.pop("hidden_ability", None)
         vg, lv = latest_vg(p, "level-up")
         evo, learn = [], []
-        for lvl, name in sorted(lv):
+        for lvl, _no, name in sorted(lv):
             m = mid(name)
             if m not in known:
                 missing.setdefault(m, []).append(key)
