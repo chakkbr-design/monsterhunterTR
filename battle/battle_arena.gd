@@ -2,7 +2,8 @@ extends Node3D
 ## Arena de batalha em tempo real. Contrato: start(player_party, enemies, opts) e signal finished(result).
 ## opts: {kind: "wild"|"trainer", trainer_id?, can_run?, auto_battle? (padrão true: IA luta pelo jogador,
 ##        que ainda usa bolsa/bola/troca/pausa), autoplay? (IA e sem jogador: confirmações passam sozinhas),
-##        player_think_scale?, player_item?, enemy_think_scale? (ajustes da IA por lado), seed?, speed?,
+##        player_think_scale?, player_item?, enemy_think_scale? (ajustes da IA por lado),
+##        no_rewards? (sem XP, EVs, prêmio nem evolução), seed?, speed?,
 ##        battle_size? (selvagem 2 = 2x1 com aliado IA; treinador sempre 1), trainer_item?, game? (bolsa injetada),
 ##        center? (Vector3 global: quadra num lugar certo), arena? (Vector2 [w, d]), trainer_node? (Node3D),
 ##        arena_color? (Color), tutorial? (bool: cartões de dica e lição da 1ª luta, battle_tutorial.gd),
@@ -562,6 +563,11 @@ func _player_ctrl() -> String:
 	return "ai" if opts.get("autoplay", false) or opts.get("auto_battle", true) else "player"
 
 
+## opts.no_rewards (séries de balanceamento): sem XP, EVs, prêmio nem evolução no meio da luta.
+func _rewards() -> bool:
+	return not bool(opts.get("no_rewards", false))
+
+
 ## Tem alguém no teclado (fora de testes manuais e do autoplay).
 func _human() -> bool:
 	return not manual and not bool(opts.get("autoplay", false))
@@ -653,6 +659,8 @@ func _sync_board_level() -> void:
 ## (Battle._on_knocked_out + gain_evs_from do original).
 func on_knocked_out(user: BattleFighter, target: BattleFighter) -> void:
 	if not training or target != enemy or not is_instance_valid(user) or user.side != 0:
+		return
+	if not _rewards():
 		return
 	var got := user.mon.add_evs(enemy.mon.ev_yield())
 	if got.is_empty():
@@ -1560,7 +1568,7 @@ func _on_fainted(f: BattleFighter) -> void:
 
 func _enemy_fainted(f: BattleFighter) -> void:
 	var killer := f.last_hit_by
-	if is_instance_valid(killer) and killer.side == 0:
+	if is_instance_valid(killer) and killer.side == 0 and _rewards():
 		var got := killer.mon.add_evs(f.mon.ev_yield())
 		if not got.is_empty():
 			_sync_from_mon(killer)
@@ -1595,6 +1603,8 @@ func _enemy_fainted(f: BattleFighter) -> void:
 ## a última leva em _build_results, como o _results_sequence do original.
 func _award_exp(defeated: Mon) -> void:
 	_last_exp = []
+	if not _rewards():
+		return
 	var receivers: Array = _participants.values().filter(func(m): return not m.is_fainted())
 	if receivers.is_empty():
 		return
@@ -1622,7 +1632,7 @@ func _check_evolution(raw: float) -> void:
 	if _evo_check_t > 0.0:
 		return
 	_evo_check_t = EVO_CHECK
-	if state != "fight" or menu != "" or pause_open:
+	if state != "fight" or menu != "" or pause_open or not _rewards():
 		return
 	var f := player
 	if not is_instance_valid(f) or not f.active() or f.mon.evolution_target() == "":
@@ -1738,7 +1748,7 @@ func _build_results() -> Array:
 
 ## Prêmio da vitória contra treinador (o mesmo cálculo de Game._finish, que é quem paga).
 func _prize() -> int:
-	if kind != "trainer" or enemies.is_empty():
+	if kind != "trainer" or enemies.is_empty() or not _rewards():
 		return 0
 	var g := _game()
 	if g == null or not g.has_method("trainer_payout"):

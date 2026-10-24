@@ -32,6 +32,7 @@ func _initialize() -> void:
 	_results()
 	_capture_pc_and_ball()
 	_auto_battle()
+	_no_rewards()
 	print("battle: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -762,4 +763,24 @@ func _auto_battle() -> void:
 	check(outcome in ["win", "lose"], "batalha automática termina (%s em %.1f s)" % [outcome, t])
 	check(sent.size() == 2 or outcome == "win", "troca sozinha quando o mon desmaia")
 	check(party.any(func(m): return m.hp > 0) or outcome == "lose", "resultado coerente")
+	_done(a)
+
+
+## opts.no_rewards: a vitória não dá XP, EVs nem prêmio.
+func _no_rewards() -> void:
+	var mine := Mon.create("charmander", 20)
+	var xp0 := mine.xp
+	var a := _arena(
+		[mine],
+		[Mon.create("caterpie", 3)],
+		{"kind": "trainer", "trainer_id": "brock", "seed": 4, "autoplay": true, "no_rewards": true}
+	)
+	var t := 0.0
+	while a.state != "done" and t < 600.0:
+		a.step(DT)
+		t += DT
+	var got: Dictionary = a.get_meta("got")
+	check(String(got.get("outcome", "")) == "win", "no_rewards: a luta termina com vitória")
+	check(mine.xp == xp0 and mine.ev_total() == 0, "no_rewards: sem XP nem EVs")
+	check(got.get("exp", []).is_empty() and int(got.get("prize", 0)) == 0, "no_rewards: sem prêmio")
 	_done(a)
