@@ -7269,7 +7269,7 @@
       "into": "Ninetales"
     },
     "pp": 100,
-    "jump_height": 0.35,
+    "jump_height": 0.52,
     "sprite": "res://assets/sprites/critter_purple.png"
   },
   "Ninetales": {
@@ -7341,7 +7341,7 @@
     "category": "Fox Pokémon",
     "flavor": "The coat of gleaming golden fur is quite magnificent. This species is said to store sacred power in its nine long tails and to live for a millennium.",
     "pp": 100,
-    "jump_height": 0.35,
+    "jump_height": 0.92,
     "sprite": "res://assets/sprites/critter_purple.png"
   },
   "Venonat": {
@@ -7442,13 +7442,13 @@
       "into": "Venomoth"
     },
     "pp": 100,
-    "jump_height": 0.35,
+    "jump_height": 0.55,
     "sprite": "res://assets/sprites/critter_purple.png"
   },
   "Venomoth": {
     "shape": "bug-wings",
     "locomotion": "fly",
-    "fly_height": 1.1,
+    "fly_height": 1.6,
     "dex_no": 49,
     "types": [
       "bug",
@@ -7543,7 +7543,7 @@
     "category": "Poison Moth Pokémon",
     "flavor": "The powdery scales on its wings are hard to remove from skin. They also contain poison that leaks out on contact.",
     "pp": 100,
-    "jump_height": 0.35,
+    "jump_height": 0.8,
     "sprite": "res://assets/sprites/critter_purple.png"
   }
 }
