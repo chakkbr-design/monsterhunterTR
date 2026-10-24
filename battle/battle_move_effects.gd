@@ -6,19 +6,19 @@ extends RefCounted
 ## Learnsets completos: Counter, Substitute, Endure, troca (Baton Pass, U-turn), armadilhas (Spikes, Stealth
 ## Rock), terrenos Elétrico/Névoa, Reflect, Taunt, Attract, Wish, Future Sight, poder condicional...
 ## Chamado pelos ganchos de BattleMoves (use/deliver/hit) e pela arena (tick). Campo "special" do golpe.
-## Tempo real: 1 turno da série = TURN segundos para os efeitos de campo (status já duram em segundos).
-## Janelas de reação (Protect, Endure, Wide Guard, Counter) são curtas; "o turno anterior" vira 1 TURN.
+## Turno do oficial = rodada (BattleTurns): tudo que dura "N turnos" conta rodadas no fim de turno
+## (BattleEndTurn, set_rounds/count_round): clima e terrenos 5, Tailwind 4, telas 5, Gravity 5,
+## Safeguard/Mist 5, Taunt 3, Encore 3, Disable 4, Yawn, Wish, Future Sight, Wrap/Bind 4-5. Protect,
+## Endure, Quick/Wide Guard, Roost e Follow Me valem até o fim da rodada em que saíram. Counter e as
+## janelas de reação curtas (Fake Out, Revenge, Assurance, Helping Hand) seguem em segundos.
 
-const TURN := 1.6
-const PROTECT_TIME := 0.8
-const QUICK_GUARD_TIME := 1.2
+## Duração "sem fim em segundos" de um efeito contado em rodadas (o fim vem de count_round).
+const FOREVER := 1.0e9
+## Cooldown que trava um golpe (Disable, Encore) até o efeito acabar no fim de turno.
+const LOCK_CD := 1.0e6
 const FIELD_TURNS := 5
 const TAILWIND_TURNS := 4
-const FOLLOW_TIME := 3.2
-const LASER_TIME := 6.0
-const CHARGE_TIME := 8.0
-const CURSE_TIME := 8.0
-const ROOST_TIME := TURN
+const LASER_TURNS := 2
 ## Prioridade negativa: preparo extra por nível (Whirlwind -6 sai 0,6 s mais devagar) e GCD maior.
 const NEG_PRIORITY_DELAY := 0.1
 const NEG_PRIORITY_GCD := 0.05
@@ -78,14 +78,33 @@ const COUNTER_MULT := 2
 ## Fake Out só logo depois de entrar em campo; Avalanche/Payback/Revenge: o alvo me acertou há pouco.
 const FAKE_OUT_WINDOW := 1.5
 const REVENGE_WINDOW := 1.5
-## Future Sight cai ~2 turnos depois do uso (o aviso no chão é o windup normal no fim).
-const FUTURE_DELAY := 2.0 * TURN
-const ATTRACT_TIME := 6.0
+## Future Sight cai no fim do 2º turno depois do uso (3 contando o do uso; o aviso no chão é o
+## windup normal na hora).
+const FUTURE_TURNS := 3
+## Wish cura no fim do turno seguinte; Yawn faz dormir no fim do turno seguinte.
+const WISH_TURNS := 2
+const YAWN_TURNS := 2
 const ATTRACT_FAIL := 0.5
 const TAUNT_TURNS := 3
+const ENCORE_TURNS := 3
+const DISABLE_TURNS := 4
 const THROAT_TURNS := 2
 const HEAL_BLOCK_TURNS := 2
 const UPROAR_TURNS := 3
+## Wrap/Bind e companhia: 4-5 turnos (Showdown: duração 5-6 contando o do uso), 1/8 por turno.
+const BIND_TURNS := [5, 6]
+const BIND_MOVES := [
+	"wrap",
+	"bind",
+	"fire_spin",
+	"whirlpool",
+	"sand_tomb",
+	"clamp",
+	"infestation",
+	"magma_storm",
+	"snap_trap",
+	"thunder_cage",
+]
 const PIVOT_DELAY := 0.35
 const PRESENT_HEAL := 0.2
 const STEALTH_R := 1.4
@@ -123,9 +142,10 @@ var last_any := ""
 var sides := [{}, {}]
 var field := {}
 var spikes: Array = []
+## Future Sight no ar: {user, mv, miss, rounds}.
+var futures: Array = []
 var _st := {}
 var _last_crit := false
-var _turn_acc := 0.0
 
 
 func _init(a: Node, r: RandomNumberGenerator) -> void:
@@ -172,8 +192,8 @@ func st(f: BattleFighter) -> Dictionary:
 			"used": {},
 			"fail": false,
 			"prev_fail": false,
-			"rose_t": -99.0,
-			"fell_t": -99.0,
+			"rose_t": -99,
+			"fell_t": -99,
 			"hit_by": {},
 			"focus_t": -99.0,
 			"pivot_cast": -1,
@@ -192,6 +212,53 @@ func _left(d: Dictionary, k: String) -> float:
 
 func active(d: Dictionary, k: String) -> bool:
 	return _left(d, k) > 0.0
+
+
+## Liga `k` em `d` por `n` rodadas (turnos do oficial): BattleEndTurn conta no fim de cada rodada,
+## incluindo a do uso (count_round).
+func set_rounds(d: Dictionary, k: String, n: int) -> void:
+	d[k] = now + FOREVER
+	d[k + "#"] = n
+
+
+## Rodadas que ainda faltam de `k` (0 = desligado ou contado em segundos).
+func rounds_left(d: Dictionary, k: String) -> int:
+	return int(d.get(k + "#", 0)) if active(d, k) else 0
+
+
+## Fim de turno: desconta uma rodada de `k` (como o oficial, antes do efeito). true = acabou agora.
+func count_round(d: Dictionary, k: String) -> bool:
+	if not d.has(k + "#"):
+		return false
+	if not active(d, k):
+		d.erase(k + "#")  # tirado antes (Brick Break, Defog, Feint...)
+		return false
+	var n := int(d[k + "#"]) - 1
+	if n > 0:
+		d[k + "#"] = n
+		return false
+	d.erase(k)
+	d.erase(k + "#")
+	return true
+
+
+## Segundos que ainda faltam na rodada (para o visual do que dura até o fim dela).
+func round_left() -> float:
+	var t = arena.get("turns")
+	if t == null:
+		return 1.0
+	return maxf(BattleTurns.ROUND_SECS - float(t.round_t), 0.6)
+
+
+## Segundos aproximados de `n` rodadas (só para o visual).
+static func rounds_secs(n: int) -> float:
+	return n * BattleTurns.ROUND_SECS
+
+
+## Rodada atual (para "neste turno": Lash Out, Burning Jealousy).
+func _round_id() -> int:
+	var t = arena.get("turns")
+	return int(t.round_n) if t else 0
 
 
 ## Efeito de lado ativo (safeguard, light_screen, tailwind...). A IA consulta.
@@ -252,9 +319,9 @@ func on_enter(f: BattleFighter) -> void:
 ## Mudança de estágio que pegou (Burning Jealousy, Lash Out olham o último turno).
 func note_stage(f: BattleFighter, delta: int) -> void:
 	if delta > 0:
-		st(f).rose_t = now
+		st(f).rose_t = _round_id()
 	elif delta < 0:
-		st(f).fell_t = now
+		st(f).fell_t = _round_id()
 
 
 ## Queda de atributo vinda do outro lado barrada pelo Mist.
@@ -317,13 +384,14 @@ static func _norm_weather(w: String) -> String:
 	return w
 
 
-func set_weather(kind: String, secs: float) -> void:
+## Clima de golpe por `rounds` rodadas (5 turnos no oficial), contadas no fim de turno.
+func set_weather(kind: String, rounds: int) -> void:
 	if not _local_weather():
-		arena.abilities.set_weather(kind, secs)
+		arena.abilities.set_weather_rounds(kind, rounds)
 	else:
 		field["weather"] = kind
-		field["weather_t"] = now + secs
-	_vfx("weather", [kind, secs])
+		set_rounds(field, "weather_t", rounds)
+	_vfx("weather", [kind, rounds_secs(rounds)])
 
 
 # --- Ganchos de BattleMoves.use ---
@@ -547,7 +615,7 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 			user.item_used = true
 			user.popup("Arremessou %s!" % _item_name(user), Color(1, 0.85, 0.5), 0.8)
 		"uproar":
-			field["uproar"] = now + UPROAR_TURNS * TURN
+			set_rounds(field, "uproar", UPROAR_TURNS)
 			for f in arena.fighters:
 				if is_instance_valid(f) and f.active() and f.status == "sleep":
 					f.clear_status()
@@ -797,7 +865,7 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 			if _has_item(target):
 				p *= 1.5
 		"lash_out":
-			if now - float(s.fell_t) <= TURN:
+			if int(s.fell_t) == _round_id():
 				p *= 2.0
 		"revenge":
 			if now - float(s.hit_by.get(target.get_instance_id(), -99.0)) <= REVENGE_WINDOW:
@@ -1045,6 +1113,12 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			_status(user, target, ["burn", "paralysis", "freeze"][rng.randi() % 3])
 	if mv.has("trap") and String(mv.get("kind", "")) in ["zone", "stream"] and target.alive():
 		target.trap_t = maxf(target.trap_t, float(mv.trap))
+	if id in BIND_MOVES and dealt > 0 and target.alive() and not active(st(target), "bound"):
+		# Wrap/Bind: preso 4-5 turnos, 1/8 no fim de cada um (BattleEndTurn), sem fugir nem trocar
+		var bs := st(target)
+		set_rounds(bs, "bound", rng.randi_range(int(BIND_TURNS[0]), int(BIND_TURNS[1])))
+		bs.bound_by = user
+		bs.bound_move = String(mv.get("name", id))
 	var ss = mv.get("self_stats")
 	if ss is Dictionary and user.alive() and int(s.self_cast) != user.cast_n:
 		s.self_cast = user.cast_n
@@ -1093,7 +1167,10 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			if last2 == "":
 				_fail(user)
 			else:
-				target.move_cd[last2] = maxf(float(target.move_cd.get(last2, 0.0)), 4.0 * TURN)
+				end_disable(target)
+				set_rounds(ts, "disable", DISABLE_TURNS)
+				ts.disable_move = last2
+				target.move_cd[last2] = LOCK_CD
 				target.popup(
 					"%s desativado!" % Dex.move(last2).get("name", last2), Color(0.8, 0.8, 0.9)
 				)
@@ -1102,9 +1179,12 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			if last3 == "":
 				_fail(user)
 			else:
+				end_encore(target)
+				set_rounds(ts, "encore", ENCORE_TURNS)
+				ts.encore_move = last3
 				for mid in target.moves:
 					if String(mid) != last3:
-						target.move_cd[mid] = maxf(float(target.move_cd.get(mid, 0.0)), 3.0 * TURN)
+						target.move_cd[mid] = LOCK_CD
 				target.popup(
 					"Bis! Só %s!" % Dex.move(last3).get("name", last3), Color(1, 0.85, 0.6)
 				)
@@ -1121,7 +1201,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			var fk := String(mv.get("flatter_stat", "spa"))
 			arena.moves.change_stage(target, fk, 2 if fk == "atk" else 1)
 		"jealousy":
-			if not sheer and target.alive() and now - float(ts.rose_t) <= TURN:
+			if not sheer and target.alive() and int(ts.rose_t) == _round_id():
 				_status(user, target, String(mv.get("jealous_status", "burn")))
 		"omni_boost":
 			if not sheer and user.alive() and int(s.omni_cast) != user.cast_n:
@@ -1135,11 +1215,11 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.popup("Perdeu %s!" % _item_name(target), Color(1, 0.75, 0.5))
 		"heal_block":
 			if target.alive():
-				ts.heal_block = now + HEAL_BLOCK_TURNS * TURN
+				set_rounds(ts, "heal_block", HEAL_BLOCK_TURNS)
 				target.popup("Não pode se curar!", Color(0.8, 0.6, 0.9))
 		"throat_chop":
 			if dealt > 0 and target.alive():
-				ts.throat = now + THROAT_TURNS * TURN
+				set_rounds(ts, "throat", THROAT_TURNS)
 				target.popup("Garganta ferida!", Color(0.85, 0.6, 0.6))
 		"terrain_clear":
 			_clear_terrain(target)
@@ -1150,7 +1230,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 		"attract":
 			_attract(user, target)
 		"taunt":
-			ts.taunt = now + TAUNT_TURNS * TURN
+			set_rounds(ts, "taunt", TAUNT_TURNS)
 			target.popup("Provocado!", Color(1, 0.55, 0.4))
 		"memento":
 			arena.moves.change_stage(target, "atk", -2, user)
@@ -1189,16 +1269,13 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.item_used = false
 				user.popup("Trocou os itens!", Color(1, 0.85, 0.5))
 		"yawn":
-			if target.status != "":
+			if target.status != "" or active(ts, "yawn"):
 				_fail(user)
 			else:
+				# dorme no fim do turno seguinte (BattleEndTurn: yawn_sleep)
 				target.popup("Sonolento...", Color(0.75, 0.8, 0.95))
-				arena.later(
-					TURN,
-					func() -> void:
-						if is_instance_valid(target) and target.active() and target.status == "":
-							_status(user, target, "sleep")
-				)
+				set_rounds(ts, "yawn", YAWN_TURNS)
+				ts.yawn_by = user
 
 
 ## Status de efeito extra pelas mesmas regras do hit (imunidade de tipo, habilidade, Safeguard).
@@ -1259,7 +1336,7 @@ func _attract(user: BattleFighter, target: BattleFighter) -> void:
 	elif a == b or active(st(target), "attract"):
 		_fail(user)
 	else:
-		st(target).attract = now + ATTRACT_TIME
+		st(target).attract = now + FOREVER  # oficial: até sair de campo
 		target.popup("Apaixonou-se!", Color(1, 0.55, 0.75))
 
 
@@ -1291,9 +1368,9 @@ func _clear_terrain(near: BattleFighter) -> void:
 func _set_terrain(kind: String, user: BattleFighter, text: String, type: String) -> void:
 	for k in TERRAINS:
 		field.erase(k)
-	field[kind] = now + FIELD_TURNS * TURN
+	set_rounds(field, kind, FIELD_TURNS)
 	arena.popup(user.position + Vector3(0, 1.6, 0), text, Dex.type_color(type))
-	_vfx("terrain", [kind, FIELD_TURNS * TURN])
+	_vfx("terrain", [kind, rounds_secs(FIELD_TURNS)])
 
 
 func _steal_item(user: BattleFighter, target: BattleFighter) -> void:
@@ -1342,8 +1419,8 @@ func _burn_berries_near(target: BattleFighter) -> void:
 
 
 func _rapid_spin(user: BattleFighter) -> void:
-	if user.status == "leech":
-		user.clear_status()
+	user.clear_seed()
+	free_bind(user)
 	user.trap_t = 0.0
 	for z in spikes.duplicate():
 		if int(z.side) != user.side:
@@ -1383,8 +1460,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		var foe := user.opponent
 		user.take_damage(maxi(1, user.max_hp / 2), Vector3.ZERO, 0.0)
 		if is_instance_valid(foe) and foe.active():
-			st(foe).curse = now + CURSE_TIME
-			st(foe).curse_tick = now + TURN
+			st(foe).cursed = true  # 1/4 no fim de cada turno até sair de campo (BattleEndTurn)
 			foe.popup("Amaldiçoado!", Dex.type_color("ghost"))
 		return true
 	var stats = mv.get("stats")
@@ -1395,24 +1471,29 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 	match sp:
 		"", "charge", "defense_curl":
 			if sp == "charge":
-				s.charged = now + CHARGE_TIME
+				s.charged = now + FOREVER  # Gen 9: até o próximo golpe Elétrico
 				user.popup("Carregado!", Dex.type_color("electric"))
 			elif sp == "defense_curl":
 				s.curled = true
 			return false
 		"protect":
-			s.protect = now + PROTECT_TIME
+			# Protect/Detect: o turno todo (até o fim da rodada em que saiu); uso em rodadas seguidas
+			# tem 1/3 de chance a cada vez (1, 1/3, 1/9...), zera quando uma rodada passa sem usar
+			if not _stall_ok(s):
+				_fail(user)
+				return true
+			set_rounds(s, "protect", 1)
 			user.popup("Proteger!", Color(0.6, 0.9, 1.0), 1.1)
-			_vfx("protect_shield", [user, PROTECT_TIME])
+			_vfx("protect_shield", [user, round_left()])
 		"quick_guard":
-			sd["quick_guard"] = now + QUICK_GUARD_TIME
+			set_rounds(sd, "quick_guard", 1)
 			user.popup("Guarda Rápida!", Color(0.6, 0.9, 1.0))
-			_vfx("protect_shield", [user, QUICK_GUARD_TIME])
+			_vfx("protect_shield", [user, round_left()])
 		"follow_me":
-			s.follow = now + FOLLOW_TIME
+			set_rounds(s, "follow", 1)
 			s.follow_powder = bool(mv.get("powder", false))
 			user.popup("Todos olham para %s!" % user.mon.display_name, Color(1, 0.8, 0.5))
-			_vfx("spotlight", [user, FOLLOW_TIME])
+			_vfx("spotlight", [user, round_left()])
 		"after_you":
 			var p := partner(user)
 			if p == null:
@@ -1437,7 +1518,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			else:
 				_fail(user)
 		"laser_focus":
-			s.laser = now + LASER_TIME
+			set_rounds(s, "laser", LASER_TURNS)
 			user.popup("Mira perfeita!", Color(1, 0.6, 0.3))
 		"imprison":
 			s.imprison = true
@@ -1471,7 +1552,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		"roost":
 			_heal(user, int(ceil(user.max_hp * float(mv.get("heal", 0.5)))))
 			if "flying" in user.types:
-				s.roost = now + ROOST_TIME
+				set_rounds(s, "roost", 1)  # sem o tipo Voador até o fim da rodada
 				s.roost_types = user.types.duplicate()
 				var ty: Array = user.types.duplicate()
 				ty.erase("flying")
@@ -1482,7 +1563,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			user.confusion_t = 0.0
 			_heal(user, user.max_hp)
 			user.apply_status("sleep")
-			user.status_t = 2.0 * TURN
+			user.sleep_turns = BattleFighter.REST_COUNTER  # dorme 2 turnos
 			user.popup("Dormiu e recuperou tudo!", Color(0.75, 0.8, 0.95))
 		"life_dew":
 			for f in [user, partner(user)]:
@@ -1503,7 +1584,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			)
 			_vfx("haze", [user])
 		"light_screen", "safeguard", "reflect", "mist":
-			sd[sp] = now + FIELD_TURNS * TURN
+			set_rounds(sd, sp, FIELD_TURNS)
 			var words := {
 				"light_screen": "Light Screen!",
 				"safeguard": "Safeguard!",
@@ -1511,17 +1592,17 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				"mist": "Névoa protetora!"
 			}
 			user.popup(String(words[sp]), Color(0.9, 0.85, 1.0))
-			_vfx("screen", [user.side, sp, FIELD_TURNS * TURN])
+			_vfx("screen", [user.side, sp, rounds_secs(FIELD_TURNS)])
 		"tailwind":
-			sd["tailwind"] = now + TAILWIND_TURNS * TURN
+			set_rounds(sd, "tailwind", TAILWIND_TURNS)
 			user.popup("Vento a favor!", Dex.type_color("flying"))
-			_vfx("screen", [user.side, sp, TAILWIND_TURNS * TURN])
+			_vfx("screen", [user.side, sp, rounds_secs(TAILWIND_TURNS)])
 		"gravity":
-			field["gravity"] = now + FIELD_TURNS * TURN
+			set_rounds(field, "gravity", FIELD_TURNS)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "Gravidade intensa!", Dex.type_color("psychic")
 			)
-			_vfx("gravity", [FIELD_TURNS * TURN])
+			_vfx("gravity", [rounds_secs(FIELD_TURNS)])
 		"trick_room":
 			# Trick Room (-7 no oficial): a ordem da rodada inverte; usar de novo desliga
 			var t = arena.get("turns")
@@ -1541,18 +1622,18 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		"misty_terrain":
 			_set_terrain("misty", user, "Campo de névoa!", "fairy")
 		"sunny_day":
-			set_weather("sun", FIELD_TURNS * TURN)
+			set_weather("sun", FIELD_TURNS)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "O sol ficou forte!", Dex.type_color("fire")
 			)
 		"endure":
-			s.endure = now + PROTECT_TIME
+			set_rounds(s, "endure", 1)
 			user.popup("Aguentar!", Color(1, 0.85, 0.5), 1.1)
-			_vfx("protect_shield", [user, PROTECT_TIME])
+			_vfx("protect_shield", [user, round_left()])
 		"wide_guard":
-			sd["wide_guard"] = now + PROTECT_TIME
+			set_rounds(sd, "wide_guard", 1)
 			user.popup("Guarda Ampla!", Color(0.6, 0.9, 1.0))
-			_vfx("protect_shield", [user, PROTECT_TIME])
+			_vfx("protect_shield", [user, round_left()])
 		"counter":
 			s.counter = now + COUNTER_TIME
 			s.counter_cat = String(mv.get("counter_cat", "physical"))
@@ -1601,10 +1682,13 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				user.crit_stage = foe2.crit_stage
 				user.popup("Copiou os atributos!", Color(0.9, 0.9, 1.0))
 		"regen":
+			# Ingrain / Aqua Ring: 1/16 no fim de cada turno (BattleEndTurn), até sair de campo
 			var root := bool(mv.get("rooted", false))
-			if bool(s.regen) and (not root or bool(s.rooted)):
+			var key := "ingrain" if root else "aqua_ring"
+			if bool(s.get(key, false)):
 				_fail(user)
 				return true
+			s[key] = true
 			s.regen = true
 			if root:
 				s.rooted = true
@@ -1639,7 +1723,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			var w: Array = sd.get("wishes", [])
 			w.append(
 				{
-					"t": now + TURN,
+					"rounds": WISH_TURNS,
 					"amt": int(ceil(user.max_hp / 2.0)),
 					"id": user.get_instance_id(),
 					"pos": user.position
@@ -1660,12 +1744,12 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			else:
 				_call(user, String(pool2[rng.randi() % pool2.size()]))
 		"sandstorm":
-			set_weather("sand", FIELD_TURNS * TURN)
+			set_weather("sand", FIELD_TURNS)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "Tempestade de areia!", Dex.type_color("rock")
 			)
 		"rain_dance":
-			set_weather("rain", FIELD_TURNS * TURN)
+			set_weather("rain", FIELD_TURNS)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "Começou a chover!", Dex.type_color("water")
 			)
@@ -1699,6 +1783,23 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				user.popup("Copiou %s!" % Dex.move(c2).get("name", c2), Color(0.9, 0.9, 1.0))
 		_:
 			return false
+	return true
+
+
+## Protect seguido (oficial): 1/3^n de chance, n = usos com sucesso em rodadas seguidas. Sucesso
+## conta mais um; falha zera.
+func _stall_ok(s: Dictionary) -> bool:
+	var r := _round_id()
+	var n := int(s.get("stall_n", 0))
+	var last := int(s.get("stall_round", -99))
+	if last < r - 1:
+		n = 0
+	if n > 0 and rng.randf() >= pow(1.0 / 3.0, n):
+		s.stall_n = 0
+		s.stall_round = -99
+		return false
+	s.stall_n = n + 1
+	s.stall_round = r
 	return true
 
 
@@ -1793,12 +1894,6 @@ func _drop_spike(z: Dictionary) -> void:
 
 func tick(dt: float) -> void:
 	now += dt
-	_turn_acc += dt
-	var turn := _turn_acc >= TURN
-	if turn:
-		_turn_acc -= TURN
-	var sand := _local_weather() and weather() == "sand"
-	var grassy := active(field, "grassy")
 	var gravity := active(field, "gravity")
 	for f in arena.fighters:
 		if not is_instance_valid(f) or not f.active():
@@ -1819,20 +1914,6 @@ func tick(dt: float) -> void:
 				if bool(s.get("follow_powder", false)) and "grass" in foe.types:
 					continue
 				foe.opponent = f
-		if active(s, "curse") and now >= float(s.get("curse_tick", 0.0)):
-			s.curse_tick = now + TURN
-			var d := maxi(1, int(f.max_hp / 8.0 * f.dot_scale()))
-			f.popup("-%d maldição" % d, Dex.type_color("ghost"), 0.8)
-			f.take_damage(d, Vector3.ZERO, 0.0)
-		if turn and f.alive():
-			if grassy and grounded(f) and f.hp < f.max_hp:
-				_heal(f, maxi(1, int(f.max_hp / 16.0 * f.dot_scale())))
-			if bool(s.regen) and f.hp < f.max_hp:  # Aqua Ring / Ingrain
-				_heal(f, maxi(1, int(f.max_hp / 16.0 * f.dot_scale())))
-			if sand and not ("rock" in f.types or "ground" in f.types or "steel" in f.types):
-				var d2 := maxi(1, int(f.max_hp / 16.0 * f.dot_scale()))
-				f.popup("-%d areia" % d2, Dex.type_color("rock"), 0.8)
-				f.take_damage(d2, Vector3.ZERO, 0.0)
 	_tick_spikes()
 	_tick_wish()
 
@@ -1870,30 +1951,9 @@ func _tick_spikes() -> void:
 			_status(null, f, "toxic" if int(z.layers) >= 2 else "poison")
 
 
+## Healing Wish: quem entra no lugar de quem se sacrificou volta cheio (na hora, como o oficial).
 func _tick_wish() -> void:
 	for side in 2:
-		var ws: Array = sides[side].get("wishes", [])
-		for w in ws.duplicate():
-			if now < float(w.t):
-				continue
-			ws.erase(w)
-			# Quem está no lugar de quem desejou: ele mesmo, ou o substituto mais perto do lugar.
-			var to: BattleFighter = null
-			var best := INF
-			for f in arena.fighters:
-				if not is_instance_valid(f) or not f.active() or f.side != side:
-					continue
-				var d: float = (
-					-1.0
-					if f.get_instance_id() == int(w.id)
-					else Vector3(f.position - w.pos).length()
-				)
-				if d < best:
-					best = d
-					to = f
-			if to != null:
-				to.popup("O desejo se realizou!", Color(1, 0.8, 0.95), 1.1)
-				_heal(to, int(w.amt))
 		var ids = sides[side].get("wish")
 		if not ids is Array:
 			continue
@@ -1911,6 +1971,111 @@ func _tick_wish() -> void:
 				break
 
 
+# --- Fim de turno (BattleEndTurn) ---
+
+
+## Future Sight: guarda o golpe para cair no fim do 2º turno depois deste (BattleMoves._future_sight).
+func add_future(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> void:
+	futures.append({"user": user, "mv": mv, "miss": miss, "rounds": FUTURE_TURNS})
+
+
+## Passo 2: conta os Future Sight no ar; os que chegam no zero caem agora. Devolve quem soltou.
+func end_turn_future() -> Array:
+	var out := []
+	for e in futures.duplicate():
+		e.rounds = int(e.rounds) - 1
+		if int(e.rounds) > 0:
+			continue
+		futures.erase(e)
+		var u = e.user
+		if is_instance_valid(u) and u.alive():
+			u.popup("O futuro chegou!", Dex.type_color("psychic"), 0.9)
+			arena.moves.land_future(u, e.mv, e.miss)
+			out.append(u)
+	return out
+
+
+## Passo 3: Wish cura metade do HP de quem desejou no fim do turno seguinte (ele mesmo ou quem está no
+## lugar dele, o mais perto do lugar). Devolve quem foi curado.
+func end_turn_wish() -> Array:
+	var out := []
+	for side in 2:
+		var ws: Array = sides[side].get("wishes", [])
+		for w in ws.duplicate():
+			w.rounds = int(w.get("rounds", 1)) - 1
+			if int(w.rounds) > 0:
+				continue
+			ws.erase(w)
+			var to: BattleFighter = null
+			var best := INF
+			for f in arena.fighters:
+				if not is_instance_valid(f) or not f.active() or f.side != side:
+					continue
+				var d: float = (
+					-1.0
+					if f.get_instance_id() == int(w.id)
+					else Vector3(f.position - w.pos).length()
+				)
+				if d < best:
+					best = d
+					to = f
+			if to != null:
+				to.popup("O desejo se realizou!", Color(1, 0.8, 0.95), 1.1)
+				to.residual_heal(int(w.amt), "Wish")
+				out.append(to)
+	return out
+
+
+## Passo 12: o Yawn chegou ao fim. Dorme se ainda está sem status (Safeguard, Electric Terrain...).
+func yawn_sleep(f: BattleFighter) -> void:
+	var s := st(f)
+	var by = s.get("yawn_by")
+	s.erase("yawn_by")
+	if f.active() and f.status == "":
+		_status(by if is_instance_valid(by) else null, f, "sleep")
+
+
+## O Encore acabou (ou foi refeito): destrava os outros golpes.
+func end_encore(f: BattleFighter) -> void:
+	var s := st(f)
+	var keep := String(s.get("encore_move", ""))
+	if keep == "":
+		return
+	for mid in f.moves:
+		if String(mid) != keep and float(f.move_cd.get(mid, 0.0)) >= LOCK_CD * 0.5:
+			f.move_cd[mid] = 0.0
+	s.erase("encore_move")
+
+
+## O Disable acabou (ou foi refeito): destrava o golpe.
+func end_disable(f: BattleFighter) -> void:
+	var s := st(f)
+	var id := String(s.get("disable_move", ""))
+	if id != "" and float(f.move_cd.get(id, 0.0)) >= LOCK_CD * 0.5:
+		f.move_cd[id] = 0.0
+	s.erase("disable_move")
+
+
+## Solta do Wrap/Bind (acabou, quem prendeu saiu, Rapid Spin).
+func free_bind(f: BattleFighter) -> void:
+	var s := st(f)
+	s.erase("bound")
+	s.erase("bound#")
+	s.erase("bound_by")
+
+
+## Passo 17: o que vale só a rodada em que saiu (Protect, Endure, Quick/Wide Guard, Roost, Follow
+## Me) e o Laser Focus (até o fim do turno seguinte).
+func end_turn_only() -> void:
+	for id in _st:
+		var s: Dictionary = _st[id]
+		for k in ["protect", "endure", "roost", "follow", "laser"]:
+			count_round(s, k)
+	for sd in sides:
+		for k in ["quick_guard", "wide_guard"]:
+			count_round(sd, k)
+
+
 # --- Consultas de fora ---
 
 
@@ -1923,7 +2088,9 @@ func no_jump() -> bool:
 
 
 func cant_escape(f: BattleFighter) -> bool:
-	return is_instance_valid(f) and bool(st(f).trapped) and not "ghost" in f.types
+	if not is_instance_valid(f) or "ghost" in f.types:
+		return false
+	return bool(st(f).trapped) or active(st(f), "bound")
 
 
 ## Dano esperado de OHKO/Endeavor para a IA (-1 = use a fórmula).
@@ -2043,7 +2210,8 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 		"wish":
 			return hp < 0.6
 		"regen":
-			return not bool(s.regen) and hp < 0.9
+			var rk := "ingrain" if bool(mv.get("rooted", false)) else "aqua_ring"
+			return not bool(s.get(rk, false)) and hp < 0.9
 		"psych_up":
 			return has_opp and _stage_sum(opp) - _stage_sum(f) >= 2
 		"baton_pass":

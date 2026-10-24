@@ -123,9 +123,9 @@ func _trick_room() -> void:
 		"Trick Room inverte dentro da faixa: %s" % [_ids(got)]
 	)
 	check(not a.turns.toggle_trick_room(), "Trick Room de novo desliga")
-	a.turns.toggle_trick_room(1.0)
-	_run(a, 1.2)
-	check(not a.turns.trick_room(), "Trick Room acaba sozinho")
+	a.turns.toggle_trick_room(1)
+	a.end_turn.run()
+	check(not a.turns.trick_room(), "Trick Room acaba sozinho no fim da rodada")
 	a.free()
 
 

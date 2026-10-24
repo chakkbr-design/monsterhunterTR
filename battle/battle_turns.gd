@@ -6,7 +6,7 @@ extends RefCounted
 ## sorteio). Cada um solta UM golpe na vez dele, com MOVE_GAP s de folga entre um golpe e o seguinte;
 ## fora da vez só anda, desvia e usa o campo. Recarga (Hyper Beam), sono, item do treinador e troca
 ## gastam a vez. A rodada dura pelo menos ROUND_SECS s; no fim dela vêm os efeitos de fim de turno
-## (BattleAbilities.on_round_end). Os cooldowns e o GCD continuam valendo por cima da fila.
+## (BattleEndTurn.run, pela arena). Os cooldowns e o GCD continuam valendo por cima da fila.
 ## opts.turn_mode false desliga a fila (ritmo antigo, para testes velhos); o fim de rodada continua
 ## a cada ROUND_SECS s.
 
@@ -20,8 +20,8 @@ const TURN_MAX := 2.2
 const SKIP_HOLD := 0.35
 ## Item do treinador sai antes dos golpes (como a bolsa no oficial).
 const ITEM_PRIORITY := 6
-## Trick Room: duração em s (5 turnos de TURN da série).
-const TRICK_ROOM_SECS := 5 * 1.6
+## Trick Room: 5 turnos (rodadas), contados no fim de turno (BattleEndTurn).
+const TRICK_ROOM_ROUNDS := 5
 
 var arena: Node
 ## Fila ligada (false = ritmo antigo, só o relógio de fim de rodada).
@@ -36,8 +36,8 @@ var index := 0
 var current: BattleFighter = null
 var turn_t := 0.0
 var gap_t := 0.0
-## Trick Room ligado por mais trick_room_t s.
-var trick_room_t := 0.0
+## Trick Room ligado por mais trick_room_rounds rodadas.
+var trick_room_rounds := 0
 ## Registro para testes e para o HUD: {round, who (BattleFighter), what, t, prio, spe}.
 var history: Array = []
 var clock := 0.0
@@ -76,13 +76,21 @@ static func priority_of(f: BattleFighter, id: String) -> int:
 
 
 func trick_room() -> bool:
-	return trick_room_t > 0.0
+	return trick_room_rounds > 0
 
 
-## Liga (ou desliga, se já está ligado, como o oficial) o Trick Room.
-func toggle_trick_room(secs := TRICK_ROOM_SECS) -> bool:
-	trick_room_t = 0.0 if trick_room_t > 0.0 else secs
-	return trick_room_t > 0.0
+## Liga (ou desliga, se já está ligado, como o oficial) o Trick Room por `rounds` rodadas.
+func toggle_trick_room(rounds := TRICK_ROOM_ROUNDS) -> bool:
+	trick_room_rounds = 0 if trick_room_rounds > 0 else rounds
+	return trick_room_rounds > 0
+
+
+## Fim de turno: conta uma rodada do Trick Room; true se acabou agora.
+func count_trick_room() -> bool:
+	if trick_room_rounds <= 0:
+		return false
+	trick_room_rounds -= 1
+	return trick_room_rounds == 0
 
 
 ## Ordena pela Speed (Trick Room inverte; empate no sorteio, fixo dentro da rodada). Serve também
@@ -218,7 +226,6 @@ func _record(f: BattleFighter, what: String) -> void:
 func tick(dt: float) -> void:
 	clock += dt
 	round_t += dt
-	trick_room_t = maxf(trick_room_t - dt, 0.0)
 	if not on:
 		if round_n == 0 or round_t >= ROUND_SECS:
 			_end_round()
