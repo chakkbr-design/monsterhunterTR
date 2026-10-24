@@ -64,6 +64,50 @@ func _run() -> void:
 	if pm:
 		check(not pm.is_processing_unhandled_input(), "menu de pausa bloqueado na tela")
 
+	# --- Texto digitado num SpinBox (sem Enter) vai para o Pokémon que estava aberto ---
+	var le: LineEdit = scr._level.get_line_edit()
+	le.grab_focus()
+	le.text = "33"
+	scr._on_team_click(0, Vector2.ZERO, MOUSE_BUTTON_LEFT, 1)
+	await frames(2)
+	check(int(scr.cfg.sides[0].mons[0].level) == 33, "nível digitado fica no Pokémon aberto")
+	check(scr.side == 1 and int(scr.cfg.sides[1].mons[0].level) == 15, "e não no que abriu depois")
+	scr._on_team_click(0, Vector2.ZERO, MOUSE_BUTTON_RIGHT, 0)
+	scr._on_team_click(0, Vector2.ZERO, MOUSE_BUTTON_WHEEL_DOWN, 0)
+	await frames(2)
+	check(scr.side == 1, "roda e botão direito não trocam o Pokémon")
+	le.grab_focus()
+	le.text = "21"
+	scr.save()
+	check(int(Cfg.load_config().sides[1].mons[0].level) == 21, "Salvar confirma o texto pendente")
+	scr.set_level(15)
+	scr.select(0, 0)
+	scr.set_level(15)
+
+	# --- Espécies em ordem da Pokédex; turbo e limite de tempo ---
+	var last := 0
+	var ordered := true
+	for i in scr._sp_list.item_count:
+		var no := int(Dex.species(String(scr._sp_list.get_item_metadata(i))).get("dex_no", 0))
+		ordered = ordered and no >= last
+		last = no
+	check(
+		ordered and scr._sp_list.item_count == Dex.all_species().size(),
+		"espécies em ordem da Pokédex"
+	)
+	scr.set_turbo(true)
+	scr.set_time_limit(120)
+	check(
+		scr.cfg.turbo == true and int(scr.cfg.time_limit) == 120 and scr._turbo.button_pressed,
+		"turbo e limite de tempo na config"
+	)
+	scr.cfg.erase("turbo")
+	scr.cfg.erase("time_limit")
+	scr.select(0, 0)
+	check(
+		not scr._turbo.button_pressed and int(scr._limit.value) == 0, "config antiga sem as chaves"
+	)
+
 	# --- Espécie: mantém nível/IVs/EVs/natureza, golpes do nível, habilidade/gênero válidos ---
 	scr.select(0, 0)
 	var e := entry(scr)
@@ -117,6 +161,36 @@ func _run() -> void:
 	scr.moves_for_level()
 	check(entry(scr).moves == Dex.moves_at("Bulbasaur", 42), "golpes do nível")
 
+	# --- Tirar golpe: o slot marcado vai para o 1º vazio; o último golpe não sai ---
+	check(entry(scr).moves.size() == Mon.MAX_MOVES, "4 golpes no nível 42")
+	var kept: Array = entry(scr).moves.duplicate()
+	scr._on_move_slot(1)
+	scr.set_move(1, "")
+	kept.remove_at(1)
+	check(
+		entry(scr).moves == kept and scr.move_slot == kept.size(),
+		"tirar golpe marca o 1º slot vazio (%d)" % scr.move_slot
+	)
+	var k_new := -1
+	for i in scr._mv_list.item_count:
+		var mid := String(scr._mv_list.get_item_metadata(i))
+		if mid != "" and not kept.has(mid):
+			k_new = i
+			break
+	scr._on_move_click(k_new, Vector2.ZERO, MOUSE_BUTTON_LEFT)
+	var after: Array = entry(scr).moves
+	check(
+		after.size() == Mon.MAX_MOVES and after.slice(0, kept.size()) == kept,
+		"clique na lista não sobrescreve golpe mantido"
+	)
+	scr.set_field("moves", [String(kept[0])])
+	scr.set_move(0, "")
+	check(
+		entry(scr).moves.size() == 1 and scr._status.text.contains("pelo menos um golpe"),
+		"não tira o último golpe"
+	)
+	scr.moves_for_level()
+
 	# --- IVs/EVs (total 510) ---
 	scr.clear_evs()
 	scr.set_ev("atk", 252)
@@ -146,7 +220,7 @@ func _run() -> void:
 		scr.add_mon(0)
 	check(scr.cfg.sides[0].mons.size() == Cfg.PARTY_MAX, "time no máximo de %d" % Cfg.PARTY_MAX)
 	scr.set_think(0, 2.5)
-	check(is_equal_approx(float(scr.cfg.sides[0].think_scale), 2.5), "reação da IA do Time A")
+	check(is_equal_approx(float(scr.cfg.sides[0].think_scale), 2.5), "nível da IA do Time A")
 	scr.set_team_item(1, "potion")
 	check(scr.cfg.sides[1].item == "potion", "item do Time B")
 
@@ -165,15 +239,24 @@ func _run() -> void:
 	scr.swap_sides()
 	check(scr.cfg.sides[0].name == "Time B" and scr.side == 0, "troca os times de lado")
 
-	# --- Começar ---
+	# --- Começar (pelo botão, com um EV digitado e ainda não confirmado) ---
 	check(not scr._start_btn.disabled, "Começar habilitado")
-	scr.start()
+	scr.clear_evs()
+	var ev_le: LineEdit = scr._ev["def"].get_line_edit()
+	ev_le.grab_focus()
+	ev_le.text = "40"
+	scr._start_btn.button_down.emit()
+	scr._start_btn.pressed.emit()
 	check(scene_to == scr.BATTLE_SCENE, "start() vai para a luta")
 	check(Cfg.current == scr.cfg, "Cfg.current é a config da tela")
 	var saved := Cfg.load_config()
 	check(
 		FileAccess.file_exists(TEST_PATH) and saved.sides[0].mons.size() == Cfg.PARTY_MAX,
 		"config salva em %s" % TEST_PATH
+	)
+	check(
+		int(saved.sides[scr.side].mons[scr.slot].evs.def) == 40,
+		"EV digitado confirmado antes de começar"
 	)
 	scene_to = ""
 	scr.back_to_title()

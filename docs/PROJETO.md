@@ -48,6 +48,12 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 
+### Modo de treinamento (para balancear)
+- Opção **MODO DE TREINAMENTO** no título (`ui/training/`). Não usa nem grava o save do jogo; a montagem fica em `user://training.json`.
+- Tela de montar: dois times de até 6, qualquer espécie, apelido, nível, natureza, gênero, habilidade, IVs, EVs, 4 golpes entre todos os golpes do jogo, HP/PP/status iniciais e amizade; por time, nome, item do treinador e nível da IA (`think_scale`); velocidade (0,6x a 4x), turbo, limite de tempo e semente.
+- Arena fixa 20 x 12 (o dobro da quadra padrão) com cerca. Os dois lados lutam sozinhos com a IA (`opts.autoplay`), sem XP, EVs, prêmio nem evolução (`opts.no_rewards`). Acima de 1x a arena anda em passos de no máximo 1x, para o resultado não mudar com a velocidade.
+- Resultado com HP final de cada Pokémon, duração, semente e placar da série; "Rodar série" faz N lutas seguidas (com semente fixa, a luta k usa semente + k) e "Copiar registro" copia o log da luta.
+
 ### Progressão e sistemas
 - 82 espécies, 142 golpes, 32 treinadores, 30 itens + 5 bolas, 22 tabelas de encontro (tudo em `data/`).
 - Stats, naturezas, IVs, EVs, 6 curvas de XP, evolução por nível (tela animada, dá para cancelar) e por pedra, aprender e esquecer golpes, TMs, Rare Candy.
@@ -76,7 +82,7 @@ Flags de história em `Game.flags`: `got_starter`, `rival_starter`, `has_parcel`
 
 ## Testes
 
-21 suítes headless, todas passando na última rodada (core, game, battle, battle_visual, gfx, audio, ui, ui_front, ui_pc, ui_evolution, world ×4, interiors ×2, story ×3, content ×2). O teste do Mt. Moon leva de 10 a 15 minutos.
+23 suítes headless, todas passando na última rodada (core, game, battle, battle_visual, gfx, audio, ui, ui_front, ui_pc, ui_evolution, ui_training ×2, world ×4, interiors ×2, story ×3, content ×2). O teste do Mt. Moon leva de 10 a 15 minutos.
 
 ```bash
 "/c/Users/User/Desktop/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe" --headless --fixed-fps 60 --path . --script res://tests/core/test_core.gd < /dev/null

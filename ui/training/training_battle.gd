@@ -10,8 +10,10 @@ const Kit := preload("res://ui/ui_kit.gd")
 const ARENA_SCENE := "res://battle/battle_arena.tscn"
 const SETUP_SCENE := "res://ui/training/training_setup.tscn"
 const TITLE_SCENE := "res://ui/front/title.tscn"
-## A câmera fixa da arena (14 m, fov 30) foi feita para a quadra de 10 x 6; esta tem o dobro.
-const CAM_FOV := 52.0
+## A câmera fixa da arena (14 m, fov 30) foi feita para a quadra de 10 x 6; esta tem o dobro:
+## a câmera olha 2 m para cá do centro e abre o fov para os quatro cantos caberem na tela.
+const CAM_FOV := 60.0
+const CAM_FOCUS := Vector3(0, 0, 2)
 const CAM_DIST := 14.0
 const CAM_PITCH := deg_to_rad(30.0)
 const GROUND := Color(0.36, 0.55, 0.3)
@@ -21,6 +23,7 @@ const FENCE_GAP := 1.6
 const POST_STEP := 2.0
 
 ## Placar da série enquanto a config não muda (sobrevive a "Repetir").
+## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
 static var series := {"key": "", "a": 0, "b": 0, "draw": 0, "n": 0}
 
 var cfg := {}
@@ -29,7 +32,10 @@ var team_a: Array = []
 var team_b: Array = []
 var result := {}
 var fight_time := 0.0
-var run_index := 0
+## Semente da luta atual (mostrada no resultado para reproduzir a luta).
+var last_seed := 0
+## Passos da arena por quadro de física (velocidade acima de 1x, turbo).
+var steps := 1
 ## Lutas que ainda faltam na série automática (0 = para no fim desta).
 var auto_left := 0
 var _ui: CanvasLayer
@@ -37,6 +43,7 @@ var _info: Label
 var _result_box: Control
 var _stop: Button
 var _last_log: Array = []
+var _stage_cam: Camera3D
 
 
 func _ready() -> void:
@@ -73,12 +80,12 @@ func _build_stage() -> void:
 	_plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0)
 	_build_fence(Cfg.ARENA * 0.5 + Vector2(FENCE_GAP, FENCE_GAP))
 	# Câmera do cenário no mesmo ponto da câmera fixa da arena: a arena a devolve no fim da luta.
-	var cam := Camera3D.new()
-	cam.fov = CAM_FOV
-	cam.position = Vector3(0, sin(CAM_PITCH), cos(CAM_PITCH)) * CAM_DIST
-	add_child(cam)
-	cam.look_at(Vector3.ZERO, Vector3.UP)
-	cam.make_current()
+	_stage_cam = Camera3D.new()
+	_stage_cam.fov = CAM_FOV
+	_stage_cam.position = CAM_FOCUS + Vector3(0, sin(CAM_PITCH), cos(CAM_PITCH)) * CAM_DIST
+	add_child(_stage_cam)
+	_stage_cam.look_at(CAM_FOCUS, Vector3.UP)
+	_stage_cam.make_current()
 
 
 func _plane(sz: Vector2, col: Color, y: float) -> void:
@@ -133,22 +140,55 @@ func _build_fence(half: Vector2) -> void:
 
 
 func start_fight() -> void:
-	if is_instance_valid(arena):
-		arena.queue_free()
+	_drop_arena()
 	_result_box.visible = false
 	result = {}
 	fight_time = 0.0
 	team_a = Cfg.build_side(cfg, 0)
 	team_b = Cfg.build_side(cfg, 1)
 	var o := Cfg.arena_opts(cfg, global_position)
-	if o.has("seed"):
-		o.seed = int(o.seed) + run_index
-	run_index += 1
+	last_seed = int(o.seed) + int(series.n) if o.has("seed") else randi()
+	o.seed = last_seed
+	# Acima de 1x a arena anda em vários passos de no máximo 1x por quadro: um passo grande faria
+	# golpes rápidos atravessarem o alvo e mudaria o resultado da luta.
+	var turbo := bool(cfg.get("turbo", false))
+	var spd := float(o.speed)
+	steps = Cfg.TURBO_STEPS if turbo else maxi(1, ceili(spd))
+	o.speed = 1.0 if turbo else spd / steps
 	arena = load(ARENA_SCENE).instantiate()
+	arena.manual = true
 	add_child(arena)
 	arena.finished.connect(_on_finished)
 	arena.start(team_a, team_b, o)
 	_fit_camera()
+	var help = arena.hud.get("_help") if arena.get("hud") else null
+	if help is Control:
+		help.visible = false  # teclas do jogador: ninguém controla nada no treino
+
+
+## Solta a arena atual sem deixar ela terminar depois (Parar, Repetir).
+func _drop_arena() -> void:
+	if is_instance_valid(arena):
+		if arena.finished.is_connected(_on_finished):
+			arena.finished.disconnect(_on_finished)
+		arena.queue_free()
+	arena = null
+	# A próxima arena guarda a câmera atual para devolver no fim: tem que ser a do cenário.
+	if _stage_cam:
+		_stage_cam.make_current()
+
+
+## A arena roda em modo manual: aqui ela anda `steps` passos por quadro.
+func _physics_process(dt: float) -> void:
+	for i in steps:
+		if not is_instance_valid(arena) or String(arena.get("state")) == "done":
+			return
+		var a := arena
+		var fighting := String(a.get("state")) == "fight"
+		a.step(dt)
+		if fighting and is_instance_valid(a):
+			fight_time += dt * float(a.get("fight_speed"))
+			_check_time_limit()
 
 
 ## A câmera da arena olha o meio entre o jogador e o 1º mon do adversário; aqui olha o centro da
@@ -158,12 +198,20 @@ func _fit_camera() -> void:
 	if cam is Camera3D:
 		cam.fov = CAM_FOV
 	if arena.get("_cam_focus") != null:
-		arena.set("_cam_focus", Vector3.ZERO)
+		arena.set("_cam_focus", CAM_FOCUS)
 
 
-func _process(dt: float) -> void:
-	if is_instance_valid(arena) and String(arena.get("state")) == "fight":
-		fight_time += dt * float(arena.get("fight_speed"))
+## Limite de tempo (cfg.time_limit, segundos de jogo): a luta termina sem vencedor ("timeout").
+func _check_time_limit() -> void:
+	var limit := float(cfg.get("time_limit", 0))
+	if limit <= 0.0 or fight_time < limit or not is_instance_valid(arena):
+		return
+	if String(arena.get("state")) == "fight":
+		arena.say("Tempo esgotado!")
+		arena.call("_end", "timeout", 0.0)
+
+
+func _process(_dt: float) -> void:
 	_refresh_info()
 
 
@@ -189,9 +237,7 @@ func _on_finished(r: Dictionary) -> void:
 func stop_fight() -> void:
 	auto_left = 0
 	_keep_log()
-	if is_instance_valid(arena):
-		arena.queue_free()
-	arena = null
+	_drop_arena()
 	_show_result()
 
 
@@ -199,9 +245,9 @@ func stop_fight() -> void:
 func winner_name() -> String:
 	match String(result.get("outcome", "")):
 		"win":
-			return String(cfg.sides[0].get("name", "Time A"))
+			return Cfg.side_name(cfg, 0)
 		"lose":
-			return String(cfg.sides[1].get("name", "Time B"))
+			return Cfg.side_name(cfg, 1)
 	return ""
 
 
@@ -277,10 +323,17 @@ func _build_result(root: Control) -> void:
 func _refresh_info() -> void:
 	if _info == null:
 		return
-	var a := String(cfg.sides[0].get("name", "Time A"))
-	var b := String(cfg.sides[1].get("name", "Time B"))
 	var s := (
-		"%s x %s   ·   %s   ·   Série: %d x %d" % [a, b, _clock(fight_time), series.a, series.b]
+		"%s %s x %s %s   ·   %s   ·   Série: %d x %d"
+		% [
+			Cfg.side_name(cfg, 0),
+			_alive(team_a),
+			_alive(team_b),
+			Cfg.side_name(cfg, 1),
+			_clock(fight_time),
+			series.a,
+			series.b
+		]
 	)
 	if int(series.draw) > 0:
 		s += " (%d sem vencedor)" % series.draw
@@ -290,30 +343,52 @@ func _refresh_info() -> void:
 	_stop.visible = not _result_box.visible
 
 
+## "2/3": Pokémon de pé no time.
+static func _alive(team: Array) -> String:
+	return "%d/%d" % [team.filter(func(m): return not m.is_fainted()).size(), team.size()]
+
+
 static func _clock(t: float) -> String:
 	return "%d:%04.1f" % [int(t) / 60, fmod(t, 60.0)]
 
 
 func _show_result() -> void:
 	Kit.clear(_result_box)
-	var w: Array = Kit.panel("RESULTADO", Vector2(620, 0), 8)
+	var w: Array = Kit.panel("RESULTADO", Vector2(760, 0), 6)
 	_result_box.add_child(w[0])
 	var col: VBoxContainer = w[1]
 	var win := winner_name()
-	col.add_child(Kit.header("%s venceu!" % win if win != "" else "Luta interrompida", Kit.RED, 24))
-	col.add_child(Kit.label("Duração da luta: %s (tempo de jogo)" % _clock(fight_time)))
+	var head := "%s venceu!" % win
+	if win == "":
+		head = (
+			"Tempo esgotado: sem vencedor"
+			if String(result.get("outcome", "")) == "timeout"
+			else "Luta interrompida"
+		)
+	col.add_child(Kit.header(head, Kit.RED, 24))
 	col.add_child(
 		Kit.label(
-			(
-				"Série: %s %d x %d %s em %d lutas"
-				% [cfg.sides[0].name, series.a, series.b, cfg.sides[1].name, series.n]
-			)
+			"Duração da luta: %s (tempo de jogo) · semente %d" % [_clock(fight_time), last_seed]
 		)
 	)
+	var line := (
+		"Série: %s %d x %d %s em %d lutas"
+		% [Cfg.side_name(cfg, 0), series.a, series.b, Cfg.side_name(cfg, 1), series.n]
+	)
+	if int(series.draw) > 0:
+		line += " (%d sem vencedor)" % series.draw
+	col.add_child(Kit.label(line))
+	# Os dois times lado a lado (6 x 6 cabe na tela).
+	var teams := HBoxContainer.new()
+	teams.add_theme_constant_override("separation", 16)
+	col.add_child(teams)
 	for side in 2:
-		col.add_child(Kit.header(String(cfg.sides[side].get("name", "")), Kit.BLUE, 18))
+		var tc := VBoxContainer.new()
+		tc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		teams.add_child(tc)
+		tc.add_child(Kit.header(Cfg.side_name(cfg, side), Kit.BLUE, 18))
 		for m in team_a if side == 0 else team_b:
-			col.add_child(Kit.label(_mon_line(m), Kit.DIM if m.is_fainted() else Kit.INK, 16))
+			tc.add_child(Kit.label(_mon_line(m), Kit.DIM if m.is_fainted() else Kit.INK, 15))
 	var rep := HBoxContainer.new()
 	rep.add_theme_constant_override("separation", 8)
 	col.add_child(rep)
@@ -339,7 +414,7 @@ func _mon_line(m: Mon) -> String:
 	var st := "" if m.status == "" else " · " + String(Cfg.STATUS_NAMES.get(m.status, m.status))
 	return (
 		"%s Nv %d: %d/%d HP%s"
-		% [m.display_name, m.level, m.hp, m.max_hp, " (desmaiou)" if m.is_fainted() else st]
+		% [m.display_name, m.level, m.hp, m.max_hp, " · desmaiou" if m.is_fainted() else st]
 	)
 
 
@@ -361,3 +436,6 @@ func _copy_log() -> void:
 func _keep_log() -> void:
 	if is_instance_valid(arena) and arena.get("log_lines") is Array:
 		_last_log = arena.log_lines.duplicate()
+		# A faixa de log da arena guarda só as últimas LOG_MAX linhas.
+		if _last_log.size() >= int(arena.LOG_MAX):
+			_last_log.push_front("(registro truncado: as primeiras linhas da luta se perderam)")

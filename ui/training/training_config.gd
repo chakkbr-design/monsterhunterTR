@@ -2,7 +2,7 @@ extends RefCounted
 ## Modo de treinamento: a configuração das lutas (dois times, opções) e a montagem dos Mon.
 ## Formato (salvo em user://training.json, nunca no save do jogo):
 ##   {sides: [{name, item, think_scale, mons: [Mon.to_dict() + "hp_pct"]}, {...}],
-##    speed, seed (-1 = aleatório)}
+##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite)}
 ## Uso: const Cfg := preload("res://ui/training/training_config.gd")
 
 const PATH := "user://training.json"
@@ -13,6 +13,8 @@ const PARTY_MAX := 6
 ## Quadra fixa do treino: o dobro da quadra padrão da arena (FIXED_ARENA 10 x 6).
 const ARENA := Vector2(20, 12)
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
+## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
+const TURBO_STEPS := 12
 const STATUSES := ["", "burn", "poison", "paralysis", "sleep"]
 const STATUS_NAMES := {
 	"": "Nenhum",
@@ -40,6 +42,8 @@ static func default_config() -> Dictionary:
 		],
 		"speed": 1.0,
 		"seed": -1,
+		"turbo": false,
+		"time_limit": 0,
 	}
 
 
@@ -89,6 +93,12 @@ static func can_start(cfg: Dictionary) -> bool:
 	return not build_side(cfg, 0).is_empty() and not build_side(cfg, 1).is_empty()
 
 
+## Nome do time para mostrar ("Time A"/"Time B" quando está em branco).
+static func side_name(cfg: Dictionary, side: int) -> String:
+	var n := String(cfg.sides[side].get("name", "")).strip_edges()
+	return n if n != "" else ("Time A" if side == 0 else "Time B")
+
+
 ## opts da arena para uma luta automática dos dois lados (contrato em battle/battle_arena.gd).
 static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 	var o := {
@@ -100,7 +110,7 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"center": center,
 		"arena": ARENA,
 		"speed": float(cfg.get("speed", 1.0)),
-		"trainer_name": String(cfg.sides[1].get("name", "Time B")),
+		"trainer_name": side_name(cfg, 1),
 		"trainer_item": String(cfg.sides[1].get("item", "")),
 		"player_item": String(cfg.sides[0].get("item", "")),
 		"player_think_scale": float(cfg.sides[0].get("think_scale", 1.0)),
@@ -134,9 +144,14 @@ static func battle_items() -> Array:
 	var it = Dex._load_json("res://data/items.json")
 	for e in it.get("items", []) if it is Dictionary else []:
 		var eff = e.get("effect", {})
-		if eff is Dictionary and (eff.has("hp") or eff.has("cure")):
+		if eff is Dictionary and (eff.has("hp") or _cures_status(String(eff.get("cure", "")))):
 			out.append(String(e.id))
 	return out
+
+
+## Cura que o item do treinador consegue usar (status de luta; confusão não conta).
+static func _cures_status(cure: String) -> bool:
+	return cure == "all" or (cure != "" and STATUSES.has(cure))
 
 
 ## Liga/desliga o menu de pausa do mundo (Esc) enquanto o modo de treinamento está aberto.

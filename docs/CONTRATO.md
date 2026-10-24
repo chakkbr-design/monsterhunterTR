@@ -215,3 +215,9 @@ Dados novos em `data/`: `pmd_anims.json`, `move_fx.json`, `time_of_day.json`, `t
 - Flags novas: `bought_magikarp`, `mt_moon_cleared`, `mt_moon_fossil`, `FLAG_GOT_DOME_FOSSIL` / `FLAG_GOT_HELIX_FOSSIL`, `FLAG_GOT_FOSSIL_FROM_MT_MOON`, `static_<uid>`.
 - `trainers.json`: campo `display_name` em português. Textos de mapas e treinadores traduzidos.
 - `Game.trainer_id` (número do Cartão de Treinador).
+
+## Modo de treinamento
+
+- Pasta `ui/training/` e testes em `tests/ui_training/`. Entrada pela opção `training` do título (`title.gd TRAINING_SCENE`).
+- `training_config.gd`: formato da montagem (`{sides: [{name, item, think_scale, mons}], speed, seed, turbo, time_limit}`, cada mon = `Mon.to_dict()` + `hp_pct`), `build_mon`, `arena_opts`, `side_name`, `Cfg.current` entre as cenas e `Cfg.path` (os testes trocam).
+- `training_battle.gd` instancia a arena direto (sem `Game.request_battle`) com `kind: "trainer"`, `autoplay`, `no_rewards`, `player_item`/`trainer_item`, `player_think_scale`/`enemy_think_scale`, `center` e `arena` 20 x 12, com `manual = true` e chama `step()` ela mesma (vários passos de no máximo 1x por quadro). Lê campos internos da arena (`_cam`, `_cam_focus`, `state`, `fight_speed`, `log_lines`, `hud._help`) e chama `_end("timeout", 0)` no limite de tempo; quem mexer nesses nomes em `battle/` precisa atualizar o treino.

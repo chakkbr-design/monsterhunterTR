@@ -109,6 +109,43 @@ func _run() -> void:
 	tb.stop_fight()
 	await process_frame
 	check(tb._result_box.visible and tb.winner_name() == "", "Parar mostra luta interrompida")
+	for i in 120:
+		await process_frame
+	check(int(tb.series.n) == 3, "a luta parada não conta depois")
+	tb.queue_free()
+	await process_frame
+
+	# Semente fixa: a luta k da série usa semente + k, mesmo voltando para a cena.
+	tb = load(SCENE).instantiate()
+	root.add_child(tb)
+	await process_frame
+	check(tb.last_seed == 7 + 3, "semente continua a série ao voltar (%d)" % tb.last_seed)
+	check(tb.steps == 4 and is_equal_approx(tb.arena.fight_speed, 1.0), "4x = 4 passos de 1x")
+	tb.queue_free()
+	await process_frame
+
+	# Turbo + limite de tempo: dois Onix iguais não terminam em 3 s, a luta acaba sem vencedor.
+	var tank := Cfg.mon_entry("Onix", 60)
+	Cfg.current = _cfg([tank], [tank.duplicate(true)])
+	Cfg.current.turbo = true
+	Cfg.current.time_limit = 3
+	Cfg.current.sides[0].name = "  "
+	tb = load(SCENE).instantiate()
+	root.add_child(tb)
+	await process_frame
+	check(tb.steps == Cfg.TURBO_STEPS, "turbo: %d passos por quadro" % tb.steps)
+	done = await _wait_result(tb)
+	check(
+		done and String(tb.result.get("outcome", "")) == "timeout", "limite de tempo: sem vencedor"
+	)
+	check(int(tb.series.draw) == 1 and int(tb.series.n) == 1, "placar conta sem vencedor")
+	check(tb.fight_time < 4.0, "parou perto do limite (%.1f s)" % tb.fight_time)
+	check(Cfg.side_name(tb.cfg, 0) == "Time A", "nome em branco vira Time A")
+	var items := Cfg.battle_items()
+	check(
+		items.has("potion") and items.has("antidote") and not items.has("persim_berry"),
+		"itens do treinador só os que a IA usa"
+	)
 
 	tb.queue_free()
 	await process_frame
