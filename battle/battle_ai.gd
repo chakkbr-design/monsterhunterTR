@@ -1127,7 +1127,8 @@ func is_contact(id: String) -> bool:
 func _go_home(side_v: Vector3) -> Vector3:
 	var home: Vector3 = f.arena.home_of(f)
 	var v := home - f.pos2(f.position)
-	if v.length() < HOME_NEAR * 2.0:
+	# Só chegou de volta depois de sair: logo depois de soltar uma investida ele ainda está perto de casa.
+	if v.length() < HOME_NEAR * 2.0 and f.dash_t <= 0.0 and f.lunge_t <= 0.0 and recover_t <= 0.0:
 		returning = false
 	if v.length() < HOME_NEAR:
 		return side_v * 0.08 * float(_p("strafe", 0.5))
