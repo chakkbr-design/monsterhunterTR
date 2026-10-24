@@ -49,6 +49,7 @@ static func default_config() -> Dictionary:
 		"seed": -1,
 		"turbo": false,
 		"time_limit": 0,
+		"battle_size": 2,
 	}
 
 
@@ -121,6 +122,7 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"player_think_scale": float(cfg.sides[0].get("think_scale", 1.0)),
 		"enemy_think_scale": float(cfg.sides[1].get("think_scale", 1.0)),
 		"no_rewards": true,
+		"battle_size": clampi(int(cfg.get("battle_size", 2)), 1, 2),
 	}
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)

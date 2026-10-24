@@ -63,6 +63,10 @@ func _run() -> void:
 		"opts: autoplay, sem recompensa, treinador"
 	)
 	check(o.arena == Vector2(20, 12), "quadra com o dobro da padrão (20 x 12)")
+	check(o.battle_size == 2, "opts: 2x2 por padrão")
+	var one := _cfg([e], [e])
+	one.battle_size = 1
+	check(Cfg.arena_opts(one, Vector3.ZERO).battle_size == 1, "opts: 1x1 quando escolhido")
 	check(not Cfg.can_start(_cfg([], [e])), "sem Pokémon num lado não começa")
 	check(
 		load("res://ui/front/title.gd").MENU_TEXT.has("training"),

@@ -48,6 +48,7 @@ var _start_btn: Button
 var _speed: OptionButton
 var _seed: SpinBox
 var _turbo: CheckBox
+var _battle: OptionButton
 var _limit: SpinBox
 var _empty_note: Label
 var _editor: Control
@@ -308,6 +309,12 @@ func set_seed(v: int) -> void:
 
 func set_turbo(on: bool) -> void:
 	cfg["turbo"] = on
+	_refresh_all()
+
+
+## Batalha 1x1 (1) ou 2x2 (2): quantos Pokémon de cada time lutam ao mesmo tempo.
+func set_battle_size(n: int) -> void:
+	cfg["battle_size"] = 1 if n == 1 else 2
 	_refresh_all()
 
 
@@ -688,6 +695,12 @@ func _build_top() -> Control:
 	_turbo.tooltip_text = "Roda as lutas o mais rápido possível, para séries longas"
 	_turbo.button_down.connect(_commit_edits)
 	_turbo.toggled.connect(_on_turbo)
+	_battle = OptionButton.new()
+	_battle.add_item("1x1")
+	_battle.add_item("2x2")
+	_battle.tooltip_text = "Quantos Pokémon de cada time lutam ao mesmo tempo"
+	_battle.item_selected.connect(_on_battle)
+	r2.add_child(_battle)
 	r2.add_child(_turbo)
 	r2.add_child(_btn("Trocar times", swap_sides, "Troca o Time A e o Time B de lado"))
 	_status = Kit.label("", Kit.INK, SMALL_SIZE)
@@ -1018,6 +1031,7 @@ func _refresh_all() -> void:
 	_seed.value = int(cfg.get("seed", -1))
 	_limit.value = int(cfg.get("time_limit", 0))
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
+	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1185,6 +1199,11 @@ func _on_limit(v: float) -> void:
 func _on_turbo(on: bool) -> void:
 	if not _syncing:
 		set_turbo(on)
+
+
+func _on_battle(i: int) -> void:
+	if not _syncing:
+		set_battle_size(i + 1)
 
 
 ## Seleção pela lista de um time: confirma o texto pendente no Pokémon aberto antes de trocar.
