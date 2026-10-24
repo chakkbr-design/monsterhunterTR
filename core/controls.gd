@@ -18,6 +18,15 @@ const KEYS := {
 	"run_away": [KEY_R],
 	"pause": [KEY_ESCAPE],
 	"ally_mode": [KEY_F],
+	# Fora da batalha (controls.gd setup do original): F dá comida ao companheiro; 1-6 mandam e
+	# recolhem cada Pokémon da equipe.
+	"feed": [KEY_F],
+	"party_1": [KEY_1],
+	"party_2": [KEY_2],
+	"party_3": [KEY_3],
+	"party_4": [KEY_4],
+	"party_5": [KEY_5],
+	"party_6": [KEY_6],
 }
 
 
