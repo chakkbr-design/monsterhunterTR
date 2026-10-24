@@ -929,6 +929,9 @@ class Pop:
 		screen = cam.unproject_position(world)
 		var rise := (30.0 if style == "damage" else 18.0) * ease(clampf(age / life, 0.0, 1.0), 0.4)
 		var side := Vector2(46.0, 0.0) if style == "callout" else Vector2.ZERO
+		# "Interrompido!" sai junto do número de dano: fica embaixo dele.
+		if style == "interrupted":
+			side = Vector2(0.0, 40.0)
 		position = screen + Vector2(jitter, stack - rise) + side
 		# Fica abaixo dos cartões: os da direita (adversários) descem mais na dupla.
 		var vw := get_viewport_rect().size.x
@@ -1086,7 +1089,7 @@ class BattleLogLine:
 	const CHIP_GAP := 8.0
 	const H := 32.0
 	const TOP := 116.0
-	const BOTTOM := 44.0
+	const BOTTOM := 96.0  # acima da barra de status e do "Parar (Esc)" do treino
 	const FONT_SIZE := 18
 	const APPEAR := 0.25
 
@@ -1381,7 +1384,7 @@ class VivaLayer:
 		var a := clampf((CALLOUT_LIFE - age) / 0.2, 0.0, 1.0)
 		var sc := lerpf(1.35, 1.0, k)
 		# Menor e longe dos cartões: o do jogador acima da faixa de log, o do adversário abaixo dos cartões.
-		var y := size.y - 130.0 if side == 0 else CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 40.0
+		var y := size.y - 175.0 if side == 0 else CARD_TOP + CARD_H * 2.0 + FOE2_GAP + 40.0
 		var x := 28.0 if side == 0 else size.x - 28.0 - w
 		x += (1.0 - k) * (-260.0 if side == 0 else 260.0)
 		draw_set_transform(Vector2(x + w * 0.5, y), 0.0, Vector2(sc, sc))
