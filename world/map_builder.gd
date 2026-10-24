@@ -1341,6 +1341,8 @@ func _sprite_prop(parent: Node3D, p: Dictionary) -> void:
 	spr.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	spr.pixel_size = h / maxf(1.0, float(tex.get_height()))
 	spr.position = _at(p) + Vector3(0, h / 2.0, 0)
+	spr.set_meta("sprite", String(p.sprite))  # o Coordenador esconde o boneco escolhido (sprite_prop)
+	spr.add_to_group("sprite_prop")
 	parent.add_child(spr)
 	if collide:  # original: a wall as wide as the sprite, 0.4 m deep
 		_solid_box(
@@ -1708,7 +1710,11 @@ func _people() -> void:
 			continue
 		if n.has("hidden_by_flag") and bool(Game.flags.get(String(n.hidden_by_flag), false)):
 			continue
-		var npc := WorldNpc.new()
+		var npc: WorldNpc = (
+			TrainingAttendant.from_entry(n.attendant, self)
+			if n.has("attendant")
+			else WorldNpc.new()
+		)
 		npc.name = String(n.get("node", "Npc"))
 		npc.npc_name = String(n.get("name", "Villager"))
 		npc.lines = fill_names(n.get("lines", ["..."]))

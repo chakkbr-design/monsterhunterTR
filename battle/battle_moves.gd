@@ -322,6 +322,8 @@ func hit(
 			float(mv.get("knockback", 4.0)),
 			{"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
+		if dmg >= hp_before and arena.has_method("on_knocked_out"):
+			arena.on_knocked_out(user, target)  # Moves.knocked_out do original
 		if mv.has("drain") and user.alive():
 			user.heal(maxi(1, int(float(dmg) * float(mv.drain))))
 		var col := (

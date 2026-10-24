@@ -53,6 +53,8 @@ var last_hit_by: BattleFighter
 var on_field := true
 var trainer_item := ""
 var item_used := false
+## Boneco do acampamento de treino (creature.gd immortal do original): no KO o HP volta cheio.
+var immortal := false
 
 var moves: Array = []
 var types: Array = []
@@ -591,6 +593,12 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 			look.hurt()
 	refresh_label()
 	if hp == 0:
+		if immortal:
+			hp = max_hp
+			mon.hp = hp
+			popup("KO! (recarregado)", Color(1, 0.4, 0.4))
+			refresh_label()
+			return imp
 		_faint()
 	return imp
 
