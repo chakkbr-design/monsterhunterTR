@@ -93,22 +93,24 @@ func _run() -> void:
 	check(sw.peace_timer <= 0.0, "swimmer peace timer runs out (%.2f)" % sw.peace_timer)
 	sw.queue_free()
 
-	# Z/C with a modal UI open: the camera stays put.
-	var yaw0: float = cam._yaw_target
-	var gs := GDScript.new()
-	gs.source_code = "extends Node\nfunc is_open() -> bool:\n\treturn true\n"
-	gs.reload()
-	var fake := Node.new()
-	fake.set_script(gs)
-	fake.name = "LearnMove"
-	var old := root.get_node_or_null("LearnMove")
-	if old:
-		old.free()
-	root.add_child(fake)
-	Input.action_press("cam_left")
-	await process_frame
-	await process_frame
-	Input.action_release("cam_left")
-	check(is_equal_approx(cam._yaw_target, yaw0), "Z ignored while a modal UI is open")
+	# No manual camera turn (like the original): Z/C are not camera keys and leave the yaw alone.
+	check(
+		not InputMap.has_action("cam_left") and not InputMap.has_action("cam_right"),
+		"no cam_left/cam_right actions"
+	)
+	var yaw0: float = cam.yaw()
+	for k in [KEY_Z, KEY_C]:
+		var ev := InputEventKey.new()
+		ev.physical_keycode = k
+		ev.pressed = true
+		Input.parse_input_event(ev)
+		await process_frame
+		ev = ev.duplicate()
+		ev.pressed = false
+		Input.parse_input_event(ev)
+		await process_frame
+	for i in 30:
+		await process_frame
+	check(is_equal_approx(cam.yaw(), yaw0), "Z/C do not turn the camera")
 	print("[world motion] %d failed" % _fails)
 	quit(1 if _fails > 0 else 0)

@@ -55,21 +55,13 @@ const PORTRAIT_GREEN := "res://original/assets/sprites/trainer_green.png"
 const PORTRAIT_FRAME := Rect2(8, 11, 16, 20)
 const DEX_ROWS := 11
 const CONTROLS := [
-	[
-		"MUNDO",
-		[
-			["Andar", "WASD/Setas"],
-			["Correr", "Shift"],
-			["Pular", "Espaço"],
-			["Interagir", "E"],
-			["Girar câmera", "Z/C"],
-			["Menu", "Esc"]
-		]
-	],
+	["MUNDO", [["Andar", "WASD/Setas"], ["Correr", "Shift"], ["Interagir", "E"], ["Menu", "Esc"]]],
 	[
 		"BATALHA",
 		[
 			["Golpes", "1-4"],
+			["Correr", "Shift"],
+			["Pular", "Espaço"],
 			["Jogar Pokébola", "Q"],
 			["Trocar Pokémon", "Tab"],
 			["Fugir", "R"],

@@ -1,6 +1,7 @@
 class_name OverworldPlayer
 extends CharacterBody3D
-## Overworld avatar: camera-relative movement, sprint, jump, tall-grass rolls and interaction focus.
+## Overworld avatar: camera-relative movement, sprint, tall-grass rolls and interaction focus (no jump,
+## like the original player.gd; ledges hop on their own).
 
 const GROUP := "ow_player"
 const LAYER := 2
@@ -11,7 +12,6 @@ const ENGAGE_RANGE := 3.5
 
 @export var walk_speed := 4.0
 @export var run_speed := 7.0
-@export var jump_velocity := 7.0
 @export var color := Color(0.85, 0.2, 0.2)
 
 var locked := false  ## scripted freeze (dialogue, ambush alert, trainer spotted)
@@ -128,7 +128,7 @@ func _physics_process(delta: float) -> void:
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 	if is_on_floor():
-		velocity.y = jump_velocity if active and Input.is_action_just_pressed("jump") else -0.5
+		velocity.y = -0.5
 	else:
 		velocity.y -= GRAVITY * delta
 	var before := global_position

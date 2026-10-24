@@ -6,7 +6,8 @@ extends Node3D
 ## tilt-shift depth of field around the focus (camera_attrs.tres),
 ## per-zone look (camera_distance / camera_yaw / camera_pitch / camera_pitch_near over a rect /
 ## camera_far), and buildings / terraces that fade to see-through while they hide the player.
-## Publishes main_cam_pos for the HGSS billboard shader. cam_left/cam_right still turn it in steps.
+## Publishes main_cam_pos for the HGSS billboard shader. No manual turn (the original reads no input:
+## the yaw only comes from the zone).
 
 const GROUP := "ow_camera"
 const FADE_RADIUS := 18.0
@@ -15,7 +16,6 @@ const ATTRS := "res://world/look/camera_attrs.tres"
 @export_range(15.0, 75.0) var pitch_deg := 32.0
 @export var distance := 12.0
 @export var follow_sharpness := 6.0
-@export var yaw_step_deg := 45.0
 @export var yaw_sharpness := 8.0
 @export var fov := 35.0
 @export var dof_band := 6.0
@@ -101,11 +101,6 @@ func _pitch_near_blend(p: Vector3) -> float:
 
 func _process(delta: float) -> void:
 	var t := Overworld.player_of(self)
-	if not Game.is_busy() and not (t and t.ui_blocking()):  # Z/C also drive the PC boxes and menus
-		if Input.is_action_just_pressed("cam_left"):
-			_yaw_target -= deg_to_rad(yaw_step_deg)
-		if Input.is_action_just_pressed("cam_right"):
-			_yaw_target += deg_to_rad(yaw_step_deg)
 	_yaw = lerpf(_yaw, _yaw_target, 1.0 - exp(-yaw_sharpness * delta))
 	if t:
 		global_position = global_position.lerp(

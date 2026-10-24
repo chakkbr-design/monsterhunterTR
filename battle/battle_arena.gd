@@ -21,7 +21,6 @@ const NEXT_TRAINER_MON := 1.4
 const SWAP_CD := 1.0
 const CAM_DIST := 5.0
 const CAM_HEIGHT := 3.4
-const CAM_TURN := deg_to_rad(110.0)
 const BALL_FLIGHT := 0.5
 const BALL_SHAKE := 0.6
 const BALL_ABSORB := 0.3
@@ -625,8 +624,6 @@ func step(dt: float) -> void:
 	if state == "done":
 		return
 	_visual_step(dt)
-	if not manual:
-		_camera_input(raw)
 	_update_camera(raw)
 	hud.refresh(
 		player,
@@ -1640,18 +1637,11 @@ func _finish() -> void:
 # --- Câmera ---
 
 
-func _camera_input(dt: float) -> void:
-	if Input.is_action_pressed("cam_left"):
-		_yaw -= CAM_TURN * dt
-	if Input.is_action_pressed("cam_right"):
-		_yaw += CAM_TURN * dt
-
-
 func _update_camera(dt: float) -> void:
 	if _cam == null:
 		return
 	if fixed:
-		# Como o original numa quadra fixa: câmera parada (focus_fixed), só gira com Z/C.
+		# Como o original numa quadra fixa: câmera parada (focus_fixed), sem giro manual.
 		var off := Vector3(0, sin(FIXED_CAM_PITCH), cos(FIXED_CAM_PITCH)) * FIXED_CAM_DIST
 		_cam.position = _cam.position.lerp(
 			_cam_focus + off.rotated(Vector3.UP, _yaw), clampf(dt * 6.0, 0.0, 1.0)

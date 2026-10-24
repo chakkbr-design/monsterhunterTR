@@ -21,8 +21,9 @@ Atualizado em 2026-10-23. Jogo em Godot 4.7 (GDScript), feito a partir do estudo
 - Cenas de teste: `res://battle/battle_test.tscn` (só batalha), `res://world/overworld.tscn` (mapa de teste antigo).
 - Save do jogador: `user://save.json` (`%APPDATA%\Godot\app_userdata\PokmemonLike`). Os testes usam outros arquivos e nunca mexem nele.
 
-**Controles:** WASD anda, Shift corre, Espaço pula, E interage, Z/C giram a câmera, Esc abre o menu.
-Na batalha: 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémon (ou qual dos dois você controla), F modo do aliado, R foge.
+**Controles:** WASD anda, Shift corre, E interage, Esc abre o menu. Como no original, não há pulo no mundo
+(os ressaltos pulam sozinhos) nem giro de câmera (o ângulo vem da zona).
+Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémon (ou qual dos dois você controla), F modo do aliado, R foge.
 
 ## O que o jogo tem
 

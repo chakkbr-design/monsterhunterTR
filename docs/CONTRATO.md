@@ -21,9 +21,9 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 ## Autoloads (registrados pelo Núcleo)
 
 - `Controls` (`core/controls.gd`): cria o input map em código no `_ready`.
-  Ações: `move_left` `move_right` `move_forward` `move_back` (WASD e setas), `jump` (Espaço),
+  Ações: `move_left` `move_right` `move_forward` `move_back` (WASD e setas), `jump` (Espaço, só na batalha),
   `sprint` (Shift), `interact` (E), `move_1`..`move_4` (teclas 1-4), `throw_ball` (Q),
-  `swap_mon` (Tab), `run_away` (R), `pause` (Esc), `cam_left`/`cam_right` (Z/C), `ally_mode` (F).
+  `swap_mon` (Tab), `run_away` (R), `pause` (Esc), `ally_mode` (F). Sem giro de câmera (como o original).
 - `Game` (`core/game.gd`): estado do jogador e ponte overworld ↔ batalha.
 
 ## API do núcleo (classes com `class_name`, funções estáticas onde indicado)
