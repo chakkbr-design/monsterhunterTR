@@ -45,6 +45,12 @@ const TARGET_STICKY := 0.5
 const GUARD_DIST := 1.5
 const ATTACK_THINK := 0.75
 const DEFEND_BUFF_CHANCE := 0.5
+## Física Gen 9: investida longa (dash com alcance >= RUSH_MIN) fecha a distância de longe; golpe de área
+## na dupla quando pega os dois e rende AREA_PREF x o melhor de alvo único.
+const RUSH_MIN := 6.0
+const RUSH_FROM := 4.5
+const RUSH_CHANCE := 0.7
+const AREA_PREF := 1.25
 ## Reação a golpe avisado: base (s) dividida pelo fator de Speed e vezes think_scale.
 const REACT_BASE := 0.28
 const DODGE_RUN := 0.45
@@ -210,7 +216,12 @@ func step(dt: float) -> Vector3:
 			intent = _plan()
 			if intent == "":
 				think = THINK_RETRY * think_scale
-		var fire := intent != "" and in_range(intent, d) and _ready(intent)
+		var rush := _rush_move(d)
+		if rush != "":
+			intent = rush
+		var fire := (
+			intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
+		)
 		if punish and not punished and tactic_on:
 			fire = true
 			punished = true
@@ -639,11 +650,18 @@ func pick(avail: Array) -> String:
 	for id in avail:
 		if float(Dex.move(id).get("power", 0)) > 0.0:
 			dmg[id] = _dmg(id)
+			if BattleMoves.multi_target(Dex.move(id)) == "all_other_pokemon" and partner() != null:
+				# Earthquake com o parceiro perto: o custo de acertar o parceiro entra na conta.
+				var tot: float = f.arena.moves.expected_total(f, Dex.move(id))
+				dmg[id] = minf(float(dmg[id]), maxf(tot, 0.0))
 	var usable: Array = avail.filter(func(id): return not dmg.has(id) or dmg[id] > 0.0)
 	var pool: Array = usable if not usable.is_empty() else avail
 	var best := best_move(pool, dmg)
 	if best != "" and dmg.get(best, 0.0) >= float(f.opponent.hp):
 		return best
+	var area := _area_pick(pool, dmg)
+	if area != "":
+		return area
 	var rng := _rng()
 	if rng.randf() < error_chance():
 		return String(pool[rng.randi() % pool.size()])
@@ -833,6 +851,9 @@ func _jump_threat(d: float) -> String:
 		and d <= float(mv.get("radius", 0.0))
 	):
 		return "quake" + sig
+	var pq := _partner_quake()
+	if pq != "":
+		return pq
 	if _incoming_body_attack(d) != Vector3.ZERO and _can_clear(o):
 		return "dash" + sig
 	return ""
@@ -842,6 +863,8 @@ func _jump_lead(threat: String, d: float) -> float:
 	var o := f.opponent
 	if threat.begins_with("quake"):
 		return maxf(o.root_t - 0.1, 0.0)
+	if threat.begins_with("pquake") and partner() != null:
+		return maxf(partner().root_t - 0.1, 0.0)
 	if o.dash_t > 0.0:
 		return maxf((d - BattleFighter.HIT_RANGE) / maxf(o.dash_speed, 1.0), 0.0)
 	return maxf((d - BattleFighter.HIT_RANGE) / BattleFighter.LUNGE_SPEED, 0.0)
@@ -899,3 +922,76 @@ func _sprint(dt: float, reason: bool) -> bool:
 	react_t = SPRINT_REACT * maxf(think_scale, 0.05)
 	sprint_want = true
 	return true
+
+
+# --- Física Gen 9 e regras de dupla ---
+
+
+## Investida longa (Quick Attack, Aqua Jet, Volt Tackle...) pronta e o alvo longe: vai nela para fechar
+## a distância (às vezes, para não ficar previsível).
+func _rush_move(d: float) -> String:
+	if d < RUSH_FROM or (intent != "" and in_range(intent, d)):
+		return ""
+	if not is_instance_valid(f.opponent) or f.opponent.hidden != "":
+		return ""
+	for id in f.moves:
+		var mv := Dex.move(String(id))
+		if (
+			String(mv.get("kind", "")) == "dash"
+			and float(mv.get("range", 0.0)) >= RUSH_MIN
+			and float(mv.get("power", 0)) > 0.0
+			and in_range(String(id), d)
+			and _ready(String(id))
+			and _dmg(String(id)) > 0.0
+			and _rng().randf() < RUSH_CHANCE
+		):
+			return String(id)
+	return ""
+
+
+## O golpe alcança o alvo agora (Dig/Fly escondido só leva dos golpes que alcançam).
+func _reaches(t: BattleFighter, id: String) -> bool:
+	if not is_instance_valid(t) or t.hidden == "":
+		return true
+	var mv := Dex.move(id)
+	return float(mv.get("power", 0)) <= 0.0 or f.arena.moves.phys.hidden_power(mv, t) > 0.0
+
+
+## Dupla: golpe de vários alvos (com o 0,75x de cada) quando pega os dois e rende mais que o melhor de alvo
+## único. Golpe de alvo único conta um alvo só.
+func _area_pick(pool: Array, dmg: Dictionary) -> String:
+	if f.arena.targets_of(f).size() < 2:
+		return ""
+	var best_single := 0.0
+	for id in pool:
+		if BattleMoves.multi_target(Dex.move(String(id))) == "":
+			best_single = maxf(best_single, float(dmg.get(id, 0.0)))
+	var pick_id := ""
+	var best_v := best_single * AREA_PREF
+	for id in pool:
+		var mv := Dex.move(String(id))
+		if BattleMoves.multi_target(mv) == "" or float(mv.get("power", 0)) <= 0.0:
+			continue
+		if f.arena.moves._in_reach(f, mv) < 2:
+			continue
+		var v: float = f.arena.moves.expected_total(f, mv)
+		if v > best_v:
+			best_v = v
+			pick_id = String(id)
+	return pick_id
+
+
+## Parceiro preparando Earthquake/Magnitude perto de mim: pulo também (o tremor pega o parceiro).
+func _partner_quake() -> String:
+	var p := partner()
+	if p == null or p.root_t <= 0.0:
+		return ""
+	var mv := p.cast_move
+	if (
+		BattleMoves.multi_target(mv) == "all_other_pokemon"
+		and String(mv.get("kind", "")) == "aoe_self"
+		and String(mv.get("type", "")) == "ground"
+		and f.flat_to(p).length() <= float(mv.get("radius", 0.0))
+	):
+		return "pquake@%d" % p.cast_n
+	return ""

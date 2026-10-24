@@ -40,14 +40,18 @@ const COVER_CHANCE := 0.35
 const AREA_KINDS := ["aoe_self", "aoe_target", "zone"]
 const CONFUSION_CHANCE := 0.33
 const AI_ROLL_MEAN := 0.925
+## Regra oficial do spread: golpe de vários alvos que acerta mais de um no mesmo uso dá 0,75x.
+const SPREAD_MULT := Damage.SPREAD
 
 var arena: Node
 var rng: RandomNumberGenerator
+var phys: BattlePhysics
 
 
 func _init(a: Node, r: RandomNumberGenerator) -> void:
 	arena = a
 	rng = r
+	phys = BattlePhysics.new(a, r)
 
 
 func can_afford(user: BattleFighter, id: String, careful := true) -> bool:
@@ -196,9 +200,15 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		mv = mv.duplicate()
 		mv.power = int(roll[1])
 		user.popup("Magnitude %d" % int(roll[0]), Dex.type_color(String(mv.type)), 1.0, 1.0)
+	mv = _cast_copy(user, mv)
 	user.cast_move = mv
 	user.cast_n += 1
 	_cast_visual(user, mv, dir)
+	if phys.scripted(mv):
+		_scripted(user, mv, dir, miss)
+		return
+	if kind in ["projectile", "homing"] and _spread_shots(user, mv, kind == "homing", miss):
+		return
 	match kind:
 		"dash":
 			user.start_dash(mv, dir, miss)
@@ -269,6 +279,8 @@ func _miss_dir(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 
 
 func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
+	if phys.scripted(mv):
+		return  # salto/sumiço/túnel avisam no pouso
 	var delay := 0.15
 	var dist := user.flat_to(target).length()
 	match String(mv.get("kind", "")):
@@ -301,8 +313,13 @@ func _roll_magnitude(table: Array) -> Array:
 # --- Dano esperado (IA) ---
 
 
-func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+## with_spread: golpe de vários alvos com dois ou mais ao alcance conta o 0,75x (a IA não acha que bate cheio).
+func expected_damage(
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, with_spread := true
+) -> float:
 	if not is_instance_valid(target) or not target.alive():
+		return 0.0
+	if phys.hidden_power(mv, target) <= 0.0:
 		return 0.0
 	var power := float(mv.get("power", 0.0))
 	if power <= 0.0:
@@ -330,6 +347,8 @@ func expected_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 	var base := ((2.0 * float(user.level) / 5.0 + 2.0) * power * a / maxf(d, 1.0)) / 50.0 + 2.0
 	var stab := 1.5 if mv.get("type") in user.types else 1.0
 	var score := base * hits * stab * eff * AI_ROLL_MEAN * hit_chance(user, mv) * pace()
+	if with_spread and _in_reach(user, mv) >= 2:
+		score *= SPREAD_MULT
 	if bool(mv.get("self_destruct", false)):
 		score *= clampf(1.0 - float(user.hp) / maxf(float(user.max_hp), 1.0), 0.0, 1.0)
 	return score
@@ -348,6 +367,12 @@ func hit(
 ) -> void:
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
+	if not _claim(target, mv):
+		return  # alvo único: o uso já acertou outro
+	var reach := phys.hidden_power(mv, target)
+	if reach <= 0.0:
+		return  # escondido (Dig, Fly...): o golpe passa
+	power_scale *= reach
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
 		target.popup("Errou!", Color(0.9, 0.9, 1.0))
 		_dodged(target, "evasion")
@@ -368,7 +393,9 @@ func hit(
 		if power_scale != 1.0:
 			m = mv.duplicate()
 			m.power = power
-		var res := Damage.compute(user.damage_profile(), target.damage_profile(), m, rng)
+		var res := Damage.compute(
+			user.damage_profile(), target.damage_profile(), m, rng, {"spread": spread_of(mv)}
+		)
 		var eff := float(res.eff)
 		if eff == 0.0:
 			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
@@ -391,10 +418,14 @@ func hit(
 		target.take_damage(
 			dmg,
 			dir,
-			float(mv.get("knockback", 4.0)),
+			(
+				float(mv.get("knockback", 4.0))
+				* BattlePhysics.knock_mult(eff, res.crit, BattlePhysics.weight_of(target))
+			),
 			{"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
-		if arena.combos:
+		phys.after_hit(user, target, mv, dir, eff, res.crit, final)
+		if arena.combos and user.side != target.side:
 			arena.combos.on_hit(user, target, mv, dmg)
 		if arena.abilities:
 			arena.abilities.on_hit(user, target, mv, dmg)
@@ -459,7 +490,12 @@ func pace() -> float:
 ## Cobrir: o parceiro em DEFENSIVO (ou Muralha no LIVRE) perto do alvo se joga na frente às vezes e
 ## leva o golpe no lugar dele (o vídeo 2x2 de Mt. Silver).
 func _cover(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> BattleFighter:
-	if float(mv.get("power", 0)) <= 0.0 or mv.get("combo", false) or target.ai == null:
+	if (
+		user.side == target.side
+		or float(mv.get("power", 0)) <= 0.0
+		or mv.get("combo", false)
+		or target.ai == null
+	):
 		return target
 	var p := target.ai.partner()
 	if p == null or not p.can_act() or p.flat_to(target).length() > COVER_DIST:
@@ -476,7 +512,7 @@ func _cover(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Battl
 ## Combos (marcas, Ressonância, dupla) e habilidades no fim da fórmula de dano.
 func extra_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	var m := 1.0
-	if arena.combos:
+	if arena.combos and user.side != target.side:
 		m *= arena.combos.damage_mult(user, target, mv)
 	if arena.abilities:
 		m *= arena.abilities.damage_mult(user, target, mv)
@@ -541,7 +577,7 @@ func _arc(
 		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5),
 		0.15
 	)
-	for t in targets_of(user):
+	for t in _victims(user, mv, user.position):
 		if t != miss and in_cone(user, t, dir, r, half):
 			var to := user.flat_to(t)
 			hit(user, t, mv, to.normalized() if to.length() > 0.01 else dir, 1.0, final)
@@ -664,7 +700,7 @@ func _stream_tick(
 			Dex.type_color(String(mv.type)),
 			tick
 		)
-	for t in targets_of(user):
+	for t in _victims(user, mv, user.position):
 		if mv.get("once", false) and state.hit.has(t.get_instance_id()):
 			continue
 		if in_cone(user, t, dir, r, half):
@@ -705,7 +741,7 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 				arena.fx_beam(
 					user.position + Vector3(0, user.look_h * 0.5, 0), dir, r, w, col, 0.25
 				)
-			for t in targets_of(user):
+			for t in _victims(user, mv, user.position):
 				if t == miss:
 					continue
 				var to := user.flat_to(t)
@@ -727,6 +763,8 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 	var windup := float(mv.get("windup", 0.4))
 	var radius := float(mv.get("radius", 4.0))
 	user.root_t = maxf(user.root_t, windup + 0.1)
+	if mv.get("slam", false):
+		phys.slam_hop(user, mv, windup)
 	var col := Dex.type_color(String(mv.type))
 	arena.fx_disc(user.position, radius, col * Color(1, 1, 1, 0.3), windup)
 	arena.telegraph(
@@ -746,10 +784,13 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 			arena.fx_disc(user.position, radius, col, 0.25)
 			if arena.field:
 				arena.field.on_move_landed(user, mv, user.pos2(user.position), radius)
-			for t in targets_of(user):
+			var got := _victims(user, mv, user.position).filter(
+				func(t): return user.flat_to(t).length() <= radius and not _ground_immune(mv, t)
+			)
+			_set_spread(mv, got.size())
+			for t in got:
 				var to := user.flat_to(t)
-				if to.length() <= radius and not _ground_immune(mv, t):
-					hit(user, t, mv, to.normalized() if to.length() > 0.01 else user.facing)
+				hit(user, t, mv, to.normalized() if to.length() > 0.01 else user.facing)
 			if mv.get("self_destruct", false):
 				arena.later(
 					0.3,
@@ -790,14 +831,20 @@ func _aoe_target(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 				arena.field.on_move_landed(user, mv, at, radius)
 			if arena.vfx and arena.is_inside_tree():
 				arena.vfx.sky_bolt(String(mv.get("id", "")), arena.to_global(at))
-			for t in targets_of(user):
-				if t == miss or _ground_immune(mv, t):
-					continue
+			var got := _victims(user, mv, at).filter(
+				func(t):
+					return (
+						t != miss
+						and not _ground_immune(mv, t)
+						and (t.pos2(t.position) - at).length() <= radius
+					)
+			)
+			_set_spread(mv, got.size())
+			for t in got:
 				var to: Vector3 = t.pos2(t.position) - at
-				if to.length() <= radius:
-					hit(user, t, mv, to.normalized() if to.length() > 0.05 else dir)
-					if mv.has("trap") and t.alive():
-						t.trap_t = maxf(t.trap_t, float(mv.trap))
+				hit(user, t, mv, to.normalized() if to.length() > 0.05 else dir)
+				if mv.has("trap") and t.alive() and t.hidden == "":
+					t.trap_t = maxf(t.trap_t, float(mv.trap))
 	)
 
 
@@ -817,7 +864,7 @@ func _zone_tick(
 ) -> void:
 	if left <= 0 or not is_instance_valid(user) or not user.alive():
 		return
-	for t in targets_of(user):
+	for t in _victims(user, mv, at):
 		var to: Vector3 = t.pos2(t.position) - at
 		if to.length() <= radius:
 			hit(user, t, mv, Vector3.ZERO if to.length() < 0.05 else to.normalized(), 1.0, false)
@@ -853,6 +900,171 @@ func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.18),
 		0.3
 	)
-	for t in targets_of(user):
-		if user.flat_to(t).length() <= radius:
+	var single := multi_target(mv) == ""
+	for t in _victims(user, mv, user.position):
+		if user.flat_to(t).length() > radius or t.hidden != "":
+			continue
+		if mv.has("stat"):
 			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)))
+		if phys.push_dist(mv) > 0.0:
+			var away := user.flat_to(t)
+			phys.launch(
+				t,
+				away.normalized() if away.length() > 0.01 else user.facing,
+				(
+					phys.push_dist(mv)
+					* BattlePhysics.knock_mult(1.0, false, BattlePhysics.weight_of(t))
+				),
+				true
+			)
+		if single:
+			break  # alvo único (Screech, Whirlwind...): só o mais perto
+
+
+# --- Alvos (regras de dupla oficiais) e entregas da física ---
+
+
+## "" (alvo único), "all_opponents" ou "all_other_pokemon" (acerta o parceiro também), como no oficial.
+static func multi_target(mv: Dictionary) -> String:
+	return String(mv.get("multi_target", ""))
+
+
+## Quem o golpe pode acertar, do mais perto de `origin` ao mais longe (inclui o parceiro em
+## "all_other_pokemon", como o Earthquake oficial).
+func _victims(user: BattleFighter, mv: Dictionary, origin: Vector3) -> Array:
+	var out: Array = targets_of(user)
+	if multi_target(mv) == "all_other_pokemon":
+		for f in arena.fighters:
+			if f != user and is_instance_valid(f) and f.side == user.side and f.active():
+				out.append(f)
+	var o := Vector3(origin.x, 0.0, origin.z)
+	out.sort_custom(
+		func(a, b):
+			return (
+				Vector3(a.position.x, 0, a.position.z).distance_to(o)
+				< Vector3(b.position.x, 0, b.position.z).distance_to(o)
+			)
+	)
+	return out
+
+
+## Cópia do golpe para este uso, com o estado do uso em "_cast": alvo travado (golpe de alvo único) e
+## spread (mais de um alvo ao alcance no momento do uso; área recalcula no acerto).
+func _cast_copy(user: BattleFighter, mv: Dictionary) -> Dictionary:
+	var m := mv.duplicate()
+	m["_cast"] = {"lock": 0, "spread": _in_reach(user, mv) >= 2}
+	return m
+
+
+## Quantos alvos de um golpe de vários alvos estão ao alcance agora (0 no golpe de alvo único).
+func _in_reach(user: BattleFighter, mv: Dictionary) -> int:
+	if multi_target(mv) == "":
+		return 0
+	var n := 0
+	var r := _reach_of(mv)
+	for t in _victims(user, mv, user.position):
+		if user.flat_to(t).length() <= r:
+			n += 1
+	return n
+
+
+func _reach_of(mv: Dictionary) -> float:
+	match String(mv.get("kind", "")):
+		"aoe_self", "debuff_aoe":
+			return float(mv.get("radius", 4.0)) + 0.4
+		"aoe_target", "zone":
+			return float(mv.get("range", 8.0)) + float(mv.get("radius", 2.0))
+		"arc", "multi_arc", "stream":
+			return float(mv.get("range", 2.0)) + 0.4
+	return float(mv.get("range", 10.0))
+
+
+func _set_spread(mv: Dictionary, n: int) -> void:
+	var ctx = mv.get("_cast")
+	if ctx is Dictionary and multi_target(mv) != "":
+		ctx.spread = n >= 2
+
+
+## 0,75 se este uso de golpe de vários alvos acerta mais de um; 1 no resto.
+func spread_of(mv: Dictionary) -> float:
+	var ctx = mv.get("_cast")
+	return SPREAD_MULT if ctx is Dictionary and bool(ctx.get("spread", false)) else 1.0
+
+
+## Golpe de alvo único acerta só um alvo por uso (o primeiro que alcança), mesmo que a geometria pegue dois.
+func _claim(target: BattleFighter, mv: Dictionary) -> bool:
+	var ctx = mv.get("_cast")
+	if not ctx is Dictionary or multi_target(mv) != "":
+		return true
+	var id := target.get_instance_id()
+	if int(ctx.lock) == 0:
+		ctx.lock = id
+		return true
+	return int(ctx.lock) == id
+
+
+## Salto em cima do alvo, sumiço (Aerial Ace) ou túnel (Dig).
+func _scripted(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
+	if phys.tunnel_of(mv) != "":
+		phys.start_tunnel(user, mv, dir, miss)
+	elif phys.is_blink(mv):
+		phys.start_blink(user, mv, dir, miss)
+	else:
+		phys.start_leap(user, mv, dir, miss)
+
+
+## Projétil de vários alvos (Razor Leaf, Swift, Acid...) com dois ou mais ao alcance: sai uma leva para
+## cada alvo e o dano é o do spread. Falso = segue a entrega normal (um alvo só).
+func _spread_shots(user: BattleFighter, mv: Dictionary, homing: bool, miss: BattleFighter) -> bool:
+	if multi_target(mv) == "":
+		return false
+	var r := float(mv.get("range", 10.0))
+	var foes: Array = targets_of(user).filter(func(t): return user.flat_to(t).length() <= r)
+	if foes.size() < 2:
+		return false
+	_set_spread(mv, foes.size())
+	var n := maxi(int(mv.get("count", 1)), 1)
+	var spread := deg_to_rad(float(mv.get("spread", 0.0)))
+	for t in foes:
+		var to: Vector3 = user.flat_to(t)
+		var d := to.normalized() if to.length() > 0.01 else user.facing
+		var m: BattleFighter = miss if t == user.opponent else null
+		if t != user.opponent and rng.randf() >= hit_chance(user, mv):
+			m = t
+			d = _miss_dir(user, t, mv, d)
+		for i in n:
+			var di := d
+			if n > 1:
+				di = d.rotated(Vector3.UP, lerpf(-spread / 2.0, spread / 2.0, float(i) / (n - 1)))
+			arena.spawn_projectile(user, mv, di, homing, m, t)
+	return true
+
+
+## Dano esperado de um uso somando todos os alvos que ele pega (IA): o alvo atual, os outros inimigos
+## perto dele (golpe de vários alvos, com o 0,75x) e, no "all_other_pokemon", o parceiro como custo.
+func expected_total(user: BattleFighter, mv: Dictionary) -> float:
+	var main: BattleFighter = user.opponent
+	if not is_instance_valid(main) or not main.active():
+		return 0.0
+	if multi_target(mv) == "":
+		return expected_damage(user, main, mv)
+	var r := _reach_of(mv)
+	var kind := String(mv.get("kind", ""))
+	var total := 0.0
+	var n := 0
+	for t in _victims(user, mv, user.position):
+		var near := user.flat_to(t).length() <= r
+		if kind in ["aoe_target", "zone"]:
+			near = (
+				(t.pos2(t.position) - main.pos2(main.position)).length()
+				<= float(mv.get("radius", 2.0))
+			)
+		if not near:
+			continue
+		var d := expected_damage(user, t, mv, false)
+		if t.side == user.side:
+			total -= d * 1.5  # acertar o parceiro custa
+		else:
+			total += d
+		n += 1
+	return total * (SPREAD_MULT if n >= 2 else 1.0)
