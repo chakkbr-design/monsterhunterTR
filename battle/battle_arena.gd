@@ -1106,7 +1106,7 @@ func _clash() -> void:
 
 func _separate() -> void:
 	var live: Array = fighters.filter(
-		func(f): return f.active() and f.dash_t <= 0.0 and not f.is_airborne()
+		func(f): return f.active() and f.dash_t <= 0.0 and not f.is_airborne() and f.motion == ""
 	)
 	for i in live.size():
 		for j in range(i + 1, live.size()):

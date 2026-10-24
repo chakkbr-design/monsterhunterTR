@@ -134,6 +134,27 @@ var sprinting := false
 
 var cast_move := {}
 var cast_n := 0
+
+## Física (BattlePhysics): movimento roteirizado do golpe (salto, sumiço, túnel) e arremesso.
+## motion: "" | "leap" | "blink" | "burrow" | "tunnel". hidden: "" | "dig" | "dive" | "sky" | "blink"
+## (escondido: só os golpes de BattlePhysics.REACHES_HIDDEN acertam).
+var motion := ""
+var motion_t := 0.0
+var motion_total := 0.0
+var motion_from := Vector3.ZERO
+var motion_to := Vector3.ZERO
+var motion_off := Vector3.ZERO
+var motion_h := 0.0  ## altura do salto; no túnel, a velocidade (m/s)
+var motion_y0 := 0.0
+var motion_track := 0.0
+var motion_target: BattleFighter
+var motion_cb := Callable()
+var motion_tick := Callable()
+var hidden := ""
+var launch_v := Vector3.ZERO
+var launch_t := 0.0
+var launch_total := 0.0
+var launch_lift := 0.0
 var look_h := 1.0
 
 var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
@@ -357,6 +378,8 @@ func damage_profile() -> Dictionary:
 	d["crit_spa"] = crit_stat("spa", true)
 	d["crit_def"] = crit_stat("def", false)
 	d["crit_spd"] = crit_stat("spd", false)
+	var ab = arena.get("abilities") if arena else null
+	d["guts"] = ab != null and ab.ability_of(self) == "guts"  # Guts ignora a queimadura (oficial)
 	return d
 
 
@@ -385,8 +408,10 @@ func walk_speed() -> float:
 	return v
 
 
-## Altura do corpo acima do chão (pulo + voo).
+## Altura do corpo acima do chão (pulo + voo; no salto de golpe, a do salto).
 func height() -> float:
+	if motion == "leap":
+		return maxf(position.y, air_h + fly_h)
 	return air_h + fly_h
 
 
@@ -395,10 +420,12 @@ func can_act() -> bool:
 
 
 func is_airborne() -> bool:
-	return air_t > 0.0
+	return air_t > 0.0 or motion == "leap"
 
 
 func may_start(mv: Dictionary) -> bool:
+	if motion != "" or launch_t > 0.0:
+		return false
 	return not is_airborne() or bool(mv.get("allowed_midair", true))
 
 
@@ -470,6 +497,8 @@ func can_jump() -> bool:
 		and land_t <= 0.0
 		and dash_t <= 0.0
 		and lunge_t <= 0.0
+		and motion == ""
+		and launch_t <= 0.0
 	)
 
 
@@ -716,6 +745,8 @@ func _endure() -> bool:
 
 
 func _faint() -> void:
+	end_motion()
+	launch_t = 0.0
 	clear_prepare()
 	dash_t = 0.0
 	lunge_t = 0.0
@@ -812,6 +843,8 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 		if air_t <= 0.0:
 			air_h = 0.0
 			land_t = JUMP_LAND
+	if _scripted_step(dt):
+		return
 	if dash_t > 0.0:
 		dash_t -= dt
 		velocity = dash_dir * dash_speed
@@ -865,11 +898,140 @@ func _tint() -> Color:
 	return c
 
 
+# --- Física: movimento roteirizado e arremesso (BattlePhysics) ---
+
+
+## Começa um movimento de golpe: anda de onde está até `to` em `secs` (salto com altura `h`, que no
+## túnel é a velocidade). Com `target`, o destino segue o alvo até a fração `track` do tempo.
+## `tick(f, s, dt)` roda a cada passo; `cb` no fim.
+func start_motion(
+	kind: String,
+	to: Vector3,
+	secs: float,
+	h: float,
+	target: BattleFighter,
+	cb: Callable,
+	track := 0.0,
+	tick_cb := Callable(),
+	y0 := 0.0
+) -> void:
+	motion = kind
+	motion_t = maxf(secs, 0.01)
+	motion_total = motion_t
+	motion_from = pos2(position)
+	motion_to = pos2(to)
+	motion_off = motion_to - pos2(target.position) if target else Vector3.ZERO
+	motion_h = h
+	motion_y0 = y0
+	motion_track = track
+	motion_target = target
+	motion_cb = cb
+	motion_tick = tick_cb
+	dash_t = 0.0
+	lunge_t = 0.0
+	arc_step_t = 0.0
+	knock = Vector3.ZERO
+
+
+## Interrompe o movimento (desmaio): volta o sprite e sai do esconderijo.
+func end_motion() -> void:
+	motion = ""
+	motion_cb = Callable()
+	motion_tick = Callable()
+	motion_target = null
+	hidden = ""
+	if look:
+		look.visible = true
+		look.position.y = 0.0
+
+
+## Arremesso: sai a 2 x dist / secs e desacelera até parar em `secs` (percorre `dist`), subindo `lift`.
+func launch(dir: Vector3, dist: float, secs: float, lift: float) -> void:
+	launch_v = pos2(dir).normalized() * (2.0 * dist / maxf(secs, 0.05))
+	launch_t = secs
+	launch_total = secs
+	launch_lift = lift
+	knock = Vector3.ZERO
+	impact_knock = Vector3.ZERO
+	dash_t = 0.0
+	lunge_t = 0.0
+	arc_step_t = 0.0
+	stun_t = maxf(stun_t, secs * 0.8)
+
+
+## Um passo do movimento de golpe ou do arremesso; true se tomou conta do corpo neste quadro.
+func _scripted_step(dt: float) -> bool:
+	if motion != "":
+		_motion_step(dt)
+	elif launch_t > 0.0:
+		_launch_step(dt)
+	else:
+		return false
+	if facing.length() > 0.01:
+		rotation.y = atan2(-facing.x, -facing.z)
+	return true
+
+
+func _motion_step(dt: float) -> void:
+	var before := position
+	motion_t -= dt
+	var s := clampf(1.0 - motion_t / maxf(motion_total, 0.001), 0.0, 1.0)
+	if is_instance_valid(motion_target) and motion_target.active() and s <= motion_track:
+		motion_to = pos2(motion_target.position) + motion_off
+	match motion:
+		"leap":
+			var p := motion_from.lerp(motion_to, s)
+			position = Vector3(p.x, motion_y0 * (1.0 - s) + motion_h * 4.0 * s * (1.0 - s), p.z)
+		"tunnel":
+			var to := motion_to - pos2(position)
+			var stp := motion_h * dt
+			if to.length() <= stp + 0.35:
+				position += to
+				motion_t = 0.0
+			elif to.length() > 0.01:
+				position += to.normalized() * stp
+			position.y = 0.0
+		_:
+			position.y = 0.0
+	var v := pos2(position - before) / maxf(dt, 0.0001)
+	velocity = v
+	if v.length() > 0.5:
+		facing = v.normalized()
+	if motion_tick.is_valid():
+		motion_tick.call(self, s, dt)
+	if motion_t <= 0.0:
+		var cb := motion_cb
+		motion = ""
+		motion_cb = Callable()
+		motion_tick = Callable()
+		motion_target = null
+		position.y = air_h + fly_h
+		if cb.is_valid():
+			cb.call()
+
+
+func _launch_step(dt: float) -> void:
+	var k := launch_t / maxf(launch_total, 0.001)
+	var v := launch_v * k
+	var next := position + v * dt
+	launch_t = maxf(launch_t - dt, 0.0)
+	knock = Vector3.ZERO
+	if arena and arena.get("moves") and arena.moves.phys.crash_check(self, next):
+		velocity = Vector3.ZERO
+		position.y = air_h + fly_h
+		return
+	position.x = next.x
+	position.z = next.z
+	var s := 1.0 - launch_t / maxf(launch_total, 0.001)
+	position.y = air_h + fly_h + launch_lift * 4.0 * s * (1.0 - s)
+	velocity = v
+
+
 func _check_dash_hit() -> void:
 	if dash_hit:
 		return
 	for t in arena.targets_of(self):
-		if t == dash_miss or flat_to(t).length() >= HIT_RANGE:
+		if t == dash_miss or t.hidden != "" or flat_to(t).length() >= HIT_RANGE:
 			continue
 		if passes_under(t):
 			if not dash_dodged.has(t.get_instance_id()):

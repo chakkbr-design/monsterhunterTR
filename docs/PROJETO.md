@@ -9,6 +9,7 @@ Atualizado em 2026-10-23. Jogo em Godot 4.7 (GDScript), feito a partir do estudo
 |---|---|
 | `C:\Users\User\Documents\pokmemon-like` | O projeto Godot (repositório git local, sem remoto) |
 | `C:\Users\User\Documents\pba-referencia` | Engenharia reversa do original: `codigo/` (164 scripts decompilados), `dados/` (JSONs), `analise/` (3 relatórios), `ferramentas/` (extrator do PCK, decompilador `.gdc`, conversor de arte) |
+| `docs/MECANICAS.md` | Regras da batalha oficial atual (dano Gen 5+, crítico, prioridade, dupla, status, clima) e como o jogo adapta cada uma, com o arquivo |
 | `docs/CONTRATO.md` | Regras de quem edita qual pasta e as APIs entre as partes (histórico de todas as rodadas) |
 | `docs/pedidos/*.md` | Pedidos que cada parte fez às outras |
 | `docs/screens/*.png` | Capturas reais de cada parte do jogo |
@@ -44,7 +45,7 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 
 ### Batalha (tempo real, como o original)
 - Arena no próprio mapa. Stamina, cooldown por golpe e global, pool único de PP, fator de Speed, estágios de stat, status com duração em segundos (queimado, envenenado, paralisado, dormindo, confuso, semente, hesitar).
-- 14 tipos de entrega de golpe (investida, arco, projétil, raio, área, corrente etc.), acerto geométrico, dano Gen 3 exato.
+- 14 tipos de entrega de golpe (investida, arco, projétil, raio, área, corrente etc.), acerto geométrico, dano da fórmula oficial Gen 5+ (spread 0,75x na dupla, golpe de alvo único acerta um só), empurrão pela eficácia, arremesso com batida na cerca/caixa, Body Slam pulando em cima, Aerial Ace, Dig por baixo da terra (`battle/battle_physics.gd`, detalhes em `docs/MECANICAS.md`).
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 

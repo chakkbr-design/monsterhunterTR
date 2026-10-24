@@ -83,7 +83,8 @@ func _damage() -> void:
 	check(
 		Damage.compute(atk, grass, Dex.move("growl"), rng).damage == 0, "golpe de status sem dano"
 	)
-	# Faixa exata: base = ((2*10/5+2)*40*25/20)/50+2 = 8; *1.5*2*[0.85..1]
+	# Faixa exata (Gen 5+, com os arredondamentos): base = floor(floor(6*40*25/20)/50)+2 = 8;
+	# aleatório antes do STAB: floor(8*0,85) = 6 -> STAB 9 -> tipo 18; no máximo 8 -> 12 -> 24.
 	var lo := 999
 	var hi := 0
 	for i in 300:
@@ -91,7 +92,7 @@ func _damage() -> void:
 		if not r.crit:
 			lo = mini(lo, r.damage)
 			hi = maxi(hi, r.damage)
-	check(lo == int(8 * 3 * 0.85) and hi <= 24, "faixa de dano %d-%d" % [lo, hi])
+	check(lo == 18 and hi <= 24, "faixa de dano %d-%d" % [lo, hi])
 
 
 func _mon() -> void:
