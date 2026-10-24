@@ -128,7 +128,7 @@ func _tick_marks(dt: float) -> void:
 			if _flat(f.position - m.pos).length() > m.r:
 				continue
 			if m.kind == "scorch" and standing:
-				st.acc += f.max_hp / 32.0 * dt
+				st.acc += f.max_hp / 32.0 * f.dot_scale() * dt
 				if st.acc >= 1.0:
 					var n := mini(int(st.acc), f.hp - 1)
 					st.acc -= int(st.acc)

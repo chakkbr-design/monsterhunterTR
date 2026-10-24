@@ -602,16 +602,24 @@ func _tick_status(dt: float) -> void:
 		status_tick += 1.0
 		match status:
 			"burn":
-				_dot(maxi(1, int(max_hp / 16.0)), "burn", Dex.type_color("fire"))
+				_dot(maxi(1, int(max_hp / 16.0 * dot_scale())), "burn", Dex.type_color("fire"))
 			"poison":
-				_dot(maxi(1, int(max_hp / 12.0)), "poison", Dex.type_color("poison"))
+				_dot(maxi(1, int(max_hp / 12.0 * dot_scale())), "poison", Dex.type_color("poison"))
 			"leech":
-				var d := maxi(1, int(max_hp / 16.0))
+				var d := maxi(1, int(max_hp / 16.0 * dot_scale()))
 				_dot(d, "leech", Dex.type_color("grass"))
 				if is_instance_valid(leech_source) and leech_source.alive():
 					leech_source.heal(d)
 	if status_t <= 0.0 and alive():
 		clear_status()
+
+
+## Dano por segundo de status no ritmo da luta: igual ao original até o ritmo padrão do 1x1 e menor
+## na dupla (que tem ritmo mais lento), para queimar/envenenar não decidir a luta sozinho.
+func dot_scale() -> float:
+	if arena == null or not arena.get("moves"):
+		return 1.0
+	return clampf(arena.moves.pace() / BattleMoves.DAMAGE_PACE, 0.0, 1.0)
 
 
 func _dot(amount: int, why: String, col: Color) -> void:
