@@ -72,7 +72,10 @@ func _run() -> void:
 	check(evo.state == "anim" and b.species == "Bulbasaur", "ainda não evoluiu no meio da animação")
 	finish_anim()
 	check(evo.state == "done" and b.species == "Ivysaur", "evoluiu ao fim da animação")
-	check(evo.message == "Parabéns! Bulbasaur evoluiu para Ivysaur!", "texto final: " + evo.message)
+	check(
+		evo.message == "Parabéns! Seu Bulbasaur evoluiu para Ivysaur!",
+		"texto final: " + evo.message
+	)
 	check(game.pending_evolutions.is_empty(), "fila vazia depois de aceitar")
 	check(bool(game.caught.get("Ivysaur", false)), "Ivysaur marcado como capturado")
 	send(KEY_E)
@@ -89,7 +92,9 @@ func _run() -> void:
 	evo.advance(2.5)
 	send(KEY_ESCAPE)
 	check(evo.state == "cancelled" and c.species == "Charmander", "Esc cancelou")
-	check(evo.message == "Charmander parou de evoluir.", "texto do cancelamento: " + evo.message)
+	check(
+		evo.message == "Hã? Charmander parou de evoluir!", "texto do cancelamento: " + evo.message
+	)
 	check(
 		c.evolution_target() == "" and game.pending_evolutions.is_empty(),
 		"cancelado até o próximo nível"

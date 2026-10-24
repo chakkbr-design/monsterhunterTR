@@ -4,12 +4,25 @@ extends CanvasLayer
 ## clarão e partículas) → "Parabéns! X evoluiu para Y!" → Game.resolve_evolution(mon, true).
 ## Esc/Q (apertar ou segurar) durante a animação cancela → Game.resolve_evolution(mon, false).
 ## A LearnMove espera esta tela terminar a fila (golpes que não couberam na evolução vêm depois).
+##
+## Evolução no próprio Pokémon (o original: evolution.gd, chamado por progression.gd _run_evolution):
+## begin_on(mon, sprite) não abre a tela cheia; o próprio CreatureSprite brilha e alterna entre as duas
+## espécies e só um painel pequeno embaixo fala. A batalha usa isso no lutador controlado (no meio da luta
+## de treinador, com a luta parada) e o mundo no Pokémon que segue o jogador. Sem sprite (outro Pokémon da
+## party), a fila do mundo cai na tela cheia. Ao terminar emite finished(evoluiu).
+
+signal finished(evolved: bool)
 
 const Kit := preload("res://ui/ui_kit.gd")
 const INTRO := 1.4  # segundos mostrando "O quê?..." antes da animação (E/Enter pula)
 const DURATION := 5.0  # animação inteira, como no original
 const BURST := 1.2  # duração do clarão final
 const MSG_MIN := 0.4  # tempo mínimo na mensagem final antes de aceitar a tecla
+## No sprite (evolution.gd): brilho até GLOW em 0,8 s; depois de 1 s alterna as espécies de 1,5 a 12 vezes
+## por segundo; no fim o brilho volta à cor normal em 0,6 s.
+const GLOW := Color(3.2, 3.2, 3.0)
+const GLOW_IN := 0.8
+const TINT_BACK := 0.6
 
 ## Instâncias injetáveis (testes). Vazias = autoloads /root/Game e /root/LearnMove.
 var game: Node = null
@@ -31,6 +44,19 @@ var _closed_at := -1
 var _parts: Array = []  # partículas: {p: Vector2 (polar a, r) ou pos, v, life, max, size, out}
 var _rng := RandomNumberGenerator.new()
 var _spawn_acc := 0.0
+var _bg: ColorRect
+var _panel: PanelContainer
+## Sessão no próprio sprite (begin_on): o CreatureSprite, quem avança (driven = o dono chama tick),
+## confirmar sozinho (auto), o aviso acima da cabeça (popup(texto, cor, escala)) e o Game da sessão.
+var look: Node3D = null
+var _driven := false
+var _auto := false
+var _popup := Callable()
+var _g: Node = null
+var _showing_new := false
+var _base_tint := Color.WHITE
+var _evolved := false
+var _lines: Array = []  ## "X aprendeu Y!" depois do Parabéns (evolution.gd _finish)
 
 
 ## Desenha a cena no próprio Control (o CanvasLayer não tem _draw).
@@ -64,6 +90,7 @@ func _build() -> void:
 	bg.color = Color(0.03, 0.04, 0.08, 0.92)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(bg)
+	_bg = bg
 	_stage = Stage.new()
 	_stage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_stage.ui = self
@@ -77,6 +104,7 @@ func _build() -> void:
 	panel.offset_top = -150
 	panel.offset_bottom = -40
 	_root.add_child(panel)
+	_panel = panel
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	panel.add_child(col)
@@ -110,12 +138,104 @@ func _try_open() -> void:
 	while not game.pending_evolutions.is_empty():
 		var m: Mon = game.pending_evolutions[0]
 		if m.evolution_target() != "" and not m.is_fainted():
-			_begin(m)
+			var body := _follower_look(m)
+			if body == null or not begin_on(m, body):
+				_begin(m)
 			return
 		game.pending_evolutions.erase(m)  # não pode mais evoluir: só sai da fila
 
 
+## O sprite do Pokémon que segue o jogador no mundo, se for m (o original evolui o Creature que está fora).
+func _follower_look(m: Mon) -> Node3D:
+	if not is_inside_tree():
+		return null
+	var f := get_tree().get_first_node_in_group("ow_follower")
+	# Sem olhar visible: logo depois da batalha o seguidor ainda está escondido até o próximo quadro.
+	if f == null or not f.has_method("_lead") or f._lead() != m:
+		return null
+	var l = f.get("look")
+	return l if l is Node3D and is_instance_valid(l) and "species" in l else null
+
+
+## Evolui m no próprio sprite (CreatureSprite): sem tela cheia, só o painel embaixo, como o original.
+## o: {driven: o dono chama tick(dt) (a arena), auto: confirma as falas sozinho, popup: Callable(texto, cor,
+## escala) para os avisos acima da cabeça}. g: o Game da sessão (vazio = o desta tela).
+func begin_on(m: Mon, body: Node3D, g: Node = null, o := {}) -> bool:
+	if state != "" or m == null or body == null or not is_instance_valid(body):
+		return false
+	if m.evolution_target() == "" or m.is_fainted():
+		return false
+	_g = g if g else game
+	if _g == null:
+		return false
+	mon = m
+	from_species = m.species
+	into = m.evolution_target()
+	look = body
+	_driven = bool(o.get("driven", false))
+	_auto = bool(o.get("auto", false))
+	_popup = o.get("popup", Callable())
+	_showing_new = false
+	_base_tint = body.tint if "tint" in body else Color.WHITE
+	_evolved = false
+	_lines.clear()
+	_parts.clear()
+	_set_mode(true)
+	_set_state("anim", "O quê? %s está evoluindo!" % m.display_name)
+	_root.visible = true
+	_pop("Evoluindo!", Color(1, 1, 0.75), 1.1)
+	return true
+
+
+## Tela cheia (fundo e palco) ou só o painel embaixo do original (evolution.gd _build_ui).
+func _set_mode(on_sprite: bool) -> void:
+	_bg.visible = not on_sprite
+	_stage.visible = not on_sprite
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE if on_sprite else Control.MOUSE_FILTER_STOP
+	if on_sprite:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.06, 0.08, 0.12, 0.88)
+		sb.set_corner_radius_all(10)
+		sb.border_color = Color(1, 0.95, 0.7, 0.8)
+		sb.set_border_width_all(2)
+		sb.content_margin_left = 22
+		sb.content_margin_right = 22
+		sb.content_margin_top = 12
+		sb.content_margin_bottom = 12
+		_panel.add_theme_stylebox_override("panel", sb)
+		_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_panel.offset_left = -330
+		_panel.offset_right = 330
+		_panel.offset_top = -150
+		_panel.offset_bottom = -96
+	else:
+		_panel.remove_theme_stylebox_override("panel")
+		_panel.grow_vertical = Control.GROW_DIRECTION_END
+		_panel.offset_left = -360
+		_panel.offset_right = 360
+		_panel.offset_top = -150
+		_panel.offset_bottom = -40
+
+
+func _pop(text: String, col: Color, k: float) -> void:
+	if is_instance_valid(look) and _popup.is_valid():
+		_popup.call(text, col, k)
+
+
+func _set_tint(c: Color) -> void:
+	if is_instance_valid(look) and "tint" in look:
+		look.tint = c
+
+
 func _begin(m: Mon) -> void:
+	_g = game
+	look = null
+	_driven = false
+	_auto = false
+	_popup = Callable()
+	_evolved = false
+	_lines.clear()
+	_set_mode(false)
 	mon = m
 	from_species = m.species
 	into = m.evolution_target()
@@ -146,9 +266,22 @@ func _process(dt: float) -> void:
 		if game and not game.pending_evolutions.is_empty():
 			_try_open()
 		return
+	if _driven and not is_instance_valid(look):
+		_driven = false  # a arena sumiu no meio: a tela termina sozinha
+	if not _driven:
+		tick(dt)
+
+
+## Um quadro: segurar Esc/Q cancela, o tempo anda e, com auto, as falas passam sozinhas.
+## A arena chama direto (driven) para a evolução andar junto com o step(dt) da luta.
+func tick(dt: float) -> void:
+	if state == "":
+		return
 	if state == "anim" and _cancel_held():
 		_cancel()
 	advance(dt)
+	if _auto and state in ["done", "cancelled", "learned"] and t >= MSG_MIN:
+		_next()
 
 
 ## Segurar Esc/Q também cancela (o _input só vê o aperto).
@@ -161,6 +294,14 @@ func advance(dt: float) -> void:
 	if state == "":
 		return
 	t += dt
+	if look != null:  # no próprio sprite: sem palco nem partículas
+		if state == "anim":
+			_sprite_anim()
+			if t >= DURATION:
+				_complete()
+		else:
+			_set_tint(GLOW.lerp(_base_tint, clampf(t / TINT_BACK, 0.0, 1.0)))
+		return
 	match state:
 		"intro":
 			if t >= INTRO:
@@ -175,6 +316,20 @@ func advance(dt: float) -> void:
 				_complete()
 	_update_parts(dt)
 	_stage.queue_redraw()
+
+
+## evolution.gd _process: o sprite acende e troca entre as duas espécies cada vez mais rápido.
+func _sprite_anim() -> void:
+	if not is_instance_valid(look):
+		return
+	if t > 1.0:
+		var k := (t - 1.0) / (DURATION - 1.0)
+		var freq := lerpf(1.5, 12.0, k * k)
+		var show_new := fmod(t * freq, 1.0) > 0.5
+		if show_new != _showing_new:
+			_showing_new = show_new
+			look.species = into if show_new else from_species
+	_set_tint(_base_tint.lerp(GLOW, clampf(t / GLOW_IN, 0.0, 1.0)))
 
 
 func _input(ev: InputEvent) -> void:
@@ -199,17 +354,29 @@ func press(a: String) -> void:
 		"anim":
 			if a == "back":
 				_cancel()
-		"done", "cancelled":
+		"done", "cancelled", "learned":
 			if a in ["ok", "back"] and t >= MSG_MIN:
 				_next()
 
 
 func _complete() -> void:
 	var old_name := mon.display_name
-	game.resolve_evolution(mon, true)
+	var before: Array = mon.moves.duplicate()
+	_g.resolve_evolution(mon, true)
 	into = mon.species
-	_set_state("done", "Parabéns! %s evoluiu para %s!" % [old_name, into])
+	_evolved = true
+	for id in mon.moves:
+		if not before.has(id):
+			_lines.append(
+				"%s aprendeu %s!" % [mon.display_name, String(Dex.move(id).get("name", id))]
+			)
+	_set_state("done", "Parabéns! Seu %s evoluiu para %s!" % [old_name, into])
 	preload("res://audio/cue.gd").sfx("item_get")
+	if is_instance_valid(look):
+		look.species = into
+		_base_tint = look.tint
+		_set_tint(GLOW)
+		_pop(into + "!", Color(1, 0.95, 0.5), 1.4)
 	for i in 70:
 		var a := _rng.randf() * TAU
 		var sp := _rng.randf_range(120.0, 420.0)
@@ -226,16 +393,32 @@ func _complete() -> void:
 
 
 func _cancel() -> void:
-	game.resolve_evolution(mon, false)
-	_set_state("cancelled", "%s parou de evoluir." % mon.display_name)
+	_g.resolve_evolution(mon, false)
+	_set_state("cancelled", "Hã? %s parou de evoluir!" % mon.display_name)
 	_parts.clear()
+	if is_instance_valid(look):
+		look.species = from_species
+		_base_tint = look.tint
+		_set_tint(GLOW)
 
 
 func _next() -> void:
+	if not _lines.is_empty():
+		_set_state("learned", String(_lines.pop_front()))
+		return
+	var evolved := _evolved
+	if is_instance_valid(look):
+		_set_tint(_base_tint)
+	look = null
+	_driven = false
+	_auto = false
+	_popup = Callable()
+	_evolved = false
 	state = ""
 	_try_open()
 	if state == "":
 		_close()
+	finished.emit(evolved)
 
 
 func _close() -> void:
@@ -309,6 +492,8 @@ func _draw_stage(c: Control) -> void:
 			show_new = true
 			glow = clampf(1.0 - t / BURST, 0.0, 1.0)
 			light = glow
+		"learned":
+			show_new = true
 		"cancelled":
 			glow = 0.0
 

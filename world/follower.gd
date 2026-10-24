@@ -32,10 +32,12 @@ func _process(delta: float) -> void:
 	var want := String(lead.species) if lead else ""
 	if want != _species:
 		_species = want
-		if look:
+		if look and want != "":
+			look.species = want  # mesma figura (a evolução no próprio sprite segura este nó)
+		elif look:
 			look.queue_free()
 			look = null
-		if want != "" and ResourceLoader.exists(CREATURE_SPRITE):
+		elif want != "" and ResourceLoader.exists(CREATURE_SPRITE):
 			look = load(CREATURE_SPRITE).new()
 			look.species = want
 			add_child(look)
