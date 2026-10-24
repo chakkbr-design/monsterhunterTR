@@ -176,6 +176,11 @@ func _run() -> void:
 	)
 	scr.moves_for_level()
 	check(entry(scr).moves == Dex.moves_at("Bulbasaur", 15), "golpes do nível")
+	if not Dex.move("flamethrower").is_empty():
+		var bp := int(Dex.move("flamethrower").get("bp", 0))
+		check(scr._move_info("flamethrower").contains("Poder %d" % bp), "poder pelo bp (stream)")
+	if not Dex.move("seismic_toss").is_empty():
+		check(scr._move_info("seismic_toss").contains("Poder —"), "poder variável mostra —")
 
 	# --- Times: adicionar, duplicar (sem compartilhar), subir, remover ---
 	scr.add_mon(1)

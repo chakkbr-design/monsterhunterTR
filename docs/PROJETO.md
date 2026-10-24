@@ -89,7 +89,7 @@ Flags de história em `Game.flags`: `got_starter`, `rival_starter`, `has_parcel`
 "/c/Users/User/Desktop/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe" --headless --fixed-fps 60 --path . --script res://tests/core/test_core.gd < /dev/null
 ```
 
-Depois de criar scripts com `class_name` novos, rode `--headless --path . --import` uma vez.
+Depois de criar scripts com `class_name` novos, ou depois de chegar arte nova em `original/` (ex.: os sprites de Vulpix, Ninetales, Venonat e Venomoth), rode `--headless --path . --import` uma vez antes dos testes. Abrir o projeto no editor faz a importação sozinho.
 
 ## O que falta ou foi simplificado
 
