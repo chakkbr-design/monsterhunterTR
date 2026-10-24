@@ -188,13 +188,9 @@ func _world() -> void:
 		p.global_position.y < 0.3 and p.global_position.z > -44.0,
 		"world: drops off the ledge (%s)" % p.global_position
 	)
-	# ...but can't jump back up.
-	for i in 6:
-		Input.action_press("move_forward")
-		Input.action_press("jump")
-		await frames(3)
-		Input.action_release("jump")
-		await frames(25)
+	# ...but can't walk back up.
+	Input.action_press("move_forward")
+	await frames(170)
 	Input.action_release("move_forward")
 	await frames(30)
 	check(

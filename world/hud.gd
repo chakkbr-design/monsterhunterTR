@@ -228,7 +228,7 @@ func _ready() -> void:
 	_orbs = PartyOrbs.new()
 	root.add_child(_orbs)
 
-	_hint = Kit.hint("Shift correr · Espaço pular · Esc menu")
+	_hint = Kit.hint("Shift correr · Esc menu")
 	root.add_child(_hint)
 
 	_prompt = Kit.hint("")

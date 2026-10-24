@@ -16,7 +16,7 @@ const MOVE_DX := 92.0
 const MOVE_DY := 68.0
 const DIAMOND_AT := Vector2(-182.0, -134.0)
 const BAR_H := 72.0
-const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  Z/C câmera  Esc pausa"
+const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  Esc pausa"
 const PAUSE_W := 300.0
 
 var _root: Control

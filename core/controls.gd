@@ -6,7 +6,7 @@ const KEYS := {
 	"move_right": [KEY_D, KEY_RIGHT],
 	"move_forward": [KEY_W, KEY_UP],
 	"move_back": [KEY_S, KEY_DOWN],
-	"jump": [KEY_SPACE],
+	"jump": [KEY_SPACE],  ## só na batalha, como o original (lá é Q; aqui Q joga a bola)
 	"sprint": [KEY_SHIFT],
 	"interact": [KEY_E],
 	"move_1": [KEY_1],
@@ -17,8 +17,6 @@ const KEYS := {
 	"swap_mon": [KEY_TAB],
 	"run_away": [KEY_R],
 	"pause": [KEY_ESCAPE],
-	"cam_left": [KEY_Z],
-	"cam_right": [KEY_C],
 	"ally_mode": [KEY_F],
 }
 

@@ -47,13 +47,14 @@ func _run() -> void:
 		"moves forward (dz %.2f)" % (player.global_position.z - start.z)
 	)
 
-	# Jump.
+	# No jump in the world (like the original): Space does not lift the player.
 	await frames(10)
+	var y0 := player.global_position.y
 	Input.action_press("jump")
 	await frames(2)
 	Input.action_release("jump")
 	await frames(10)
-	check(player.global_position.y > 0.5, "jumps (y %.2f)" % player.global_position.y)
+	check(player.global_position.y < y0 + 0.2, "no jump (y %.2f)" % player.global_position.y)
 	await frames(60)
 
 	# Pace inside the big grass patch until an ambush happens.
