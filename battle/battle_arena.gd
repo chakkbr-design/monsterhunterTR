@@ -67,6 +67,10 @@ const EXP_LEVEL_SECS := 0.7
 const BATTLE_SPEEDS := [0.6, 1.0]
 const SETTINGS := "res://ui/front/settings.gd"
 const TUTORIAL := preload("res://battle/battle_tutorial.gd")
+## Evolução no meio da luta (progression.gd check_evolutions, a cada 0,4 s): o controlado que já pode
+## evoluir evolui no próprio sprite com a luta parada (Battle.pause_for_evolution).
+const EVO_CHECK := 0.4
+const EVOLUTION := "/root/Evolution"
 
 var manual := false
 var rng := RandomNumberGenerator.new()
@@ -145,6 +149,10 @@ var tut_move := -1
 var tut_walk := false
 var tut_hold_foe := false
 var tutorial: Node
+## Tela Evolution tocando no lutador controlado (não nulo = luta parada) e o lutador.
+var _evo: Node = null
+var _evo_f: BattleFighter = null
+var _evo_check_t := 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -724,8 +732,11 @@ func step(dt: float) -> void:
 				hud.fight_flash("Lutem!")
 				fight_started.emit()
 		"fight":
-			if not pause_open:
+			if _evo != null:
+				_evolution_step(raw)
+			elif not pause_open:
 				_fight_step(dt)
+				_check_evolution(raw)
 			elif not manual:
 				_pause_input()
 		"capture":
@@ -1562,6 +1573,70 @@ func _award_exp(defeated: Mon) -> void:
 		var f := _fighter_of(m)
 		if f:
 			_sync_from_mon(f)
+
+
+# --- Evolução no meio da luta ---
+
+
+## progression.gd check_evolutions (a cada 0,4 s): só o controlado evolui em batalha, fora de menu e
+## captura. Na selvagem o último desmaio já leva ao fim (Battle._ending), então ela fica para o mundo;
+## na de treinador, com mais Pokémon dele, evolui aqui e a luta continua com a forma nova.
+func _check_evolution(raw: float) -> void:
+	_evo_check_t -= raw
+	if _evo_check_t > 0.0:
+		return
+	_evo_check_t = EVO_CHECK
+	if state != "fight" or menu != "" or pause_open:
+		return
+	var f := player
+	if not is_instance_valid(f) or not f.active() or f.mon.evolution_target() == "":
+		return
+	var g := _game()
+	var ui := get_node_or_null(EVOLUTION) if is_inside_tree() else null
+	if (
+		g == null
+		or ui == null
+		or not g.has_method("resolve_evolution")
+		or not ui.has_method("begin_on")
+	):
+		return
+	var o := {"driven": true, "auto": _auto_confirm(), "popup": _evolution_popup}
+	if not ui.begin_on(f.mon, f.look, g, o):
+		return
+	_evo = ui
+	_evo_f = f
+	# creature.gd com evolving: parado, sem investida; take_damage "No effect!" (aqui a luta toda para).
+	f.evolving = true
+	f.velocity = Vector3.ZERO
+	f.sprinting = false
+	f.dash_t = 0.0
+	f.lunge_t = 0.0
+	ui.finished.connect(_on_evolution_finished, CONNECT_ONE_SHOT)
+
+
+## A luta parada (moves.gd hit e creature.gd voltam cedo com pause_for_evolution); só a evolução anda.
+func _evolution_step(raw: float) -> void:
+	if not is_instance_valid(_evo):
+		_on_evolution_finished(false)
+		return
+	_evo.tick(raw)
+
+
+func _evolution_popup(text: String, col: Color, k: float) -> void:
+	if is_instance_valid(_evo_f):
+		_evo_f.popup(text, col, k, 0.6)
+
+
+func _on_evolution_finished(evolved: bool) -> void:
+	var f := _evo_f
+	_evo = null
+	_evo_f = null
+	if not is_instance_valid(f):
+		return
+	f.evolving = false
+	if evolved:
+		f.refresh_species()
+		_sync_from_mon(f)
 
 
 # --- Resultado do fim (EXP, nível, prêmio) ---

@@ -175,6 +175,10 @@ Quem chama um autoload de outra parte usa `get_node_or_null("/root/<Nome>")`, pa
 - Evolução: `Game.pending_evolutions` + `signal evolution_requested` (emitido depois de `battle_finished`). `Game.resolve_evolution(mon, aceitar)`: aceitar evolui e põe golpes que não couberam na fila de aprender; recusar cancela até o próximo nível.
   Sem o autoload `Evolution`, o Game evolui na hora (comportamento antigo, usado nos testes headless).
 - A tela de aprender golpe deve esperar enquanto `Evolution.is_open()` ou houver evolução pendente.
+- Evolução no próprio Pokémon (o original: evolution.gd): `Evolution.begin_on(mon, creature_sprite, game, {driven, auto, popup})`
+  evolui no sprite com um painel pequeno embaixo e emite `finished(evoluiu)`. A arena chama no lutador controlado
+  (a cada 0,4 s em "fight"; a luta fica parada; na selvagem o fim vem antes) e avança com `tick(dt)`. No mundo a
+  fila usa o sprite do `WorldFollower` quando o Pokémon é o líder; os outros caem na tela cheia.
 - Dados novos: `data/interiors/pewter.json`, `viridian_forest.json`. Mapas de route_22, route_2, route_2_north, viridian_forest e pewter_city já estão em `data/maps/`.
 
 ### Rodada 4 (pronto)

@@ -57,6 +57,7 @@ var _bump_vel := Vector3.ZERO
 var _status := ""
 var _status_t := 0.0
 var _status_tick := 1.0
+var _species := ""
 
 
 func _enter_tree() -> void:
@@ -68,6 +69,7 @@ func _ready() -> void:
 	if ResourceLoader.exists(CREATURE_SPRITE):
 		look = load(CREATURE_SPRITE).new()
 		look.species = mon.species
+		_species = mon.species
 		add_child(look)
 		# Sai da bola: cresce de 5% a 115% e assenta (send_out do original).
 		look.scale = Vector3.ONE * 0.05
@@ -98,6 +100,11 @@ func leave() -> void:
 func _process(delta: float) -> void:
 	if leaving or mon == null:
 		return
+	if look and _species != mon.species:
+		# Evoluiu (pedra, troca): a mesma figura troca de espécie; a evolução no próprio sprite
+		# (evolution_ui.begin_on) já segura este nó e deixa a espécie nova nele.
+		_species = mon.species
+		look.species = mon.species
 	var p := Overworld.player_of(self)
 	visible = p != null and not Game.is_busy()
 	if p == null or Game.is_busy():

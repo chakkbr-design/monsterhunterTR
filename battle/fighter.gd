@@ -119,6 +119,8 @@ var cast_n := 0
 var look_h := 1.0
 
 var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
+## Evoluindo no meio da luta (creature.gd evolving): a tela Evolution pinta o sprite, a luta fica parada.
+var evolving := false
 var vfx: BattleVfx
 var _status_fx: FxSprite
 var _status_fx_id := ""
@@ -222,7 +224,7 @@ func visual_step(dt: float) -> void:
 	if _flash_t > 0.0:
 		_flash_t -= dt
 		tint = FLASH_COL
-	if alive():
+	if alive() and not evolving:
 		look.tint = tint
 	_update_status_fx()
 	_place_status_fx()
@@ -781,6 +783,19 @@ func _check_lunge_hit() -> void:
 	if alive():
 		take_damage(maxi(1, int(max_hp / 4.0)), Vector3.ZERO, 0.0)
 		popup("Recuo", Color(0.9, 0.6, 0.6), 0.8)
+
+
+## Evoluiu no meio da luta (evolution.gd _complete: creature.apply_species): espécie, tipos, golpes e altura
+## novos. Os stats, o nível e o HP vêm do Mon pela arena (_sync_from_mon).
+func refresh_species() -> void:
+	var sp := Dex.species(mon.species)
+	types = mon.types
+	moves = mon.moves.slice(0, 4)
+	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
+	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
+	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
+	if look and look.species != mon.species:
+		look.species = mon.species
 
 
 ## Depois de um item aplicado ao Mon: copia HP e status persistente de volta para o lutador.
