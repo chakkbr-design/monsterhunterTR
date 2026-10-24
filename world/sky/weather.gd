@@ -13,6 +13,8 @@ const FADE_MIN := 6.0  ## game minutes to fade in/out
 
 static var forced := ""
 
+## Clima da batalha (BattleWeatherFx): (wet, snow, fog, cloud) por cima do clima do mundo enquanto dura.
+var battle_cover := Color(0, 0, 0, 0)
 var wet := 0.0
 var cloud := 0.0
 var indoor := false
@@ -77,6 +79,9 @@ func _process(delta: float) -> void:
 	indoor = tod.indoor if tod else false
 	var rains := wet * 0.8 if not indoor else 0.0
 	var cov := Color(rains, 0.0, 0.0, cloud if not indoor else 0.0)
+	if not indoor:
+		var b := battle_cover
+		cov = Color(maxf(cov.r, b.r), b.g, b.b, maxf(cov.a, b.a))
 	if cov != _cov:  # texture upload only when the coverage changes, not every frame
 		_cov = cov
 		WorldFx.set_weather(cov)

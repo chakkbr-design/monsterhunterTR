@@ -342,6 +342,7 @@
     "round": {"travel": "wave_circle_white", "stream": {"fx": "wave_circle_yellow", "every": 0.06, "travel": 0.35, "scale": 1.4, "spread": 0.4, "extra": {"fx": "sing_notes", "scale": 1.6}}, "look": {"cast": ["notes", "sound"], "land": ["notes"], "proj": "note", "impact": ["shock"]}},
     "safeguard": {"look": {"cast": ["shield", "sparkles"], "color": [0.8, 0.7, 1.0], "dur": 1.2}},
     "sandstorm": {"look": {"cast": ["storm"], "color": [0.85, 0.72, 0.5]}},
+    "snowscape": {"look": {"cast": ["storm"], "color": [0.85, 0.95, 1.0]}},
     "shell_smash": {"look": {"cast": ["shatter", "aura"], "icon": "swords", "color": [1.0, 0.5, 0.35]}},
     "sludge_bomb": {"travel": {"fx": "poison_ball_ranger", "scale": 1.6, "loop": true}, "hit": "mud_bomb_hit", "look": {"proj": "poison", "impact": ["sludge", "shock"]}},
     "spit_up": {"look": {"proj": "glow", "impact": ["burst", "shock"], "color": [1.0, 0.95, 0.8]}},

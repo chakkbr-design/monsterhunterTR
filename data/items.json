@@ -260,6 +260,62 @@
    }
   },
   {
+   "id": "heat_rock",
+   "name": "Heat Rock",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "heat_rock"
+   },
+   "description": "Extends the duration of sun (Sunny Day) from 5 to 8 turns when held.",
+   "icon": {
+    "shape": "stone",
+    "color": "#c8502a"
+   }
+  },
+  {
+   "id": "damp_rock",
+   "name": "Damp Rock",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "damp_rock"
+   },
+   "description": "Extends the duration of rain (Rain Dance) from 5 to 8 turns when held.",
+   "icon": {
+    "shape": "stone",
+    "color": "#3a6ab8"
+   }
+  },
+  {
+   "id": "smooth_rock",
+   "name": "Smooth Rock",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "smooth_rock"
+   },
+   "description": "Extends the duration of sandstorm (Sandstorm) from 5 to 8 turns when held.",
+   "icon": {
+    "shape": "stone",
+    "color": "#b89a6a"
+   }
+  },
+  {
+   "id": "icy_rock",
+   "name": "Icy Rock",
+   "category": "held",
+   "price": 0,
+   "effect": {
+    "held": "icy_rock"
+   },
+   "description": "Extends the duration of snow (Snowscape) from 5 to 8 turns when held.",
+   "icon": {
+    "shape": "stone",
+    "color": "#a8d8f0"
+   }
+  },
+  {
    "id": "rare_candy",
    "name": "Rare Candy",
    "category": "medicine",

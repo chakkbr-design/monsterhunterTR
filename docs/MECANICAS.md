@@ -173,17 +173,37 @@ status até quebrar (som atravessa).
 
 ## 10. Clima e terreno
 
-**Oficial:** chuva/sol 5 turnos (8 com pedra): Água/Fogo 1,5x/0,5x; Thunder/Hurricane 100% na chuva;
-tempestade de areia 1/16 por turno em quem não é Pedra/Terra/Aço e +50% Def. Esp. de Pedra; neve (Gen 9)
-+50% Def de Gelo. Terrenos 5 turnos, 1,3x no tipo para quem está no chão: Elétrico (sem sono), Grama
-(cura 1/16, Earthquake 0,5x), Psíquico (bloqueia prioridade), Névoa (Dragão 0,5x, sem status).
+**Oficial:** chuva/sol/areia/neve 5 turnos (8 com Heat/Damp/Smooth/Icy Rock): Água/Fogo 1,5x/0,5x;
+Thunder/Hurricane 100% na chuva e 50% no sol; Blizzard 100% na neve; Solar Beam/Blade sem carga no
+sol e 0,5x na chuva/areia/neve; Growth +2 no sol; ninguém congela no sol; Moonlight/Synthesis/Morning
+Sun 2/3 no sol e 1/4 nos outros; Weather Ball muda de tipo e dobra. Tempestade de areia 1/16 por turno em
+quem não é Pedra/Terra/Aço e +50% Def. Esp. de Pedra; neve (Gen 9, Snowscape/Snow Warning) +50% Def de
+Gelo, sem dano. Habilidades: Drought/Drizzle/Sand Stream/Snow Warning criam o clima ao entrar;
+Chlorophyll/Swift Swim/Sand Rush/Slush Rush dobram a Speed; Rain Dish, Ice Body, Dry Skin, Solar Power,
+Hydration, Leaf Guard, Sand Veil/Snow Cloak, Sand Force; Cloud Nine/Air Lock suprimem. Terrenos 5
+turnos, 1,3x no tipo para quem está no chão: Elétrico (sem sono), Grama (cura 1/16, Earthquake 0,5x),
+Psíquico (bloqueia prioridade), Névoa (Dragão 0,5x, sem status).
 
-**Jogo:** clima de luta em `battle_abilities.gd` (`weather_now`): Rain Dance/Sunny Day/Sandstorm e
-Drought criam clima por 5 rodadas (`set_weather_rounds`), contadas no fim de turno; como no oficial a
-rodada conta antes do efeito, então no 5º fim de turno o clima acaba sem tirar HP (a areia tira 4 vezes).
-Chuva/sol 1,5x/0,5x; areia 1/16 por turno em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force,
-Magic Guard, Overcoat); neve (`hail`) da Gen 9 sem dano. `set_weather(kind, secs)` em segundos ficou só
-para testes; `arena.opts.weather` vale a luta toda. "Terreno" do jogo também são marcas no chão que mudam
+**Jogo:** clima de luta em `battle_abilities.gd` (`weather_now`): Rain Dance/Sunny Day/Sandstorm/
+Snowscape e Drought/Drizzle/Sand Stream/Snow Warning criam clima por 5 rodadas (`set_weather_rounds`;
+8 com a pedra do clima como item segurado, `weather_rounds_for`), contadas no fim de turno; como no
+oficial a rodada conta antes do efeito, então no 5º fim de turno o clima acaba sem tirar HP (a areia
+tira 4 vezes). No modo de energia a "rodada" é o relógio de 4 s, então o clima dura 20 s. Tudo da lista
+oficial acima vale (Def x1,5 em `_mults`, precisão em `BattleMoveEffects.accuracy_of`, carga do Solar
+Beam/Blade em `move_for`, congelar/Leaf Guard em `blocks_status`, Hydration no passo do Shed Skin, Ice
+Body/Rain Dish em `weather_residual`); o dano segue com o 0,75x do jogo no fim. A neve usa o id "hail".
+`set_weather(kind, secs)` em segundos ficou só para testes; `arena.opts.weather` vale a luta toda (o
+treino repassa `cfg.weather`).
+
+Visual do clima: `battle/battle_weather_fx.gd` (filho da arena, monta só no primeiro clima da luta):
+chuva com gotas, respingos, chão molhado com poças e relâmpago; neve com flocos e neve acumulando no
+chão (derrete quando acaba); sol com feixes de luz, raios no canto da tela e poeira dourada; areia com
+grãos, nuvens de poeira e névoa marrom. No mapa o chão é o do mundo (`WorldWeather.battle_cover` molha
+ou cobre de neve os shaders do mapa); no treino vai um piso próprio (`gfx/shaders/weather_ground`).
+Nome do clima e rodadas restantes no alto da tela. Fotos: `tests/battle/shot_weather.gd` (treino) e
+`tests/battle/shot_weather_world.gd` (mapa), `-- weather=rain|hail|sun|sand`.
+
+"Terreno" do jogo também são marcas no chão que mudam
 o andar e às vezes queimam (cratera, buraco do Dig, poça, gelo, grama queimada, Spikes) em
 `battle_field.gd`.
 

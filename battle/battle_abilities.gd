@@ -125,7 +125,26 @@ const KEEP_STAT := {
 }
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Habilidades que agem ao entrar (troca, substituição, começo da luta), em ordem pela Speed.
-const ENTRY := ["intimidate", "drought", "frisk", "unnerve", "cloud_nine", "air_lock"]
+const ENTRY := [
+	"intimidate",
+	"drought",
+	"drizzle",
+	"sand_stream",
+	"snow_warning",
+	"frisk",
+	"unnerve",
+	"cloud_nine",
+	"air_lock",
+]
+## Habilidades que criam clima ao entrar (5 rodadas, 8 com a pedra do clima segurada).
+const WEATHER_SETTERS := {
+	"drought": "sun", "drizzle": "rain", "sand_stream": "sand", "snow_warning": "hail"
+}
+## Pedras que alongam o clima de quem segura (Heat/Damp/Smooth/Icy Rock): 8 turnos no oficial.
+const WEATHER_ROCKS := {
+	"sun": "heat_rock", "rain": "damp_rock", "sand": "smooth_rock", "hail": "icy_rock"
+}
+const ROCK_ROUNDS := 8
 ## Clima: duração padrão de set_weather (s, tempo real) e rodadas do clima de golpe/habilidade (5 turnos).
 const WEATHER_SECS := 25.0
 const WEATHER_ROUNDS := 5
@@ -142,6 +161,8 @@ const WEATHER_ALIAS := {
 }
 const SANDPROOF_TYPES := ["rock", "ground", "steel"]
 const SANDPROOF := ["sand_rush", "sand_force", "sand_veil", "magic_guard", "overcoat"]
+## Defesa x1,5 no clima (Gen 9): Pedra na areia (Def. Esp.), Gelo na neve (Def).
+const WEATHER_DEF_MULT := 1.5
 ## Speed na ordem da rodada (oficial) e no andar/preparo (tempo real) dos que dobram a Speed.
 const SPEED_DOUBLE := 2.0
 const SPEED_WALK := 1.5
@@ -150,6 +171,12 @@ const NO_GUARD_ACC := 100.0
 const BANNER_GAP := 3.0
 const POPUP_GAP := 1.0
 const COL_DEFAULT := Color(1.0, 0.85, 0.4)
+const WEATHER_COLORS := {
+	"sun": Color(1.0, 0.75, 0.3),
+	"rain": Color(0.45, 0.65, 1.0),
+	"sand": Color(0.85, 0.72, 0.42),
+	"hail": Color(0.8, 0.93, 1.0),
+}
 
 ## Perfis de movimento sugeridos (brawler, shooter, skirmisher, wall, trickster, flyer).
 const PROFILES := {
@@ -169,6 +196,8 @@ const PROFILES := {
 	"quick_feet": "skirmisher",
 	"swift_swim": "skirmisher",
 	"chlorophyll": "skirmisher",
+	"sand_rush": "skirmisher",
+	"slush_rush": "skirmisher",
 	"run_away": "skirmisher",
 	"unburden": "skirmisher",
 	"motor_drive": "skirmisher",
@@ -343,9 +372,10 @@ func _entry(f: BattleFighter) -> bool:
 	match ability_of(f):
 		"intimidate":
 			return _do_intimidate(f)
-		"drought":
-			set_weather_rounds("sun")
-			_fire(f, Color(1.0, 0.75, 0.3))
+		"drought", "drizzle", "sand_stream", "snow_warning":
+			var wk := String(WEATHER_SETTERS[ability_of(f)])
+			set_weather_rounds(wk, weather_rounds_for(f, wk))
+			_fire(f, WEATHER_COLORS.get(wk, COL_DEFAULT))
 		"frisk":
 			return _do_frisk(f)
 		"unnerve":
@@ -380,6 +410,19 @@ func set_weather_rounds(kind: String, n := WEATHER_ROUNDS) -> bool:
 	weather_t = -1.0
 	weather_rounds = n
 	return true
+
+
+## Rodadas do clima que `f` cria: 8 com a pedra do clima segurada, senão 5.
+func weather_rounds_for(f: BattleFighter, kind: String) -> int:
+	kind = String(WEATHER_ALIAS.get(kind, kind))
+	if (
+		is_instance_valid(f)
+		and not f.item_used
+		and f.trainer_item != ""
+		and f.trainer_item == String(WEATHER_ROCKS.get(kind, "-"))
+	):
+		return ROCK_ROUNDS
+	return WEATHER_ROUNDS
 
 
 func _weather_on(kind: String) -> bool:
@@ -539,6 +582,11 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 			if power > 0.0 and cat in ["physical", "special"]:
 				var ak := "atk" if cat == "physical" else "spa"
 				tm /= StatCalc.stage_mult(int(user.stages.get(ak, 0)))
+	if power > 0.0:
+		if wx == "sand" and cat == "special" and "rock" in target.types:
+			tm /= WEATHER_DEF_MULT
+		elif wx == "hail" and cat == "physical" and "ice" in target.types:
+			tm /= WEATHER_DEF_MULT
 	var pa := partner_of(target)
 	if pa != null and ability_of(pa) == "friend_guard" and ua != "infiltrator":
 		tm *= 0.75
@@ -792,6 +840,13 @@ func blocks_status(f: BattleFighter, status: String) -> bool:
 	if a == "steadfast" and status == "flinch":
 		_stage_up(f, "spe", 1)
 		_fire(f)
+	if weather_now() == "sun":
+		# sol forte: ninguém congela; Leaf Guard não pega status nenhum (oficial)
+		if status == "freeze":
+			return true
+		if a == "leaf_guard" and status in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
+			_fire(f)
+			return true
 	return false
 
 
@@ -873,13 +928,15 @@ func walk_mult(f: BattleFighter) -> float:
 	return m
 
 
-## Speed dobrada no clima certo (Chlorophyll no sol, Swift Swim na chuva, Sand Rush na areia).
+## Speed dobrada no clima certo (Chlorophyll no sol, Swift Swim na chuva, Sand Rush na areia, Slush
+## Rush na neve).
 func _weather_speed(a: String) -> bool:
 	var wx := weather_now()
 	return (
 		(a == "chlorophyll" and wx == "sun")
 		or (a == "swift_swim" and wx == "rain")
 		or (a == "sand_rush" and wx == "sand")
+		or (a == "slush_rush" and wx == "hail")
 	)
 
 
@@ -959,7 +1016,7 @@ func count_weather_round() -> bool:
 
 ## Clima no fim do turno, para um lutador: Rain Dish 1/16, Dry Skin +1/8 na chuva e -1/8 no sol,
 ## Solar Power -1/8, areia -1/16 em quem não é Pedra/Terra/Aço (nem Sand Veil/Rush/Force, Magic Guard,
-## Overcoat). A neve (hail) da Gen 9 não tira HP.
+## Overcoat), Ice Body +1/16 na neve. A neve (hail) da Gen 9 não tira HP.
 func weather_residual(f: BattleFighter) -> void:
 	var a := ability_of(f)
 	var guard := a == "magic_guard"
@@ -976,13 +1033,23 @@ func weather_residual(f: BattleFighter) -> void:
 		"sand":
 			if not _sand_proof(f, a):
 				_weather_chip(f, 1.0 / 16.0, Color(0.85, 0.72, 0.42), "areia")
+		"hail":
+			if a == "ice_body":
+				_round_heal(f, 1.0 / 16.0, "Ice Body")
 
 
-## Passo 4 (junto do Leftovers): Shed Skin, 1/3 de curar o status. true = curou.
+## Passo 4 (junto do Leftovers): Shed Skin, 1/3 de curar o status; Hydration cura sempre na chuva.
+## true = curou.
 func shed_skin(f: BattleFighter) -> bool:
-	if ability_of(f) != "shed_skin" or not f.status in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
+	var a := ability_of(f)
+	if (
+		not a in ["shed_skin", "hydration"]
+		or not f.status in Mon.PERSIST_STATUS + ["toxic", "freeze"]
+	):
 		return false
-	if not _roll(1.0 / 3.0):
+	if a == "hydration" and weather_now() != "rain":
+		return false
+	if a == "shed_skin" and not _roll(1.0 / 3.0):
 		return false
 	f.clear_status()
 	_fire(f)
@@ -1127,8 +1194,8 @@ func _tick_fighter(f: BattleFighter) -> void:
 			if f.item_used and not s.unburdened:
 				s.unburdened = true
 				_fire(f)
-		"sand_veil":
-			if f.evasion_t <= 0.0 and weather_now() == "sand":
+		"sand_veil", "snow_cloak":
+			if f.evasion_t <= 0.0 and weather_now() == ("sand" if a == "sand_veil" else "hail"):
 				f.evasion = 0.2
 				f.evasion_t = 0.5
 

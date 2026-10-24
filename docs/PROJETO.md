@@ -51,6 +51,7 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 - **Modo de energia** (padrão no treino, `battle/battle_energy.gd`): sem rodadas nem posições fixas, barra de energia que enche com o tempo no lugar do PP, golpes gastam energia e têm cooldown, e a IA recua para recuperar ou fica lutando. Detalhes em `docs/BATALHA_VIVA.md`.
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - IA no estilo VGC (`docs/IA_VGC.md`): cada Pokémon escolhe golpe e alvo por pontuação (KO, super efetivo, foco com o parceiro, Protect, Tailwind) e o treinador troca, usa item e escolhe quem entra.
+- Clima Gen 9 (sol, chuva, areia, neve) por golpe, habilidade ou pedra, com visual próprio: chuva com poças e relâmpago, neve acumulando no chão, feixes de sol e tempestade de areia (`battle/battle_weather_fx.gd`, regras em `docs/MECANICAS.md` §10).
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 
 ### Modo de treinamento (para balancear)

@@ -514,5 +514,45 @@
     "name": "WONDER SKIN",
     "desc": "Makes status moves more likely to miss the Pokémon.",
     "desc_pt": "Golpes de status dos inimigos (precisão acima de 50%) falham em metade das vezes."
+  },
+  "drizzle": {
+    "name": "DRIZZLE",
+    "desc": "The Pokémon makes it rain when it enters a battle.",
+    "desc_pt": "Ao entrar, faz chover por 5 rodadas (8 com Damp Rock): Água x1,5, Fogo x0,5."
+  },
+  "sand_stream": {
+    "name": "SAND STREAM",
+    "desc": "The Pokémon summons a sandstorm when it enters a battle.",
+    "desc_pt": "Ao entrar, cria uma tempestade de areia por 5 rodadas (8 com Smooth Rock)."
+  },
+  "snow_warning": {
+    "name": "SNOW WARNING",
+    "desc": "The Pokémon makes it snow when it enters a battle.",
+    "desc_pt": "Ao entrar, faz nevar por 5 rodadas (8 com Icy Rock): Gelo ganha Def x1,5."
+  },
+  "slush_rush": {
+    "name": "SLUSH RUSH",
+    "desc": "Boosts the Pokémon's Speed stat in snow.",
+    "desc_pt": "Speed dobrada na neve."
+  },
+  "ice_body": {
+    "name": "ICE BODY",
+    "desc": "The Pokémon gradually regains HP in snow.",
+    "desc_pt": "Recupera 1/16 do HP no fim de cada rodada com neve."
+  },
+  "snow_cloak": {
+    "name": "SNOW CLOAK",
+    "desc": "Boosts evasiveness in snow.",
+    "desc_pt": "Mais esquiva na neve."
+  },
+  "hydration": {
+    "name": "HYDRATION",
+    "desc": "Heals status conditions if it's raining.",
+    "desc_pt": "Cura o status no fim da rodada quando está chovendo."
+  },
+  "leaf_guard": {
+    "name": "LEAF GUARD",
+    "desc": "Prevents status conditions in harsh sunlight.",
+    "desc_pt": "Não pega status no sol forte."
   }
 }

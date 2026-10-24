@@ -17,6 +17,10 @@ const FOREVER := 1.0e9
 ## Cooldown que trava um golpe (Disable, Encore) até o efeito acabar no fim de turno.
 const LOCK_CD := 1.0e6
 const FIELD_TURNS := 5
+## Clima nos golpes (oficial): Thunder/Hurricane 50% no sol; Solar Beam/Blade sem carga no sol.
+const SUN_STORM_ACC := 50.0
+const SOLAR_MOVES := ["solar_beam", "solar_blade"]
+const SOLAR_SUN_WINDUP := 0.25
 const TAILWIND_TURNS := 4
 const LASER_TURNS := 2
 ## Prioridade negativa: preparo extra por nível (Whirlwind -6 sai 0,6 s mais devagar) e GCD maior.
@@ -384,14 +388,16 @@ static func _norm_weather(w: String) -> String:
 	return w
 
 
-## Clima de golpe por `rounds` rodadas (5 turnos no oficial), contadas no fim de turno.
-func set_weather(kind: String, rounds: int) -> void:
+## Clima de golpe por `rounds` rodadas (5 turnos no oficial, 8 com a pedra do clima de `user`),
+## contadas no fim de turno. O visual do clima é o BattleWeatherFx, que lê weather().
+func set_weather(kind: String, rounds: int, user: BattleFighter = null) -> void:
 	if not _local_weather():
+		if user != null and arena.abilities.has_method("weather_rounds_for"):
+			rounds = maxi(rounds, arena.abilities.weather_rounds_for(user, kind))
 		arena.abilities.set_weather_rounds(kind, rounds)
 	else:
 		field["weather"] = kind
 		set_rounds(field, "weather_t", rounds)
-	_vfx("weather", [kind, rounds_secs(rounds)])
 
 
 # --- Ganchos de BattleMoves.use ---
@@ -511,8 +517,13 @@ func sleep_move(f: BattleFighter, mv: Dictionary) -> bool:
 	)
 
 
-## O golpe como sai agora (Grassy Glide ganha prioridade +1 no campo de grama).
+## O golpe como sai agora (Grassy Glide ganha prioridade +1 no campo de grama; Solar Beam/Blade no sol
+## saem sem o turno de carga, aqui o preparo quase todo).
 func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
+	if String(mv.get("id", "")) in SOLAR_MOVES and weather() == "sun":
+		var sm := mv.duplicate()
+		sm["windup"] = SOLAR_SUN_WINDUP
+		return sm
 	if (
 		String(mv.get("special", "")) == "grassy_glide"
 		and active(field, "grassy")
@@ -647,7 +658,13 @@ func accuracy_of(user: BattleFighter, mv: Dictionary) -> float:
 	var id := String(mv.get("id", ""))
 	if id == "toxic" and "poison" in user.types:
 		return 0.0
-	if id in ["thunder", "hurricane"] and weather() == "rain":
+	var w := weather()
+	if id in ["thunder", "hurricane"]:
+		if w == "rain":
+			return 0.0
+		if w == "sun":
+			acc = SUN_STORM_ACC
+	if id == "blizzard" and w in ["hail", "snow"]:
 		return 0.0
 	if String(mv.get("special", "")) == "ohko":
 		var t := user.opponent
@@ -1043,7 +1060,7 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 	if active(field, "misty") and type == "dragon" and grounded(target):
 		m *= MISTY_DRAGON
 	var w := weather()
-	if String(mv.get("id", "")) == "solar_beam" and w in ["rain", "sand", "hail", "snow"]:
+	if String(mv.get("id", "")) in SOLAR_MOVES and w in ["rain", "sand", "hail", "snow"]:
 		m *= 0.5
 	if _local_weather():
 		if w == "rain":
@@ -1464,8 +1481,10 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		return true
 	var stats = mv.get("stats")
 	if stats is Dictionary and sp in ["", "curse"]:
+		# Growth: +2 em vez de +1 no sol (oficial)
+		var mult := 2 if String(mv.get("id", "")) == "growth" and weather() == "sun" else 1
 		for k in stats:
-			arena.moves.change_stage(user, String(k), int(stats[k]))
+			arena.moves.change_stage(user, String(k), int(stats[k]) * mult)
 		return true
 	match sp:
 		"", "charge", "defense_curl":
@@ -1621,7 +1640,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		"misty_terrain":
 			_set_terrain("misty", user, "Campo de névoa!", "fairy")
 		"sunny_day":
-			set_weather("sun", FIELD_TURNS)
+			set_weather("sun", FIELD_TURNS, user)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "O sol ficou forte!", Dex.type_color("fire")
 			)
@@ -1743,14 +1762,19 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			else:
 				_call(user, String(pool2[rng.randi() % pool2.size()]))
 		"sandstorm":
-			set_weather("sand", FIELD_TURNS)
+			set_weather("sand", FIELD_TURNS, user)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "Tempestade de areia!", Dex.type_color("rock")
 			)
 		"rain_dance":
-			set_weather("rain", FIELD_TURNS)
+			set_weather("rain", FIELD_TURNS, user)
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0), "Começou a chover!", Dex.type_color("water")
+			)
+		"snowscape":
+			set_weather("hail", FIELD_TURNS, user)
+			arena.popup(
+				user.position + Vector3(0, 1.6, 0), "Começou a nevar!", Dex.type_color("ice")
 			)
 		"toxic_spikes":
 			_lay_toxic_spikes(user)
@@ -2282,6 +2306,8 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			)
 		"rain_dance":
 			return weather() != "rain"
+		"snowscape":
+			return weather() != "hail" and ("ice" in f.types or _has_type_hit(f, "ice"))
 		"toxic_spikes":
 			return (
 				has_opp

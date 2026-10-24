@@ -383,6 +383,7 @@ func _build() -> void:
 	_built = true
 	_build_court()
 	vfx = BattleVfx.new(self)
+	add_child(BattleWeatherFx.new(self))
 	_prev_cam = get_viewport().get_camera_3d() if is_inside_tree() else null
 	_cam = Camera3D.new()
 	_cam.fov = FIXED_CAM_FOV if fixed else 60.0

@@ -151,8 +151,9 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 	}
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)
-	# Comparar IAs (tests/balance/ia_duel.gd): IA VGC e IA do treinador por lado ([lado 0, lado 1]).
-	for k in ["vgc_ai", "trainer_ai"]:
+	# Comparar IAs (tests/balance/ia_duel.gd): IA VGC e IA do treinador por lado ([lado 0, lado 1]);
+	# weather: clima da luta toda (sun, rain, sand, hail), para testes e fotos.
+	for k in ["vgc_ai", "trainer_ai", "weather"]:
 		if cfg.has(k):
 			o[k] = cfg[k]
 	return o
