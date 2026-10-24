@@ -55,7 +55,17 @@ const PORTRAIT_GREEN := "res://original/assets/sprites/trainer_green.png"
 const PORTRAIT_FRAME := Rect2(8, 11, 16, 20)
 const DEX_ROWS := 11
 const CONTROLS := [
-	["MUNDO", [["Andar", "WASD/Setas"], ["Correr", "Shift"], ["Interagir", "E"], ["Menu", "Esc"]]],
+	[
+		"MUNDO",
+		[
+			["Andar", "WASD/Setas"],
+			["Correr", "Shift"],
+			["Interagir", "E"],
+			["Dar comida", "F"],
+			["Mandar/recolher", "1-6"],
+			["Menu", "Esc"]
+		]
+	],
 	[
 		"BATALHA",
 		[
