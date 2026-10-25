@@ -121,6 +121,14 @@ golpes. Veneno, queimadura, Toxic, semente, Curse, Wrap/Bind, clima e Black Slud
 turno) usam o valor oficial puro: `fighter.dot_scale()` não entra mais neles. `dot_scale` ficou só no dano
 físico de tempo real (batida do arremesso em `battle_physics.gd`, chão queimado em `battle_field.gd`).
 
+**Modo de energia: todo dano indireto e toda cura no ritmo (0,6).** Regra do Caio (2026-10-25): no modo de
+energia o veneno, a queimadura e todo dano indireto (semente, Curse, Wrap/Bind, clima, Spikes, Stealth Rock,
+Rough Skin, Aftermath, recuo do Desespero, lava, brasas, queda...) e toda cura em fração do HP (Recover,
+Roost, Leftovers, Aqua Ring, Wish, frutinha, poção, Regenerator...) usam o mesmo fator do dano dos golpes
+(`arena.damage_pace`, `BattleEnergy.DAMAGE_PACE` = 0,6), para tudo ficar proporcional. Fica de fora a cura
+cheia (Rest, Healing Wish, Full Restore) e o que já sai do dano feito (dreno, recuo). Tudo passa por
+`fighter.paced(n)` (e `dot_scale()`, que no modo de energia devolve o próprio 0,6). No VGC nada muda.
+
 ## 8. Regras de dupla
 
 **Oficial:**

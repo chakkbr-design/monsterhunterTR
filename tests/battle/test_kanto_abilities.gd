@@ -295,7 +295,11 @@ func _gluttony() -> void:
 	et.held_check(a.enemy)
 	check(a.player.item_used, "Gluttony: come a Oran com 60% do HP")
 	check(not a.enemy.item_used, "sem Gluttony a Oran espera os 50%")
-	check(a.player.hp - p0 == 15, "Gluttony: a Oran cura x1,5 (15, deu %d)" % (a.player.hp - p0))
+	var want: int = a.player.paced(15)  # modo de energia: cura x0,6 (fighter.paced)
+	check(
+		a.player.hp - p0 == want,
+		"Gluttony: a Oran cura x1,5 (%d, deu %d)" % [want, a.player.hp - p0]
+	)
 	check(a.enemy.hp == e0, "sem Gluttony não curou ainda")
 	a.free()
 

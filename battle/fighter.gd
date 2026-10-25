@@ -840,12 +840,24 @@ func _chance(p: float) -> bool:
 
 
 ## Ritmo da luta para o dano físico de tempo real (batida no arremesso, chão queimado): igual ao
-## original até o ritmo padrão do 1x1. O dano de fim de turno (status, clima, semente) NÃO usa: segue
-## o oficial puro (docs/MECANICAS.md, "Fim de turno").
+## original até o ritmo padrão do 1x1. No modo de energia é o próprio ritmo do dano (0,6), como todo
+## dano indireto (paced). O dano de fim de turno do VGC segue o oficial puro (docs/MECANICAS.md).
 func dot_scale() -> float:
 	if arena == null or not arena.get("moves"):
 		return 1.0
+	if energy_mode:
+		return clampf(float(arena.damage_pace), 0.0, 1.0)
 	return clampf(arena.moves.pace() / BattleMoves.DAMAGE_PACE, 0.0, 1.0)
+
+
+## Caio, 2026-10-25: no modo de energia todo dano indireto (veneno, queimadura, semente, clima...) e toda
+## cura em fração do HP (Recover, Leftovers, frutinha, poção...) seguem o mesmo fator do dano dos golpes
+## (arena.damage_pace, 0,6), para a luta continuar proporcional. Cura cheia (Rest, Healing Wish) fica cheia;
+## dreno e recuo já saem do dano feito. No VGC devolve n.
+func paced(n: int) -> int:
+	if not energy_mode or arena == null or n <= 0 or n >= max_hp:
+		return n
+	return maxi(1, int(round(float(n) * float(arena.damage_pace))))
 
 
 ## Dano de fim de turno (veneno, queimadura, semente, clima...): popup "-12 veneno" e clarão curto na
@@ -1305,7 +1317,7 @@ func _check_lunge_hit() -> void:
 		return
 	arena.moves.hit(self, opponent, STRUGGLE, lunge_dir)
 	if alive():
-		take_damage(maxi(1, int(max_hp / 4.0)), Vector3.ZERO, 0.0)
+		take_damage(paced(maxi(1, int(max_hp / 4.0))), Vector3.ZERO, 0.0)
 		popup("Recuo", Color(0.9, 0.6, 0.6), 0.8)
 
 

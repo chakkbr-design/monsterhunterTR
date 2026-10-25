@@ -1383,7 +1383,7 @@ func use_trainer_item() -> void:
 	var it := Dex.item(f.trainer_item)
 	var e: Dictionary = it.get("effect", {})
 	if e.has("hp"):
-		var amount: int = f.max_hp if str(e.hp) == "full" else int(e.hp)
+		var amount: int = f.max_hp if str(e.hp) == "full" else f.paced(int(e.hp))
 		var before := f.hp
 		f.heal(mini(amount, f.max_hp - f.hp))
 		f.popup("+%d HP" % (f.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)

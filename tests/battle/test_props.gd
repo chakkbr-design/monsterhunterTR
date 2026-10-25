@@ -335,7 +335,7 @@ func _bush() -> void:
 	var hp := b.hp
 	pr.tick(DT)
 	check(pr.berries.is_empty(), "Grama pega de mais longe")
-	var heal := int(float(b.max_hp) * P.BERRY_HEAL)
+	var heal: int = b.paced(int(float(b.max_hp) * P.BERRY_HEAL))  # modo de energia: x0,6
 	check(b.hp - hp == heal, "Oran cura 1/8 (%d de %d)" % [b.hp - hp, heal])
 	check(_events(a, "berry_pick").size() == 1, "telemetria berry_pick")
 	# Com HP alto e pouca energia: energia.

@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_fight(0, true)
 	# Com a barra enchendo rápido o descanso é curto: vale a soma das lutas.
 	check(_rest_sum > 1.5, "recua para recuperar (%.1f s nas lutas)" % _rest_sum)
+	_paced()
 	_training()
 	print("energy: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -59,7 +60,9 @@ func _costs() -> void:
 	var qmv := Dex.move("quick_attack")
 	var qslow := qmv.duplicate()
 	qslow.erase("priority")
-	check(BattleEnergy.cooldown(qmv) > BattleEnergy.cooldown(qslow), "prioridade tem cooldown maior")
+	check(
+		BattleEnergy.cooldown(qmv) > BattleEnergy.cooldown(qslow), "prioridade tem cooldown maior"
+	)
 	check(
 		BattleEnergy.cooldown(Dex.move("growl")) > BattleEnergy.cooldown(Dex.move("tackle")),
 		"status com cooldown alto"
@@ -97,6 +100,36 @@ func _bar() -> void:
 	var slw := BattleEnergy.speed_mult(f)
 	check(fast > slw and fast <= BattleEnergy.SPEED_MAX, "Speed acelera um pouco")
 	a.queue_free()
+
+
+## Caio, 2026-10-25: veneno, queimadura, todo dano indireto e toda cura em fração do HP saem x0,6 (o mesmo
+## ritmo do dano dos golpes) no modo de energia; cura cheia fica cheia (fighter.paced).
+func _paced() -> void:
+	var a := _arena(
+		[Mon.create("snorlax", 50)], [Mon.create("rattata", 50)], {"kind": "trainer", "seed": 3}
+	)
+	var f: BattleFighter = a.player
+	var mode := "vgc" if "vgc" in OS.get_cmdline_user_args() else "energy"
+	var k := 0.6 if mode == "energy" else 1.0
+	var eighth := int(f.max_hp / 8.0)
+	check(
+		f.paced(eighth) == maxi(1, int(round(eighth * k))),
+		"fração do HP x%.1f (%d -> %d)" % [k, eighth, f.paced(eighth)]
+	)
+	check(f.paced(f.max_hp) == f.max_hp, "cura cheia fica cheia")
+	f.apply_status("poison")
+	var hp0 := f.hp
+	a.end_turn.run()
+	check(hp0 - f.hp == f.paced(eighth), "veneno tira 1/8 x%.1f (%d)" % [k, hp0 - f.hp])
+	f.clear_status()
+	f.hp = f.max_hp / 2
+	hp0 = f.hp
+	a.moves.effects._heal(f, int(ceil(f.max_hp * 0.5)))
+	check(
+		f.hp - hp0 == f.paced(int(ceil(f.max_hp * 0.5))),
+		"Recover cura metade x%.1f (%d)" % [k, f.hp - hp0]
+	)
+	a.free()
 
 
 ## Luta automática: golpes variados, sem repetir muito, recua para recuperar, anda pela arena e acaba.

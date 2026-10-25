@@ -1221,7 +1221,7 @@ func _do_trainer_item(side: int, item: String, target: BattleFighter) -> void:
 	var e: Dictionary = Dex.item(item).get("effect", {})
 	target.item_used = true
 	if e.has("hp"):
-		var amount: int = target.max_hp if str(e.hp) == "full" else int(e.hp)
+		var amount: int = target.max_hp if str(e.hp) == "full" else target.paced(int(e.hp))
 		var before := target.hp
 		target.heal(mini(amount, target.max_hp - target.hp))
 		target.popup("+%d HP" % (target.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)

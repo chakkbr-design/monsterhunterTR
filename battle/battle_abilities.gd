@@ -469,7 +469,7 @@ func _stage_up(f: BattleFighter, k: String, n: int) -> void:
 
 func _heal_pct(f: BattleFighter, pct: float) -> void:
 	if f.alive() and f.hp < f.max_hp:
-		f.heal(maxi(1, int(float(f.max_hp) * pct)))
+		f.heal(f.paced(maxi(1, int(float(f.max_hp) * pct))))
 
 
 func _roll(chance: float) -> bool:
@@ -1163,7 +1163,7 @@ func on_hit(
 			user.popup("Enfeitiçado!", Color(1.0, 0.55, 0.75))
 			_fire(target, Color(1.0, 0.55, 0.75))
 		elif ta == "rough_skin" and ua != "magic_guard":
-			var chip := maxi(1, int(user.max_hp / 8.0))
+			var chip := user.paced(maxi(1, int(user.max_hp / 8.0)))
 			_fire(target)
 			user.popup("-%d" % chip, Color(0.8, 0.6, 0.4), 0.8)
 			user.take_damage(chip, Vector3.ZERO, 0.0)
@@ -1189,7 +1189,7 @@ func on_hit(
 			and _on_field("damp") == null
 		):
 			_fire(target)
-			user.take_damage(maxi(1, int(user.max_hp / 4.0)), Vector3.ZERO, 0.0)
+			user.take_damage(user.paced(maxi(1, int(user.max_hp / 4.0))), Vector3.ZERO, 0.0)
 
 
 ## Anger Point, Cursed Body, Poison Touch, Rattled e Weak Armor (as de Kanto) depois do acerto.
@@ -1568,7 +1568,7 @@ func _healer(f: BattleFighter) -> void:
 
 func _round_heal(f: BattleFighter, pct: float, why := "") -> void:
 	if f.hp < f.max_hp:
-		f.residual_heal(maxi(1, int(float(f.max_hp) * pct)), why)
+		f.residual_heal(f.paced(maxi(1, int(float(f.max_hp) * pct))), why)
 		_fire(f, Color(0.5, 1.0, 0.6))
 
 
@@ -1581,9 +1581,9 @@ func _sand_proof(f: BattleFighter, a: String) -> bool:
 	return false
 
 
-## Dano de clima: oficial puro (sem o ritmo de dano dos golpes).
+## Dano de clima: oficial puro no VGC; no modo de energia x0,6 como todo dano indireto (fighter.paced).
 func _weather_chip(f: BattleFighter, pct: float, col: Color, why: String) -> void:
-	f.residual_damage(maxi(1, int(float(f.max_hp) * pct)), why, col)
+	f.residual_damage(f.paced(maxi(1, int(float(f.max_hp) * pct))), why, col)
 
 
 # --- Troca ---
@@ -1599,7 +1599,7 @@ func _switched_out(f: BattleFighter) -> void:
 		"regenerator":
 			var m: Mon = f.mon
 			if m.hp > 0 and m.hp < m.max_hp:
-				m.hp = mini(m.max_hp, m.hp + maxi(1, int(m.max_hp / 3.0)))
+				m.hp = mini(m.max_hp, m.hp + f.paced(maxi(1, int(m.max_hp / 3.0))))
 				f.hp = m.hp
 				_fire(f, Color(0.5, 1.0, 0.6))
 

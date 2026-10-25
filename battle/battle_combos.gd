@@ -640,7 +640,7 @@ func _duo_effect(
 						"stat_up"
 					)
 					if duo.has("heal"):
-						f.heal(maxi(1, int(float(f.max_hp) * float(duo.heal))))
+						f.heal(f.paced(maxi(1, int(float(f.max_hp) * float(duo.heal)))))
 			_area_hit(u1, target, float(duo.power), radius, ty, true, extra)
 		"debuff_foes":
 			for t in arena.targets_of(u1):

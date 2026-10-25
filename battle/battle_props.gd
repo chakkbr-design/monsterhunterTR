@@ -877,7 +877,7 @@ func _eat(f: BattleFighter, b: Dictionary) -> void:
 	var n := 0
 	if gain == "hp":
 		var before: int = f.hp
-		f.heal(maxi(1, int(float(f.max_hp) * BERRY_HEAL)))
+		f.heal(f.paced(maxi(1, int(float(f.max_hp) * BERRY_HEAL))))
 		n = int(f.hp) - before
 		f.popup("+%d Oran" % n, Color(0.5, 1.0, 0.55), 0.9, 0.3, "heal")
 	else:

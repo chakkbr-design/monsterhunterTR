@@ -310,7 +310,7 @@ func _vfx(name: String, args: Array) -> void:
 
 
 func _heal(f: BattleFighter, n: int) -> void:
-	n = mini(n, f.max_hp - f.hp)
+	n = mini(f.paced(n), f.max_hp - f.hp)  # modo de energia: x0,6 (fighter.paced)
 	if n <= 0 or not f.alive():
 		return
 	if heal_blocked(f):
@@ -336,7 +336,7 @@ func note_fail(f: BattleFighter) -> void:
 func crash_damage(user: BattleFighter, mv: Dictionary) -> void:
 	if not mv.has("crash") or not is_instance_valid(user) or not user.alive():
 		return
-	var n := maxi(1, int(ceil(float(user.max_hp) * float(mv.crash))))
+	var n := user.paced(maxi(1, int(ceil(float(user.max_hp) * float(mv.crash)))))
 	user.take_damage(n, Vector3.ZERO, 0.0)
 	user.popup("-%d machucou-se!" % n, Color(1.0, 0.7, 0.5), 0.9)
 
@@ -628,7 +628,7 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 		s.destiny = false  # Destiny Bond vale até o próximo golpe de quem usou
 	if mv.has("max_recoil"):
 		# Steel Beam: perde metade do HP máximo depois de atirar, acertando ou não
-		var lose := int(ceil(float(user.max_hp) * float(mv.max_recoil)))
+		var lose := user.paced(int(ceil(float(user.max_hp) * float(mv.max_recoil))))
 		arena.later(
 			float(mv.get("windup", 0.0)) + 0.2,
 			func() -> void:
@@ -1976,7 +1976,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			w.append(
 				{
 					"rounds": WISH_TURNS,
-					"amt": int(ceil(user.max_hp / 2.0)),
+					"amt": user.paced(int(ceil(user.max_hp / 2.0))),
 					"id": user.get_instance_id(),
 					"pos": user.position
 				}
@@ -2208,7 +2208,9 @@ func _tick_spikes() -> void:
 				var ab = arena.abilities
 				if ab and ab.has_method("no_indirect") and ab.no_indirect(f):
 					continue
-				var d := maxi(1, int(f.max_hp / 8.0 * Dex.effectiveness("rock", f.types)))
+				var d: int = f.paced(
+					maxi(1, int(f.max_hp / 8.0 * Dex.effectiveness("rock", f.types)))
+				)
 				f.popup("-%d pedras" % d, Dex.type_color("rock"), 0.8)
 				f.take_damage(d, Vector3.ZERO, 0.0)
 				continue

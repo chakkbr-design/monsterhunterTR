@@ -96,7 +96,7 @@ func _order() -> Array:
 
 
 func _frac(f: BattleFighter, k: float) -> int:
-	return maxi(1, int(f.max_hp * k))
+	return f.paced(maxi(1, int(f.max_hp * k)))  # modo de energia: x0,6 (fighter.paced)
 
 
 # --- Roda ---
@@ -376,7 +376,7 @@ func held_check(f: BattleFighter) -> void:
 		if glut:
 			heal_n = int(heal_n * BattleAbilities.GLUTTONY_HEAL)  # Gluttony: devora a frutinha
 			ab._fire(f, Color(0.9, 0.7, 0.4))
-		f.residual_heal(heal_n, _item_name(id))
+		f.residual_heal(f.paced(heal_n), _item_name(id))
 	elif CURE_BERRIES.has(id):
 		var cures: Array = CURE_BERRIES[id]
 		if f.status in cures:

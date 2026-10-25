@@ -150,7 +150,7 @@ func _tick_marks(dt: float) -> void:
 						f.take_damage(n, Vector3.ZERO, 0.0)
 			elif m.kind == "spikes" and f.side != m.side and not m.hit.has(id) and _on_ground(f):
 				m.hit[id] = true
-				var d := maxi(1, int(f.max_hp / 8.0))
+				var d: int = f.paced(maxi(1, int(f.max_hp / 8.0)))
 				f.popup("-%d Spikes" % d, Dex.type_color("ground"), 0.8)
 				f.take_damage(d, Vector3.ZERO, 0.0)
 		_still[id] = st
@@ -357,7 +357,7 @@ func _tick_objects(dt: float) -> void:
 		if b.t > 0.0:
 			for f in arena.fighters:
 				if is_instance_valid(f) and f.active() and _flat(f.position - b.pos).length() < 0.7:
-					var n := maxi(1, int(f.max_hp / 10.0))
+					var n: int = f.paced(maxi(1, int(f.max_hp / 10.0)))
 					f.heal(n)
 					f.set_meta("ate_berry", true)  # Belch
 					f.popup("+%d Frutinha" % n, Color(0.5, 1.0, 0.5), 0.8)
