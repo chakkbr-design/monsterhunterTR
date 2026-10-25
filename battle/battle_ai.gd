@@ -703,6 +703,8 @@ func _free_fire(dt: float, d: float) -> void:
 	if punish and not punished and tactic_on:
 		fire = true
 		punished = true
+	if f.energy_mode and BattleProps.ai_shot(self, mode):
+		return  # tiro num objeto do cenário (Voltorb, árvore, tabela no cristal)
 	# Sem PP: Desespero de perto (os dois sem PP ficavam rodando sem bater até o fim do tempo).
 	if f.out_of_pp() and d < 2.2:
 		fire = true
@@ -923,6 +925,9 @@ func move_reach(id: String) -> float:
 ## os outros recuam para longe dos inimigos (descansar enche mais rápido) e só voltam quando a
 ## caminhada até o alcance cobre o que falta encher. INF = segue a faixa normal.
 func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
+	var berry := BattleProps.steer(self, d)  # Oran no chão com HP/energia baixa
+	if berry != Vector3.INF:
+		return berry
 	var scene := BattleTerrainAI.steer(self, d)  # cenário: lago, grama alta, Fogo e Elétrico
 	if scene != Vector3.INF:
 		return scene

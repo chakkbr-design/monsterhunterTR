@@ -14,6 +14,14 @@ from collections import Counter, defaultdict
 CORNER_WALL = 1.6
 CORNER_FOE = 3.2
 STALL_GAP = 25.0
+# Objetos vivos do cenário (battle/battle_props.gd): eventos contados por luta e dano que vem deles.
+PROP_EVENTS = (
+    "tree_ignite", "tree_fall", "tree_fall_hit", "log_block", "voltorb_wake", "voltorb_boom",
+    "voltorb_hit", "berry_drop", "berry_pick", "bush_burn", "bush_regrow", "crystal_reflect",
+    "crystal_reflect_hit", "crystal_charge", "crystal_spark", "crystal_break", "prop_ai_shot",
+    "prop_ai_berry",
+)
+PROP_DMG = ("tree_fall_hit", "voltorb_hit", "crystal_spark")  # fora dos eventos "hit"
 
 
 def pct(a, b):
@@ -99,6 +107,10 @@ def analyse(fights):
     stall_fights = 0
     stalls = []
     terrain = Counter()
+    props = Counter()
+    prop_dmg = Counter()
+    prop_ai = Counter()
+    berry_gain = Counter()
     misses = 0
     dodges = Counter()
     per_mon_tag_entropy = []
@@ -183,6 +195,14 @@ def analyse(fights):
                     mon_time[e["who"]] += e["t"] - enter_t.pop(e["who"])
             elif k.startswith("terrain_"):
                 terrain[k[8:]] += 1
+            elif k in PROP_EVENTS:
+                props[k] += 1
+                if k in PROP_DMG or k == "crystal_reflect_hit":
+                    prop_dmg[k] += e.get("frac", 0.0)
+                if k == "prop_ai_shot":
+                    prop_ai[e.get("what", "?")] += 1
+                if k == "berry_pick":
+                    berry_gain[e.get("gain", "?")] += 1
             elif k == "miss":
                 misses += 1
             elif k == "dodge":
@@ -270,6 +290,13 @@ def analyse(fights):
     R["tag_entropy_bits"] = {"mean": st.mean(per_mon_tag_entropy) if per_mon_tag_entropy else 0, "p10": q(per_mon_tag_entropy, 0.1)}
     R["stall_fights_pct"] = pct(stall_fights, n)
     R["terrain_events"] = dict(terrain)
+    R["props_per_fight"] = {k: props[k] / n for k in PROP_EVENTS if props[k]} if n else {}
+    R["prop_ai_shots"] = dict(prop_ai)
+    R["berry_gain"] = dict(berry_gain)
+    extra = sum(prop_dmg[k] for k in PROP_DMG)
+    total = dmg_direct + dmg_resid + extra
+    R["prop_damage_pct"] = {k: pct(v, total) for k, v in prop_dmg.items()}
+    R["prop_damage_share_pct"] = pct(extra + prop_dmg["crystal_reflect_hit"], total)
     R["misses_per_fight"] = misses / n if n else 0
     R["dodges_per_fight"] = {k: v / n for k, v in dodges.items()}
     R["combos_per_fight"] = {k: v / n for k, v in combos.items()}

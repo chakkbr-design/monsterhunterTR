@@ -466,6 +466,7 @@ func walk_speed() -> float:
 			v *= arena.field.move_mult(self)
 		if arena.get("terrain"):
 			v *= arena.terrain.move_mult(self)
+			v *= arena.terrain.props.move_mult(self)  # tronco caído (BattleProps)
 		var ab = arena.get("abilities")
 		if ab and ab.has_method("walk_mult"):
 			v *= ab.walk_mult(self)
@@ -819,7 +820,10 @@ func residual_damage(amount: int, why: String, col: Color) -> int:
 	if ab and ab.has_method("no_indirect") and ab.no_indirect(self):
 		return 0
 	amount = mini(amount, hp)
-	_tele("residual", {"why": why, "dmg": amount, "frac": snappedf(float(amount) / maxf(max_hp, 1), 0.001)})
+	_tele(
+		"residual",
+		{"why": why, "dmg": amount, "frac": snappedf(float(amount) / maxf(max_hp, 1), 0.001)}
+	)
 	popup("-%d %s" % [amount, why], col, 0.85, 0.3)
 	take_damage(amount, Vector3.ZERO, 0.0)
 	flash(col.lerp(Color.WHITE, 0.3) * 1.6, RESIDUAL_FLASH)
