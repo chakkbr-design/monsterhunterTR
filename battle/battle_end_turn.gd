@@ -309,6 +309,7 @@ func _volatiles(f: BattleFighter) -> void:
 		_note("yawn", f)
 	if BattleKanto.perish_tick(fx, f):
 		_note("perish", f)
+	BattleMore.end_turn(fx, f)
 
 
 ## Lado (Reflect, Light Screen, Safeguard, Mist, Tailwind): conta a rodada e avisa quem acabou.

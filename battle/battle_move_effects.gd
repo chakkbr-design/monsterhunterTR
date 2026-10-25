@@ -344,6 +344,7 @@ func crash_damage(user: BattleFighter, mv: Dictionary) -> void:
 ## Um lutador desmaiou (Retaliate olha o lado dele).
 func note_faint(f: BattleFighter) -> void:
 	BattleKanto.note_faint(self, f)
+	BattleMore.note_faint(self, f)
 
 
 ## Entrou em campo agora (Fake Out conta a partir daqui).
@@ -519,7 +520,10 @@ func _blocked(user: BattleFighter, mv: Dictionary) -> String:
 		"stockpile":
 			if int(st(user).stock) >= 3:
 				return "Não cabe mais!"
-	return BattleKanto.blocked(self, user, mv)
+	var k := BattleKanto.blocked(self, user, mv)
+	if k != "":
+		return k
+	return BattleMore.blocked(self, user, mv)
 
 
 func _last_of(f: BattleFighter) -> String:
@@ -691,6 +695,7 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 	if cs is Dictionary:
 		for k in cs:
 			arena.moves.change_stage(user, String(k), int(cs[k]))
+	BattleMore.on_use(self, user, mv)
 
 
 func _chain_window(mv: Dictionary) -> float:
@@ -806,6 +811,8 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 			target.popup("A proteção caiu!", Color(1, 0.8, 0.5))
 		return false
 	if BattleKanto.blocks_hit(self, user, target, mv):
+		return true
+	if BattleMore.blocks_hit(self, user, target, mv):
 		return true
 	if (
 		float(mv.get("power", 0)) <= 0.0
@@ -1076,7 +1083,9 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 					)
 				)
 			)
-	if String(m.get("type", "")) == "electric" and active(s, "charged"):
+	p = BattleMore.power(self, user, target, m, p)
+	ty = BattleMore.move_type(self, user, target, m, ty)
+	if ty == "electric" and active(s, "charged"):
 		p *= 2.0
 	var crit := active(s, "laser")
 	if p == p0 and not crit and ty == ty0:
@@ -1101,6 +1110,7 @@ func attacker_profile(user: BattleFighter, target: BattleFighter, m: Dictionary)
 			p["crit_atk"] = target.crit_stat("atk", true)
 		"facade":
 			p["burned"] = false
+	BattleMore.attacker(self, user, target, m, p)
 	return p
 
 
@@ -1134,6 +1144,7 @@ func defender_profile(user: BattleFighter, target: BattleFighter, m: Dictionary)
 			p["spd"] = float(target.stats.get("spd", 1))
 			p["crit_def"] = p.def
 			p["crit_spd"] = p.spd
+	BattleMore.defender(self, user, target, m, p)
 	if arena.abilities and arena.abilities.no_crit(target, user):
 		p["no_crit"] = true
 	return p
@@ -1245,6 +1256,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			user.take_damage(user.hp, Vector3.ZERO, 0.0)
 		_counter(user, target, mv, dealt)
 		BattleKanto.note_damage(self, user, target, mv, dealt)
+		BattleMore.note_damage(self, user, target, mv, dealt)
 		if active(s, "laser"):
 			s.laser = -99.0
 		if String(mv.get("type", "")) == "electric":
@@ -2027,7 +2039,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				user.moves[i] = c2
 				user.popup("Copiou %s!" % Dex.move(c2).get("name", c2), Color(0.9, 0.9, 1.0))
 		_:
-			return BattleKanto.self_move(self, user, mv)
+			return BattleKanto.self_move(self, user, mv) or BattleMore.self_move(self, user, mv)
 	return true
 
 
@@ -2171,6 +2183,7 @@ func tick(dt: float) -> void:
 				foe.opponent = f
 	_tick_spikes()
 	_tick_wish()
+	BattleMore.tick(self, dt)
 
 
 func _tick_spikes() -> void:
@@ -2607,7 +2620,10 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			if "ghost" in f.types:
 				return hp > 0.6
 			return int(f.stages.get("atk", 0)) < 2
-	return BattleKanto.ai_worth(self, f, mv)
+	var k = BattleKanto.ai_worth(self, f, mv)
+	if k != null:
+		return k
+	return BattleMore.ai_worth(self, f, mv)
 
 
 func _has_type_hit(f: BattleFighter, type: String) -> bool:

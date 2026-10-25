@@ -650,7 +650,11 @@
     "desc": "Passes poison, burn and paralysis back.",
     "desc_pt": "Veneno, queimadura ou paralisia que ele pega passam também para quem causou."
   },
-  "imposter": {"name": "IMPOSTER", "desc": "Transforms into the foe it faces.", "desc_pt": "Ao entrar, vira uma cópia do inimigo mais perto (tipos, stats menos HP, golpes, habilidade e aparência)."},
+  "imposter": {
+    "name": "IMPOSTER",
+    "desc": "Transforms into the foe it faces.",
+    "desc_pt": "Ao entrar, vira uma cópia do inimigo mais perto (tipos, stats menos HP, golpes, habilidade e aparência)."
+  },
   "trace": {
     "name": "TRACE",
     "desc": "Copies a foe's ability.",
@@ -660,5 +664,760 @@
     "name": "WEAK ARMOR",
     "desc": "Physical hits lower DEFENSE and raise SPEED.",
     "desc_pt": "Golpe físico que o acerta baixa a Defesa (-1) e sobe a Speed (+2); no máximo uma vez por segundo."
+  },
+  "pickpocket": {
+    "name": "PICKPOCKET",
+    "desc": "Steals attacking Pokémon's held items on contact.",
+    "desc_pt": ""
+  },
+  "klutz": {
+    "name": "KLUTZ",
+    "desc": "Prevents the Pokémon from using its held item in battle.",
+    "desc_pt": ""
+  },
+  "beast_boost": {
+    "name": "BEAST BOOST",
+    "desc": "Raises this Pokémon's highest stat by one stage when it faints another Pokémon.",
+    "desc_pt": ""
+  },
+  "contrary": {
+    "name": "CONTRARY",
+    "desc": "Inverts stat changes.",
+    "desc_pt": ""
+  },
+  "bulletproof": {
+    "name": "BULLETPROOF",
+    "desc": "Protects against bullet, ball, and bomb-based moves.",
+    "desc_pt": ""
+  },
+  "protosynthesis": {
+    "name": "PROTOSYNTHESIS",
+    "desc": "Raises highest stat in harsh sunlight, or if holding Booster Energy.",
+    "desc_pt": ""
+  },
+  "quark_drive": {
+    "name": "QUARK DRIVE",
+    "desc": "Raises highest stat on Electric Terrain, or if holding Booster Energy.",
+    "desc_pt": ""
+  },
+  "sweet_veil": {
+    "name": "SWEET VEIL",
+    "desc": "Prevents friendly Pokémon from sleeping.",
+    "desc_pt": ""
+  },
+  "moody": {
+    "name": "MOODY",
+    "desc": "Raises a random stat two stages and lowers another one stage after each turn.",
+    "desc_pt": ""
+  },
+  "heavy_metal": {
+    "name": "HEAVY METAL",
+    "desc": "Doubles the Pokémon's weight.",
+    "desc_pt": ""
+  },
+  "stakeout": {
+    "name": "STAKEOUT",
+    "desc": "This Pokémon's moves have double power against Pokémon that switched in this turn.",
+    "desc_pt": ""
+  },
+  "protean": {
+    "name": "PROTEAN",
+    "desc": "Changes the bearer's type to match each move it uses.",
+    "desc_pt": ""
+  },
+  "magic_bounce": {
+    "name": "MAGIC BOUNCE",
+    "desc": "Reflects most non-damaging moves back at their user.",
+    "desc_pt": ""
+  },
+  "light_metal": {
+    "name": "LIGHT METAL",
+    "desc": "Halves the Pokémon's weight.",
+    "desc_pt": ""
+  },
+  "cheek_pouch": {
+    "name": "CHEEK POUCH",
+    "desc": "Restores HP upon eating a Berry, in addition to the Berry's effect.",
+    "desc_pt": ""
+  },
+  "aroma_veil": {
+    "name": "AROMA VEIL",
+    "desc": "Protects allies against moves that affect their mental state.",
+    "desc_pt": ""
+  },
+  "fluffy": {
+    "name": "FLUFFY",
+    "desc": "Damage from contact moves is halved. Damage from Fire moves is doubled.",
+    "desc_pt": ""
+  },
+  "shadow_tag": {
+    "name": "SHADOW TAG",
+    "desc": "Prevents opponents from fleeing or switching out.",
+    "desc_pt": ""
+  },
+  "suction_cups": {
+    "name": "SUCTION CUPS",
+    "desc": "Prevents being forced out of battle by other Pokémon's moves.",
+    "desc_pt": ""
+  },
+  "simple": {
+    "name": "SIMPLE",
+    "desc": "Doubles the Pokémon's stat modifiers. These doubled modifiers are still capped at -6 or 6 stages.",
+    "desc_pt": ""
+  },
+  "heatproof": {
+    "name": "HEATPROOF",
+    "desc": "Halves damage from Fire moves and burns.",
+    "desc_pt": ""
+  },
+  "magician": {
+    "name": "MAGICIAN",
+    "desc": "Steals the target's held item when the bearer uses a damaging move.",
+    "desc_pt": ""
+  },
+  "gooey": {
+    "name": "GOOEY",
+    "desc": "Lowers attacking Pokémon's Speed by one stage on contact.",
+    "desc_pt": ""
+  },
+  "honey_gather": {
+    "name": "HONEY GATHER",
+    "desc": "The Pokémon may pick up Honey after battle.",
+    "desc_pt": ""
+  },
+  "solid_rock": {
+    "name": "SOLID ROCK",
+    "desc": "Decreases damage taken from super-effective moves by 1/4.",
+    "desc_pt": ""
+  },
+  "white_smoke": {
+    "name": "WHITE SMOKE",
+    "desc": "Prevents stats from being lowered by other Pokémon.",
+    "desc_pt": ""
+  },
+  "flower_veil": {
+    "name": "FLOWER VEIL",
+    "desc": "Protects friendly Grass Pokémon from having their stats lowered by other Pokémon.",
+    "desc_pt": ""
+  },
+  "symbiosis": {
+    "name": "SYMBIOSIS",
+    "desc": "Passes the bearer's held item to an ally when the ally uses up its item.",
+    "desc_pt": ""
+  },
+  "corrosion": {
+    "name": "CORROSION",
+    "desc": "This Pokémon can inflict poison on Poison and Steel Pokémon.",
+    "desc_pt": ""
+  },
+  "grassy_surge": {
+    "name": "GRASSY SURGE",
+    "desc": "When this Pokémon enters battle, it changes the terrain to Grassy Terrain.",
+    "desc_pt": ""
+  },
+  "magma_armor": {
+    "name": "MAGMA ARMOR",
+    "desc": "Prevents freezing.",
+    "desc_pt": ""
+  },
+  "wind_rider": {
+    "name": "WIND RIDER",
+    "desc": "Gives immunity to wind moves, and causes the Pokémon's Attack to increase by one stage when hit by one.",
+    "desc_pt": ""
+  },
+  "truant": {
+    "name": "TRUANT",
+    "desc": "Skips every second turn.",
+    "desc_pt": ""
+  },
+  "sharpness": {
+    "name": "SHARPNESS",
+    "desc": "Powers up slicing moves.",
+    "desc_pt": ""
+  },
+  "iron_barbs": {
+    "name": "IRON BARBS",
+    "desc": "Damages attacking Pokémon for 1/8 their max HP on contact.",
+    "desc_pt": ""
+  },
+  "long_reach": {
+    "name": "LONG REACH",
+    "desc": "This Pokémon's moves do not make contact.",
+    "desc_pt": ""
+  },
+  "liquid_voice": {
+    "name": "LIQUID VOICE",
+    "desc": "Sound-based moves become Water-type.",
+    "desc_pt": ""
+  },
+  "stamina": {
+    "name": "STAMINA",
+    "desc": "Raises this Pokémon's Defense by one stage when it takes damage from a move.",
+    "desc_pt": ""
+  },
+  "libero": {
+    "name": "LIBERO",
+    "desc": "Libero changes the Pokémon's type to that of its previously used attack.",
+    "desc_pt": ""
+  },
+  "steam_engine": {
+    "name": "STEAM ENGINE",
+    "desc": "Boosts the Speed stat drastically when the Pokémon is hit by a Fire- or Water-type move.",
+    "desc_pt": ""
+  },
+  "ripen": {
+    "name": "RIPEN",
+    "desc": "Doubles the effect of berries.",
+    "desc_pt": ""
+  },
+  "purifying_salt": {
+    "name": "PURIFYING SALT",
+    "desc": "Protects from status conditions and halves damage from Ghost-type moves.",
+    "desc_pt": ""
+  },
+  "thermal_exchange": {
+    "name": "THERMAL EXCHANGE",
+    "desc": "Raises Attack when hit by a Fire-type move. Cannot be burned.",
+    "desc_pt": ""
+  },
+  "toxic_chain": {
+    "name": "TOXIC CHAIN",
+    "desc": "May cause bad poisoning when the Pokémon hits an opponent with a move.",
+    "desc_pt": ""
+  },
+  "normalize": {
+    "name": "NORMALIZE",
+    "desc": "Makes the Pokémon's moves all act Normal-type.",
+    "desc_pt": ""
+  },
+  "pure_power": {
+    "name": "PURE POWER",
+    "desc": "Doubles Attack in battle.",
+    "desc_pt": ""
+  },
+  "flare_boost": {
+    "name": "FLARE BOOST",
+    "desc": "Increases Special Attack to 1.5× when burned.",
+    "desc_pt": ""
+  },
+  "slow_start": {
+    "name": "SLOW START",
+    "desc": "Halves Attack and Speed for five turns upon entering battle.",
+    "desc_pt": ""
+  },
+  "mummy": {
+    "name": "MUMMY",
+    "desc": "Changes attacking Pokémon's abilities to Mummy on contact.",
+    "desc_pt": ""
+  },
+  "defeatist": {
+    "name": "DEFEATIST",
+    "desc": "Halves Attack and Special Attack at 50% max HP or less.",
+    "desc_pt": ""
+  },
+  "illusion": {
+    "name": "ILLUSION",
+    "desc": "Takes the appearance of the last conscious party Pokémon upon being sent out until hit by a damaging move.",
+    "desc_pt": ""
+  },
+  "grass_pelt": {
+    "name": "GRASS PELT",
+    "desc": "Boosts Defense while Grassy Terrain is in effect.",
+    "desc_pt": ""
+  },
+  "mega_launcher": {
+    "name": "MEGA LAUNCHER",
+    "desc": "Strengthens aura and pulse moves to 1.5× their power.",
+    "desc_pt": ""
+  },
+  "refrigerate": {
+    "name": "REFRIGERATE",
+    "desc": "Turns the bearer's Normal moves into Ice moves and strengthens them to 1.3× their power.",
+    "desc_pt": ""
+  },
+  "merciless": {
+    "name": "MERCILESS",
+    "desc": "This Pokémon's moves critical hit against poisoned targets.",
+    "desc_pt": ""
+  },
+  "water_bubble": {
+    "name": "WATER BUBBLE",
+    "desc": "Halves damage from Fire moves, doubles damage of Water moves, and prevents burns.",
+    "desc_pt": ""
+  },
+  "water_compaction": {
+    "name": "WATER COMPACTION",
+    "desc": "Raises this Pokémon's Defense by two stages when it's hit by a Water move.",
+    "desc_pt": ""
+  },
+  "electric_surge": {
+    "name": "ELECTRIC SURGE",
+    "desc": "When this Pokémon enters battle, it changes the terrain to Electric Terrain.",
+    "desc_pt": ""
+  },
+  "psychic_surge": {
+    "name": "PSYCHIC SURGE",
+    "desc": "When this Pokémon enters battle, it changes the terrain to Psychic Terrain.",
+    "desc_pt": ""
+  },
+  "cotton_down": {
+    "name": "COTTON DOWN",
+    "desc": "When Ignores moves and abilities that draw in moves.",
+    "desc_pt": ""
+  },
+  "sand_spit": {
+    "name": "SAND SPIT",
+    "desc": "Creates a sandstorm when hit by an attack.",
+    "desc_pt": ""
+  },
+  "propeller_tail": {
+    "name": "PROPELLER TAIL",
+    "desc": "Ignores moves and abilities that draw in moves.",
+    "desc_pt": ""
+  },
+  "ice_scales": {
+    "name": "ICE SCALES",
+    "desc": "Halves damage from Special moves.",
+    "desc_pt": ""
+  },
+  "stalwart": {
+    "name": "STALWART",
+    "desc": "Ignores moves and abilities that draw in moves.",
+    "desc_pt": ""
+  },
+  "wind_power": {
+    "name": "WIND POWER",
+    "desc": "When hit by a wind move, the power of the next Electric-type move it uses is doubled.",
+    "desc_pt": ""
+  },
+  "guard_dog": {
+    "name": "GUARD DOG",
+    "desc": "Boosts Attack if intimidated, and prevents being forced to switch out.",
+    "desc_pt": ""
+  },
+  "mycelium_might": {
+    "name": "MYCELIUM MIGHT",
+    "desc": "Status moves go last, but are not affected by the opponent's ability.",
+    "desc_pt": ""
+  },
+  "toxic_debris": {
+    "name": "TOXIC DEBRIS",
+    "desc": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
+    "desc_pt": ""
+  },
+  "supersweet_syrup": {
+    "name": "SUPERSWEET SYRUP",
+    "desc": "Once per battle, when a Pokémon with Supersweet Syrup enters the battle, it lowers the evasion stat of all adjacent opponents by one stage.",
+    "desc_pt": ""
+  },
+  "hospitality": {
+    "name": "HOSPITALITY",
+    "desc": "When a Pokémon with Hospitality enters a battle, it restores HP for an ally by 25%.",
+    "desc_pt": ""
+  },
+  "wonder_guard": {
+    "name": "WONDER GUARD",
+    "desc": "Protects against damaging moves that are not super effective.",
+    "desc_pt": ""
+  },
+  "stall": {
+    "name": "STALL",
+    "desc": "Makes the Pokémon move last within its move's priority bracket.",
+    "desc_pt": ""
+  },
+  "toxic_boost": {
+    "name": "TOXIC BOOST",
+    "desc": "Increases Attack to 1.5× when poisoned.",
+    "desc_pt": ""
+  },
+  "forecast": {
+    "name": "FORECAST",
+    "desc": "Changes Castform's type and form to match the weather.",
+    "desc_pt": ""
+  },
+  "color_change": {
+    "name": "COLOR CHANGE",
+    "desc": "Changes type to match when hit by a damaging move.",
+    "desc_pt": ""
+  },
+  "air_lock": {
+    "name": "AIR LOCK",
+    "desc": "Negates all effects of weather, but does not prevent the weather itself.",
+    "desc_pt": ""
+  },
+  "flower_gift": {
+    "name": "FLOWER GIFT",
+    "desc": "Increases friendly Pokémon's Attack and Special Defense to 1.5× during strong sunlight.",
+    "desc_pt": ""
+  },
+  "bad_dreams": {
+    "name": "BAD DREAMS",
+    "desc": "Damages sleeping opponents for 1/8 their max HP after each turn.",
+    "desc_pt": ""
+  },
+  "multitype": {
+    "name": "MULTITYPE",
+    "desc": "Changes Arceus's type and form to match its held Plate.",
+    "desc_pt": ""
+  },
+  "victory_star": {
+    "name": "VICTORY STAR",
+    "desc": "Increases moves' accuracy to 1.1× for friendly Pokémon.",
+    "desc_pt": ""
+  },
+  "zen_mode": {
+    "name": "ZEN MODE",
+    "desc": "Changes Darmanitan's form after each turn depending on its HP: Zen Mode below 50% max HP, and Standard Mode otherwise.",
+    "desc_pt": ""
+  },
+  "turboblaze": {
+    "name": "TURBOBLAZE",
+    "desc": "Bypasses targets' abilities if they could hinder or prevent moves.",
+    "desc_pt": ""
+  },
+  "teravolt": {
+    "name": "TERAVOLT",
+    "desc": "Bypasses targets' abilities if they could hinder or prevent moves.",
+    "desc_pt": ""
+  },
+  "fur_coat": {
+    "name": "FUR COAT",
+    "desc": "Halves damage from physical attacks.",
+    "desc_pt": ""
+  },
+  "stance_change": {
+    "name": "STANCE CHANGE",
+    "desc": "Changes Aegislash to Blade Forme before using a damaging move, or Shield Forme before using King’s Shield.",
+    "desc_pt": ""
+  },
+  "pixilate": {
+    "name": "PIXILATE",
+    "desc": "Turns the bearer's Normal moves into Fairy moves and strengthens them to 1.3× their power.",
+    "desc_pt": ""
+  },
+  "fairy_aura": {
+    "name": "FAIRY AURA",
+    "desc": "Strengthens Fairy moves to 1.33× their power for all friendly and opposing Pokémon.",
+    "desc_pt": ""
+  },
+  "dark_aura": {
+    "name": "DARK AURA",
+    "desc": "Strengthens Dark moves to 1.33× their power for all friendly and opposing Pokémon.",
+    "desc_pt": ""
+  },
+  "aura_break": {
+    "name": "AURA BREAK",
+    "desc": "Makes Dark Aura and Fairy Aura weaken moves of their respective types.",
+    "desc_pt": ""
+  },
+  "battery": {
+    "name": "BATTERY",
+    "desc": "Ally Pokémon's moves have their power increased to 1.3×.",
+    "desc_pt": ""
+  },
+  "dancer": {
+    "name": "DANCER",
+    "desc": "Whenever another Pokémon uses a dance move, this Pokémon will use the same move immediately afterwards.",
+    "desc_pt": ""
+  },
+  "schooling": {
+    "name": "SCHOOLING",
+    "desc": "Wishiwashi becomes Schooling Form when its HP is 25% or higher.",
+    "desc_pt": ""
+  },
+  "queenly_majesty": {
+    "name": "QUEENLY MAJESTY",
+    "desc": "Opposing Pokémon cannot use priority attacks.",
+    "desc_pt": ""
+  },
+  "triage": {
+    "name": "TRIAGE",
+    "desc": "This Pokémon's healing moves have their priority increased by 3.",
+    "desc_pt": ""
+  },
+  "receiver": {
+    "name": "RECEIVER",
+    "desc": "When an ally faints, this Pokémon gains its Ability.",
+    "desc_pt": ""
+  },
+  "wimp_out": {
+    "name": "WIMP OUT",
+    "desc": "This Pokémon automatically switches out when its HP drops below half.",
+    "desc_pt": ""
+  },
+  "emergency_exit": {
+    "name": "EMERGENCY EXIT",
+    "desc": "This Pokémon automatically switches out when its HP drops below half.",
+    "desc_pt": ""
+  },
+  "innards_out": {
+    "name": "INNARDS OUT",
+    "desc": "When this Pokémon faints from an opponent's move, that opponent takes damage equal to the HP this Pokémon had remaining.",
+    "desc_pt": ""
+  },
+  "rks_system": {
+    "name": "RKS SYSTEM",
+    "desc": "Changes this Pokémon's type to match its held Memory.",
+    "desc_pt": ""
+  },
+  "shields_down": {
+    "name": "SHIELDS DOWN",
+    "desc": "Transforms this Minior between Core Form and Meteor Form. Prevents major status ailments and drowsiness while in Meteor Form.",
+    "desc_pt": ""
+  },
+  "comatose": {
+    "name": "COMATOSE",
+    "desc": "This Pokémon always acts as though it were Asleep.",
+    "desc_pt": ""
+  },
+  "disguise": {
+    "name": "DISGUISE",
+    "desc": "Prevents the first instance of battle damage.",
+    "desc_pt": ""
+  },
+  "dazzling": {
+    "name": "DAZZLING",
+    "desc": "Opposing Pokémon cannot use priority attacks.",
+    "desc_pt": ""
+  },
+  "berserk": {
+    "name": "BERSERK",
+    "desc": "Raises this Pokémon's Special Attack by one stage every time its HP drops below half.",
+    "desc_pt": ""
+  },
+  "steelworker": {
+    "name": "STEELWORKER",
+    "desc": "This Pokémon's Steel moves have 1.5× power.",
+    "desc_pt": ""
+  },
+  "misty_surge": {
+    "name": "MISTY SURGE",
+    "desc": "When this Pokémon enters battle, it changes the terrain to Misty Terrain.",
+    "desc_pt": ""
+  },
+  "full_metal_body": {
+    "name": "FULL METAL BODY",
+    "desc": "Other Pokémon cannot lower this Pokémon's stats.",
+    "desc_pt": ""
+  },
+  "shadow_shield": {
+    "name": "SHADOW SHIELD",
+    "desc": "When this Pokémon has full HP, regular damage from moves is halved.",
+    "desc_pt": ""
+  },
+  "prism_armor": {
+    "name": "PRISM ARMOR",
+    "desc": "Reduces super-effective damage to 0.75×.",
+    "desc_pt": ""
+  },
+  "soul_heart": {
+    "name": "SOUL-HEART",
+    "desc": "This Pokémon's Special Attack rises by one stage every time any Pokémon faints.",
+    "desc_pt": ""
+  },
+  "mirror_armor": {
+    "name": "MIRROR ARMOR",
+    "desc": "Reflects any stat-lowering effects.",
+    "desc_pt": ""
+  },
+  "ball_fetch": {
+    "name": "BALL FETCH",
+    "desc": "If the Pokémon is not holding an item, it will fetch the Poké Ball from the first failed throw of the battle.",
+    "desc_pt": ""
+  },
+  "gulp_missile": {
+    "name": "GULP MISSILE",
+    "desc": "If a Cramorant with Gulp Missile uses Surf or Dive, it catches prey and changes its form depending on its remaining HP.",
+    "desc_pt": ""
+  },
+  "punk_rock": {
+    "name": "PUNK ROCK",
+    "desc": "Boosts sound-based moves and halves damage from the same moves.",
+    "desc_pt": ""
+  },
+  "steely_spirit": {
+    "name": "STEELY SPIRIT",
+    "desc": "Powers up ally Pokémon's Steel-type moves.",
+    "desc_pt": ""
+  },
+  "perish_body": {
+    "name": "PERISH BODY",
+    "desc": "When hit by a move that makes direct contact, the Pokémon and the attacker will faint after three turns unless they switch out of battle.",
+    "desc_pt": ""
+  },
+  "screen_cleaner": {
+    "name": "SCREEN CLEANER",
+    "desc": "Nullifies effects of Light Screen, Reflect, and Aurora Veil.",
+    "desc_pt": ""
+  },
+  "wandering_spirit": {
+    "name": "WANDERING SPIRIT",
+    "desc": "Swaps abilities with opponents on contact.",
+    "desc_pt": ""
+  },
+  "power_spot": {
+    "name": "POWER SPOT",
+    "desc": "Just being next to the Pokémon powers up moves.",
+    "desc_pt": ""
+  },
+  "ice_face": {
+    "name": "ICE FACE",
+    "desc": "The Pokémon’s ice head can take a physical attack as a substitute, but the attack also changes the Pokémon’s appearance. The ice will be restored when it snows.",
+    "desc_pt": ""
+  },
+  "hunger_switch": {
+    "name": "HUNGER SWITCH",
+    "desc": "Causes Morpeko to change its form each turn, alternating between Full Belly Mode and Hangry Mode",
+    "desc_pt": ""
+  },
+  "intrepid_sword": {
+    "name": "INTREPID SWORD",
+    "desc": "Boosts Attack in battle.",
+    "desc_pt": ""
+  },
+  "dauntless_shield": {
+    "name": "DAUNTLESS SHIELD",
+    "desc": "Boosts Defense in battle.",
+    "desc_pt": ""
+  },
+  "unseen_fist": {
+    "name": "UNSEEN FIST",
+    "desc": "Contact moves can strike through Protect/Detect.",
+    "desc_pt": ""
+  },
+  "transistor": {
+    "name": "TRANSISTOR",
+    "desc": "Powers up Electric-type moves.",
+    "desc_pt": ""
+  },
+  "dragons_maw": {
+    "name": "DRAGON’S MAW",
+    "desc": "Powers up Dragon-type moves.",
+    "desc_pt": ""
+  },
+  "chilling_neigh": {
+    "name": "CHILLING NEIGH",
+    "desc": "Boosts Attack after knocking out a Pokémon.",
+    "desc_pt": ""
+  },
+  "grim_neigh": {
+    "name": "GRIM NEIGH",
+    "desc": "Boosts Special Attack after knocking out a Pokémon.",
+    "desc_pt": ""
+  },
+  "lingering_aroma": {
+    "name": "LINGERING AROMA",
+    "desc": "Contact changes the attacker's Ability to Lingering Aroma.",
+    "desc_pt": ""
+  },
+  "well_baked_body": {
+    "name": "WELL-BAKED BODY",
+    "desc": "Immune to Fire-type moves, and Defense is sharply boosted.",
+    "desc_pt": ""
+  },
+  "seed_sower": {
+    "name": "SEED SOWER",
+    "desc": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
+    "desc_pt": ""
+  },
+  "electromorphosis": {
+    "name": "ELECTROMORPHOSIS",
+    "desc": "When hit by an attack, the power of the next Electric-type move it uses is doubled.",
+    "desc_pt": ""
+  },
+  "anger_shell": {
+    "name": "ANGER SHELL",
+    "desc": "When the Pokémon's HP drops below half, Anger Shell lowers its Defense and Special Defense but its Attack, Special Attack and Speed are raised.",
+    "desc_pt": ""
+  },
+  "opportunist": {
+    "name": "OPPORTUNIST",
+    "desc": "Copies stat boosts by the opponent.",
+    "desc_pt": ""
+  },
+  "rocky_payload": {
+    "name": "ROCKY PAYLOAD",
+    "desc": "Powers up Rock-type moves.",
+    "desc_pt": ""
+  },
+  "zero_to_hero": {
+    "name": "ZERO TO HERO",
+    "desc": "Transforms into its Hero Form when switching out.",
+    "desc_pt": ""
+  },
+  "earth_eater": {
+    "name": "EARTH EATER",
+    "desc": "Restores HP when hit by a Ground-type move.",
+    "desc_pt": ""
+  },
+  "costar": {
+    "name": "COSTAR",
+    "desc": "Copies ally's stat changes on entering battle.",
+    "desc_pt": ""
+  },
+  "commander": {
+    "name": "COMMANDER",
+    "desc": "Goes inside the mouth of an ally Dondozo if one is on the field.",
+    "desc_pt": ""
+  },
+  "cud_chew": {
+    "name": "CUD CHEW",
+    "desc": "Causes the Pokémon to reuse an already consumed Berry at the end of the next turn.",
+    "desc_pt": ""
+  },
+  "armor_tail": {
+    "name": "ARMOR TAIL",
+    "desc": "Prevents the opponent from using any moves that have priority, such as Quick Attack.",
+    "desc_pt": ""
+  },
+  "supreme_overlord": {
+    "name": "SUPREME OVERLORD",
+    "desc": "Attack and Special Attack are boosted for each party Pokémon that has been defeated.",
+    "desc_pt": ""
+  },
+  "good_as_gold": {
+    "name": "GOOD AS GOLD",
+    "desc": "Gives immunity to status moves.",
+    "desc_pt": ""
+  },
+  "tablets_of_ruin": {
+    "name": "TABLETS OF RUIN",
+    "desc": "Lowers Attack of all Pokémon except itself.",
+    "desc_pt": ""
+  },
+  "sword_of_ruin": {
+    "name": "SWORD OF RUIN",
+    "desc": "Lowers Defense of all Pokémon except itself.",
+    "desc_pt": ""
+  },
+  "vessel_of_ruin": {
+    "name": "VESSEL OF RUIN",
+    "desc": "Lowers Special Attack of all Pokémon except itself.",
+    "desc_pt": ""
+  },
+  "beads_of_ruin": {
+    "name": "BEADS OF RUIN",
+    "desc": "Lowers Special Defense of all Pokémon except itself.",
+    "desc_pt": ""
+  },
+  "orichalcum_pulse": {
+    "name": "ORICHALCUM PULSE",
+    "desc": "Turns the sunlight harsh when entering battle, and boosts Attack while active.",
+    "desc_pt": ""
+  },
+  "hadron_engine": {
+    "name": "HADRON ENGINE",
+    "desc": "Creates an Electric Terrain when entering battle, and boosts Special Attack while active.",
+    "desc_pt": ""
+  },
+  "tera_shift": {
+    "name": "TERA SHIFT",
+    "desc": "When Terapagos enters the battle, it turns into its Terastal Form until the end of the battle.",
+    "desc_pt": ""
+  },
+  "poison_puppeteer": {
+    "name": "POISON PUPPETEER",
+    "desc": "Pokémon poisoned by Pecharunt's moves will also become confused.",
+    "desc_pt": ""
   }
 }

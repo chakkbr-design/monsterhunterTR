@@ -656,6 +656,15 @@ FX = {
 }
 
 
+# --- Gen 2-9: os golpes que faltavam para as 1025 espécies (parte A: tools/moves_more_a.py, parte B: moves_more_b.py) ---
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import moves_more_a, moves_more_b  # noqa: E402
+
+for _part in (moves_more_a, moves_more_b):
+    NEW.update(_part.NEW)
+    FX.update(_part.FX)
+
+
 def merge_fx(path="data/move_fx.json"):
     """Acrescenta (ou troca) as entradas FX em moves de move_fx.json, uma por linha como as outras."""
     lines = open(path, encoding="utf-8").read().split("\n")
