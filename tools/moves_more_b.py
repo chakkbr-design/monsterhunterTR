@@ -10,3 +10,6 @@ SELF = {"kind": "self_buff", "power": 0}
 NEW = {}
 
 FX = {}
+
+# Texto do guia (docs/GOLPES.md, tools/move_guide.py): como o golpe foi adaptado ao tempo real, em pt-BR.
+GUIDE = {}

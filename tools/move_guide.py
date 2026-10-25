@@ -443,6 +443,13 @@ BESPOKE = {
     "focus_energy": "Chance de crítico do usuário +2 níveis (limite 4): o crítico passa de 1/24 para 1/2.",
 }
 
+# Golpes da Gen 2-9 (tools/moves_more_a.py e moves_more_b.py): GUIDE[id] = texto da adaptação.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import moves_more_a, moves_more_b  # noqa: E402
+
+for _part in (moves_more_a, moves_more_b):
+    BESPOKE.update(getattr(_part, "GUIDE", {}))
+
 
 # ---------------------------------------------------------------- montagem das linhas
 def priority_text(p):
