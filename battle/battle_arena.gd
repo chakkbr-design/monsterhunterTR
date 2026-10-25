@@ -2946,6 +2946,8 @@ func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 		)
 	if combos:
 		combos.on_move_used(user, mv)
+	if abilities:
+		abilities.on_move_used(user, mv)
 	if hud and hud.has_method("callout"):
 		hud.callout(
 			user,

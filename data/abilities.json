@@ -554,5 +554,110 @@
     "name": "LEAF GUARD",
     "desc": "Prevents status conditions in harsh sunlight.",
     "desc_pt": "Não pega status no sol forte."
+  },
+  "analytic": {
+    "name": "ANALYTIC",
+    "desc": "Boosts move power if the target moved recently.",
+    "desc_pt": "Dano x1,3 em quem usou um golpe nos últimos 3 s (pega o alvo no meio da recuperação)."
+  },
+  "anger_point": {
+    "name": "ANGER POINT",
+    "desc": "Maxes ATTACK when hit by a critical hit.",
+    "desc_pt": "Ao levar um crítico, o Ataque vai ao máximo (+6) e ele entra em fúria (não recua mais)."
+  },
+  "anticipation": {
+    "name": "ANTICIPATION",
+    "desc": "Senses dangerous moves.",
+    "desc_pt": "Ao entrar, avisa se algum inimigo tem golpe superefetivo contra ele; com o aviso, 25% de se esquivar de golpe superefetivo."
+  },
+  "cursed_body": {
+    "name": "CURSED BODY",
+    "desc": "May disable a move that hit it.",
+    "desc_pt": "30% de travar por 6 s o golpe de quem o acertou (o golpe entra em recarga)."
+  },
+  "download": {
+    "name": "DOWNLOAD",
+    "desc": "Adjusts power based on a foe's defenses.",
+    "desc_pt": "Ao entrar, analisa os inimigos: sobe o Ataque (+1) se a Defesa deles for menor que a Def. Esp., senão o Atq. Esp. (+1)."
+  },
+  "early_bird": {
+    "name": "EARLY BIRD",
+    "desc": "Awakens from sleep twice as fast.",
+    "desc_pt": "Acorda duas vezes mais rápido: o sono perde o dobro de rodadas por rodada."
+  },
+  "forewarn": {
+    "name": "FOREWARN",
+    "desc": "Reveals the foes' strongest move.",
+    "desc_pt": "Ao entrar, revela o golpe mais forte de cada inimigo; contra esse golpe, 30% de se esquivar."
+  },
+  "gluttony": {
+    "name": "GLUTTONY",
+    "desc": "Eats berries early.",
+    "desc_pt": "Come a frutinha de HP cedo (com 75% do HP no lugar de 50%) e a cura vale x1,5."
+  },
+  "harvest": {
+    "name": "HARVEST",
+    "desc": "May regrow a used berry.",
+    "desc_pt": "A cada rodada (~4 s) 50% de recuperar a frutinha comida (sempre no sol)."
+  },
+  "healer": {
+    "name": "HEALER",
+    "desc": "May heal an ally's status.",
+    "desc_pt": "A cada rodada, 30% de curar o status do aliado (sozinho em campo, 10% de curar o próprio)."
+  },
+  "liquid_ooze": {
+    "name": "LIQUID OOZE",
+    "desc": "Drain moves hurt the drainer.",
+    "desc_pt": "Quem drena HP dele (golpe de dreno, Leech Seed) perde o HP em vez de ganhar. A IA evita golpes de dreno nele."
+  },
+  "mold_breaker": {
+    "name": "MOLD BREAKER",
+    "desc": "Moves ignore the target's ability.",
+    "desc_pt": "Os golpes dele ignoram habilidades defensivas do alvo (Levitate, Sturdy, Thick Fat, Soundproof, Clear Body, Shell Armor...)."
+  },
+  "neutralizing_gas": {
+    "name": "NEUTRALIZING GAS",
+    "desc": "Neutralizes all other abilities.",
+    "desc_pt": "Enquanto está em campo, as habilidades de todos os outros ficam anuladas; ao sair, elas voltam (e as de entrada agem de novo)."
+  },
+  "overcoat": {
+    "name": "OVERCOAT",
+    "desc": "Protects from weather and powder.",
+    "desc_pt": "Imune a golpes de pó e esporos, e ao dano de areia."
+  },
+  "poison_touch": {
+    "name": "POISON TOUCH",
+    "desc": "May poison on contact attacks.",
+    "desc_pt": "30% de envenenar o alvo quando acerta um golpe de contato."
+  },
+  "pressure": {
+    "name": "PRESSURE",
+    "desc": "Foes spend more energy per move.",
+    "desc_pt": "Inimigos a menos de 6 m gastam 25% mais energia (PP) por golpe."
+  },
+  "rattled": {
+    "name": "RATTLED",
+    "desc": "Speed rises when scared.",
+    "desc_pt": "Speed +1 ao levar golpe de Inseto, Fantasma ou Sombrio, ou ao ser intimidado."
+  },
+  "scrappy": {
+    "name": "SCRAPPY",
+    "desc": "Hits Ghost types with Normal and Fighting moves.",
+    "desc_pt": "Golpes Normal e Lutador acertam Fantasma; imune à Intimidate."
+  },
+  "synchronize": {
+    "name": "SYNCHRONIZE",
+    "desc": "Passes poison, burn and paralysis back.",
+    "desc_pt": "Veneno, queimadura ou paralisia que ele pega passam também para quem causou."
+  },
+  "trace": {
+    "name": "TRACE",
+    "desc": "Copies a foe's ability.",
+    "desc_pt": "Ao entrar, copia a habilidade de um inimigo (e a ativa na hora)."
+  },
+  "weak_armor": {
+    "name": "WEAK ARMOR",
+    "desc": "Physical hits lower DEFENSE and raise SPEED.",
+    "desc_pt": "Golpe físico que o acerta baixa a Defesa (-1) e sobe a Speed (+2); no máximo uma vez por segundo."
   }
 }

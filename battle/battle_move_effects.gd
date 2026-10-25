@@ -1070,8 +1070,10 @@ func attacker_profile(user: BattleFighter, target: BattleFighter, m: Dictionary)
 
 
 ## Perfil do defensor: na Gravity o Voador perde a imunidade a golpe de Terra.
-func defender_profile(_user: BattleFighter, target: BattleFighter, m: Dictionary) -> Dictionary:
+func defender_profile(user: BattleFighter, target: BattleFighter, m: Dictionary) -> Dictionary:
 	var p := target.damage_profile()
+	if arena.abilities:
+		p["types"] = arena.abilities.hit_types(user, target, m, p.types)  # Scrappy
 	if String(m.get("type", "")) == "ground" and active(field, "gravity") and "flying" in p.types:
 		var ty: Array = p.types.duplicate()
 		ty.erase("flying")
@@ -1088,7 +1090,7 @@ func defender_profile(_user: BattleFighter, target: BattleFighter, m: Dictionary
 		# Psyshock: golpe especial contra a Defesa física.
 		p["spd"] = p.def
 		p["crit_spd"] = p.crit_def
-	if arena.abilities and arena.abilities.no_crit(target):
+	if arena.abilities and arena.abilities.no_crit(target, user):
 		p["no_crit"] = true
 	return p
 
@@ -1408,7 +1410,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 func _status(user: BattleFighter, target: BattleFighter, s: String) -> void:
 	if BattleMoves.STATUS_IMMUNE.get(s, "-") in target.types:
 		return
-	if arena.abilities and arena.abilities.blocks_status(target, s):
+	if arena.abilities and arena.abilities.blocks_status(target, s, user):
 		return
 	if blocks_status(user, target, s):
 		return

@@ -135,7 +135,73 @@ const ENTRY := [
 	"unnerve",
 	"cloud_nine",
 	"air_lock",
+	"download",
+	"anticipation",
+	"forewarn",
+	"pressure",
+	"trace",
+	"neutralizing_gas",
 ]
+## Habilidades que o Trace não copia.
+const UNTRACEABLE := ["trace", "neutralizing_gas", "imposter"]
+## Habilidades de gatilho que o Mold Breaker NÃO ignora (agem no portador, não protegem de um golpe).
+const UNBREAKABLE := [
+	"static",
+	"poison_point",
+	"flame_body",
+	"effect_spore",
+	"cute_charm",
+	"rough_skin",
+	"aftermath",
+	"justified",
+	"steadfast",
+	"stench",
+	"synchronize",
+	"weak_armor",
+	"rattled",
+	"anger_point",
+	"cursed_body",
+	"liquid_ooze",
+	"poison_touch",
+	"pressure",
+	"moxie",
+	"defiant",
+	"competitive",
+	"neutralizing_gas",
+	"mold_breaker",
+	"scrappy",
+	"analytic",
+]
+## Habilidades que ignoram a imunidade de Fantasma (Scrappy): tipos de golpe que passam a acertar.
+const SCRAPPY_TYPES := ["normal", "fighting"]
+## Status que o Synchronize devolve.
+const SYNC_STATUS := ["poison", "toxic", "burn", "paralysis"]
+## Analytic: x1,3 em quem usou um golpe há menos de ANALYTIC_WINDOW s.
+const ANALYTIC_MULT := 1.3
+const ANALYTIC_WINDOW := 3.0
+## Esquiva extra de Anticipation (golpe superefetivo) e Forewarn (o golpe revelado).
+const ANTICIPATION_DODGE := 0.25
+const FOREWARN_DODGE := 0.3
+## Cursed Body: chance e segundos que o golpe que o acertou fica travado.
+const CURSED_CHANCE := 0.3
+const CURSED_LOCK := 6.0
+## Weak Armor: no máximo um gatilho por ARMOR_GAP s (golpe de vários acertos não empilha tudo).
+const ARMOR_GAP := 1.0
+## Harvest: chance por rodada de a frutinha voltar (sempre no sol).
+const HARVEST_CHANCE := 0.5
+## Healer: chance por rodada de curar o aliado; sozinho em campo cura a si mesmo com HEALER_SELF.
+const HEALER_CHANCE := 0.3
+const HEALER_SELF := 0.1
+## Poison Touch: chance de envenenar no golpe de contato.
+const POISON_TOUCH_CHANCE := 0.3
+## Pressure: inimigos a menos de PRESSURE_RANGE m gastam PRESSURE_COST x mais energia por golpe.
+const PRESSURE_RANGE := 6.0
+const PRESSURE_COST := 1.25
+## Gluttony: a frutinha de HP é comida com esta fração a mais do HP máx. e cura GLUTTONY_HEAL x.
+const GLUTTONY_BONUS := 0.25
+const GLUTTONY_HEAL := 1.5
+## Frutinhas que o Harvest planta de novo.
+const BERRIES := ["oran_berry", "sitrus_berry", "pecha_berry", "persim_berry"]
 ## Habilidades que criam clima ao entrar (5 rodadas, 8 com a pedra do clima segurada).
 const WEATHER_SETTERS := {
 	"drought": "sun", "drizzle": "rain", "sand_stream": "sand", "snow_warning": "hail"
@@ -227,6 +293,31 @@ const PROFILES := {
 	"plus": "shooter",
 	"minus": "shooter",
 	"skill_link": "shooter",
+	# Kanto: pune a recuperação do alvo / entra e sai
+	"analytic": "skirmisher",
+	"anticipation": "skirmisher",
+	"rattled": "skirmisher",
+	"early_bird": "skirmisher",
+	# Download/Trace/Forewarn/Neutralizing Gas/Synchronize: leitura e truque à distância
+	"download": "shooter",
+	"forewarn": "trickster",
+	"trace": "trickster",
+	"neutralizing_gas": "trickster",
+	"synchronize": "trickster",
+	# Pressure e quem quer o corpo a corpo
+	"pressure": "brawler",
+	"anger_point": "brawler",
+	"mold_breaker": "brawler",
+	"scrappy": "brawler",
+	"poison_touch": "brawler",
+	# Aguenta e devolve / se recupera em campo
+	"cursed_body": "wall",
+	"weak_armor": "wall",
+	"liquid_ooze": "wall",
+	"overcoat": "wall",
+	"gluttony": "wall",
+	"harvest": "wall",
+	"healer": "wall",
 }
 
 var arena: Node
@@ -246,7 +337,8 @@ var _field := {}  ## id -> lutador ativo no frame anterior (para ver quem saiu n
 var weather := ""  ## clima criado por golpe/habilidade
 var weather_t := 0.0  ## segundos restantes (-1 = sem fim em segundos)
 var weather_rounds := 0  ## rodadas restantes do clima de golpe/habilidade (0 = não conta rodada)
-var weather_ended := ""  ## clima que acabou no último fim de turno (count_weather_round)
+var weather_ended := ""
+var _gas_prev := false  ## havia Neutralizing Gas no frame anterior  ## clima que acabou no último fim de turno (count_weather_round)
 
 
 func _init(a: Node) -> void:
@@ -262,11 +354,37 @@ func no_indirect(f: BattleFighter) -> bool:
 
 
 func ability_of(f: BattleFighter) -> String:
+	var a := _raw_ability(f)
+	if a != "" and a != "neutralizing_gas" and _gas_on():
+		return ""  # Neutralizing Gas: ninguém mais tem habilidade
+	return a
+
+
+## A habilidade sem o Neutralizing Gas (Gastro Acid / Worry Seed / Trace entram aqui).
+func _raw_ability(f: BattleFighter) -> String:
 	if not is_instance_valid(f) or f.mon == null:
 		return ""
-	if f.has_meta("ability_override"):  # Gastro Acid / Worry Seed
+	if f.has_meta("ability_override"):  # Gastro Acid / Worry Seed / Trace
 		return String(f.get_meta("ability_override"))
 	return f.mon.ability
+
+
+## Há um Neutralizing Gas em campo.
+func _gas_on() -> bool:
+	if arena == null:
+		return false
+	for g in arena.fighters:
+		if is_instance_valid(g) and g.active() and _raw_ability(g) == "neutralizing_gas":
+			return true
+	return false
+
+
+## Habilidade do alvo que vale contra este atacante: o Mold Breaker ignora as defensivas.
+func _tab(user: BattleFighter, target: BattleFighter) -> String:
+	var ta := ability_of(target)
+	if ta != "" and ability_of(user) == "mold_breaker" and not ta in UNBREAKABLE:
+		return ""
+	return ta
 
 
 func _state(f: BattleFighter) -> Dictionary:
@@ -280,6 +398,11 @@ func _state(f: BattleFighter) -> Dictionary:
 			"unburdened": f.item_used,
 			"flash": false,
 			"item": "",
+			"moved": -99.0,  # última vez que usou um golpe (Analytic olha no alvo)
+			"armor": -99.0,  # último gatilho do Weak Armor
+			"shudder": false,  # Anticipation viu golpe superefetivo
+			"warn": {},  # Forewarn: id do inimigo -> golpe revelado
+			"gas": false,  # havia Neutralizing Gas no frame anterior
 		}
 	return _st[id]
 
@@ -384,6 +507,20 @@ func _entry(f: BattleFighter) -> bool:
 			_fire(f, Color(0.75, 0.6, 0.9))
 		"cloud_nine", "air_lock":
 			_fire(f, Color(0.8, 0.9, 1.0))
+		"download":
+			return _do_download(f)
+		"anticipation":
+			return _do_anticipation(f)
+		"forewarn":
+			return _do_forewarn(f)
+		"trace":
+			return _do_trace(f)
+		"pressure":
+			_fire(f, Color(0.75, 0.55, 0.9))
+			f.popup("Pressão!", Color(0.75, 0.55, 0.9), 0.9, 0.9)
+		"neutralizing_gas":
+			_fire(f, Color(0.7, 0.9, 0.5))
+			f.popup("Gás tóxico!", Color(0.7, 0.9, 0.5), 0.9, 0.9)
 	return true
 
 
@@ -476,7 +613,217 @@ func _do_intimidate(f: BattleFighter) -> bool:
 			_fire(t)
 		else:
 			arena.moves.change_stage(t, "atk", -1)
+			if ability_of(t) == "rattled":
+				_stage_up(t, "spe", 1)  # Rattled: o susto dá pressa
+				_fire(t, Color(0.6, 0.5, 0.7))
 	return true
+
+
+# --- Habilidades de Kanto: entrada ---
+
+
+## Download: compara a Defesa e a Def. Esp. dos inimigos e sobe o Ataque ou o Atq. Esp.
+func _do_download(f: BattleFighter) -> bool:
+	var foes: Array = arena.targets_of(f)
+	if foes.is_empty():
+		return false
+	var def_sum := 0.0
+	var spd_sum := 0.0
+	for t in foes:
+		def_sum += t.stat("def")
+		spd_sum += t.stat("spd")
+	_fire(f, Color(0.5, 0.9, 1.0))
+	_stage_up(f, "atk" if def_sum < spd_sum else "spa", 1)
+	return true
+
+
+## Golpe que assusta quem tem `types`: superefetivo ou nocaute de um golpe (OHKO).
+static func _dangerous(mv: Dictionary, types: Array) -> bool:
+	if String(mv.get("special", "")) == "ohko":
+		return true
+	return (
+		float(mv.get("power", 0)) > 0.0
+		and Dex.effectiveness(String(mv.get("type", "")), types) > 1.0
+	)
+
+
+## Anticipation: avisa se algum inimigo tem golpe perigoso contra ele; com o aviso, esquiva às vezes.
+func _do_anticipation(f: BattleFighter) -> bool:
+	var foes: Array = arena.targets_of(f)
+	if foes.is_empty():
+		return false
+	var s := _state(f)
+	for t in foes:
+		for id in t.moves:
+			if _dangerous(Dex.move(String(id)), f.types):
+				s.shudder = true
+	if s.shudder:
+		f.popup("Arrepio!", Color(0.8, 0.7, 1.0), 0.9, 0.9)
+		_fire(f, Color(0.8, 0.7, 1.0))
+	return true
+
+
+## Poder que o Forewarn enxerga no golpe (OHKO 150, dano fixo ou variável 80, status 0).
+static func _scary_power(mv: Dictionary) -> float:
+	if String(mv.get("special", "")) == "ohko":
+		return 150.0
+	if String(mv.get("category", "status")) == "status":
+		return 0.0
+	var p := float(mv.get("power", 0))
+	return p if p > 1.0 else 80.0
+
+
+## Forewarn: revela o golpe mais forte de cada inimigo; contra esse golpe esquiva às vezes.
+func _do_forewarn(f: BattleFighter) -> bool:
+	var foes: Array = arena.targets_of(f)
+	if foes.is_empty():
+		return false
+	var s := _state(f)
+	s.warn = {}
+	for t in foes:
+		var best := ""
+		var top := 0.0
+		for id in t.moves:
+			var p := _scary_power(Dex.move(String(id)))
+			if p > top:
+				top = p
+				best = String(id)
+		if best != "":
+			s.warn[t.get_instance_id()] = best
+			f.popup(
+				"Alerta: %s" % String(Dex.move(best).get("name", best)),
+				Color(1.0, 0.8, 0.5),
+				0.85,
+				0.9
+			)
+	if not s.warn.is_empty():
+		_fire(f, Color(1.0, 0.8, 0.5))
+	return true
+
+
+## Trace: copia a habilidade de um inimigo e a ativa na hora.
+func _do_trace(f: BattleFighter) -> bool:
+	var foes: Array = arena.targets_of(f)
+	if foes.is_empty():
+		return false
+	var pool: Array = []
+	for t in foes:
+		var a := ability_of(t)
+		if a != "" and not a in UNTRACEABLE:
+			pool.append(a)
+	if pool.is_empty():
+		return true
+	var got := String(pool[arena.rng.randi() % pool.size()])
+	f.set_meta("ability_override", got)
+	f.popup(
+		"Copiou %s" % String(Dex.ability(got).get("name", got.to_upper())),
+		Color(0.7, 0.9, 1.0),
+		0.9,
+		0.9
+	)
+	if got == "super_luck":
+		f.crit_stage += 1
+	elif got in ENTRY:
+		return _entry(f)
+	return true
+
+
+## Esquiva de Anticipation (golpe perigoso depois do arrepio) e Forewarn (o golpe revelado).
+func _foresaw(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
+	var ta := ability_of(target)
+	if ta != "anticipation" and ta != "forewarn":
+		return false
+	var s := _state(target)
+	var chance := ANTICIPATION_DODGE
+	if ta == "anticipation":
+		if not s.shudder or not _dangerous(mv, target.types):
+			return false
+	else:
+		if String(s.warn.get(user.get_instance_id(), "")) != String(mv.get("id", "-")):
+			return false
+		chance = FOREWARN_DODGE
+	if not _roll(chance):
+		return false
+	target.popup("Previu!", Color(0.8, 0.9, 1.0), 1.0, 0.5)
+	_fire(target, Color(0.8, 0.9, 1.0))
+	return true
+
+
+# --- Habilidades de Kanto: golpe e custo ---
+
+
+## Registra o golpe usado (Analytic olha no alvo quando ele agiu).
+func on_move_used(user: BattleFighter, _mv: Dictionary) -> void:
+	if is_instance_valid(user):
+		_state(user).moved = _now
+
+
+## O lutador usou um golpe há menos de ANALYTIC_WINDOW s.
+func _acted_recently(f: BattleFighter) -> bool:
+	return _now - float(_state(f).moved) <= ANALYTIC_WINDOW
+
+
+## Tipos do alvo como o golpe os enxerga: Scrappy acerta Fantasma com Normal e Lutador.
+func hit_types(user: BattleFighter, _target: BattleFighter, mv: Dictionary, types: Array) -> Array:
+	if (
+		"ghost" in types
+		and String(mv.get("type", "")) in SCRAPPY_TYPES
+		and ability_of(user) == "scrappy"
+	):
+		var out: Array = types.filter(func(t): return t != "ghost")
+		return out if not out.is_empty() else ["normal"]
+	return types
+
+
+## Pressure: o golpe custa PRESSURE_COST x mais com um inimigo com Pressure a menos de PRESSURE_RANGE m.
+func cost_mult(f: BattleFighter) -> float:
+	if not is_instance_valid(f) or arena == null:
+		return 1.0
+	for t in arena.targets_of(f):
+		if ability_of(t) == "pressure" and f.flat_to(t).length() < PRESSURE_RANGE:
+			return PRESSURE_COST
+	return 1.0
+
+
+## Liquid Ooze: o dreno do `target` (golpe, semente) faz mal a `user` em vez de curar. true = o HP de
+## `gain` foi tirado do `user`.
+func drain_backfires(user: BattleFighter, target: BattleFighter, gain: int) -> bool:
+	if ability_of(target) != "liquid_ooze" or not is_instance_valid(user) or not user.alive():
+		return false
+	_fire(target, Color(0.6, 0.35, 0.7))
+	if ability_of(user) != "magic_guard":
+		user.popup("-%d" % gain, Color(0.6, 0.35, 0.7), 0.9, 0.5)
+		user.take_damage(gain, Vector3.ZERO, 0.0)
+	return true
+
+
+## A IA pesa o golpe: dreno em Liquid Ooze quase não vale (o dano ainda conta, a cura vira dano).
+func ai_mult(_user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	if mv.has("drain") and ability_of(target) == "liquid_ooze":
+		return 0.3
+	return 1.0
+
+
+## Synchronize: o status (veneno, queimadura, paralisia) volta para quem o causou.
+func on_status(f: BattleFighter, status: String, src: BattleFighter) -> void:
+	if (
+		ability_of(f) != "synchronize"
+		or not status in SYNC_STATUS
+		or src == null
+		or not is_instance_valid(src)
+		or src == f
+		or src.side == f.side
+		or not src.alive()
+	):
+		return
+	if BattleMoves.STATUS_IMMUNE.get(status, "-") in src.types or blocks_status(src, status):
+		return
+	if src.apply_status(status, f):
+		_fire(f, Color(1.0, 0.7, 0.9))
+		src.popup(
+			String(BattleMoves.STATUS_WORDS.get(status, status.to_upper() + "!")),
+			Color(1, 0.9, 0.6)
+		)
 
 
 # --- Dano ---
@@ -485,7 +832,7 @@ func _do_intimidate(f: BattleFighter) -> bool:
 ## Multiplicadores de dano de cada lado (sem efeitos colaterais).
 func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dictionary:
 	var ua := ability_of(user)
-	var ta := ability_of(target)
+	var ta := _tab(user, target)
 	var um := 1.0
 	var tm := 1.0
 	var type := String(mv.get("type", "normal"))
@@ -508,6 +855,10 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		"huge_power":
 			if cat == "physical":
 				um *= 2.0
+		"analytic":
+			# o alvo acabou de agir: pega ele no meio da recuperação
+			if power > 0.0 and _acted_recently(target):
+				um *= ANALYTIC_MULT
 		"hustle":
 			if cat == "physical":
 				um *= 1.5
@@ -588,14 +939,21 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		elif wx == "hail" and cat == "physical" and "ice" in target.types:
 			tm /= WEATHER_DEF_MULT
 	var pa := partner_of(target)
-	if pa != null and ability_of(pa) == "friend_guard" and ua != "infiltrator":
+	if (
+		pa != null
+		and ability_of(pa) == "friend_guard"
+		and not ua in ["infiltrator", "mold_breaker"]
+	):
 		tm *= 0.75
 	return {"user": um, "target": tm}
 
 
 ## Shell Armor / Battle Armor: não leva crítico (oficial).
-func no_crit(f: BattleFighter) -> bool:
-	return ability_of(f) in ["shell_armor", "battle_armor"]
+func no_crit(f: BattleFighter, user: BattleFighter = null) -> bool:
+	var a := ability_of(f)
+	if user != null and ability_of(user) == "mold_breaker":
+		return false  # Mold Breaker: o golpe passa por cima do Shell Armor
+	return a in ["shell_armor", "battle_armor"]
 
 
 ## Sniper: o crítico dá 2,25x em vez de 1,5x (o fator extra por cima do CRIT_MULT).
@@ -659,9 +1017,12 @@ func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 	):
 		target.popup("Não afeta...", Color(0.7, 0.7, 0.7))
 		return true
-	if _absorbs(target, type):
+	if user.side != target.side and _foresaw(user, target, mv):
+		return true  # Anticipation / Forewarn: viu o golpe vindo
+	var ta := _tab(user, target)  # Mold Breaker ignora as defensivas
+	if _absorbs(target, type, ta):
 		return true
-	match ability_of(target):
+	match ta:
 		"wonder_skin":
 			# golpe de status de inimigo: precisão cai para 50%
 			var acc := float(mv.get("accuracy", 0.0))
@@ -689,9 +1050,9 @@ func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 
 
 ## Habilidades que absorvem um tipo (o golpe não causa dano).
-func _absorbs(owner: BattleFighter, type: String) -> bool:
+func _absorbs(owner: BattleFighter, type: String, ab: String) -> bool:
 	var col := Dex.type_color(type)
-	match ability_of(owner):
+	match ab:
 		"water_absorb":
 			if type == "water":
 				_heal_pct(owner, 0.25)
@@ -736,15 +1097,17 @@ func _absorbs(owner: BattleFighter, type: String) -> bool:
 
 
 ## Dano final ajustado (Sturdy segura com 1 HP etc.). Devolve o dano a aplicar.
-func adjust_damage(_user: BattleFighter, target: BattleFighter, _mv: Dictionary, dmg: int) -> int:
-	if ability_of(target) == "sturdy" and target.hp >= target.max_hp and dmg >= target.hp:
+func adjust_damage(user: BattleFighter, target: BattleFighter, _mv: Dictionary, dmg: int) -> int:
+	if _tab(user, target) == "sturdy" and target.hp >= target.max_hp and dmg >= target.hp:
 		_fire(target, Color(0.8, 0.8, 0.9))
 		return maxi(target.hp - 1, 0)
 	return dmg
 
 
-## Depois do acerto (Static, Poison Point, Effect Spore ao contato...).
-func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: int) -> void:
+## Depois do acerto (Static, Poison Point, Effect Spore ao contato...). `crit` = o golpe foi crítico.
+func on_hit(
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: int, crit := false
+) -> void:
 	if not is_instance_valid(user) or not is_instance_valid(target):
 		return
 	var ua := ability_of(user)
@@ -787,6 +1150,8 @@ func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: in
 		_fire(user, Color(0.6, 0.5, 0.7))
 	if ua == "serene_grace" and target.alive():
 		_serene(user, target, mv)
+	if target.alive():
+		_kanto_on_hit(user, target, mv, crit, contact)
 	if ta == "justified" and String(mv.get("type", "")) == "dark":
 		_stage_up(target, "atk", 1)
 		_fire(target)
@@ -803,6 +1168,55 @@ func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: in
 		):
 			_fire(target)
 			user.take_damage(maxi(1, int(user.max_hp / 4.0)), Vector3.ZERO, 0.0)
+
+
+## Anger Point, Cursed Body, Poison Touch, Rattled e Weak Armor (as de Kanto) depois do acerto.
+func _kanto_on_hit(
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, crit: bool, contact: bool
+) -> void:
+	var ua := ability_of(user)
+	var ta := ability_of(target)
+	var type := String(mv.get("type", ""))
+	var power := float(mv.get("power", 0))
+	if ua == "poison_touch" and contact and _roll(POISON_TOUCH_CHANCE):
+		if (
+			not BattleMoves.STATUS_IMMUNE.get("poison", "-") in target.types
+			and not blocks_status(target, "poison", user)
+			and target.apply_status("poison", user)
+		):
+			_fire(user, Color(0.75, 0.35, 0.95))
+			target.popup(
+				String(BattleMoves.STATUS_WORDS.get("poison", "ENVENENADO!")), Color(1, 0.9, 0.6)
+			)
+	if user.side == target.side or power <= 0.0:
+		return
+	match ta:
+		"anger_point":
+			if crit:
+				_stage_up(target, "atk", 6)
+				if target.mood_state == "":
+					target.mood_state = "fury"  # a IA para de recuar
+				target.popup("Fúria!", Color(1.0, 0.4, 0.3), 1.0, 0.9)
+				_fire(target, Color(1.0, 0.4, 0.3))
+		"cursed_body":
+			var id := String(mv.get("id", ""))
+			if user.alive() and id != "" and _roll(CURSED_CHANCE):
+				user.move_cd[id] = maxf(float(user.move_cd.get(id, 0.0)), CURSED_LOCK)
+				user.popup(
+					"%s travado!" % String(mv.get("name", id)), Color(0.6, 0.45, 0.8), 0.9, 0.7
+				)
+				_fire(target, Color(0.6, 0.45, 0.8))
+		"rattled":
+			if type in ["bug", "ghost", "dark"]:
+				_stage_up(target, "spe", 1)
+				_fire(target, Color(0.6, 0.5, 0.7))
+		"weak_armor":
+			var s := _state(target)
+			if String(mv.get("category", "")) == "physical" and _now - float(s.armor) >= ARMOR_GAP:
+				s.armor = _now
+				arena.moves.change_stage(target, "def", -1)
+				_stage_up(target, "spe", 2)
+				_fire(target, Color(0.8, 0.75, 0.6))
 
 
 ## Cute Charm: 30% ao contato, só entre sexos opostos (sem sexo não se enfeitiça).
@@ -832,8 +1246,10 @@ func _serene(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 
 
 ## true = a habilidade bloqueia esse status (Inner Focus, Own Tempo, Vital Spirit...).
-func blocks_status(f: BattleFighter, status: String) -> bool:
+func blocks_status(f: BattleFighter, status: String, src: BattleFighter = null) -> bool:
 	var a := ability_of(f)
+	if src != null and a != "" and ability_of(src) == "mold_breaker" and not a in UNBREAKABLE:
+		a = ""  # Mold Breaker: Own Tempo, Insomnia, Shield Dust... não seguram
 	if a == "shield_dust" or (BLOCKS.has(a) and status in BLOCKS[a]):
 		_fire(f)
 		return true
@@ -851,8 +1267,10 @@ func blocks_status(f: BattleFighter, status: String) -> bool:
 
 
 ## Queda de atributo que a habilidade impede (Clear Body, Hyper Cutter, Keen Eye, Big Pecks).
-func blocks_stage_drop(f: BattleFighter, k: String) -> bool:
+func blocks_stage_drop(f: BattleFighter, k: String, src: BattleFighter = null) -> bool:
 	var a := ability_of(f)
+	if src != null and a != "" and ability_of(src) == "mold_breaker" and not a in UNBREAKABLE:
+		return false
 	if not KEEP_STAT.has(a):
 		return false
 	var keys: Array = KEEP_STAT[a]
@@ -1078,6 +1496,52 @@ func late_residual(f: BattleFighter) -> void:
 			_round_heal(f, 1.0 / 16.0)
 		"pickup":
 			_round_heal(f, 0.02)
+		"early_bird":
+			_early_bird(f)
+		"harvest":
+			_harvest(f)
+		"healer":
+			_healer(f)
+
+
+## Early Bird: o sono corre em dobro (um passo a mais por rodada, fora a rodada em que dormiu).
+func _early_bird(f: BattleFighter) -> void:
+	if f.status != "sleep" or f.round_now() == f.status_round:
+		return
+	f.sleep_turns -= 1
+	if f.sleep_turns <= 1:
+		f.clear_status()
+		f.popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+		_fire(f, Color(1.0, 0.9, 0.5))
+
+
+## Harvest: a frutinha comida volta a cada rodada (50%, sempre no sol).
+func _harvest(f: BattleFighter) -> void:
+	if not f.item_used or not f.trainer_item in BERRIES:
+		return
+	if weather_now() != "sun" and not _roll(HARVEST_CHANCE):
+		return
+	f.item_used = false
+	f.set_meta("ate_berry", false)
+	_state(f).unburdened = false
+	f.popup("Colheu a frutinha!", Color(0.6, 1.0, 0.5), 0.9, 0.7)
+	_fire(f, Color(0.6, 1.0, 0.5))
+	var et = arena.get("end_turn")
+	if et and et.has_method("held_check"):
+		et.held_check(f)
+
+
+## Healer: cura o status do aliado (e, sozinho em campo, o próprio com chance menor).
+func _healer(f: BattleFighter) -> void:
+	var p := partner_of(f)
+	var who := p if p != null else f
+	if who.status == "" or not who.status in Mon.PERSIST_STATUS + ["toxic", "freeze"]:
+		return
+	if not _roll(HEALER_CHANCE if p != null else HEALER_SELF):
+		return
+	who.clear_status()
+	who.popup("Curado!", Color(0.6, 1.0, 0.7), 0.9)
+	_fire(f, Color(0.6, 1.0, 0.7))
 
 
 func _round_heal(f: BattleFighter, pct: float, why := "") -> void:
@@ -1150,6 +1614,7 @@ func tick(dt: float) -> void:
 			else:
 				keep.append(f)
 		_pending_enter = keep
+	_watch_gas()
 	if weather_t > 0.0:
 		weather_t -= dt
 		if weather_t <= 0.0:
@@ -1159,6 +1624,18 @@ func tick(dt: float) -> void:
 		if is_instance_valid(f) and f.active():
 			_unnerve(f)
 			_tick_fighter(f)
+
+
+## Neutralizing Gas: quando o último gás sai de campo, as habilidades voltam e as de entrada agem de
+## novo (Intimidate, clima...).
+func _watch_gas() -> void:
+	var gas := _gas_on()
+	if _gas_prev and not gas:
+		for f in arena.fighters:
+			if is_instance_valid(f) and f.active() and ability_of(f) in ENTRY:
+				if not f in _pending_enter:
+					_pending_enter.append(f)
+	_gas_prev = gas
 
 
 ## Unnerve: enquanto há um inimigo com Unnerve em campo, o item do treinador não é usado.

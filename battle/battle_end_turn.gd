@@ -240,7 +240,11 @@ func _leech(f: BattleFighter) -> void:
 				break
 	var d := _dmg(f, _frac(f, 1.0 / 8.0), "semente", COL_SEED, "leech_seed")
 	if d > 0 and to != null:
-		_heal(to, d, "semente", "leech_heal")
+		var ab := _ab()
+		if ab and ab.drain_backfires(to, f, d):  # Liquid Ooze: a semente faz mal a quem plantou
+			_note("liquid_ooze", to, -d)
+		else:
+			_heal(to, d, "semente", "leech_heal")
 
 
 ## Veneno 1/8; Toxic n/16 (n sobe a cada fim de turno). Poison Heal cura 1/8 no lugar.
@@ -354,11 +358,18 @@ func held_check(f: BattleFighter) -> void:
 	var id := f.trainer_item
 	if HP_BERRIES.has(id):
 		var row: Array = HP_BERRIES[id]
-		if f.hp * 1.0 > f.max_hp * float(row[0]):
+		var ab := _ab()
+		var glut: bool = ab != null and ab.ability_of(f) == "gluttony"
+		var limit := float(row[0]) + (BattleAbilities.GLUTTONY_BONUS if glut else 0.0)
+		if f.hp * 1.0 > f.max_hp * limit:
 			return
 		var amt := float(row[1])
 		_eat(f)
-		f.residual_heal(int(amt) if amt >= 1.0 else maxi(1, int(f.max_hp * amt)), _item_name(id))
+		var heal_n := int(amt) if amt >= 1.0 else maxi(1, int(f.max_hp * amt))
+		if glut:
+			heal_n = int(heal_n * BattleAbilities.GLUTTONY_HEAL)  # Gluttony: devora a frutinha
+			ab._fire(f, Color(0.9, 0.7, 0.4))
+		f.residual_heal(heal_n, _item_name(id))
 	elif CURE_BERRIES.has(id):
 		var cures: Array = CURE_BERRIES[id]
 		if f.status in cures:

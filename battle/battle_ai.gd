@@ -1805,6 +1805,10 @@ func _status_lands(opp: BattleFighter, st: String, powder: bool) -> bool:
 		return false
 	var ab = f.arena.get("abilities")
 	var a := String(ab.ability_of(opp)) if ab and ab.has_method("ability_of") else ""
+	if powder and a == "overcoat":
+		return false
+	if a == "synchronize" and st in BattleAbilities.SYNC_STATUS and f.status == "":
+		return false  # Synchronize devolveria o status para quem o causou
 	if a == "shield_dust" or st in BattleAbilities.BLOCKS.get(a, []):
 		return false
 	if f.arena.moves.effects.side_active(opp.side, "safeguard"):

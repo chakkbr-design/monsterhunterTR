@@ -355,7 +355,10 @@ func expected_damage(
 	var power := effects.ai_power(user, target, mv)
 	if power <= 0.0:
 		return 0.0
-	var eff := Dex.effectiveness(String(mv.get("type", "")), target.types)
+	var types: Array = target.types
+	if arena.abilities:
+		types = arena.abilities.hit_types(user, target, mv, types)  # Scrappy
+	var eff := Dex.effectiveness(String(mv.get("type", "")), types)
 	if eff <= 0.0:
 		return 0.0
 	var kind := String(mv.get("kind", ""))
@@ -382,6 +385,8 @@ func expected_damage(
 		score *= SPREAD_MULT
 	if bool(mv.get("self_destruct", false)):
 		score *= clampf(1.0 - float(user.hp) / maxf(float(user.max_hp), 1.0), 0.0, 1.0)
+	if arena.abilities:
+		score *= arena.abilities.ai_mult(user, target, mv)  # Liquid Ooze: não drenar
 	return score
 
 
@@ -494,11 +499,13 @@ func hit(
 		if arena.combos and user.side != target.side:
 			arena.combos.on_hit(user, target, mv, dmg)
 		if arena.abilities:
-			arena.abilities.on_hit(user, target, mv, dmg)
+			arena.abilities.on_hit(user, target, mv, dmg, res.crit)
 		if dmg >= hp_before and arena.has_method("on_knocked_out"):
 			arena.on_knocked_out(user, target)  # Moves.knocked_out do original
 		if mv.has("drain") and user.alive():
-			user.heal(maxi(1, int(float(dmg) * float(mv.drain))))
+			var gain := maxi(1, int(float(dmg) * float(mv.drain)))
+			if not (arena.abilities and arena.abilities.drain_backfires(user, target, gain)):
+				user.heal(gain)
 		var col := (
 			Color(1, 0.75, 0.15)
 			if eff > 1.0
@@ -543,7 +550,7 @@ func hit(
 			var st := String(ef.status)
 			if STATUS_IMMUNE.get(st, "-") in target.types:
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
-			elif arena.abilities and arena.abilities.blocks_status(target, st):
+			elif arena.abilities and arena.abilities.blocks_status(target, st, user):
 				pass
 			elif effects.blocks_status(user, target, st):
 				pass
@@ -633,7 +640,7 @@ func change_stage(c: BattleFighter, k: String, delta: int, src: BattleFighter = 
 		delta < 0
 		and arena.abilities
 		and arena.abilities.has_method("blocks_stage_drop")
-		and arena.abilities.blocks_stage_drop(c, k)
+		and arena.abilities.blocks_stage_drop(c, k, src)
 	):
 		return
 	var cur := int(c.stages.get(k, 0))

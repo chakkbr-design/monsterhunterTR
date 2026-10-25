@@ -525,7 +525,11 @@ func may_start(mv: Dictionary) -> bool:
 
 ## PP gasto pelo golpe: o oficial (o Caio pediu só o dano reduzido; o PP não acompanha o ritmo).
 func pp_cost_of(mv: Dictionary) -> float:
-	return BattleEnergy.cost(mv) if energy_mode else Dex.pp_cost(mv)
+	var c := BattleEnergy.cost(mv) if energy_mode else Dex.pp_cost(mv)
+	var ab = arena.get("abilities") if arena else null
+	if ab and ab.has_method("cost_mult"):
+		c *= ab.cost_mult(self)  # Pressure: inimigo perto faz o golpe custar mais
+	return roundf(c) if energy_mode else c
 
 
 func min_move_cost() -> float:
@@ -713,6 +717,9 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 	refresh_label()
 	_tele("status", {"st": s, "by": _tele_id(source)})
 	_held_check()
+	var ab = arena.get("abilities") if arena else null
+	if ab and ab.has_method("on_status"):
+		ab.on_status(self, s, source)  # Synchronize
 	return true
 
 
