@@ -57,14 +57,50 @@ const HIT_CD := 0.35
 ## VGC: meia largura do corredor livre entre as posições dos dois lados (m).
 const VGC_LANE := 2.8
 ## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
-## "crate" são as caixas/pedras do BattleField. Todo cenário sorteável tem ao menos um morro, um pico e
-## um lago (a praia não tem lago: a maré faz o papel dele).
-## "tree", "bush", "voltorb" e "crystal" são os objetos vivos (BattleProps, só no modo de energia).
+## "crate" são as caixas/pedras do BattleField. Todo cenário do sorteio do VGC tem ao menos um morro, um
+## pico e um lago (a praia não tem lago: a maré faz o papel dele; VGC_SKIP).
+## "tree", "bush", "voltorb", "crystal", "geyser", "hive", "mushroom" e "boulder" são os objetos vivos
+## (BattleProps, só no modo de energia; o pedregulho fica no topo de um morro).
 const SCENARIOS := {
-	"campo": {"pond": 1, "hill": 2, "peak": 1, "grass": 5, "crate": 2, "tree": 2, "bush": 1},
-	"lagoa": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 1, "tree": 1, "bush": 1},
+	"campo":
+	{
+		"pond": 1,
+		"hill": 2,
+		"peak": 1,
+		"grass": 5,
+		"crate": 2,
+		"tree": 2,
+		"bush": 1,
+		"voltorb": 1,
+		"hive": 1,
+		"mushroom": 1,
+		"boulder": 1
+	},
+	"lagoa":
+	{
+		"pond": 3,
+		"hill": 1,
+		"peak": 1,
+		"grass": 3,
+		"crate": 1,
+		"tree": 1,
+		"bush": 1,
+		"crystal": 1,
+		"geyser": 1,
+		"mushroom": 1
+	},
 	"pedreira":
-	{"pond": 1, "hill": 2, "peak": 3, "grass": 1, "crate": 4, "crystal": 2, "voltorb": 1},
+	{
+		"pond": 1,
+		"hill": 2,
+		"peak": 3,
+		"grass": 1,
+		"crate": 4,
+		"crystal": 2,
+		"voltorb": 2,
+		"geyser": 1,
+		"boulder": 1
+	},
 	"misto":
 	{
 		"pond": 2,
@@ -74,19 +110,34 @@ const SCENARIOS := {
 		"crate": 2,
 		"tree": 1,
 		"crystal": 1,
-		"voltorb": 1
+		"voltorb": 1,
+		"hive": 1,
+		"boulder": 1
 	},
-	"praia": {"pond": 0, "hill": 1, "peak": 1, "grass": 1, "crate": 3, "bush": 1, "voltorb": 1},
+	"praia":
+	{
+		"pond": 0,
+		"hill": 1,
+		"peak": 1,
+		"grass": 1,
+		"crate": 3,
+		"bush": 1,
+		"voltorb": 2,
+		"geyser": 1,
+		"boulder": 1
+	},
 	# Biomas (BattleBiomes, só no modo de energia; colunas, montes, lava e lama em BattleBiomes.EXTRAS).
 	"ruinas": {"pond": 1, "hill": 1, "peak": 1, "grass": 3, "crate": 2, "tree": 1},
 	"montanha": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 1},
-	"vulcao": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 2},
+	"vulcao": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 2, "geyser": 1, "boulder": 1},
 	"caverna": {"pond": 1, "hill": 1, "peak": 4, "grass": 0, "crate": 1, "crystal": 3},
-	"pantano": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 0, "tree": 1},
+	"pantano": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 0, "tree": 1, "mushroom": 2},
 }
-## Cenários fora do sorteio: só quando escolhidos (opts.scenario). A praia (maré e lama, BattleGround) não
-## tem lago e é do modo de energia.
-const PICK_ONLY := ["praia"]
+## Cenários fora de todo sorteio: só quando escolhidos (opts.scenario).
+const PICK_ONLY: Array = []
+## Fora do sorteio do VGC: a praia não tem lago (a maré e a lama do BattleGround são do modo de energia).
+## No modo de energia ela entra no sorteio.
+const VGC_SKIP := ["praia"]
 ## Cenários só do modo de energia (BattleBiomes): o VGC não sorteia nem monta (pedido no VGC = sorteio).
 const ENERGY_ONLY := ["ruinas", "montanha", "vulcao", "caverna", "pantano"]
 const PLACE_ORDER := ["pond", "hill", "peak", "grass", "crate"]  ## os grandes primeiro
@@ -217,7 +268,7 @@ func setup() -> void:
 		var names: Array = SCENARIOS.keys()
 		names = names.filter(func(n): return not n in PICK_ONLY)
 		if not energy:
-			names = names.filter(func(n): return not n in ENERGY_ONLY)
+			names = names.filter(func(n): return not n in ENERGY_ONLY and not n in VGC_SKIP)
 		names.sort()
 		scenario = String(names[rng.randi() % names.size()])
 	var tel = arena.get("telemetry")
@@ -258,7 +309,7 @@ func setup() -> void:
 					_add_grass(at, r)
 				"crate":
 					crate_spots.append(at)
-				"tree", "bush", "voltorb", "crystal":
+				"tree", "bush", "voltorb", "crystal", "geyser", "hive", "mushroom", "boulder":
 					props.add(String(kind), at)
 				_:
 					_add(String(kind), at, r, h)
@@ -558,6 +609,9 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 
 
 func _damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	var pm := props.damage_mult(user, target, mv)  # Voador em quem o gêiser jogou para o alto
+	if pm != 1.0:
+		return pm
 	var gd := ground.damage_mult(user, target, mv)  # Elétrico na maré
 	if gd != 1.0:
 		return gd
@@ -1040,6 +1094,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
 	want = ground.steer(f, want)  # contorna a lama e as brasas
 	want = biomes.steer(f, want)  # colunas, lava e neve funda
+	want = props.avoid(f, want)  # esporos, gêiser perto da erupção, enxame
 	if obstacles.is_empty() or want.length() < 0.05:
 		return want
 	var dir := want.normalized()

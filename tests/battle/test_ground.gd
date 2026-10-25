@@ -208,6 +208,7 @@ func _vgc() -> void:
 	g.on_move_landed(a.player, Dex.move("earthquake"), Vector3.ZERO, 4.0)
 	check(g.marks.is_empty(), "VGC: sem marcas")
 	a.free()
+	var seen_energy := {}
 	for s in range(1, 13):
 		var b := _arena(
 			[Mon.create("pikachu", 50)],
@@ -215,8 +216,26 @@ func _vgc() -> void:
 			s,
 			{"battle_mode": "vgc" if s % 2 else "energy"}
 		)
-		check(not b.terrain.scenario in BattleTerrain.PICK_ONLY, "o sorteio não pega a praia")
+		var vgc := s % 2 == 1
+		check(
+			not b.terrain.scenario in BattleTerrain.PICK_ONLY, "o sorteio não pega os só escolhidos"
+		)
+		if vgc:
+			check(
+				not b.terrain.scenario in BattleTerrain.VGC_SKIP,
+				"o sorteio do VGC não pega a praia"
+			)
+		else:
+			seen_energy[b.terrain.scenario] = true
 		b.free()
+	# No modo de energia a praia entra no sorteio.
+	for s in range(100, 140):
+		if seen_energy.has("praia"):
+			break
+		var b := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s, {})
+		seen_energy[b.terrain.scenario] = true
+		b.free()
+	check(seen_energy.has("praia"), "energia: a praia sai no sorteio (%s)" % [seen_energy.keys()])
 
 
 func _fissure() -> void:
