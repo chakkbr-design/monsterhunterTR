@@ -6,7 +6,7 @@ extends Node3D
 ##   e relâmpago de vez em quando;
 ## - neve: flocos com vento, a neve acumula no chão aos poucos e derrete quando o clima acaba;
 ## - sol forte: feixes de luz na quadra, raios saindo do canto da tela, poeira dourada no ar;
-## - areia: grãos e nuvens de poeira cruzando a quadra, ondas de areia no chão e névoa marrom.
+## - areia: grãos cruzando a quadra e ondas de areia no chão (sem nuvem nem névoa, para não tapar a luta).
 ## No mundo (há WorldWeather) o chão é o do mundo: o clima vai para WorldWeather.battle_cover e os
 ## shaders do mapa ficam molhados ou brancos. Sem mundo (treino, cena de teste) vai um piso próprio.
 ## Também mostra o nome do clima e as rodadas que faltam no alto da tela.
@@ -47,7 +47,6 @@ var _rain: GPUParticles3D
 var _splash: GPUParticles3D
 var _snow: GPUParticles3D
 var _sand_grains: GPUParticles3D
-var _sand_dust: GPUParticles3D
 var _motes: GPUParticles3D
 var _shafts: Array[MeshInstance3D] = []
 var _ground: MeshInstance3D
@@ -130,7 +129,6 @@ func _process(dt: float) -> void:
 	_emit(_splash, rain * 0.9)
 	_emit(_snow, snow)
 	_emit(_sand_grains, sand)
-	_emit(_sand_dust, sand)
 	_emit(_motes, sun)
 	_update_shafts(sun)
 	if _ground_mat:
@@ -307,23 +305,6 @@ func _build_sand() -> void:
 	q.size = Vector2(0.2, 0.025)
 	q.material = _mat(_gradient_tex(true), Color(1, 1, 1, 0.8), BaseMaterial3D.BILLBOARD_ENABLED)
 	_sand_grains.draw_pass_1 = q
-	_sand_dust = _particles(160, 3.5, Vector3(1.5, 1.4, _half.y + MARGIN), at + Vector3(0, 0.3, 0))
-	var dm := _sand_dust.process_material as ParticleProcessMaterial
-	dm.direction = Vector3(1.0, 0.03, 0.08)
-	dm.spread = 10.0
-	dm.initial_velocity_min = 6.0
-	dm.initial_velocity_max = 9.0
-	dm.gravity = Vector3.ZERO
-	dm.scale_min = 1.6
-	dm.scale_max = 3.2
-	dm.angle_min = 0.0
-	dm.angle_max = 360.0
-	dm.color_initial_ramp = _color_ramp(Color(0.66, 0.5, 0.3), Color(0.86, 0.72, 0.5))
-	dm.alpha_curve = _curve_tex([Vector2(0, 0), Vector2(0.2, 1), Vector2(0.8, 1), Vector2(1, 0)])
-	var dq := QuadMesh.new()
-	dq.size = Vector2(1.0, 1.0)
-	dq.material = _mat(_dot_tex(0.0), Color(1, 1, 1, 0.22), BaseMaterial3D.BILLBOARD_PARTICLES)
-	_sand_dust.draw_pass_1 = dq
 
 
 func _build_sun() -> void:

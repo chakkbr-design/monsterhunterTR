@@ -1103,18 +1103,11 @@ func _build() -> void:
 					l.position = Vector3(0, 1.0, 0)
 					o.node.add_child(l)
 		"pantano":
-			_env(
-				{
-					"ambient": Color(0.5, 0.56, 0.48),
-					"bg": Color(0.5, 0.56, 0.5),
-					"sun": 0.6,
-					"fog": Color(0.55, 0.62, 0.55)
-				}
-			)
+			_env({"ambient": Color(0.5, 0.56, 0.48), "bg": Color(0.5, 0.56, 0.5), "sun": 0.6})
 
 
-## Luz da cena (caverna escura, neblina do pântano, brilho da lava): muda o WorldEnvironment e o sol da
-## tela e desfaz quando a arena sai da árvore.
+## Luz da cena (caverna escura, pântano, brilho da lava): muda o WorldEnvironment e o sol da tela e
+## desfaz quando a arena sai da árvore. A neblina do pântano é só regra (precisão), sem véu na tela.
 func _env(want: Dictionary) -> void:
 	var root: Node = arena.get_tree().root
 	for we in root.find_children("*", "WorldEnvironment", true, false):
@@ -1125,10 +1118,6 @@ func _env(want: Dictionary) -> void:
 			_set_undo(env, "ambient_light_color", want.ambient)
 		if want.has("bg"):
 			_set_undo(env, "background_color", want.bg)
-		if want.has("fog"):
-			_set_undo(env, "fog_enabled", true)
-			_set_undo(env, "fog_light_color", want.fog)
-			_set_undo(env, "fog_density", 0.035)
 	for sun in root.find_children("*", "DirectionalLight3D", true, false):
 		_set_undo(sun, "light_energy", float(sun.light_energy) * float(want.get("sun", 1.0)))
 	if not _env_undo.is_empty() and not arena.tree_exiting.is_connected(_restore_env):

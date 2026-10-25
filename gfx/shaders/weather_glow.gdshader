@@ -29,8 +29,7 @@ void fragment() {
 		rays = pow(rays, 2.2) * (0.75 + 0.25 * sin(TIME * 0.9 + ang * 5.0));
 		float fall = exp(-r * 1.1);
 		float glow = exp(-r * 3.5);
-		col += vec3(1.0, 0.85, 0.55) * (rays * fall * 0.5 + glow * 0.55) * sun;
-		col += vec3(0.08, 0.06, 0.02) * sun;
+		col += vec3(1.0, 0.85, 0.55) * (rays * fall * 0.25 + glow * 0.35) * sun;
 	}
 	if (flash > 0.0) {
 		col += vec3(0.75, 0.82, 1.0) * flash * (0.45 + 0.25 * (1.0 - uv.y));

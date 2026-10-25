@@ -20,9 +20,6 @@ ambient_light_source = 3
 ambient_light_energy = 0.8
 tonemap_mode = 2
 ssao_enabled = true
-fog_enabled = true
-fog_light_color = Color(0.72, 0.82, 0.9, 1)
-fog_density = 0.004
 
 [node name="RouteWorld" type="Node3D"]
 script = ExtResource("1_rw")
