@@ -48,6 +48,7 @@ var _turbo: CheckBox
 var _battle: OptionButton
 var _p1: OptionButton
 var _mode: OptionButton
+var _scenario: OptionButton
 var _limit: SpinBox
 var _empty_note: Label
 var _editor: Control
@@ -304,6 +305,12 @@ func set_battle_size(n: int) -> void:
 ## Modo da batalha: "energy" (barra de energia, sem rodadas) ou "vgc" (rodadas pela Speed).
 func set_battle_mode(mode: String) -> void:
 	cfg["battle_mode"] = "vgc" if mode == "vgc" else "energy"
+	_refresh_all()
+
+
+## Cenário do relevo (só energia/treino): "" = aleatório (sorteado a cada luta) ou um de Cfg.SCENARIOS.
+func set_scenario(id: String) -> void:
+	cfg["scenario"] = id if Cfg.SCENARIOS.has(id) else ""
 	_refresh_all()
 
 
@@ -923,6 +930,16 @@ func _build_top() -> Control:
 	)
 	_mode.item_selected.connect(_on_mode)
 	r2.add_child(_mode)
+	r2.add_child(_small("Cenário"))
+	_scenario = OptionButton.new()
+	_scenario.add_item("Aleatório")
+	_scenario.set_item_metadata(0, "")
+	for id in Cfg.SCENARIOS:
+		_scenario.add_item(String(Cfg.SCENARIO_NAMES[id]))
+		_scenario.set_item_metadata(_scenario.item_count - 1, id)
+	_scenario.tooltip_text = "Relevo da quadra (morros, lagos, grama alta...). Aleatório sorteia a cada luta"
+	_scenario.item_selected.connect(_on_scenario)
+	r2.add_child(_scenario)
 	r2.add_child(_small("Jogador 1"))
 	_p1 = OptionButton.new()
 	_p1.add_item("IA")
@@ -1256,6 +1273,7 @@ func _refresh_all() -> void:
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
 	_mode.select(1 if Cfg.battle_mode(cfg) == "vgc" else 0)
+	_scenario.select(maxi(Cfg.SCENARIOS.find(Cfg.scenario(cfg)) + 1, 0))
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1455,6 +1473,11 @@ func _on_battle(i: int) -> void:
 func _on_mode(i: int) -> void:
 	if not _syncing:
 		set_battle_mode(String(_mode.get_item_metadata(i)))
+
+
+func _on_scenario(i: int) -> void:
+	if not _syncing:
+		set_scenario(String(_scenario.get_item_metadata(i)))
 
 
 func _on_p1(i: int) -> void:

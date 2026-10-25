@@ -5,7 +5,8 @@ extends RefCounted
 ##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite),
 ##    battle_size (1 ou 2), battle_mode ("energy" = barra de energia sem rodadas, padrão; "vgc" =
 ##    rodadas pela Speed com posições fixas), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
-##    só na luta única: a série roda com IA)}
+##    só na luta única: a série roda com IA), scenario ("" = aleatório, padrão; ou campo, lagoa,
+##    pedreira, misto: o relevo da quadra, opts.scenario do BattleTerrain)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
@@ -24,6 +25,11 @@ const PARTY_MAX := 6
 const LEVEL := 50
 ## Quadra fixa do treino: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
 const ARENA := Vector2(24, 14)
+## Cenários do relevo para escolher na tela (os ids são os de BattleTerrain.SCENARIOS).
+const SCENARIOS := ["campo", "lagoa", "pedreira", "misto"]
+const SCENARIO_NAMES := {
+	"campo": "Campo", "lagoa": "Lagoa", "pedreira": "Pedreira", "misto": "Misto"
+}
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
 const TURBO_STEPS := 12
@@ -63,6 +69,7 @@ static func default_config() -> Dictionary:
 		"time_limit": 0,
 		"battle_size": 2,
 		"battle_mode": "energy",
+		"scenario": "",
 		"p1_control": "ai",
 	}
 
@@ -151,6 +158,8 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"terrain": bool(cfg.get("terrain", true)),
 		"mirror_court": true,
 	}
+	if scenario(cfg) != "":
+		o["scenario"] = scenario(cfg)
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)
 	# Comparar IAs (tests/balance/ia_duel.gd): IA VGC e IA do treinador por lado ([lado 0, lado 1]);
@@ -167,6 +176,12 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 ## Modo da batalha do treino: "energy" (padrão) ou "vgc".
 static func battle_mode(cfg: Dictionary) -> String:
 	return "vgc" if String(cfg.get("battle_mode", "energy")) == "vgc" else "energy"
+
+
+## Cenário escolhido ("" = aleatório: a arena sorteia pela rng da luta).
+static func scenario(cfg: Dictionary) -> String:
+	var id := String(cfg.get("scenario", ""))
+	return id if SCENARIOS.has(id) else ""
 
 
 static func load_config() -> Dictionary:
@@ -287,18 +302,35 @@ static func randomize_sides(cfg: Dictionary, rng: RandomNumberGenerator) -> void
 
 
 ## PARTY_MAX espécies diferentes da Pokédex 1-RANDOM_DEX_MAX (as de learnset completo), cada uma com
-## habilidade e golpes sorteados (random_moves).
+## habilidade e golpes sorteados (random_moves). Equilibrado por tipo: sorteia primeiro um tipo (uniforme
+## entre os que têm espécie livre) e depois uma espécie dele; dupla tipagem conta nos dois tipos.
 static func random_mons(rng: RandomNumberGenerator) -> Array:
 	var pool := random_pool()
 	var out: Array = []
 	for k in mini(PARTY_MAX, pool.size()):
-		var sp := String(pool.pop_at(rng.randi() % pool.size()))
+		var sp := pick_by_type(pool, rng)
+		pool.erase(sp)
 		var d := mon_entry(sp, LEVEL)
 		var n: int = Dex.species(sp).get("abilities", []).size()
 		d["ability_slot"] = rng.randi() % maxi(n, 1)
 		d["moves"] = random_moves(sp, rng)
 		out.append(d)
 	return out
+
+
+## Uma espécie de `pool` (ordenado): tipo uniforme entre os presentes (ordem alfabética), depois a
+## espécie entre as que têm esse tipo. Determinístico pela rng.
+static func pick_by_type(pool: Array, rng: RandomNumberGenerator) -> String:
+	var by_type := {}
+	for sp in pool:
+		for t in Dex.species(String(sp)).get("types", []):
+			if not by_type.has(t):
+				by_type[t] = []
+			by_type[t].append(sp)
+	var types: Array = by_type.keys()
+	types.sort()
+	var list: Array = by_type[types[rng.randi() % types.size()]]
+	return String(list[rng.randi() % list.size()])
 
 
 ## Até 4 golpes do learnset: um de dano de cada tipo da espécie (quando ela aprende), pelo menos um de

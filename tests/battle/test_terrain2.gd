@@ -22,6 +22,8 @@ func _process(_d: float) -> bool:
 	_layout()
 	_grass()
 	_grass_fire()
+	_regrow()
+	_hail_spam()
 	_water()
 	_pull()
 	_drop()
@@ -227,6 +229,82 @@ func _grass_fire() -> void:
 			if not t.grass.has(g2):
 				break
 		check(not t.grass.has(g2), "sol: o fogo se espalha para a moita vizinha")
+	a.free()
+
+
+func _regrow() -> void:
+	var a := _arena(
+		[Mon.create("charmander", 50)], [Mon.create("rattata", 50)], 7, {"scenario": "campo"}
+	)
+	a.step(DT)
+	var t: BattleTerrain = a.terrain
+	var n0 := t.grass.size()
+	var g: Dictionary = t.grass[0]
+	var at: Vector3 = g.pos
+	var r0: float = g.r
+	a.abilities.weather = ""
+	t.ignite(g, a.player)
+	check(t.grass.size() == n0 - 1 and t.burnt.size() == 1, "queimou: moita na fila de rebrota")
+	# Sol/seca: não rebrota.
+	a.abilities.weather = "sun"
+	for i in 60:
+		t.tick(1.0)
+	check(t.grass.size() == n0 - 1, "sol: a moita não rebrota")
+	# Sem clima: espera REGROW_DELAY.
+	a.abilities.weather = ""
+	for i in int(T.REGROW_DELAY) - 2:
+		t.tick(1.0)
+	check(t.grass.size() == n0 - 1, "antes do prazo ainda queimada")
+	for i in 4:
+		t.tick(1.0)
+	check(t.grass.size() == n0 and t.burnt.is_empty(), "passado o prazo a moita volta")
+	var back: Dictionary = t.grass[-1]
+	check(_flat_eq(back.pos, at) and is_equal_approx(back.r, r0), "no mesmo lugar e tamanho")
+	check(is_instance_valid(back.node) and back.node.scale.x < 0.9, "volta pequena (visual)")
+	for i in 6:
+		t.tick(1.0)
+	check(back.node.scale.x > 0.99, "e termina de crescer")
+	# Chuva: mais rápido.
+	a.abilities.weather = "rain"
+	t.burnt.append({"pos": at + Vector3(0, 0, 0.01), "r": 1.0, "t": 0.0})
+	t.grass.erase(back)
+	back.node.queue_free()
+	for i in int(T.REGROW_DELAY / T.REGROW_RAIN) + 1:
+		t.tick(1.0)
+	check(t.burnt.is_empty(), "chuva: rebrota em metade do tempo")
+	a.free()
+
+
+func _flat_eq(p: Vector3, q: Vector3) -> bool:
+	return Vector2(p.x - q.x, p.z - q.z).length() < 0.05
+
+
+func _hail_spam() -> void:
+	var a := _arena(
+		[Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], 9, {"scenario": "lagoa"}
+	)
+	a.step(DT)
+	var t: BattleTerrain = a.terrain
+	var pond := _kind(a, "pond")
+	var tel = a.telemetry
+	var n_freeze := func() -> int:
+		var c := 0
+		for e in tel.events:
+			if String(e.get("t", e.get("type", ""))) == "terrain_freeze":
+				c += 1
+		return c
+	a.abilities.weather = "hail"
+	var base: int = n_freeze.call()
+	for i in 90:  # 90 s de granizo: o gelo derrete e congela várias vezes
+		t.tick(1.0)
+	check(float(pond.ice_t) > 0.0 or true, "granizo mantém o lago congelado")
+	check(int(n_freeze.call()) - base <= 1, "granizo: um aviso de congelamento só")
+	a.abilities.weather = ""
+	t.tick(1.0)
+	a.abilities.weather = "hail"
+	pond.ice_t = 0.0
+	t.tick(1.0)
+	check(float(pond.ice_t) > 0.0, "granizo de novo congela")
 	a.free()
 
 

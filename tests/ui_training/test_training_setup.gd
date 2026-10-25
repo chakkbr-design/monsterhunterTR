@@ -313,6 +313,31 @@ func _run() -> void:
 		)
 	check(Cfg.can_start(scr.cfg), "sorteio: pronto para lutar")
 
+	# Sorteio equilibrado por tipo: determinístico pela semente e sem espécie repetida.
+	var ra := RandomNumberGenerator.new()
+	ra.seed = 77
+	var rb := RandomNumberGenerator.new()
+	rb.seed = 77
+	var ta: Array = Cfg.random_mons(ra).map(func(d): return d.species)
+	var tb: Array = Cfg.random_mons(rb).map(func(d): return d.species)
+	check(ta == tb, "sorteio por tipo: mesma semente, mesmo time")
+	var uniq := {}
+	for sp in ta:
+		uniq[sp] = true
+	check(uniq.size() == Cfg.PARTY_MAX, "sorteio por tipo: sem espécie repetida")
+
+	# Cenário: padrão aleatório, escolhido vai para a config e para as opts da arena.
+	check(Cfg.scenario(scr.cfg) == "" and scr._scenario.selected == 0, "cenário padrão: aleatório")
+	check(not Cfg.arena_opts(scr.cfg, Vector3.ZERO).has("scenario"), "aleatório: opts sem cenário")
+	scr.set_scenario("lagoa")
+	check(scr.cfg.scenario == "lagoa", "cenário Lagoa na config")
+	check(scr._scenario.get_item_text(scr._scenario.selected) == "Lagoa", "e no seletor")
+	check(Cfg.arena_opts(scr.cfg, Vector3.ZERO).get("scenario") == "lagoa", "e nas opts da arena")
+	scr.set_scenario("xyz")
+	check(Cfg.scenario(scr.cfg) == "", "cenário inválido volta a aleatório")
+	Cfg.save_config({"sides": scr.cfg.sides, "scenario": "misto"})
+	check(String(Cfg.load_config().scenario) == "misto", "cenário salvo no arquivo")
+
 	scr.queue_free()
 	await frames(2)
 	if pm:

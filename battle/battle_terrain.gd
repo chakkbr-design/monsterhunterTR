@@ -86,6 +86,14 @@ const GRASS_BURN_STATUS := 0.3  ## chance de ficar queimado na moita em chamas
 const SUN_BURN_MULT := 1.25  ## com sol a moita queima mais forte
 const SPREAD_GAP := 2.5  ## com sol o fogo pula para moitas a até SPREAD_GAP m (borda a borda)
 const SPREAD_DELAY := 0.5
+## Rebrota: a moita queimada volta depois de REGROW_DELAY s (chuva conta REGROW_RAIN x mais rápido; com
+## sol/seca não conta) e cresce em REGROW_SECS s (escala de REGROW_FROM até 1).
+const REGROW_DELAY := 20.0
+const REGROW_RAIN := 2.0
+const REGROW_SECS := 4.0
+const REGROW_FROM := 0.3
+## Granizo: o aviso "O lago congelou!" (log e telemetria) sai no máximo a cada FREEZE_SAY_CD s por lago.
+const FREEZE_SAY_CD := 12.0
 ## Areia: na tempestade de areia, Pedra/Terra/Aço se camuflam (golpe à distância x 0,85).
 const SAND_TYPES := ["rock", "ground", "steel"]
 const SAND_EVADE := 0.15
@@ -133,6 +141,8 @@ var _water_t := 0.0
 var scenario := ""  ## cenário desta luta ("" = sem relevo)
 ## Moitas de grama alta: {kind: "grass", pos, r, node}
 var grass: Array = []
+## Moitas queimadas esperando rebrotar: {pos, r, t}
+var burnt: Array = []
 ## Onde o BattleField põe as caixas/pedras do cenário (locais, planos).
 var crate_spots: Array = []
 var _slides := {}  ## id do lutador -> {from, to, t, dur} (puxado/derrubado)
@@ -595,13 +605,19 @@ func _conduct(user: BattleFighter, mv: Dictionary, pond: Dictionary, at: Vector3
 		PixelFx.pop(arena, "electric", pond.pos + Vector3(0, 0.2, 0), pond.r * 1.6, 0.5)
 
 
-func freeze(pond: Dictionary) -> void:
+## Congela o lago. O aviso só sai se ele não estava congelado e passou FREEZE_SAY_CD desde o último
+## (no granizo o gelo derrete e congela de novo: não enche o log). `quiet` congela sem aviso.
+func freeze(pond: Dictionary, quiet := false) -> void:
 	var was := float(pond.ice_t) > 0.0
 	pond.ice_t = FREEZE_SECS
-	if not was:
-		_set_water_look(pond)
-		_tele("terrain_freeze", {})
-		arena.say("O lago congelou!")
+	if was:
+		return
+	_set_water_look(pond)
+	if quiet or _water_t - float(pond.get("said_t", -1000.0)) < FREEZE_SAY_CD:
+		return
+	pond.said_t = _water_t
+	_tele("terrain_freeze", {})
+	arena.say("O lago congelou!")
 
 
 func _steam(pond: Dictionary, at: Vector3) -> void:
@@ -626,6 +642,7 @@ func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
 			arena.popup(g.pos + Vector3(0, 0.8, 0), "Grama molhada!", Dex.type_color("water"))
 		return
 	grass.erase(g)
+	burnt.append({"pos": g.pos, "r": g.r, "t": 0.0})
 	if is_instance_valid(g.get("node")):
 		g.node.queue_free()
 	var sun := wx == "sun"
@@ -796,7 +813,8 @@ func has_cover() -> bool:
 
 func tick(dt: float) -> void:
 	_water_t += dt
-	var wx := _weather() if has_scenery() else ""
+	var wx := _weather() if has_scenery() or not burnt.is_empty() else ""
+	_regrow(dt, wx)
 	for o in obstacles:
 		o.cd = maxf(float(o.cd) - dt, 0.0)
 		if o.kind == "pond":
@@ -818,6 +836,29 @@ func tick(dt: float) -> void:
 		_fire_in_water(f, dt)
 
 
+## Grama queimada rebrota: conta REGROW_DELAY s (x REGROW_RAIN na chuva, parada com sol/seca), a moita
+## volta pequena e cresce em REGROW_SECS s. Moita brotando já esconde e queima como as outras.
+func _regrow(dt: float, wx: String) -> void:
+	for b in burnt.duplicate():
+		if wx == "sun":
+			continue
+		b.t = float(b.t) + dt * (REGROW_RAIN if wx == "rain" else 1.0)
+		if float(b.t) < REGROW_DELAY:
+			continue
+		burnt.erase(b)
+		_add_grass(b.pos, float(b.r))
+		var g: Dictionary = grass[-1]
+		g.grow = 0.0
+		_tele("terrain_grass_regrow", {})
+	for g in grass:
+		if not g.has("grow") or float(g.grow) >= 1.0:
+			continue
+		g.grow = minf(float(g.grow) + dt / REGROW_SECS, 1.0)
+		if is_instance_valid(g.get("node")):
+			var k := lerpf(REGROW_FROM, 1.0, float(g.grow))
+			g.node.scale = Vector3(k, k, k)
+
+
 ## Fogo dentro do lago: FIRE_WATER_DOT do HP por segundo (cobrado de segundo em segundo).
 func _fire_in_water(f: BattleFighter, dt: float) -> void:
 	var id := f.get_instance_id()
@@ -836,8 +877,13 @@ func _fire_in_water(f: BattleFighter, dt: float) -> void:
 
 ## Clima no lago: chuva enche, sol seca (o raio anda POND_GROW m/s até o alvo), granizo/neve congela.
 func _pond_weather(o: Dictionary, wx: String, dt: float) -> void:
-	if wx == "hail" and float(o.ice_t) <= 0.0:
-		freeze(o)
+	if wx == "hail":
+		if float(o.ice_t) <= 0.0:
+			# Congela de novo sem aviso: só a mudança (sem granizo -> granizo) vai para o log.
+			freeze(o, bool(o.get("hail_ice", false)))
+			o.hail_ice = true
+	else:
+		o.hail_ice = false
 	var want: float = (
 		float(o.r0) * (RAIN_POND if wx == "rain" else (SUN_POND if wx == "sun" else 1.0))
 	)

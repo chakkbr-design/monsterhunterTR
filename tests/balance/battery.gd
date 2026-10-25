@@ -4,7 +4,8 @@ extends SceneTree
 ## out/<semente>.json. Roda em turbo (passos de 1x, o resultado não muda; ver tests/balance/turbo_check.gd).
 ## Rodar várias em paralelo (tools/battery.sh) e analisar com tools/battery_report.py.
 ## Opções (depois de --): n=N, seed=N, out=DIR, mode=energy|vgc, size=1|2|mix, weather=mix|none,
-## pace=X (damage_pace), think=mix|1, team=N (Pokémon por lado, padrão 6), limit=S.
+## pace=X (damage_pace), think=mix|1, team=N (Pokémon por lado, padrão 6), limit=S,
+## scenario=campo|lagoa|pedreira|misto (omitido ou aleatorio = sorteado por luta).
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -20,6 +21,7 @@ var pace := -1.0
 var think := "mix"
 var team := 6
 var limit := 420
+var scenario := ""
 var extra := {}
 var turbo := true
 
@@ -52,6 +54,8 @@ func _initialize() -> void:
 				limit = int(kv[1])
 			"turbo":
 				turbo = kv[1] != "0"
+			"scenario":
+				scenario = kv[1] if Cfg.SCENARIOS.has(kv[1]) else ""
 			_:
 				# Qualquer outra chave vira opts da arena (número quando der).
 				extra[kv[0]] = float(kv[1]) if kv[1].is_valid_float() else kv[1]
@@ -84,6 +88,7 @@ func _one(sd: int) -> Dictionary:
 	c.battle_mode = mode
 	c.battle_size = sz
 	c.seed = sd
+	c.scenario = scenario
 	c.turbo = turbo
 	c.time_limit = limit
 	if w != "":
@@ -98,6 +103,7 @@ func _one(sd: int) -> Dictionary:
 		"think": [c.sides[0].think_scale, c.sides[1].think_scale],
 		"pace": pace,
 		"extra": extra,
+		"scenario": scenario,
 	}
 	if pace > 0.0:
 		eo["damage_pace"] = pace
