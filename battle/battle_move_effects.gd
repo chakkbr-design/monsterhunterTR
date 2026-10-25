@@ -124,7 +124,7 @@ const LOCK_TURNS := 2
 const RAGE_STEP := 50.0
 const RAGE_MAX := 350.0
 ## Golpes que descongelam o alvo além dos de Fogo.
-const THAW_MOVES := ["scald"]
+const THAW_MOVES := ["scald", "hydro_steam", "steam_eruption", "matcha_gotcha"]
 ## Acupressure: atributos que podem subir.
 const ACUPRESSURE_STATS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Golpes de som oficiais que existem no jogo (Throat Chop bloqueia; atravessam o Substitute).
@@ -146,6 +146,10 @@ const SOUND_MOVES := [
 	"boomburst",
 	"chatter",
 	"clanging_scales",
+	"clangorous_soul",
+	"confide",
+	"grass_whistle",
+	"parting_shot",
 	"noble_roar",
 	"overdrive",
 	"relic_song",

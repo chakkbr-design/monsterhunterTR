@@ -533,12 +533,12 @@ func _type_changers() -> void:
 	_give(a.player, "pixilate")
 	var m := fx.move_for(a.player, tackle)
 	check(
-		String(m.type) == "fairy" and is_equal_approx(float(m.ate), 1.3),
-		"Pixilate: Normal vira Fada com x1,3"
+		String(m.type) == "fairy" and is_equal_approx(float(m.ate), 1.2),
+		"Pixilate: Normal vira Fada com x1,2"
 	)
 	check(
-		is_equal_approx(a.abilities.damage_mult(a.player, a.enemy, m), 1.3),
-		"Pixilate: o dano sai x1,3"
+		is_equal_approx(a.abilities.damage_mult(a.player, a.enemy, m), 1.2),
+		"Pixilate: o dano sai x1,2"
 	)
 	_give(a.player, "refrigerate")
 	check(String(fx.move_for(a.player, tackle).type) == "ice", "Refrigerate: Normal vira Gelo")

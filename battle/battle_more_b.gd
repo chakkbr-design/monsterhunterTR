@@ -223,12 +223,22 @@ static func blocks_hit(
 	if not fx.active(ts, "b_guard") or _sp(mv) in ["no_protect", "feint"]:
 		return false
 	var guard := String(ts.get("guard", ""))
+	# Obstruct e Silk Trap só barram golpe de dano (como o King's Shield); o Spiky Shield barra tudo.
+	if guard != "spiky_shield" and String(mv.get("category", "")) == "status":
+		return false
 	target.popup("Protegeu-se!", GUARD_COL.get(guard, Color(0.6, 0.9, 1.0)), 1.1)
 	fx.st(user).fail = true
 	fx.crash_damage(user, mv)
-	if float(mv.get("power", 0)) > 0.0 and String(mv.get("kind", "")) in CONTACT_KINDS:
+	if float(mv.get("power", 0)) > 0.0 and _touches(mv):
 		_guard_react(fx, user, target, guard)
 	return true
+
+
+## O golpe encosta no alvo: o dado oficial ("contact") vale mais que o kind.
+static func _touches(mv: Dictionary) -> bool:
+	if mv.has("contact"):
+		return bool(mv.contact)
+	return String(mv.get("kind", "")) in CONTACT_KINDS
 
 
 static func _guard_react(

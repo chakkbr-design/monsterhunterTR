@@ -23,6 +23,8 @@ const SMACK_TURNS := 5
 const FAIRY_LOCK_TURNS := 2
 ## Bolt Beak / Fishious Rend no modo de energia: o alvo parado há mais que isto "ainda não agiu".
 const IDLE_SECS := 2.5
+## Moongeist Beam e Photon Geyser também passam por cima da habilidade do alvo (como o Sunsteel Strike).
+const IGNORE_ABILITY_IDS := ["moongeist_beam", "photon_geyser"]
 const SOUND := ["clangorous_soul", "confide", "grass_whistle"]
 const CONTACT_KINDS := ["dash", "arc", "multi_arc", "whip"]
 ## Natural Gift: tipo da frutinha (o poder é 80 em todas as que existem aqui).
@@ -56,6 +58,8 @@ const COL_TETHER := Color(0.7, 0.45, 0.85)
 
 ## O golpe encosta no alvo (física de perto), para King's Shield, Baneful Bunker, Beak Blast.
 static func _contact(mv: Dictionary) -> bool:
+	if mv.has("contact"):
+		return bool(mv.contact) and float(mv.get("power", 0)) > 0.0
 	return (
 		String(mv.get("category", "")) == "physical" and String(mv.get("kind", "")) in CONTACT_KINDS
 	)
@@ -187,6 +191,8 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 				user.popup("Usou %s!" % fx._item_name(user), Color(1, 0.85, 0.5), 0.8)
 		"ignore_ability":
 			_mold_breaker(fx, user, mv)
+	if id in IGNORE_ABILITY_IDS:
+		_mold_breaker(fx, user, mv)  # golpes com ignoreAbility oficial sem outro special
 	if mv.has("recharge_after") and String(mv.get("kind", "")) != "beam":
 		var wait := Dex.prepare_time(mv) + 0.2
 		match String(mv.get("kind", "")):
@@ -263,7 +269,7 @@ static func blocks_hit(
 	if dmg and fx.active(ts, "kshield"):
 		target.popup("Escudo do rei!", Color(0.8, 0.85, 0.95), 1.1)
 		if contact and user.alive():
-			fx.arena.moves.change_stage(user, "atk", -2, target)
+			fx.arena.moves.change_stage(user, "atk", -1, target)
 		fx.note_fail(user)
 		return true
 	var pfx := String(ts.get("protect_fx", ""))

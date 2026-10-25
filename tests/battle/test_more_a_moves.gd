@@ -356,7 +356,7 @@ func _shields() -> void:
 	check(_use(a, p, "kings_shield"), "usa King's Shield")
 	check(fx.active(fx.st(p), "kshield"), "King's Shield ligado")
 	check(fx.blocks_hit(e, p, tackle), "King's Shield barra golpe de dano")
-	check(int(e.stages.get("atk", 0)) == -2, "contato com King's Shield: Ataque -2")
+	check(int(e.stages.get("atk", 0)) == -1, "contato com King's Shield: Ataque -1 (Gen 8+)")
 	var growl := {"id": "x", "power": 0, "category": "status", "kind": "projectile"}
 	check(not fx.blocks_hit(e, p, growl), "King's Shield deixa passar golpe de status")
 	check(not fx.blocks_hit(e, p, Dex.move("phantom_force")), "golpe que ignora proteção passa")

@@ -64,7 +64,10 @@ static func apply(arena: Node, user: BattleFighter, target: BattleFighter) -> bo
 	if arena.get("vfx") and arena.is_inside_tree():
 		arena.vfx.puff(arena.to_global(user.position + Vector3(0, 0.5, 0)), 1.6)
 	user.popup(
-		"Virou %s!" % target.mon.display_name, Dex.type_color(String(target.types[0])), 1.1, 0.9
+		"Virou %s!" % target.mon.display_name,
+		Dex.type_color(String(target.types[0]) if not target.types.is_empty() else "normal"),
+		1.1,
+		0.9
 	)
 	user.refresh_label()
 	return true
@@ -75,7 +78,7 @@ static func _can_copy(arena: Node, user: BattleFighter, target: BattleFighter) -
 		return false
 	if not is_instance_valid(target) or target == user or not target.active():
 		return false
-	if target.hidden != "" or target.types.is_empty():
+	if target.hidden != "":
 		return false
 	var mv = arena.get("moves")
 	if mv and int(mv.effects.st(target).sub) > 0:

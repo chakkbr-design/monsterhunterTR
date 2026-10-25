@@ -38,6 +38,7 @@ const BULLET_MOVES := [
 	"zap_cannon",
 ]
 const WIND_MOVES := [
+	"aeroblast",
 	"air_cutter",
 	"bleakwind_storm",
 	"blizzard",
@@ -102,6 +103,7 @@ const DANCE_MOVES := [
 	"teeter_dance",
 	"victory_dance",
 	"aqua_step",
+	"clangorous_soul",
 ]
 const HEAL_MOVES := [
 	"recover",
@@ -183,7 +185,7 @@ const SLICE_MULT := 1.5
 const PULSE_MULT := 1.5
 const PUNK_MULT := 1.3
 const STATUS_BOOST := 1.5
-const ATE_MULT := 1.3
+const ATE_MULT := 1.2
 const NORMALIZE_MULT := 1.2
 const RUIN_MULT := 0.75
 const AURA_MULT := 4.0 / 3.0
@@ -850,7 +852,10 @@ static func adjust(
 	s["hp_pre"] = target.hp
 	if user.side == target.side or float(mv.get("power", 0)) <= 0.0:
 		return dmg
-	match ab.ability_of(target):
+	var tab := ab.ability_of(target)
+	if ab._breaker(user):
+		tab = ""  # Mold Breaker passa por cima de Disguise e Ice Face
+	match tab:
 		"disguise":
 			if form_of(target) != "busted" and not bool(s.get("busted", false)):
 				s["busted"] = true
@@ -959,7 +964,7 @@ static func _victim(
 				ab._stage_up(target, "spe", 6)
 				ab._fire(target, Color(0.9, 0.9, 0.95))
 		"thermal_exchange":
-			if type == "fire":
+			if type == "fire" and not ab._breaker(user):
 				ab._stage_up(target, "atk", 1)
 				ab._fire(target, Dex.type_color("fire"))
 		"sand_spit":

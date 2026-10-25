@@ -2623,7 +2623,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Jato de água fervente em arco. Ao sol o poder triplica na conta (anula o 0,5x do sol sobre Água e fica 1,5x, como o oficial).
+  - Jato de água fervente em arco. Ao sol o poder triplica na conta (anula o 0,5x do sol sobre Água e fica 1,5x, como o oficial). Descongela o alvo.
 
 ### Jet Punch
 
@@ -2776,7 +2776,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Coluna de vapor no alvo; 30% de queimar.
+  - Coluna de vapor no alvo; 30% de queimar. Descongela o alvo.
   - 30% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
 
 ### Surf
@@ -3004,7 +3004,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Investida elétrica de 120; o usuário perde o tipo Elétrico (só sai se for Elétrico). Vale até o fim da luta dele em campo.
+  - Investida elétrica de 120; o usuário perde o tipo Elétrico (só sai se for Elétrico). Fica sem tipo (neutro contra tudo, sem STAB) até o fim da luta dele em campo.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 1,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
 ### Eerie Impulse
@@ -3713,7 +3713,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Jato de chá em arco que cura o usuário com metade do dano; 20% de queimar.
+  - Jato de chá em arco que cura o usuário com metade do dano; 20% de queimar. Descongela o alvo.
   - 20% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
   - Dreno: orbe verde que, ao acertar, cura o usuário em 50% do dano causado.
 
@@ -6079,7 +6079,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Pilar de luz no alvo. Se o Ataque do usuário for maior que o At. Esp., o golpe usa o Ataque e a Defesa do alvo (vira físico).
+  - Pilar de luz no alvo. Se o Ataque do usuário for maior que o At. Esp., o golpe usa o Ataque e a Defesa do alvo (vira físico). Também passa por cima da habilidade do alvo, como o Moongeist Beam.
 
 ### Power Split
 
@@ -6607,7 +6607,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
-  - Protege como o Protect (prioridade +4, o turno todo). Quem encosta com golpe de contato perde 1 de Velocidade.
+  - Protege como o Protect (prioridade +4, o turno todo). Só barra golpes de dano (os de status passam). Quem encosta com golpe de contato perde 1 de Velocidade.
   - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Skitter Smack
@@ -7047,7 +7047,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Raio fantasma com aviso no chão. A parte de ignorar a habilidade do alvo ficou simplificada (sem efeito extra).
+  - Raio fantasma com aviso no chão. Passa por cima da habilidade do alvo durante o golpe (o usuário vale como Mold Breaker por um instante, como o Sunsteel Strike).
 
 ### Night Shade
 
@@ -7775,7 +7775,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
-  - Protege como o Protect (prioridade +4, o turno todo, uso seguido falha mais). Quem encosta com golpe de contato perde 2 estágios de Defesa.
+  - Protege como o Protect (prioridade +4, o turno todo, uso seguido falha mais). Só barra golpes de dano (os de status passam). Quem encosta com golpe de contato perde 2 estágios de Defesa.
   - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Parting Shot
@@ -8127,7 +8127,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
-  - Prioridade +4 até o fim da rodada: bloqueia golpes de dano (não os de status); quem encosta com golpe de contato perde -2 de Ataque.
+  - Prioridade +4 até o fim da rodada: bloqueia golpes de dano (não os de status); quem encosta com golpe de contato perde -1 de Ataque (Gen 8+).
   - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Make It Rain

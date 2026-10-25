@@ -743,7 +743,7 @@
   "aroma_veil": {
     "name": "AROMA VEIL",
     "desc": "Protects allies against moves that affect their mental state.",
-    "desc_pt": "Ele e o parceiro não sofrem Taunt, Encore, Disable, Heal Block, Attract nem confusão."
+    "desc_pt": "Ele e o parceiro não sofrem Taunt, Torment, Encore, Disable, Heal Block, Attract nem confusão."
   },
   "fluffy": {
     "name": "FLUFFY",
@@ -933,7 +933,7 @@
   "refrigerate": {
     "name": "REFRIGERATE",
     "desc": "Turns the bearer's Normal moves into Ice moves and strengthens them to 1.3× their power.",
-    "desc_pt": "Golpes Normal viram Gelo e ganham x1,3 de poder."
+    "desc_pt": "Golpes Normal viram Gelo e ganham x1,2 de poder."
   },
   "merciless": {
     "name": "MERCILESS",
@@ -1093,7 +1093,7 @@
   "pixilate": {
     "name": "PIXILATE",
     "desc": "Turns the bearer's Normal moves into Fairy moves and strengthens them to 1.3× their power.",
-    "desc_pt": "Golpes Normal viram Fada e ganham x1,3 de poder."
+    "desc_pt": "Golpes Normal viram Fada e ganham x1,2 de poder."
   },
   "fairy_aura": {
     "name": "FAIRY AURA",

@@ -55,6 +55,10 @@ const SOUND_MOVES := [
 	"psychic_noise",
 	"chatter",
 	"clanging_scales",
+	"clangorous_soul",
+	"confide",
+	"howl",
+	"snarl",
 ]
 ## Golpes de soco oficiais (Iron Fist).
 const PUNCH_MOVES := [
@@ -227,8 +231,6 @@ const UNBREAKABLE := [
 	"prism_armor",
 	"shadow_shield",
 	"full_metal_body",
-	"disguise",
-	"ice_face",
 	"pickpocket",
 	"magician",
 	"stamina",
@@ -253,7 +255,6 @@ const UNBREAKABLE := [
 	"wind_power",
 	"water_compaction",
 	"steam_engine",
-	"thermal_exchange",
 ]
 ## Habilidades que ignoram a imunidade de Fantasma (Scrappy): tipos de golpe que passam a acertar.
 const SCRAPPY_TYPES := ["normal", "fighting"]
@@ -669,7 +670,9 @@ func partner_of(f: BattleFighter) -> BattleFighter:
 
 
 func _is_contact(mv: Dictionary) -> bool:
-	return bool(mv.get("contact", false)) or String(mv.get("kind", "")) in CONTACT_KINDS
+	if mv.has("contact"):  # o dado diz (oficial): vale mais que o kind
+		return bool(mv.contact)
+	return String(mv.get("kind", "")) in CONTACT_KINDS
 
 
 func _is_sound(mv: Dictionary) -> bool:
