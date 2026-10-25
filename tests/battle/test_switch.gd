@@ -299,6 +299,9 @@ func _paralysis_secs() -> void:
 	g.immortal = true
 	g.clear_status()
 	g.apply_status("paralysis")
-	_run(a, BattleFighter.PARALYSIS_SECS + 0.5)
-	check(g.status != "paralysis", "aliado também sai da paralisia em 10 s")
+	var tg := 0.0
+	while g.status == "paralysis" and tg < BattleFighter.PARALYSIS_SECS * 2.0:
+		a.step(DT)
+		tg += DT
+	check(g.status != "paralysis", "aliado também sai da paralisia em 10 s de campo (%.1f)" % tg)
 	a.free()

@@ -9,7 +9,7 @@ extends RefCounted
 ## Barra cheia.
 const MAX := 100.0
 ## Energia por segundo, base.
-const REGEN := 5.0
+const REGEN := 15.0
 ## Speed: fator 1 + SPEED_K * ln(Speed / SPEED_REF), limitado a SPEED_MIN-SPEED_MAX (acelera pouco).
 const SPEED_K := 0.12
 const SPEED_REF := 100.0
