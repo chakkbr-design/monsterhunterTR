@@ -20,6 +20,8 @@ extends RefCounted
 ##   ~30 s por TIDE_IN s, com TIDE_WARN s de aviso, e depois baixa. A água rasa segue as regras do lago
 ##   (Elétrico 1,3x, energia de Água/Grama maior, de Fogo menor), sem o dano no Fogo e só com o andar
 ##   na água rasa (TIDE_WADE). Na areia seca, quem é de Terra fica camuflado (golpe à distância x0,85).
+## - Mais coisas (tronco sobre o lago, pilar condutor, teia e cipó, vento, pedras que ficam e o clima no
+##   chão): BattleGroundExtras (extras), com os ganchos passando por aqui.
 
 ## Lama por cenário (as outras coisas do cenário ficam em BattleTerrain.SCENARIOS).
 const MUD_COUNT := {"campo": 1, "lagoa": 1, "misto": 2, "praia": 2}
@@ -87,6 +89,8 @@ var _was_mud := {}  ## id -> estava na lama no quadro anterior
 var _slide_v := {}  ## id -> velocidade no gelo (embalo)
 var _hold := {}  ## id -> segundos lutando na lama (IA); negativo = espera
 var _t := 0.0
+## Tronco, pilar, teia/cipó, vento, pedrinhas e clima no chão (BattleGroundExtras).
+var extras: BattleGroundExtras
 
 static var _tex := {}
 
@@ -94,6 +98,7 @@ static var _tex := {}
 func _init(ter: BattleTerrain) -> void:
 	terrain = ter
 	arena = ter.arena
+	extras = BattleGroundExtras.new(self)
 
 
 func _tele(kind: String, data := {}) -> void:
@@ -125,6 +130,7 @@ func setup() -> void:
 	if terrain.scenario == "praia":
 		tide = {"phase": "dry", "t": TIDE_FIRST - TIDE_WARN, "side": 1 if rng.randf() < 0.5 else -1}
 		_build_beach()
+	extras.setup()  # tronco e pilar (rng própria)
 
 
 ## Ponto para a lama do cenário: chão livre (ela é baixa: pode encostar no resto, só não em cima),
@@ -261,11 +267,12 @@ func move_mult(f: BattleFighter) -> float:
 
 ## Energia na água rasa da maré: as regras do lago (sem o dano no Fogo).
 func regen_mult(f: BattleFighter) -> float:
+	var k := extras.regen_mult(f)  # Aço perto do pilar
 	if not in_tide(f):
-		return 1.0
+		return k
 	if terrain.swimmer(f) or "grass" in f.types:
-		return BattleTerrain.SWIM_REGEN
-	return BattleTerrain.FIRE_WATER_REGEN if "fire" in f.types else BattleTerrain.WADE_REGEN
+		return BattleTerrain.SWIM_REGEN * k
+	return (BattleTerrain.FIRE_WATER_REGEN if "fire" in f.types else BattleTerrain.WADE_REGEN) * k
 
 
 ## Precisão: enlameado erra mais de longe; quem está na fenda fica escondido de tiro de longe; Terra
@@ -338,6 +345,7 @@ func shot_cover(a: Vector3, b: Vector3) -> float:
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
 	if not on:
 		return
+	extras.on_move_landed(user, mv, at, radius)  # teia, cipó, pedrinhas; Fogo queima o tronco
 	var type := String(mv.get("type", ""))
 	var power := float(mv.get("power", 0))
 	var id := String(mv.get("id", ""))
@@ -431,7 +439,10 @@ func settle(f: BattleFighter, dt: float) -> void:
 
 ## Desvia a direção da IA da lama (quem atola) e das brasas (quem não é de Fogo).
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
-	if not on or want.length() < 0.05 or not _grounded(f):
+	if not on or want.length() < 0.05:
+		return want
+	want = extras.steer(f, want)  # tronco como caminho, contorna a teia
+	if not _grounded(f):
 		return want
 	var dir := want.normalized()
 	var out := want
@@ -468,6 +479,7 @@ func tick(dt: float) -> void:
 		return
 	_t += dt
 	var wx := terrain._weather()
+	extras.tick(dt)
 	_tick_tide(dt)
 	_tick_mud(dt, wx)
 	_tick_marks(dt, wx)
@@ -715,6 +727,9 @@ static func steer_ai(ai, d: float) -> Vector3:
 	if ter == null or ter.get("ground") == null or not ter.ground.on:
 		return Vector3.INF
 	var g: BattleGround = ter.ground
+	var ex := g.extras.steer_ai(ai, d)  # chuva: esconde no anel do pilar contra Elétrico
+	if ex != Vector3.INF:
+		return ex
 	if "fire" in f.types and g.in_tide(f):
 		ai.tag = "leave_tide"
 		f.sprinting = f.can_sprint(true)
@@ -737,6 +752,25 @@ static func steer_ai(ai, d: float) -> Vector3:
 		return (to * 0.5).limit_length(0.3)
 	f.sprinting = to.length() > 3.0 and f.can_sprint(true)
 	return to.normalized() * clampf(to.length(), 0.3, 1.0)
+
+
+## Escolha do golpe da IA (BattleAI.pick): alvo no tronco puxa empurrão forte. "" = segue.
+static func ai_pick(ai, avail: Array) -> String:
+	var g = _of(ai)
+	return "" if g == null else g.extras.ai_pick(ai, avail)
+
+
+## Filtro da escolha da IA (BattleAI.pick): Elétrico de longe sai perto do pilar na chuva.
+static func ai_filter(ai, avail: Array) -> Array:
+	var g = _of(ai)
+	return avail if g == null else g.extras.ai_filter(ai, avail)
+
+
+static func _of(ai) -> BattleGround:
+	var ter = ai.f.arena.get("terrain") if ai.f.arena else null
+	if ter == null or ter.get("ground") == null or not ter.ground.on:
+		return null
+	return ter.ground
 
 
 ## Lama (mole) a até MUD_SEEK m de onde o golpe pretendido alcança o alvo, para quem é de Terra lutar

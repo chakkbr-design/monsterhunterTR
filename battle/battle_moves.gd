@@ -210,6 +210,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	if arena.get("terrain"):
 		dir = arena.terrain.props.aim_dir(user, mv, dir)  # IA mirou num objeto (BattleProps)
+		arena.terrain.ground.extras.on_move_used(user, mv, dir)  # vento, Stealth Rock
 	user.facing = dir
 	# O nome do golpe não aparece sobre o Pokémon: fica na lateral (BattleHUD.callout, em on_move_used).
 	if kind == "arc" or kind == "multi_arc":
@@ -397,6 +398,8 @@ func hit(
 ) -> void:
 	if not is_instance_valid(target) or not target.active() or not is_instance_valid(user):
 		return
+	if arena.get("terrain") and arena.terrain.ground.extras.rod(user, target, mv):
+		return  # chuva: o pilar condutor puxa o Elétrico de quem está perto dele
 	var left := _spend_hit(target, mv)
 	if left < 0:
 		return  # este uso já deu todos os acertos oficiais neste alvo (jato, nuvem, folhas extras)
@@ -931,6 +934,8 @@ func _area_point(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	if miss != null:
 		var side := dir.cross(Vector3.UP).normalized() * (1.0 if rng.randf() < 0.5 else -1.0)
 		at += side * (radius + rng.randf_range(0.9, 1.5))
+	if arena.get("terrain"):
+		at = arena.terrain.ground.extras.wind_area(mv, at)  # pó no vento vai para frente
 	return at
 
 

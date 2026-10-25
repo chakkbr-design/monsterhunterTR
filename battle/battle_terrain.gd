@@ -368,7 +368,9 @@ func pond_at(p: Vector3) -> Dictionary:
 
 
 func in_water(f: BattleFighter) -> bool:
-	return not pond_at(f.position).is_empty() and _grounded(f) and f.ground_y < 0.1
+	if pond_at(f.position).is_empty() or not _grounded(f) or f.ground_y >= 0.1:
+		return false
+	return not ground.extras.on_bridge(f)  # em cima do tronco não está na água
 
 
 ## Dentro da água de verdade (lago não congelado).
@@ -387,6 +389,8 @@ func grass_at(p: Vector3) -> Dictionary:
 func in_grass(f: BattleFighter) -> bool:
 	if grass.is_empty() or not is_instance_valid(f) or f.motion == "tunnel":
 		return false
+	if ground.extras.grass_buried():
+		return false  # tempestade de areia cobre a grama
 	return not grass_at(f.position).is_empty() and _grounded(f) and f.ground_y < 0.1
 
 
@@ -428,7 +432,7 @@ func move_mult(f: BattleFighter) -> float:
 	if gm != 1.0:
 		return gm
 	var pond := pond_at(f.position)
-	if not pond.is_empty() and _grounded(f):
+	if not pond.is_empty() and _grounded(f) and not ground.extras.on_bridge(f):
 		if float(pond.ice_t) > 0.0:
 			return ICE_MULT
 		return SWIM_MULT if swimmer(f) else WADE_MULT
@@ -719,6 +723,7 @@ func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
 			"terrain_grass_burn_hit", {"who": _uid(f), "by": _uid(user), "dmg": n, "burned": burned}
 		)
 		f.take_damage(n, Vector3.ZERO, 0.0)
+	ground.extras.on_grass_burn(g, user)  # vento leva o fogo para a moita a favor dele
 	if not sun:
 		return
 	for o in grass.duplicate():
@@ -738,6 +743,8 @@ func after_hit(
 	var id := target.get_instance_id()
 	if _shove_at.has(id) and _water_t - float(_shove_at[id]) < SHOVE_CD:
 		return
+	if ground.extras.after_hit(user, target, mv, dir, knock):
+		return  # derrubado do tronco na água
 	var type := String(mv.get("type", ""))
 	var strong_water := String(mv.get("id", "")) in PULL_MOVES or knock >= PULL_KNOCK
 	if type == "water" and strong_water and not swimmer(target) and not in_water(target):
@@ -831,7 +838,7 @@ func on_shot_blocked(user: BattleFighter, mv: Dictionary, p: Vector3) -> void:
 
 ## Projétil em `p` (local) bateu no relevo? Caixas e pedras do campo também param o tiro.
 func blocks_shot(p: Vector3) -> bool:
-	if p.y < height_at(p) - 0.05 or props.blocks_shot(p):
+	if p.y < height_at(p) - 0.05 or props.blocks_shot(p) or ground.extras.blocks_shot(p):
 		return true
 	if arena.field:
 		for o in arena.field.objects:
@@ -855,7 +862,7 @@ func shot_block(a: Vector3, b: Vector3) -> float:
 
 
 func has_cover() -> bool:
-	if not obstacles.is_empty() or props.has_cover():
+	if not obstacles.is_empty() or props.has_cover() or ground.extras.has_cover():
 		return true
 	return arena.field != null and not arena.field.objects.is_empty()
 
@@ -984,6 +991,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 		for o in arena.field.objects:
 			cands.append({"pos": o.pos, "r": BattleField.OBJ_R})
 	cands.append_array(props.cover_cands())  # árvore e cristal
+	cands.append_array(ground.extras.cover_cands())  # pilar, pedrinhas, neve
 	var best := Vector3.INF
 	var best_d := max_d
 	for c in cands:
@@ -1015,7 +1023,8 @@ func steer(f: BattleFighter, want: Vector3) -> Vector3:
 				and float(o.ice_t) <= 0.0
 				and _grounded(f)
 				and pond_at(f.position).is_empty()
-			)
+				and not ground.extras.routes_through(f, o)
+			)  # vai pelo tronco
 		if not avoid:
 			continue
 		var to := _flat(o.pos - f.position)
