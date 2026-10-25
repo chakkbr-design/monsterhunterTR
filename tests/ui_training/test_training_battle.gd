@@ -224,6 +224,23 @@ func _run() -> void:
 		check(sp.size() == Cfg.PARTY_MAX and uniq.size() == sp.size(), "lado %d: 6 diferentes" % s)
 	tb.random_series = false
 
+	# Cenário aleatório sorteia de novo a cada luta; o escolhido fica, e o piso segue o cenário.
+	tb.cfg.erase("scenario")
+	tb.cfg.seed = -1  # semente fixa repete a luta (e o cenário) até a série andar
+	var scns := {}
+	for i in 6:
+		tb.start_fight()
+		scns[tb.scenario()] = true
+		check(
+			tb._court_mat.albedo_color == tb.STAGE_COLORS[tb.scenario()][1],
+			"piso da quadra com a cor de %s" % tb.scenario()
+		)
+	check(scns.size() >= 3, "aleatório varia o cenário (%d em 6 lutas)" % scns.size())
+	tb.cfg["scenario"] = "vulcao"
+	tb.start_fight()
+	check(tb.scenario() == "vulcao", "cenário escolhido: Vulcão")
+	tb.cfg.erase("scenario")
+
 	tb.queue_free()
 	await process_frame
 	check(pm == null or pm.is_processing_unhandled_input(), "menu de pausa volta ao sair")

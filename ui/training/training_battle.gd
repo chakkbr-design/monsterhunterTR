@@ -23,6 +23,19 @@ const DIRT := Color(0.62, 0.52, 0.38)
 const WOOD := Color(0.5, 0.34, 0.2)
 const FENCE_GAP := 1.6
 const POST_STEP := 2.0
+## Cor do chão de fora e do piso da quadra por cenário ([fora, quadra]): cada cenário tem cara própria.
+const STAGE_COLORS := {
+	"campo": [GROUND, DIRT],
+	"lagoa": [Color(0.3, 0.52, 0.36), Color(0.52, 0.5, 0.36)],
+	"pedreira": [Color(0.5, 0.48, 0.42), Color(0.6, 0.56, 0.5)],
+	"misto": [Color(0.4, 0.52, 0.3), Color(0.58, 0.5, 0.36)],
+	"praia": [Color(0.86, 0.78, 0.56), Color(0.92, 0.85, 0.64)],
+	"ruinas": [Color(0.46, 0.5, 0.36), Color(0.66, 0.62, 0.52)],
+	"montanha": [Color(0.86, 0.9, 0.95), Color(0.74, 0.78, 0.82)],
+	"vulcao": [Color(0.26, 0.2, 0.18), Color(0.4, 0.3, 0.26)],
+	"caverna": [Color(0.22, 0.22, 0.26), Color(0.34, 0.32, 0.32)],
+	"pantano": [Color(0.28, 0.36, 0.24), Color(0.38, 0.36, 0.26)],
+}
 
 ## Placar da série enquanto a config não muda (sobrevive a "Repetir").
 ## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
@@ -52,6 +65,8 @@ var _result_box: Control
 var _stop: Button
 var _last_log: Array = []
 var _stage_cam: Camera3D
+var _ground_mat: StandardMaterial3D
+var _court_mat: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -84,8 +99,8 @@ func _build_stage() -> void:
 	sun.rotation_degrees = Vector3(-55, 30, 0)
 	sun.shadow_enabled = true
 	add_child(sun)
-	_plane(Vector2(90, 70), GROUND, -0.01)
-	_plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0)
+	_ground_mat = _plane(Vector2(90, 70), GROUND, -0.01)
+	_court_mat = _plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0)
 	_build_fence(Cfg.ARENA * 0.5 + Vector2(FENCE_GAP, FENCE_GAP))
 	# Câmera do cenário no mesmo ponto da câmera fixa da arena: a arena a devolve no fim da luta.
 	_stage_cam = Camera3D.new()
@@ -96,7 +111,7 @@ func _build_stage() -> void:
 	_stage_cam.make_current()
 
 
-func _plane(sz: Vector2, col: Color, y: float) -> void:
+func _plane(sz: Vector2, col: Color, y: float) -> StandardMaterial3D:
 	var mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = sz
@@ -107,6 +122,21 @@ func _plane(sz: Vector2, col: Color, y: float) -> void:
 	mi.mesh = pm
 	mi.position.y = y
 	add_child(mi)
+	return mat
+
+
+## Nome do cenário da luta atual ("" sem relevo).
+func scenario() -> String:
+	if not is_instance_valid(arena) or arena.get("terrain") == null:
+		return ""
+	return String(arena.terrain.scenario)
+
+
+## Pinta o chão de fora e o piso da quadra com as cores do cenário sorteado ou escolhido.
+func _paint_stage() -> void:
+	var cols: Array = STAGE_COLORS.get(scenario(), [GROUND, DIRT])
+	_ground_mat.albedo_color = cols[0]
+	_court_mat.albedo_color = cols[1]
 
 
 ## Cerca de madeira em volta da quadra (só visual: a arena já prende os Pokémon na quadra).
@@ -177,6 +207,7 @@ func start_fight() -> void:
 	add_child(arena)
 	arena.finished.connect(_on_finished)
 	arena.start(team_a, team_b, o)
+	_paint_stage()
 	_fit_camera()
 	var help = arena.hud.get("_help") if arena.get("hud") else null
 	if help is Control and not bool(o.get("keyboard", false)):
@@ -356,6 +387,8 @@ func _refresh_info() -> void:
 	)
 	if int(series.draw) > 0:
 		s += " (%d sem vencedor)" % series.draw
+	if scenario() != "":
+		s += "   ·   %s" % Cfg.SCENARIO_NAMES.get(scenario(), scenario())
 	if auto_left > 0:
 		s += "   ·   faltam %d" % auto_left
 	_info.text = s
@@ -387,7 +420,10 @@ func _show_result() -> void:
 	col.add_child(Kit.header(head, Kit.RED, 24))
 	col.add_child(
 		Kit.label(
-			"Duração da luta: %s (tempo de jogo) · semente %d" % [_clock(fight_time), last_seed]
+			(
+				"Duração da luta: %s (tempo de jogo) · semente %d · cenário %s"
+				% [_clock(fight_time), last_seed, Cfg.SCENARIO_NAMES.get(scenario(), "sem relevo")]
+			)
 		)
 	)
 	var line := (
