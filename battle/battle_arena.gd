@@ -122,6 +122,9 @@ var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
 var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta para a bateria
+## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
+## câmera lenta no golpe que nocauteia e todo mundo parado na troca.
+var director: BattleDirector = null
 ## IA do treinador por lado (BattleTrainerAI, opcional): round_start() no começo da rodada e
 ## pick_replacement(slot) -> índice de bench_of(side) (-1 = a arena escolhe).
 var trainer_ai := {}
@@ -273,6 +276,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
 	end_turn = BattleEndTurn.new(self)
+	if bool(o.get("action_cam", false)) and energy_on() and not bool(o.get("fast_sim", false)):
+		director = BattleDirector.new(self)
 	if String(o.get("telemetry", "")) != "":
 		telemetry = BattleTelemetry.new(self, String(o.telemetry))
 		telemetry.meta = o.get("telemetry_meta", {})
@@ -1076,6 +1081,8 @@ func throw_ball_fx(side: int, to: Vector3, on_open: Callable) -> void:
 	add_child(ball)
 	var from := _hand(side)
 	ball.position = from
+	if director:
+		director.on_send(side, to)
 	_balls.append(
 		{
 			"ball": ball,
@@ -1109,6 +1116,8 @@ func _tick_balls(dt: float) -> void:
 			if vfx and ball.is_inside_tree():
 				vfx.puff(ball.global_position, 1.6)
 			e.cb.call()
+			if director:
+				director.on_ball_open()
 		if e.t >= SEND_FLIGHT + SEND_OPEN:
 			ball.queue_free()
 			_balls.erase(e)
@@ -1317,6 +1326,7 @@ func step(dt: float) -> void:
 	var raw := dt
 	# Pausa aberta: a luta para (o original: fight_speed 0 com _battle_paused).
 	dt *= fight_speed * (0.0 if pause_open else (MODAL_SLOW if menu != "" else 1.0))
+	dt *= cine_scale()
 	_state_t += dt
 	_tick_fx(raw)
 	match state:
@@ -1509,7 +1519,14 @@ func _foe_balls() -> Array:
 	return out
 
 
+## Câmera lenta das cenas do BattleDirector (1 sem ele).
+func cine_scale() -> float:
+	return director.time_scale() if director and state in ["fight", "ending"] else 1.0
+
+
 func _fight_step(dt: float) -> void:
+	if director:
+		director.tick(dt)
 	_cut_gap = maxf(_cut_gap - dt, 0.0)
 	if _cut_t > 0.0:
 		_cut_t -= dt
@@ -1530,6 +1547,8 @@ func _fight_step(dt: float) -> void:
 			_events.append(e)
 	if state != "fight":
 		return
+	if director and director.holding():
+		return  # troca: todos param até o antigo sair e o novo cair
 	_swap_cd = maxf(_swap_cd - dt, 0.0)
 	item_cd = maxf(item_cd - dt, 0.0)
 	_support_heal()
@@ -2218,6 +2237,8 @@ func _menu_text() -> String:
 
 ## Tira o lutador de campo (fica escondido até a arena ser liberada; callbacks pendentes seguem válidos).
 func _recall(f: BattleFighter) -> void:
+	if director and f.visible and state == "fight":
+		director.on_recall(f)
 	if f.visible and _stands.has(f.side) and state == "fight":
 		_recall_beam(f)  # raio vermelho de volta para a bola na mão do treinador
 	elif vfx and f.visible and f.is_inside_tree():
@@ -2401,6 +2422,8 @@ func _capture_step(_dt: float) -> void:
 func _on_fainted(f: BattleFighter) -> void:
 	if telemetry:
 		telemetry.faint(f)
+	if director:
+		director.on_faint(f)
 	if state == "ending" or state == "done":
 		return
 	later(
@@ -2941,6 +2964,9 @@ func _finish() -> void:
 func _update_camera(dt: float) -> void:
 	if _cam == null:
 		return
+	if director:
+		director.camera(_cam, dt)
+		return
 	if fixed:
 		# Como o original numa quadra fixa: câmera parada (focus_fixed), sem giro manual.
 		var off := Vector3(0, sin(FIXED_CAM_PITCH), cos(FIXED_CAM_PITCH)) * cam_dist
@@ -2986,6 +3012,8 @@ func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 		combos.on_move_used(user, mv)
 	if abilities:
 		abilities.on_move_used(user, mv)
+	if director:
+		director.on_move(user, mv)
 	if hud and hud.has_method("callout"):
 		hud.callout(
 			user,

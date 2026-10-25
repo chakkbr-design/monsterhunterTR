@@ -196,6 +196,9 @@ func start_fight() -> void:
 	if _series:
 		o.merge({"autoplay": true, "auto_battle": true, "keyboard": false}, true)
 	o.seed = last_seed
+	# Câmera de ação no modo de energia (BattleDirector): enquadra a ação, KO em câmera lenta e
+	# todo mundo parado na troca. A bateria (fast_sim) não tem câmera.
+	o["action_cam"] = true
 	# Acima de 1x a arena anda em vários passos de no máximo 1x por quadro: um passo grande faria
 	# golpes rápidos atravessarem o alvo e mudaria o resultado da luta.
 	var turbo := bool(cfg.get("turbo", false))
@@ -235,7 +238,7 @@ func _physics_process(dt: float) -> void:
 		var fighting := String(a.get("state")) == "fight"
 		a.step(dt)
 		if fighting and is_instance_valid(a):
-			fight_time += dt * float(a.get("fight_speed"))
+			fight_time += dt * float(a.get("fight_speed")) * float(a.call("cine_scale"))
 			_check_time_limit()
 
 

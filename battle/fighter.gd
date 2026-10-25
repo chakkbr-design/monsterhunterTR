@@ -489,6 +489,8 @@ func speed_factor() -> float:
 ## Velocidade de andar absoluta (m/s) pela Speed, chão e habilidade (paralisia é aplicada em drive).
 func walk_speed() -> float:
 	var v := StatCalc.walk_speed(stat("spe"))
+	if energy_mode:
+		v *= BattleEnergy.WALK_PACE
 	if controller == "player":
 		v *= PLAYER_WALK_MULT
 	if arena:

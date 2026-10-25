@@ -53,6 +53,9 @@ const PRIORITY_CD := 1.8
 ## Dano final no modo de energia (o VGC fica no BattleMoves.DAMAGE_PACE, 0,75). O Caio escolheu 0,6
 ## em 2026-10-25 pela bateria: menos "entrou e morreu" e ~21 s por Pokémon. opts.damage_pace muda.
 const DAMAGE_PACE := 0.6
+## Andar no modo de energia (Caio, 2026-10-25: a luta estava rápida demais): todo Pokémon anda
+## WALK_PACE x da velocidade pela Speed (StatCalc.walk_speed). Investidas e golpes não mudam.
+const WALK_PACE := 0.8
 ## Começa a luta com esta fração da barra.
 const START := 0.4
 ## Status no modo de energia (Caio, 2026-10-25: veneno, queimadura e paralisia estavam fortes demais).

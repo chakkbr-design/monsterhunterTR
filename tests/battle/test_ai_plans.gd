@@ -11,7 +11,9 @@ const Cfg := preload("res://ui/training/training_config.gd")
 const DT := 1.0 / 60.0
 ## Sementes do duelo Squirtle x Nidoran F em pânico (cada uma tem que acabar em PANIC_LIMIT s).
 const PANIC_SEEDS := [2, 3, 4, 5, 6, 7, 8, 9]
-const PANIC_LIMIT := 120.0
+## Em tempo de luta: com o andar mais lento do modo de energia (BattleEnergy.WALK_PACE) a perseguição
+## demora na mesma proporção.
+const PANIC_LIMIT := 120.0 / BattleEnergy.WALK_PACE
 
 var _fails := 0
 var _count := 0
