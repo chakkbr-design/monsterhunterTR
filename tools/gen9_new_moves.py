@@ -745,7 +745,7 @@ def from_api(mid, game, desc):
     if mv["category"] == "status":
         mv["power"] = 0
     mv["uses"] = d["pp"]
-    if d.get("accuracy") is not None:
+    if d.get("accuracy"):  # 0/None = nunca erra (a PokeAPI dá 0 no Dragon Cheer)
         mv["accuracy"] = d["accuracy"]
     if d.get("power"):
         mv["bp"] = d["power"]

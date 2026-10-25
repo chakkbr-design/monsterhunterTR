@@ -3046,6 +3046,7 @@
       "endeavor",
       "endure",
       "facade",
+      "fake_tears",
       "fling",
       "focus_blast",
       "focus_punch",
@@ -5679,6 +5680,7 @@
       "facade",
       "foul_play",
       "giga_impact",
+      "helping_hand",
       "hyper_beam",
       "mud_shot",
       "mud_slap",
@@ -5690,6 +5692,7 @@
       "rock_tomb",
       "sand_tomb",
       "sandstorm",
+      "scary_face",
       "scorching_sands",
       "shadow_claw",
       "sleep_talk",
@@ -12863,6 +12866,30 @@
       [
         1,
         "quick_attack"
+      ],
+      [
+        1,
+        "disable"
+      ],
+      [
+        1,
+        "ember"
+      ],
+      [
+        1,
+        "extrasensory"
+      ],
+      [
+        1,
+        "incinerate"
+      ],
+      [
+        1,
+        "inferno"
+      ],
+      [
+        1,
+        "safeguard"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -17687,6 +17714,10 @@
       [
         1,
         "psyshock"
+      ],
+      [
+        1,
+        "growth"
       ]
     ],
     "evo_moves": [
@@ -21562,6 +21593,7 @@
       "fire_blast",
       "fire_fang",
       "fire_spin",
+      "flame_charge",
       "flamethrower",
       "flare_blitz",
       "giga_impact",
@@ -25155,8 +25187,6 @@
       "brick_break",
       "bulldoze",
       "burning_jealousy",
-      "calm_mind",
-      "confuse_ray",
       "curse",
       "dig",
       "double_edge",
@@ -25179,14 +25209,11 @@
       "gyro_ball",
       "heat_wave",
       "helping_hand",
-      "hex",
       "hyper_beam",
       "iron_head",
       "low_kick",
-      "night_shade",
       "overheat",
       "play_rough",
-      "poltergeist",
       "protect",
       "rest",
       "reversal",
@@ -25198,7 +25225,6 @@
       "shadow_claw",
       "sleep_talk",
       "solar_beam",
-      "spite",
       "stomping_tantrum",
       "substitute",
       "sunny_day",
@@ -26301,6 +26327,10 @@
       [
         12,
         "reflect"
+      ],
+      [
+        15,
+        "defog"
       ],
       [
         18,
@@ -30093,6 +30123,7 @@
       "magical_leaf",
       "pollen_puff",
       "protect",
+      "rain_dance",
       "reflect",
       "rest",
       "seed_bomb",
@@ -31563,6 +31594,7 @@
       "hyper_voice",
       "lash_out",
       "light_screen",
+      "mud_slap",
       "protect",
       "psych_up",
       "psychic",
@@ -31897,6 +31929,7 @@
       "future_sight",
       "giga_impact",
       "grass_knot",
+      "helping_hand",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -45356,6 +45389,10 @@
         "toxic"
       ],
       [
+        1,
+        "spore"
+      ],
+      [
         12,
         "mega_drain"
       ],
@@ -56850,6 +56887,7 @@
       "body_slam",
       "bulldoze",
       "bullet_seed",
+      "calm_mind",
       "curse",
       "double_edge",
       "dragon_dance",
@@ -61127,12 +61165,24 @@
         "teleport"
       ],
       [
+        13,
+        "double_team"
+      ],
+      [
         19,
         "knock_off"
       ],
       [
+        19,
+        "taunt"
+      ],
+      [
         25,
         "psyshock"
+      ],
+      [
+        25,
+        "spikes"
       ],
       [
         31,
@@ -61141,6 +61191,10 @@
       [
         37,
         "gravity"
+      ],
+      [
+        37,
+        "superpower"
       ],
       [
         43,
@@ -61155,12 +61209,36 @@
         "cosmic_power"
       ],
       [
+        55,
+        "amnesia"
+      ],
+      [
+        55,
+        "iron_defense"
+      ],
+      [
         61,
         "recover"
       ],
       [
+        61,
+        "zap_cannon"
+      ],
+      [
         73,
         "hyper_beam"
+      ],
+      [
+        73,
+        "counter"
+      ],
+      [
+        73,
+        "extreme_speed"
+      ],
+      [
+        73,
+        "mirror_coat"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -72634,6 +72712,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "reversal",
       "scary_face",
       "shadow_ball",
       "shadow_claw",
@@ -73939,6 +74018,10 @@
         "bug_buzz"
       ],
       [
+        1,
+        "hypnosis"
+      ],
+      [
         14,
         "quick_attack"
       ],
@@ -74388,6 +74471,7 @@
       "swift",
       "take_down",
       "tera_blast",
+      "trailblaze",
       "triple_axel",
       "water_pulse",
       "weather_ball"
@@ -75125,6 +75209,7 @@
       "low_kick",
       "low_sweep",
       "magical_leaf",
+      "metronome",
       "misty_terrain",
       "night_shade",
       "pain_split",
@@ -75712,6 +75797,7 @@
       "thunder",
       "thunder_wave",
       "thunderbolt",
+      "trailblaze",
       "trick",
       "triple_axel",
       "water_pulse",
@@ -75907,6 +75993,42 @@
         "rest"
       ],
       [
+        1,
+        "ally_switch"
+      ],
+      [
+        1,
+        "iron_tail"
+      ],
+      [
+        1,
+        "magic_room"
+      ],
+      [
+        1,
+        "psycho_cut"
+      ],
+      [
+        1,
+        "round"
+      ],
+      [
+        1,
+        "safeguard"
+      ],
+      [
+        1,
+        "snore"
+      ],
+      [
+        1,
+        "tri_attack"
+      ],
+      [
+        1,
+        "wonder_room"
+      ],
+      [
         7,
         "swift"
       ],
@@ -76067,6 +76189,42 @@
         "rest"
       ],
       [
+        1,
+        "ally_switch"
+      ],
+      [
+        1,
+        "iron_tail"
+      ],
+      [
+        1,
+        "magic_room"
+      ],
+      [
+        1,
+        "psycho_cut"
+      ],
+      [
+        1,
+        "round"
+      ],
+      [
+        1,
+        "safeguard"
+      ],
+      [
+        1,
+        "snore"
+      ],
+      [
+        1,
+        "tri_attack"
+      ],
+      [
+        1,
+        "wonder_room"
+      ],
+      [
         7,
         "swift"
       ],
@@ -76223,6 +76381,54 @@
       [
         1,
         "rest"
+      ],
+      [
+        1,
+        "ally_switch"
+      ],
+      [
+        1,
+        "assurance"
+      ],
+      [
+        1,
+        "iron_tail"
+      ],
+      [
+        1,
+        "magic_room"
+      ],
+      [
+        1,
+        "payback"
+      ],
+      [
+        1,
+        "psycho_cut"
+      ],
+      [
+        1,
+        "round"
+      ],
+      [
+        1,
+        "safeguard"
+      ],
+      [
+        1,
+        "self_destruct"
+      ],
+      [
+        1,
+        "snore"
+      ],
+      [
+        1,
+        "tri_attack"
+      ],
+      [
+        1,
+        "wonder_room"
       ],
       [
         7,
@@ -77692,6 +77898,10 @@
       [
         28,
         "synthesis"
+      ],
+      [
+        28,
+        "quick_attack"
       ],
       [
         37,
@@ -79542,7 +79752,6 @@
       "brick_break",
       "bulldoze",
       "chilling_water",
-      "dark_pulse",
       "dig",
       "drill_run",
       "encore",
@@ -79560,7 +79769,6 @@
       "ice_beam",
       "icy_wind",
       "knock_off",
-      "lash_out",
       "liquidation",
       "protect",
       "rain_dance",
@@ -79568,7 +79776,6 @@
       "scary_face",
       "sleep_talk",
       "smart_strike",
-      "snarl",
       "snowscape",
       "substitute",
       "surf",
@@ -79578,7 +79785,6 @@
       "taunt",
       "tera_blast",
       "thief",
-      "throat_chop",
       "upper_hand",
       "vacuum_wave",
       "water_pledge",
@@ -89866,6 +90072,7 @@
       "crunch",
       "dark_pulse",
       "dig",
+      "encore",
       "endure",
       "facade",
       "fake_tears",
@@ -108165,6 +108372,10 @@
         "splash"
       ],
       [
+        5,
+        "vice_grip"
+      ],
+      [
         10,
         "flail"
       ],
@@ -108319,6 +108530,10 @@
       [
         1,
         "heal_pulse"
+      ],
+      [
+        1,
+        "vice_grip"
       ],
       [
         15,
@@ -109516,6 +109731,7 @@
       "magical_leaf",
       "misty_explosion",
       "misty_terrain",
+      "mud_slap",
       "play_rough",
       "protect",
       "psych_up",
@@ -111658,7 +111874,8 @@
     ],
     "egg": [
       "defog",
-      "dragon_rush"
+      "dragon_rush",
+      "switcheroo"
     ],
     "moves": [
       "hurricane",
@@ -113218,14 +113435,9 @@
       "aerial_ace",
       "air_cutter",
       "air_slash",
-      "aura_sphere",
       "baton_pass",
       "brave_bird",
-      "brick_break",
-      "bulk_up",
       "bullet_seed",
-      "close_combat",
-      "coaching",
       "confuse_ray",
       "curse",
       "dual_wingbeat",
@@ -113234,8 +113446,6 @@
       "facade",
       "false_swipe",
       "feather_dance",
-      "focus_blast",
-      "focus_punch",
       "frenzy_plant",
       "giga_drain",
       "giga_impact",
@@ -113262,9 +113472,6 @@
       "protect",
       "rain_dance",
       "rest",
-      "reversal",
-      "rock_tomb",
-      "scary_face",
       "seed_bomb",
       "shadow_ball",
       "shadow_claw",
@@ -113280,11 +113487,9 @@
       "swords_dance",
       "tailwind",
       "take_down",
-      "taunt",
       "tera_blast",
       "trailblaze",
-      "u_turn",
-      "upper_hand"
+      "u_turn"
     ],
     "egg": [
       "confuse_ray",
@@ -115424,6 +115629,10 @@
     "hidden_ability": "anger_point",
     "learnset": [
       [
+        1,
+        "vice_grip"
+      ],
+      [
         5,
         "rock_smash"
       ],
@@ -116246,6 +116455,7 @@
     "egg": [
       "endeavor",
       "last_resort",
+      "sucker_punch",
       "thrash"
     ],
     "moves": [
@@ -117522,6 +117732,7 @@
     ],
     "egg": [
       "defog",
+      "superpower",
       "worry_seed"
     ],
     "moves": [
@@ -118045,6 +118256,7 @@
       "facade",
       "fire_blast",
       "fire_fang",
+      "flame_charge",
       "flamethrower",
       "flare_blitz",
       "fling",
@@ -118222,6 +118434,7 @@
       "dragon_claw",
       "dragon_dance",
       "dragon_pulse",
+      "dragon_tail",
       "encore",
       "endeavor",
       "endure",
@@ -118229,6 +118442,7 @@
       "fake_tears",
       "fire_blast",
       "fire_fang",
+      "flame_charge",
       "flamethrower",
       "flare_blitz",
       "fling",
@@ -120454,11 +120668,9 @@
     ],
     "tutor": [
       "draco_meteor",
-      "fire_pledge",
       "grass_pledge",
       "steel_beam",
-      "terrain_pulse",
-      "water_pledge"
+      "terrain_pulse"
     ],
     "moves": [
       "double_edge",
@@ -127305,6 +127517,7 @@
       "tera_blast",
       "thief",
       "thunder_fang",
+      "trailblaze",
       "wild_charge"
     ],
     "moves": [
@@ -129009,6 +129222,7 @@
       "crunch",
       "dig",
       "double_edge",
+      "dragon_tail",
       "earth_power",
       "earthquake",
       "endure",
@@ -129701,6 +129915,7 @@
       "iron_defense",
       "iron_head",
       "meteor_beam",
+      "mud_slap",
       "overheat",
       "power_gem",
       "protect",
@@ -132948,6 +133163,7 @@
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "aerial_ace",
       "amnesia",
       "baton_pass",
       "body_slam",
@@ -132965,6 +133181,7 @@
       "facade",
       "fake_tears",
       "false_swipe",
+      "flash_cannon",
       "fling",
       "foul_play",
       "giga_impact",
@@ -136266,6 +136483,7 @@
       "agility",
       "baton_pass",
       "breaking_swipe",
+      "confuse_ray",
       "curse",
       "double_edge",
       "draco_meteor",
@@ -136425,6 +136643,7 @@
       "baton_pass",
       "body_slam",
       "breaking_swipe",
+      "confuse_ray",
       "curse",
       "double_edge",
       "draco_meteor",
@@ -137538,6 +137757,10 @@
         "twister"
       ],
       [
+        1,
+        "vice_grip"
+      ],
+      [
         6,
         "bite"
       ],
@@ -138333,6 +138556,7 @@
       "lunge",
       "pounce",
       "protect",
+      "rain_dance",
       "rest",
       "reversal",
       "rock_blast",
@@ -138535,8 +138759,7 @@
       "throat_chop",
       "thunder_punch",
       "trailblaze",
-      "uproar",
-      "vacuum_wave"
+      "uproar"
     ],
     "moves": [
       "hammer_arm",
@@ -138667,6 +138890,7 @@
       "crunch",
       "double_edge",
       "endeavor",
+      "endure",
       "facade",
       "flip_turn",
       "giga_impact",
@@ -138695,12 +138919,14 @@
       "spite",
       "substitute",
       "surf",
+      "swift",
       "take_down",
       "tera_blast",
       "uproar",
       "water_pulse",
       "waterfall",
-      "whirlpool"
+      "whirlpool",
+      "zen_headbutt"
     ],
     "egg": [
       "endeavor"
@@ -138979,6 +139205,7 @@
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
+      "acid_spray",
       "agility",
       "blizzard",
       "chilling_water",
@@ -138992,6 +139219,7 @@
       "gunk_shot",
       "gyro_ball",
       "haze",
+      "hex",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -139017,6 +139245,7 @@
       "spite",
       "substitute",
       "surf",
+      "swift",
       "swords_dance",
       "take_down",
       "taunt",
@@ -139025,6 +139254,7 @@
       "toxic",
       "toxic_spikes",
       "venoshock",
+      "water_pulse",
       "waterfall"
     ],
     "moves": [
@@ -139879,6 +140109,7 @@
       "curse",
       "dig",
       "disarming_voice",
+      "encore",
       "endure",
       "facade",
       "fire_blast",
@@ -139969,6 +140200,10 @@
       [
         1,
         "ember"
+      ],
+      [
+        1,
+        "yawn"
       ],
       [
         7,
@@ -140197,6 +140432,8 @@
       "psych_up",
       "rain_dance",
       "rest",
+      "sleep_talk",
+      "substitute",
       "surf",
       "swift",
       "take_down",
@@ -140341,6 +140578,8 @@
       "psych_up",
       "rain_dance",
       "rest",
+      "sleep_talk",
+      "substitute",
       "surf",
       "swift",
       "take_down",
@@ -142120,6 +142359,7 @@
     "tm": [
       "aerial_ace",
       "agility",
+      "baton_pass",
       "bullet_seed",
       "charm",
       "chilling_water",
@@ -143574,6 +143814,7 @@
       "night_shade",
       "overheat",
       "protect",
+      "rest",
       "sleep_talk",
       "spite",
       "substitute",
@@ -145757,6 +145998,10 @@
         "rock_throw"
       ],
       [
+        1,
+        "vice_grip"
+      ],
+      [
         6,
         "harden"
       ],
@@ -147576,6 +147821,7 @@
       "protect",
       "psych_up",
       "rain_dance",
+      "rest",
       "rock_blast",
       "rock_slide",
       "rock_tomb",
@@ -148021,6 +148267,7 @@
       "poison_jab",
       "protect",
       "rain_dance",
+      "rest",
       "sandstorm",
       "scary_face",
       "sleep_talk",
@@ -150138,6 +150385,7 @@
       "swift",
       "take_down",
       "taunt",
+      "tera_blast",
       "thief",
       "throat_chop",
       "thunder",
@@ -151918,6 +152166,7 @@
       "rock_tomb",
       "sandstorm",
       "scary_face",
+      "sleep_talk",
       "smart_strike",
       "stealth_rock",
       "steel_beam",
@@ -152714,6 +152963,7 @@
       "sand_tomb",
       "sandstorm",
       "scary_face",
+      "sleep_talk",
       "smack_down",
       "snarl",
       "spikes",
@@ -154752,6 +155002,7 @@
       "dragon_claw",
       "dragon_dance",
       "dragon_pulse",
+      "dragon_tail",
       "endure",
       "facade",
       "fire_fang",
