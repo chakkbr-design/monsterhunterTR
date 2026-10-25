@@ -562,6 +562,9 @@ func move_reach(id: String) -> float:
 ## os outros recuam para longe dos inimigos (descansar enche mais rápido) e só voltam quando a
 ## caminhada até o alcance cobre o que falta encher. INF = segue a faixa normal.
 func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
+	var scene := BattleTerrainAI.steer(self, d)  # cenário: lago, grama alta, Fogo e Elétrico
+	if scene != Vector3.INF:
+		return scene
 	if intent == "" or recover_t > 0.0:
 		return Vector3.INF
 	var need := BattleEnergy.secs_to(f, f.pp_cost_of(Dex.move(intent)))

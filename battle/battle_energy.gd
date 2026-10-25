@@ -182,8 +182,8 @@ static func resting(f: BattleFighter) -> bool:
 
 static func regen(f: BattleFighter) -> float:
 	var k := REST_MULT if resting(f) else 1.0
-	if k > 1.0 and f.arena and f.arena.get("terrain"):
-		k *= f.arena.terrain.regen_mult(f)  # Água descansando no lago
+	if f.arena and f.arena.get("terrain"):
+		k *= f.arena.terrain.regen_mult(f)  # lago e grama alta pelo tipo (BattleTerrain)
 	return REGEN * speed_mult(f) * k
 
 

@@ -47,6 +47,11 @@ func _init(a: Node) -> void:
 func setup() -> void:
 	if arena.opts.get("field_objects", true) == false:
 		return
+	var ter = arena.get("terrain")
+	if ter and ter.scenario != "":
+		for p in ter.crate_spots:
+			_add_object(p)  # o cenário (BattleTerrain) já escolheu quantas e onde, espalhadas
+		return
 	var n: int = arena.rng.randi_range(2, 4)
 	var r: Rect2 = arena.rect.grow(-1.2)
 	for i in n:
