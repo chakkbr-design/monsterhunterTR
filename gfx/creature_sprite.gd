@@ -29,6 +29,12 @@ const FAINT_TINT := Color(0.55, 0.55, 0.55)
 	set(v):
 		scale_mult = v
 		_apply_scale()
+## Achatar/esticar visual (x, y, z multiplicam a escala; 1 = nada). Usado pelo pulo de desespero.
+var squash := Vector3.ONE:
+	set(v):
+		if v != squash:
+			squash = v
+			_apply_scale()
 ## Calcula a velocidade pelo deslocamento global do nó. Desligue e escreva `velocity` à mão.
 @export var auto_motion := true
 ## Vira o sprite para a direção da velocidade quando anda.
@@ -164,7 +170,7 @@ func _set_look(s: Dictionary) -> void:
 func _apply_scale() -> void:
 	if _sprite == null:
 		return
-	_base_scale = Vector3.ONE * scale_mult
+	_base_scale = Vector3.ONE * scale_mult * squash
 	if _collapse_t < 0.0:
 		_sprite.scale = _base_scale
 
