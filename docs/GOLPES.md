@@ -1,10 +1,10 @@
 # Guia dos golpes
 
-Gerado por `tools/move_guide.py` (não editar à mão): 511 golpes, agrupados por tipo e em ordem alfabética.
+Gerado por `tools/move_guide.py` (não editar à mão): 622 golpes, agrupados por tipo e em ordem alfabética.
 
 ## Como ler este guia
 
-Este guia explica, golpe por golpe, como cada golpe oficial (dados da Gen 9) foi adaptado ao combate em tempo real do PokmemonLike. São 511 golpes. Ele é gerado por `tools/move_guide.py` a partir de `data/moves.json` (e `data/species.json` para contar quem aprende cada golpe); para atualizar, rode `python tools/move_guide.py caminho/da/pagina.html` da raiz do projeto. Os textos de adaptação vêm dos campos de cada golpe e dos dicionários do script, que seguem `battle/battle_move_effects.gd`, `battle/battle_moves.gd` e `battle/battle_physics.gd`.
+Este guia explica, golpe por golpe, como cada golpe oficial (dados da Gen 9) foi adaptado ao combate em tempo real do PokmemonLike. São 622 golpes. Ele é gerado por `tools/move_guide.py` a partir de `data/moves.json` (e `data/species.json` para contar quem aprende cada golpe); para atualizar, rode `python tools/move_guide.py caminho/da/pagina.html` da raiz do projeto. Os textos de adaptação vêm dos campos de cada golpe e dos dicionários do script, que seguem `battle/battle_move_effects.gd`, `battle/battle_moves.gd` e `battle/battle_physics.gd`.
 
 Em cada golpe: tipo, categoria, poder oficial (`bp`), precisão, PP oficial, o tipo de entrega no jogo, alcance/área/duração quando há, o custo de energia e o cooldown no modo de energia, quantas espécies do jogo aprendem o golpe (152 espécies) e o texto de Adaptação.
 
@@ -66,11 +66,11 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 ## Golpes por tipo
 
-[Normal (131)](#tipo-normal) · [Fogo (24)](#tipo-fire) · [Água (30)](#tipo-water) · [Elétrico (23)](#tipo-electric) · [Planta (32)](#tipo-grass) · [Gelo (19)](#tipo-ice) · [Lutador (34)](#tipo-fighting) · [Veneno (23)](#tipo-poison) · [Terra (17)](#tipo-ground) · [Voador (19)](#tipo-flying) · [Psíquico (43)](#tipo-psychic) · [Inseto (19)](#tipo-bug) · [Pedra (15)](#tipo-rock) · [Fantasma (15)](#tipo-ghost) · [Dragão (14)](#tipo-dragon) · [Sombrio (25)](#tipo-dark) · [Aço (16)](#tipo-steel) · [Fada (12)](#tipo-fairy)
+[Normal (150)](#tipo-normal) · [Fogo (36)](#tipo-fire) · [Água (36)](#tipo-water) · [Elétrico (31)](#tipo-electric) · [Planta (39)](#tipo-grass) · [Gelo (21)](#tipo-ice) · [Lutador (37)](#tipo-fighting) · [Veneno (26)](#tipo-poison) · [Terra (21)](#tipo-ground) · [Voador (23)](#tipo-flying) · [Psíquico (56)](#tipo-psychic) · [Inseto (24)](#tipo-bug) · [Pedra (16)](#tipo-rock) · [Fantasma (17)](#tipo-ghost) · [Dragão (21)](#tipo-dragon) · [Sombrio (32)](#tipo-dark) · [Aço (20)](#tipo-steel) · [Fada (16)](#tipo-fairy)
 
 <a id="tipo-normal"></a>
 
-## Normal (131)
+## Normal (150)
 
 ### Acupressure
 
@@ -157,6 +157,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 85), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 30% de chance de causar Paralisia no alvo. Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
+
+### Boomburst
+
+`boomburst` · Normal · Especial · poder 140 · precisão 100% · PP oficial 10
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 5 m, aviso de 0,5 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 5 m, preparo 0,5 s]
+- **Energia:** custo 47 · cooldown 14,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 140), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Estrondo em volta do usuário (onda de 5 m) que acerta todo mundo, inclusive o parceiro. Golpe de som: atravessa o Substitute e a Garganta ferida o impede.
+  - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
 ### Conversion
 
@@ -571,6 +584,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Se o parceiro soltar um golpe de dano em até 4 s, ele sai com 1,5x por 2,5 s. Sem parceiro, falha.
   - Prioridade +5: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
+### Hidden Power
+
+`hidden_power` · Normal · Especial · poder 60 · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 14 m/s; dá para desviar. [alcance 11 m, 14 m/s]
+- **Energia:** custo 27 · cooldown 4,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - O tipo vem dos IVs do Pokémon (a fórmula oficial: último bit de cada IV vira 1 de 16 tipos). O poder é 60 fixo.
+
 ### Horn Attack
 
 `horn_attack` · Normal · Físico · poder 65 · precisão 100% · PP oficial 25
@@ -638,6 +662,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
   - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 100%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
+### Judgment
+
+`judgment` · Normal · Especial · poder 100 · precisão 100% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2 m de raio sobre ele (alcance 10 m) e cai depois de 0,7 s; quem sair da marca escapa. [alcance 10 m, raio 2 m, preparo 0,7 s]
+- **Energia:** custo 37 · cooldown 11 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Pilares de luz no alvo. O tipo é o primeiro tipo do usuário (a placa do oficial não existe aqui).
 
 ### Laser Focus
 
@@ -734,6 +769,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Usa um golpe sorteado do jogo (fora da lista proibida: Protect, Counter, Metronome, Copycat...).
 
+### Milk Drink
+
+`milk_drink` · Normal · Status · poder — · precisão nunca erra · PP oficial 5
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 37,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cura 50% do HP máximo do usuário.
+  - Cura metade do HP máximo do usuário.
+
 ### Mimic
 
 `mimic` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
@@ -743,6 +789,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 3 espécie(s) do jogo
 - **Adaptação:**
   - Troca o próprio Mimic pelo último golpe usado pelo adversário (fora da lista proibida).
+
+### Mind Reader
+
+`mind_reader` · Normal · Status · poder — · precisão nunca erra · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 14 m/s; dá para desviar. [alcance 9 m, 14 m/s]
+- **Energia:** custo 28 · cooldown 37,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O próximo golpe do usuário (neste turno e no seguinte) não erra.
+  - Projétil que trava a mira: o próximo golpe do usuário nunca erra (como Lock-On).
 
 ### Minimize
 
@@ -773,6 +830,26 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 0 espécie(s) do jogo
 - **Adaptação:**
   - Vira outro golpe conforme o terreno em que o usuário está (Earth Power, Ice Beam, Hydro Pump...).
+
+### Noble Roar
+
+`noble_roar` · Normal · Status · poder — · precisão 100% · PP oficial 30
+
+- **Entrega:** `debuff_aoe` (Efeito ao redor). Efeito ao redor: atinge quem estiver até 6 m do usuário (só o mais perto). Nunca erra. [raio 6 m]
+- **Energia:** custo 28 · cooldown 8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Rugido que derruba o Ataque e o At. Esp. do alvo mais perto em 1. Golpe de som.
+
+### Odor Sleuth
+
+`odor_sleuth` · Normal · Status · poder — · precisão nunca erra · PP oficial 40
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O alvo perde a evasão e deixa de ser imune: Fantasma passa a levar Normal e Lutador até sair de campo.
 
 ### Pain Split
 
@@ -934,6 +1011,31 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - O usuário copia os tipos do alvo.
 
+### Refresh
+
+`refresh` · Normal · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cura queimadura, veneno ou paralisia do usuário.
+
+### Relic Song
+
+`relic_song` · Normal · Especial · poder 75 · precisão 100% · PP oficial 10
+
+- **Entrega:** `stream` (Jato). Jato em cone: 6 m de alcance, 100° de abertura, durante 0,5 s (um pulso a cada 0,1 s); o usuário fica parado e trava no alvo. Não erra por precisão. [alcance 6 m, 100°, 0,5 s]
+- **Energia:** custo 31 · cooldown 8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 75), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Cone de som que acerta todos os adversários; 10% de dormir. Golpe de som.
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - 10% de chance de causar Sono no alvo. Sono: não age por 1 a 3 rodadas; golpe recebido não acorda.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
 ### Retaliate
 
 `retaliate` · Normal · Físico · poder 70 · precisão 100% · PP oficial 5
@@ -944,6 +1046,28 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Poder x2 se um aliado desmaiou nos últimos 8 s.
+
+### Revelation Dance
+
+`revelation_dance` · Normal · Especial · poder 90 · precisão 100% · PP oficial 15
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 3,2 m, aviso de 0,5 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 3,2 m, preparo 0,5 s]
+- **Energia:** custo 35 · cooldown 6,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 90), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Dança que solta uma onda ao redor; o tipo é o primeiro tipo do usuário.
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Revival Blessing
+
+`revival_blessing` · Normal · Status · poder — · precisão nunca erra · PP oficial 1
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 187,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Reanima um Pokémon desmaiado do banco do usuário com metade do HP. Falha se ninguém desmaiou.
 
 ### Roar
 
@@ -1024,6 +1148,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
+### Shed Tail
+
+`shed_tail` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O usuário perde metade do HP, cria um substituto de 1/4 do HP máximo e troca; quem entra herda o substituto.
+
 ### Shell Smash
 
 `shell_smash` · Normal · Status · poder — · precisão nunca erra · PP oficial 15
@@ -1054,6 +1188,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Golpe de som: atravessa o Substitute e Throat Chop o bloqueia por 2 rodadas.
   - Causa Sono no alvo se acertar (75% de chance). Sono: não age por 1 a 3 rodadas; golpe recebido não acorda.
+
+### Sketch
+
+`sketch` · Normal · Status · poder — · precisão nunca erra · PP oficial 1
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 187,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Copia de verdade o último golpe do alvo: o Sketch some da lista do usuário e o golpe novo fica no lugar, para o resto da vida do Pokémon.
 
 ### Skull Bash
 
@@ -1206,6 +1350,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,6 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Stuff Cheeks
+
+`stuff_cheeks` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O usuário come a frutinha que segura (ou uma a até 2 m dele no chão) e ganha 2 de Defesa; falha sem frutinha.
+
 ### Substitute
 
 `substitute` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
@@ -1324,6 +1478,37 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Recuo: o usuário perde 25% do dano causado (Rock Head anula).
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,9 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Tearful Look
+
+`tearful_look` · Normal · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `debuff_aoe` (Efeito ao redor). Efeito ao redor: atinge quem estiver até 6 m do usuário (só o mais perto). Nunca erra. [raio 6 m]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Derruba o Ataque e o At. Esp. do alvo mais perto em 1.
+
+### Teatime
+
+`teatime` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Todos em campo comem a frutinha que seguram (Oran e Sitrus curam, Pecha e Persim tiram o status).
+
+### Techno Blast
+
+`techno_blast` · Normal · Especial · poder 120 · precisão 100% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 13 m de alcance, 0,9 m de largura; avisa no chão por 0,6 s e dispara; o usuário fica parado 0,5 s depois. [alcance 13 m, largura 0,9 m, preparo 0,6 s]
+- **Energia:** custo 42 · cooldown 22,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de 120 de poder; o tipo vem do Drive que o usuário segura (Douse, Shock, Burn, Chill) e é Normal sem ele.
+
 ### Teeter Dance
 
 `teeter_dance` · Normal · Status · poder — · precisão 100% · PP oficial 20
@@ -1344,6 +1529,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 98 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+
+### Tera Starstorm
+
+`tera_starstorm` · Normal · Especial · poder 120 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 5,5 m, aviso de 0,8 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 5,5 m, preparo 0,8 s]
+- **Energia:** custo 42 · cooldown 23,6 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Chuva de estrelas em volta do usuário que acerta todos os adversários. Sem forma Estelar, é Normal.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
 ### Terrain Pulse
 
@@ -1377,6 +1575,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Ataque e Defesa dos alvos -1 cada.
+
+### Tidy Up
+
+`tidy_up` · Normal · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Sobe Ataque e Velocidade em 1 e limpa o campo: espinhos, pedras, teias de cenário e todos os substitutos.
 
 ### Transform
 
@@ -1490,7 +1698,20 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-fire"></a>
 
-## Fogo (24)
+## Fogo (36)
+
+### Armor Cannon
+
+`armor_cannon` · Fogo · Especial · poder 120 · precisão 100% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 11 m/s; dá para desviar. [alcance 11 m, 11 m/s]
+- **Energia:** custo 42 · cooldown 20,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola grande de fogo (projétil lento e pesado); depois de sair, o usuário perde 1 de Defesa e 1 de Def. Esp.
+  - Depois de acertar, muda os atributos do usuário (uma vez por uso): Defesa -1, Def. Esp. -1.
+  - Se acertar um alvo congelado, descongela.
 
 ### Blast Burn
 
@@ -1518,6 +1739,31 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Se acertar um alvo congelado, descongela.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Blue Flare
+
+`blue_flare` · Fogo · Especial · poder 130 · precisão 85% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 10 m/s; dá para desviar. [alcance 11 m, 10 m/s]
+- **Energia:** custo 45 · cooldown 21,9 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 130), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Chama azul grande e lenta (projétil); 20% de queimar.
+  - 20% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+  - Se acertar um alvo congelado, descongela.
+
+### Burn Up
+
+`burn_up` · Fogo · Especial · poder 130 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,6 s; quem sair da marca escapa. [alcance 9 m, raio 1,8 m, preparo 0,6 s]
+- **Energia:** custo 45 · cooldown 24,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 130), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Coluna de fogo no alvo. Depois do acerto o usuário perde o tipo Fire (vira Normal). Só sai se o usuário ainda for Fire.
+  - Se acertar um alvo congelado, descongela.
+
 ### Burning Jealousy
 
 `burning_jealousy` · Fogo · Especial · poder 70 · precisão 100% · PP oficial 5
@@ -1543,6 +1789,34 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 10% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+  - Se acertar um alvo congelado, descongela.
+
+### Eruption
+
+`eruption` · Fogo · Especial · poder 150 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 5 m, aviso de 0,7 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 5 m, preparo 0,7 s]
+- **Energia:** custo 50 · cooldown 28,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Poder proporcional ao HP atual do usuário (poder x HP atual / HP máximo, mínimo 1).
+  - Onda de fogo em volta do usuário; o poder acompanha o HP (150 com HP cheio), igual ao Water Spout.
+  - Se acertar um alvo congelado, descongela.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Fiery Dance
+
+`fiery_dance` · Fogo · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 32 · cooldown 7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola de fogo que sai de uma dança; 50% de subir o At. Esp. do usuário.
+  - 50% de chance: sobe At. Esp. do usuário em 1 estágio.
   - Se acertar um alvo congelado, descongela.
 
 ### Fire Blast
@@ -1607,6 +1881,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Prende o alvo no lugar por 0,6 s (parado dentro da área).
   - Se acertar um alvo congelado, descongela.
 
+### Flame Burst
+
+`flame_burst` · Fogo · Especial · poder 70 · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 13 m/s; dá para desviar. [alcance 11 m, 13 m/s]
+- **Energia:** custo 30 · cooldown 4,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola de fogo que, ao acertar, solta faíscas: o adversário que estiver a até 2,2 m do alvo (dupla) perde 1/16 do HP.
+  - Se acertar um alvo congelado, descongela.
+
 ### Flame Charge
 
 `flame_charge` · Fogo · Físico · poder 50 · precisão 100% · PP oficial 20
@@ -1658,6 +1944,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Recuo: o usuário perde 33% do dano causado (Rock Head anula).
   - Se acertar um alvo congelado, descongela.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 1,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
+
+### Fusion Flare
+
+`fusion_flare` · Fogo · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 11 m/s; dá para desviar. [alcance 11 m, 11 m/s]
+- **Energia:** custo 37 · cooldown 17,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola de fogo gigante; dobra o poder se alguém usou Fusion Bolt nos últimos 4 s.
+  - Se acertar um alvo congelado, descongela.
 
 ### Heat Crash
 
@@ -1727,6 +2025,36 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
+### Magma Storm
+
+`magma_storm` · Fogo · Especial · poder 100 · precisão 75% · PP oficial 5
+
+- **Entrega:** `zone` (Zona no chão). Zona no chão: círculo de 2 m de raio (alcance 8 m) que dura 2,5 s e bate a cada 0,5 s em quem estiver dentro. [alcance 8 m, raio 2 m, 2,5 s]
+- **Energia:** custo 37 · cooldown 25,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Tempestade de magma numa zona de 2 m: prende o alvo por 4-5 rodadas (1/8 do HP por rodada) e impede a fuga.
+  - Se causar dano, prende o alvo por 4-5 rodadas: 1/8 do HP no fim de cada rodada, sem fugir nem trocar (acaba se quem prendeu sair; Rapid Spin solta).
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Prende o alvo no lugar por 0,8 s (parado dentro da área).
+  - Se acertar um alvo congelado, descongela.
+
+### Mind Blown
+
+`mind_blown` · Fogo · Especial · poder 150 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 4,5 m, aviso de 0,5 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 4,5 m, preparo 0,5 s]
+- **Energia:** custo 50 · cooldown 27,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Explosão em volta do usuário (acerta todos, até o parceiro). O usuário perde metade do HP máximo ao usar, acertando ou não (como o Steel Beam).
+  - O usuário perde 50% do HP máximo ao atirar, acertando ou não.
+  - Se acertar um alvo congelado, descongela.
+  - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
 ### Mystical Fire
 
 `mystical_fire` · Fogo · Especial · poder 75 · precisão 100% · PP oficial 10
@@ -1764,6 +2092,35 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Se acertar um alvo congelado, descongela.
   - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
+### Searing Shot
+
+`searing_shot` · Fogo · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 4 m, aviso de 0,4 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 4 m, preparo 0,4 s]
+- **Energia:** custo 37 · cooldown 18,6 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Chamas em volta do usuário que acertam todos (até o parceiro); 30% de queimar.
+  - 30% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+  - Se acertar um alvo congelado, descongela.
+  - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Shell Trap
+
+`shell_trap` · Fogo · Especial · poder 150 · precisão 100% · PP oficial 5
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 50 · cooldown 25 s · prioridade -3
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Prioridade -3 (prepara um pouco mais). Arma a armadilha por 1,5 s com o usuário parado: se levar um golpe físico nesse tempo, ela explode na hora em volta dele (onda de 3,8 m, poder 150, acerta todos os adversários); se ninguém o acertar fisicamente, o golpe falha.
+  - Se acertar um alvo congelado, descongela.
+  - Prioridade -3: na fila da rodada sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
 ### Sunny Day
 
 `sunny_day` · Fogo · Status · poder — · precisão nunca erra · PP oficial 5
@@ -1786,6 +2143,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Poder x2 se o golpe anterior do usuário falhou (errou, foi bloqueado ou sem efeito).
   - Se acertar um alvo congelado, descongela.
 
+### Torch Song
+
+`torch_song` · Fogo · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 14 m/s; dá para desviar. [alcance 11 m, 14 m/s]
+- **Energia:** custo 32 · cooldown 7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola de fogo cantada; sobe o At. Esp. do usuário em 1 (100%). Golpe de som.
+  - Sempre sobe At. Esp. do usuário em 1 estágio.
+  - Se acertar um alvo congelado, descongela.
+
 ### Will-O-Wisp
 
 `will_o_wisp` · Fogo · Status · poder — · precisão 85% · PP oficial 15
@@ -1798,7 +2168,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-water"></a>
 
-## Água (30)
+## Água (36)
 
 ### Aqua Jet
 
@@ -1935,6 +2305,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
 
+### Hydro Steam
+
+`hydro_steam` · Água · Especial · poder 80 · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil lançado em arco (altura 1,6 m): até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 32 · cooldown 4,7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Jato de água fervente em arco. Ao sol o poder triplica na conta (anula o 0,5x do sol sobre Água e fica 1,5x, como o oficial).
+
 ### Life Dew
 
 `life_dew` · Água · Status · poder — · precisão nunca erra · PP oficial 10
@@ -1971,6 +2352,32 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 85%: esta entrega (jato) nunca erra, então a precisão não é rolada.
 
+### Octazooka
+
+`octazooka` · Água · Especial · poder 65 · precisão 85% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil lançado em arco (altura 1,4 m): até 11 m a 13 m/s; dá para desviar. [alcance 11 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Jato de tinta em arco; 50% de baixar a Precisão do alvo.
+  - 50% de chance: baixa Precisão do alvo em 1 estágio.
+
+### Origin Pulse
+
+`origin_pulse` · Água · Especial · poder 110 · precisão 85% · PP oficial 10
+
+- **Entrega:** `stream` (Jato). Jato em cone: 7 m de alcance, 120° de abertura, durante 0,8 s (um pulso a cada 0,1 s); o usuário fica parado e trava no alvo. Não erra por precisão. [alcance 7 m, 120°, 0,8 s]
+- **Energia:** custo 40 · cooldown 12,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Onda larga de 120 graus que acerta todos os adversários no cone.
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 85%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
 ### Rain Dance
 
 `rain_dance` · Água · Status · poder — · precisão nunca erra · PP oficial 5
@@ -2004,6 +2411,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Descongela o alvo congelado, como os golpes de Fogo.
   - 30% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
 
+### Snipe Shot
+
+`snipe_shot` · Água · Especial · poder 80 · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 15 m a 20 m/s; dá para desviar. [alcance 15 m, 20 m/s]
+- **Energia:** custo 32 · cooldown 4,7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Projétil rápido com crítico mais provável que ignora o Cobrir do parceiro e o para-raios (Lightning Rod/Storm Drain).
+  - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
+
 ### Soak
 
 `soak` · Água · Status · poder — · precisão 100% · PP oficial 20
@@ -2026,6 +2445,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Cura a queimadura do alvo.
   - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Steam Eruption
+
+`steam_eruption` · Água · Especial · poder 110 · precisão 95% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2 m de raio sobre ele (alcance 9 m) e cai depois de 0,6 s; quem sair da marca escapa. [alcance 9 m, raio 2 m, preparo 0,6 s]
+- **Energia:** custo 40 · cooldown 21 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Coluna de vapor no alvo; 30% de queimar.
+  - 30% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
 
 ### Surf
 
@@ -2070,6 +2501,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 20% de chance de causar Confusão no alvo. Confusão: 2 a 5 rodadas; 33% dos golpes saem em direção aleatória.
+
+### Water Shuriken
+
+`water_shuriken` · Água · Especial · poder 15 x 2-5 · precisão 100% · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 20 m/s; dá para desviar. Sai uma leva em leque de 22° (quantidade sorteada, ver multi-hit). [alcance 11 m, 20 m/s]
+- **Energia:** custo 14 · cooldown 5,6 s · prioridade +1
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 15), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - De 2 a 5 estrelas de água rápidas (35/35/15/15%), prioridade +1.
+  - Multi-hit oficial: sorteia 2 a 5 acertos por uso (35% / 35% / 15% / 15% para 2/3/4/5), cada um com o poder oficial (15); Skill Link sempre dá 5. O visual solta os projéteis sorteados, todos no mesmo alvo.
+  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Water Sport
 
@@ -2144,7 +2588,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-electric"></a>
 
-## Elétrico (23)
+## Elétrico (31)
 
 ### Charge
 
@@ -2211,6 +2655,29 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder variável (ver abaixo)), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Poder 40 a 150 pela razão de Speed usuário/alvo (>=1x: 60, >=2x: 80, >=3x: 120, >=4x: 150).
 
+### Electro Drift
+
+`electro_drift` · Elétrico · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `dash` (Investida). Investida: o Pokémon corre até o alvo (até 8 m, 21 m/s) e bate no contato. Só sai no chão (no ar espera pousar). [alcance 8 m, 21 m/s]
+- **Energia:** custo 37 · cooldown 17,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Investida elétrica rápida; se o golpe é super efetivo o poder sobe 4/3 (o 'bônus de supereficaz' oficial).
+
+### Electro Shot
+
+`electro_shot` · Elétrico · Especial · poder 130 · precisão 100% · PP oficial 10
+
+- **Entrega:** `beam` (Raio). Raio em linha: 14 m de alcance, 0,9 m de largura; avisa no chão por 0,9 s e dispara; o usuário fica parado 0,8 s depois. [alcance 14 m, largura 0,9 m, preparo 0,9 s]
+- **Energia:** custo 45 · cooldown 14,9 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 130), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de 130 de poder com carga: no preparo longo o usuário ganha +1 de At. Esp.; na chuva a carga é pulada (preparo curto).
+  - Ao começar a usar, muda os atributos do usuário: At. Esp. +1 (o turno de carga do oficial).
+
 ### Electroweb
 
 `electroweb` · Elétrico · Especial · poder 55 · precisão 95% · PP oficial 15
@@ -2254,6 +2721,45 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 20), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Sempre causa Paralisia no alvo (depois do dano). Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
+
+### Overdrive
+
+`overdrive` · Elétrico · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `stream` (Jato). Jato em cone: 5,5 m de alcance, 90° de abertura, durante 0,5 s (um pulso a cada 0,1 s); o usuário fica parado e trava no alvo. Não erra por precisão. [alcance 5,5 m, 90°, 0,5 s]
+- **Energia:** custo 32 · cooldown 8,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Riff de guitarra: onda de som em cone que acerta todos os adversários. Golpe de som.
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
+### Parabolic Charge
+
+`parabolic_charge` · Elétrico · Especial · poder 65 · precisão 100% · PP oficial 20
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 3,5 m, aviso de 0,3 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 3,5 m, preparo 0,35 s]
+- **Energia:** custo 28 · cooldown 4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Onda elétrica em volta do usuário, que acerta todos (até o parceiro) e cura o usuário com metade do dano total.
+  - Dreno: orbe verde que, ao acertar, cura o usuário em 50% do dano causado.
+  - Golpe de vários alvos (todos os outros, inclusive o parceiro): acerta todos ao alcance, até o aliado; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Rising Voltage
+
+`rising_voltage` · Elétrico · Especial · poder 70 · precisão 100% · PP oficial 20
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,5 m de raio sobre ele (alcance 9 m) e cai depois de 0,5 s; quem sair da marca escapa. [alcance 9 m, raio 1,5 m, preparo 0,45 s]
+- **Energia:** custo 30 · cooldown 4,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Descarga que sobe do chão no alvo; o poder dobra se o Campo Elétrico está ativo e o alvo está no chão.
 
 ### Shock Wave
 
@@ -2299,6 +2805,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Na chuva nunca erra (oficial). Atinge quem está no alto (Fly/Bounce).
   - 30% de chance de causar Paralisia no alvo. Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
+
+### Thunder Cage
+
+`thunder_cage` · Elétrico · Especial · poder 80 · precisão 90% · PP oficial 15
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,5 m de raio sobre ele (alcance 9 m) e cai depois de 0,5 s; quem sair da marca escapa. [alcance 9 m, raio 1,5 m, preparo 0,5 s]
+- **Energia:** custo 32 · cooldown 6,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Gaiola elétrica na área do alvo; prende por 4-5 rodadas (1/8 do HP por rodada) e impede a fuga.
+  - Se causar dano, prende o alvo por 4-5 rodadas: 1/8 do HP no fim de cada rodada, sem fugir nem trocar (acaba se quem prendeu sair; Rapid Spin solta).
+  - Prende o alvo no lugar por 0,8 s (parado dentro da área).
 
 ### Thunder Fang
 
@@ -2356,6 +2875,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 90), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 10% de chance de causar Paralisia no alvo. Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
 
+### Thunderclap
+
+`thunderclap` · Elétrico · Especial · poder 70 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,3 m de raio sobre ele (alcance 10 m) e cai depois de 0,1 s; quem sair da marca escapa. [alcance 10 m, raio 1,3 m, preparo 0,12 s]
+- **Energia:** custo 18 · cooldown 23 s · prioridade +1
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio instantâneo (prioridade +1, preparo de 0,12 s) que só sai se o alvo estiver preparando um golpe de dano.
+  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+
 ### Volt Switch
 
 `volt_switch` · Elétrico · Especial · poder 70 · precisão 100% · PP oficial 20
@@ -2392,6 +2923,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Recuo: o usuário perde 25% do dano causado (Rock Head anula).
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,9 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Wildbolt Storm
+
+`wildbolt_storm` · Elétrico · Especial · poder 100 · precisão 80% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,8 s; quem sair da marca escapa. [alcance 9 m, raio 2,8 m, preparo 0,8 s]
+- **Energia:** custo 37 · cooldown 11,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Tempestade elétrica numa área larga; 20% de paralisar. Na chuva nunca erra.
+  - 20% de chance de causar Paralisia no alvo. Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
 ### Zap Cannon
 
 `zap_cannon` · Elétrico · Especial · poder 120 · precisão 50% · PP oficial 5
@@ -2405,7 +2949,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-grass"></a>
 
-## Planta (32)
+## Planta (39)
 
 ### Absorb
 
@@ -2417,6 +2961,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 20), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Dreno: orbe verde que, ao acertar, cura o usuário em 50% do dano causado.
+
+### Apple Acid
+
+`apple_acid` · Planta · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil lançado em arco (altura 1,8 m): até 11 m a 13 m/s; dá para desviar. [alcance 11 m, 13 m/s]
+- **Energia:** custo 32 · cooldown 7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Cusparada de suco em arco (projétil lento); cada acerto baixa a Def. Esp. do alvo em 1.
+  - Sempre baixa Def. Esp. do alvo em 1 estágio.
 
 ### Aromatherapy
 
@@ -2549,6 +3105,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Depois de acertar, muda os atributos do usuário (uma vez por uso): At. Esp. -2.
   - Precisão oficial 90%: esta entrega (jato) nunca erra, então a precisão não é rolada.
 
+### Leaf Tornado
+
+`leaf_tornado` · Planta · Especial · poder 65 · precisão 90% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,7 m de raio sobre ele (alcance 9 m) e cai depois de 0,5 s; quem sair da marca escapa. [alcance 9 m, raio 1,7 m, preparo 0,5 s]
+- **Energia:** custo 28 · cooldown 7,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Redemoinho de folhas na área do alvo; 50% de baixar a Precisão dele.
+  - 50% de chance: baixa Precisão do alvo em 1 estágio.
+
 ### Leech Seed
 
 `leech_seed` · Planta · Status · poder — · precisão 90% · PP oficial 10
@@ -2569,6 +3137,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Um acerto por alvo por uso (o visual solta 3): o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+
+### Matcha Gotcha
+
+`matcha_gotcha` · Planta · Especial · poder 80 · precisão 90% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Orbe de dreno: teleguiado de curva suave (2), até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 32 · cooldown 4,7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Jato de chá em arco que cura o usuário com metade do dano; 20% de queimar.
+  - 20% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+  - Dreno: orbe verde que, ao acertar, cura o usuário em 50% do dano causado.
 
 ### Mega Drain
 
@@ -2640,6 +3221,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
 
+### Seed Flare
+
+`seed_flare` · Planta · Especial · poder 120 · precisão 85% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2,3 m de raio sobre ele (alcance 9 m) e cai depois de 0,7 s; quem sair da marca escapa. [alcance 9 m, raio 2,3 m, preparo 0,7 s]
+- **Energia:** custo 42 · cooldown 23,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Onda de luz no alvo; 40% de baixar 2 estágios da Def. Esp.
+  - 40% de chance: baixa Def. Esp. do alvo em 2 estágios.
+
 ### Sleep Powder
 
 `sleep_powder` · Planta · Status · poder — · precisão 75% · PP oficial 15
@@ -2672,6 +3265,27 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 125), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 2 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
+
+### Spicy Extract
+
+`spicy_extract` · Planta · Status · poder — · precisão nunca erra · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O alvo ganha 2 de Ataque e perde 2 de Defesa.
+
+### Spiky Shield
+
+`spiky_shield` · Planta · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Protege como o Protect (prioridade +4, o turno todo). Quem encosta com golpe de contato perde 1/8 do HP.
+  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Spore
 
@@ -2714,6 +3328,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 5 espécie(s) do jogo
 - **Adaptação:**
   - Cura o usuário em 1/2 do HP máximo; 2/3 sob sol forte, 1/4 sob qualquer outro clima (chuva, areia, neve).
+
+### Syrup Bomb
+
+`syrup_bomb` · Planta · Especial · poder 60 · precisão 85% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil lançado em arco (altura 1,8 m): até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 27 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bomba de xarope: ao acertar, o alvo perde 1 de Velocidade no fim de cada uma das 3 rodadas seguintes.
 
 ### Trailblaze
 
@@ -2760,7 +3385,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-ice"></a>
 
-## Gelo (19)
+## Gelo (21)
 
 ### Aurora Beam
 
@@ -2808,6 +3433,35 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Água é fraca ao Gelo neste golpe (a resistência vira fraqueza).
   - 10% de chance de causar Congelamento no alvo. Congelamento: 20% de descongelar a cada tentativa de agir; golpe de Fogo descongela; Gelo é imune.
+
+### Frost Breath
+
+`frost_breath` · Gelo · Especial · poder 60 · precisão 90% · PP oficial 10
+
+- **Entrega:** `stream` (Jato). Jato em cone: 5 m de alcance, 50° de abertura, durante 0,5 s (um pulso a cada 0,1 s); o usuário fica parado e trava no alvo. Não erra por precisão. [alcance 5 m, 50°, 0,5 s]
+- **Energia:** custo 27 · cooldown 7,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Sopro gelado em cone; sempre crítico.
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Estágio de crítico +3.
+  - Precisão oficial 90%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
+### Glaciate
+
+`glaciate` · Gelo · Especial · poder 65 · precisão 95% · PP oficial 10
+
+- **Entrega:** `stream` (Jato). Jato em cone: 6,5 m de alcance, 110° de abertura, durante 0,7 s (um pulso a cada 0,1 s); o usuário fica parado e trava no alvo. Não erra por precisão. [alcance 6,5 m, 110°, 0,7 s]
+- **Energia:** custo 28 · cooldown 8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Sopro gelado largo (cone de 110 graus) que acerta todos os adversários e baixa a Velocidade deles em 1.
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Sempre baixa Speed do alvo em 1 estágio.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 95%: esta entrega (jato) nunca erra, então a precisão não é rolada.
 
 ### Hail
 
@@ -2980,7 +3634,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-fighting"></a>
 
-## Lutador (34)
+## Lutador (37)
 
 ### Aura Sphere
 
@@ -3243,6 +3897,26 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
+### No Retreat
+
+`no_retreat` · Lutador · Status · poder — · precisão nunca erra · PP oficial 5
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 37,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Sobe todos os atributos em 1, mas o usuário fica preso: não pode fugir nem trocar até sair de campo.
+
+### Octolock
+
+`octolock` · Lutador · Status · poder — · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Prende o alvo (não foge nem troca) por 4 rodadas; no fim de cada uma ele perde 1 de Defesa e 1 de Def. Esp. Um aperto curto trava o movimento dele.
+
 ### Quick Guard
 
 `quick_guard` · Lutador · Status · poder — · precisão nunca erra · PP oficial 15
@@ -3287,6 +3961,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 50% de chance: baixa Defesa do alvo em 1 estágio.
+
+### Secret Sword
+
+`secret_sword` · Lutador · Especial · poder 85 · precisão 100% · PP oficial 10
+
+- **Entrega:** `arc` (Arco (contato)). Golpe de contato em cone: acerta quem está até 2,4 m à frente, num arco de 100°. [alcance 2,4 m, 100°]
+- **Energia:** custo 33 · cooldown 7,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 85), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Golpe especial calculado contra a Defesa física do alvo.
+  - Corte de chifre em arco curto; é especial mas usa a Defesa do alvo em vez da Def. Esp. (como o Psyshock).
 
 ### Seismic Toss
 
@@ -3371,7 +4057,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-poison"></a>
 
-## Veneno (23)
+## Veneno (26)
 
 ### Acid
 
@@ -3473,6 +4159,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 30% de chance de causar Veneno no alvo. Veneno: 1/8 do HP por rodada; Veneno e Aço são imunes.
 
+### Malignant Chain
+
+`malignant_chain` · Veneno · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `whip` (Chicote). Chicote: 2 ponta(s) varrem uma linha de até 4,5 m e acertam o primeiro que tocar. [alcance 4,5 m]
+- **Energia:** custo 37 · cooldown 17,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Duas pontas de corrente que chicoteiam em arco curto; 50% de envenenar gravemente.
+  - 50% de chance de causar Toxic (veneno grave) no alvo. Toxic: n/16 do HP no n-ésimo turno; Veneno e Aço são imunes.
+
 ### Poison Fang
 
 `poison_fang` · Veneno · Físico · poder 50 · precisão 100% · PP oficial 15
@@ -3541,6 +4239,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - 10% de chance de causar Veneno no alvo. Veneno: 1/8 do HP por rodada; Veneno e Aço são imunes.
   - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
 
+### Purify
+
+`purify` · Veneno · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cura o status do alvo e o usuário recupera metade do HP máximo; falha se o alvo não tem status.
+
 ### Sludge
 
 `sludge` · Veneno · Especial · poder 65 · precisão 100% · PP oficial 20
@@ -3608,6 +4316,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Espinhos venenosos no chão sob os adversários (duram 20 s): 1 camada envenena, 2 camadas dão Toxic; Veneno que pisa absorve.
 
+### Toxic Thread
+
+`toxic_thread` · Veneno · Status · poder — · precisão 100% · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Fio venenoso: envenena o alvo (100%) e derruba a Velocidade dele em 1.
+  - Causa Veneno no alvo se acertar. Veneno: 1/8 do HP por rodada; Veneno e Aço são imunes.
+
 ### Venom Drench
 
 `venom_drench` · Veneno · Status · poder — · precisão 100% · PP oficial 20
@@ -3632,7 +4351,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-ground"></a>
 
-## Terra (17)
+## Terra (21)
 
 ### Bone Rush
 
@@ -3764,6 +4483,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 55), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Sempre baixa Speed do alvo em 1 estágio.
 
+### Mud Sport
+
+`mud_sport` · Terra · Status · poder — · precisão nunca erra · PP oficial 15
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cobre a quadra de lama por 5 rodadas: todo golpe Elétrico (de qualquer lado) sai com 1/3 do poder.
+
 ### Mud-Slap
 
 `mud_slap` · Terra · Especial · poder 20 · precisão 100% · PP oficial 10
@@ -3774,6 +4503,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 20), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Sempre baixa Precisão do alvo em 1 estágio.
+
+### Rototiller
+
+`rototiller` · Terra · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Revolve o chão: todo Pokémon Grass no chão (de qualquer lado) ganha +1 de Ataque e +1 de At. Esp.
 
 ### Sand Attack
 
@@ -3799,6 +4538,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
   - Prende o alvo no lugar por 0,6 s (parado dentro da área).
 
+### Sandsear Storm
+
+`sandsear_storm` · Terra · Especial · poder 100 · precisão 80% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,8 s; quem sair da marca escapa. [alcance 9 m, raio 2,8 m, preparo 0,8 s]
+- **Energia:** custo 37 · cooldown 11,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Tempestade de areia quente numa área larga; 20% de queimar.
+  - 20% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
 ### Scorching Sands
 
 `scorching_sands` · Terra · Especial · poder 70 · precisão 100% · PP oficial 10
@@ -3809,6 +4561,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 30% de chance de causar Queimadura no alvo. Queimadura: 1/16 do HP por rodada e o dano físico dele cai à metade; Fogo é imune.
+
+### Shore Up
+
+`shore_up` · Terra · Status · poder — · precisão nunca erra · PP oficial 5
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 37,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cura metade do HP máximo (2/3 na tempestade de areia).
 
 ### Spikes
 
@@ -3834,7 +4596,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-flying"></a>
 
-## Voador (19)
+## Voador (23)
 
 ### Acrobatics
 
@@ -3857,6 +4619,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Some e reaparece em cima do alvo (nunca erra no oficial).
+
+### Aeroblast
+
+`aeroblast` · Voador · Especial · poder 100 · precisão 95% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 14 m de alcance, 0,9 m de largura; avisa no chão por 0,5 s e dispara; o usuário fica parado 0,5 s depois. [alcance 14 m, largura 0,9 m, preparo 0,5 s]
+- **Energia:** custo 37 · cooldown 18,9 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de vento com aviso no chão; crítico mais provável (+1).
+  - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
 
 ### Air Cutter
 
@@ -3882,6 +4656,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 75), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 30% de chance de causar Hesitar no alvo. Hesitar: o alvo fica parado 0,5 s.
 
+### Bleakwind Storm
+
+`bleakwind_storm` · Voador · Especial · poder 100 · precisão 80% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,8 s; quem sair da marca escapa. [alcance 9 m, raio 2,8 m, preparo 0,8 s]
+- **Energia:** custo 37 · cooldown 11,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Tempestade de vento gelado numa área larga marcada no chão; 30% de baixar a Velocidade. Vale como golpe de vento (empurra quem é leve) e, na chuva, nunca erra.
+  - 30% de chance: baixa Speed do alvo em 1 estágio.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
 ### Bounce
 
 `bounce` · Voador · Físico · poder 85 · precisão 85% · PP oficial 5
@@ -3906,6 +4693,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Recuo: o usuário perde 33% do dano causado (Rock Head anula).
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 1,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
+
+### Chatter
+
+`chatter` · Voador · Especial · poder 65 · precisão 100% · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 15 m/s; dá para desviar. [alcance 11 m, 15 m/s]
+- **Energia:** custo 28 · cooldown 3,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Notas musicais que voam em linha reta e confundem o alvo (100%). Golpe de som.
+  - Sempre causa Confusão no alvo (depois do dano). Confusão: 2 a 5 rodadas; 33% dos golpes saem em direção aleatória.
 
 ### Defog
 
@@ -3988,6 +4787,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - 30% de chance de causar Confusão no alvo. Confusão: 2 a 5 rodadas; 33% dos golpes saem em direção aleatória.
   - Precisão oficial 70%: esta entrega (jato) nunca erra, então a precisão não é rolada.
 
+### Oblivion Wing
+
+`oblivion_wing` · Voador · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Orbe de dreno: teleguiado de curva suave (2), até 11 m a 15 m/s; dá para desviar. [alcance 11 m, 15 m/s]
+- **Energia:** custo 32 · cooldown 7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Projétil teleguiado fraco (a curva deixa desviar) que devolve 75% do dano em HP.
+  - Dreno: orbe verde que, ao acertar, cura o usuário em 75% do dano causado.
+
 ### Peck
 
 `peck` · Voador · Físico · poder 35 · precisão 100% · PP oficial 35
@@ -4054,7 +4865,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-psychic"></a>
 
-## Psíquico (43)
+## Psíquico (56)
 
 ### Agility
 
@@ -4212,6 +5023,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - O usuário desmaia; quem entrar no lugar dele volta com HP cheio e sem status. Só com reserva no banco.
 
+### Hyperspace Hole
+
+`hyperspace_hole` · Psíquico · Especial · poder 80 · precisão nunca erra · PP oficial 5
+
+- **Entrega:** `dash` (Investida). Teleporte: o Pokémon some e reaparece em cima do alvo (alcance 7 m). Só sai no chão (no ar espera pousar). [alcance 7 m, 16 m/s]
+- **Energia:** custo 32 · cooldown 14,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Quebra o Protect/Quick Guard do alvo (a proteção cai) e bate normalmente.
+  - O usuário some num buraco e reaparece colado no alvo; nunca erra e atravessa o Protect (derruba a proteção do alvo).
+
 ### Hypnosis
 
 `hypnosis` · Psíquico · Status · poder — · precisão 60% · PP oficial 20
@@ -4252,6 +5075,30 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Light Screen por 5 rodadas: o lado do usuário leva 0,5x de golpes especiais (2/3 na dupla). Crítico ignora.
 
+### Lumina Crash
+
+`lumina_crash` · Psíquico · Especial · poder 80 · precisão 100% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,7 m de raio sobre ele (alcance 9 m) e cai depois de 0,5 s; quem sair da marca escapa. [alcance 9 m, raio 1,7 m, preparo 0,5 s]
+- **Energia:** custo 32 · cooldown 8,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Luz que explode na área do alvo e derruba 2 estágios da Def. Esp. dele (100%).
+  - Sempre baixa Def. Esp. do alvo em 2 estágios.
+
+### Luster Purge
+
+`luster_purge` · Psíquico · Especial · poder 95 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,7 m de raio sobre ele (alcance 9 m) e cai depois de 0,5 s; quem sair da marca escapa. [alcance 9 m, raio 1,7 m, preparo 0,5 s]
+- **Energia:** custo 36 · cooldown 18 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 95), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Explosão de luz no alvo; 50% de baixar a Def. Esp. em 1.
+  - 50% de chance: baixa Def. Esp. do alvo em 1 estágio.
+
 ### Magic Coat
 
 `magic_coat` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 15
@@ -4262,6 +5109,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Janela curta em que golpes de status do inimigo voltam contra quem os lançou.
   - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+
+### Magic Powder
+
+`magic_powder` · Psíquico · Status · poder — · precisão 100% · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Pó mágico: o alvo vira Psychic (puro). Golpe de pó: não pega Grass nem quem tem Overcoat.
+  - Golpe de pó: não afeta Planta nem quem tem Overcoat.
 
 ### Magic Room
 
@@ -4284,6 +5142,40 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Postura de 1 s parado (prioridade -5): o primeiro golpe especial recebido nela volta com o dobro do dano para quem bateu.
   - Prioridade -5: na fila da rodada sai depois dos normais; prepara 0,5 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
+### Mist Ball
+
+`mist_ball` · Psíquico · Especial · poder 95 · precisão 100% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 36 · cooldown 16,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 95), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola de névoa psíquica; 50% de baixar o At. Esp. do alvo.
+  - 50% de chance: baixa At. Esp. do alvo em 1 estágio.
+
+### Mystical Power
+
+`mystical_power` · Psíquico · Especial · poder 70 · precisão 90% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 14 m/s; dá para desviar. [alcance 11 m, 14 m/s]
+- **Energia:** custo 30 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola mística; ao acertar, o maior dos atributos do usuário (Ataque, Defesa, At. Esp., Def. Esp., Velocidade) sobe 1.
+
+### Photon Geyser
+
+`photon_geyser` · Psíquico · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,8 m de raio sobre ele (alcance 10 m) e cai depois de 0,7 s; quem sair da marca escapa. [alcance 10 m, raio 1,8 m, preparo 0,7 s]
+- **Energia:** custo 37 · cooldown 19,6 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Pilar de luz no alvo. Se o Ataque do usuário for maior que o At. Esp., o golpe usa o Ataque e a Defesa do alvo (vira físico).
+
 ### Power Split
 
 `power_split` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 10
@@ -4303,6 +5195,28 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 6 espécie(s) do jogo
 - **Adaptação:**
   - Troca as mudanças de estágio de Defesa/Def. Esp. (ou Ataque/At. Esp.) com o alvo.
+
+### Power Trick
+
+`power_trick` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Troca o Ataque e a Defesa do usuário (usar de novo desfaz).
+
+### Prismatic Laser
+
+`prismatic_laser` · Psíquico · Especial · poder 160 · precisão 100% · PP oficial 10
+
+- **Entrega:** `beam` (Raio). Raio em linha: 15 m de alcance, 1 m de largura; avisa no chão por 0,7 s e dispara; o usuário fica parado 0,5 s depois. [alcance 15 m, largura 1 m, preparo 0,7 s]
+- **Energia:** custo 50 · cooldown 17 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 160), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de 160 de poder; depois o usuário fica parado 1,6 s recarregando, como o Hyper Beam.
+  - Precisa recarregar: depois do golpe o usuário fica parado e vulnerável por 1,6 s.
 
 ### Psybeam
 
@@ -4362,6 +5276,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Campo psíquico por 5 rodadas: Psíquico 1,3x para quem está no chão e golpes de prioridade não o alcançam. Um terreno tira o outro.
 
+### Psycho Boost
+
+`psycho_boost` · Psíquico · Especial · poder 140 · precisão 90% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 12 m/s; dá para desviar. [alcance 11 m, 12 m/s]
+- **Energia:** custo 47 · cooldown 23,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 140), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Bola psíquica pesada de 140 de poder; depois o usuário perde 2 estágios de At. Esp.
+  - Depois de acertar, muda os atributos do usuário (uma vez por uso): At. Esp. -2.
+
 ### Psycho Cut
 
 `psycho_cut` · Psíquico · Físico · poder 70 · precisão 100% · PP oficial 20
@@ -4372,6 +5298,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
+
+### Psycho Shift
+
+`psycho_shift` · Psíquico · Status · poder — · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Passa o status do usuário (queimadura, veneno, sono...) para o alvo, se o alvo estiver livre e o status pegar.
 
 ### Psyshock
 
@@ -4456,6 +5392,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 20), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Poder = 20 + 20 por estágio de atributo positivo do usuário.
 
+### Take Heart
+
+`take_heart` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Cura o status do usuário e sobe At. Esp. e Def. Esp. em 1.
+
 ### Teleport
 
 `teleport` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 20
@@ -4488,6 +5434,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Prioridade -7: inverte a ordem da fila de Speed por 5 rodadas; usar de novo desliga.
   - Prioridade -7: na fila da rodada sai depois dos normais; prepara 0,7 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
+### Twin Beam
+
+`twin_beam` · Psíquico · Especial · poder 40 x 2 · precisão 100% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 18 m/s; dá para desviar. Sai uma leva em leque de 12° (quantidade sorteada, ver multi-hit). [alcance 11 m, 18 m/s]
+- **Energia:** custo 32 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Dois feixes psíquicos em sequência (2 acertos de 40).
+  - Multi-hit oficial: 2 acertos por uso no mesmo alvo, cada um com o poder oficial (40).
+
 ### Wonder Room
 
 `wonder_room` · Psíquico · Status · poder — · precisão nunca erra · PP oficial 10
@@ -4512,7 +5470,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-bug"></a>
 
-## Inseto (19)
+## Inseto (24)
 
 ### Bug Bite
 
@@ -4573,6 +5531,20 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Usos seguidos que acertam dobram o poder (até 2 dobras, x4); errar ou esperar demais zera a corrente.
+
+### Infestation
+
+`infestation` · Inseto · Especial · poder 20 · precisão 100% · PP oficial 20
+
+- **Entrega:** `zone` (Zona no chão). Zona no chão: círculo de 1,6 m de raio (alcance 8 m) que dura 2,5 s e bate a cada 0,5 s em quem estiver dentro. [alcance 8 m, raio 1,6 m, 2,5 s]
+- **Energia:** custo 17 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 20), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Enxame que cai no chão, prende o alvo por 4-5 rodadas (1/8 do HP por rodada) e não deixa fugir nem trocar.
+  - Se causar dano, prende o alvo por 4-5 rodadas: 1/8 do HP no fim de cada rodada, sem fugir nem trocar (acaba se quem prendeu sair; Rapid Spin solta).
+  - Um acerto por alvo por uso: o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Prende o alvo no lugar por 0,6 s (parado dentro da área).
 
 ### Leech Life
 
@@ -4662,6 +5634,29 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Golpe de pó: não afeta Planta nem quem tem Overcoat.
   - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
+### Signal Beam
+
+`signal_beam` · Inseto · Especial · poder 75 · precisão 100% · PP oficial 15
+
+- **Entrega:** `beam` (Raio). Raio em linha: 12 m de alcance, 0,7 m de largura; avisa no chão por 0,4 s e dispara; o usuário fica parado 0,5 s depois. [alcance 12 m, largura 0,7 m, preparo 0,4 s]
+- **Energia:** custo 31 · cooldown 5,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 75), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de luz fino; 10% de confundir.
+  - 10% de chance de causar Confusão no alvo. Confusão: 2 a 5 rodadas; 33% dos golpes saem em direção aleatória.
+
+### Silk Trap
+
+`silk_trap` · Inseto · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Protege como o Protect (prioridade +4, o turno todo). Quem encosta com golpe de contato perde 1 de Velocidade.
+  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+
 ### Skitter Smack
 
 `skitter_smack` · Inseto · Físico · poder 70 · precisão 90% · PP oficial 10
@@ -4672,6 +5667,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Sempre baixa At. Esp. do alvo em 1 estágio.
+
+### Sticky Web
+
+`sticky_web` · Inseto · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Teia no chão do lado inimigo: em volta do adversário nascem até 3 teias; quem pisar (no chão, que não seja Inseto) fica preso 1 s e perde 1 de Velocidade. Sem o chão vivo (VGC/campo plano), baixa a Velocidade dele direto.
 
 ### String Shot
 
@@ -4697,6 +5702,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Sempre baixa At. Esp. do alvo em 1 estágio.
   - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
   - Precisão oficial 100%: esta entrega (jato) nunca erra, então a precisão não é rolada.
+
+### Tail Glow
+
+`tail_glow` · Inseto · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Sobe o At. Esp. do usuário em 3 estágios.
 
 ### Twineedle
 
@@ -4734,7 +5749,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-rock"></a>
 
-## Pedra (15)
+## Pedra (16)
 
 ### Ancient Power
 
@@ -4888,6 +5903,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
 
+### Tar Shot
+
+`tar_shot` · Pedra · Status · poder — · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O alvo perde 1 de Velocidade e fica coberto de piche: golpes de Fire contra ele saem com o dobro do poder até ele sair de campo.
+  - Baixa Speed do alvo em 1 estágio.
+
 ### Wide Guard
 
 `wide_guard` · Pedra · Status · poder — · precisão nunca erra · PP oficial 10
@@ -4901,7 +5927,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-ghost"></a>
 
-## Fantasma (15)
+## Fantasma (17)
 
 ### Astonish
 
@@ -4965,6 +5991,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 30), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 30% de chance de causar Paralisia no alvo. Paralisia: Speed x0,5 e 20% de chance de o golpe falhar; Elétrico é imune.
+
+### Moongeist Beam
+
+`moongeist_beam` · Fantasma · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 14 m de alcance, 0,9 m de largura; avisa no chão por 0,6 s e dispara; o usuário fica parado 0,5 s depois. [alcance 14 m, largura 0,9 m, preparo 0,55 s]
+- **Energia:** custo 37 · cooldown 19,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio fantasma com aviso no chão. A parte de ignorar a habilidade do alvo ficou simplificada (sem efeito extra).
 
 ### Night Shade
 
@@ -5064,9 +6101,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Corta o PP do último golpe do alvo (no modo de energia, tira energia).
 
+### Trick-or-Treat
+
+`trick_or_treat` · Fantasma · Status · poder — · precisão 100% · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Acrescenta o tipo Ghost ao alvo.
+
 <a id="tipo-dragon"></a>
 
-## Dragão (14)
+## Dragão (21)
 
 ### Breaking Swipe
 
@@ -5078,6 +6125,32 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Sempre baixa Ataque do alvo em 1 estágio.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
+### Clanging Scales
+
+`clanging_scales` · Dragão · Especial · poder 110 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 4,5 m, aviso de 0,5 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 4,5 m, preparo 0,45 s]
+- **Energia:** custo 40 · cooldown 20,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 110), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Onda de som em volta do usuário que acerta todos os adversários; depois o usuário perde 1 de Defesa. Golpe de som.
+  - Depois de acertar, muda os atributos do usuário (uma vez por uso): Defesa -1.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
+### Core Enforcer
+
+`core_enforcer` · Dragão · Especial · poder 100 · precisão 100% · PP oficial 10
+
+- **Entrega:** `beam` (Raio). Raio em linha: 13 m de alcance, 1,4 m de largura; avisa no chão por 0,5 s e dispara; o usuário fica parado 0,5 s depois. [alcance 13 m, largura 1,4 m, preparo 0,45 s]
+- **Energia:** custo 37 · cooldown 10,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio largo. Se o alvo já agiu há pouco (nos últimos 3 s, o 'já se moveu neste turno' do oficial), a habilidade dele é anulada.
   - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
 
 ### Draco Meteor
@@ -5132,6 +6205,20 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 14 espécie(s) do jogo
 - **Adaptação:**
   - Atributos do usuário: Ataque +1, Speed +1.
+
+### Dragon Energy
+
+`dragon_energy` · Dragão · Especial · poder 150 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 5 m, aviso de 0,6 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 5 m, preparo 0,6 s]
+- **Energia:** custo 50 · cooldown 28 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Poder proporcional ao HP atual do usuário (poder x HP atual / HP máximo, mínimo 1).
+  - Onda de energia ao redor; o poder cai junto com o HP do usuário (150 com HP cheio), igual ao Water Spout.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+  - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
 ### Dragon Pulse
 
@@ -5188,6 +6275,28 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Multi-hit oficial: 2 acertos por uso no mesmo alvo, cada um com o poder oficial (40).
 
+### Dynamax Cannon
+
+`dynamax_cannon` · Dragão · Especial · poder 100 · precisão 100% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 15 m de alcance, 1 m de largura; avisa no chão por 0,6 s e dispara; o usuário fica parado 0,7 s depois. [alcance 15 m, largura 1 m, preparo 0,6 s]
+- **Energia:** custo 37 · cooldown 19,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio grosso de Dragão com aviso no chão. Sem Dynamax no jogo, o dano é o normal.
+
+### Fickle Beam
+
+`fickle_beam` · Dragão · Especial · poder 80 · precisão 100% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 13 m de alcance, 0,7 m de largura; avisa no chão por 0,5 s e dispara; o usuário fica parado 0,5 s depois. [alcance 13 m, largura 0,7 m, preparo 0,5 s]
+- **Energia:** custo 32 · cooldown 15,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio de Dragão. Ao sair, 30% de chance de uma segunda cabeça entrar e dobrar o poder (o aviso 'Poder dobrado!' aparece).
+
 ### Outrage
 
 `outrage` · Dragão · Físico · poder 120 · precisão 100% · PP oficial 10
@@ -5200,6 +6309,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Depois que o golpe termina, o usuário fica confuso de cansaço (como o oficial, que repete 2-3 turnos e confunde ao fim).
   - Precisão oficial 100%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
 
+### Roar of Time
+
+`roar_of_time` · Dragão · Especial · poder 150 · precisão 90% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 16 m de alcance, 1,1 m de largura; avisa no chão por 0,8 s e dispara; o usuário fica parado 1,2 s depois. [alcance 16 m, largura 1,1 m, preparo 0,8 s]
+- **Energia:** custo 50 · cooldown 29 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio gigante de 150 de poder; depois o usuário fica parado 1,8 s recarregando.
+  - Precisa recarregar: depois do golpe o usuário fica parado e vulnerável por 1,8 s.
+
 ### Scale Shot
 
 `scale_shot` · Dragão · Físico · poder 25 x 2-5 · precisão 90% · PP oficial 20
@@ -5211,6 +6332,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 25), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Multi-hit oficial: sorteia 2 a 5 acertos por uso (35% / 35% / 15% / 15% para 2/3/4/5), cada um com o poder oficial (25); Skill Link sempre dá 5. O visual solta os projéteis sorteados, todos no mesmo alvo.
   - Depois de acertar, muda os atributos do usuário (uma vez por uso): Speed +1, Defesa -1.
+
+### Spacial Rend
+
+`spacial_rend` · Dragão · Especial · poder 100 · precisão 95% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2 m de raio sobre ele (alcance 9 m) e cai depois de 0,6 s; quem sair da marca escapa. [alcance 9 m, raio 2 m, preparo 0,55 s]
+- **Energia:** custo 37 · cooldown 19,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Rasgo no espaço na área do alvo; crítico mais provável (+1).
+  - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
 
 ### Twister
 
@@ -5229,7 +6362,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 
 <a id="tipo-dark"></a>
 
-## Sombrio (25)
+## Sombrio (32)
 
 ### Assurance
 
@@ -5407,6 +6540,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - At. Esp. do usuário sobe em 2 estágios (multiplicador (2+n)/2, limite de -6 a +6).
 
+### Night Daze
+
+`night_daze` · Sombrio · Especial · poder 85 · precisão 95% · PP oficial 10
+
+- **Entrega:** `aoe_self` (Onda ao redor). Onda ao redor do usuário: raio 3,5 m, aviso de 0,4 s e depois bate em todo mundo dentro do raio. Não erra por precisão (pular ou sair da área desvia). [raio 3,5 m, preparo 0,4 s]
+- **Energia:** custo 33 · cooldown 8,6 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 85), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Onda escura em volta do usuário; 40% de baixar a Precisão de quem pegar.
+  - 40% de chance: baixa Precisão do alvo em 1 estágio.
+  - Precisão oficial 95%: esta entrega (onda ao redor) nunca erra, então a precisão não é rolada.
+
 ### Night Slash
 
 `night_slash` · Sombrio · Físico · poder 70 · precisão 100% · PP oficial 15
@@ -5417,6 +6563,27 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Alta chance de crítico (+1 no estágio: 1/8 em vez de 1/24).
+
+### Obstruct
+
+`obstruct` · Sombrio · Status · poder — · precisão 100% · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 17 · cooldown 33,8 s · prioridade +4
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Protege como o Protect (prioridade +4, o turno todo, uso seguido falha mais). Quem encosta com golpe de contato perde 2 estágios de Defesa.
+  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+
+### Parting Shot
+
+`parting_shot` · Sombrio · Status · poder — · precisão 100% · PP oficial 20
+
+- **Entrega:** `debuff_aoe` (Efeito ao redor). Efeito ao redor: atinge quem estiver até 6 m do usuário (só o mais perto). Nunca erra. [raio 6 m]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Ameaça de despedida: derruba Ataque e At. Esp. do alvo em 1 e o usuário troca com o próximo do banco.
 
 ### Payback
 
@@ -5438,6 +6605,27 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 0 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+
+### Quash
+
+`quash` · Sombrio · Status · poder — · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O alvo perde o ritmo: fica 1,6 s sem poder agir (o 'age por último' do oficial).
+
+### Ruination
+
+`ruination` · Sombrio · Especial · poder 1 · precisão 90% · PP oficial 10
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 1,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,8 s; quem sair da marca escapa. [alcance 9 m, raio 1,8 m, preparo 0,8 s]
+- **Energia:** custo 12 · cooldown 8,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano fixo = metade do HP atual do alvo (mínimo 1). Só o ritmo x0,75 vai por cima.
+  - Aplicação de ruína na área do alvo: tira metade do HP atual dele.
 
 ### Snarl
 
@@ -5510,9 +6698,29 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Se causar dano, o alvo não pode usar golpes de som por 2 rodadas.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,6 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Topsy-Turvy
+
+`topsy_turvy` · Sombrio · Status · poder — · precisão nunca erra · PP oficial 20
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 9,4 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Inverte os estágios do alvo (+2 vira -2). Falha se ele não tem nenhum.
+
+### Torment
+
+`torment` · Sombrio · Status · poder — · precisão 100% · PP oficial 15
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 9 m a 13 m/s; dá para desviar. [alcance 9 m, 13 m/s]
+- **Energia:** custo 28 · cooldown 12,5 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - O alvo não pode usar o mesmo golpe duas vezes seguidas (o golpe fica travado até ele usar outro).
+
 <a id="tipo-steel"></a>
 
-## Aço (16)
+## Aço (20)
 
 ### Bullet Punch
 
@@ -5524,6 +6732,18 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+
+### Doom Desire
+
+`doom_desire` · Aço · Especial · poder 140 · precisão 100% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2 m de raio sobre ele (alcance 10 m) e cai depois de 0,7 s; quem sair da marca escapa. [alcance 10 m, raio 2 m, preparo 0,7 s]
+- **Energia:** custo 47 · cooldown 26,7 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 140), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Avisa agora e cai no fim da segunda rodada seguinte, na área do alvo da hora. Só cai se quem usou ainda está vivo.
+  - Como Future Sight: o aviso cai no chão agora e o golpe de Aço bate no fim do 2º turno depois deste, no alvo de então.
 
 ### Flash Cannon
 
@@ -5604,6 +6824,20 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - 30% de chance: baixa Defesa do alvo em 1 estágio.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 1,2 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Make It Rain
+
+`make_it_rain` · Aço · Especial · poder 120 · precisão 100% · PP oficial 5
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 15 m/s; dá para desviar. Sai uma leva de 5 em leque de 60°. [alcance 11 m, 15 m/s]
+- **Energia:** custo 42 · cooldown 20,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 120), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Rajada de moedas em leque (5 projéteis) que acerta todos os adversários; depois o usuário perde 1 de At. Esp.
+  - Um acerto por alvo por uso (o visual solta 5): o visual desenha o jato, a área ou os golpes seguidos, mas cada alvo leva dano e efeito uma vez só (no oficial não é multi-hit).
+  - Depois de acertar, muda os atributos do usuário (uma vez por uso): At. Esp. -1.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
+
 ### Metal Burst
 
 `metal_burst` · Aço · Físico · poder variável · precisão 100% · PP oficial 10
@@ -5650,6 +6884,16 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - 20% de chance: sobe Ataque do usuário em 1 estágio.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,9 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
+### Shift Gear
+
+`shift_gear` · Aço · Status · poder — · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `self_buff` (Efeito próprio). Efeito próprio: sem alvo, o efeito cai no usuário ou no campo. Nunca erra.
+- **Energia:** custo 28 · cooldown 18,8 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Sobe o Ataque em 1 e a Velocidade em 2.
+
 ### Smart Strike
 
 `smart_strike` · Aço · Físico · poder 70 · precisão nunca erra · PP oficial 10
@@ -5694,9 +6938,21 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 10% de chance: sobe Defesa do usuário em 1 estágio.
 
+### Tachyon Cutter
+
+`tachyon_cutter` · Aço · Especial · poder 50 x 2 · precisão nunca erra · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 22 m/s; dá para desviar. Sai uma leva em leque de 14° (quantidade sorteada, ver multi-hit). [alcance 11 m, 22 m/s]
+- **Energia:** custo 37 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 50), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Duas lâminas rápidas em sequência (2 acertos de 50); não tem precisão, nunca erra.
+  - Multi-hit oficial: 2 acertos por uso no mesmo alvo, cada um com o poder oficial (50).
+
 <a id="tipo-fairy"></a>
 
-## Fada (12)
+## Fada (16)
 
 ### Alluring Voice
 
@@ -5769,6 +7025,29 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 50), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Dreno: orbe verde que, ao acertar, cura o usuário em 75% do dano causado.
 
+### Fairy Wind
+
+`fairy_wind` · Fada · Especial · poder 40 · precisão 100% · PP oficial 30
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 10 m a 16 m/s; dá para desviar. [alcance 10 m, 16 m/s]
+- **Energia:** custo 22 · cooldown 2,1 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Rajada de vento rosa em linha reta; vale como golpe de vento (empurra quem é leve).
+
+### Fleur Cannon
+
+`fleur_cannon` · Fada · Especial · poder 130 · precisão 90% · PP oficial 5
+
+- **Entrega:** `beam` (Raio). Raio em linha: 13 m de alcance, 0,9 m de largura; avisa no chão por 0,8 s e dispara; o usuário fica parado 0,5 s depois. [alcance 13 m, largura 0,9 m, preparo 0,75 s]
+- **Energia:** custo 45 · cooldown 25,2 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 130), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Raio rosa de 130 de poder; o recuo baixa 2 estágios do At. Esp. do usuário.
+  - Depois de acertar, muda os atributos do usuário (uma vez por uso): At. Esp. -2.
+
 ### Misty Explosion
 
 `misty_explosion` · Fada · Especial · poder 100 · precisão 100% · PP oficial 5
@@ -5813,6 +7092,17 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Cura o usuário em 1/2 do HP máximo; 2/3 sob sol forte, 1/4 sob qualquer outro clima (chuva, areia, neve).
 
+### Nature’s Madness
+
+`natures_madness` · Fada · Especial · poder variável · precisão 90% · PP oficial 10
+
+- **Entrega:** `projectile` (Projétil). Projétil: voa em linha reta até 11 m a 14 m/s; dá para desviar. [alcance 11 m, 14 m/s]
+- **Energia:** custo 30 · cooldown 6,3 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano fixo = metade do HP atual do alvo (mínimo 1). Só o ritmo x0,75 vai por cima.
+  - Projétil de fada que tira metade do HP atual do alvo (como Super Fang).
+
 ### Play Rough
 
 `play_rough` · Fada · Físico · poder 90 · precisão 90% · PP oficial 10
@@ -5824,6 +7114,19 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 90), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - 10% de chance: baixa Ataque do alvo em 1 estágio.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,9 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
+
+### Springtide Storm
+
+`springtide_storm` · Fada · Especial · poder 100 · precisão 80% · PP oficial 5
+
+- **Entrega:** `aoe_target` (Área no alvo). Área no alvo: marca um círculo de 2,8 m de raio sobre ele (alcance 9 m) e cai depois de 0,8 s; quem sair da marca escapa. [alcance 9 m, raio 2,8 m, preparo 0,8 s]
+- **Energia:** custo 37 · cooldown 19,9 s
+- **Aprendem:** 0 espécie(s) do jogo
+- **Adaptação:**
+  - Dano pela fórmula oficial (Gen 5+, especial, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
+  - Tempestade de amor e ódio numa área larga; 30% de baixar o Ataque do alvo.
+  - 30% de chance: baixa Ataque do alvo em 1 estágio.
+  - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
 
 ### Sweet Kiss
 

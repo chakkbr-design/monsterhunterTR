@@ -143,6 +143,13 @@ const SOUND_MOVES := [
 	"psychic_noise",
 	"roar",
 	"round",
+	"boomburst",
+	"chatter",
+	"clanging_scales",
+	"noble_roar",
+	"overdrive",
+	"relic_song",
+	"torch_song",
 	"screech",
 	"sing",
 	"snarl",
@@ -563,6 +570,11 @@ func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
 		var sm := mv.duplicate()
 		sm["windup"] = SOLAR_SUN_WINDUP
 		return sm
+	if String(mv.get("id", "")) == "electro_shot" and weather() == "rain":
+		var es := mv.duplicate()
+		es["windup"] = SOLAR_SUN_WINDUP  # na chuva a carga é pulada
+		es.erase("charge_stats")
+		return es
 	if (
 		String(mv.get("special", "")) == "grassy_glide"
 		and active(field, "grassy")
@@ -718,6 +730,8 @@ func accuracy_of(user: BattleFighter, mv: Dictionary) -> float:
 			return 0.0
 		if w == "sun":
 			acc = SUN_STORM_ACC
+	if id in ["bleakwind_storm", "wildbolt_storm"] and w == "rain":
+		return 0.0
 	if id == "blizzard" and w in ["hail", "snow"]:
 		return 0.0
 	if String(mv.get("special", "")) == "ohko":
@@ -1463,6 +1477,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.popup("Sonolento...", Color(0.75, 0.8, 0.95))
 				set_rounds(ts, "yawn", YAWN_TURNS)
 				ts.yawn_by = user
+	BattleMore.after_hit(self, user, target, mv, dealt)
 
 
 ## Status de efeito extra pelas mesmas regras do hit (imunidade de tipo, habilidade, Safeguard).
@@ -1631,7 +1646,7 @@ func debuff_move(user: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
 			else:
 				t.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
 		_:
-			return false
+			return BattleMore.debuff_move(self, user, t, mv)
 	return true
 
 
@@ -2392,6 +2407,9 @@ func ai_power(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> flo
 		return 0.0
 	if not usable(user, mv):
 		return 0.0
+	var more := BattleMore.ai_power(self, user, target, mv)
+	if more >= 0.0:
+		return more
 	match String(mv.get("special", "")):
 		"spit_up":
 			return 100.0 * int(st(user).stock)

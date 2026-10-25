@@ -72,3 +72,13 @@ static func tick(_fx: BattleMoveEffects, _dt: float) -> void:
 ## Fim de turno (uma vez por rodada) de cada lutador ativo: conte rodadas com fx.count_round.
 static func end_turn(_fx: BattleMoveEffects, _f: BattleFighter) -> void:
 	pass
+
+
+## debuff_aoe com "special" que o BattleMoveEffects não conhece (vários atributos, troca). true = tratado aqui.
+static func debuff_move(_fx: BattleMoveEffects, _user: BattleFighter, _t: BattleFighter, _mv: Dictionary) -> bool:
+	return false
+
+
+## Poder que a IA conta neste golpe (poder condicional). Negativo = sem opinião (usa o padrão).
+static func ai_power(_fx: BattleMoveEffects, _user: BattleFighter, _target: BattleFighter, _mv: Dictionary) -> float:
+	return -1.0
