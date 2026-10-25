@@ -358,3 +358,12 @@ static func _shock_target(ai, ter) -> void:
 			ai.why = "shock_water"
 			ter._tele("terrain_ai_shock", {"who": ter._uid(f), "tgt": ter._uid(o)})
 		return
+
+
+## Falta energia para o golpe pretendido por mais que ENERGY_WAIT s (hora de descansar).
+static func _needs_rest(ai) -> bool:
+	if ai.intent == "" or ai.recover_t > 0.0:
+		return false
+	var f: BattleFighter = ai.f
+	var need := BattleEnergy.secs_to(f, f.pp_cost_of(Dex.move(ai.intent)))
+	return need > BattleAI.ENERGY_WAIT and not ai._stays_fighting()
