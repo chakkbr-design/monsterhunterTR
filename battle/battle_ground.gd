@@ -25,7 +25,8 @@ extends RefCounted
 const MUD_COUNT := {"campo": 1, "lagoa": 1, "misto": 2, "praia": 2}
 const MUD_R := [1.2, 1.6]  ## raio da lama do cenário
 const MUD_GAP := 0.3  ## distância mínima da borda da lama até a dos outros
-const MUD_MULT := 0.6  ## andar na lama (quem não é imune)
+const MUD_MULT := 0.6  ## andar na lama do cenário (quem não é imune)
+const MUD_NEW_MULT := 0.8  ## andar na lama nova (poça pequena de golpe)
 const MUD_TYPES := ["ground", "water", "poison"]  ## não atolam
 const MUDDY_SECS := 3.0  ## enlameado depois de sair da lama
 const MUDDY_ACC := 0.9  ## precisão do golpe à distância de quem está enlameado
@@ -62,7 +63,7 @@ const TIDE_FIRST := 12.0
 const TIDE_DRY := 15.0
 const TIDE_WARN := 3.0
 const TIDE_IN := 12.0
-const TIDE_WADE := 0.85  ## andar na água rasa (quem não é de Água)
+const TIDE_WADE := 0.9  ## andar na água rasa (quem não é de Água)
 const TIDE_SWIM := 1.1  ## Água na água rasa
 const TIDE_CONDUCT := 3.5  ## Elétrico na maré passa a corrente a até TIDE_CONDUCT m
 const SAND_EVADE := 0.15  ## Terra na areia seca: golpe à distância x0,85
@@ -250,7 +251,9 @@ func move_mult(f: BattleFighter) -> float:
 	if not on:
 		return 1.0
 	if in_mud(f):
-		return 1.0 if mud_immune(f) else MUD_MULT
+		if mud_immune(f):
+			return 1.0
+		return MUD_MULT if float(_mud_at(f.position).t) == INF else MUD_NEW_MULT
 	if in_tide(f):
 		return TIDE_SWIM if terrain.swimmer(f) else TIDE_WADE
 	return 1.0

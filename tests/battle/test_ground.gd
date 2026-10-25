@@ -156,6 +156,8 @@ func _mud_new() -> void:
 	g.on_move_landed(a.player, Dex.move("mud_slap"), spot, 0.8)
 	check(g.mud.size() == 1 and float(g.mud[0].t) == G.MUD_LIFE, "golpe de Terra abre lama nova")
 	check(_events(a, "terrain_mud_new") == 1, "telemetria mud_new")
+	_put(a, a.enemy, spot)
+	check(absf(a.terrain.move_mult(a.enemy) - G.MUD_NEW_MULT) < 0.001, "lama nova atola menos")
 	g.on_move_landed(a.player, Dex.move("mud_slap"), spot, 0.8)
 	check(g.mud.size() == 1, "no mesmo lugar renova")
 	for i in 5:
