@@ -9,9 +9,15 @@ const REACT_ICD := 2.5
 const MULT_CAP := 1.5
 const RESONANCE_WINDOW := 1.0
 const RESONANCE_MULT := 1.25
-const DUO_WINDOW := 1.2
+## Janela entre os dois golpes de tipos que formam a dupla (2 s desde 2026-10-25: com 1,2 s a IA quase
+## nunca fechava o par).
+const DUO_WINDOW := 2.0
 const DUO_CHANCE := 0.06
-const DUO_COOLDOWN := 5.0
+## Chance da dupla com a Sintonia cheia pela metade ou mais (sobe linear de DUO_CHANCE até aqui).
+const DUO_CHANCE_SYNC := 0.15
+## Sintonia a partir da qual a IA do par escolhe de propósito golpes que fecham reação ou dupla.
+const SYNC_COORD := 0.3
+const DUO_COOLDOWN := 12.0
 const DUO_DELAY := 0.5
 const SYNC_NEAR_WINDOW := 1.5
 const SYNC_HIT := 0.1
@@ -22,6 +28,14 @@ const SYNC_IDLE := 2.0
 const CONTACT_KINDS := ["dash", "arc", "multi_arc", "whip"]
 const KNOCKDOWN := 7.0
 const DUO_PATH := "res://data/duo_moves.json"
+const STAT_WORDS := {
+	"atk": "Ataque",
+	"def": "Defesa",
+	"spa": "At. Esp.",
+	"spd": "Def. Esp.",
+	"spe": "Velocidade",
+	"acc": "Precisão"
+}
 
 ## Marcas: id -> nome, tipo da cor.
 const MARKS := {
@@ -263,11 +277,47 @@ func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 		if duo.is_empty():
 			continue
 		var full: bool = _sync[user.side] >= 0.999
-		if full or arena.rng.randf() < DUO_CHANCE:
+		var chance := lerpf(DUO_CHANCE, DUO_CHANCE_SYNC, clampf(_sync[user.side] * 2.0, 0.0, 1.0))
+		if full or arena.rng.randf() < chance:
 			if full:
 				_sync[user.side] = 0.0
 			_fire_duo(user, u.user, duo)
 			return
+
+
+## Para a IA do par: o golpe `mv` de `user` fecha uma dupla com o último golpe do parceiro (dentro da
+## DUO_WINDOW) e a dupla está livre?
+func completes_duo(user: BattleFighter, mv: Dictionary) -> bool:
+	if not _ok(user) or bool(mv.get("combo", false)) or _duo_cd[user.side] > 0.0:
+		return false
+	if String(mv.get("category", "")) == "status" or float(mv.get("power", 0)) <= 0.0:
+		return false
+	var ty := String(mv.get("type", ""))
+	for k in _used:
+		var u: Dictionary = _used[k]
+		if u.user == user or not _ok(u.user) or u.user.side != user.side:
+			continue
+		if _clock - float(u.t) <= DUO_WINDOW and not _find_duo(String(u.type), ty).is_empty():
+			return true
+	return false
+
+
+## Para a IA do par: o golpe `mv` deixa uma marca que algum golpe do parceiro detona?
+func sets_up_reaction(user: BattleFighter, partner: BattleFighter, mv: Dictionary) -> bool:
+	var mid := _mark_for(mv)
+	if mid == "" or not _ok(partner):
+		return false
+	for pid in partner.moves:
+		var pm: Dictionary = Dex.move(String(pid))
+		if float(pm.get("power", 0)) <= 0.0:
+			continue
+		var pt := String(pm.get("type", ""))
+		for r in REACTIONS:
+			if r.mark != mid:
+				continue
+			if (r.get("contact", false) and _is_contact(pm)) or pt in r.get("by", []):
+				return true
+	return false
 
 
 ## Sintonia do lado (0..1) para o HUD.
@@ -352,7 +402,14 @@ func _find_reaction(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> void:
 	var tel = arena.get("telemetry")
 	if tel:
-		tel.note("combo", {"who": tel.uid(user), "tgt": tel.uid(target), "r": String(r.get("name", r.get("id", "")))})
+		tel.note(
+			"combo",
+			{
+				"who": tel.uid(user),
+				"tgt": tel.uid(target),
+				"r": String(r.get("name", r.get("id", "")))
+			}
+		)
 	var tid := target.get_instance_id()
 	_icd[tid] = REACT_ICD
 	if _marks.has(tid):
@@ -543,6 +600,8 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 	_used.clear()
 	_add_sync(u1.side, 0.0)
 	_notify("COMBO! %s" % String(duo.name), col)
+	var mid_at := (u1.pos2(u1.position) + u2.pos2(u2.position)) * 0.5
+	arena.popup(mid_at + Vector3(0, 2.2, 0), String(duo.name).to_upper() + "!", col, 2.2, "super")
 	arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	_pixel_burst_key(u1, "sparkle", 1.4, 0.5)
@@ -560,6 +619,7 @@ func _duo_effect(
 	var at := target.pos2(target.position)
 	var extra := {}
 	_pixel_burst(target, ty, clampf(radius * 2.2, 2.0, 5.0))
+	_duo_vis(at, duo)
 	if duo.has("status"):
 		extra.effect = {"status": duo.status.id, "chance": float(duo.status.chance)}
 	match String(duo.effect):
@@ -572,7 +632,13 @@ func _duo_effect(
 			for f in [u1, u2]:
 				if _ok(f):
 					_temp_stage(f, String(duo.stat), int(duo.stages), float(duo.dur))
-					f.popup("Velocidade do time!", Dex.type_color(ty), 1.0, 0.5, "stat_up")
+					f.popup(
+						"%s do time!" % String(STAT_WORDS.get(String(duo.stat), "Status")),
+						Dex.type_color(ty),
+						1.0,
+						0.5,
+						"stat_up"
+					)
 					if duo.has("heal"):
 						f.heal(maxi(1, int(float(f.max_hp) * float(duo.heal))))
 			_area_hit(u1, target, float(duo.power), radius, ty, true, extra)
@@ -614,3 +680,48 @@ func _run_field(
 			if duo.has("slow") and t.alive():
 				_temp_stage(t, "spe", -1, float(duo.tick) + 0.3)
 	arena.later(float(duo.tick), func() -> void: _run_field(user, at, duo, extra, left - 1))
+
+
+## Desenho do golpe de dupla com os PixelFx do tipo (sem arte nada acontece): ring = anel de estouros
+## na borda, pillar = coluna subindo, rain = chuva caindo do alto, bolts = raios espalhados,
+## spiral = espiral subindo, sparkle = faíscas em volta. Cada estouro entra com um atraso curto.
+func _duo_vis(at: Vector3, duo: Dictionary) -> void:
+	if bool(arena.opts.get("fast_sim", false)):
+		return
+	var ty := String(duo.type)
+	var key := PixelFx.key_for_type(ty)
+	var r := float(duo.radius)
+	var style := String(duo.get("vis", "ring"))
+	if style == "bolts":
+		key = "electric" if ty in ["electric", "ground", "steel"] else key
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		var pos := at
+		var delay := 0.05 * float(i)
+		var size := r * 0.9
+		match style:
+			"ring":
+				pos += Vector3(cos(a), 0.4, sin(a)) * r * 0.8
+			"pillar":
+				pos += Vector3(0, 0.3 + 0.45 * float(i), 0)
+				delay = 0.04 * float(i)
+				size = r * 0.8
+			"rain":
+				pos += Vector3(cos(a * 2.3) * r * 0.7, 3.2, sin(a * 3.1) * r * 0.7)
+				pos.y = 3.2 - 0.4 * float(i % 4)
+				size = r * 0.6
+			"bolts":
+				pos += Vector3(
+					cos(a * 1.7) * r * 0.8, 0.9 + 0.4 * float(i % 3), sin(a * 2.9) * r * 0.8
+				)
+				delay = 0.07 * float(i)
+			"spiral":
+				pos += (
+					Vector3(cos(a), 0.3 + 0.35 * float(i), sin(a)) * Vector3(r * 0.7, 1.0, r * 0.7)
+				)
+				delay = 0.05 * float(i)
+			_:
+				pos += Vector3(cos(a), 0.8, sin(a)) * r
+				size = r * 0.5
+		arena.later(delay + 0.01, func() -> void: PixelFx.pop(arena, key, pos, size, 0.5))
+	arena.fx_disc(at, r, Dex.type_color(ty) * Color(1, 1, 1, 0.3), 0.6)

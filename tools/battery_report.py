@@ -78,6 +78,7 @@ def analyse(fights):
     ohko_full = 0
     hits_total = 0
     dmg_direct = 0.0
+    dmg_combo = 0.0
     dmg_resid = 0.0
     resid_by = Counter()
     move_use = Counter()
@@ -143,6 +144,8 @@ def analyse(fights):
             elif k == "hit":
                 hits_total += 1
                 dmg_direct += e["frac"]
+                if e.get("move", "") in ("combo_area", "combo_field"):
+                    dmg_combo += e["frac"]
                 hits_on[e["tgt"]] += 1
                 frac_by_bucket["all"].append(e["frac"])
                 eff_hits[str(e["eff"])] += 1
@@ -272,6 +275,7 @@ def analyse(fights):
     R["terrain_events"] = dict(terrain)
     R["misses_per_fight"] = misses / n if n else 0
     R["dodges_per_fight"] = {k: v / n for k, v in dodges.items()}
+    R["damage_share_combo_pct"] = pct(dmg_combo, dmg_direct)
     R["combos_per_fight"] = {k: v / n for k, v in combos.items()}
     R["passives"] = dict(passives)
     R["duration_by_weather"] = {k: st.mean(v) for k, v in weather_t.items()}

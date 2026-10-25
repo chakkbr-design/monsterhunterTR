@@ -192,6 +192,9 @@ var motion_track := 0.0
 var motion_target: BattleFighter
 var motion_cb := Callable()
 var motion_tick := Callable()
+## Visual do pulo de desespero (BattlePassives): "" | "desperate"; squash_t = achatar ao pousar (s).
+var leap_style := ""
+var squash_t := 0.0
 var hidden := ""
 var launch_v := Vector3.ZERO
 var launch_t := 0.0
@@ -346,6 +349,7 @@ func visual_step(dt: float) -> void:
 		elif air_t > 0.0:
 			st = "airborne"
 	look.state = st
+	look.squash = _leap_squash(vdt)
 	look.tick(vdt)
 	if _ring:
 		_ring.visible = alive() and on_field
@@ -358,6 +362,25 @@ func visual_step(dt: float) -> void:
 		look.tint = tint
 	_update_status_fx()
 	_place_status_fx()
+
+
+## Achatar/esticar do pulo de desespero: agacha na decolagem (primeiros 20% do arco), estica no
+## ar e achata de novo ao pousar (squash_t). Só visual, lê o movimento sem mexer nele.
+func _leap_squash(dt: float) -> Vector3:
+	squash_t = maxf(squash_t - dt, 0.0)
+	if motion == "leap" and leap_style == "desperate":
+		var s := clampf(1.0 - motion_t / maxf(motion_total, 0.001), 0.0, 1.0)
+		if s < 0.2:
+			var k := sin(s / 0.2 * PI)
+			return Vector3(1.0 + 0.28 * k, 1.0 - 0.38 * k, 1.0)
+		var air := sin(s * PI)
+		return Vector3(1.0 - 0.12 * air, 1.0 + 0.2 * air, 1.0)
+	if motion != "leap" and leap_style == "desperate":
+		leap_style = ""
+	if squash_t > 0.0:
+		var k2 := squash_t / 0.16
+		return Vector3(1.0 + 0.3 * k2, 1.0 - 0.35 * k2, 1.0)
+	return Vector3.ONE
 
 
 func _update_status_fx() -> void:
@@ -819,7 +842,10 @@ func residual_damage(amount: int, why: String, col: Color) -> int:
 	if ab and ab.has_method("no_indirect") and ab.no_indirect(self):
 		return 0
 	amount = mini(amount, hp)
-	_tele("residual", {"why": why, "dmg": amount, "frac": snappedf(float(amount) / maxf(max_hp, 1), 0.001)})
+	_tele(
+		"residual",
+		{"why": why, "dmg": amount, "frac": snappedf(float(amount) / maxf(max_hp, 1), 0.001)}
+	)
 	popup("-%d %s" % [amount, why], col, 0.85, 0.3)
 	take_damage(amount, Vector3.ZERO, 0.0)
 	flash(col.lerp(Color.WHITE, 0.3) * 1.6, RESIDUAL_FLASH)
@@ -1142,6 +1168,7 @@ func end_motion() -> void:
 	motion_cb = Callable()
 	motion_tick = Callable()
 	motion_target = null
+	leap_style = ""
 	hidden = ""
 	if look:
 		look.visible = true

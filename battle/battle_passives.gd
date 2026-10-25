@@ -48,6 +48,7 @@ var second_used := false
 var _dodge_from: BattleFighter = null
 var _dodge_hp := 0
 var _hooked := false
+var _trail_t := 0.0
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -121,7 +122,21 @@ func leap() -> bool:
 	leap_cd = LEAP_CD
 	corner_t = 0.0
 	var spot := Vector3(to.x, 0.0, to.z)
-	f.start_motion("leap", spot, LEAP_SECS, LEAP_H, null, _land, 0.0, Callable(), f.ground_y)
+	var visual := not _fast()
+	if visual:
+		f.leap_style = "desperate"
+		_takeoff_fx()
+	f.start_motion(
+		"leap",
+		spot,
+		LEAP_SECS,
+		LEAP_H,
+		null,
+		_land,
+		0.0,
+		_trail if visual else Callable(),
+		f.ground_y
+	)
 	f.popup("Pulo de desespero!", Color(0.75, 0.95, 1.0), 1.0, 0.8)
 	_note("pulo_desespero")
 	if f.ai:
@@ -182,7 +197,8 @@ func _land() -> void:
 	f.pp_max = minf(f.pp_max + BREATH_ENERGY, f.pp_base)
 	f.breath_t = BREATH_SECS
 	f.popup("Fôlego!", Color(0.6, 1.0, 0.7), 0.9, 0.6)
-	PixelFx.pop(f.arena, "dust", f.pos2(f.position) + Vector3(0, 0.3, 0), 1.2, 0.35)
+	if not _fast():
+		_landing_fx()
 
 
 func _second_wind() -> void:
@@ -194,6 +210,47 @@ func _second_wind() -> void:
 	f.pp_max = minf(f.pp_max + SECOND_ENERGY, f.pp_base)
 	f.popup("Segundo fôlego!", Color(0.6, 1.0, 0.7), 1.0, 0.8)
 	_note("segundo_folego")
+
+
+## Bateria (fast_sim): nenhum visual do pulo roda.
+func _fast() -> bool:
+	return f.arena == null or bool(f.arena.opts.get("fast_sim", false))
+
+
+## Decolagem: nuvem de poeira no chão (o agachar está em BattleFighter._leap_squash).
+func _takeoff_fx() -> void:
+	var at := f.pos2(f.position)
+	PixelFx.pop(f.arena, "dust", at + Vector3(0, 0.25, 0), 1.8, 0.4)
+	f.arena.fx_disc(at, 0.9, Color(0.8, 0.75, 0.6, 0.5), 0.3)
+
+
+## Rastro de velocidade durante o arco: faixas de vento atrás do corpo, a cada ~0.07 s.
+func _trail(_who: BattleFighter, s: float, dt: float) -> void:
+	_trail_t -= dt
+	if _trail_t > 0.0 or not is_instance_valid(f) or f.arena == null:
+		return
+	_trail_t = 0.07
+	var back := -f.pos2(f.motion_to - f.motion_from).normalized()
+	var at := f.pos2(f.position) + back * 0.5
+	var h := maxf(f.position.y, 0.3) + 0.35
+	var sp := PixelFx.pop(f.arena, "wind", Vector3(at.x, h, at.z), 0.9, 0.3)
+	if sp:
+		sp.grow = 0.5
+	if s > 0.1:
+		PixelFx.pop(f.arena, "spark", Vector3(at.x, h + 0.2, at.z) + back * 0.3, 0.5, 0.25)
+
+
+## Pouso: achata o corpo, anel de poeira no chão e brilho verde do Fôlego.
+func _landing_fx() -> void:
+	f.squash_t = 0.16
+	var at := f.pos2(f.position)
+	var green := Color(0.6, 1.0, 0.7)
+	PixelFx.pop(f.arena, "dust", at + Vector3(0, 0.25, 0), 2.4, 0.45)
+	PixelFx.pop(f.arena, "shock", at + Vector3(0, 0.1, 0), 2.6, 0.35)
+	f.arena.fx_disc(at, 1.4, Color(0.85, 0.8, 0.65, 0.5), 0.35)
+	f.arena.fx_disc(at, 0.9, green * Color(1, 1, 1, 0.55), 0.7)
+	PixelFx.pop(f.arena, "sparkle", at + Vector3(0, 0.9, 0), 1.6, 0.6)
+	f.flash(green, 0.5)
 
 
 ## Esquiva de lado começou (BattleAI._dodge): acompanha até a investida acabar.
