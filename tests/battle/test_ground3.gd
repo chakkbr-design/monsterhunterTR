@@ -367,7 +367,7 @@ func _web() -> void:
 		[Mon.create("rattata", 50)], [Mon.create("pikachu", 50)], 13, {"scenario": "pedreira"}
 	)
 	var fx: BattleGroundExtras = fresh.terrain.ground.extras
-	var s2 := _open_spot(fresh, 2.5)
+	var s2 := _open_spot(fresh, 2.0)
 	fx.on_move_landed(fresh.enemy, Dex.move("string_shot"), s2, 0.5)
 	_put(fresh.player, s2 + Vector3(-2.0, 0, 0.1))
 	var w: Vector3 = fx.steer(fresh.player, Vector3.RIGHT)
