@@ -353,3 +353,29 @@ Supressão: Cloud Nine/Air Lock anulam o clima; Gastro Acid/Worry Seed trocam a 
 Triage não existem nos dados. Trick Room não existe nos golpes; o handler `special: "trick_room"` já
 chama `arena.turns.toggle_trick_room()` (`battle_move_effects.gd`). Testes:
 `tests/battle/test_abilities.gd` e `test_gen9_abilities.gd`.
+
+### As 151 habilidades que faltavam (`battle/battle_abilities_more.gd`)
+
+Todas as habilidades da Gen 3-9 têm efeito (`desc_pt` em `data/abilities.json`). As de tabela (Pure Power,
+Solid Rock, White Smoke, Magma Armor, Water Bubble, os `-surge`...) ficam em `battle_abilities.gd`; o resto
+em `BattleAbilitiesMore` (estático, recebe o `BattleAbilities`), chamado pelos ganchos de sempre
+(`_mults`, `immune`, `blocks_hit`, `on_hit`, `adjust_damage`, `tick`, `late_residual`, `move_for`...).
+Texto sempre no mesmo formato: o que faz no jogo, com os números. Teste: `tests/battle/test_more_abilities.gd`.
+
+| Grupo | Adaptação ao tempo real / rodada |
+|---|---|
+| Tipo do golpe (Normalize, Pixilate, Refrigerate, Liquid Voice, Protean, Libero, Color Change, Multitype, RKS System, Hunger Switch) | `BattleAbilities.move_for` troca o `type` do golpe na hora de usar (`BattleMoveEffects.move_for`); os -ate dão x1,3 (`ate`), Normalize x1,2; Protean/Libero uma vez por entrada em campo; Multitype/RKS sem Placa/Memória (não há no jogo) usam o tipo do melhor golpe que não é Normal |
+| Formas sem arte (Zen Mode, Stance Change, Schooling, Shields Down, Disguise, Ice Face, Gulp Missile, Hunger Switch, Forecast, Zero to Hero, Tera Shift) | `BattleAbilitiesMore.set_form`: multiplica os stats da espécie pelos da forma oficial, tipo extra, tom do sprite (`form_tint`, lido por `BattleFighter._tint`) e tamanho; mesmo estilo do Transform. Zero to Hero vira Herói ao voltar de uma troca ou, em tempo real, ao cair para metade do HP; Disguise e Ice Face absorvem o 1º golpe (1/8 do HP no Disguise); Ice Face volta na neve |
+| Campos e clima (Grassy/Electric/Misty/Psychic Surge, Orichalcum Pulse, Hadron Engine, Seed Sower, Sand Spit) | usam `BattleMoveEffects._set_terrain` e `set_weather_rounds` (5 rodadas) |
+| Paradoxo (Protosynthesis, Quark Drive) | sol / campo elétrico (não há Booster Energy): melhor stat x1,3 (Speed x1,5) |
+| Prioridade (Queenly Majesty, Dazzling, Armor Tail, Triage) | `blocks_hit` barra golpe de prioridade inimiga no time; Triage +3 e preparo x1,5 nos golpes de cura |
+| Troca (Shadow Tag, Suction Cups, Guard Dog, Wimp Out, Emergency Exit) | Shadow Tag entra em `cant_escape`; Suction Cups/Guard Dog não são empurrados pelo Whirlwind/Roar (`anchored`; golpes novos de arrastar devem consultar); Wimp Out/Emergency Exit só trocam no modo de energia, ao cruzar a metade do HP |
+| Item (Pickpocket, Magician, Symbiosis, Klutz, Ripen, Cheek Pouch, Cud Chew, Ball Fetch, Honey Gather) | o item do lutador é o `trainer_item`; Cud Chew devolve a frutinha na rodada seguinte; Ball Fetch devolve a 1ª bola que falhou; Honey Gather acha o item `honey` ao vencer (5% + 5% por 10 níveis, até 50%) |
+| Time (Battery, Power Spot, Steely Spirit, Flower Gift/Veil, Sweet/Aroma Veil, Victory Star, Costar, Hospitality, Receiver, Commander, Dancer) | agem no parceiro do 2x2; Commander esconde o Tatsugiri na boca do Dondozo parceiro (`hidden = "commander"`, não age) e dá +2 em tudo; Dancer repete o golpe de dança 0,6 s depois sem custo |
+| Ruin (Tablets/Sword/Vessel/Beads of Ruin) | quem não tem a habilidade bate x0,75 (físico/especial) ou apanha x1,33 |
+| Contato e gatilho (Gooey, Mummy, Lingering Aroma, Wandering Spirit, Iron Barbs, Perish Body, Stamina, Steam Engine, Cotton Down, Toxic Debris, Berserk, Anger Shell...) | `BattleAbilitiesMore.on_hit`; Berserk/Anger Shell/Wimp Out olham o HP de antes do golpe (`adjust`) para ver se cruzou a metade |
+
+Truant age uma rodada e vadia a outra (`move_blocked`); Slow Start dura 5 rodadas; Moody, Bad Dreams e
+Hunger Switch agem no fim da rodada; Mirror Armor/Contrary/Simple ficam em `BattleMoves.change_stage`.
+Turboblaze e Teravolt são Mold Breaker (`BREAKERS`). Prism Armor, Shadow Shield, Full Metal Body, Disguise
+e Ice Face não são ignorados por ele (`UNBREAKABLE`).

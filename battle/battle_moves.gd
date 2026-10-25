@@ -550,7 +550,10 @@ func hit(
 				change_stage(target, String(ef.stat), int(ef.stages), user)
 		else:
 			var st := String(ef.status)
-			if STATUS_IMMUNE.get(st, "-") in target.types:
+			if (
+				STATUS_IMMUNE.get(st, "-") in target.types
+				and not BattleAbilitiesMore.corrodes(arena.abilities, user, st)
+			):
 				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
 			elif arena.abilities and arena.abilities.blocks_status(target, st, user):
 				pass
@@ -634,8 +637,12 @@ func _landed(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 func change_stage(c: BattleFighter, k: String, delta: int, src: BattleFighter = null) -> void:
 	if delta == 0 or not is_instance_valid(c):
 		return
-	if arena.abilities and arena.abilities.ability_of(c) == "simple":
-		delta *= 2  # Simple: as mudanças de atributo valem o dobro
+	if arena.abilities:
+		delta = arena.abilities.stage_delta(c, delta)  # Simple dobra, Contrary inverte
+		if delta == 0:
+			return
+		if delta < 0 and arena.abilities.mirrors(c, k, delta, src):
+			return  # Mirror Armor devolve a queda
 	if delta < 0 and effects.mist_blocks(c, src):
 		return
 	if (
@@ -1044,7 +1051,7 @@ func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 			continue
 		if not effects.debuff_move(user, t, mv) and mv.has("stat"):
 			change_stage(t, String(mv.get("stat", "")), int(mv.get("stages", -1)), user)
-		if phys.push_dist(mv) > 0.0:
+		if phys.push_dist(mv) > 0.0 and not (arena.abilities and arena.abilities.anchored(t)):
 			var away := user.flat_to(t)
 			phys.launch(
 				t,
