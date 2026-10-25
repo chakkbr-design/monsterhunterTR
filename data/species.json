@@ -28667,6 +28667,10 @@
         "thunder_shock"
       ],
       [
+        11,
+        "cotton_spore"
+      ],
+      [
         15,
         "charge"
       ],
@@ -28689,6 +28693,10 @@
       [
         32,
         "discharge"
+      ],
+      [
+        36,
+        "cotton_guard"
       ],
       [
         39,
@@ -28811,6 +28819,10 @@
         "thunder_wave"
       ],
       [
+        11,
+        "cotton_spore"
+      ],
+      [
         16,
         "charge"
       ],
@@ -28833,6 +28845,10 @@
       [
         38,
         "discharge"
+      ],
+      [
+        43,
+        "cotton_guard"
       ],
       [
         47,
@@ -28972,6 +28988,10 @@
         "magnetic_flux"
       ],
       [
+        11,
+        "cotton_spore"
+      ],
+      [
         16,
         "charge"
       ],
@@ -28994,6 +29014,10 @@
       [
         40,
         "discharge"
+      ],
+      [
+        46,
+        "cotton_guard"
       ],
       [
         51,
@@ -29981,6 +30005,10 @@
         "acrobatics"
       ],
       [
+        27,
+        "cotton_spore"
+      ],
+      [
         29,
         "u_turn"
       ],
@@ -30038,6 +30066,7 @@
       "u_turn"
     ],
     "egg": [
+      "cotton_guard",
       "encore",
       "grassy_terrain",
       "rage_powder",
@@ -30146,6 +30175,10 @@
       [
         28,
         "acrobatics"
+      ],
+      [
+        31,
+        "cotton_spore"
       ],
       [
         34,
@@ -30305,6 +30338,10 @@
       [
         30,
         "acrobatics"
+      ],
+      [
+        35,
+        "cotton_spore"
       ],
       [
         39,
@@ -32057,6 +32094,7 @@
       "zen_headbutt"
     ],
     "egg": [
+      "chilly_reception",
       "future_sight"
     ],
     "moves": [
@@ -32967,6 +33005,10 @@
         "yawn"
       ],
       [
+        32,
+        "hyper_drill"
+      ],
+      [
         36,
         "roost"
       ],
@@ -33331,6 +33373,10 @@
       [
         4,
         "smack_down"
+      ],
+      [
+        8,
+        "autotomize"
       ],
       [
         12,
@@ -33998,6 +34044,7 @@
       "acid_spray",
       "aqua_jet",
       "astonish",
+      "barb_barrage",
       "bubble_beam",
       "flail",
       "haze",
@@ -34390,6 +34437,10 @@
       [
         1,
         "leer"
+      ],
+      [
+        1,
+        "arm_thrust"
       ],
       [
         5,
@@ -36263,6 +36314,7 @@
     ],
     "egg": [
       "aurora_beam",
+      "aurora_veil",
       "counter",
       "destiny_bond",
       "fake_out",
@@ -36696,6 +36748,10 @@
         "torment"
       ],
       [
+        37,
+        "comeuppance"
+      ],
+      [
         40,
         "foul_play"
       ],
@@ -36873,6 +36929,10 @@
       [
         35,
         "torment"
+      ],
+      [
+        41,
+        "comeuppance"
       ],
       [
         45,
@@ -37575,6 +37635,7 @@
       "double_kick",
       "extrasensory",
       "megahorn",
+      "psyshield_bash",
       "spite",
       "thrash"
     ],
@@ -37910,7 +37971,10 @@
     "weight_kg": 48.0,
     "category": "Handstand Pokémon",
     "flavor": "After doing a handstand to throw off the opponent’s timing, it presents its fancy kick moves.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "triple_kick"
+    ]
   },
   "Smoochum": {
     "shape": "humanoid",
@@ -39052,7 +39116,8 @@
       "will_o_wisp"
     ],
     "egg": [
-      "extreme_speed"
+      "extreme_speed",
+      "sacred_fire"
     ],
     "moves": [
       "fire_blast",
@@ -40017,6 +40082,10 @@
         "recover"
       ],
       [
+        54,
+        "sacred_fire"
+      ],
+      [
         63,
         "sunny_day"
       ],
@@ -40300,6 +40369,10 @@
         "leer"
       ],
       [
+        3,
+        "leafage"
+      ],
+      [
         6,
         "quick_attack"
       ],
@@ -40460,6 +40533,10 @@
       [
         1,
         "quick_attack"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         9,
@@ -40627,6 +40704,10 @@
       [
         1,
         "quick_attack"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         5,
@@ -42258,6 +42339,7 @@
       "sunny_day",
       "surf",
       "swift",
+      "tail_slap",
       "thief",
       "thunder",
       "thunder_wave",
@@ -42432,6 +42514,7 @@
       "sunny_day",
       "surf",
       "swift",
+      "tail_slap",
       "thief",
       "throat_chop",
       "thunder",
@@ -45554,6 +45637,10 @@
         "counter"
       ],
       [
+        28,
+        "force_palm"
+      ],
+      [
         33,
         "worry_seed"
       ],
@@ -46489,6 +46576,10 @@
       ],
       [
         1,
+        "grudge"
+      ],
+      [
+        1,
         "shadow_claw"
       ],
       [
@@ -47086,8 +47177,16 @@
         "sand_attack"
       ],
       [
+        7,
+        "arm_thrust"
+      ],
+      [
         10,
         "fake_out"
+      ],
+      [
+        13,
+        "force_palm"
       ],
       [
         16,
@@ -47258,11 +47357,19 @@
       ],
       [
         1,
+        "arm_thrust"
+      ],
+      [
+        1,
         "brine"
       ],
       [
         10,
         "fake_out"
+      ],
+      [
+        13,
+        "force_palm"
       ],
       [
         16,
@@ -47307,6 +47414,10 @@
       [
         54,
         "heavy_slam"
+      ],
+      [
+        60,
+        "headlong_rush"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -48347,6 +48458,7 @@
     ],
     "egg": [
       "ancient_power",
+      "power_up_punch",
       "seismic_toss",
       "slam",
       "tickle"
@@ -48442,6 +48554,10 @@
       [
         36,
         "take_down"
+      ],
+      [
+        40,
+        "autotomize"
       ],
       [
         44,
@@ -48603,6 +48719,10 @@
         "take_down"
       ],
       [
+        46,
+        "autotomize"
+      ],
+      [
         52,
         "iron_tail"
       ],
@@ -48756,6 +48876,10 @@
       [
         40,
         "take_down"
+      ],
+      [
+        48,
+        "autotomize"
       ],
       [
         56,
@@ -48919,6 +49043,10 @@
       [
         15,
         "feint"
+      ],
+      [
+        17,
+        "force_palm"
       ],
       [
         20,
@@ -49111,6 +49239,10 @@
       [
         15,
         "feint"
+      ],
+      [
+        17,
+        "force_palm"
       ],
       [
         20,
@@ -50331,6 +50463,7 @@
       "weather_ball"
     ],
     "egg": [
+      "cotton_spore",
       "extrasensory",
       "life_dew",
       "razor_leaf",
@@ -52904,6 +53037,10 @@
         "bullet_seed"
       ],
       [
+        19,
+        "power_trip"
+      ],
+      [
         22,
         "ingrain"
       ],
@@ -52926,6 +53063,10 @@
       [
         42,
         "energy_ball"
+      ],
+      [
+        46,
+        "cotton_spore"
       ],
       [
         50,
@@ -53080,6 +53221,10 @@
         "bullet_seed"
       ],
       [
+        19,
+        "power_trip"
+      ],
+      [
         22,
         "ingrain"
       ],
@@ -53102,6 +53247,10 @@
       [
         44,
         "energy_ball"
+      ],
+      [
+        49,
+        "cotton_spore"
       ],
       [
         54,
@@ -53255,6 +53404,10 @@
         "sing"
       ],
       [
+        32,
+        "cotton_guard"
+      ],
+      [
         36,
         "take_down"
       ],
@@ -53404,6 +53557,10 @@
         "sing"
       ],
       [
+        32,
+        "cotton_guard"
+      ],
+      [
         38,
         "take_down"
       ],
@@ -53549,6 +53706,10 @@
       [
         19,
         "slash"
+      ],
+      [
+        22,
+        "power_trip"
       ],
       [
         26,
@@ -56358,6 +56519,7 @@
       "fake_out",
       "foul_play",
       "magic_coat",
+      "power_up_punch",
       "recover",
       "trick"
     ],
@@ -60915,6 +61077,10 @@
         "lava_plume"
       ],
       [
+        1,
+        "precipice_blades"
+      ],
+      [
         9,
         "earth_power"
       ],
@@ -61076,6 +61242,10 @@
       [
         1,
         "air_slash"
+      ],
+      [
+        1,
+        "dragon_ascent"
       ],
       [
         9,
@@ -61973,6 +62143,10 @@
       [
         57,
         "leaf_storm"
+      ],
+      [
+        63,
+        "headlong_rush"
       ]
     ],
     "evo_moves": [
@@ -62745,6 +62919,7 @@
     "egg": [
       "aqua_ring",
       "feather_dance",
+      "power_trip",
       "roost",
       "snore",
       "supersonic",
@@ -62898,6 +63073,7 @@
     "egg": [
       "aqua_ring",
       "feather_dance",
+      "power_trip",
       "roost",
       "snore",
       "supersonic",
@@ -63090,6 +63266,7 @@
     "egg": [
       "aqua_ring",
       "feather_dance",
+      "power_trip",
       "roost",
       "snore",
       "supersonic",
@@ -63780,6 +63957,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "rock_climb",
       "rock_smash",
       "scald",
       "shadow_ball",
@@ -64561,6 +64739,7 @@
       "weather_ball"
     ],
     "egg": [
+      "cotton_spore",
       "extrasensory",
       "life_dew",
       "razor_leaf",
@@ -65893,6 +66072,10 @@
         "fury_cutter"
       ],
       [
+        8,
+        "aromatic_mist"
+      ],
+      [
         12,
         "fell_stinger"
       ],
@@ -65919,6 +66102,14 @@
       [
         36,
         "toxic"
+      ],
+      [
+        40,
+        "attack_order"
+      ],
+      [
+        40,
+        "defend_order"
       ],
       [
         44,
@@ -66520,6 +66711,10 @@
         "morning_sun"
       ],
       [
+        5,
+        "leafage"
+      ],
+      [
         10,
         "growth"
       ],
@@ -66583,6 +66778,7 @@
     "egg": [
       "aromatherapy",
       "defense_curl",
+      "flower_shield",
       "heal_pulse",
       "healing_wish",
       "nature_power",
@@ -66654,6 +66850,14 @@
       [
         1,
         "sunny_day"
+      ],
+      [
+        1,
+        "flower_shield"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         15,
@@ -68080,6 +68284,10 @@
       [
         55,
         "dark_pulse"
+      ],
+      [
+        65,
+        "comeuppance"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -69736,6 +69944,10 @@
         "chatter"
       ],
       [
+        1,
+        "confide"
+      ],
+      [
         5,
         "peck"
       ],
@@ -70692,6 +70904,10 @@
         "quick_guard"
       ],
       [
+        36,
+        "force_palm"
+      ],
+      [
         40,
         "swords_dance"
       ],
@@ -70872,6 +71088,10 @@
       [
         16,
         "work_up"
+      ],
+      [
+        20,
+        "force_palm"
       ],
       [
         24,
@@ -72629,6 +72849,10 @@
         "powder_snow"
       ],
       [
+        5,
+        "leafage"
+      ],
+      [
         10,
         "mist"
       ],
@@ -72771,6 +72995,14 @@
       [
         1,
         "powder_snow"
+      ],
+      [
+        1,
+        "leafage"
+      ],
+      [
+        1,
+        "aurora_veil"
       ],
       [
         15,
@@ -73472,6 +73704,10 @@
       [
         68,
         "horn_drill"
+      ],
+      [
+        75,
+        "rock_wrecker"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -75413,6 +75649,10 @@
       ],
       [
         1,
+        "sacred_sword"
+      ],
+      [
+        1,
         "disarming_voice"
       ],
       [
@@ -75422,6 +75662,10 @@
       [
         1,
         "life_dew"
+      ],
+      [
+        1,
+        "aqua_cutter"
       ],
       [
         9,
@@ -76051,6 +76295,10 @@
       [
         47,
         "will_o_wisp"
+      ],
+      [
+        54,
+        "aurora_veil"
       ],
       [
         61,
@@ -77441,6 +77689,10 @@
       [
         72,
         "giga_impact"
+      ],
+      [
+        78,
+        "crush_grip"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -77581,6 +77833,10 @@
       [
         70,
         "earth_power"
+      ],
+      [
+        77,
+        "shadow_force"
       ],
       [
         84,
@@ -77733,6 +77989,14 @@
       [
         66,
         "future_sight"
+      ],
+      [
+        72,
+        "lunar_dance"
+      ],
+      [
+        72,
+        "lunar_blessing"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -77965,6 +78229,10 @@
         "tail_glow"
       ],
       [
+        1,
+        "heart_swap"
+      ],
+      [
         9,
         "charm"
       ],
@@ -78125,6 +78393,10 @@
       [
         57,
         "haze"
+      ],
+      [
+        66,
+        "dark_void"
       ],
       [
         75,
@@ -78594,6 +78866,10 @@
       [
         1,
         "flame_charge"
+      ],
+      [
+        1,
+        "v_create"
       ],
       [
         7,
@@ -79511,7 +79787,10 @@
       "level": 36,
       "into": "Emboar"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "arm_thrust"
+    ]
   },
   "Emboar": {
     "shape": "upright",
@@ -79552,6 +79831,10 @@
       [
         1,
         "ember"
+      ],
+      [
+        1,
+        "arm_thrust"
       ],
       [
         13,
@@ -79824,10 +80107,12 @@
     ],
     "egg": [
       "air_slash",
+      "aqua_cutter",
       "copycat",
       "detect",
       "knock_off",
       "night_slash",
+      "sacred_sword",
       "screech"
     ],
     "moves": [
@@ -79984,10 +80269,12 @@
     ],
     "egg": [
       "air_slash",
+      "aqua_cutter",
       "copycat",
       "detect",
       "knock_off",
       "night_slash",
+      "sacred_sword",
       "screech"
     ],
     "moves": [
@@ -80160,10 +80447,12 @@
     ],
     "egg": [
       "air_slash",
+      "aqua_cutter",
       "copycat",
       "detect",
       "knock_off",
       "night_slash",
+      "sacred_sword",
       "screech"
     ],
     "moves": [
@@ -80223,6 +80512,10 @@
         "bite"
       ],
       [
+        8,
+        "bide"
+      ],
+      [
         11,
         "detect"
       ],
@@ -80278,14 +80571,17 @@
     "learnset_version": "ultra-sun-ultra-moon",
     "tm": [
       "attract",
+      "confide",
       "double_team",
       "facade",
       "fling",
+      "frustration",
       "grass_knot",
       "hidden_power",
       "protect",
       "rain_dance",
       "rest",
+      "return",
       "round",
       "shadow_ball",
       "sleep_talk",
@@ -80301,6 +80597,7 @@
       "assurance",
       "bullet_seed",
       "flail",
+      "foresight",
       "iron_tail",
       "pursuit",
       "revenge",
@@ -80405,6 +80702,10 @@
         "bite"
       ],
       [
+        8,
+        "bide"
+      ],
+      [
         11,
         "detect"
       ],
@@ -80463,12 +80764,14 @@
     "learnset_version": "ultra-sun-ultra-moon",
     "tm": [
       "attract",
+      "confide",
       "double_team",
       "dream_eater",
       "facade",
       "flamethrower",
       "fling",
       "focus_blast",
+      "frustration",
       "giga_impact",
       "grass_knot",
       "hidden_power",
@@ -80478,6 +80781,7 @@
       "psych_up",
       "rain_dance",
       "rest",
+      "return",
       "round",
       "shadow_ball",
       "sleep_talk",
@@ -81351,6 +81655,10 @@
         "recycle"
       ],
       [
+        40,
+        "natural_gift"
+      ],
+      [
         43,
         "crunch"
       ]
@@ -81359,10 +81667,12 @@
     "tm": [
       "acrobatics",
       "attract",
+      "confide",
       "double_team",
       "energy_ball",
       "facade",
       "fling",
+      "frustration",
       "grass_knot",
       "hidden_power",
       "low_sweep",
@@ -81370,6 +81680,7 @@
       "payback",
       "protect",
       "rest",
+      "return",
       "rock_tomb",
       "round",
       "shadow_claw",
@@ -81389,6 +81700,7 @@
       "bullet_seed",
       "covet",
       "disarming_voice",
+      "grass_whistle",
       "leaf_storm",
       "low_kick",
       "magical_leaf",
@@ -81487,11 +81799,13 @@
       "acrobatics",
       "attract",
       "brick_break",
+      "confide",
       "double_team",
       "energy_ball",
       "facade",
       "fling",
       "focus_blast",
+      "frustration",
       "giga_impact",
       "grass_knot",
       "hidden_power",
@@ -81501,6 +81815,7 @@
       "payback",
       "protect",
       "rest",
+      "return",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -81638,6 +81953,10 @@
         "recycle"
       ],
       [
+        40,
+        "natural_gift"
+      ],
+      [
         43,
         "crunch"
       ]
@@ -81646,12 +81965,14 @@
     "tm": [
       "acrobatics",
       "attract",
+      "confide",
       "double_team",
       "facade",
       "fire_blast",
       "flame_charge",
       "flamethrower",
       "fling",
+      "frustration",
       "grass_knot",
       "hidden_power",
       "low_sweep",
@@ -81659,6 +81980,7 @@
       "payback",
       "protect",
       "rest",
+      "return",
       "rock_tomb",
       "round",
       "shadow_claw",
@@ -81777,6 +82099,7 @@
       "acrobatics",
       "attract",
       "brick_break",
+      "confide",
       "double_team",
       "facade",
       "fire_blast",
@@ -81784,6 +82107,7 @@
       "flamethrower",
       "fling",
       "focus_blast",
+      "frustration",
       "giga_impact",
       "grass_knot",
       "hidden_power",
@@ -81793,6 +82117,7 @@
       "payback",
       "protect",
       "rest",
+      "return",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -81931,6 +82256,10 @@
         "recycle"
       ],
       [
+        40,
+        "natural_gift"
+      ],
+      [
         43,
         "crunch"
       ]
@@ -81940,9 +82269,11 @@
       "acrobatics",
       "attract",
       "blizzard",
+      "confide",
       "double_team",
       "facade",
       "fling",
+      "frustration",
       "grass_knot",
       "hail",
       "hidden_power",
@@ -81952,6 +82283,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "return",
       "rock_tomb",
       "round",
       "scald",
@@ -82073,10 +82405,12 @@
       "attract",
       "blizzard",
       "brick_break",
+      "confide",
       "double_team",
       "facade",
       "fling",
       "focus_blast",
+      "frustration",
       "giga_impact",
       "grass_knot",
       "hail",
@@ -82088,6 +82422,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "return",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -83248,6 +83583,7 @@
       "substitute"
     ],
     "egg": [
+      "autotomize",
       "curse",
       "gravity",
       "take_down",
@@ -86500,6 +86836,10 @@
         "leech_seed"
       ],
       [
+        33,
+        "cotton_spore"
+      ],
+      [
         36,
         "energy_ball"
       ],
@@ -86510,6 +86850,10 @@
       [
         42,
         "endeavor"
+      ],
+      [
+        45,
+        "cotton_guard"
       ],
       [
         48,
@@ -86638,6 +86982,10 @@
       ],
       [
         1,
+        "cotton_spore"
+      ],
+      [
+        1,
         "giga_drain"
       ],
       [
@@ -86667,6 +87015,10 @@
       [
         1,
         "energy_ball"
+      ],
+      [
+        1,
+        "cotton_guard"
       ],
       [
         1,
@@ -87240,6 +87592,10 @@
         "leer"
       ],
       [
+        1,
+        "power_trip"
+      ],
+      [
         3,
         "sand_attack"
       ],
@@ -87407,6 +87763,10 @@
         "hone_claws"
       ],
       [
+        1,
+        "power_trip"
+      ],
+      [
         9,
         "sand_tomb"
       ],
@@ -87568,6 +87928,10 @@
       [
         1,
         "hone_claws"
+      ],
+      [
+        1,
+        "power_trip"
       ],
       [
         9,
@@ -88112,6 +88476,10 @@
         "petal_blizzard"
       ],
       [
+        40,
+        "cotton_spore"
+      ],
+      [
         44,
         "sunny_day"
       ],
@@ -88126,6 +88494,10 @@
       [
         56,
         "petal_dance"
+      ],
+      [
+        60,
+        "cotton_guard"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -88266,6 +88638,10 @@
       [
         44,
         "shell_smash"
+      ],
+      [
+        48,
+        "rock_wrecker"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -88408,6 +88784,10 @@
       [
         50,
         "shell_smash"
+      ],
+      [
+        56,
+        "rock_wrecker"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -89044,12 +89424,20 @@
         "will_o_wisp"
       ],
       [
+        20,
+        "crafty_shield"
+      ],
+      [
         24,
         "hex"
       ],
       [
         28,
         "mean_look"
+      ],
+      [
+        32,
+        "grudge"
       ],
       [
         36,
@@ -89194,12 +89582,20 @@
         "will_o_wisp"
       ],
       [
+        20,
+        "crafty_shield"
+      ],
+      [
         24,
         "hex"
       ],
       [
         28,
         "mean_look"
+      ],
+      [
+        32,
+        "grudge"
       ],
       [
         38,
@@ -90095,6 +90491,7 @@
       "venoshock"
     ],
     "egg": [
+      "autotomize",
       "curse",
       "haze",
       "rollout",
@@ -90118,7 +90515,10 @@
       "level": 36,
       "into": "Garbodor"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "corrosive_gas"
+    ]
   },
   "Garbodor": {
     "shape": "humanoid",
@@ -90281,7 +90681,10 @@
     "weight_kg": 107.3,
     "category": "Trash Heap Pokémon",
     "flavor": "The toxic liquid it launches from its right arm is so virulent that it can kill a weakened creature instantly.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "corrosive_gas"
+    ]
   },
   "Zorua": {
     "shape": "quadruped",
@@ -90668,6 +91071,10 @@
         "after_you"
       ],
       [
+        32,
+        "tail_slap"
+      ],
+      [
         36,
         "tickle"
       ],
@@ -90881,7 +91288,10 @@
     "weight_kg": 7.5,
     "category": "Scarf Pokémon",
     "flavor": "A special oil that seeps through their fur helps them avoid attacks. The oil fetches a high price at market.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "tail_slap"
+    ]
   },
   "Gothita": {
     "shape": "humanoid",
@@ -92251,6 +92661,8 @@
       "uproar"
     ],
     "egg": [
+      "aurora_veil",
+      "autotomize",
       "explosion",
       "ice_shard",
       "icicle_crash",
@@ -92846,7 +93258,10 @@
     "weight_kg": 92.5,
     "category": "Season Pokémon",
     "flavor": "They migrate according to the seasons, so some people call Sawsbuck the harbingers of spring.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "horn_leech"
+    ]
   },
   "Emolga": {
     "shape": "quadruped",
@@ -94680,12 +95095,20 @@
         "metal_sound"
       ],
       [
+        20,
+        "autotomize"
+      ],
+      [
         24,
         "discharge"
       ],
       [
         28,
         "screech"
+      ],
+      [
+        32,
+        "gear_grind"
       ],
       [
         36,
@@ -94805,12 +95228,20 @@
         "metal_sound"
       ],
       [
+        20,
+        "autotomize"
+      ],
+      [
         24,
         "discharge"
       ],
       [
         28,
         "screech"
+      ],
+      [
+        32,
+        "gear_grind"
       ],
       [
         36,
@@ -94927,6 +95358,10 @@
         "magnetic_flux"
       ],
       [
+        1,
+        "gear_up"
+      ],
+      [
         12,
         "charge_beam"
       ],
@@ -94935,12 +95370,20 @@
         "metal_sound"
       ],
       [
+        20,
+        "autotomize"
+      ],
+      [
         24,
         "discharge"
       ],
       [
         28,
         "screech"
+      ],
+      [
+        32,
+        "gear_grind"
       ],
       [
         36,
@@ -97182,6 +97625,7 @@
       "water_pulse"
     ],
     "egg": [
+      "aurora_veil",
       "explosion",
       "frost_breath"
     ],
@@ -97725,6 +98169,10 @@
         "quick_guard"
       ],
       [
+        25,
+        "force_palm"
+      ],
+      [
         30,
         "u_turn"
       ],
@@ -97877,6 +98325,10 @@
       [
         20,
         "wide_guard"
+      ],
+      [
+        25,
+        "force_palm"
       ],
       [
         30,
@@ -98886,6 +99338,10 @@
         "throat_chop"
       ],
       [
+        40,
+        "head_charge"
+      ],
+      [
         45,
         "swords_dance"
       ],
@@ -98947,6 +99403,7 @@
     ],
     "egg": [
       "belch",
+      "cotton_guard",
       "endeavor",
       "headbutt",
       "mud_slap",
@@ -99656,6 +100113,10 @@
       [
         30,
         "bind"
+      ],
+      [
+        35,
+        "fire_lash"
       ],
       [
         40,
@@ -100803,6 +101264,10 @@
         "take_down"
       ],
       [
+        49,
+        "sacred_sword"
+      ],
+      [
         56,
         "swords_dance"
       ],
@@ -100952,6 +101417,10 @@
         "take_down"
       ],
       [
+        49,
+        "sacred_sword"
+      ],
+      [
         56,
         "swords_dance"
       ],
@@ -101096,6 +101565,10 @@
       [
         42,
         "synthesis"
+      ],
+      [
+        49,
+        "sacred_sword"
       ],
       [
         56,
@@ -101744,6 +102217,10 @@
         "thunderbolt"
       ],
       [
+        48,
+        "fusion_bolt"
+      ],
+      [
         56,
         "hyper_voice"
       ],
@@ -101758,6 +102235,10 @@
       [
         80,
         "outrage"
+      ],
+      [
+        88,
+        "bolt_strike"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -102242,6 +102723,10 @@
       [
         42,
         "take_down"
+      ],
+      [
+        49,
+        "sacred_sword"
       ],
       [
         56,
@@ -106034,6 +106519,10 @@
         "double_edge"
       ],
       [
+        42,
+        "horn_leech"
+      ],
+      [
         45,
         "leaf_blade"
       ]
@@ -106189,6 +106678,10 @@
         "double_edge"
       ],
       [
+        47,
+        "horn_leech"
+      ],
+      [
         55,
         "leaf_blade"
       ],
@@ -106300,6 +106793,10 @@
         "leer"
       ],
       [
+        4,
+        "arm_thrust"
+      ],
+      [
         8,
         "taunt"
       ],
@@ -106392,6 +106889,7 @@
       "zen_headbutt"
     ],
     "egg": [
+      "power_trip",
       "quash",
       "quick_guard",
       "seismic_toss",
@@ -106461,6 +106959,10 @@
       [
         1,
         "taunt"
+      ],
+      [
+        1,
+        "arm_thrust"
       ],
       [
         1,
@@ -106676,22 +107178,29 @@
       [
         42,
         "sucker_punch"
+      ],
+      [
+        48,
+        "cotton_guard"
       ]
     ],
     "learnset_version": "ultra-sun-ultra-moon",
     "tm": [
       "attract",
       "charge_beam",
+      "confide",
       "dark_pulse",
       "double_team",
       "echoed_voice",
       "facade",
+      "frustration",
       "giga_impact",
       "grass_knot",
       "hidden_power",
       "protect",
       "rain_dance",
       "rest",
+      "return",
       "roar",
       "round",
       "sleep_talk",
@@ -106707,6 +107216,7 @@
       "work_up"
     ],
     "egg": [
+      "captivate",
       "mimic",
       "refresh",
       "role_play",
@@ -107084,6 +107594,10 @@
         "shadow_sneak"
       ],
       [
+        8,
+        "autotomize"
+      ],
+      [
         12,
         "aerial_ace"
       ],
@@ -107118,6 +107632,10 @@
       [
         44,
         "swords_dance"
+      ],
+      [
+        48,
+        "sacred_sword"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -107217,6 +107735,10 @@
         "shadow_sneak"
       ],
       [
+        1,
+        "autotomize"
+      ],
+      [
         12,
         "aerial_ace"
       ],
@@ -107251,6 +107773,10 @@
       [
         50,
         "swords_dance"
+      ],
+      [
+        56,
+        "sacred_sword"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -107384,7 +107910,19 @@
       ],
       [
         1,
+        "autotomize"
+      ],
+      [
+        1,
         "retaliate"
+      ],
+      [
+        1,
+        "sacred_sword"
+      ],
+      [
+        1,
+        "kings_shield"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -107439,7 +107977,10 @@
     "weight_kg": 53.0,
     "category": "Royal Sword Pokémon",
     "flavor": "Its potent spectral powers allow it to manipulate others. It once used its powers to force people and Pokémon to build a kingdom to its liking.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "kings_shield"
+    ]
   },
   "Spritzee": {
     "shape": "arms",
@@ -107638,6 +108179,10 @@
         "fairy_wind"
       ],
       [
+        1,
+        "aromatic_mist"
+      ],
+      [
         9,
         "disarming_voice"
       ],
@@ -107808,6 +108353,10 @@
         "string_shot"
       ],
       [
+        24,
+        "cotton_spore"
+      ],
+      [
         27,
         "energy_ball"
       ],
@@ -107818,6 +108367,10 @@
       [
         33,
         "play_rough"
+      ],
+      [
+        36,
+        "cotton_guard"
       ],
       [
         39,
@@ -107947,6 +108500,10 @@
         "string_shot"
       ],
       [
+        24,
+        "cotton_spore"
+      ],
+      [
         27,
         "energy_ball"
       ],
@@ -107957,6 +108514,10 @@
       [
         33,
         "play_rough"
+      ],
+      [
+        36,
+        "cotton_guard"
       ],
       [
         39,
@@ -109357,6 +109918,10 @@
         "thunderbolt"
       ],
       [
+        40,
+        "electrify"
+      ],
+      [
         44,
         "thunder"
       ]
@@ -109508,6 +110073,10 @@
       [
         1,
         "parabolic_charge"
+      ],
+      [
+        1,
+        "electrify"
       ],
       [
         1,
@@ -110056,6 +110625,7 @@
       "zen_headbutt"
     ],
     "egg": [
+      "aurora_veil",
       "discharge",
       "haze",
       "mirror_coat",
@@ -110504,6 +111074,10 @@
       [
         40,
         "swords_dance"
+      ],
+      [
+        44,
+        "flying_press"
       ],
       [
         48,
@@ -111388,6 +111962,10 @@
         "torment"
       ],
       [
+        16,
+        "fairy_lock"
+      ],
+      [
         20,
         "metal_sound"
       ],
@@ -111520,6 +112098,10 @@
         "astonish"
       ],
       [
+        4,
+        "branch_poke"
+      ],
+      [
         8,
         "leech_seed"
       ],
@@ -111540,6 +112122,10 @@
         "growth"
       ],
       [
+        28,
+        "horn_leech"
+      ],
+      [
         32,
         "curse"
       ],
@@ -111558,6 +112144,10 @@
       [
         48,
         "destiny_bond"
+      ],
+      [
+        52,
+        "forests_curse"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -111675,6 +112265,10 @@
         "astonish"
       ],
       [
+        1,
+        "branch_poke"
+      ],
+      [
         12,
         "confuse_ray"
       ],
@@ -111689,6 +112283,10 @@
       [
         24,
         "growth"
+      ],
+      [
+        28,
+        "horn_leech"
       ],
       [
         32,
@@ -111709,6 +112307,10 @@
       [
         48,
         "destiny_bond"
+      ],
+      [
+        52,
+        "forests_curse"
       ]
     ],
     "evo_moves": [
@@ -112261,6 +112863,7 @@
       "tera_blast"
     ],
     "egg": [
+      "aurora_veil",
       "mirror_coat",
       "mist"
     ],
@@ -112836,6 +113439,10 @@
         "psych_up"
       ],
       [
+        35,
+        "horn_leech"
+      ],
+      [
         40,
         "misty_terrain"
       ],
@@ -112846,6 +113453,10 @@
       [
         50,
         "take_down"
+      ],
+      [
+        55,
+        "geomancy"
       ],
       [
         60,
@@ -113140,6 +113751,14 @@
       ],
       [
         1,
+        "thousand_arrows"
+      ],
+      [
+        1,
+        "thousand_waves"
+      ],
+      [
+        1,
         "core_enforcer"
       ],
       [
@@ -113161,6 +113780,10 @@
       [
         40,
         "dragon_pulse"
+      ],
+      [
+        48,
+        "lands_wrath"
       ],
       [
         56,
@@ -113281,6 +113904,10 @@
       [
         1,
         "harden"
+      ],
+      [
+        1,
+        "diamond_storm"
       ],
       [
         7,
@@ -113794,6 +114421,10 @@
         "growl"
       ],
       [
+        3,
+        "leafage"
+      ],
+      [
         6,
         "astonish"
       ],
@@ -113947,6 +114578,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         9,
@@ -114117,6 +114752,10 @@
         "phantom_force"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         9,
         "peck"
       ],
@@ -114240,7 +114879,10 @@
     "weight_kg": 36.6,
     "category": "Arrow Quill Pokémon",
     "flavor": "The air stored inside the rachises of Decidueye's feathers insulates the Pokémon against Hisui's extreme cold. This is firm proof that evolution can be influenced by environment.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "spirit_shackle"
+    ]
   },
   "Litten": {
     "shape": "quadruped",
@@ -114368,7 +115010,8 @@
     ],
     "egg": [
       "fake_out",
-      "parting_shot"
+      "parting_shot",
+      "power_trip"
     ],
     "moves": [
       "flare_blitz",
@@ -114516,7 +115159,8 @@
     ],
     "egg": [
       "fake_out",
-      "parting_shot"
+      "parting_shot",
+      "power_trip"
     ],
     "moves": [
       "flare_blitz",
@@ -114699,6 +115343,7 @@
       "fake_out",
       "growl",
       "parting_shot",
+      "power_trip",
       "scratch",
       "throat_chop"
     ],
@@ -115623,7 +116268,10 @@
     "weight_kg": 26.0,
     "category": "Cannon Pokémon",
     "flavor": "Known for forming harmonious couples, this Pokémon is brought to wedding ceremonies as a good luck charm.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "beak_blast"
+    ]
   },
   "Yungoos": {
     "shape": "quadruped",
@@ -116561,6 +117209,10 @@
         "reversal"
       ],
       [
+        37,
+        "ice_hammer"
+      ],
+      [
         42,
         "iron_defense"
       ],
@@ -116914,6 +117566,7 @@
       "u_turn"
     ],
     "egg": [
+      "aromatic_mist",
       "moonblast",
       "sticky_web"
     ],
@@ -117067,6 +117720,7 @@
       "u_turn"
     ],
     "egg": [
+      "aromatic_mist",
       "moonblast",
       "sticky_web"
     ],
@@ -117289,6 +117943,10 @@
       [
         1,
         "quick_guard"
+      ],
+      [
+        1,
+        "accelerock"
       ],
       [
         12,
@@ -117818,7 +118476,10 @@
     "weight_kg": 14.5,
     "category": "Brutal Star Pokémon",
     "flavor": "Within the poison sac in its body is a poison so toxic that Pokémon as large as Wailord will still be suffering three days after it first takes effect.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "baneful_bunker"
+    ]
   },
   "Mudbray": {
     "shape": "quadruped",
@@ -118433,6 +119094,10 @@
         "fury_cutter"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         5,
         "growth"
       ],
@@ -118576,6 +119241,10 @@
       [
         1,
         "night_slash"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         15,
@@ -119277,7 +119946,10 @@
     "weight_kg": 22.2,
     "category": "Toxic Lizard Pokémon",
     "flavor": "The winner of competitions between Salazzle is decided by which one has the most male Salandit with it.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "fire_lash"
+    ]
   },
   "Stufful": {
     "shape": "quadruped",
@@ -119402,6 +120074,7 @@
     ],
     "egg": [
       "defense_curl",
+      "force_palm",
       "rollout",
       "stomp"
     ],
@@ -119647,6 +120320,10 @@
       [
         28,
         "teeter_dance"
+      ],
+      [
+        32,
+        "aromatic_mist"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -119770,6 +120447,10 @@
       [
         34,
         "teeter_dance"
+      ],
+      [
+        40,
+        "aromatic_mist"
       ],
       [
         46,
@@ -119906,6 +120587,10 @@
         "teeter_dance"
       ],
       [
+        40,
+        "aromatic_mist"
+      ],
+      [
         46,
         "leaf_storm"
       ],
@@ -119973,7 +120658,10 @@
     "weight_kg": 21.4,
     "category": "Fruit Pokémon",
     "flavor": "A kick from the hardened tips of this Pokémon’s legs leaves a wound in the opponent’s body and soul that will never heal.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "trop_kick"
+    ]
   },
   "Comfey": {
     "shape": "ball",
@@ -120046,6 +120734,10 @@
       [
         27,
         "sweet_kiss"
+      ],
+      [
+        30,
+        "floral_healing"
       ],
       [
         33,
@@ -120212,6 +120904,10 @@
       [
         45,
         "psychic"
+      ],
+      [
+        50,
+        "instruct"
       ],
       [
         55,
@@ -121372,6 +122068,10 @@
         "iron_head"
       ],
       [
+        1,
+        "multi_attack"
+      ],
+      [
         15,
         "double_hit"
       ],
@@ -121485,7 +122185,10 @@
     "weight_kg": 100.5,
     "category": "Synthetic Pokémon",
     "flavor": "The final factor needed to release this Pokémon’s true power was a strong bond with a Trainer it trusts.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "multi_attack"
+    ]
   },
   "Minior": {
     "shape": "ball",
@@ -122012,6 +122715,10 @@
       [
         35,
         "magnet_rise"
+      ],
+      [
+        40,
+        "zing_zap"
       ],
       [
         45,
@@ -122656,6 +123363,10 @@
         "metal_sound"
       ],
       [
+        52,
+        "anchor_shot"
+      ],
+      [
         56,
         "energy_ball"
       ],
@@ -123134,6 +123845,10 @@
         "close_combat"
       ],
       [
+        68,
+        "clangorous_soul"
+      ],
+      [
         76,
         "boomburst"
       ]
@@ -123450,6 +124165,10 @@
         "flatter"
       ],
       [
+        30,
+        "aromatic_mist"
+      ],
+      [
         35,
         "sweet_scent"
       ],
@@ -123580,6 +124299,10 @@
         "rock_smash"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         5,
         "withdraw"
       ],
@@ -123606,6 +124329,10 @@
       [
         35,
         "scary_face"
+      ],
+      [
+        40,
+        "horn_leech"
       ],
       [
         45,
@@ -124146,7 +124873,10 @@
     "weight_kg": 230.0,
     "category": "Sunne Pokémon",
     "flavor": "Solgaleo was once known as the Beast That Devours the Sun. Energy in the form of light radiates boundlessly from it.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "sunsteel_strike"
+    ]
   },
   "Lunala": {
     "shape": "wings",
@@ -124447,6 +125177,7 @@
       "zen_headbutt"
     ],
     "tutor": [
+      "corrosive_gas",
       "meteor_beam"
     ],
     "moves": [
@@ -124495,6 +125226,10 @@
       [
         1,
         "harden"
+      ],
+      [
+        1,
+        "power_up_punch"
       ],
       [
         5,
@@ -124670,6 +125405,10 @@
       [
         25,
         "double_kick"
+      ],
+      [
+        30,
+        "triple_kick"
       ],
       [
         35,
@@ -124963,6 +125702,10 @@
         "ingrain"
       ],
       [
+        30,
+        "autotomize"
+      ],
+      [
         35,
         "giga_drain"
       ],
@@ -125133,6 +125876,10 @@
       [
         55,
         "leaf_blade"
+      ],
+      [
+        60,
+        "sacred_sword"
       ],
       [
         65,
@@ -125332,6 +126079,7 @@
       "thief"
     ],
     "tutor": [
+      "corrosive_gas",
       "draco_meteor",
       "lash_out",
       "steel_roller"
@@ -125762,6 +126510,10 @@
         "shadow_punch"
       ],
       [
+        27,
+        "force_palm"
+      ],
+      [
         36,
         "assurance"
       ],
@@ -125776,6 +126528,10 @@
       [
         63,
         "psych_up"
+      ],
+      [
+        72,
+        "spectral_thief"
       ],
       [
         81,
@@ -126225,6 +126981,10 @@
         "wide_guard"
       ],
       [
+        35,
+        "autotomize"
+      ],
+      [
         40,
         "rock_blast"
       ],
@@ -126513,6 +127273,10 @@
         "snarl"
       ],
       [
+        1,
+        "power_up_punch"
+      ],
+      [
         8,
         "fury_swipes"
       ],
@@ -126551,6 +127315,10 @@
       [
         80,
         "agility"
+      ],
+      [
+        88,
+        "plasma_fists"
       ],
       [
         96,
@@ -126805,6 +127573,10 @@
         "superpower"
       ],
       [
+        88,
+        "double_iron_bash"
+      ],
+      [
         96,
         "hyper_beam"
       ]
@@ -126905,6 +127677,10 @@
       [
         1,
         "growl"
+      ],
+      [
+        6,
+        "branch_poke"
       ],
       [
         8,
@@ -127044,6 +127820,10 @@
       [
         1,
         "taunt"
+      ],
+      [
+        1,
+        "branch_poke"
       ],
       [
         12,
@@ -127198,6 +127978,10 @@
         "grassy_terrain"
       ],
       [
+        1,
+        "branch_poke"
+      ],
+      [
         12,
         "razor_leaf"
       ],
@@ -127310,7 +128094,10 @@
     "weight_kg": 90.0,
     "category": "Drummer Pokémon",
     "flavor": "The one with the best drumming techniques becomes the boss of the troop. It has a gentle disposition and values harmony among its group.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "drum_beating"
+    ]
   },
   "Scorbunny": {
     "shape": "upright",
@@ -127662,6 +128449,10 @@
       [
         54,
         "double_edge"
+      ],
+      [
+        62,
+        "court_change"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -127741,7 +128532,10 @@
     "weight_kg": 33.0,
     "category": "Striker Pokémon",
     "flavor": "It’s skilled at both offense and defense, and it gets pumped up when cheered on. But if it starts showboating, it could put itself in a tough spot.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "pyro_ball"
+    ]
   },
   "Sobble": {
     "shape": "quadruped",
@@ -128487,6 +129281,10 @@
         "peck"
       ],
       [
+        4,
+        "power_trip"
+      ],
+      [
         8,
         "hone_claws"
       ],
@@ -128616,6 +129414,10 @@
       [
         1,
         "hone_claws"
+      ],
+      [
+        1,
+        "power_trip"
       ],
       [
         12,
@@ -128749,6 +129551,10 @@
       [
         1,
         "hone_claws"
+      ],
+      [
+        1,
+        "power_trip"
       ],
       [
         12,
@@ -129251,6 +130057,10 @@
         "night_slash"
       ],
       [
+        32,
+        "tail_slap"
+      ],
+      [
         36,
         "foul_play"
       ]
@@ -129279,6 +130089,7 @@
       "snore",
       "substitute",
       "swift",
+      "tail_slap",
       "taunt",
       "thief"
     ],
@@ -129380,6 +130191,10 @@
         "night_slash"
       ],
       [
+        40,
+        "tail_slap"
+      ],
+      [
         46,
         "foul_play"
       ],
@@ -129426,6 +130241,7 @@
       "snore",
       "substitute",
       "swift",
+      "tail_slap",
       "taunt",
       "thief",
       "thunder_fang",
@@ -129482,6 +130298,10 @@
       [
         1,
         "sing"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         4,
@@ -129611,11 +130431,19 @@
       ],
       [
         1,
+        "cotton_spore"
+      ],
+      [
+        1,
         "rapid_spin"
       ],
       [
         1,
         "sweet_scent"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         12,
@@ -129644,6 +130472,10 @@
       [
         46,
         "leaf_storm"
+      ],
+      [
+        52,
+        "cotton_guard"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -129693,7 +130525,10 @@
     "weight_kg": 2.5,
     "category": "Cotton Bloom Pokémon",
     "flavor": "The cotton on the head of this Pokémon can be spun into a glossy, gorgeous yarn—a Galar regional specialty.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "cotton_spore"
+    ]
   },
   "Wooloo": {
     "shape": "quadruped",
@@ -129762,6 +130597,10 @@
       [
         32,
         "reversal"
+      ],
+      [
+        36,
+        "cotton_guard"
       ],
       [
         40,
@@ -129884,6 +130723,10 @@
         "reversal"
       ],
       [
+        44,
+        "cotton_guard"
+      ],
+      [
         50,
         "double_edge"
       ],
@@ -129993,6 +130836,10 @@
       [
         28,
         "counter"
+      ],
+      [
+        35,
+        "jaw_lock"
       ],
       [
         42,
@@ -130123,6 +130970,10 @@
       [
         30,
         "counter"
+      ],
+      [
+        39,
+        "jaw_lock"
       ],
       [
         48,
@@ -130379,6 +131230,10 @@
       [
         1,
         "bite"
+      ],
+      [
+        1,
+        "electrify"
       ],
       [
         1,
@@ -131040,6 +131895,10 @@
         "dragon_pulse"
       ],
       [
+        32,
+        "grav_apple"
+      ],
+      [
         36,
         "iron_defense"
       ],
@@ -131665,6 +132524,7 @@
     ],
     "egg": [
       "aerial_ace",
+      "aqua_cutter",
       "aqua_ring",
       "belch",
       "defog",
@@ -132299,6 +133159,10 @@
         "crunch"
       ],
       [
+        45,
+        "fire_lash"
+      ],
+      [
         50,
         "lunge"
       ],
@@ -132432,6 +133296,10 @@
       [
         46,
         "crunch"
+      ],
+      [
+        53,
+        "fire_lash"
       ],
       [
         60,
@@ -132604,6 +133472,7 @@
     "egg": [
       "circle_throw",
       "pain_split",
+      "power_up_punch",
       "seismic_toss",
       "soak",
       "sucker_punch"
@@ -132816,6 +133685,10 @@
         "astonish"
       ],
       [
+        6,
+        "aromatic_mist"
+      ],
+      [
         12,
         "mega_drain"
       ],
@@ -132945,6 +133818,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "aromatic_mist"
       ],
       [
         1,
@@ -133091,6 +133968,10 @@
         "disarming_voice"
       ],
       [
+        15,
+        "aromatic_mist"
+      ],
+      [
         20,
         "psybeam"
       ],
@@ -133223,6 +134104,10 @@
       [
         1,
         "life_dew"
+      ],
+      [
+        15,
+        "aromatic_mist"
       ],
       [
         20,
@@ -133361,6 +134246,10 @@
         "life_dew"
       ],
       [
+        15,
+        "aromatic_mist"
+      ],
+      [
         20,
         "psybeam"
       ],
@@ -133489,6 +134378,10 @@
       [
         1,
         "fake_out"
+      ],
+      [
+        1,
+        "confide"
       ],
       [
         4,
@@ -133636,6 +134529,10 @@
         "flatter"
       ],
       [
+        1,
+        "confide"
+      ],
+      [
         12,
         "fake_tears"
       ],
@@ -133728,7 +134625,10 @@
       "level": 42,
       "into": "Grimmsnarl"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "false_surrender"
+    ]
   },
   "Grimmsnarl": {
     "shape": "humanoid",
@@ -133774,6 +134674,14 @@
       [
         1,
         "bulk_up"
+      ],
+      [
+        1,
+        "confide"
+      ],
+      [
+        1,
+        "false_surrender"
       ],
       [
         12,
@@ -133882,7 +134790,10 @@
     "weight_kg": 61.0,
     "category": "Bulk Up Pokémon",
     "flavor": "Its hairs work like muscle fibers. When its hairs unfurl, they latch on to opponents, ensnaring them as tentacles would.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "spirit_break"
+    ]
   },
   "Obstagoon": {
     "shape": "upright",
@@ -134334,6 +135245,10 @@
         "night_shade"
       ],
       [
+        50,
+        "grudge"
+      ],
+      [
         55,
         "mirror_coat"
       ]
@@ -134510,6 +135425,10 @@
       [
         65,
         "brave_bird"
+      ],
+      [
+        70,
+        "meteor_assault"
       ]
     ],
     "evo_moves": [
@@ -134869,6 +135788,10 @@
         "brutal_swing"
       ],
       [
+        20,
+        "crafty_shield"
+      ],
+      [
         24,
         "hex"
       ],
@@ -135017,6 +135940,10 @@
         "tackle"
       ],
       [
+        1,
+        "aromatic_mist"
+      ],
+      [
         5,
         "sweet_kiss"
       ],
@@ -135137,6 +136064,10 @@
         "sweet_scent"
       ],
       [
+        1,
+        "aromatic_mist"
+      ],
+      [
         15,
         "draining_kiss"
       ],
@@ -135226,7 +136157,10 @@
     "weight_kg": 0.5,
     "category": "Cream Pokémon",
     "flavor": "When Alcremie is content, the cream it secretes from its hands becomes sweeter and richer.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "decorate"
+    ]
   },
   "Falinks": {
     "shape": "heads",
@@ -135442,6 +136376,10 @@
       [
         45,
         "poison_jab"
+      ],
+      [
+        50,
+        "zing_zap"
       ],
       [
         55,
@@ -135666,6 +136604,10 @@
       [
         32,
         "bug_buzz"
+      ],
+      [
+        36,
+        "aurora_veil"
       ],
       [
         40,
@@ -135949,6 +136891,10 @@
         "snowscape"
       ],
       [
+        48,
+        "aurora_veil"
+      ],
+      [
         54,
         "surf"
       ],
@@ -136204,6 +137150,10 @@
         "leer"
       ],
       [
+        10,
+        "power_trip"
+      ],
+      [
         15,
         "quick_attack"
       ],
@@ -136234,6 +137184,10 @@
       [
         50,
         "crunch"
+      ],
+      [
+        55,
+        "aura_wheel"
       ],
       [
         60,
@@ -136684,6 +137638,10 @@
         "discharge"
       ],
       [
+        63,
+        "bolt_beak"
+      ],
+      [
         70,
         "dragon_pulse"
       ],
@@ -136827,6 +137785,10 @@
       [
         56,
         "discharge"
+      ],
+      [
+        63,
+        "bolt_beak"
       ],
       [
         70,
@@ -136973,6 +137935,10 @@
         "crunch"
       ],
       [
+        63,
+        "fishious_rend"
+      ],
+      [
         70,
         "dragon_pulse"
       ],
@@ -137099,6 +138065,10 @@
         "bite"
       ],
       [
+        35,
+        "aurora_veil"
+      ],
+      [
         42,
         "freeze_dry"
       ],
@@ -137109,6 +138079,10 @@
       [
         56,
         "crunch"
+      ],
+      [
+        63,
+        "fishious_rend"
       ],
       [
         70,
@@ -137749,7 +138723,10 @@
     "weight_kg": 50.0,
     "category": "Stealth Pokémon",
     "flavor": "Apparently the Dreepy inside Dragapult’s horns eagerly look forward to being launched out at Mach speeds.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "dragon_darts"
+    ]
   },
   "Zacian": {
     "shape": "quadruped",
@@ -137795,6 +138772,10 @@
       [
         1,
         "quick_guard"
+      ],
+      [
+        1,
+        "sacred_sword"
       ],
       [
         11,
@@ -138483,7 +139464,10 @@
     "weight_kg": 105.0,
     "category": "Wushu Pokémon",
     "flavor": "Inhabiting the mountains of a distant region, this Pokémon races across sheer cliffs, training its legs and refining its moves.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "wicked_blow"
+    ]
   },
   "Zarude": {
     "shape": "upright",
@@ -138574,6 +139558,10 @@
       [
         84,
         "power_whip"
+      ],
+      [
+        90,
+        "jungle_healing"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -139516,7 +140504,10 @@
     "weight_kg": 95.1,
     "category": "Big Horn Pokémon",
     "flavor": "The black orbs shine with an uncanny light when the Pokémon is erecting invisible barriers. The fur shed from its beard retains heat well and is a highly useful material for winter clothing.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "psyshield_bash"
+    ]
   },
   "Kleavor": {
     "shape": "bug-wings",
@@ -139665,7 +140656,10 @@
     "weight_kg": 89.0,
     "category": "Axe Pokémon",
     "flavor": "A violent creature that fells towering trees with its crude axes and shields itself with hard stone. If one should chance upon this Pokémon in the wilds, one's only recourse is to flee.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "stone_axe"
+    ]
   },
   "Ursaluna": {
     "shape": "quadruped",
@@ -139843,7 +140837,10 @@
     "weight_kg": 290.0,
     "category": "Peat Pokémon",
     "flavor": "I believe it was Hisui's swampy terrain that gave Ursaluna its burly physique and newfound capacity to manipulate peat at will.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "headlong_rush"
+    ]
   },
   "Basculegion": {
     "shape": "fish",
@@ -139997,7 +140994,8 @@
       "zen_headbutt"
     ],
     "egg": [
-      "endeavor"
+      "endeavor",
+      "last_respects"
     ],
     "moves": [
       "head_smash",
@@ -140175,7 +141173,10 @@
     "weight_kg": 43.0,
     "category": "Free Climb Pokémon",
     "flavor": "Because of Sneasler's virulent poison and daunting physical prowess, no other species could hope to best it on the frozen highlands. Preferring solitude, this species does not form packs.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "dire_claw"
+    ]
   },
   "Overqwil": {
     "shape": "fish",
@@ -140237,6 +141238,10 @@
       [
         24,
         "brine"
+      ],
+      [
+        28,
+        "barb_barrage"
       ],
       [
         32,
@@ -140534,6 +141539,10 @@
         "tail_whip"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         7,
         "bite"
       ],
@@ -140672,6 +141681,10 @@
       [
         1,
         "tail_whip"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         7,
@@ -140817,6 +141830,10 @@
         "tail_whip"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         7,
         "bite"
       ],
@@ -140955,7 +141972,10 @@
     "weight_kg": 31.2,
     "category": "Magician Pokémon",
     "flavor": "With skillful misdirection, it rigs foes with pollen-packed flower bombs. Meowscarada sets off the bombs before its foes realize what’s going on.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "flower_trick"
+    ]
   },
   "Fuecoco": {
     "shape": "upright",
@@ -141477,6 +142497,10 @@
         "double_hit"
       ],
       [
+        21,
+        "aqua_cutter"
+      ],
+      [
         24,
         "air_slash"
       ],
@@ -141614,6 +142638,10 @@
       [
         19,
         "low_sweep"
+      ],
+      [
+        23,
+        "aqua_cutter"
       ],
       [
         27,
@@ -141759,6 +142787,10 @@
         "low_sweep"
       ],
       [
+        21,
+        "aqua_cutter"
+      ],
+      [
         27,
         "air_slash"
       ],
@@ -141863,7 +142895,10 @@
     "weight_kg": 61.9,
     "category": "Dancer Pokémon",
     "flavor": "Dancing in ways that evoke far-away places, this Pokémon mesmerizes all that see it. Flourishes of its decorative water feathers slice into its foes.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "aqua_step"
+    ]
   },
   "Lechonk": {
     "shape": "quadruped",
@@ -143043,7 +144078,10 @@
       "method": "level-up",
       "into": "Pawmot"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "arm_thrust"
+    ]
   },
   "Pawmot": {
     "shape": "upright",
@@ -143115,6 +144153,10 @@
         "spark"
       ],
       [
+        25,
+        "arm_thrust"
+      ],
+      [
         29,
         "thunder_wave"
       ],
@@ -143137,6 +144179,10 @@
       [
         54,
         "agility"
+      ],
+      [
+        60,
+        "double_shock"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -143298,6 +144344,10 @@
       [
         41,
         "copycat"
+      ],
+      [
+        46,
+        "population_bomb"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -143455,6 +144505,10 @@
       [
         46,
         "copycat"
+      ],
+      [
+        53,
+        "population_bomb"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -144671,7 +145725,10 @@
       "level": 38,
       "into": "Garganacl"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "salt_cure"
+    ]
   },
   "Garganacl": {
     "shape": "humanoid",
@@ -144740,6 +145797,10 @@
       [
         16,
         "headbutt"
+      ],
+      [
+        24,
+        "salt_cure"
       ],
       [
         30,
@@ -145198,6 +146259,10 @@
       [
         42,
         "ally_switch"
+      ],
+      [
+        48,
+        "bitter_blade"
       ],
       [
         56,
@@ -145930,6 +146995,10 @@
         "reversal"
       ],
       [
+        43,
+        "jaw_lock"
+      ],
+      [
         49,
         "double_edge"
       ]
@@ -146076,6 +147145,10 @@
         "reversal"
       ],
       [
+        48,
+        "jaw_lock"
+      ],
+      [
         55,
         "double_edge"
       ],
@@ -146141,7 +147214,10 @@
     "weight_kg": 61.0,
     "category": "Boss Pokémon",
     "flavor": "Mabosstiff loves playing with children. Though usually gentle, it takes on an intimidating look when protecting its family.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "comeuppance"
+    ]
   },
   "Shroodle": {
     "shape": "quadruped",
@@ -146456,7 +147532,10 @@
     "weight_kg": 27.2,
     "category": "Toxic Monkey Pokémon",
     "flavor": "Each Grafaiai paints its own individual pattern, and it will paint that same pattern over and over again throughout its life.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "doodle"
+    ]
   },
   "Bramblin": {
     "shape": "ball",
@@ -147279,6 +148358,10 @@
         "leer"
       ],
       [
+        1,
+        "leafage"
+      ],
+      [
         4,
         "bite"
       ],
@@ -147414,6 +148497,10 @@
       [
         1,
         "fire_fang"
+      ],
+      [
+        1,
+        "leafage"
       ],
       [
         4,
@@ -148254,6 +149341,7 @@
     ],
     "egg": [
       "feint",
+      "ice_hammer",
       "quash"
     ],
     "moves": [
@@ -148576,7 +149664,10 @@
     "weight_kg": 112.8,
     "category": "Hammer Pokémon",
     "flavor": "The hammer tops 220 pounds, yet it gets swung around easily by Tinkaton as it steals whatever it pleases and carries its plunder back home.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "gigaton_hammer"
+    ]
   },
   "Wiglett": {
     "shape": "blob",
@@ -148775,6 +149866,10 @@
       [
         24,
         "headbutt"
+      ],
+      [
+        30,
+        "triple_dive"
       ],
       [
         36,
@@ -148991,6 +150086,7 @@
     ],
     "egg": [
       "feather_dance",
+      "power_trip",
       "roost",
       "sky_attack",
       "sucker_punch"
@@ -149186,6 +150282,10 @@
       [
         1,
         "water_gun"
+      ],
+      [
+        1,
+        "jet_punch"
       ],
       [
         7,
@@ -149394,6 +150494,10 @@
         "uproar"
       ],
       [
+        46,
+        "spin_out"
+      ],
+      [
         50,
         "gunk_shot"
       ]
@@ -149546,6 +150650,10 @@
       [
         46,
         "uproar"
+      ],
+      [
+        52,
+        "spin_out"
       ],
       [
         58,
@@ -150213,7 +151321,10 @@
     "weight_kg": 45.0,
     "category": "Ore Pokémon",
     "flavor": "Glimmora’s petals are made of crystallized poison energy. It has recently become evident that these petals resemble Tera Jewels.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "mortal_spin"
+    ]
   },
   "Greavard": {
     "shape": "quadruped",
@@ -150522,7 +151633,10 @@
     "weight_kg": 15.0,
     "category": "Ghost Dog Pokémon",
     "flavor": "A lovingly mourned Pokémon was reborn as Houndstone. It doesn’t like anyone touching the protuberance atop its head.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "last_respects"
+    ]
   },
   "Flamigo": {
     "shape": "wings",
@@ -151037,6 +152151,14 @@
         "slash"
       ],
       [
+        25,
+        "aqua_cutter"
+      ],
+      [
+        30,
+        "fillet_away"
+      ],
+      [
         35,
         "night_slash"
       ],
@@ -151197,6 +152319,10 @@
       [
         45,
         "rain_dance"
+      ],
+      [
+        50,
+        "order_up"
       ],
       [
         55,
@@ -151981,6 +153107,10 @@
         "yawn"
       ],
       [
+        32,
+        "hyper_drill"
+      ],
+      [
         36,
         "roost"
       ],
@@ -152260,7 +153390,10 @@
     "weight_kg": 120.0,
     "category": "Big Blade Pokémon",
     "flavor": "Though it commands a massive army in battle, it’s not skilled at devising complex strategies. It just uses brute strength to keep pushing.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "kowtow_cleave"
+    ]
   },
   "Great Tusk": {
     "shape": "quadruped",
@@ -152351,6 +153484,10 @@
       [
         84,
         "head_smash"
+      ],
+      [
+        91,
+        "headlong_rush"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -153470,6 +154607,10 @@
         "hydro_pump"
       ],
       [
+        84,
+        "aurora_veil"
+      ],
+      [
         91,
         "blizzard"
       ]
@@ -153571,6 +154712,10 @@
         "focus_energy"
       ],
       [
+        1,
+        "arm_thrust"
+      ],
+      [
         7,
         "fake_out"
       ],
@@ -153585,6 +154730,10 @@
       [
         28,
         "slam"
+      ],
+      [
+        35,
+        "force_palm"
       ],
       [
         42,
@@ -154624,7 +155773,10 @@
     "weight_kg": 210.0,
     "category": "Ice Dragon Pokémon",
     "flavor": "It launches itself into battle by flipping upside down and spewing frigid air from its mouth. It finishes opponents off with its dorsal blade.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "glaive_rush"
+    ]
   },
   "Gimmighoul": {
     "shape": "blob",
@@ -155078,6 +156230,10 @@
       [
         55,
         "sucker_punch"
+      ],
+      [
+        60,
+        "sacred_sword"
       ],
       [
         65,
@@ -155611,6 +156767,7 @@
     ],
     "egg": [
       "breaking_swipe",
+      "jaw_lock",
       "scale_shot",
       "sunny_day"
     ],
@@ -155723,6 +156880,10 @@
       [
         84,
         "quick_guard"
+      ],
+      [
+        91,
+        "spirit_break"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -155874,6 +157035,10 @@
       [
         49,
         "flamethrower"
+      ],
+      [
+        56,
+        "collision_course"
       ],
       [
         63,
@@ -156338,8 +157503,16 @@
         "swords_dance"
       ],
       [
+        42,
+        "sacred_sword"
+      ],
+      [
         49,
         "leaf_blade"
+      ],
+      [
+        56,
+        "psyblade"
       ],
       [
         63,
@@ -156904,6 +158077,10 @@
         "poison_fang"
       ],
       [
+        24,
+        "force_palm"
+      ],
+      [
         32,
         "counter"
       ],
@@ -157216,6 +158393,10 @@
         "cross_poison"
       ],
       [
+        40,
+        "tail_slap"
+      ],
+      [
         48,
         "beat_up"
       ],
@@ -157363,6 +158544,10 @@
         "low_sweep"
       ],
       [
+        30,
+        "ivy_cudgel"
+      ],
+      [
         36,
         "throat_chop"
       ],
@@ -157438,6 +158623,7 @@
     "egg": [
       "counter",
       "double_kick",
+      "horn_leech",
       "retaliate"
     ],
     "moves": [
@@ -157846,6 +159032,10 @@
         "morning_sun"
       ],
       [
+        49,
+        "burning_bulwark"
+      ],
+      [
         56,
         "dragon_rush"
       ],
@@ -158012,6 +159202,10 @@
         "thunderclap"
       ],
       [
+        56,
+        "dragon_hammer"
+      ],
+      [
         63,
         "rising_voltage"
       ],
@@ -158166,6 +159360,14 @@
         "rock_tomb"
       ],
       [
+        49,
+        "sacred_sword"
+      ],
+      [
+        56,
+        "mighty_cleave"
+      ],
+      [
         63,
         "swords_dance"
       ],
@@ -158308,6 +159510,10 @@
       [
         42,
         "flash_cannon"
+      ],
+      [
+        49,
+        "sacred_sword"
       ],
       [
         56,
