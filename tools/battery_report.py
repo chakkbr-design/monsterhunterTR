@@ -105,6 +105,9 @@ def analyse(fights):
     weather_t = defaultdict(list)
     combos = Counter()
     passives = Counter()
+    grass_hide = []
+    grass_go = []
+    grass_why = Counter()
     eff_hits = Counter()
     crit = 0
     moves_per_min = []
@@ -191,6 +194,10 @@ def analyse(fights):
                 combos[k] += 1
             elif k == "passive":
                 passives[e.get("p", "?")] += 1
+            elif k == "ai_grass":
+                grass_hide.append(e.get("secs", 0.0))
+                grass_go.append(e.get("go", 0.0))
+                grass_why[e.get("why", "?")] += 1
         T = f["result"]["time"]
         for who, t0 in enter_t.items():
             mon_time[who] += T - t0
@@ -274,6 +281,16 @@ def analyse(fights):
     R["dodges_per_fight"] = {k: v / n for k, v in dodges.items()}
     R["combos_per_fight"] = {k: v / n for k, v in combos.items()}
     R["passives"] = dict(passives)
+    # Emboscada na grama (BattleTerrainAI): idas à moita, tempo escondido e por que saiu.
+    R["grass_ambush"] = {
+        "stints": len(grass_hide), "per_fight": len(grass_hide) / n if n else 0,
+        "hide_mean": st.mean(grass_hide) if grass_hide else 0, "hide_p90": q(grass_hide, 0.9),
+        "hide_max": max(grass_hide) if grass_hide else 0,
+        "hid_pct": pct(sum(1 for x in grass_hide if x > 0), len(grass_hide)),
+        "hide_mean_if_hid": st.mean([x for x in grass_hide if x > 0] or [0]),
+        "go_mean": st.mean(grass_go) if grass_go else 0,
+    }
+    R["grass_leave_why"] = dict(grass_why.most_common())
     R["duration_by_weather"] = {k: st.mean(v) for k, v in weather_t.items()}
     top = sorted(((v[0] / v[1], k, v[1]) for k, v in species_win.items() if v[1] >= 10), reverse=True)
     R["species_winrate_top"] = [(k, round(100 * w, 1), c) for w, k, c in top[:8]]
