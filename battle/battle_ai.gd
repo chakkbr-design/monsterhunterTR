@@ -123,12 +123,14 @@ const COMBO_SYNC_PICK := 0.6
 const DUO_PICK := 0.9
 const SETUP_PICK := 0.35
 ## Área avisada (aoe_target/zone com preparo) no modo de energia: segura até AREA_HOLD s esperando o
-## alvo parado (preparando golpe, atordoado, preso ou andando a menos de AREA_SLOW m/s); a mira vai
-## AREA_LEAD x o preparo à frente de quem anda (até AREA_LEAD_MAX m).
+## alvo parado (preparando golpe, atordoado, preso ou andando a menos de AREA_SLOW m/s); a mira vai na
+## posição prevista: velocidade recente do alvo (BattlePlan.observe) x tempo até cair (o preparo; zona
+## ZONE_LEAD s) x AREA_LEAD, até AREA_LEAD_MAX m, dentro da quadra e do alcance do golpe.
 const AREA_HOLD := 1.5
 const AREA_SLOW := 1.2
-const AREA_LEAD := 0.6
-const AREA_LEAD_MAX := 2.5
+const AREA_LEAD := 0.8
+const AREA_LEAD_MAX := 3.0
+const ZONE_LEAD := 0.5
 ## Escolha suave (modo de energia, no lugar do golpe aleatório de error_chance): chance de cada golpe
 ## de dano ~ exp((nota / melhor nota - 1) / (SOFT_T x think_scale)). O melhor sai quase sempre; um
 ## golpe com 80% da nota do melhor sai às vezes; um com metade quase nunca.
@@ -225,6 +227,19 @@ var leap_t := 0.0
 var area_hold_t := 0.0
 ## Depois de bater sai de lado (true) ou recua reto (sorteado pelo plano).
 var retreat_side := false
+## Emboscada na grama alta (BattleTerrainAI): moita escolhida ({} = fora), tempo indo até ela, tempo
+## escondido, tempo saindo para o ataque, tempo total da ida e recarga até a próxima.
+var grass_spot := {}
+var grass_go_t := 0.0
+var grass_t := 0.0
+var grass_strike_t := -1.0
+var grass_age := 0.0
+var grass_cd := 0.0
+## Segundos desde o último dano tomado (modo de energia).
+var hurt_t := 99.0
+var _hp_seen := -1
+## Memória dos inimigos na luta (BattlePlan.observe), por instance id do inimigo.
+var foe_mem := {}
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -361,6 +376,10 @@ func step(dt: float) -> Vector3:
 		recover_t -= dt
 		think -= dt
 		retreat_t -= dt
+		if energy_free and retreat_t > 0.0:
+			var gw := BattleTerrainAI.retreat_grass(self, d)  # recua para a moita (emboscada)
+			if gw != Vector3.INF:
+				return gw
 		tag = "retreat_side" if energy_free and retreat_side and retreat_t > 0.0 else "retreat"
 		return _retreat_move(dir, side_v, d)
 	if not f.moves.is_empty():
@@ -482,17 +501,36 @@ func _pinned(t: BattleFighter) -> bool:
 	)
 
 
-## Mira da área à frente do alvo que anda (BattleMoves._area_point chama no modo de energia).
+## Mira da área na posição prevista de quem anda (BattleMoves._area_point chama no modo de energia):
+## devolve o deslocamento a somar na posição atual do alvo.
 func area_lead(t: BattleFighter, mv: Dictionary) -> Vector3:
 	if not is_instance_valid(t) or t.motion != "" or t.dash_t > 0.0 or t.lunge_t > 0.0:
 		return Vector3.ZERO
-	var v := Vector3(t.velocity.x, 0.0, t.velocity.z)
-	return (v * float(mv.get("windup", 0.0)) * AREA_LEAD).limit_length(AREA_LEAD_MAX)
+	var secs := float(mv.get("windup", 0.0))
+	if String(mv.get("kind", "")) == "zone":
+		secs = maxf(secs, ZONE_LEAD)
+	var lead := (BattlePlan.foe_velocity(self, t) * secs * AREA_LEAD).limit_length(AREA_LEAD_MAX)
+	var tp := f.pos2(t.position)
+	var at := tp + lead
+	var r: Rect2 = f.arena.rect
+	at.x = clampf(at.x, r.position.x, r.end.x)
+	at.z = clampf(at.z, r.position.y, r.end.y)
+	var me := f.pos2(f.position)
+	var reach := float(mv.get("range", 8.0))
+	if (at - me).length() > reach:
+		at = me + (at - me).normalized() * reach
+	return at - tp
 
 
 ## Por passo no modo de energia: passivas (o pulo de desespero começa aqui), plano e sorteios do
 ## movimento (ângulo de aproximação, finta).
 func _energy_tick(dt: float) -> void:
+	if _hp_seen >= 0 and f.hp < _hp_seen:
+		hurt_t = 0.0
+	_hp_seen = f.hp
+	hurt_t += dt
+	BattlePlan.observe(self, dt)
+	BattleTerrainAI.tick(self, dt)
 	leap_t = maxf(leap_t - dt, 0.0)
 	feint_t = maxf(feint_t - dt, 0.0)
 	if passives.tick(dt):
@@ -625,7 +663,7 @@ func _ambush_steer(dt: float, d: float, dir: Vector3, side_v: Vector3) -> Vector
 			if to_h.length() > 0.3
 			else Vector3.ZERO
 		)
-		tag = "ambush_hide"
+		tag = "ambush_cover"
 	else:
 		var r := move_reach(intent)
 		var keep := _band().y * BattlePlan.AMBUSH_KEEP
@@ -700,6 +738,8 @@ func _free_fire(dt: float, d: float) -> void:
 	var fire := intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
 	if fire and f.energy_mode and _area_wait(dt, opp):
 		fire = false  # área avisada: espera o alvo parar (ou o tempo de espera acabar)
+	if fire and f.energy_mode and BattleTerrainAI.hold_fire(self, d):
+		fire = false  # emboscada na grama: chega e espera escondido antes de soltar
 	if fire and f.energy_mode and _los_blocked(intent, opp):
 		fire = false  # tiro/raio bateria na cobertura: anda de lado até ter linha (bateria 4)
 		los_t += dt
@@ -726,6 +766,8 @@ func _free_fire(dt: float, d: float) -> void:
 		return
 	if fire and f.can_act():
 		tactic_on = _tactic_ok()
+		if not grass_spot.is_empty():
+			tag = "ambush_strike"  # sai da moita atacando (telemetria do golpe)
 		if _use_best_move(d):
 			_after_fire(mode)
 		elif intent != "" and not _ready(intent):
@@ -798,6 +840,8 @@ func _after_fire(mode: int) -> void:
 		retreat_side = _rng().randf() < float(BattlePlan.SIDE_STEP.get(plan, 0.4))
 	ambush_t = 0.0
 	area_hold_t = 0.0
+	if not grass_spot.is_empty():
+		BattleTerrainAI.end_grass(self, "strike")
 	recover_t = maxf(recover_t, retreat_t)
 	intent = ""
 
@@ -880,7 +924,7 @@ func _band() -> Vector2:
 			b = Vector2(minf(pb.x, hi * 0.6), minf(maxf(pb.y, hi * 0.7), hi))
 	var energy := f.energy_mode and plan != ""
 	if energy:
-		b *= float(BattlePlan.BAND.get(plan, 1.0))
+		b *= float(BattlePlan.BAND.get(plan, 1.0)) * BattlePlan.memory_band(self)
 		if plan == BattlePlan.ARTILLERY and hi < INF and not is_contact(intent):
 			var r2 := move_reach(intent)
 			b = Vector2(
