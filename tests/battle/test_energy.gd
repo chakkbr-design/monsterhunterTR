@@ -57,7 +57,9 @@ func _costs() -> void:
 	check(BattleEnergy.cost(Dex.move("growl")) == BattleEnergy.STATUS_COST, "status gasta muito")
 	check(quick < tackle, "prioridade gasta menos (%d < %d)" % [quick, tackle])
 	var qmv := Dex.move("quick_attack")
-	check(BattleEnergy.cooldown(qmv) > Dex.cooldown(qmv), "prioridade tem cooldown maior")
+	var qslow := qmv.duplicate()
+	qslow.erase("priority")
+	check(BattleEnergy.cooldown(qmv) > BattleEnergy.cooldown(qslow), "prioridade tem cooldown maior")
 	check(
 		BattleEnergy.cooldown(Dex.move("growl")) > BattleEnergy.cooldown(Dex.move("tackle")),
 		"status com cooldown alto"

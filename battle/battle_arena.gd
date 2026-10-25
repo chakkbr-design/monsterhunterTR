@@ -305,6 +305,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	doubles = kind == "trainer" and _battle_size >= 2
 	# Na dupla cada um apanha de dois: o dano anda mais devagar para o Pokémon durar o mesmo tanto.
 	var pace_def := BattleMoves.DAMAGE_PACE * (BattleMoves.DOUBLES_PACE if doubles else 1.0)
+	if energy_on():
+		pace_def = BattleEnergy.DAMAGE_PACE  # Caio, 2026-10-25: 0,6x no modo de energia
 	damage_pace = float(o.get("damage_pace", pace_def))
 	auto_commands = bool(o.get("auto_commands", o.get("autoplay", false)))
 	if not InputMap.has_action("move_1"):
