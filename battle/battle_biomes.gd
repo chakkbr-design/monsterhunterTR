@@ -55,8 +55,9 @@ const RUNE_REGEN := 1.5
 const RUNE_POWER := 1.1
 const RUNE_TYPES := ["psychic", "ghost"]
 const RUNE_SEEK := 8.0  ## IA: vai ao círculo a até isso
-const RUNE_MAX := 7.0
+const RUNE_MAX := 5.0
 const RUNE_CD := 6.0
+const RUNE_EN := 50.0  ## IA: briga de dentro do círculo (golpe alcança dali) só com menos energia que isso
 const RUNE_HP := 0.4  ## IA: com HP abaixo disso não disputa
 const RUNE_CONTEST_HP := 0.55  ## IA: só entra com inimigo dentro com HP acima disso
 ## Montanha.
@@ -252,7 +253,8 @@ func setup() -> void:
 				terrain.ground._add_mud(at, r, INF)
 	match kind:
 		"montanha":
-			cliff = {"side": 1 if rng.randf() < 0.5 else -1}
+			# Paredão no lado comprido do fundo (longe da câmera, que olha do lado +Z): não tapa a quadra.
+			cliff = {"side": -1 if _perp().z > 0.0 else 1}
 			if String(arena.opts.get("weather", "")) == "" and rng.randf() < SNOW_CHANCE:
 				arena.opts = arena.opts.duplicate()
 				arena.opts["weather"] = "hail"
@@ -697,7 +699,7 @@ func _tick_hold(dt: float) -> void:
 		if String(f.ai.get("tag")) in ["rune", "snow_hide", "lava_rest"]:
 			h.t = float(h.t) + dt
 		elif float(h.t) > 0.0:
-			h.t = maxf(float(h.t) - dt * 0.5, 0.0)
+			h.t = maxf(float(h.t) - dt * 0.25, 0.0)  # entrar e sair não zera o relógio
 
 
 # --- Montanha ---
@@ -910,7 +912,7 @@ func _steer_ai(ai, d: float) -> Vector3:
 	var h: Dictionary = _hold.get(f.get_instance_id(), {"t": 0.0, "cd": 0.0})
 	var cap := {"ruinas": RUNE_MAX, "montanha": SNOW_MAX, "vulcao": LAVA_MAX}
 	if float(h.t) > float(cap.get(kind, INF)):
-		h.cd = float(cap[kind]) * HOLD_CD_K
+		h.cd = RUNE_CD if kind == "ruinas" else float(cap[kind]) * HOLD_CD_K
 		h.t = 0.0
 		_tele("ai_hold_cap", {"who": _uid(f), "kind": kind})
 		return Vector3.INF
@@ -1012,9 +1014,9 @@ func _rune_steer(ai, d: float) -> Vector3:
 			return Vector3.INF  # o parceiro já segura o círculo
 	if foes_in and hp < RUNE_CONTEST_HP:
 		return Vector3.INF
-	var want := _short(ai) or f.pp_max < BattleEnergy.MAX * 0.6
+	var want := _short(ai)
 	var opp: BattleFighter = f.opponent
-	if not want and ai.intent != "" and is_instance_valid(opp):
+	if not want and ai.intent != "" and is_instance_valid(opp) and f.pp_max < RUNE_EN:
 		var reach: float = ai.move_reach(ai.intent)
 		if reach != INF and _flat(opp.position - rune.pos).length() <= reach * 0.9:
 			want = true  # dali o golpe alcança: briga de dentro do círculo
@@ -1192,12 +1194,12 @@ func _build_cliff() -> void:
 	var ax := _ax()
 	var pp := _perp() * float(cliff.side)
 	var long := _half(ax) * 2.0 + 4.0
-	var wall := BattleTerrain._box(Vector3(long, 4.0, 2.0), tex("cliff"))
-	wall.position = _centre() + pp * (_half(_perp()) + 1.4) + Vector3(0, 2.0, 0)
+	var wall := BattleTerrain._box(Vector3(long, 3.0, 2.0), tex("cliff"))
+	wall.position = _centre() + pp * (_half(_perp()) + 1.4) + Vector3(0, 1.5, 0)
 	wall.rotation.y = -atan2(ax.z, ax.x)
 	arena.add_child(wall)
 	var top := BattleTerrain._box(Vector3(long, 0.3, 2.2), tex("snow"))
-	top.position = wall.position + Vector3(0, 2.1, 0)
+	top.position = wall.position + Vector3(0, 1.6, 0)
 	top.rotation.y = wall.rotation.y
 	arena.add_child(top)
 	cliff.node = wall

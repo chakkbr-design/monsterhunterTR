@@ -5,7 +5,8 @@ extends SceneTree
 ## Rodar várias em paralelo (tools/battery.sh) e analisar com tools/battery_report.py.
 ## Opções (depois de --): n=N, seed=N, out=DIR, mode=energy|vgc, size=1|2|mix, weather=mix|none,
 ## pace=X (damage_pace), think=mix|1, team=N (Pokémon por lado, padrão 6), limit=S,
-## scenario=campo|lagoa|pedreira|misto|praia (omitido ou aleatorio = sorteado por luta).
+## scenario=campo|lagoa|pedreira|misto|praia|ruinas|montanha|vulcao|caverna|pantano (omitido ou
+## aleatorio = sorteado por luta; os biomas só no modo de energia).
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
