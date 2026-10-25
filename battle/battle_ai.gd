@@ -112,6 +112,9 @@ const ENERGY_KEEP := 1.0
 const REPEAT_AVOID := 0.8
 ## Peso da espera pela energia na escolha do golpe (dano / (1 + k x segundos até ter energia)).
 const ENERGY_WAIT_K := 0.35
+## Tiro/raio com a linha tapada por cobertura: segura o golpe e, passado LOS_WAIT s, contorna.
+const LOS_KINDS := ["projectile", "beam", "homing"]
+const LOS_WAIT := 0.3
 ## Golpe que detona a marca de tipo do parceiro (BattleCombos) ganha este peso a mais na escolha.
 const COMBO_PICK := 1.3
 ## Área avisada (aoe_target/zone com preparo) no modo de energia: segura até AREA_HOLD s esperando o
@@ -197,6 +200,8 @@ var _tactics_checked := false
 var _likes_high := -1
 ## O que a IA está fazendo neste quadro (telemetria): "dodge", "retreat", "rest_hide", "go_high"...
 var tag := ""
+## Segundos com o golpe pretendido sem linha de tiro.
+var los_t := 0.0
 ## Por que o último golpe foi escolhido (telemetria): "ko", "best", "soft", "plan_<plano>", "tactics",
 ## "status", "error"...
 var why := ""
@@ -365,6 +370,10 @@ func step(dt: float) -> Vector3:
 	if queued and not up_next:
 		tag = "off_turn"
 		return _off_turn(dt, d, dir, side_v)
+	if energy_free and los_t > LOS_WAIT:
+		# Sem linha de tiro (pico, pedra ou caixa no meio): contorna pelo lado e chega um pouco.
+		tag = "seek_los"
+		return (side_v + dir * 0.35 + f.arena.edge_push(f)).limit_length(1.0)
 	if energy_free:
 		# Parado há STALL_SECS sem soltar golpe: para de descansar/esperar e vai para cima.
 		idle_t += dt
@@ -686,6 +695,11 @@ func _free_fire(dt: float, d: float) -> void:
 	var fire := intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
 	if fire and f.energy_mode and _area_wait(dt, opp):
 		fire = false  # área avisada: espera o alvo parar (ou o tempo de espera acabar)
+	if fire and f.energy_mode and _los_blocked(intent, opp):
+		fire = false  # tiro/raio bateria na cobertura: anda de lado até ter linha (bateria 4)
+		los_t += dt
+	else:
+		los_t = 0.0
 	if punish and not punished and tactic_on:
 		fire = true
 		punished = true
@@ -2106,3 +2120,15 @@ func _partner_quake() -> String:
 	):
 		return "pquake@%d" % p.cast_n
 	return ""
+
+
+## O tiro/raio pretendido bateria em pico, morro, caixa ou pedra antes de chegar no alvo.
+func _los_blocked(id: String, opp: BattleFighter) -> bool:
+	var ter = f.arena.get("terrain")
+	if ter == null or not ter.has_cover() or not is_instance_valid(opp):
+		return false
+	if not String(Dex.move(id).get("kind", "")) in LOS_KINDS:
+		return false
+	var a := f.pos2(f.position) + Vector3(0, f.ground_y + f.fly_h, 0)
+	var b := opp.pos2(opp.position) + Vector3(0, opp.ground_y + opp.fly_h, 0)
+	return ter.shot_block(a, b) < f.flat_to(opp).length() - 0.6
