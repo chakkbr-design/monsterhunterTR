@@ -1,7 +1,7 @@
 """Monta original/assets/pokemon/<slug>/ das espécies de Kanto que não vieram do original (arte fora do git):
 - pmd/*-Anim.png + pmd/anims.json do PMD SpriteCollab (só as animações que data/pmd_anims.json usa); as âncoras
   saem do *-Shadow.png (centro x, base y) e Idle/Walk/Hop fixam o pé no quadro, igual ao importador antigo;
-- front.png/back.png: BW animados (PokeAPI sprites) em tira de quadros quadrados (~30 qps);
+- front.png/back.png: BW animados (PokeAPI sprites) em tira de quadros quadrados, no máximo 8192 px de largura;
 - icon.png: frente HGSS 80x80; party_icon.png: ícone Gen 7 em 2x, 2 quadros (o 2º 2 px acima).
 Uso: git clone --filter=blob:none --sparse do PMDCollab/SpriteCollab (pastas sprite/NNNN) e
 python tools/kanto_sprites.py <SpriteCollab/sprite> <saída> <lista.json [[dex, nome], ...]>
@@ -79,19 +79,21 @@ def pmd(no, dst):
     json.dump({k: res[k] for k in sorted(res)}, open(os.path.join(dst, "pmd", "anims.json"), "w"), separators=(",", ":"))
     return sorted(res)
 
+MAX_W = 8192  # textura mais larga que o limite da placa de vídeo some (16384 em muitas, 8192 por segurança)
+
+
 def strip(gif_bytes, path):
-    im = Image.open(io.BytesIO(gif_bytes))
-    frames = [f.convert("RGBA") for f in ImageSequence.Iterator(im)]
-    durs = [f.info.get("duration", 100) for f in ImageSequence.Iterator(Image.open(io.BytesIO(gif_bytes)))]
-    # 1 quadro por 1/30 s aprox. (repete pela duração do GIF), quadros quadrados
-    seq = []
-    for fr, du in zip(frames, durs):
-        seq += [fr] * max(1, round(du / 33.0))
+    seq = [f.convert("RGBA") for f in ImageSequence.Iterator(Image.open(io.BytesIO(gif_bytes)))]
     s = max(max(f.size) for f in seq)
+    # quadros demais para caber em MAX_W: pula quadros por igual (a animação fica um pouco mais curta)
+    if s * len(seq) > MAX_W:
+        n = MAX_W // s
+        seq = [seq[int(i * len(seq) / n)] for i in range(n)]
     out = Image.new("RGBA", (s * len(seq), s))
     for i, fr in enumerate(seq):
         out.paste(fr, (i * s + (s - fr.size[0]) // 2, s - fr.size[1]))
     out.save(path)
+
 
 def icon(no, path):
     im = Image.open(io.BytesIO(fetch("PokeAPI/sprites/master/sprites/pokemon/versions/generation-iv/heartgold-soulsilver/%d.png" % no))).convert("RGBA")
