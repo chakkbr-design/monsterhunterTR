@@ -650,6 +650,7 @@
     "desc": "Passes poison, burn and paralysis back.",
     "desc_pt": "Veneno, queimadura ou paralisia que ele pega passam também para quem causou."
   },
+  "imposter": {"name": "IMPOSTER", "desc": "Transforms into the foe it faces.", "desc_pt": "Ao entrar, vira uma cópia do inimigo mais perto (tipos, stats menos HP, golpes, habilidade e aparência)."},
   "trace": {
     "name": "TRACE",
     "desc": "Copies a foe's ability.",

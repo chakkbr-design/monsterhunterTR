@@ -55,6 +55,7 @@ func _initialize() -> void:
 	_scrappy()
 	_synchronize()
 	_trace()
+	_imposter()
 	_weak_armor()
 	_smoke()
 	print("kanto abilities: %d checks, %d falhas" % [_count, _fails])
@@ -613,6 +614,17 @@ func _trace() -> void:
 	_run(b, 0.3)
 	check(b.abilities.ability_of(b.player) == "trace", "Trace não copia Trace")
 	b.free()
+
+
+func _imposter() -> void:
+	var a := _still("ditto", "charizard")
+	var ab: BattleAbilities = a.abilities
+	_give(a.player, "imposter")
+	ab.on_enter(a.player)
+	_run(a, 0.3)
+	check(BattleTransform.is_transformed(a.player), "Imposter: Ditto vira cópia ao entrar")
+	check(a.player.types == a.enemy.types, "Imposter: fica com os tipos do inimigo")
+	a.free()
 
 
 func _weak_armor() -> void:

@@ -289,12 +289,12 @@ func _stage_abilities() -> void:
 		"Defiant: -1 vira +2 (=%d)" % int(b.enemy.stages.get("atk", 0))
 	)
 	b.free()
-	var c := _still(Mon.create("pidgey", 10), _mon("weezing", "clear_body"))
+	var c := _still(Mon.create("pidgey", 10), _lent("weezing", "clear_body"))
 	c.moves.change_stage(c.enemy, "def", -2)
 	_run(c, 0.2)
 	check(int(c.enemy.stages.get("def", 0)) == 0, "Clear Body desfaz a queda")
 	c.free()
-	var d := _still(_mon("primeape", "moxie"), Mon.create("pidgey", 3))
+	var d := _still(_lent("primeape", "moxie"), Mon.create("pidgey", 3))
 	var foe: BattleFighter = d.enemy
 	foe.hp = 1
 	d.abilities.on_hit(d.player, foe, Dex.move("tackle"), 1)
@@ -302,7 +302,7 @@ func _stage_abilities() -> void:
 	d.abilities.on_hit(d.player, foe, Dex.move("tackle"), 1)
 	check(int(d.player.stages.get("atk", 0)) == 1, "Moxie: KO dá +1 ATK")
 	d.free()
-	var e := _still(_mon("shellder", "rough_skin"), Mon.create("pidgey", 10))
+	var e := _still(_lent("shellder", "rough_skin"), Mon.create("pidgey", 10))
 	var hp0: int = e.enemy.hp
 	e.abilities.on_hit(e.enemy, e.player, Dex.move("tackle"), 1)
 	check(e.enemy.hp <= hp0, "sem erro com Rough Skin")
@@ -363,7 +363,7 @@ func _helpers() -> void:
 	)
 	q.free()
 	# Unburden: 2x na ordem depois de usar o item
-	var u := _still(_mon("magikarp", "unburden"), Mon.create("pidgey", 10))
+	var u := _still(_lent("magikarp", "unburden"), Mon.create("pidgey", 10))
 	check(u.abilities.order_speed_mult(u.player) == 1.0, "Unburden: com item, normal")
 	u.player.item_used = true
 	check(u.abilities.order_speed_mult(u.player) == 2.0, "Unburden: usou o item, 2x na ordem")
@@ -427,7 +427,7 @@ func _doubles() -> void:
 
 
 func _plus_minus() -> void:
-	var party := [_mon("magnemite", "plus"), _mon("magneton", "minus")]
+	var party := [_lent("magnemite", "plus"), _lent("magneton", "minus")]
 	var a := _arena(party, [Mon.create("pidgey", 10)], {"seed": 5, "battle_size": 2})
 	_run(a, 1.3)
 	a.enemy.controller = "none"

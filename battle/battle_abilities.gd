@@ -141,6 +141,7 @@ const ENTRY := [
 	"pressure",
 	"trace",
 	"neutralizing_gas",
+	"imposter",
 ]
 ## Habilidades que o Trace não copia.
 const UNTRACEABLE := ["trace", "neutralizing_gas", "imposter"]
@@ -521,6 +522,8 @@ func _entry(f: BattleFighter) -> bool:
 		"neutralizing_gas":
 			_fire(f, Color(0.7, 0.9, 0.5))
 			f.popup("Gás tóxico!", Color(0.7, 0.9, 0.5), 0.9, 0.9)
+		"imposter":
+			return _do_imposter(f)
 	return true
 
 
@@ -702,6 +705,25 @@ func _do_forewarn(f: BattleFighter) -> bool:
 
 
 ## Trace: copia a habilidade de um inimigo e a ativa na hora.
+## Imposter (Ditto): ao entrar vira cópia do inimigo mais perto (BattleTransform, como o golpe Transform).
+func _do_imposter(f: BattleFighter) -> bool:
+	var foes: Array = arena.targets_of(f)
+	if foes.is_empty():
+		return false
+	foes.sort_custom(
+		func(a, b):
+			return (
+				f.global_position.distance_to(a.global_position)
+				< f.global_position.distance_to(b.global_position)
+			)
+	)
+	for t in foes:
+		if BattleTransform.apply(arena, f, t):
+			_fire(f, Color(0.8, 0.6, 0.95))
+			return true
+	return true
+
+
 func _do_trace(f: BattleFighter) -> bool:
 	var foes: Array = arena.targets_of(f)
 	if foes.is_empty():

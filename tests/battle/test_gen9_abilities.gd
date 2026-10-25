@@ -58,6 +58,15 @@ func _mon(species: String, ab: String, lv := 20) -> Mon:
 	return m
 
 
+## Como _mon, mas empresta a habilidade à espécie se os dados oficiais não a dão a ela (Grimer e
+## Poison Heal eram do jogo antes dos dados da Gen 9): só testa o efeito.
+func _lent(species: String, ab: String, lv := 10) -> Mon:
+	var list: Array = Dex.species(species).get("abilities", [])
+	if not ab in list:
+		list.append(ab)
+	return _mon(species, ab, lv)
+
+
 ## Arena parada: o inimigo não age.
 func _still(mine: Mon, foe: Mon, opts := {}) -> Node:
 	opts["seed"] = 7
@@ -257,7 +266,7 @@ func _rain_sun() -> void:
 
 ## Fim de rodada: Poison Heal, Natural Cure, Shed Skin; Damp na explosão.
 func _round_status() -> void:
-	var a := _still(_mon("grimer", "poison_heal"), Mon.create("pidgey", 20))
+	var a := _still(_lent("grimer", "poison_heal"), Mon.create("pidgey", 20))
 	var g: BattleFighter = a.player
 	g.hp = int(g.max_hp / 2.0)
 	g.status = ""

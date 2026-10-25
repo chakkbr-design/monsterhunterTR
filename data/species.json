@@ -4982,6 +4982,7 @@
       "drill_run",
       "endure",
       "facade",
+      "hail",
       "hydro_pump",
       "ice_beam",
       "icy_wind",
@@ -5125,6 +5126,7 @@
       "endure",
       "facade",
       "giga_impact",
+      "hail",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -11685,6 +11687,7 @@
       "facade",
       "flash_cannon",
       "gyro_ball",
+      "hail",
       "hydro_pump",
       "ice_beam",
       "icy_wind",
@@ -11843,6 +11846,7 @@
       "giga_impact",
       "grass_knot",
       "gyro_ball",
+      "hail",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -13611,6 +13615,10 @@
         "fire_fang"
       ],
       [
+        28,
+        "retaliate"
+      ],
+      [
         32,
         "crunch"
       ],
@@ -13686,6 +13694,7 @@
       "double_edge",
       "double_kick",
       "morning_sun",
+      "raging_fury",
       "thrash"
     ],
     "moves": [
@@ -13791,6 +13800,10 @@
       ],
       [
         1,
+        "retaliate"
+      ],
+      [
+        1,
         "play_rough"
       ],
       [
@@ -13864,7 +13877,10 @@
     "weight_kg": 155.0,
     "category": "Legendary Pokémon",
     "flavor": "Snaps at its foes with fangs cloaked in blazing flame. Despite its bulk, it deftly feints every which way, leading opponents on a deceptively merry chase as it all but dances around them.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "extreme_speed"
+    ]
   },
   "Abra": {
     "shape": "upright",
@@ -13893,7 +13909,12 @@
       "magic_guard"
     ],
     "hidden_ability": "magic_guard",
-    "learnset": [],
+    "learnset": [
+      [
+        1,
+        "teleport"
+      ]
+    ],
     "learnset_version": "sword-shield",
     "tm": [
       "ally_switch",
@@ -13910,12 +13931,15 @@
       "fling",
       "foul_play",
       "grass_knot",
+      "guard_swap",
       "ice_punch",
       "iron_tail",
       "light_screen",
+      "magic_room",
       "mega_kick",
       "mega_punch",
       "metronome",
+      "power_swap",
       "protect",
       "psychic",
       "psychic_terrain",
@@ -13929,6 +13953,7 @@
       "skill_swap",
       "sleep_talk",
       "snore",
+      "speed_swap",
       "substitute",
       "sunny_day",
       "swift",
@@ -13943,9 +13968,13 @@
       "zen_headbutt"
     ],
     "egg": [
-      "confusion"
+      "confusion",
+      "guard_split",
+      "magic_coat"
     ],
-    "moves": [],
+    "moves": [
+      "teleport"
+    ],
     "catch_rate": 200,
     "base_exp": 62,
     "growth": "medium_slow",
@@ -13997,6 +14026,14 @@
         "confusion"
       ],
       [
+        1,
+        "teleport"
+      ],
+      [
+        1,
+        "kinesis"
+      ],
+      [
         5,
         "psybeam"
       ],
@@ -14023,6 +14060,10 @@
       [
         35,
         "psychic"
+      ],
+      [
+        40,
+        "role_play"
       ],
       [
         45,
@@ -14053,12 +14094,15 @@
       "foul_play",
       "future_sight",
       "grass_knot",
+      "guard_swap",
       "ice_punch",
       "iron_tail",
       "light_screen",
+      "magic_room",
       "mega_kick",
       "mega_punch",
       "metronome",
+      "power_swap",
       "protect",
       "psychic",
       "psychic_terrain",
@@ -14073,6 +14117,7 @@
       "skill_swap",
       "sleep_talk",
       "snore",
+      "speed_swap",
       "substitute",
       "sunny_day",
       "swift",
@@ -14146,6 +14191,14 @@
         "confusion"
       ],
       [
+        1,
+        "teleport"
+      ],
+      [
+        1,
+        "kinesis"
+      ],
+      [
         5,
         "psybeam"
       ],
@@ -14172,6 +14225,10 @@
       [
         35,
         "psychic"
+      ],
+      [
+        40,
+        "role_play"
       ],
       [
         45,
@@ -14201,15 +14258,18 @@
       "future_sight",
       "giga_impact",
       "grass_knot",
+      "guard_swap",
       "hyper_beam",
       "ice_punch",
       "imprison",
       "iron_tail",
       "light_screen",
+      "magic_room",
       "mega_kick",
       "mega_punch",
       "metronome",
       "nasty_plot",
+      "power_swap",
       "protect",
       "psychic",
       "psychic_terrain",
@@ -14224,6 +14284,7 @@
       "skill_swap",
       "sleep_talk",
       "snore",
+      "speed_swap",
       "stored_power",
       "substitute",
       "sunny_day",
@@ -14314,8 +14375,16 @@
         "scary_face"
       ],
       [
+        24,
+        "vital_throw"
+      ],
+      [
         29,
         "strength"
+      ],
+      [
+        32,
+        "dual_chop"
       ],
       [
         36,
@@ -14371,6 +14440,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "retaliate",
       "revenge",
       "reversal",
       "rock_slide",
@@ -14387,6 +14457,7 @@
       "work_up"
     ],
     "egg": [
+      "bullet_punch",
       "counter",
       "quick_guard",
       "submission",
@@ -14472,8 +14543,16 @@
         "scary_face"
       ],
       [
+        24,
+        "vital_throw"
+      ],
+      [
         31,
         "strength"
+      ],
+      [
+        36,
+        "dual_chop"
       ],
       [
         42,
@@ -14529,6 +14608,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "retaliate",
       "revenge",
       "reversal",
       "rock_slide",
@@ -14629,8 +14709,16 @@
         "scary_face"
       ],
       [
+        24,
+        "vital_throw"
+      ],
+      [
         31,
         "strength"
+      ],
+      [
+        36,
+        "dual_chop"
       ],
       [
         42,
@@ -14663,6 +14751,7 @@
       "bulldoze",
       "close_combat",
       "cross_poison",
+      "darkest_lariat",
       "dig",
       "earthquake",
       "encore",
@@ -14691,6 +14780,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "retaliate",
       "revenge",
       "reversal",
       "rock_blast",
@@ -14938,6 +15028,10 @@
         "water_gun"
       ],
       [
+        1,
+        "reflect_type"
+      ],
+      [
         12,
         "supersonic"
       ],
@@ -15151,6 +15245,7 @@
       "high_horsepower",
       "iron_tail",
       "low_kick",
+      "mystical_fire",
       "overheat",
       "play_rough",
       "protect",
@@ -15317,6 +15412,7 @@
       "iron_tail",
       "low_kick",
       "megahorn",
+      "mystical_fire",
       "overheat",
       "pay_day",
       "play_rough",
@@ -15470,6 +15566,7 @@
       "poison_jab",
       "protect",
       "rest",
+      "retaliate",
       "revenge",
       "round",
       "sleep_talk",
@@ -15492,6 +15589,7 @@
       "feather_dance",
       "feint",
       "final_gambit",
+      "first_impression",
       "flail",
       "gust",
       "night_slash",
@@ -15942,6 +16040,7 @@
       "take_down",
       "tera_blast",
       "thief",
+      "triple_axel",
       "uproar",
       "water_pulse",
       "waterfall",
@@ -15951,8 +16050,11 @@
     "egg": [
       "belch",
       "disable",
+      "entrainment",
       "fake_out",
       "horn_drill",
+      "lick",
+      "perish_song",
       "spit_up",
       "stockpile",
       "swallow"
@@ -16114,6 +16216,7 @@
       "take_down",
       "tera_blast",
       "thief",
+      "triple_axel",
       "uproar",
       "water_pulse",
       "waterfall",
@@ -16123,8 +16226,11 @@
     "egg": [
       "belch",
       "disable",
+      "entrainment",
       "fake_out",
       "horn_drill",
+      "lick",
+      "perish_song",
       "spit_up",
       "stockpile",
       "swallow"
@@ -16143,7 +16249,10 @@
     "weight_kg": 120.0,
     "category": "Sea Lion Pokémon",
     "flavor": "Its entire body is a snowy white. Unharmed by even intense cold, it swims powerfully in icy waters.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "sheer_cold"
+    ]
   },
   "Gastly": {
     "shape": "ball",
@@ -16174,6 +16283,10 @@
       [
         1,
         "confuse_ray"
+      ],
+      [
+        1,
+        "lick"
       ],
       [
         4,
@@ -16218,6 +16331,10 @@
       [
         44,
         "destiny_bond"
+      ],
+      [
+        48,
+        "dream_eater"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -16243,6 +16360,7 @@
       "night_shade",
       "pain_split",
       "poison_jab",
+      "poltergeist",
       "protect",
       "psych_up",
       "psychic",
@@ -16275,6 +16393,8 @@
       "clear_smog",
       "disable",
       "haze",
+      "perish_song",
+      "reflect_type",
       "smog",
       "toxic"
     ],
@@ -16334,6 +16454,10 @@
       ],
       [
         1,
+        "lick"
+      ],
+      [
+        1,
         "mean_look"
       ],
       [
@@ -16371,6 +16495,10 @@
       [
         54,
         "destiny_bond"
+      ],
+      [
+        60,
+        "dream_eater"
       ]
     ],
     "evo_moves": [
@@ -16402,7 +16530,9 @@
       "nasty_plot",
       "night_shade",
       "pain_split",
+      "phantom_force",
       "poison_jab",
+      "poltergeist",
       "protect",
       "psych_up",
       "psychic",
@@ -16488,11 +16618,23 @@
       ],
       [
         1,
+        "lick"
+      ],
+      [
+        1,
+        "perish_song"
+      ],
+      [
+        1,
         "mean_look"
       ],
       [
         1,
         "shadow_punch"
+      ],
+      [
+        1,
+        "reflect_type"
       ],
       [
         12,
@@ -16529,6 +16671,10 @@
       [
         54,
         "destiny_bond"
+      ],
+      [
+        60,
+        "dream_eater"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -16564,7 +16710,9 @@
       "nasty_plot",
       "night_shade",
       "pain_split",
+      "phantom_force",
       "poison_jab",
+      "poltergeist",
       "protect",
       "psych_up",
       "psychic",
@@ -16762,8 +16910,11 @@
     "egg": [
       "fire_punch",
       "flatter",
+      "guard_swap",
       "ice_punch",
+      "power_split",
       "psycho_cut",
+      "role_play",
       "thunder_punch"
     ],
     "moves": [
@@ -17037,6 +17188,14 @@
       [
         40,
         "swords_dance"
+      ],
+      [
+        44,
+        "crabhammer"
+      ],
+      [
+        48,
+        "guillotine"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -17055,6 +17214,7 @@
       "facade",
       "false_swipe",
       "fling",
+      "hail",
       "ice_beam",
       "icy_wind",
       "iron_defense",
@@ -17190,6 +17350,14 @@
       [
         48,
         "swords_dance"
+      ],
+      [
+        54,
+        "crabhammer"
+      ],
+      [
+        60,
+        "guillotine"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -17210,6 +17378,7 @@
       "false_swipe",
       "fling",
       "giga_impact",
+      "hail",
       "high_horsepower",
       "hydro_pump",
       "hyper_beam",
@@ -17493,6 +17662,10 @@
       ],
       [
         1,
+        "wood_hammer"
+      ],
+      [
+        1,
         "psyshock"
       ]
     ],
@@ -17618,6 +17791,10 @@
         "headbutt"
       ],
       [
+        16,
+        "retaliate"
+      ],
+      [
         20,
         "fling"
       ],
@@ -17626,12 +17803,20 @@
         "stomping_tantrum"
       ],
       [
+        29,
+        "bone_rush"
+      ],
+      [
         32,
         "focus_energy"
       ],
       [
         36,
         "endeavor"
+      ],
+      [
+        40,
+        "bonemerang"
       ],
       [
         44,
@@ -17671,6 +17856,7 @@
       "mega_punch",
       "protect",
       "rest",
+      "retaliate",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -17692,8 +17878,10 @@
       "ancient_power",
       "belly_drum",
       "curse",
+      "detect",
       "double_kick",
       "leer",
+      "perish_song",
       "skull_bash"
     ],
     "tutor": [
@@ -17768,6 +17956,10 @@
         "headbutt"
       ],
       [
+        16,
+        "retaliate"
+      ],
+      [
         20,
         "fling"
       ],
@@ -17776,12 +17968,20 @@
         "stomping_tantrum"
       ],
       [
+        31,
+        "bone_rush"
+      ],
+      [
         36,
         "focus_energy"
       ],
       [
         42,
         "endeavor"
+      ],
+      [
+        48,
+        "bonemerang"
       ],
       [
         54,
@@ -17825,6 +18025,7 @@
       "outrage",
       "protect",
       "rest",
+      "retaliate",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -17932,6 +18133,10 @@
         "wide_guard"
       ],
       [
+        24,
+        "blaze_kick"
+      ],
+      [
         28,
         "feint"
       ],
@@ -17946,6 +18151,14 @@
       [
         40,
         "reversal"
+      ],
+      [
+        44,
+        "high_jump_kick"
+      ],
+      [
+        50,
+        "axe_kick"
       ]
     ],
     "evo_moves": [
@@ -18001,8 +18214,11 @@
       "vacuum_wave"
     ],
     "egg": [
+      "bullet_punch",
       "counter",
       "feint",
+      "high_jump_kick",
+      "mach_punch",
       "rapid_spin",
       "vacuum_wave"
     ],
@@ -18071,8 +18287,20 @@
         "feint"
       ],
       [
+        4,
+        "mach_punch"
+      ],
+      [
         8,
         "vacuum_wave"
+      ],
+      [
+        12,
+        "detect"
+      ],
+      [
+        16,
+        "bullet_punch"
       ],
       [
         21,
@@ -18170,8 +18398,11 @@
       "vacuum_wave"
     ],
     "egg": [
+      "bullet_punch",
       "counter",
       "feint",
+      "high_jump_kick",
+      "mach_punch",
       "rapid_spin",
       "vacuum_wave"
     ],
@@ -18222,6 +18453,10 @@
       [
         1,
         "defense_curl"
+      ],
+      [
+        1,
+        "lick"
       ],
       [
         6,
@@ -18297,6 +18532,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "retaliate",
       "rock_slide",
       "rock_tomb",
       "round",
@@ -18339,7 +18575,11 @@
     "weight_kg": 65.5,
     "category": "Licking Pokémon",
     "flavor": "Wields its long tongue deftly, as though it were an arm. The Pokémon's viscous saliva, once it has been collected and boiled down, yields a strong and highly useful adhesive.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "steel_roller",
+      "terrain_pulse"
+    ]
   },
   "Rhyhorn": {
     "shape": "quadruped",
@@ -18488,6 +18728,8 @@
       "counter",
       "curse",
       "dragon_rush",
+      "guard_split",
+      "metal_burst",
       "rock_polish"
     ],
     "moves": [
@@ -18679,6 +18921,8 @@
       "counter",
       "curse",
       "dragon_rush",
+      "guard_split",
+      "metal_burst",
       "rock_polish"
     ],
     "moves": [
@@ -18794,6 +19038,10 @@
         "double_edge"
       ],
       [
+        44,
+        "soft_boiled"
+      ],
+      [
         48,
         "last_resort"
       ],
@@ -18868,6 +19116,7 @@
     ],
     "egg": [
       "gravity",
+      "heal_bell",
       "present",
       "seismic_toss"
     ],
@@ -18995,6 +19244,7 @@
       "grassy_terrain",
       "hyper_beam",
       "leaf_storm",
+      "power_swap",
       "power_whip",
       "protect",
       "reflect",
@@ -19015,6 +19265,7 @@
       "endeavor",
       "flail",
       "leech_seed",
+      "nature_power",
       "rage_powder"
     ],
     "tutor": [
@@ -19148,6 +19399,7 @@
       "focus_blast",
       "focus_energy",
       "giga_impact",
+      "hail",
       "helping_hand",
       "hydro_pump",
       "hyper_beam",
@@ -19162,6 +19414,7 @@
       "protect",
       "rain_dance",
       "rest",
+      "retaliate",
       "reversal",
       "rock_slide",
       "rock_tomb",
@@ -19206,7 +19459,10 @@
     "weight_kg": 80.0,
     "category": "Parent Pokémon",
     "flavor": "There are records of a lost human child being raised by a childless Kangaskhan.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "terrain_pulse"
+    ]
   },
   "Mr. Mime": {
     "shape": "humanoid",
@@ -19255,6 +19511,14 @@
       ],
       [
         1,
+        "power_swap"
+      ],
+      [
+        1,
+        "guard_swap"
+      ],
+      [
+        1,
         "wide_guard"
       ],
       [
@@ -19264,6 +19528,10 @@
       [
         12,
         "confusion"
+      ],
+      [
+        16,
+        "role_play"
       ],
       [
         20,
@@ -19332,19 +19600,23 @@
       "future_sight",
       "giga_impact",
       "grass_knot",
+      "guard_swap",
       "helping_hand",
       "hyper_beam",
       "ice_punch",
       "icy_wind",
       "iron_defense",
       "light_screen",
+      "magic_room",
       "magical_leaf",
       "mega_kick",
       "mega_punch",
       "metronome",
       "misty_terrain",
+      "mystical_fire",
       "nasty_plot",
       "payback",
+      "power_swap",
       "protect",
       "psychic",
       "psychic_terrain",
@@ -19378,6 +19650,7 @@
       "confuse_ray",
       "fake_out",
       "hypnosis",
+      "power_split",
       "tickle"
     ],
     "tutor": [
@@ -19582,6 +19855,14 @@
       ],
       [
         1,
+        "lick"
+      ],
+      [
+        1,
+        "powder_snow"
+      ],
+      [
+        1,
         "sweet_kiss"
       ],
       [
@@ -19613,8 +19894,16 @@
         "psychic"
       ],
       [
+        40,
+        "lovely_kiss"
+      ],
+      [
         46,
         "mean_look"
+      ],
+      [
+        52,
+        "perish_song"
       ],
       [
         58,
@@ -19643,6 +19932,7 @@
       "future_sight",
       "giga_impact",
       "grass_knot",
+      "hail",
       "helping_hand",
       "hyper_beam",
       "hyper_voice",
@@ -19651,6 +19941,7 @@
       "icicle_spear",
       "icy_wind",
       "light_screen",
+      "magic_room",
       "mega_kick",
       "mega_punch",
       "metronome",
@@ -19680,7 +19971,8 @@
       "zen_headbutt"
     ],
     "tutor": [
-      "expanding_force"
+      "expanding_force",
+      "triple_axel"
     ],
     "moves": [
       "blizzard",
@@ -19923,6 +20215,10 @@
         "fire_punch"
       ],
       [
+        34,
+        "lava_plume"
+      ],
+      [
         40,
         "low_kick"
       ],
@@ -19998,7 +20294,8 @@
       "cross_chop",
       "dynamic_punch",
       "focus_punch",
-      "follow_me"
+      "follow_me",
+      "mach_punch"
     ],
     "moves": [
       "hyper_beam",
@@ -20046,6 +20343,10 @@
     "learnset": [
       [
         1,
+        "vice_grip"
+      ],
+      [
+        1,
         "harden"
       ],
       [
@@ -20065,8 +20366,16 @@
         "bug_bite"
       ],
       [
+        20,
+        "storm_throw"
+      ],
+      [
         24,
         "double_hit"
+      ],
+      [
+        28,
+        "vital_throw"
       ],
       [
         32,
@@ -20083,6 +20392,10 @@
       [
         44,
         "submission"
+      ],
+      [
+        48,
+        "guillotine"
       ],
       [
         52,
@@ -20214,6 +20527,10 @@
       [
         30,
         "zen_headbutt"
+      ],
+      [
+        35,
+        "raging_bull"
       ],
       [
         40,
@@ -20389,6 +20706,14 @@
       [
         55,
         "hydro_pump"
+      ],
+      [
+        60,
+        "perish_song"
+      ],
+      [
+        65,
+        "sheer_cold"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -20450,7 +20775,9 @@
       "ancient_power",
       "curse",
       "fissure",
+      "freeze_dry",
       "horn_drill",
+      "sparkling_aria",
       "tickle"
     ],
     "moves": [
@@ -20495,10 +20822,17 @@
       "imposter"
     ],
     "hidden_ability": "imposter",
-    "learnset": [],
+    "learnset": [
+      [
+        1,
+        "transform"
+      ]
+    ],
     "learnset_version": "scarlet-violet",
     "tm": [],
-    "moves": [],
+    "moves": [
+      "transform"
+    ],
     "catch_rate": 35,
     "base_exp": 101,
     "growth": "medium_fast",
@@ -20635,6 +20969,7 @@
     ],
     "egg": [
       "curse",
+      "detect",
       "double_kick",
       "flail",
       "mud_slap",
@@ -21138,6 +21473,10 @@
         "fire_spin"
       ],
       [
+        40,
+        "lava_plume"
+      ],
+      [
         45,
         "scary_face"
       ],
@@ -21248,6 +21587,10 @@
         "tackle"
       ],
       [
+        1,
+        "conversion"
+      ],
+      [
         5,
         "recycle"
       ],
@@ -21262,6 +21605,10 @@
       [
         20,
         "psybeam"
+      ],
+      [
+        25,
+        "conversion_2"
       ],
       [
         30,
@@ -21446,6 +21793,7 @@
       "endure",
       "facade",
       "gyro_ball",
+      "hail",
       "hydro_pump",
       "ice_beam",
       "icy_wind",
@@ -21478,6 +21826,7 @@
       "bubble_beam",
       "haze",
       "knock_off",
+      "reflect_type",
       "slam",
       "supersonic",
       "tickle",
@@ -21614,6 +21963,7 @@
       "facade",
       "giga_impact",
       "gyro_ball",
+      "hail",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -21762,6 +22112,7 @@
       "endure",
       "facade",
       "giga_drain",
+      "hail",
       "hydro_pump",
       "ice_beam",
       "icy_wind",
@@ -21940,6 +22291,7 @@
       "facade",
       "giga_drain",
       "giga_impact",
+      "hail",
       "hydro_pump",
       "hyper_beam",
       "ice_beam",
@@ -22205,6 +22557,10 @@
       ],
       [
         1,
+        "lick"
+      ],
+      [
+        1,
         "flail"
       ],
       [
@@ -22419,6 +22775,10 @@
         "mist"
       ],
       [
+        5,
+        "powder_snow"
+      ],
+      [
         10,
         "reflect"
       ],
@@ -22437,6 +22797,10 @@
       [
         30,
         "tailwind"
+      ],
+      [
+        35,
+        "freeze_dry"
       ],
       [
         40,
@@ -22461,6 +22825,10 @@
       [
         65,
         "blizzard"
+      ],
+      [
+        70,
+        "sheer_cold"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -22502,6 +22870,7 @@
       "tailwind",
       "take_down",
       "tera_blast",
+      "triple_axel",
       "u_turn",
       "water_pulse",
       "weather_ball"
@@ -22602,6 +22971,10 @@
       [
         55,
         "thunder"
+      ],
+      [
+        60,
+        "detect"
       ],
       [
         65,
@@ -22956,6 +23329,7 @@
     "egg": [
       "aqua_jet",
       "dragon_breath",
+      "extreme_speed",
       "mist",
       "supersonic",
       "water_pulse"
@@ -23188,6 +23562,10 @@
       ],
       [
         1,
+        "extreme_speed"
+      ],
+      [
+        1,
         "roost"
       ],
       [
@@ -23393,8 +23771,20 @@
         "psychic"
       ],
       [
+        56,
+        "power_swap"
+      ],
+      [
+        56,
+        "guard_swap"
+      ],
+      [
         64,
         "mist"
+      ],
+      [
+        72,
+        "psystrike"
       ],
       [
         80,
@@ -23545,6 +23935,10 @@
         "pound"
       ],
       [
+        1,
+        "reflect_type"
+      ],
+      [
         10,
         "amnesia"
       ],
@@ -23571,6 +23965,10 @@
       [
         70,
         "imprison"
+      ],
+      [
+        80,
+        "transform"
       ],
       [
         90,
@@ -23720,10 +24118,12 @@
       "overheat",
       "pain_split",
       "petal_blizzard",
+      "phantom_force",
       "play_rough",
       "poison_jab",
       "poison_tail",
       "pollen_puff",
+      "poltergeist",
       "pounce",
       "power_gem",
       "protect",
@@ -23794,6 +24194,7 @@
       "trailblaze",
       "trick",
       "trick_room",
+      "triple_axel",
       "u_turn",
       "upper_hand",
       "uproar",
