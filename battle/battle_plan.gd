@@ -11,6 +11,11 @@ extends RefCounted
 ## - desgaste: status primeiro, recua mais.
 ## - cacar: vai no alvo de HP mais baixo (2x2) e fica em cima dele.
 ## - proteger (2x2): fica entre o parceiro ferido e o inimigo mais perto dele.
+##
+## Memória do adversário (observe): cada IA conta os golpes que viu cada inimigo soltar (contato/investida,
+## de longe, status) e guarda a velocidade recente dele (mira de área). Contra quem vive investindo
+## (`foe_style` "dasher") fica mais longe, pronto para esquivar, e puxa artilharia; contra quem só
+## atira ("ranged") encosta (pressão, caçar, emboscada na grama); contra quem vive de status, pressão.
 
 const PRESS := "pressao"
 const ARTILLERY := "artilharia"
@@ -58,6 +63,19 @@ const PROTECT_HP := 0.5
 const PROTECT_GAP := 1.8
 ## Alvo com HP abaixo disso puxa caçar (e pressão).
 const LOW_TARGET := 0.35
+## Memória: confia no estilo do inimigo depois de MEM_MIN golpes vistos; "dasher" com MEM_DASH dos
+## golpes de contato, "ranged" com MEM_RANGED de longe, "status" com MEM_STATUS de status. A faixa vai
+## x MEM_FAR contra "dasher" (fora da pressão) e x MEM_CLOSE contra "ranged" (fora da artilharia).
+## Velocidade lembrada: média com constante de tempo MEM_VEL_TAU s.
+const MEM_MIN := 3
+const MEM_DASH := 0.5
+const MEM_RANGED := 0.7
+const MEM_STATUS := 0.35
+const MEM_FAR := 1.15
+const MEM_CLOSE := 0.85
+const MEM_VEL_TAU := 0.3
+const MEM_CONTACT := ["dash", "arc", "multi_arc", "whip"]
+const MEM_FAR_KINDS := ["projectile", "homing", "beam", "stream", "aoe_target", "zone"]
 
 
 ## Pesos de cada plano agora (0 = fora). `ai` é o BattleAI do lutador.
@@ -137,6 +155,18 @@ static func weights(ai) -> Dictionary:
 		w[ARTILLERY] += 0.6 if w[ARTILLERY] > 0.0 else 0.0
 		if ter.has_cover():
 			w[AMBUSH] += 0.6
+	match foe_style(ai, opp):
+		"dasher":
+			w[ARTILLERY] += 0.8 if w[ARTILLERY] > 0.0 else 0.0
+			w[ATTRITION] += 0.3
+			w[PRESS] *= 0.8
+		"ranged":
+			w[PRESS] += 1.0
+			w[HUNT] += 0.4
+			w[AMBUSH] += 0.4
+			w[ARTILLERY] *= 0.7
+		"status":
+			w[PRESS] += 0.5
 	var mates := ai.partner() != null
 	var foes: int = f.arena.targets_of(f).size()
 	if mates and ai._partner_hurt():
@@ -206,4 +236,63 @@ static func status_mult(plan: String) -> float:
 			return STATUS_MORE
 		PRESS, HUNT:
 			return STATUS_LESS
+	return 1.0
+
+
+## Memória: conta os golpes novos de cada inimigo em campo (pelo cast_n) e atualiza a velocidade média.
+static func observe(ai, dt: float) -> void:
+	var k := 1.0 - exp(-dt / MEM_VEL_TAU)
+	for o in ai.f.arena.targets_of(ai.f):
+		var id: int = o.get_instance_id()
+		var v := Vector3(o.velocity.x, 0.0, o.velocity.z)
+		if not ai.foe_mem.has(id):
+			ai.foe_mem[id] = {"n": 0, "dash": 0, "ranged": 0, "status": 0, "seen": o.cast_n, "v": v}
+			continue
+		var m: Dictionary = ai.foe_mem[id]
+		m.v = (m.v as Vector3).lerp(v, k)
+		if o.cast_n == int(m.seen):
+			continue
+		m.seen = o.cast_n
+		var mv: Dictionary = o.cast_move
+		m.n += 1
+		if String(mv.get("category", "")) == "status" or float(mv.get("power", 0)) <= 0.0:
+			m.status += 1
+		elif String(mv.get("kind", "")) in MEM_CONTACT:
+			m.dash += 1
+		elif String(mv.get("kind", "")) in MEM_FAR_KINDS:
+			m.ranged += 1
+
+
+## Estilo lembrado do inimigo: "" (pouco visto ou misto), "dasher", "ranged" ou "status".
+static func foe_style(ai, o) -> String:
+	if not is_instance_valid(o):
+		return ""
+	var m: Dictionary = ai.foe_mem.get(o.get_instance_id(), {})
+	var n := int(m.get("n", 0))
+	if n < MEM_MIN:
+		return ""
+	if float(m.dash) / n >= MEM_DASH:
+		return "dasher"
+	if float(m.ranged) / n >= MEM_RANGED:
+		return "ranged"
+	if float(m.status) / n >= MEM_STATUS:
+		return "status"
+	return ""
+
+
+## Velocidade recente do inimigo (lembrada; sem memória ainda, a de agora).
+static func foe_velocity(ai, o) -> Vector3:
+	var m: Dictionary = ai.foe_mem.get(o.get_instance_id(), {})
+	if m.has("v"):
+		return m.v
+	return Vector3(o.velocity.x, 0.0, o.velocity.z)
+
+
+## Multiplicador da faixa de distância pela memória do alvo: longe de quem investe, perto de quem atira.
+static func memory_band(ai) -> float:
+	match foe_style(ai, ai.f.opponent):
+		"dasher":
+			return 1.0 if ai.plan == PRESS else MEM_FAR
+		"ranged":
+			return 1.0 if ai.plan == ARTILLERY else MEM_CLOSE
 	return 1.0
