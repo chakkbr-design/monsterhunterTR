@@ -24,7 +24,8 @@ static var _fit_cache := {}
 
 
 static func slug(species: String) -> String:
-	return species.to_lower().replace(" ", "_").replace(".", "").replace("'", "")
+	# ":" sai como no tools/kanto_sprites.py (o Windows não aceita na pasta: Type: Null -> type_null)
+	return species.to_lower().replace(" ", "_").replace(".", "").replace("'", "").replace(":", "")
 
 
 ## Caminho do original ("res://assets/...") convertido para "res://original/assets/...".

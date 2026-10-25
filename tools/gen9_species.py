@@ -1,5 +1,5 @@
-"""Atualiza data/species.json para a geração atual (PokeAPI): todos os Pokémon de 1..N (padrão 151, Kanto
-inteiro) e também as espécies do jogo fora desse intervalo (ex.: Kingdra); as que faltam são criadas.
+"""Atualiza data/species.json para a geração atual (PokeAPI): todos os Pokémon de 1..N (padrão 1025, a Pokédex
+nacional inteira) e também as espécies do jogo fora desse intervalo (ex.: Kingdra); as que faltam são criadas.
 
 Stats base, tipos, habilidades (normais + oculta), learnset por nível da versão mais recente em que a
 espécie aparece (SV > SwSh > BDSP > USUM), golpes de evolução (nível 0 da PokeAPI), TMs, egg e tutor.
@@ -14,9 +14,10 @@ import json, os, sys
 P = os.path.join(os.path.dirname(__file__), "..", "..", "pba-referencia", "dados", "pokeapi")
 if len(sys.argv) > 1:
     P = sys.argv[1]
-LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 151
+LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 1025
 ALL = True
-PREF = ["scarlet-violet", "sword-shield", "brilliant-diamond-shining-pearl", "ultra-sun-ultra-moon"]
+PREF = ["scarlet-violet", "sword-shield", "brilliant-diamond-shining-pearl", "ultra-sun-ultra-moon", "sun-moon",
+        "omega-ruby-alpha-sapphire", "x-y", "black-2-white-2"]
 GROWTH = {
     "slow": "slow",
     "medium": "medium_fast",
@@ -36,10 +37,24 @@ STAT = {
 ITEM_EVO = {"fire-stone": "fire_stone", "moon-stone": "moon_stone", "thunder-stone": "thunder_stone",
             "leaf-stone": "leaf_stone", "water-stone": "water_stone"}
 # Espécies novas que não andam no chão: fly = sempre no ar, hover = flutua um pouco (data/species.json _doc).
+# Fora desta lista vale a regra de locomotion(): Voador de asas voa, Levitate e fantasma sem pernas flutuam.
 LOCOMOTION = {
     "Farfetch'd": "fly", "Aerodactyl": "fly", "Articuno": "fly", "Zapdos": "fly", "Moltres": "fly",
     "Dragonite": "fly", "Gastly": "hover", "Haunter": "hover", "Mew": "hover", "Porygon": "hover",
+    # Gen 2-9: dragões e lendários que voam sem ter forma de asa, e os que flutuam sem Levitate
+    "Lugia": "fly", "Ho-Oh": "fly", "Rayquaza": "fly", "Salamence": "fly", "Togekiss": "fly", "Yveltal": "fly",
+    "Latias": "fly", "Latios": "fly", "Noivern": "fly", "Charizard": "fly", "Flygon": "fly", "Hydreigon": "fly",
+    "Dragapult": "hover", "Drakloak": "hover", "Dreepy": "hover", "Celebi": "hover", "Jirachi": "hover",
+    "Deoxys": "hover", "Uxie": "hover", "Mesprit": "hover", "Azelf": "hover", "Cresselia": "hover",
+    "Giratina": "hover", "Porygon2": "hover", "Porygon-Z": "hover", "Magnezone": "hover", "Klink": "hover",
+    "Klang": "hover", "Klinklang": "hover", "Solrock": "hover", "Lunatone": "hover", "Bronzor": "hover",
+    "Bronzong": "hover", "Hoopa": "hover", "Necrozma": "hover", "Cosmog": "hover", "Cosmoem": "hover",
+    "Lunala": "fly", "Mimikyu": "ground", "Pheromosa": "ground", "Kartana": "hover", "Celesteela": "hover",
+    "Nihilego": "hover", "Volcarona": "fly", "Frosmoth": "fly", "Vikavolt": "hover", "Enamorus": "fly",
+    "Tornadus": "fly", "Thundurus": "fly", "Landorus": "fly", "Shaymin": "ground", "Gholdengo": "ground",
+    "Flutter Mane": "hover", "Iron Moth": "fly", "Eternatus": "hover", "Regieleki": "ground",
 }
+LEGS = {"legs", "quadruped", "upright", "humanoid", "armor"}
 # Formas que não pulam (rastejam, rolam, flutuam ou são pesadas demais).
 NO_JUMP = {"squiggle", "blob", "armor", "fish", "ball", "heads", "tentacles"}
 COLOR = {"black": "#585858", "blue": "#5c7fc0", "brown": "#a0785a", "gray": "#9a9a9a", "green": "#6fbf8a",
@@ -52,7 +67,8 @@ def new_fields(name, p, sp):
     h, w = p["height"] / 10.0, p["weight"] / 10.0
     bst = sum(s["base_stat"] for s in p["stats"])
     shape = sp["shape"]["name"] if sp.get("shape") else "upright"
-    e = {"shape": shape, "locomotion": LOCOMOTION.get(name, "ground")}
+    abil = [a["ability"]["name"] for a in p["abilities"]]
+    e = {"shape": shape, "locomotion": LOCOMOTION.get(name) or locomotion(types, shape, abil, w)}
     import math
 
     if e["locomotion"] == "fly":
@@ -68,6 +84,18 @@ def new_fields(name, p, sp):
     e["pp"] = int(min(130, max(70, 5 * round((55 + 0.15 * bst) / 5))))
     e["placeholder_tint"] = COLOR.get(sp["color"]["name"], "#ffffff")
     return e
+
+
+def locomotion(types, shape, abil, w):
+    """Locomoção de quem não está em LOCOMOTION: Voador de asas (leve) voa; Levitate, ou fantasma/psíquico
+    sem pernas, flutua; o resto anda."""
+    if "flying" in types and shape in ("wings", "bug-wings") and w < 300:
+        return "fly"
+    if "levitate" in abil:
+        return "hover"
+    if ("ghost" in types or "psychic" in types) and shape in ("ball", "blob", "arms", "heads", "tentacles"):
+        return "hover"
+    return "ground"
 
 
 def load(name):
@@ -139,7 +167,7 @@ def main():
     known = {m["id"] for m in json.load(open("data/moves.json", encoding="utf-8"))["moves"]}
     by_no = {v["dex_no"]: k for k, v in doc.items() if k != "_doc"}
     names = {}
-    for no in range(1, 152):
+    for no in range(1, LAST + 1):
         sp = load("pokemon-species_%d" % no)
         names[sp["name"]] = by_no.get(no) or next(
             n["name"] for n in sp["names"] if n["language"]["name"] == "en"
