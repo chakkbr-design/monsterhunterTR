@@ -1153,6 +1153,8 @@ func _tint() -> Color:
 			c = c.lerp(Color(1, 1, 0.2), 0.35)
 		"sleep":
 			c = c.darkened(0.4)
+	if has_meta("form_tint"):
+		c *= Color(get_meta("form_tint"))  # forma sem arte (BattleAbilitiesMore.set_form)
 	return c
 
 

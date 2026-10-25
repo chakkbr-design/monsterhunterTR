@@ -457,6 +457,10 @@ func usable(user: BattleFighter, mv: Dictionary, feedback := false) -> bool:
 func _blocked(user: BattleFighter, mv: Dictionary) -> String:
 	var id := String(mv.get("id", ""))
 	var s := st(user)
+	if arena.abilities:
+		var ab_why: String = arena.abilities.move_blocked(user, mv)  # Truant, Commander
+		if ab_why != "":
+			return ab_why
 	for foe in _foes(user):
 		if bool(st(foe).imprison) and id in foe.moves:
 			return "Aprisionado!"
@@ -566,6 +570,8 @@ func sleep_move(f: BattleFighter, mv: Dictionary) -> bool:
 ## O golpe como sai agora (Grassy Glide ganha prioridade +1 no campo de grama; Solar Beam/Blade no sol
 ## saem sem o turno de carga, aqui o preparo quase todo).
 func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
+	if arena.abilities:
+		mv = arena.abilities.move_for(user, mv)  # Normalize, Pixilate, Liquid Voice...
 	if String(mv.get("id", "")) in SOLAR_MOVES and weather() == "sun":
 		var sm := mv.duplicate()
 		sm["windup"] = SOLAR_SUN_WINDUP
@@ -828,6 +834,8 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		return true
 	if BattleMore.blocks_hit(self, user, target, mv):
 		return true
+	if arena.abilities and arena.abilities.blocks_hit(user, target, mv):
+		return true  # Magic Bounce, Good as Gold, Dazzling...
 	if (
 		float(mv.get("power", 0)) <= 0.0
 		and int(ts.sub) > 0
@@ -838,7 +846,10 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		return true
 	if sp == "no_protect":
 		return false
-	if active(ts, "protect"):
+	if (
+		active(ts, "protect")
+		and not (arena.abilities and arena.abilities.pierces_protect(user, mv))
+	):
 		target.popup("Protegeu-se!", Color(0.6, 0.9, 1.0), 1.1)
 		BattleKanto.on_protected(self, target)
 		us.fail = true
@@ -1125,6 +1136,8 @@ func attacker_profile(user: BattleFighter, target: BattleFighter, m: Dictionary)
 		"facade":
 			p["burned"] = false
 	BattleMore.attacker(self, user, target, m, p)
+	if arena.abilities:
+		arena.abilities.tweak_attacker(user, target, p)  # Merciless
 	return p
 
 
@@ -1222,7 +1235,11 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 
 ## Status que o golpe não consegue dar (Safeguard; Aço e Veneno não se envenenam).
 func blocks_status(user: BattleFighter, target: BattleFighter, s: String) -> bool:
-	if s in ["poison", "toxic"] and ("steel" in target.types or "poison" in target.types):
+	if (
+		s in ["poison", "toxic"]
+		and ("steel" in target.types or "poison" in target.types)
+		and not BattleAbilitiesMore.corrodes(arena.abilities, user, s)
+	):
 		target.popup("Imune a veneno", Color(0.8, 0.8, 0.8))
 		return true
 	if (
@@ -2375,6 +2392,8 @@ func no_jump() -> bool:
 func cant_escape(f: BattleFighter) -> bool:
 	if not is_instance_valid(f) or "ghost" in f.types:
 		return false
+	if arena.abilities and arena.abilities.traps(f):
+		return true  # Shadow Tag
 	return bool(st(f).trapped) or active(st(f), "bound")
 
 

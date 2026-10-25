@@ -20,34 +20,50 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 
 
 ## Golpe parado antes de acertar (proteções novas). true = parou.
-static func blocks_hit(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
-	return BattleMoreA.blocks_hit(fx, user, target, mv) or BattleMoreB.blocks_hit(fx, user, target, mv)
+static func blocks_hit(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary
+) -> bool:
+	return (
+		BattleMoreA.blocks_hit(fx, user, target, mv) or BattleMoreB.blocks_hit(fx, user, target, mv)
+	)
 
 
 ## Poder deste acerto (poder variável). Devolve o poder novo.
-static func power(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: float) -> float:
+static func power(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: float
+) -> float:
 	return BattleMoreB.power(fx, user, target, m, BattleMoreA.power(fx, user, target, m, p))
 
 
 ## Tipo deste acerto (golpes que mudam de tipo). Devolve o tipo novo.
-static func move_type(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, ty: String) -> String:
-	return BattleMoreB.move_type(fx, user, target, m, BattleMoreA.move_type(fx, user, target, m, ty))
+static func move_type(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, ty: String
+) -> String:
+	return BattleMoreB.move_type(
+		fx, user, target, m, BattleMoreA.move_type(fx, user, target, m, ty)
+	)
 
 
 ## Perfil do atacante (atk/spa/burned...) para a fórmula: muda p no lugar.
-static func attacker(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: Dictionary) -> void:
+static func attacker(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: Dictionary
+) -> void:
 	BattleMoreA.attacker(fx, user, target, m, p)
 	BattleMoreB.attacker(fx, user, target, m, p)
 
 
 ## Perfil do defensor (def/spd/types...) para a fórmula: muda p no lugar.
-static func defender(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: Dictionary) -> void:
+static func defender(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, m: Dictionary, p: Dictionary
+) -> void:
 	BattleMoreA.defender(fx, user, target, m, p)
 	BattleMoreB.defender(fx, user, target, m, p)
 
 
 ## Depois do acerto (também golpes de status com alvo), com o dano tirado.
-static func after_hit(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt: int) -> void:
+static func after_hit(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt: int
+) -> void:
 	BattleMoreA.after_hit(fx, user, target, mv, dealt)
 	BattleMoreB.after_hit(fx, user, target, mv, dealt)
 
@@ -66,7 +82,9 @@ static func ai_worth(fx: BattleMoveEffects, f: BattleFighter, mv: Dictionary) ->
 
 
 ## Alvo levou dano de golpe.
-static func note_damage(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt: int) -> void:
+static func note_damage(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt: int
+) -> void:
 	BattleMoreA.note_damage(fx, user, target, mv, dealt)
 	BattleMoreB.note_damage(fx, user, target, mv, dealt)
 
@@ -90,12 +108,16 @@ static func end_turn(fx: BattleMoveEffects, f: BattleFighter) -> void:
 
 
 ## debuff_aoe com "special" que o BattleMoveEffects não conhece (vários atributos, troca). true = tratado aqui.
-static func debuff_move(fx: BattleMoveEffects, user: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
+static func debuff_move(
+	fx: BattleMoveEffects, user: BattleFighter, t: BattleFighter, mv: Dictionary
+) -> bool:
 	return BattleMoreA.debuff_move(fx, user, t, mv) or BattleMoreB.debuff_move(fx, user, t, mv)
 
 
 ## Poder que a IA conta neste golpe (poder condicional). Negativo = sem opinião (usa o padrão).
-static func ai_power(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+static func ai_power(
+	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary
+) -> float:
 	var r := BattleMoreA.ai_power(fx, user, target, mv)
 	if r >= 0.0:
 		return r

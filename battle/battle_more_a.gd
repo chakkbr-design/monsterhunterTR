@@ -906,10 +906,14 @@ static func _unleash(fx: BattleMoveEffects, f: BattleFighter) -> void:
 
 
 ## debuff_aoe com "special" que o BattleMoveEffects não conhece (vários atributos, troca). true = tratado aqui.
-static func debuff_move(_fx: BattleMoveEffects, _user: BattleFighter, _t: BattleFighter, _mv: Dictionary) -> bool:
+static func debuff_move(
+	_fx: BattleMoveEffects, _user: BattleFighter, _t: BattleFighter, _mv: Dictionary
+) -> bool:
 	return false
 
 
 ## Poder que a IA conta neste golpe (poder condicional). Negativo = sem opinião (usa o padrão).
-static func ai_power(_fx: BattleMoveEffects, _user: BattleFighter, _target: BattleFighter, _mv: Dictionary) -> float:
+static func ai_power(
+	_fx: BattleMoveEffects, _user: BattleFighter, _target: BattleFighter, _mv: Dictionary
+) -> float:
 	return -1.0

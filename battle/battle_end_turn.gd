@@ -156,7 +156,10 @@ func run() -> void:
 			_poison(f)
 	for f in order:
 		if f.active() and f.status == "burn":
-			_dmg(f, _frac(f, 1.0 / 16.0), "queimadura", COL_BURN, "burn")
+			var burn := _frac(f, 1.0 / 16.0)
+			if ab:
+				burn = maxi(1, int(float(burn) * ab.burn_mult(f)))  # Heatproof
+			_dmg(f, burn, "queimadura", COL_BURN, "burn")
 	if fx:
 		# 10. Curse  11. Wrap/Bind
 		for f in order:
@@ -354,6 +357,9 @@ func _holds(f: BattleFighter) -> bool:
 	var fx := _fx()
 	if fx and fx.active(fx.field, "magic"):
 		return false  # Magic Room
+	var ab := _ab()
+	if ab and is_instance_valid(f) and ab.ability_of(f) == "klutz":
+		return false  # Klutz não usa o item
 	return is_instance_valid(f) and f.trainer_item != "" and not f.item_used
 
 
@@ -376,6 +382,8 @@ func held_check(f: BattleFighter) -> void:
 		if glut:
 			heal_n = int(heal_n * BattleAbilities.GLUTTONY_HEAL)  # Gluttony: devora a frutinha
 			ab._fire(f, Color(0.9, 0.7, 0.4))
+		if ab != null and ab.ability_of(f) == "ripen":
+			heal_n *= 2  # Ripen: a frutinha vale o dobro
 		f.residual_heal(f.paced(heal_n), _item_name(id))
 	elif CURE_BERRIES.has(id):
 		var cures: Array = CURE_BERRIES[id]
@@ -392,6 +400,9 @@ func held_check(f: BattleFighter) -> void:
 func _eat(f: BattleFighter) -> void:
 	f.item_used = true
 	f.set_meta("ate_berry", true)  # Belch
+	var ab := _ab()
+	if ab:
+		ab.on_berry(f)  # Cheek Pouch, Cud Chew
 
 
 static func _item_name(id: String) -> String:

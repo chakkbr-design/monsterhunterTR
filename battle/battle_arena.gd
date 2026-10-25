@@ -196,6 +196,7 @@ var _cam: Camera3D
 var _prev_cam: Camera3D
 var _yaw := 0.0
 var _swap_cd := 0.0
+var _ball_fetched := false  ## Ball Fetch já buscou a bola desta luta
 var _capture := {}
 var _think_scale := 1.0
 var _trainer_item := ""
@@ -2387,6 +2388,7 @@ func _capture_step(_dt: float) -> void:
 	if vfx and enemy.is_inside_tree():
 		vfx.puff(enemy.to_global(Vector3(0, 0.5, 0)), 1.8)
 	say(Capture.fail_line(int(_capture.res.shakes)), "catch")
+	_ball_fetch(String(_capture.id))
 	preload("res://audio/cue.gd").sfx("catch_fail")
 	_capture = {}
 	state = "fight"
@@ -2857,8 +2859,42 @@ func _doubles_refill(f: BattleFighter) -> bool:
 	return true
 
 
+## Ball Fetch: o Pokémon de mão vazia busca a primeira Poké Bola que falhou na luta e ela volta à mochila.
+func _ball_fetch(ball_id: String) -> void:
+	if _ball_fetched or not is_instance_valid(player) or not player.alive() or abilities == null:
+		return
+	if abilities.ability_of(player) != "ball_fetch":
+		return
+	if player.trainer_item != "" and not player.item_used:
+		return
+	_ball_fetched = true
+	var g := _game()
+	if g:
+		g.add_item(ball_id)
+	player.popup("Buscou a bola!", Color(1.0, 0.85, 0.5), 1.0, 0.8)
+	say("%s buscou a Poké Bola!" % player.mon.display_name, "item")
+
+
+## Honey Gather: quem venceu com ela às vezes acha mel (vai para a mochila).
+func _found_items() -> void:
+	if abilities == null:
+		return
+	var g := _game()
+	for id in abilities.found_items():
+		if g:
+			g.add_item(String(id))
+		say(
+			(
+				"%s achou %s!"
+				% [player.mon.display_name, String(Dex.item(String(id)).get("name", id))]
+			),
+			"item"
+		)
+
+
 func _end(outcome: String, delay: float, extra := {}) -> void:
 	if outcome == "win" and _rewards() and not training:
+		_found_items()
 		for m in _participants.values():
 			if not m.is_fainted():
 				m.set_friend(m.friend + FRIEND_WIN)

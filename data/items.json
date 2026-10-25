@@ -498,6 +498,18 @@
    }
   },
   {
+   "id": "honey",
+   "name": "Honey",
+   "category": "key",
+   "price": 300,
+   "effect": {},
+   "description": "Sweet honey a Pokémon with Honey Gather found. It can be sold for a low price.",
+   "icon": {
+    "shape": "vial",
+    "color": "#e8b030"
+   }
+  },
+  {
    "id": "big_mushroom",
    "name": "Big Mushroom",
    "category": "key",

@@ -114,6 +114,10 @@ const BLOCKS := {
 	"water_veil": ["burn"],
 	"limber": ["paralysis"],
 	"immunity": ["poison"],
+	"magma_armor": ["freeze"],
+	"water_bubble": ["burn"],
+	"thermal_exchange": ["burn"],
+	"sweet_veil": ["sleep"],
 }
 ## Queda de atributo anulada: habilidade -> chaves (vazio = todas).
 const KEEP_STAT := {
@@ -122,6 +126,8 @@ const KEEP_STAT := {
 	"keen_eye": ["acc"],
 	"illuminate": ["acc"],
 	"big_pecks": ["def"],
+	"white_smoke": [],
+	"full_metal_body": [],
 }
 const STAGE_KEYS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Habilidades que agem ao entrar (troca, substituição, começo da luta), em ordem pela Speed.
@@ -142,9 +148,53 @@ const ENTRY := [
 	"trace",
 	"neutralizing_gas",
 	"imposter",
+	"grassy_surge",
+	"electric_surge",
+	"misty_surge",
+	"psychic_surge",
+	"orichalcum_pulse",
+	"hadron_engine",
+	"intrepid_sword",
+	"dauntless_shield",
+	"supersweet_syrup",
+	"hospitality",
+	"costar",
+	"screen_cleaner",
+	"slow_start",
+	"illusion",
+	"zero_to_hero",
+	"tera_shift",
+	"multitype",
+	"rks_system",
 ]
 ## Habilidades que o Trace não copia.
-const UNTRACEABLE := ["trace", "neutralizing_gas", "imposter"]
+const UNTRACEABLE := [
+	"trace",
+	"neutralizing_gas",
+	"imposter",
+	"illusion",
+	"wonder_guard",
+	"multitype",
+	"rks_system",
+	"stance_change",
+	"schooling",
+	"shields_down",
+	"disguise",
+	"gulp_missile",
+	"ice_face",
+	"zen_mode",
+	"forecast",
+	"flower_gift",
+	"hunger_switch",
+	"commander",
+	"zero_to_hero",
+	"tera_shift",
+	"protosynthesis",
+	"quark_drive",
+	"receiver",
+]
+## Quem passa por cima das habilidades defensivas do alvo.
+const BREAKERS := ["mold_breaker", "turboblaze", "teravolt"]
 ## Habilidades de gatilho que o Mold Breaker NÃO ignora (agem no portador, não protegem de um golpe).
 const UNBREAKABLE := [
 	"static",
@@ -170,8 +220,40 @@ const UNBREAKABLE := [
 	"competitive",
 	"neutralizing_gas",
 	"mold_breaker",
+	"turboblaze",
+	"teravolt",
 	"scrappy",
 	"analytic",
+	"prism_armor",
+	"shadow_shield",
+	"full_metal_body",
+	"disguise",
+	"ice_face",
+	"pickpocket",
+	"magician",
+	"stamina",
+	"gooey",
+	"mummy",
+	"lingering_aroma",
+	"wandering_spirit",
+	"iron_barbs",
+	"perish_body",
+	"toxic_debris",
+	"seed_sower",
+	"sand_spit",
+	"cotton_down",
+	"berserk",
+	"anger_shell",
+	"wimp_out",
+	"emergency_exit",
+	"color_change",
+	"innards_out",
+	"gulp_missile",
+	"electromorphosis",
+	"wind_power",
+	"water_compaction",
+	"steam_engine",
+	"thermal_exchange",
 ]
 ## Habilidades que ignoram a imunidade de Fantasma (Scrappy): tipos de golpe que passam a acertar.
 const SCRAPPY_TYPES := ["normal", "fighting"]
@@ -319,6 +401,158 @@ const PROFILES := {
 	"gluttony": "wall",
 	"harvest": "wall",
 	"healer": "wall",
+	# Gen 3-9 que faltavam
+	"pickpocket": "trickster",
+	"magician": "trickster",
+	"klutz": "brawler",
+	"beast_boost": "brawler",
+	"contrary": "trickster",
+	"bulletproof": "wall",
+	"protosynthesis": "brawler",
+	"quark_drive": "brawler",
+	"sweet_veil": "wall",
+	"moody": "trickster",
+	"heavy_metal": "wall",
+	"light_metal": "skirmisher",
+	"stakeout": "brawler",
+	"protean": "trickster",
+	"libero": "trickster",
+	"magic_bounce": "trickster",
+	"cheek_pouch": "wall",
+	"aroma_veil": "wall",
+	"fluffy": "wall",
+	"shadow_tag": "trickster",
+	"suction_cups": "wall",
+	"simple": "trickster",
+	"heatproof": "wall",
+	"gooey": "wall",
+	"solid_rock": "wall",
+	"white_smoke": "wall",
+	"flower_veil": "wall",
+	"symbiosis": "wall",
+	"corrosion": "shooter",
+	"grassy_surge": "shooter",
+	"electric_surge": "shooter",
+	"misty_surge": "shooter",
+	"psychic_surge": "shooter",
+	"magma_armor": "wall",
+	"wind_rider": "flyer",
+	"truant": "wall",
+	"sharpness": "brawler",
+	"iron_barbs": "wall",
+	"long_reach": "shooter",
+	"liquid_voice": "shooter",
+	"stamina": "wall",
+	"steam_engine": "skirmisher",
+	"ripen": "wall",
+	"purifying_salt": "wall",
+	"thermal_exchange": "wall",
+	"toxic_chain": "shooter",
+	"normalize": "brawler",
+	"pure_power": "brawler",
+	"flare_boost": "shooter",
+	"slow_start": "wall",
+	"mummy": "wall",
+	"defeatist": "wall",
+	"illusion": "trickster",
+	"grass_pelt": "wall",
+	"mega_launcher": "shooter",
+	"refrigerate": "shooter",
+	"pixilate": "shooter",
+	"merciless": "brawler",
+	"water_bubble": "wall",
+	"water_compaction": "wall",
+	"cotton_down": "wall",
+	"sand_spit": "wall",
+	"propeller_tail": "flyer",
+	"ice_scales": "wall",
+	"stalwart": "wall",
+	"wind_power": "flyer",
+	"guard_dog": "brawler",
+	"mycelium_might": "trickster",
+	"toxic_debris": "wall",
+	"supersweet_syrup": "trickster",
+	"hospitality": "wall",
+	"wonder_guard": "wall",
+	"stall": "wall",
+	"toxic_boost": "brawler",
+	"forecast": "trickster",
+	"color_change": "trickster",
+	"air_lock": "flyer",
+	"flower_gift": "wall",
+	"bad_dreams": "trickster",
+	"multitype": "shooter",
+	"victory_star": "shooter",
+	"zen_mode": "brawler",
+	"turboblaze": "brawler",
+	"teravolt": "brawler",
+	"fur_coat": "wall",
+	"stance_change": "brawler",
+	"fairy_aura": "shooter",
+	"dark_aura": "shooter",
+	"aura_break": "wall",
+	"battery": "shooter",
+	"dancer": "trickster",
+	"schooling": "brawler",
+	"queenly_majesty": "wall",
+	"dazzling": "wall",
+	"triage": "wall",
+	"receiver": "wall",
+	"wimp_out": "skirmisher",
+	"emergency_exit": "skirmisher",
+	"innards_out": "wall",
+	"rks_system": "brawler",
+	"shields_down": "wall",
+	"comatose": "wall",
+	"disguise": "trickster",
+	"berserk": "shooter",
+	"steelworker": "brawler",
+	"full_metal_body": "wall",
+	"shadow_shield": "wall",
+	"prism_armor": "wall",
+	"soul_heart": "shooter",
+	"mirror_armor": "wall",
+	"ball_fetch": "skirmisher",
+	"gulp_missile": "flyer",
+	"punk_rock": "shooter",
+	"steely_spirit": "brawler",
+	"perish_body": "wall",
+	"screen_cleaner": "wall",
+	"wandering_spirit": "trickster",
+	"power_spot": "wall",
+	"ice_face": "wall",
+	"hunger_switch": "skirmisher",
+	"intrepid_sword": "brawler",
+	"dauntless_shield": "wall",
+	"unseen_fist": "brawler",
+	"transistor": "shooter",
+	"dragons_maw": "shooter",
+	"chilling_neigh": "brawler",
+	"grim_neigh": "shooter",
+	"lingering_aroma": "wall",
+	"well_baked_body": "wall",
+	"seed_sower": "wall",
+	"electromorphosis": "shooter",
+	"anger_shell": "brawler",
+	"opportunist": "skirmisher",
+	"rocky_payload": "brawler",
+	"zero_to_hero": "brawler",
+	"earth_eater": "wall",
+	"costar": "wall",
+	"commander": "wall",
+	"cud_chew": "wall",
+	"armor_tail": "wall",
+	"supreme_overlord": "brawler",
+	"good_as_gold": "wall",
+	"tablets_of_ruin": "brawler",
+	"sword_of_ruin": "brawler",
+	"vessel_of_ruin": "shooter",
+	"beads_of_ruin": "shooter",
+	"orichalcum_pulse": "brawler",
+	"hadron_engine": "shooter",
+	"tera_shift": "brawler",
+	"poison_puppeteer": "trickster",
+	"honey_gather": "skirmisher",
 }
 
 var arena: Node
@@ -340,6 +574,10 @@ var weather_t := 0.0  ## segundos restantes (-1 = sem fim em segundos)
 var weather_rounds := 0  ## rodadas restantes do clima de golpe/habilidade (0 = não conta rodada)
 var weather_ended := ""
 var _gas_prev := false  ## havia Neutralizing Gas no frame anterior  ## clima que acabou no último fim de turno (count_weather_round)
+var once_used := {}  ## "uma vez por luta" (Intrepid Sword, Supersweet Syrup): "id do mon:chave" -> true
+var bouncing := false  ## Magic Bounce devolvendo um golpe (o rebatido não rebate de novo)
+var dancing := false  ## Dancer repetindo um passo (não entra em cadeia)
+var seen_faint := {}  ## id do lutador -> já contado o desmaio (Soul Heart, Receiver)
 
 
 func _init(a: Node) -> void:
@@ -381,11 +619,26 @@ func _gas_on() -> bool:
 
 
 ## Habilidade do alvo que vale contra este atacante: o Mold Breaker ignora as defensivas.
-func _tab(user: BattleFighter, target: BattleFighter) -> String:
+func _tab(user: BattleFighter, target: BattleFighter, mv := {}) -> String:
 	var ta := ability_of(target)
-	if ta != "" and ability_of(user) == "mold_breaker" and not ta in UNBREAKABLE:
+	if ta == "":
+		return ""
+	if _breaker(user) and not ta in UNBREAKABLE:
+		return ""
+	# Mycelium Might: o golpe de estado passa por cima da habilidade do alvo.
+	if (
+		not mv.is_empty()
+		and String(mv.get("category", "")) == "status"
+		and ability_of(user) == "mycelium_might"
+		and not ta in UNBREAKABLE
+	):
 		return ""
 	return ta
+
+
+## Mold Breaker, Turboblaze e Teravolt: o golpe passa por cima das habilidades defensivas.
+func _breaker(user: BattleFighter) -> bool:
+	return is_instance_valid(user) and ability_of(user) in BREAKERS
 
 
 func _state(f: BattleFighter) -> Dictionary:
@@ -524,6 +777,8 @@ func _entry(f: BattleFighter) -> bool:
 			f.popup("Gás tóxico!", Color(0.7, 0.9, 0.5), 0.9, 0.9)
 		"imposter":
 			return _do_imposter(f)
+		_:
+			return BattleAbilitiesMore.entry(self, f)
 	return true
 
 
@@ -612,7 +867,14 @@ func _do_intimidate(f: BattleFighter) -> bool:
 		return false
 	_fire(f, Color(1.0, 0.5, 0.35))
 	for t in foes:
-		if ability_of(t) in INTIMIDATE_PROOF:
+		var tb := ability_of(t)
+		if tb == "guard_dog":
+			_stage_up(t, "atk", 1)  # Guard Dog: a intimidação vira coragem
+			_fire(t, Color(1.0, 0.7, 0.4))
+		elif tb == "mirror_armor":
+			_fire(t, Color(0.85, 0.9, 1.0))
+			arena.moves.change_stage(f, "atk", -1)  # Mirror Armor devolve o -1
+		elif tb in INTIMIDATE_PROOF:
 			_fire(t)
 		else:
 			arena.moves.change_stage(t, "atk", -1)
@@ -775,9 +1037,10 @@ func _foresaw(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> boo
 
 
 ## Registra o golpe usado (Analytic olha no alvo quando ele agiu).
-func on_move_used(user: BattleFighter, _mv: Dictionary) -> void:
+func on_move_used(user: BattleFighter, mv: Dictionary) -> void:
 	if is_instance_valid(user):
 		_state(user).moved = _now
+		BattleAbilitiesMore.on_move_used(self, user, mv)
 
 
 ## O lutador usou um golpe há menos de ANALYTIC_WINDOW s.
@@ -820,14 +1083,15 @@ func drain_backfires(user: BattleFighter, target: BattleFighter, gain: int) -> b
 
 
 ## A IA pesa o golpe: dreno em Liquid Ooze quase não vale (o dano ainda conta, a cura vira dano).
-func ai_mult(_user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+func ai_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	if mv.has("drain") and ability_of(target) == "liquid_ooze":
 		return 0.3
-	return 1.0
+	return BattleAbilitiesMore.ai_mult(self, user, target, mv)
 
 
 ## Synchronize: o status (veneno, queimadura, paralisia) volta para quem o causou.
 func on_status(f: BattleFighter, status: String, src: BattleFighter) -> void:
+	BattleAbilitiesMore.on_status(self, f, status, src)  # Poison Puppeteer
 	if (
 		ability_of(f) != "synchronize"
 		or not status in SYNC_STATUS
@@ -854,7 +1118,7 @@ func on_status(f: BattleFighter, status: String, src: BattleFighter) -> void:
 ## Multiplicadores de dano de cada lado (sem efeitos colaterais).
 func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dictionary:
 	var ua := ability_of(user)
-	var ta := _tab(user, target)
+	var ta := _tab(user, target, mv)
 	var um := 1.0
 	var tm := 1.0
 	var type := String(mv.get("type", "normal"))
@@ -874,7 +1138,7 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 		"guts":
 			if cat == "physical" and user.status != "":
 				um *= 1.5
-		"huge_power":
+		"huge_power", "pure_power":
 			if cat == "physical":
 				um *= 2.0
 		"analytic":
@@ -944,7 +1208,7 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 			# Defesa x1,5 com status: só no físico
 			if target.status != "" and cat == "physical":
 				tm *= 2.0 / 3.0
-		"filter":
+		"filter", "solid_rock", "prism_armor":
 			if power > 0.0 and Dex.effectiveness(type, target.types) > 1.0:
 				tm *= 0.75
 		"dry_skin":
@@ -960,11 +1224,14 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 			tm /= WEATHER_DEF_MULT
 		elif wx == "hail" and cat == "physical" and "ice" in target.types:
 			tm /= WEATHER_DEF_MULT
+	var more := BattleAbilitiesMore.mults(self, user, target, mv, ua, ta, wx)
+	um *= float(more.user)
+	tm *= float(more.target)
 	var pa := partner_of(target)
 	if (
 		pa != null
 		and ability_of(pa) == "friend_guard"
-		and not ua in ["infiltrator", "mold_breaker"]
+		and not ua in ["infiltrator", "mold_breaker", "turboblaze", "teravolt"]
 	):
 		tm *= 0.75
 	return {"user": um, "target": tm}
@@ -973,7 +1240,7 @@ func _mults(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dicti
 ## Shell Armor / Battle Armor: não leva crítico (oficial).
 func no_crit(f: BattleFighter, user: BattleFighter = null) -> bool:
 	var a := ability_of(f)
-	if user != null and ability_of(user) == "mold_breaker":
+	if user != null and _breaker(user):
 		return false  # Mold Breaker: o golpe passa por cima do Shell Armor
 	return a in ["shell_armor", "battle_armor"]
 
@@ -1010,6 +1277,8 @@ func redirect(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Bat
 		return target
 	if BattleMoves.multi_target(mv) != "":
 		return target
+	if ability_of(user) in ["propeller_tail", "stalwart"]:
+		return target  # Propeller Tail / Stalwart: nada puxa o golpe
 	var rod := _rod_for(String(mv.get("type", "")))
 	if rod == "" or ability_of(target) == rod:
 		return target
@@ -1041,8 +1310,10 @@ func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 		return true
 	if user.side != target.side and _foresaw(user, target, mv):
 		return true  # Anticipation / Forewarn: viu o golpe vindo
-	var ta := _tab(user, target)  # Mold Breaker ignora as defensivas
+	var ta := _tab(user, target, mv)  # Mold Breaker ignora as defensivas
 	if _absorbs(target, type, ta):
+		return true
+	if BattleAbilitiesMore.immune(self, user, target, mv, ta):
 		return true
 	match ta:
 		"wonder_skin":
@@ -1119,7 +1390,8 @@ func _absorbs(owner: BattleFighter, type: String, ab: String) -> bool:
 
 
 ## Dano final ajustado (Sturdy segura com 1 HP etc.). Devolve o dano a aplicar.
-func adjust_damage(user: BattleFighter, target: BattleFighter, _mv: Dictionary, dmg: int) -> int:
+func adjust_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary, dmg: int) -> int:
+	dmg = BattleAbilitiesMore.adjust(self, user, target, mv, dmg)
 	if _tab(user, target) == "sturdy" and target.hp >= target.max_hp and dmg >= target.hp:
 		_fire(target, Color(0.8, 0.8, 0.9))
 		return maxi(target.hp - 1, 0)
@@ -1128,7 +1400,7 @@ func adjust_damage(user: BattleFighter, target: BattleFighter, _mv: Dictionary, 
 
 ## Depois do acerto (Static, Poison Point, Effect Spore ao contato...). `crit` = o golpe foi crítico.
 func on_hit(
-	user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: int, crit := false
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, dmg: int, crit := false
 ) -> void:
 	if not is_instance_valid(user) or not is_instance_valid(target):
 		return
@@ -1139,7 +1411,7 @@ func on_hit(
 		_fire(user)
 	if float(m.target) != 1.0:
 		_fire(target)
-	var contact := _is_contact(mv)
+	var contact := _is_contact(mv) and ua != "long_reach"  # Long Reach: nada que encosta
 	if contact and user.alive():
 		if CONTACT_STATUS.has(ta) and _roll(CONTACT_CHANCE):
 			var opts: Array = CONTACT_STATUS[ta]
@@ -1174,10 +1446,12 @@ func on_hit(
 		_serene(user, target, mv)
 	if target.alive():
 		_kanto_on_hit(user, target, mv, crit, contact)
+	BattleAbilitiesMore.on_hit(self, user, target, mv, dmg, crit, contact)
 	if ta == "justified" and String(mv.get("type", "")) == "dark":
 		_stage_up(target, "atk", 1)
 		_fire(target)
 	if target.hp <= 0:
+		BattleAbilitiesMore.on_ko(self, user)
 		if ua == "moxie":
 			_stage_up(user, "atk", 1)
 			_fire(user)
@@ -1270,10 +1544,12 @@ func _serene(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void
 ## true = a habilidade bloqueia esse status (Inner Focus, Own Tempo, Vital Spirit...).
 func blocks_status(f: BattleFighter, status: String, src: BattleFighter = null) -> bool:
 	var a := ability_of(f)
-	if src != null and a != "" and ability_of(src) == "mold_breaker" and not a in UNBREAKABLE:
+	if src != null and a != "" and _breaker(src) and not a in UNBREAKABLE:
 		a = ""  # Mold Breaker: Own Tempo, Insomnia, Shield Dust... não seguram
 	if a == "shield_dust" or (BLOCKS.has(a) and status in BLOCKS[a]):
 		_fire(f)
+		return true
+	if BattleAbilitiesMore.blocks_status(self, f, status, src):
 		return true
 	if a == "steadfast" and status == "flinch":
 		_stage_up(f, "spe", 1)
@@ -1291,8 +1567,10 @@ func blocks_status(f: BattleFighter, status: String, src: BattleFighter = null) 
 ## Queda de atributo que a habilidade impede (Clear Body, Hyper Cutter, Keen Eye, Big Pecks).
 func blocks_stage_drop(f: BattleFighter, k: String, src: BattleFighter = null) -> bool:
 	var a := ability_of(f)
-	if src != null and a != "" and ability_of(src) == "mold_breaker" and not a in UNBREAKABLE:
+	if src != null and a != "" and _breaker(src) and not a in UNBREAKABLE:
 		return false
+	if BattleAbilitiesMore.keeps_stat(self, f, k, src):
+		return true
 	if not KEEP_STAT.has(a):
 		return false
 	var keys: Array = KEEP_STAT[a]
@@ -1301,14 +1579,98 @@ func blocks_stage_drop(f: BattleFighter, k: String, src: BattleFighter = null) -
 
 ## Multiplicador de precisão do usuário (Compound Eyes, Hustle, No Guard).
 func acc_mult(f: BattleFighter) -> float:
+	var m := BattleAbilitiesMore.acc_bonus(self, f)  # Victory Star (o time todo)
 	match ability_of(f):
 		"compound_eyes":
-			return 1.3
+			return 1.3 * m
 		"no_guard":
 			return NO_GUARD_ACC
 		"hustle":
-			return 0.8
-	return 1.0
+			return 0.8 * m
+	return m
+
+
+# --- Habilidades da Gen 3-9 que faltavam (battle_abilities_more.gd): ganchos de fora ---
+
+
+## O golpe como `user` o solta (Normalize, Pixilate, Liquid Voice...): BattleMoveEffects.move_for chama.
+func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
+	return BattleAbilitiesMore.move_for(self, user, mv)
+
+
+## Golpe que não pode sair agora ("" = pode): Truant folgando, Tatsugiri na boca do Dondozo.
+func move_blocked(user: BattleFighter, mv: Dictionary) -> String:
+	return BattleAbilitiesMore.move_blocked(self, user, mv)
+
+
+## Golpe de estado/prioridade parado pela habilidade do alvo (Magic Bounce, Good as Gold, Dazzling...).
+func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
+	return BattleAbilitiesMore.blocks_hit(self, user, target, mv)
+
+
+## Contrary inverte e Simple dobra a mudança de estágio (BattleMoves.change_stage).
+func stage_delta(c: BattleFighter, delta: int) -> int:
+	match ability_of(c):
+		"simple":
+			return delta * 2
+		"contrary":
+			return -delta
+	return delta
+
+
+## Mirror Armor: a queda de atributo causada por um inimigo volta para ele. true = refletiu.
+func mirrors(c: BattleFighter, k: String, delta: int, src: BattleFighter) -> bool:
+	if (
+		delta >= 0
+		or not is_instance_valid(src)
+		or src.side == c.side
+		or ability_of(c) != "mirror_armor"
+		or _breaker(src)
+	):
+		return false
+	_fire(c, Color(0.85, 0.9, 1.0))
+	arena.moves.change_stage(src, k, delta)
+	return true
+
+
+## Shadow Tag: o inimigo (que não é Fantasma nem Shadow Tag) não consegue trocar nem fugir.
+func traps(f: BattleFighter) -> bool:
+	if not is_instance_valid(f) or "ghost" in f.types or ability_of(f) == "shadow_tag":
+		return false
+	for t in arena.targets_of(f):
+		if ability_of(t) == "shadow_tag":
+			return true
+	return false
+
+
+## Suction Cups e Guard Dog: não são empurrados nem arrastados para fora por Whirlwind, Roar & cia.
+func anchored(f: BattleFighter) -> bool:
+	return ability_of(f) in ["suction_cups", "guard_dog"]
+
+
+## Unseen Fist: o golpe de contato atravessa o Protect.
+func pierces_protect(user: BattleFighter, mv: Dictionary) -> bool:
+	return ability_of(user) == "unseen_fist" and _is_contact(mv)
+
+
+## Heatproof: a queimadura tira só metade.
+func burn_mult(f: BattleFighter) -> float:
+	return 0.5 if ability_of(f) == "heatproof" else 1.0
+
+
+## Ajuste do perfil do atacante na fórmula de dano (Merciless: crítico em envenenado).
+func tweak_attacker(user: BattleFighter, target: BattleFighter, p: Dictionary) -> void:
+	BattleAbilitiesMore.crit_tweak(self, user, target, p)
+
+
+## O lutador comeu a frutinha segurada (Cheek Pouch, Cud Chew).
+func on_berry(f: BattleFighter) -> void:
+	BattleAbilitiesMore.on_berry(self, f)
+
+
+## Itens que as habilidades acharam na luta ganha (Honey Gather); a arena os põe na mochila.
+func found_items() -> Array:
+	return BattleAbilitiesMore.honey(self)
 
 
 # --- Speed: ordem da rodada, andar e preparo ---
@@ -1319,21 +1681,25 @@ func acc_mult(f: BattleFighter) -> float:
 ## paralisia), Unburden 2x depois de usar o item.
 func order_speed_mult(f: BattleFighter) -> float:
 	var a := ability_of(f)
+	var extra := float(BattleAbilitiesMore.speed(self, f).order)  # Slow Start, Stall, paradoxos
 	if _weather_speed(a):
-		return SPEED_DOUBLE
+		return SPEED_DOUBLE * extra
 	match a:
 		"quick_feet":
 			if f.status != "":
-				return 1.5 * (2.0 if f.status == "paralysis" else 1.0)
+				return 1.5 * (2.0 if f.status == "paralysis" else 1.0) * extra
 		"unburden":
 			if f.item_used:
-				return SPEED_DOUBLE
-	return 1.0
+				return SPEED_DOUBLE * extra
+	return extra
 
 
 ## Prioridade extra do golpe (BattleTurns.priority_of): Prankster +1 em status, Gale Wings +1 em
 ## Voador com HP cheio (Gen 7+).
 func priority_bonus(f: BattleFighter, mv: Dictionary) -> int:
+	var tri := BattleAbilitiesMore.priority_bonus(self, f, mv)
+	if tri != 0:
+		return tri
 	match ability_of(f):
 		"prankster":
 			if String(mv.get("category", "")) == "status":
@@ -1346,7 +1712,7 @@ func priority_bonus(f: BattleFighter, mv: Dictionary) -> int:
 
 ## Multiplicador da velocidade de andar (a arena aplica em Fighter.drive).
 func walk_mult(f: BattleFighter) -> float:
-	var m := 1.0
+	var m := float(BattleAbilitiesMore.speed(self, f).walk)
 	var a := ability_of(f)
 	match a:
 		"run_away":
@@ -1384,19 +1750,22 @@ func _weather_speed(a: String) -> bool:
 ## A ordem da rodada vem de order_speed_mult/priority_bonus.
 func cast_speed_mult(f: BattleFighter, mv: Dictionary) -> float:
 	var a := ability_of(f)
+	var more := (
+		float(BattleAbilitiesMore.speed(self, f).cast) * BattleAbilitiesMore.cast_mult(self, f, mv)
+	)
 	if _weather_speed(a) or (a == "unburden" and f.item_used):
-		return SPEED_WALK
+		return SPEED_WALK * more
 	match a:
 		"prankster":
 			if String(mv.get("category", "")) == "status":
-				return 1.5
+				return 1.5 * more
 		"gale_wings":
 			if String(mv.get("type", "")) == "flying" and f.hp >= f.max_hp:
-				return 1.4
+				return 1.4 * more
 		"quick_feet":
 			if f.status != "":
-				return 1.2
-	return 1.0
+				return 1.2 * more
+	return more
 
 
 ## Perfil de movimento sugerido pela habilidade ("" = nenhum).
@@ -1524,6 +1893,7 @@ func late_residual(f: BattleFighter) -> void:
 			_harvest(f)
 		"healer":
 			_healer(f)
+	BattleAbilitiesMore.late(self, f, a, s)
 
 
 ## Early Bird: o sono corre em dobro (um passo a mais por rodada, fora a rodada em que dormiu).
@@ -1591,6 +1961,7 @@ func _weather_chip(f: BattleFighter, pct: float, col: Color, why: String) -> voi
 
 ## Saiu de campo vivo (troca): Natural Cure cura o status, Regenerator cura 1/3 do HP (oficial).
 func _switched_out(f: BattleFighter) -> void:
+	BattleAbilitiesMore.switched_out(self, f)
 	match ability_of(f):
 		"natural_cure":
 			if f.status != "" or f.mon.status != "":
@@ -1637,6 +2008,7 @@ func tick(dt: float) -> void:
 				keep.append(f)
 		_pending_enter = keep
 	_watch_gas()
+	BattleAbilitiesMore.tick(self, dt)
 	if weather_t > 0.0:
 		weather_t -= dt
 		if weather_t <= 0.0:
