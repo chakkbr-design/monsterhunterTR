@@ -54,6 +54,8 @@ const KEEP_SPOT := 1.8  ## longe dos pontos de entrada
 const KEEP_WALL := 1.0
 const GAP := 1.2  ## distância mínima entre as bordas de dois obstáculos (espalha o cenário)
 const HIT_CD := 0.35
+## VGC: meia largura do corredor livre entre as posições dos dois lados (m).
+const VGC_LANE := 2.8
 ## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
 ## "crate" são as caixas/pedras do BattleField. Todo cenário tem ao menos um morro, um pico e um lago.
 const SCENARIOS := {
@@ -237,6 +239,8 @@ func _place(rng: RandomNumberGenerator, r: float, side: int, gap: float) -> Vect
 
 
 func _spot_free(at: Vector3, r: float, gap: float) -> bool:
+	if _in_vgc_lane(at, r):
+		return false
 	for s in [arena.player_spot, arena.enemy_spot]:
 		if _flat(at - s).length() < r + KEEP_SPOT:
 			return false
@@ -247,6 +251,18 @@ func _spot_free(at: Vector3, r: float, gap: float) -> bool:
 		if _flat(at - c).length() < r + BattleField.OBJ_R + gap:
 			return false
 	return true
+
+
+## VGC (posições fixas): nada entre as duas posições dos lados, senão tiro e raio de casa batem na
+## cobertura e a luta se arrasta (bateria 5: empates no 1x1 do VGC subiram com os cenários).
+func _in_vgc_lane(at: Vector3, r: float) -> bool:
+	if not arena.has_method("energy_on") or arena.energy_on():
+		return false
+	var a: Vector3 = _flat(arena.player_spot)
+	var b: Vector3 = _flat(arena.enemy_spot)
+	var ab := b - a
+	var t := clampf((_flat(at) - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+	return _flat(at - (a + ab * t)).length() < VGC_LANE + r
 
 
 func _add(kind: String, at: Vector3, r: float, h: float) -> void:
