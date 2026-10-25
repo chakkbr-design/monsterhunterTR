@@ -24866,6 +24866,10 @@
       [
         58,
         "overheat"
+      ],
+      [
+        64,
+        "eruption"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -25019,6 +25023,10 @@
       [
         68,
         "overheat"
+      ],
+      [
+        75,
+        "eruption"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -25133,6 +25141,10 @@
       [
         1,
         "smokescreen"
+      ],
+      [
+        1,
+        "eruption"
       ],
       [
         1,
@@ -25917,7 +25929,8 @@
       "focus_energy",
       "last_resort",
       "reversal",
-      "slash"
+      "slash",
+      "tidy_up"
     ],
     "moves": [
       "hyper_voice",
@@ -26089,7 +26102,8 @@
       "focus_energy",
       "last_resort",
       "reversal",
-      "slash"
+      "slash",
+      "tidy_up"
     ],
     "moves": [
       "hyper_voice",
@@ -26775,6 +26789,10 @@
         "absorb"
       ],
       [
+        8,
+        "infestation"
+      ],
+      [
         12,
         "scary_face"
       ],
@@ -26813,6 +26831,14 @@
       [
         44,
         "cross_poison"
+      ],
+      [
+        47,
+        "sticky_web"
+      ],
+      [
+        51,
+        "toxic_thread"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -26937,6 +26963,10 @@
         "fell_stinger"
       ],
       [
+        8,
+        "infestation"
+      ],
+      [
         12,
         "scary_face"
       ],
@@ -26975,6 +27005,14 @@
       [
         50,
         "cross_poison"
+      ],
+      [
+        54,
+        "sticky_web"
+      ],
+      [
+        59,
+        "toxic_thread"
       ]
     ],
     "evo_moves": [
@@ -28068,7 +28106,8 @@
       "extrasensory",
       "morning_sun",
       "peck",
-      "present"
+      "present",
+      "psycho_shift"
     ],
     "moves": [
       "wish",
@@ -28130,6 +28169,10 @@
       [
         1,
         "sweet_kiss"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         1,
@@ -28261,7 +28304,10 @@
       "item": "shiny_stone",
       "into": "Togekiss"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "fairy_wind"
+    ]
   },
   "Natu": {
     "shape": "wings",
@@ -28316,6 +28362,10 @@
       [
         20,
         "night_shade"
+      ],
+      [
+        26,
+        "psycho_shift"
       ],
       [
         30,
@@ -28476,6 +28526,10 @@
       [
         20,
         "night_shade"
+      ],
+      [
+        28,
+        "psycho_shift"
       ],
       [
         34,
@@ -29606,6 +29660,10 @@
         "rock_tomb"
       ],
       [
+        24,
+        "tearful_look"
+      ],
+      [
         28,
         "sucker_punch"
       ],
@@ -29887,6 +29945,10 @@
         "absorb"
       ],
       [
+        8,
+        "fairy_wind"
+      ],
+      [
         10,
         "poison_powder"
       ],
@@ -30054,6 +30116,10 @@
         "tackle"
       ],
       [
+        10,
+        "fairy_wind"
+      ],
+      [
         12,
         "poison_powder"
       ],
@@ -30207,6 +30273,10 @@
       [
         8,
         "tackle"
+      ],
+      [
+        10,
+        "fairy_wind"
       ],
       [
         12,
@@ -31711,6 +31781,14 @@
       [
         50,
         "sucker_punch"
+      ],
+      [
+        55,
+        "torment"
+      ],
+      [
+        60,
+        "quash"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -32188,10 +32266,17 @@
     "abilities": [
       "levitate"
     ],
-    "learnset": [],
+    "learnset": [
+      [
+        1,
+        "hidden_power"
+      ]
+    ],
     "learnset_version": "brilliant-diamond-shining-pearl",
     "tm": [],
-    "moves": [],
+    "moves": [
+      "hidden_power"
+    ],
     "catch_rate": 225,
     "base_exp": 118,
     "growth": "medium_fast",
@@ -32363,6 +32448,10 @@
       [
         28,
         "double_hit"
+      ],
+      [
+        32,
+        "twin_beam"
       ],
       [
         37,
@@ -32610,6 +32699,7 @@
       "counter",
       "flail",
       "pin_missile",
+      "power_trick",
       "sand_tomb",
       "swift",
       "toxic_spikes"
@@ -34181,6 +34271,14 @@
         "gastro_acid"
       ],
       [
+        50,
+        "sticky_web"
+      ],
+      [
+        55,
+        "power_trick"
+      ],
+      [
         60,
         "stone_edge"
       ],
@@ -34230,6 +34328,7 @@
       "covet",
       "defense_curl",
       "final_gambit",
+      "infestation",
       "knock_off",
       "sweet_scent",
       "toxic"
@@ -35876,6 +35975,7 @@
       "acid_spray",
       "flail",
       "haze",
+      "octazooka",
       "supersonic",
       "water_spout"
     ],
@@ -35941,6 +36041,10 @@
       [
         1,
         "focus_energy"
+      ],
+      [
+        1,
+        "octazooka"
       ],
       [
         1,
@@ -36060,7 +36164,10 @@
     "weight_kg": 28.5,
     "category": "Jet Pokémon",
     "flavor": "While Octillery still shoots water from its mouth, the drastic anatomical difference between it and Remoraid meant that for a long time, no one believed the former evolved from the latter.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "octazooka"
+    ]
   },
   "Delibird": {
     "shape": "wings",
@@ -36585,6 +36692,10 @@
         "fire_fang"
       ],
       [
+        32,
+        "torment"
+      ],
+      [
         40,
         "foul_play"
       ],
@@ -36758,6 +36869,10 @@
       [
         30,
         "fire_fang"
+      ],
+      [
+        35,
+        "torment"
       ],
       [
         45,
@@ -37510,10 +37625,17 @@
       "moody"
     ],
     "hidden_ability": "moody",
-    "learnset": [],
+    "learnset": [
+      [
+        1,
+        "sketch"
+      ]
+    ],
     "learnset_version": "scarlet-violet",
     "tm": [],
-    "moves": [],
+    "moves": [
+      "sketch"
+    ],
     "catch_rate": 45,
     "base_exp": 88,
     "growth": "fast",
@@ -38316,6 +38438,10 @@
         "zen_headbutt"
       ],
       [
+        35,
+        "milk_drink"
+      ],
+      [
         40,
         "body_slam"
       ],
@@ -38873,6 +38999,10 @@
       [
         72,
         "fire_blast"
+      ],
+      [
+        78,
+        "eruption"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -39713,6 +39843,10 @@
       [
         45,
         "recover"
+      ],
+      [
+        54,
+        "aeroblast"
       ],
       [
         63,
@@ -40613,6 +40747,7 @@
       "fury_cutter",
       "leech_seed",
       "night_slash",
+      "shed_tail",
       "slash",
       "synthesis",
       "worry_seed",
@@ -43465,6 +43600,10 @@
       ],
       [
         1,
+        "torment"
+      ],
+      [
+        1,
         "astonish"
       ],
       [
@@ -43741,6 +43880,7 @@
       "synthesis",
       "tackle",
       "take_down",
+      "torment",
       "whirlwind",
       "worry_seed"
     ],
@@ -43866,6 +44006,7 @@
       "work_up"
     ],
     "egg": [
+      "boomburst",
       "brave_bird",
       "hurricane",
       "sky_attack",
@@ -44965,6 +45106,10 @@
       [
         35,
         "baton_pass"
+      ],
+      [
+        38,
+        "sticky_web"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -46061,6 +46206,10 @@
         "fury_swipes"
       ],
       [
+        35,
+        "mind_reader"
+      ],
+      [
         40,
         "dig"
       ]
@@ -46210,6 +46359,10 @@
         "fury_swipes"
       ],
       [
+        43,
+        "mind_reader"
+      ],
+      [
         50,
         "slash"
       ],
@@ -46353,6 +46506,10 @@
       [
         36,
         "fury_swipes"
+      ],
+      [
+        43,
+        "mind_reader"
       ],
       [
         50,
@@ -46800,6 +46957,10 @@
       [
         63,
         "hyper_voice"
+      ],
+      [
+        72,
+        "boomburst"
       ],
       [
         81,
@@ -47902,6 +48063,10 @@
         "knock_off"
       ],
       [
+        30,
+        "quash"
+      ],
+      [
         33,
         "shadow_claw"
       ],
@@ -48006,7 +48171,8 @@
       "flatter",
       "metal_burst",
       "recover",
-      "sucker_punch"
+      "sucker_punch",
+      "torment"
     ],
     "moves": [
       "foul_play",
@@ -48061,6 +48227,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        4,
+        "fairy_wind"
       ],
       [
         8,
@@ -48775,6 +48945,10 @@
         "acupressure"
       ],
       [
+        36,
+        "power_trick"
+      ],
+      [
         39,
         "reversal"
       ],
@@ -48961,6 +49135,10 @@
       [
         33,
         "acupressure"
+      ],
+      [
+        36,
+        "power_trick"
       ],
       [
         47,
@@ -49194,7 +49372,10 @@
       "level": 26,
       "into": "Manectric"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "rising_voltage"
+    ]
   },
   "Manectric": {
     "shape": "quadruped",
@@ -49339,7 +49520,10 @@
     "weight_kg": 40.2,
     "category": "Discharge Pokémon",
     "flavor": "It rarely appears before people. It is said to nest where lightning has fallen.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "rising_voltage"
+    ]
   },
   "Plusle": {
     "shape": "upright",
@@ -49731,6 +49915,10 @@
         "moonlight"
       ],
       [
+        22,
+        "tail_glow"
+      ],
+      [
         26,
         "protect"
       ],
@@ -49753,6 +49941,10 @@
       [
         43,
         "double_edge"
+      ],
+      [
+        47,
+        "infestation"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -49916,6 +50108,10 @@
       [
         43,
         "play_rough"
+      ],
+      [
+        47,
+        "infestation"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -50306,7 +50502,8 @@
       "curse",
       "destiny_bond",
       "mud_slap",
-      "smog"
+      "smog",
+      "stuff_cheeks"
     ],
     "moves": [
       "gunk_shot",
@@ -51028,6 +51225,10 @@
         "soak"
       ],
       [
+        1,
+        "noble_roar"
+      ],
+      [
         15,
         "mist"
       ],
@@ -51363,6 +51564,10 @@
         "focus_energy"
       ],
       [
+        1,
+        "eruption"
+      ],
+      [
         12,
         "bulldoze"
       ],
@@ -51570,6 +51775,10 @@
       [
         60,
         "shell_smash"
+      ],
+      [
+        64,
+        "eruption"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -52115,6 +52324,7 @@
       "guard_split",
       "icy_wind",
       "psycho_cut",
+      "psycho_shift",
       "rapid_spin",
       "role_play",
       "trick",
@@ -52355,6 +52565,10 @@
       [
         56,
         "dragon_rush"
+      ],
+      [
+        62,
+        "boomburst"
       ]
     ],
     "evo_moves": [
@@ -52528,6 +52742,10 @@
       [
         60,
         "dragon_rush"
+      ],
+      [
+        68,
+        "boomburst"
       ]
     ],
     "evo_moves": [
@@ -52966,7 +53184,10 @@
     "weight_kg": 77.4,
     "category": "Scarecrow Pokémon",
     "flavor": "If a traveler is going through a desert in the thick of night, Cacturne will follow in a ragtag group. The Pokémon are biding their time, waiting for the traveler to tire and become incapable of moving.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "spiky_shield"
+    ]
   },
   "Swablu": {
     "shape": "wings",
@@ -54669,6 +54890,10 @@
         "rock_tomb"
       ],
       [
+        12,
+        "power_trick"
+      ],
+      [
         15,
         "psybeam"
       ],
@@ -54839,6 +55064,10 @@
       [
         9,
         "rock_tomb"
+      ],
+      [
+        12,
+        "power_trick"
       ],
       [
         15,
@@ -57429,6 +57658,10 @@
         "icy_wind"
       ],
       [
+        30,
+        "frost_breath"
+      ],
+      [
         35,
         "bite"
       ],
@@ -57576,6 +57809,10 @@
       [
         25,
         "icy_wind"
+      ],
+      [
+        30,
+        "frost_breath"
       ],
       [
         35,
@@ -60197,6 +60434,10 @@
         "wish"
       ],
       [
+        35,
+        "mist_ball"
+      ],
+      [
         40,
         "zen_headbutt"
       ],
@@ -60373,6 +60614,10 @@
         "ally_switch"
       ],
       [
+        35,
+        "luster_purge"
+      ],
+      [
         40,
         "zen_headbutt"
       ],
@@ -60528,6 +60773,10 @@
       [
         1,
         "water_pulse"
+      ],
+      [
+        1,
+        "origin_pulse"
       ],
       [
         9,
@@ -60696,6 +60945,10 @@
       [
         81,
         "solar_beam"
+      ],
+      [
+        90,
+        "eruption"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -61034,6 +61287,10 @@
       [
         91,
         "last_resort"
+      ],
+      [
+        98,
+        "doom_desire"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -61223,6 +61480,10 @@
       [
         61,
         "zap_cannon"
+      ],
+      [
+        67,
+        "psycho_boost"
       ],
       [
         73,
@@ -61863,6 +62124,10 @@
         "nasty_plot"
       ],
       [
+        25,
+        "torment"
+      ],
+      [
         31,
         "facade"
       ],
@@ -62030,6 +62295,10 @@
       [
         26,
         "feint"
+      ],
+      [
+        29,
+        "torment"
       ],
       [
         36,
@@ -62210,6 +62479,10 @@
       [
         26,
         "feint"
+      ],
+      [
+        29,
+        "torment"
       ],
       [
         42,
@@ -63687,6 +63960,10 @@
       [
         42,
         "night_slash"
+      ],
+      [
+        44,
+        "sticky_web"
       ],
       [
         46,
@@ -65255,6 +65532,10 @@
       [
         32,
         "psybeam"
+      ],
+      [
+        35,
+        "infestation"
       ],
       [
         38,
@@ -67781,6 +68062,10 @@
         "night_slash"
       ],
       [
+        1,
+        "quash"
+      ],
+      [
         25,
         "swagger"
       ],
@@ -67979,6 +68264,7 @@
       "thief",
       "thunder",
       "thunderbolt",
+      "torment",
       "u_turn",
       "water_pulse",
       "work_up"
@@ -68149,6 +68435,7 @@
       "thief",
       "thunder",
       "thunderbolt",
+      "torment",
       "u_turn",
       "water_pulse",
       "work_up"
@@ -69025,6 +69312,10 @@
         "rock_tomb"
       ],
       [
+        24,
+        "tearful_look"
+      ],
+      [
         28,
         "sucker_punch"
       ],
@@ -69441,6 +69732,10 @@
         "hyper_voice"
       ],
       [
+        1,
+        "chatter"
+      ],
+      [
         5,
         "peck"
       ],
@@ -69455,6 +69750,10 @@
       [
         17,
         "fury_attack"
+      ],
+      [
+        21,
+        "chatter"
       ],
       [
         25,
@@ -69479,6 +69778,10 @@
       [
         45,
         "uproar"
+      ],
+      [
+        49,
+        "parting_shot"
       ],
       [
         50,
@@ -69511,12 +69814,14 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "u_turn",
       "work_up"
     ],
     "egg": [
       "agility",
       "air_cutter",
+      "boomburst",
       "encore",
       "night_shade",
       "supersonic"
@@ -71765,6 +72070,10 @@
         "grass_knot"
       ],
       [
+        31,
+        "leaf_tornado"
+      ],
+      [
         37,
         "stockpile"
       ],
@@ -73879,6 +74188,10 @@
       ],
       [
         1,
+        "fairy_wind"
+      ],
+      [
+        1,
         "life_dew"
       ]
     ],
@@ -75724,6 +76037,10 @@
         "icy_wind"
       ],
       [
+        30,
+        "frost_breath"
+      ],
+      [
         35,
         "confuse_ray"
       ],
@@ -76071,6 +76388,10 @@
       [
         77,
         "memento"
+      ],
+      [
+        84,
+        "mystical_power"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -76267,6 +76588,10 @@
       [
         77,
         "healing_wish"
+      ],
+      [
+        84,
+        "mystical_power"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -76473,6 +76798,10 @@
       [
         77,
         "explosion"
+      ],
+      [
+        84,
+        "mystical_power"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -76629,6 +76958,10 @@
       [
         80,
         "iron_tail"
+      ],
+      [
+        88,
+        "roar_of_time"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -76778,6 +77111,10 @@
       [
         72,
         "earth_power"
+      ],
+      [
+        80,
+        "spacial_rend"
       ],
       [
         88,
@@ -76946,6 +77283,10 @@
       [
         66,
         "stone_edge"
+      ],
+      [
+        72,
+        "magma_storm"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -77524,6 +77865,10 @@
       [
         69,
         "rain_dance"
+      ],
+      [
+        75,
+        "take_heart"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -77616,6 +77961,10 @@
         "water_gun"
       ],
       [
+        1,
+        "tail_glow"
+      ],
+      [
         9,
         "charm"
       ],
@@ -77650,6 +77999,10 @@
       [
         69,
         "rain_dance"
+      ],
+      [
+        76,
+        "take_heart"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -77930,6 +78283,10 @@
       [
         91,
         "healing_wish"
+      ],
+      [
+        100,
+        "seed_flare"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -78057,6 +78414,10 @@
       [
         90,
         "perish_song"
+      ],
+      [
+        100,
+        "judgment"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -78265,6 +78626,10 @@
       [
         56,
         "reversal"
+      ],
+      [
+        63,
+        "searing_shot"
       ],
       [
         70,
@@ -79917,6 +80282,7 @@
       "facade",
       "fling",
       "grass_knot",
+      "hidden_power",
       "protect",
       "rain_dance",
       "rest",
@@ -79938,7 +80304,8 @@
       "iron_tail",
       "pursuit",
       "revenge",
-      "screech"
+      "screech",
+      "tearful_look"
     ],
     "tutor": [
       "after_you",
@@ -80026,6 +80393,10 @@
         "confuse_ray"
       ],
       [
+        1,
+        "rototiller"
+      ],
+      [
         3,
         "leer"
       ],
@@ -80100,6 +80471,7 @@
       "focus_blast",
       "giga_impact",
       "grass_knot",
+      "hidden_power",
       "hyper_beam",
       "light_screen",
       "protect",
@@ -80136,6 +80508,7 @@
       "low_kick",
       "seed_bomb",
       "shock_wave",
+      "signal_beam",
       "snore",
       "stomping_tantrum",
       "super_fang",
@@ -80653,6 +81026,10 @@
         "fury_swipes"
       ],
       [
+        16,
+        "torment"
+      ],
+      [
         21,
         "assurance"
       ],
@@ -80795,6 +81172,10 @@
       [
         12,
         "fury_swipes"
+      ],
+      [
+        16,
+        "torment"
       ],
       [
         23,
@@ -80950,6 +81331,10 @@
         "seed_bomb"
       ],
       [
+        25,
+        "torment"
+      ],
+      [
         28,
         "fling"
       ],
@@ -80979,6 +81364,7 @@
       "facade",
       "fling",
       "grass_knot",
+      "hidden_power",
       "low_sweep",
       "nature_power",
       "payback",
@@ -80994,6 +81380,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "work_up"
     ],
@@ -81007,6 +81394,7 @@
       "magical_leaf",
       "nasty_plot",
       "role_play",
+      "spiky_shield",
       "tickle"
     ],
     "tutor": [
@@ -81106,6 +81494,7 @@
       "focus_blast",
       "giga_impact",
       "grass_knot",
+      "hidden_power",
       "hyper_beam",
       "low_sweep",
       "nature_power",
@@ -81123,6 +81512,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "work_up"
     ],
@@ -81224,6 +81614,10 @@
         "bite"
       ],
       [
+        22,
+        "flame_burst"
+      ],
+      [
         25,
         "amnesia"
       ],
@@ -81259,6 +81653,7 @@
       "flamethrower",
       "fling",
       "grass_knot",
+      "hidden_power",
       "low_sweep",
       "overheat",
       "payback",
@@ -81274,6 +81669,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "will_o_wisp",
       "work_up"
@@ -81370,6 +81766,10 @@
       [
         1,
         "fury_swipes"
+      ],
+      [
+        1,
+        "flame_burst"
       ]
     ],
     "learnset_version": "ultra-sun-ultra-moon",
@@ -81386,6 +81786,7 @@
       "focus_blast",
       "giga_impact",
       "grass_knot",
+      "hidden_power",
       "hyper_beam",
       "low_sweep",
       "overheat",
@@ -81403,6 +81804,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "will_o_wisp",
       "work_up"
@@ -81430,7 +81832,8 @@
     "moves": [
       "fury_swipes",
       "lick",
-      "leer"
+      "leer",
+      "flame_burst"
     ],
     "catch_rate": 75,
     "base_exp": 174,
@@ -81542,6 +81945,7 @@
       "fling",
       "grass_knot",
       "hail",
+      "hidden_power",
       "ice_beam",
       "low_sweep",
       "payback",
@@ -81558,6 +81962,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "waterfall",
       "work_up"
@@ -81570,6 +81975,7 @@
       "disarming_voice",
       "hydro_pump",
       "low_kick",
+      "mud_sport",
       "nasty_plot",
       "role_play",
       "tickle"
@@ -81674,6 +82080,7 @@
       "giga_impact",
       "grass_knot",
       "hail",
+      "hidden_power",
       "hyper_beam",
       "ice_beam",
       "low_sweep",
@@ -81692,6 +82099,7 @@
       "swagger",
       "taunt",
       "thief",
+      "torment",
       "toxic",
       "waterfall",
       "work_up"
@@ -83286,6 +83694,7 @@
     "egg": [
       "flatter",
       "knock_off",
+      "psycho_shift",
       "roost",
       "supersonic"
     ],
@@ -85224,6 +85633,10 @@
         "endure"
       ],
       [
+        31,
+        "sticky_web"
+      ],
+      [
         36,
         "bug_buzz"
       ],
@@ -85343,6 +85756,10 @@
       [
         29,
         "endure"
+      ],
+      [
+        31,
+        "sticky_web"
       ],
       [
         36,
@@ -86047,6 +86464,10 @@
         "helping_hand"
       ],
       [
+        3,
+        "fairy_wind"
+      ],
+      [
         6,
         "stun_spore"
       ],
@@ -86250,6 +86671,10 @@
       [
         1,
         "hurricane"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         1,
@@ -86835,6 +87260,10 @@
         "bite"
       ],
       [
+        18,
+        "torment"
+      ],
+      [
         21,
         "dig"
       ],
@@ -86988,6 +87417,10 @@
       [
         15,
         "bite"
+      ],
+      [
+        18,
+        "torment"
       ],
       [
         21,
@@ -87147,6 +87580,10 @@
       [
         15,
         "bite"
+      ],
+      [
+        18,
+        "torment"
       ],
       [
         21,
@@ -87635,6 +88072,10 @@
         "after_you"
       ],
       [
+        1,
+        "spiky_shield"
+      ],
+      [
         4,
         "growth"
       ],
@@ -88078,6 +88519,10 @@
         "facade"
       ],
       [
+        20,
+        "torment"
+      ],
+      [
         24,
         "beat_up"
       ],
@@ -88253,6 +88698,10 @@
       [
         16,
         "facade"
+      ],
+      [
+        20,
+        "torment"
       ],
       [
         24,
@@ -88522,6 +88971,7 @@
     ],
     "egg": [
       "ancient_power",
+      "psycho_shift",
       "roost"
     ],
     "tutor": [
@@ -89867,6 +90317,10 @@
         "leer"
       ],
       [
+        4,
+        "torment"
+      ],
+      [
         8,
         "hone_claws"
       ],
@@ -89897,6 +90351,10 @@
       [
         36,
         "imprison"
+      ],
+      [
+        40,
+        "night_daze"
       ],
       [
         44,
@@ -90018,6 +90476,10 @@
       ],
       [
         1,
+        "torment"
+      ],
+      [
+        1,
         "u_turn"
       ],
       [
@@ -90047,6 +90509,10 @@
       [
         40,
         "imprison"
+      ],
+      [
+        46,
+        "night_daze"
       ],
       [
         52,
@@ -90264,7 +90730,8 @@
       "aqua_tail",
       "flail",
       "knock_off",
-      "tail_whip"
+      "tail_whip",
+      "tidy_up"
     ],
     "moves": [
       "last_resort",
@@ -90397,7 +90864,8 @@
       "slam",
       "swift",
       "tail_whip",
-      "tickle"
+      "tickle",
+      "tidy_up"
     ],
     "moves": [
       "bullet_seed",
@@ -90550,7 +91018,8 @@
       "fake_out",
       "heal_pulse",
       "mean_look",
-      "mirror_coat"
+      "mirror_coat",
+      "torment"
     ],
     "moves": [
       "magic_room",
@@ -92506,7 +92975,8 @@
       "tickle"
     ],
     "tutor": [
-      "dual_wingbeat"
+      "dual_wingbeat",
+      "rising_voltage"
     ],
     "moves": [
       "agility",
@@ -93695,6 +94165,7 @@
     ],
     "egg": [
       "double_team",
+      "infestation",
       "lunge",
       "poison_sting",
       "struggle_bug"
@@ -93846,6 +94317,7 @@
     ],
     "egg": [
       "double_team",
+      "infestation",
       "lunge",
       "poison_sting",
       "struggle_bug"
@@ -93864,7 +94336,10 @@
     "weight_kg": 14.3,
     "category": "EleSpider Pokémon",
     "flavor": "It lays traps of electrified threads near the nests of bird Pokémon, aiming to snare chicks that are not yet good at flying.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "sticky_web"
+    ]
   },
   "Ferroseed": {
     "shape": "ball",
@@ -94217,6 +94692,10 @@
         "lock_on"
       ],
       [
+        40,
+        "shift_gear"
+      ],
+      [
         44,
         "zap_cannon"
       ],
@@ -94249,6 +94728,7 @@
       "wild_charge"
     ],
     "tutor": [
+      "rising_voltage",
       "steel_beam",
       "steel_roller"
     ],
@@ -94337,6 +94817,10 @@
         "lock_on"
       ],
       [
+        42,
+        "shift_gear"
+      ],
+      [
         48,
         "zap_cannon"
       ],
@@ -94370,6 +94854,7 @@
       "wild_charge"
     ],
     "tutor": [
+      "rising_voltage",
       "steel_beam",
       "steel_roller"
     ],
@@ -94462,6 +94947,10 @@
         "lock_on"
       ],
       [
+        42,
+        "shift_gear"
+      ],
+      [
         48,
         "zap_cannon"
       ],
@@ -94503,6 +94992,7 @@
       "wild_charge"
     ],
     "tutor": [
+      "rising_voltage",
       "steel_beam",
       "steel_roller"
     ],
@@ -96253,6 +96743,10 @@
         "brine"
       ],
       [
+        18,
+        "frost_breath"
+      ],
+      [
         21,
         "slash"
       ],
@@ -96423,6 +96917,10 @@
       [
         15,
         "brine"
+      ],
+      [
+        18,
+        "frost_breath"
       ],
       [
         21,
@@ -96684,7 +97182,8 @@
       "water_pulse"
     ],
     "egg": [
-      "explosion"
+      "explosion",
+      "frost_breath"
     ],
     "moves": [
       "sheer_cold",
@@ -96816,7 +97315,8 @@
     "egg": [
       "double_edge",
       "feint",
-      "guard_split"
+      "guard_split",
+      "mind_reader"
     ],
     "tutor": [
       "skitter_smack"
@@ -96908,6 +97408,10 @@
       [
         1,
         "acid_spray"
+      ],
+      [
+        1,
+        "water_shuriken"
       ],
       [
         12,
@@ -98040,6 +98544,10 @@
         "metal_claw"
       ],
       [
+        15,
+        "torment"
+      ],
+      [
         20,
         "scary_face"
       ],
@@ -98198,6 +98706,10 @@
       [
         1,
         "metal_burst"
+      ],
+      [
+        15,
+        "torment"
       ],
       [
         20,
@@ -99366,6 +99878,7 @@
     "egg": [
       "first_impression",
       "flail",
+      "infestation",
       "metal_burst",
       "struggle_bug"
     ],
@@ -100110,6 +100623,10 @@
         "struggle_bug"
       ],
       [
+        1,
+        "fiery_dance"
+      ],
+      [
         18,
         "flame_wheel"
       ],
@@ -100755,6 +101272,10 @@
       [
         70,
         "thrash"
+      ],
+      [
+        77,
+        "bleakwind_storm"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -100916,6 +101437,10 @@
       [
         70,
         "thrash"
+      ],
+      [
+        75,
+        "wildbolt_storm"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -101030,6 +101555,10 @@
         "fire_fang"
       ],
       [
+        1,
+        "noble_roar"
+      ],
+      [
         8,
         "slash"
       ],
@@ -101050,6 +101579,10 @@
         "flamethrower"
       ],
       [
+        48,
+        "fusion_flare"
+      ],
+      [
         56,
         "hyper_voice"
       ],
@@ -101064,6 +101597,10 @@
       [
         80,
         "outrage"
+      ],
+      [
+        88,
+        "blue_flare"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -101181,6 +101718,10 @@
       [
         1,
         "thunder_fang"
+      ],
+      [
+        1,
+        "noble_roar"
       ],
       [
         8,
@@ -101394,6 +101935,10 @@
       [
         75,
         "fissure"
+      ],
+      [
+        80,
+        "sandsear_storm"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -101501,6 +102046,10 @@
       ],
       [
         1,
+        "noble_roar"
+      ],
+      [
+        1,
         "freeze_dry"
       ],
       [
@@ -101538,6 +102087,10 @@
       [
         72,
         "outrage"
+      ],
+      [
+        80,
+        "glaciate"
       ],
       [
         88,
@@ -101661,6 +102214,10 @@
       [
         1,
         "work_up"
+      ],
+      [
+        1,
+        "secret_sword"
       ],
       [
         7,
@@ -101829,6 +102386,10 @@
       [
         43,
         "u_turn"
+      ],
+      [
+        50,
+        "relic_song"
       ],
       [
         57,
@@ -102008,6 +102569,10 @@
       [
         77,
         "lock_on"
+      ],
+      [
+        84,
+        "techno_blast"
       ],
       [
         91,
@@ -102601,7 +103166,10 @@
     "weight_kg": 90.0,
     "category": "Spiny Armor Pokémon",
     "flavor": "When it takes a defensive posture with its fists guarding its face, it could withstand a bomb blast.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "spiky_shield"
+    ]
   },
   "Fennekin": {
     "shape": "quadruped",
@@ -103611,7 +104179,10 @@
     "weight_kg": 40.0,
     "category": "Ninja Pokémon",
     "flavor": "It appears and vanishes with a ninja’s grace. It toys with its enemies using swift movements, while slicing them with throwing stars of sharpest water.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "water_shuriken"
+    ]
   },
   "Bunnelby": {
     "shape": "upright",
@@ -104691,6 +105262,10 @@
         "headbutt"
       ],
       [
+        15,
+        "noble_roar"
+      ],
+      [
         20,
         "take_down"
       ],
@@ -104849,6 +105424,10 @@
         "headbutt"
       ],
       [
+        15,
+        "noble_roar"
+      ],
+      [
         20,
         "take_down"
       ],
@@ -104984,6 +105563,10 @@
         "tackle"
       ],
       [
+        6,
+        "fairy_wind"
+      ],
+      [
         10,
         "safeguard"
       ],
@@ -105067,7 +105650,8 @@
     ],
     "egg": [
       "copycat",
-      "endeavor"
+      "endeavor",
+      "tearful_look"
     ],
     "moves": [
       "solar_beam",
@@ -105123,6 +105707,10 @@
       [
         1,
         "tackle"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         10,
@@ -105494,6 +106082,7 @@
     "egg": [
       "defense_curl",
       "grassy_terrain",
+      "milk_drink",
       "rollout"
     ],
     "moves": [
@@ -105602,6 +106191,10 @@
       [
         55,
         "leaf_blade"
+      ],
+      [
+        58,
+        "milk_drink"
       ]
     ],
     "evo_moves": [
@@ -105739,6 +106332,10 @@
         "body_slam"
       ],
       [
+        40,
+        "parting_shot"
+      ],
+      [
         44,
         "entrainment"
       ]
@@ -105795,6 +106392,7 @@
       "zen_headbutt"
     ],
     "egg": [
+      "quash",
       "quick_guard",
       "seismic_toss",
       "storm_throw"
@@ -105899,6 +106497,10 @@
       [
         40,
         "body_slam"
+      ],
+      [
+        46,
+        "parting_shot"
       ],
       [
         52,
@@ -106056,6 +106658,10 @@
         "bite"
       ],
       [
+        27,
+        "odor_sleuth"
+      ],
+      [
         33,
         "retaliate"
       ],
@@ -106082,6 +106688,7 @@
       "facade",
       "giga_impact",
       "grass_knot",
+      "hidden_power",
       "protect",
       "rain_dance",
       "rest",
@@ -106101,6 +106708,7 @@
     ],
     "egg": [
       "mimic",
+      "refresh",
       "role_play",
       "work_up"
     ],
@@ -106504,6 +107112,10 @@
         "iron_head"
       ],
       [
+        40,
+        "power_trick"
+      ],
+      [
         44,
         "swords_dance"
       ]
@@ -106633,6 +107245,10 @@
         "iron_head"
       ],
       [
+        44,
+        "power_trick"
+      ],
+      [
         50,
         "swords_dance"
       ]
@@ -106748,6 +107364,10 @@
       ],
       [
         1,
+        "power_trick"
+      ],
+      [
+        1,
         "night_slash"
       ],
       [
@@ -106851,6 +107471,10 @@
       [
         1,
         "sweet_scent"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         3,
@@ -107010,6 +107634,10 @@
         "heal_pulse"
       ],
       [
+        1,
+        "fairy_wind"
+      ],
+      [
         9,
         "disarming_voice"
       ],
@@ -107156,6 +107784,10 @@
         "play_nice"
       ],
       [
+        6,
+        "fairy_wind"
+      ],
+      [
         9,
         "aromatherapy"
       ],
@@ -107225,6 +107857,7 @@
     "egg": [
       "after_you",
       "copycat",
+      "sticky_web",
       "yawn"
     ],
     "tutor": [
@@ -107287,6 +107920,10 @@
       ],
       [
         1,
+        "fairy_wind"
+      ],
+      [
+        1,
         "play_nice"
       ],
       [
@@ -107324,6 +107961,10 @@
       [
         39,
         "endeavor"
+      ],
+      [
+        42,
+        "sticky_web"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -107460,6 +108101,10 @@
       [
         33,
         "foul_play"
+      ],
+      [
+        36,
+        "topsy_turvy"
       ],
       [
         39,
@@ -107620,6 +108265,10 @@
       [
         37,
         "foul_play"
+      ],
+      [
+        42,
+        "topsy_turvy"
       ],
       [
         47,
@@ -108696,6 +109345,10 @@
         "volt_switch"
       ],
       [
+        28,
+        "parabolic_charge"
+      ],
+      [
         32,
         "thunder_wave"
       ],
@@ -108750,6 +109403,7 @@
       "glare"
     ],
     "tutor": [
+      "rising_voltage",
       "scale_shot"
     ],
     "moves": [
@@ -108853,6 +109507,10 @@
       ],
       [
         1,
+        "parabolic_charge"
+      ],
+      [
+        1,
         "eerie_impulse"
       ]
     ],
@@ -108909,6 +109567,7 @@
       "wild_charge"
     ],
     "tutor": [
+      "rising_voltage",
       "scale_shot"
     ],
     "moves": [
@@ -109998,6 +110657,10 @@
         "charm"
       ],
       [
+        25,
+        "parabolic_charge"
+      ],
+      [
         30,
         "volt_switch"
       ],
@@ -110077,7 +110740,8 @@
     ],
     "egg": [
       "covet",
-      "magnet_rise"
+      "magnet_rise",
+      "tearful_look"
     ],
     "moves": [
       "thunder",
@@ -110569,6 +111233,10 @@
         "acid_spray"
       ],
       [
+        1,
+        "tearful_look"
+      ],
+      [
         15,
         "protect"
       ],
@@ -110710,6 +111378,14 @@
       [
         4,
         "tackle"
+      ],
+      [
+        8,
+        "fairy_wind"
+      ],
+      [
+        12,
+        "torment"
       ],
       [
         20,
@@ -111156,6 +111832,10 @@
         "astonish"
       ],
       [
+        1,
+        "trick_or_treat"
+      ],
+      [
         4,
         "shadow_sneak"
       ],
@@ -111166,6 +111846,10 @@
       [
         12,
         "razor_leaf"
+      ],
+      [
+        12,
+        "trick_or_treat"
       ],
       [
         16,
@@ -111180,6 +111864,10 @@
         "scary_face"
       ],
       [
+        24,
+        "trick_or_treat"
+      ],
+      [
         28,
         "worry_seed"
       ],
@@ -111190,6 +111878,10 @@
       [
         36,
         "shadow_ball"
+      ],
+      [
+        36,
+        "trick_or_treat"
       ],
       [
         40,
@@ -111317,11 +112009,19 @@
       ],
       [
         1,
+        "trick_or_treat"
+      ],
+      [
+        1,
         "moonblast"
       ],
       [
         12,
         "razor_leaf"
+      ],
+      [
+        12,
+        "trick_or_treat"
       ],
       [
         16,
@@ -111336,6 +112036,10 @@
         "scary_face"
       ],
       [
+        24,
+        "trick_or_treat"
+      ],
+      [
         28,
         "worry_seed"
       ],
@@ -111346,6 +112050,10 @@
       [
         36,
         "shadow_ball"
+      ],
+      [
+        36,
+        "trick_or_treat"
       ],
       [
         40,
@@ -111990,6 +112698,10 @@
       [
         56,
         "hurricane"
+      ],
+      [
+        62,
+        "boomburst"
       ]
     ],
     "evo_moves": [
@@ -112293,6 +113005,10 @@
         "psychic"
       ],
       [
+        50,
+        "oblivion_wing"
+      ],
+      [
         55,
         "phantom_force"
       ],
@@ -112421,6 +113137,10 @@
       [
         1,
         "bulldoze"
+      ],
+      [
+        1,
+        "core_enforcer"
       ],
       [
         8,
@@ -112777,6 +113497,10 @@
       [
         75,
         "psychic"
+      ],
+      [
+        85,
+        "hyperspace_hole"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -112889,6 +113613,10 @@
       [
         1,
         "fire_spin"
+      ],
+      [
+        1,
+        "steam_eruption"
       ],
       [
         6,
@@ -113639,7 +114367,8 @@
       "will_o_wisp"
     ],
     "egg": [
-      "fake_out"
+      "fake_out",
+      "parting_shot"
     ],
     "moves": [
       "flare_blitz",
@@ -113786,7 +114515,8 @@
       "will_o_wisp"
     ],
     "egg": [
-      "fake_out"
+      "fake_out",
+      "parting_shot"
     ],
     "moves": [
       "flare_blitz",
@@ -113968,6 +114698,7 @@
     "egg": [
       "fake_out",
       "growl",
+      "parting_shot",
       "scratch",
       "throat_chop"
     ],
@@ -114568,6 +115299,7 @@
       "uproar"
     ],
     "egg": [
+      "boomburst",
       "gunk_shot",
       "sky_attack"
     ],
@@ -114712,6 +115444,7 @@
       "uproar"
     ],
     "egg": [
+      "boomburst",
       "echoed_voice",
       "gunk_shot",
       "sky_attack"
@@ -114872,6 +115605,7 @@
       "uproar"
     ],
     "egg": [
+      "boomburst",
       "gunk_shot",
       "sky_attack"
     ],
@@ -115246,6 +115980,10 @@
         "spark"
       ],
       [
+        25,
+        "sticky_web"
+      ],
+      [
         30,
         "x_scissor"
       ],
@@ -115364,6 +116102,10 @@
       [
         23,
         "spark"
+      ],
+      [
+        29,
+        "sticky_web"
       ],
       [
         36,
@@ -115499,6 +116241,10 @@
       [
         23,
         "spark"
+      ],
+      [
+        29,
+        "sticky_web"
       ],
       [
         36,
@@ -115979,6 +116725,10 @@
         "air_slash"
       ],
       [
+        40,
+        "revelation_dance"
+      ],
+      [
         43,
         "agility"
       ],
@@ -116081,6 +116831,10 @@
         "absorb"
       ],
       [
+        1,
+        "fairy_wind"
+      ],
+      [
         6,
         "stun_spore"
       ],
@@ -116160,7 +116914,8 @@
       "u_turn"
     ],
     "egg": [
-      "moonblast"
+      "moonblast",
+      "sticky_web"
     ],
     "moves": [
       "quiver_dance",
@@ -116222,6 +116977,10 @@
       [
         1,
         "sweet_scent"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         18,
@@ -116308,7 +117067,8 @@
       "u_turn"
     ],
     "egg": [
-      "moonblast"
+      "moonblast",
+      "sticky_web"
     ],
     "moves": [
       "quiver_dance",
@@ -116688,6 +117448,10 @@
         "brine"
       ],
       [
+        16,
+        "tearful_look"
+      ],
+      [
         20,
         "dive"
       ],
@@ -116894,6 +117658,7 @@
     ],
     "egg": [
       "haze",
+      "infestation",
       "spit_up",
       "stockpile",
       "swallow"
@@ -117374,6 +118139,10 @@
         "water_gun"
       ],
       [
+        1,
+        "infestation"
+      ],
+      [
         4,
         "bug_bite"
       ],
@@ -117458,6 +118227,7 @@
     "egg": [
       "power_split",
       "spit_up",
+      "sticky_web",
       "stockpile"
     ],
     "moves": [
@@ -117525,6 +118295,10 @@
       [
         1,
         "wide_guard"
+      ],
+      [
+        1,
+        "infestation"
       ],
       [
         12,
@@ -117608,6 +118382,7 @@
     "egg": [
       "power_split",
       "spit_up",
+      "sticky_web",
       "stockpile"
     ],
     "moves": [
@@ -118380,6 +119155,10 @@
       [
         1,
         "encore"
+      ],
+      [
+        1,
+        "torment"
       ],
       [
         1,
@@ -119415,6 +120194,10 @@
         "psych_up"
       ],
       [
+        25,
+        "quash"
+      ],
+      [
         30,
         "nasty_plot"
       ],
@@ -120025,6 +120808,10 @@
         "earth_power"
       ],
       [
+        55,
+        "shore_up"
+      ],
+      [
         60,
         "sandstorm"
       ]
@@ -120180,6 +120967,10 @@
         "earth_power"
       ],
       [
+        61,
+        "shore_up"
+      ],
+      [
         68,
         "sandstorm"
       ]
@@ -120301,6 +121092,10 @@
       [
         20,
         "counter"
+      ],
+      [
+        25,
+        "purify"
       ],
       [
         30,
@@ -120611,6 +121406,10 @@
       [
         55,
         "double_edge"
+      ],
+      [
+        60,
+        "parting_shot"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -121053,6 +121852,10 @@
         "flamethrower"
       ],
       [
+        40,
+        "shell_trap"
+      ],
+      [
         44,
         "shell_smash"
       ],
@@ -121221,6 +122024,10 @@
       [
         55,
         "wild_charge"
+      ],
+      [
+        60,
+        "spiky_shield"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -121275,6 +122082,7 @@
       "wish"
     ],
     "tutor": [
+      "rising_voltage",
       "steel_beam",
       "steel_roller"
     ],
@@ -121999,6 +122807,10 @@
         "dragon_claw"
       ],
       [
+        36,
+        "noble_roar"
+      ],
+      [
         40,
         "dragon_dance"
       ],
@@ -122141,6 +122953,10 @@
       [
         32,
         "dragon_claw"
+      ],
+      [
+        38,
+        "noble_roar"
       ],
       [
         44,
@@ -122302,6 +123118,10 @@
         "dragon_claw"
       ],
       [
+        38,
+        "noble_roar"
+      ],
+      [
         44,
         "dragon_dance"
       ],
@@ -122312,6 +123132,10 @@
       [
         60,
         "close_combat"
+      ],
+      [
+        76,
+        "boomburst"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -122403,7 +123227,10 @@
     "weight_kg": 78.2,
     "category": "Scaly Pokémon",
     "flavor": "Certain ruins have paintings of ancient warriors wearing armor made of Kommo-o scales.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "clanging_scales"
+    ]
   },
   "Tapu Koko": {
     "shape": "arms",
@@ -122446,6 +123273,10 @@
         "withdraw"
       ],
       [
+        10,
+        "fairy_wind"
+      ],
+      [
         15,
         "false_swipe"
       ],
@@ -122476,6 +123307,10 @@
       [
         50,
         "mean_look"
+      ],
+      [
+        55,
+        "natures_madness"
       ],
       [
         60,
@@ -122631,6 +123466,10 @@
         "mean_look"
       ],
       [
+        55,
+        "natures_madness"
+      ],
+      [
         60,
         "moonblast"
       ],
@@ -122775,6 +123614,10 @@
       [
         50,
         "mean_look"
+      ],
+      [
+        55,
+        "natures_madness"
       ],
       [
         60,
@@ -122944,6 +123787,10 @@
       [
         50,
         "mean_look"
+      ],
+      [
+        55,
+        "natures_madness"
       ],
       [
         60,
@@ -123169,6 +124016,10 @@
         "cosmic_power"
       ],
       [
+        1,
+        "noble_roar"
+      ],
+      [
         7,
         "iron_head"
       ],
@@ -123361,6 +124212,10 @@
         "moonlight"
       ],
       [
+        42,
+        "night_daze"
+      ],
+      [
         49,
         "psychic"
       ],
@@ -123449,7 +124304,10 @@
     "weight_kg": 120.0,
     "category": "Moone Pokémon",
     "flavor": "It steals the light from its surroundings and then becomes the full moon, showering its own light across the night sky.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "moongeist_beam"
+    ]
   },
   "Nihilego": {
     "shape": "tentacles",
@@ -124043,7 +124901,10 @@
     "weight_kg": 100.0,
     "category": "Glowing Pokémon",
     "flavor": "They’ve been dubbed Ultra Beasts. Some of them stand unmoving, like trees, with their arms and legs stuck into the ground.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "rising_voltage"
+    ]
   },
   "Celesteela": {
     "shape": "humanoid",
@@ -124570,8 +125431,16 @@
         "power_gem"
       ],
       [
+        72,
+        "photon_geyser"
+      ],
+      [
         80,
         "gravity"
+      ],
+      [
+        88,
+        "prismatic_laser"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -124714,6 +125583,10 @@
         "lock_on"
       ],
       [
+        48,
+        "shift_gear"
+      ],
+      [
         54,
         "trick"
       ],
@@ -124736,6 +125609,10 @@
       [
         84,
         "zap_cannon"
+      ],
+      [
+        90,
+        "fleur_cannon"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -125524,6 +126401,10 @@
       [
         65,
         "fire_blast"
+      ],
+      [
+        70,
+        "mind_blown"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -125734,7 +126615,8 @@
       "work_up"
     ],
     "tutor": [
-      "coaching"
+      "coaching",
+      "rising_voltage"
     ],
     "moves": [
       "close_combat",
@@ -126309,6 +127191,10 @@
       ],
       [
         1,
+        "noble_roar"
+      ],
+      [
+        1,
         "grassy_terrain"
       ],
       [
@@ -126338,6 +127224,10 @@
       [
         54,
         "endeavor"
+      ],
+      [
+        62,
+        "boomburst"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -126904,6 +127794,10 @@
         "water_pulse"
       ],
       [
+        17,
+        "tearful_look"
+      ],
+      [
         20,
         "sucker_punch"
       ],
@@ -127029,6 +127923,10 @@
       [
         12,
         "water_pulse"
+      ],
+      [
+        19,
+        "tearful_look"
       ],
       [
         24,
@@ -127164,6 +128062,10 @@
         "water_pulse"
       ],
       [
+        19,
+        "tearful_look"
+      ],
+      [
         24,
         "sucker_punch"
       ],
@@ -127265,7 +128167,10 @@
     "weight_kg": 45.2,
     "category": "Secret Agent Pokémon",
     "flavor": "Its nictitating membranes let it pick out foes’ weak points so it can precisely blast them with water that shoots from its fingertips at Mach 3.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "snipe_shot"
+    ]
   },
   "Skwovet": {
     "shape": "upright",
@@ -127305,6 +128210,10 @@
       [
         5,
         "bite"
+      ],
+      [
+        10,
+        "stuff_cheeks"
       ],
       [
         15,
@@ -127435,6 +128344,10 @@
       [
         1,
         "bite"
+      ],
+      [
+        1,
+        "stuff_cheeks"
       ],
       [
         15,
@@ -127977,7 +128890,9 @@
     "learnset_version": "sword-shield",
     "tm": [],
     "egg": [
+      "infestation",
       "recover",
+      "sticky_web",
       "supersonic"
     ],
     "moves": [
@@ -128370,7 +129285,8 @@
     "egg": [
       "howl",
       "knock_off",
-      "quick_guard"
+      "quick_guard",
+      "torment"
     ],
     "tutor": [
       "lash_out"
@@ -128466,6 +129382,10 @@
       [
         46,
         "foul_play"
+      ],
+      [
+        52,
+        "parting_shot"
       ]
     ],
     "evo_moves": [
@@ -128578,6 +129498,10 @@
       [
         16,
         "round"
+      ],
+      [
+        21,
+        "leaf_tornado"
       ],
       [
         24,
@@ -128700,6 +129624,10 @@
       [
         16,
         "round"
+      ],
+      [
+        23,
+        "leaf_tornado"
       ],
       [
         28,
@@ -129408,7 +130336,10 @@
       "level": 25,
       "into": "Boltund"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "rising_voltage"
+    ]
   },
   "Boltund": {
     "shape": "quadruped",
@@ -129537,7 +130468,10 @@
     "weight_kg": 34.0,
     "category": "Dog Pokémon",
     "flavor": "It sends electricity through its legs to boost their strength. Running at top speed, it easily breaks 50 mph.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "tutor": [
+      "rising_voltage"
+    ]
   },
   "Rolycoly": {
     "shape": "ball",
@@ -129955,7 +130889,10 @@
     "weight_kg": 310.5,
     "category": "Coal Pokémon",
     "flavor": "While it’s engaged in battle, its mountain of coal will burn bright red, sending off sparks that scorch the surrounding area.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "tar_shot"
+    ]
   },
   "Applin": {
     "shape": "squiggle",
@@ -130247,6 +131184,10 @@
       [
         24,
         "recover"
+      ],
+      [
+        28,
+        "apple_acid"
       ],
       [
         32,
@@ -131048,6 +131989,10 @@
       [
         1,
         "nuzzle"
+      ],
+      [
+        1,
+        "tearful_look"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -131147,7 +132092,15 @@
       ],
       [
         1,
+        "noble_roar"
+      ],
+      [
+        1,
         "nuzzle"
+      ],
+      [
+        1,
+        "tearful_look"
       ],
       [
         4,
@@ -131184,6 +132137,18 @@
       [
         40,
         "poison_jab"
+      ],
+      [
+        44,
+        "overdrive"
+      ],
+      [
+        48,
+        "boomburst"
+      ],
+      [
+        52,
+        "shift_gear"
       ]
     ],
     "evo_moves": [
@@ -131336,6 +132301,10 @@
       [
         50,
         "lunge"
+      ],
+      [
+        55,
+        "burn_up"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -131467,6 +132436,10 @@
       [
         60,
         "lunge"
+      ],
+      [
+        67,
+        "burn_up"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -131695,11 +132668,19 @@
       ],
       [
         1,
+        "octazooka"
+      ],
+      [
+        1,
         "rock_smash"
       ],
       [
         1,
         "feint"
+      ],
+      [
+        1,
+        "octolock"
       ],
       [
         15,
@@ -131728,6 +132709,10 @@
       [
         45,
         "superpower"
+      ],
+      [
+        50,
+        "topsy_turvy"
       ]
     ],
     "learnset_version": "sword-shield",
@@ -131790,7 +132775,10 @@
     "weight_kg": 39.0,
     "category": "Jujitsu Pokémon",
     "flavor": "Searching for an opponent to test its skills against, it emerges onto land. Once the battle is over, it returns to the sea.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "octolock"
+    ]
   },
   "Sinistea": {
     "shape": "ball",
@@ -132053,7 +133041,10 @@
     "weight_kg": 0.4,
     "category": "Black Tea Pokémon",
     "flavor": "Leaving leftover black tea unattended is asking for this Pokémon to come along and pour itself into it, turning the tea into a new Polteageist.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "teatime"
+    ]
   },
   "Hatenna": {
     "shape": "legs",
@@ -132166,7 +133157,8 @@
     "egg": [
       "after_you",
       "mystical_fire",
-      "nuzzle"
+      "nuzzle",
+      "quash"
     ],
     "moves": [
       "healing_wish",
@@ -132391,6 +133383,10 @@
       [
         55,
         "healing_wish"
+      ],
+      [
+        64,
+        "magic_powder"
       ]
     ],
     "evo_moves": [
@@ -132519,6 +133515,10 @@
         "sucker_punch"
       ],
       [
+        28,
+        "torment"
+      ],
+      [
         33,
         "dark_pulse"
       ],
@@ -132589,7 +133589,10 @@
       "level": 32,
       "into": "Morgrem"
     },
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "egg": [
+      "parting_shot"
+    ]
   },
   "Morgrem": {
     "shape": "humanoid",
@@ -132647,6 +133650,10 @@
       [
         24,
         "sucker_punch"
+      ],
+      [
+        28,
+        "torment"
       ],
       [
         35,
@@ -132783,6 +133790,10 @@
       [
         24,
         "sucker_punch"
+      ],
+      [
+        28,
+        "torment"
       ],
       [
         35,
@@ -132943,6 +133954,10 @@
         "baby_doll_eyes"
       ],
       [
+        1,
+        "obstruct"
+      ],
+      [
         9,
         "snarl"
       ],
@@ -133067,7 +134082,10 @@
     "weight_kg": 46.0,
     "category": "Blocking Pokémon",
     "flavor": "It evolved after experiencing numerous fights. While crossing its arms, it lets out a shout that would make any opponent flinch.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "obstruct"
+    ]
   },
   "Perrserker": {
     "shape": "upright",
@@ -134275,6 +135293,10 @@
         "first_impression"
       ],
       [
+        40,
+        "no_retreat"
+      ],
+      [
         45,
         "iron_defense"
       ],
@@ -134547,6 +135569,7 @@
     ],
     "egg": [
       "bug_bite",
+      "fairy_wind",
       "mirror_coat"
     ],
     "moves": [
@@ -134615,6 +135638,10 @@
       [
         4,
         "stun_spore"
+      ],
+      [
+        8,
+        "infestation"
       ],
       [
         12,
@@ -135193,6 +136220,10 @@
         "spark"
       ],
       [
+        35,
+        "torment"
+      ],
+      [
         40,
         "agility"
       ],
@@ -135265,6 +136296,8 @@
     "egg": [
       "charge",
       "fake_out",
+      "parting_shot",
+      "quash",
       "rapid_spin",
       "super_fang",
       "swagger",
@@ -135707,7 +136740,8 @@
     ],
     "tutor": [
       "draco_meteor",
-      "meteor_beam"
+      "meteor_beam",
+      "rising_voltage"
     ],
     "moves": [
       "dragon_rush",
@@ -135848,7 +136882,8 @@
       "wild_charge"
     ],
     "tutor": [
-      "meteor_beam"
+      "meteor_beam",
+      "rising_voltage"
     ],
     "moves": [
       "blizzard",
@@ -136337,6 +137372,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "infestation"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -136368,7 +137407,8 @@
     "moves": [
       "astonish",
       "quick_attack",
-      "bite"
+      "bite",
+      "infestation"
     ],
     "catch_rate": 45,
     "base_exp": 54,
@@ -136424,6 +137464,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "infestation"
       ],
       [
         6,
@@ -136586,6 +137630,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "infestation"
       ],
       [
         6,
@@ -136759,6 +137807,10 @@
       [
         33,
         "iron_head"
+      ],
+      [
+        44,
+        "noble_roar"
       ],
       [
         55,
@@ -137049,6 +138101,10 @@
       [
         48,
         "flamethrower"
+      ],
+      [
+        56,
+        "dynamax_cannon"
       ],
       [
         64,
@@ -137651,6 +138707,10 @@
         "extreme_speed"
       ],
       [
+        36,
+        "thunder_cage"
+      ],
+      [
         42,
         "thunderbolt"
       ],
@@ -137797,6 +138857,10 @@
         "focus_energy"
       ],
       [
+        66,
+        "dragon_energy"
+      ],
+      [
         72,
         "hyper_beam"
       ],
@@ -137897,6 +138961,10 @@
       [
         18,
         "stomp"
+      ],
+      [
+        24,
+        "torment"
       ],
       [
         30,
@@ -139307,6 +140375,14 @@
         "astonish"
       ],
       [
+        1,
+        "fairy_wind"
+      ],
+      [
+        5,
+        "torment"
+      ],
+      [
         10,
         "flatter"
       ],
@@ -139357,6 +140433,10 @@
       [
         70,
         "outrage"
+      ],
+      [
+        75,
+        "springtide_storm"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -140334,7 +141414,10 @@
     "weight_kg": 326.5,
     "category": "Singer Pokémon",
     "flavor": "Skeledirge’s gentle singing soothes the souls of all that hear it. It burns its enemies to a crisp with flames of over 5,400 degrees Fahrenheit.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "torch_song"
+    ]
   },
   "Quaxly": {
     "shape": "upright",
@@ -140901,6 +141984,7 @@
       "endeavor",
       "spit_up",
       "stockpile",
+      "stuff_cheeks",
       "swallow"
     ],
     "moves": [
@@ -141134,6 +142218,10 @@
         "headbutt"
       ],
       [
+        29,
+        "sticky_web"
+      ],
+      [
         33,
         "gastro_acid"
       ],
@@ -141274,6 +142362,10 @@
         "headbutt"
       ],
       [
+        33,
+        "sticky_web"
+      ],
+      [
         37,
         "gastro_acid"
       ],
@@ -141351,7 +142443,10 @@
     "weight_kg": 16.5,
     "category": "Trap Pokémon",
     "flavor": "Spidops covers its territory in tough, sticky threads to set up traps for intruders.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "silk_trap"
+    ]
   },
   "Nymble": {
     "shape": "armor",
@@ -142119,7 +143214,10 @@
     "weight_kg": 41.0,
     "category": "Hands-On Pokémon",
     "flavor": "Pawmot’s fluffy fur acts as a battery. It can store the same amount of electricity as an electric car.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "revival_blessing"
+    ]
   },
   "Tandemaus": {
     "shape": "heads",
@@ -142309,6 +143407,10 @@
       [
         1,
         "baby_doll_eyes"
+      ],
+      [
+        1,
+        "tidy_up"
       ],
       [
         5,
@@ -143175,6 +144277,10 @@
         "quick_attack"
       ],
       [
+        10,
+        "torment"
+      ],
+      [
         13,
         "aerial_ace"
       ],
@@ -143260,7 +144366,8 @@
     "egg": [
       "double_edge",
       "final_gambit",
-      "flatter"
+      "flatter",
+      "parting_shot"
     ],
     "moves": [
       "reversal",
@@ -143940,6 +145047,10 @@
       [
         56,
         "expanding_force"
+      ],
+      [
+        62,
+        "armor_cannon"
       ]
     ],
     "evo_moves": [
@@ -144287,6 +145398,7 @@
     ],
     "egg": [
       "muddy_water",
+      "parabolic_charge",
       "soak"
     ],
     "moves": [
@@ -145168,6 +146280,7 @@
     "egg": [
       "copycat",
       "cross_poison",
+      "parting_shot",
       "super_fang",
       "swagger",
       "toxic"
@@ -145398,6 +146511,10 @@
         "bullet_seed"
       ],
       [
+        17,
+        "infestation"
+      ],
+      [
         21,
         "hex"
       ],
@@ -145541,6 +146658,10 @@
       [
         13,
         "bullet_seed"
+      ],
+      [
+        17,
+        "infestation"
       ],
       [
         21,
@@ -146344,7 +147465,8 @@
       ]
     ],
     "evo_moves": [
-      "flamethrower"
+      "flamethrower",
+      "spicy_extract"
     ],
     "learnset_version": "scarlet-violet",
     "tm": [
@@ -146698,7 +147820,10 @@
     "weight_kg": 3.5,
     "category": "Rolling Pokémon",
     "flavor": "An infant sleeps inside the ball. Rabsca rolls the ball soothingly with its legs to ensure the infant sleeps comfortably.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "revival_blessing"
+    ]
   },
   "Flittle": {
     "shape": "legs",
@@ -146992,7 +148117,10 @@
     "weight_kg": 90.0,
     "category": "Ostrich Pokémon",
     "flavor": "It emits psychic power from the gaps between its multicolored frills and sprints at speeds greater than 120 mph.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "lumina_crash"
+    ]
   },
   "Tinkatink": {
     "shape": "humanoid",
@@ -147026,6 +148154,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         5,
@@ -147121,7 +148253,8 @@
       "thunder_wave"
     ],
     "egg": [
-      "feint"
+      "feint",
+      "quash"
     ],
     "moves": [
       "knock_off",
@@ -147175,6 +148308,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         5,
@@ -147322,6 +148459,10 @@
       [
         1,
         "astonish"
+      ],
+      [
+        1,
+        "fairy_wind"
       ],
       [
         5,
@@ -147771,6 +148912,10 @@
         "pluck"
       ],
       [
+        24,
+        "torment"
+      ],
+      [
         29,
         "rock_tomb"
       ],
@@ -147789,6 +148934,10 @@
       [
         53,
         "knock_off"
+      ],
+      [
+        60,
+        "parting_shot"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -147977,6 +149126,7 @@
       "zen_headbutt"
     ],
     "egg": [
+      "boomburst",
       "bounce",
       "counter",
       "haze",
@@ -148288,7 +149438,9 @@
     ],
     "egg": [
       "haze",
+      "parting_shot",
       "self_destruct",
+      "torment",
       "toxic"
     ],
     "moves": [
@@ -148461,7 +149613,10 @@
     "weight_kg": 120.0,
     "category": "Multi-Cyl Pokémon",
     "flavor": "Revavroom viciously threatens others with the sound of its exhaust. It sticks its tongue out from its cylindrical mouth and sprays toxic fluids.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "shift_gear"
+    ]
   },
   "Cyclizar": {
     "shape": "quadruped",
@@ -148524,8 +149679,16 @@
         "u_turn"
       ],
       [
+        31,
+        "shed_tail"
+      ],
+      [
         36,
         "dragon_claw"
+      ],
+      [
+        40,
+        "shift_gear"
       ],
       [
         45,
@@ -148688,6 +149851,10 @@
       [
         47,
         "earthquake"
+      ],
+      [
+        52,
+        "shed_tail"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -148940,6 +150107,10 @@
       [
         1,
         "smack_down"
+      ],
+      [
+        1,
+        "spiky_shield"
       ],
       [
         7,
@@ -150008,6 +151179,10 @@
         "dive"
       ],
       [
+        25,
+        "noble_roar"
+      ],
+      [
         30,
         "soak"
       ],
@@ -150638,6 +151813,10 @@
         "double_hit"
       ],
       [
+        32,
+        "twin_beam"
+      ],
+      [
         37,
         "crunch"
       ],
@@ -150824,6 +152003,10 @@
       [
         56,
         "hurricane"
+      ],
+      [
+        62,
+        "boomburst"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -150967,6 +152150,10 @@
       [
         1,
         "metal_burst"
+      ],
+      [
+        15,
+        "torment"
       ],
       [
         20,
@@ -151279,6 +152466,10 @@
         "howl"
       ],
       [
+        14,
+        "noble_roar"
+      ],
+      [
         21,
         "bite"
       ],
@@ -151317,6 +152508,10 @@
       [
         84,
         "perish_song"
+      ],
+      [
+        91,
+        "boomburst"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -152728,6 +153923,10 @@
         "sludge_wave"
       ],
       [
+        56,
+        "fiery_dance"
+      ],
+      [
         63,
         "metal_sound"
       ],
@@ -153561,6 +154760,10 @@
         "power_gem"
       ],
       [
+        56,
+        "make_it_rain"
+      ],
+      [
         63,
         "nasty_plot"
       ],
@@ -153705,6 +154908,10 @@
       [
         45,
         "giga_drain"
+      ],
+      [
+        50,
+        "ruination"
       ],
       [
         55,
@@ -153865,6 +155072,10 @@
         "icicle_crash"
       ],
       [
+        50,
+        "ruination"
+      ],
+      [
         55,
         "sucker_punch"
       ],
@@ -154006,6 +155217,10 @@
       [
         45,
         "stomping_tantrum"
+      ],
+      [
+        50,
+        "ruination"
       ],
       [
         55,
@@ -154158,6 +155373,10 @@
       [
         45,
         "lava_plume"
+      ],
+      [
+        50,
+        "ruination"
       ],
       [
         55,
@@ -154814,6 +156033,10 @@
         "charge"
       ],
       [
+        21,
+        "parabolic_charge"
+      ],
+      [
         28,
         "discharge"
       ],
@@ -154824,6 +156047,10 @@
       [
         42,
         "dragon_pulse"
+      ],
+      [
+        56,
+        "electro_drift"
       ],
       [
         63,
@@ -154955,6 +156182,10 @@
         "water_pulse"
       ],
       [
+        21,
+        "noble_roar"
+      ],
+      [
         28,
         "dragon_breath"
       ],
@@ -154965,6 +156196,10 @@
       [
         42,
         "dragon_rush"
+      ],
+      [
+        56,
+        "hydro_steam"
       ],
       [
         63,
@@ -155182,7 +156417,8 @@
       "x_scissor"
     ],
     "tutor": [
-      "electric_terrain"
+      "electric_terrain",
+      "quash"
     ],
     "moves": [
       "solar_blade",
@@ -155266,6 +156502,10 @@
         "bullet_seed"
       ],
       [
+        28,
+        "syrup_bomb"
+      ],
+      [
         32,
         "dragon_pulse"
       ],
@@ -155321,6 +156561,7 @@
     ],
     "egg": [
       "defense_curl",
+      "infestation",
       "recycle",
       "rollout",
       "sucker_punch"
@@ -155609,7 +156850,10 @@
     "weight_kg": 2.2,
     "category": "Matcha Pokémon",
     "flavor": "It prefers cool, dark places, such as the back of a shelf or the space beneath a home's floorboards. It wanders in search of prey after sunset.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "matcha_gotcha"
+    ]
   },
   "Okidogi": {
     "shape": "upright",
@@ -155836,6 +157080,10 @@
       [
         64,
         "future_sight"
+      ],
+      [
+        72,
+        "parting_shot"
       ]
     ],
     "learnset_version": "scarlet-violet",
@@ -156123,6 +157371,10 @@
         "synthesis"
       ],
       [
+        48,
+        "spiky_shield"
+      ],
+      [
         54,
         "power_whip"
       ],
@@ -156358,7 +157610,10 @@
     "weight_kg": 60.0,
     "category": "Alloy Pokémon",
     "flavor": "It digs holes on mountains, searching for food. It’s so durable that being caught in a cave-in won’t faze it.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "electro_shot"
+    ]
   },
   "Hydrapple": {
     "shape": "heads",
@@ -156424,6 +157679,10 @@
       [
         20,
         "bullet_seed"
+      ],
+      [
+        28,
+        "syrup_bomb"
       ],
       [
         32,
@@ -156495,6 +157754,7 @@
     "egg": [
       "defense_curl",
       "double_hit",
+      "infestation",
       "recycle",
       "rollout",
       "sucker_punch",
@@ -156514,7 +157774,10 @@
     "weight_kg": 93.0,
     "category": "Apple Hydra Pokémon",
     "flavor": "These capricious syrpents have banded together. On the rare occasion that their moods align, their true power is unleashed.",
-    "sprite": "res://assets/sprites/critter_purple.png"
+    "sprite": "res://assets/sprites/critter_purple.png",
+    "evo_moves": [
+      "fickle_beam"
+    ]
   },
   "Gouging Fire": {
     "shape": "quadruped",
@@ -156659,7 +157922,8 @@
     ],
     "egg": [
       "ancient_power",
-      "double_kick"
+      "double_kick",
+      "noble_roar"
     ],
     "moves": [
       "raging_fury",
@@ -156742,6 +158006,14 @@
       [
         42,
         "calm_mind"
+      ],
+      [
+        49,
+        "thunderclap"
+      ],
+      [
+        63,
+        "rising_voltage"
       ],
       [
         70,
@@ -157038,6 +158310,10 @@
         "flash_cannon"
       ],
       [
+        56,
+        "tachyon_cutter"
+      ],
+      [
         63,
         "future_sight"
       ],
@@ -157174,6 +158450,10 @@
       [
         50,
         "heavy_slam"
+      ],
+      [
+        60,
+        "tera_starstorm"
       ],
       [
         70,
@@ -157314,8 +158594,16 @@
         "fake_tears"
       ],
       [
+        32,
+        "parting_shot"
+      ],
+      [
         40,
         "shadow_ball"
+      ],
+      [
+        48,
+        "malignant_chain"
       ],
       [
         56,
