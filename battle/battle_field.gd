@@ -184,6 +184,9 @@ func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: fl
 	var kind := _mark_for(mv)
 	if kind == "":
 		return
+	var ter = arena.get("terrain")
+	if kind in ["puddle", "ice", "scorch"] and ter and ter.ground and ter.ground.on:
+		return  # no modo de energia com cenário as marcas são do BattleGround (poça, gelo, brasas)
 	var side := user.side if is_instance_valid(user) else 0
 	_add_mark(kind, _flat(at), clampf(radius, 0.8, 2.5), side)
 

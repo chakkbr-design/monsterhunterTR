@@ -57,13 +57,18 @@ const HIT_CD := 0.35
 ## VGC: meia largura do corredor livre entre as posições dos dois lados (m).
 const VGC_LANE := 2.8
 ## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
-## "crate" são as caixas/pedras do BattleField. Todo cenário tem ao menos um morro, um pico e um lago.
+## "crate" são as caixas/pedras do BattleField. Todo cenário sorteável tem ao menos um morro, um pico e
+## um lago (a praia não tem lago: a maré faz o papel dele).
 const SCENARIOS := {
 	"campo": {"pond": 1, "hill": 2, "peak": 1, "grass": 5, "crate": 2},
 	"lagoa": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 1},
 	"pedreira": {"pond": 1, "hill": 2, "peak": 3, "grass": 1, "crate": 4},
 	"misto": {"pond": 2, "hill": 2, "peak": 2, "grass": 3, "crate": 2},
+	"praia": {"pond": 0, "hill": 1, "peak": 1, "grass": 1, "crate": 3},
 }
+## Cenários fora do sorteio: só quando escolhidos (opts.scenario). A praia (maré e lama, BattleGround) não
+## tem lago e é do modo de energia.
+const PICK_ONLY := ["praia"]
 const PLACE_ORDER := ["pond", "hill", "peak", "grass", "crate"]  ## os grandes primeiro
 ## Tamanho por tipo: [raio mín., raio máx., altura mín., altura máx.].
 const SIZES := {
@@ -148,12 +153,15 @@ var crate_spots: Array = []
 var _slides := {}  ## id do lutador -> {from, to, t, dur} (puxado/derrubado)
 var _shove_at := {}  ## id do lutador -> _water_t do último puxão/derrubada
 var _fire_t := {}  ## id do lutador de Fogo -> segundos acumulados dentro do lago
+## Chão do modo de energia: lama, marcas de golpe e a maré da praia (BattleGround).
+var ground: BattleGround
 
 static var _tex := {}
 
 
 func _init(a: Node) -> void:
 	arena = a
+	ground = BattleGround.new(self)
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -180,6 +188,7 @@ func setup() -> void:
 	scenario = String(arena.opts.get("scenario", ""))
 	if not SCENARIOS.has(scenario):
 		var names: Array = SCENARIOS.keys()
+		names = names.filter(func(n): return not n in PICK_ONLY)
 		names.sort()
 		scenario = String(names[rng.randi() % names.size()])
 	var tel = arena.get("telemetry")
@@ -219,6 +228,7 @@ func setup() -> void:
 					crate_spots.append(at)
 				_:
 					_add(String(kind), at, r, h)
+	ground.setup()  # lama e maré (só no modo de energia)
 
 
 ## Ponto livre para um obstáculo de raio `r` na metade `side` (1 = lado de arena.axis, -1 = o outro,
@@ -395,6 +405,9 @@ func on_high(f: BattleFighter) -> bool:
 
 ## Multiplicador do andar pelo relevo (encosta, água, gelo).
 func move_mult(f: BattleFighter) -> float:
+	var gm := ground.move_mult(f)  # lama e maré (fora do relevo)
+	if gm != 1.0:
+		return gm
 	var pond := pond_at(f.position)
 	if not pond.is_empty() and _grounded(f):
 		if float(pond.ice_t) > 0.0:
@@ -414,6 +427,9 @@ func move_mult(f: BattleFighter) -> float:
 ## Energia pelo chão: no lago Água e Grama enchem mais, os outros menos e Fogo bem menos; na grama alta
 ## quem é de Grama enche mais.
 func regen_mult(f: BattleFighter) -> float:
+	var gr := ground.regen_mult(f)  # água rasa da maré
+	if gr != 1.0:
+		return gr
 	if wet(f):
 		if swimmer(f) or "grass" in f.types:
 			return SWIM_REGEN
@@ -441,6 +457,8 @@ func push_out(f: BattleFighter) -> Vector3:
 ## Por quadro, depois de cada lutador andar: puxão/derrubada em curso, chão sob ele, queda e o pico
 ## sólido.
 func settle(f: BattleFighter, dt: float) -> void:
+	if f.active():
+		ground.settle(f, dt)  # embalo no gelo
 	if obstacles.is_empty() or not f.active():
 		return
 	_slide_step(f, dt)
@@ -474,6 +492,7 @@ func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> flo
 	var k := 1.0
 	if ranged and on_high(user) and user.ground_y - target.ground_y >= HIGH_DIFF:
 		k *= HIGH_ACC
+	k *= ground.acc_mult(user, mv, target)  # enlameado, fenda, areia da praia
 	if not kind in RANGED_KINDS or float(mv.get("accuracy", 0)) <= 0.0:
 		return k
 	if in_grass(target) and user.flat_to(target).length() > GRASS_SEE:
@@ -487,6 +506,9 @@ func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> flo
 
 ## Dano pelo cenário (BattleMoves.extra_mult): Elétrico em quem está dentro da água bate mais forte.
 func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	var gd := ground.damage_mult(user, target, mv)  # Elétrico na maré
+	if gd != 1.0:
+		return gd
 	if obstacles.is_empty() or not is_instance_valid(target):
 		return 1.0
 	if String(mv.get("type", "")) == "electric" and wet(target):
@@ -506,6 +528,7 @@ func _weather() -> String:
 ## Um golpe chegou em `at` (BattleField.on_move_landed): Terra/Pedra/Lutador tiram vida do relevo,
 ## raio passa pela água, gelo congela o lago.
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
+	ground.on_move_landed(user, mv, at, radius)  # lama, fenda, gelo, brasas, poça
 	var type := String(mv.get("type", ""))
 	var power := float(mv.get("power", 0))
 	if power <= 0.0 or not has_scenery():
@@ -585,15 +608,21 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 			arena.cut_in("DESABOU!", Color(0.85, 0.65, 0.4))
 
 
-func _conduct(user: BattleFighter, mv: Dictionary, pond: Dictionary, at: Vector3) -> void:
+## Corrente pela água de `pond` ({pos, r}); `inside` diz quem está nela (padrão: dentro do lago).
+func _conduct(
+	user: BattleFighter, mv: Dictionary, pond: Dictionary, at: Vector3, inside := Callable()
+) -> void:
 	var m := mv.duplicate()
 	m.erase("_cast")
 	m["conducted"] = true
 	var hit_any := false
 	for f in arena.fighters:
-		if not is_instance_valid(f) or not f.active() or f == user or not in_water(f):
+		if not is_instance_valid(f) or not f.active() or f == user:
 			continue
-		if _flat(f.position - pond.pos).length() >= pond.r:
+		if inside.is_valid():
+			if not inside.call(f):
+				continue
+		elif not in_water(f) or _flat(f.position - pond.pos).length() >= pond.r:
 			continue
 		if _flat(f.position - at).length() < 0.6:
 			continue  # o próprio alvo do golpe
@@ -802,7 +831,7 @@ func shot_block(a: Vector3, b: Vector3) -> float:
 		var p := from.lerp(to, float(i) / n)
 		if blocks_shot(p):
 			return _flat(p - from).length()
-	return INF
+	return ground.shot_cover(a, b)  # alvo escondido na fenda
 
 
 func has_cover() -> bool:
@@ -813,6 +842,7 @@ func has_cover() -> bool:
 
 func tick(dt: float) -> void:
 	_water_t += dt
+	ground.tick(dt)
 	var wx := _weather() if has_scenery() or not burnt.is_empty() else ""
 	_regrow(dt, wx)
 	for o in obstacles:
@@ -950,6 +980,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 
 ## Desvia a direção desejada da IA de picos que ela não escala e (quem não é de Água) do lago.
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
+	want = ground.steer(f, want)  # contorna a lama e as brasas
 	if obstacles.is_empty() or want.length() < 0.05:
 		return want
 	var dir := want.normalized()
