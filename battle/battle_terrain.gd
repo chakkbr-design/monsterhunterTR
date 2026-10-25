@@ -1,17 +1,28 @@
 class_name BattleTerrain
 extends RefCounted
-## Relevo da quadra (opts.terrain, o treino liga): morros, picos e lagos como objetos 3D de verdade,
-## com texturas de pixel art. A arena cria um por luta (arena.terrain) e chama os ganchos abaixo.
+## Relevo da quadra (opts.terrain, o treino liga): morros, picos, lagos e grama alta como objetos 3D de
+## verdade, com texturas de pixel art. A arena cria um por luta (arena.terrain) e chama os ganchos abaixo.
 ##
+## - Cenário (opts.scenario; sem ele, sorteado): quantos morros, picos, lagos, moitas e caixas/pedras
+##   aparecem (SCENARIOS). Posições aleatórias, espalhadas (GAP entre bordas), longe das paredes e das
+##   entradas, alternando as metades da quadra (o ímpar de cada tipo vai para a faixa do meio).
 ## - Morro: tronco de cone baixo com topo de grama; qualquer um sobe pela encosta (mais devagar).
 ## - Pico: alto e estreito; só sobem os escaladores (Pedra, Terra, Lutador, Voador, Inseto ou Speed alta);
 ##   para os outros é sólido.
-## - Lago: quem não é de Água anda devagar dentro; Água nada rápido e descansa melhor (energia).
+## - Lago: quem não é de Água anda devagar dentro. Energia: Água e Grama recuperam mais, os outros menos,
+##   Fogo bem menos e ainda toma dano por segundo. Elétrico contra quem está na água bate mais forte.
+##   Chuva aumenta o lago, sol diminui, granizo/neve congela.
+## - Grama alta: baixa e atravessável. Quem está dentro fica escondido (golpe à distância erra mais) e
+##   quem é de Grama recupera energia mais rápido. Fogo queima a moita: todos dentro tomam dano alto e
+##   podem ficar queimados, e ela vira chão queimado. Com sol o fogo pula para as moitas vizinhas; com
+##   chuva a grama molhada não pega fogo.
 ##
 ## No alto (ground_y >= HIGH), golpe à distância ou Voador contra quem está mais baixo acerta mais
 ## (HIGH_ACC). Golpe de Terra, Pedra ou Lutador que cai num morro ou pico tira vida dele; quando ele
-## desaba, quem está em cima cai, toma dano e fica atordoado. Picos, caixas e pedras são cobertura:
-## param projéteis e raios. Raio no lago passa a corrente para quem está na mesma água; gelo congela o lago.
+## desaba, quem está em cima cai, toma dano e fica atordoado. Empurrão forte em quem está no alto o
+## derruba de lá; golpe de Água com empurrão perto do lago puxa o alvo para dentro. Picos, caixas e
+## pedras são cobertura: param projéteis e raios. Raio no lago passa a corrente para quem está na mesma
+## água; gelo congela o lago.
 
 const HIGH := 0.6  ## altura do chão a partir da qual o lutador está "no alto"
 const HIGH_ACC := 1.2  ## precisão de golpe à distância/Voador de cima para baixo
@@ -30,21 +41,101 @@ const UPHILL_MULT := 0.8
 const WADE_MULT := 0.6
 const SWIM_MULT := 1.3
 const ICE_MULT := 1.15
-const SWIM_REGEN := 1.3  ## energia de quem é de Água descansando no lago
+const SWIM_REGEN := 1.3  ## energia de quem é de Água ou de Grama dentro do lago
+const WADE_REGEN := 0.6  ## energia dos outros tipos dentro do lago
+const FIRE_WATER_REGEN := 0.35  ## energia de quem é de Fogo dentro do lago
+const FIRE_WATER_DOT := 1.0 / 32.0  ## dano por segundo de Fogo dentro do lago (fração do HP máximo)
+const ELEC_WATER := 1.3  ## dano de golpe Elétrico em quem está na água (lago não congelado)
 const RISE := 6.0  ## m/s que o chão sobe sob o lutador (encosta)
 const FALL_G := 14.0
 const CONDUCT := 0.75  ## poder da corrente que passa pela água (o 0,75x oficial do golpe em área)
 const FREEZE_SECS := 10.0
 const KEEP_SPOT := 1.8  ## longe dos pontos de entrada
 const KEEP_WALL := 1.0
-const GAP := 0.9
+const GAP := 1.2  ## distância mínima entre as bordas de dois obstáculos (espalha o cenário)
 const HIT_CD := 0.35
+## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
+## "crate" são as caixas/pedras do BattleField. Todo cenário tem ao menos um morro, um pico e um lago.
+const SCENARIOS := {
+	"campo": {"pond": 1, "hill": 2, "peak": 1, "grass": 5, "crate": 2},
+	"lagoa": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 1},
+	"pedreira": {"pond": 1, "hill": 2, "peak": 3, "grass": 1, "crate": 4},
+	"misto": {"pond": 2, "hill": 2, "peak": 2, "grass": 3, "crate": 2},
+}
+const PLACE_ORDER := ["pond", "hill", "peak", "grass", "crate"]  ## os grandes primeiro
+## Tamanho por tipo: [raio mín., raio máx., altura mín., altura máx.].
+const SIZES := {
+	"pond": [1.5, 2.0, 0.0, 0.0],
+	"hill": [1.7, 2.2, 0.9, 1.15],
+	"peak": [1.2, 1.45, 1.6, 1.9],
+	"grass": [1.0, 1.4, 0.0, 0.0],
+	"crate": [0.55, 0.55, 0.0, 0.0],
+}
+const MID_BAND := 2.5  ## o ímpar de cada tipo fica a até MID_BAND m da linha do meio; os outros além
+const TIGHT_GAP := 0.5  ## sem lugar com GAP, tenta de novo com GAP x TIGHT_GAP
+const PLACE_TRIES := 150
+## Grama alta.
+const GRASS_H := 0.65  ## altura das lâminas (só visual; quem voa não se esconde)
+const GRASS_EVADE := 0.3  ## golpe à distância contra quem está na grama erra mais (precisão x 0,7)
+const GRASS_SEE := 1.5  ## colado (até GRASS_SEE m) o atacante enxerga: sem evasão
+const GRASS_REGEN := 1.3  ## energia de quem é de Grama dentro da moita
+const GRASS_BURN_FRAC := 1.0 / 6.0  ## dano de quem está na moita quando ela queima (fração do HP)
+const GRASS_BURN_STATUS := 0.3  ## chance de ficar queimado na moita em chamas
+const SUN_BURN_MULT := 1.25  ## com sol a moita queima mais forte
+const SPREAD_GAP := 2.5  ## com sol o fogo pula para moitas a até SPREAD_GAP m (borda a borda)
+const SPREAD_DELAY := 0.5
+## Areia: na tempestade de areia, Pedra/Terra/Aço se camuflam (golpe à distância x 0,85).
+const SAND_TYPES := ["rock", "ground", "steel"]
+const SAND_EVADE := 0.15
+## Clima no lago: chuva aumenta o raio, sol diminui (POND_GROW m/s até o alvo); granizo/neve congela.
+const RAIN_POND := 1.25
+const SUN_POND := 0.8
+const POND_GROW := 0.15
+## Puxado para a água: golpe de Água de PULL_MOVES (ou empurrão efetivo >= PULL_KNOCK) em quem está a
+## até PULL_RANGE m da beira do lago (e não é de Água nem voa) leva o alvo para dentro em PULL_SECS s.
+const PULL_MOVES := [
+	"surf",
+	"hydro_pump",
+	"hydro_cannon",
+	"water_pulse",
+	"whirlpool",
+	"aqua_tail",
+	"liquidation",
+	"muddy_water",
+	"water_spout",
+	"wave_crash",
+	"waterfall",
+	"dive",
+	"razor_shell",
+]
+const PULL_KNOCK := 6.0
+const PULL_RANGE := 2.0
+const PULL_SECS := 0.35
+## Derrubado do alto: empurrão efetivo >= DROP_KNOCK em quem está em cima de morro/pico, fora do miolo
+## do topo (DROP_EDGE x raio do topo; no pico vale qualquer ponto), joga o alvo para fora: DROP_FRAC do
+## HP e atordoado DROP_STUN s + DROP_STUN_H s por metro de altura.
+const DROP_KNOCK := 8.0
+const DROP_EDGE := 0.5
+const DROP_OUT := 0.5
+const DROP_SECS := 0.3
+const DROP_FRAC := 1.0 / 16.0
+const DROP_STUN := 0.6
+const DROP_STUN_H := 0.3
+const SHOVE_CD := 3.0  ## o mesmo lutador só é puxado/derrubado de novo depois de SHOVE_CD s
 
 var arena: Node
 ## {kind: "hill"/"peak"/"pond", pos, r, top, h, hp, max_hp, node, cd, ice_t, top_node, mat}
 var obstacles: Array = []
 var _fall_v := {}  ## id do lutador -> velocidade da queda (m/s)
 var _water_t := 0.0
+var scenario := ""  ## cenário desta luta ("" = sem relevo)
+## Moitas de grama alta: {kind: "grass", pos, r, node}
+var grass: Array = []
+## Onde o BattleField põe as caixas/pedras do cenário (locais, planos).
+var crate_spots: Array = []
+var _slides := {}  ## id do lutador -> {from, to, t, dur} (puxado/derrubado)
+var _shove_at := {}  ## id do lutador -> _water_t do último puxão/derrubada
+var _fire_t := {}  ## id do lutador de Fogo -> segundos acumulados dentro do lago
 
 static var _tex := {}
 
@@ -68,56 +159,94 @@ static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
 
-## Monta o relevo, espelhado pelo centro (os dois lados ficam com o mesmo terreno).
+## Monta o cenário: tipo sorteado (ou opts.scenario) e obstáculos em posições aleatórias, espalhados e
+## divididos entre as duas metades da quadra.
 func setup() -> void:
 	if not bool(arena.opts.get("terrain", false)):
 		return
 	var rng: RandomNumberGenerator = arena.rng
-	var plan := [
-		{"kind": "hill", "r": [1.9, 2.4], "h": [0.9, 1.15]},
-		{"kind": "peak", "r": [1.2, 1.45], "h": [1.6, 1.9]},
-		{"kind": "pond", "r": [1.5, 2.0], "h": [0.0, 0.0]},
-	]
-	if arena.rect.size.x >= 20.0:
-		plan.append(
-			{"kind": "hill" if rng.randf() < 0.5 else "peak", "r": [1.4, 2.0], "h": [1.0, 1.3]}
-		)
-	for p in plan:
-		var r := rng.randf_range(p.r[0], p.r[1])
-		var h := rng.randf_range(p.h[0], p.h[1])
-		if p.kind == "peak":
-			r = minf(r, 1.45)
-		for _try in 120:
-			var at := _random_spot(rng, r)
+	scenario = String(arena.opts.get("scenario", ""))
+	if not SCENARIOS.has(scenario):
+		var names: Array = SCENARIOS.keys()
+		names.sort()
+		scenario = String(names[rng.randi() % names.size()])
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.meta["scenario"] = scenario
+	var plan: Dictionary = SCENARIOS[scenario]
+	# Cada obstáculo vai para a metade com menos coisa; o ímpar de cada tipo tenta a faixa do meio.
+	var count := {1: 0, -1: 0}
+	for kind in PLACE_ORDER:
+		var n := int(plan.get(kind, 0))
+		var sz: Array = SIZES[kind]
+		for i in n:
+			var r := rng.randf_range(sz[0], sz[1])
+			var h := rng.randf_range(sz[2], sz[3])
+			var light := 1 if count[1] < count[-1] else -1
+			if count[1] == count[-1]:
+				light = 1 if rng.randf() < 0.5 else -1
+			var sides := [light, -light]
+			if n % 2 == 1 and i == n - 1:
+				sides.push_front(0)
+			var at := Vector3.INF
+			for gap in [GAP, GAP * TIGHT_GAP]:  # sem lugar: aperta um pouco antes de desistir
+				for side in sides:
+					at = _place(rng, r, side, gap)
+					if at != Vector3.INF:
+						if side != 0:
+							count[side] += 1
+						break
+				if at != Vector3.INF:
+					break
 			if at == Vector3.INF:
 				continue
-			_add(String(p.kind), at, r, h)
-			_add(String(p.kind), -at, r, h)
-			break
+			match String(kind):
+				"grass":
+					_add_grass(at, r)
+				"crate":
+					crate_spots.append(at)
+				_:
+					_add(String(kind), at, r, h)
 
 
-func _random_spot(rng: RandomNumberGenerator, r: float) -> Vector3:
+## Ponto livre para um obstáculo de raio `r` na metade `side` (1 = lado de arena.axis, -1 = o outro,
+## além da faixa do meio; 0 = faixa do meio), a `gap` m das bordas dos outros. INF se não coube.
+func _place(rng: RandomNumberGenerator, r: float, side: int, gap: float) -> Vector3:
 	var rc: Rect2 = arena.rect.grow(-(r + KEEP_WALL))
 	if rc.size.x <= 0.0 or rc.size.y <= 0.0:
 		return Vector3.INF
-	var at := Vector3(
-		rng.randf_range(rc.position.x, rc.end.x), 0.0, rng.randf_range(rc.position.y, rc.end.y)
-	)
-	# A metade do jogador: o par espelhado (-at) cai na do adversário.
-	if at.dot(arena.axis) > 0.0:
-		at = -at
-	if at.length() < r + GAP:  # longe do espelho (o par não se encosta no centro)
-		return Vector3.INF
+	var ax: Vector3 = _flat(arena.axis).normalized()
+	if ax.length() < 0.5:
+		ax = Vector3.RIGHT
+	for _try in PLACE_TRIES:
+		var at := Vector3(
+			rng.randf_range(rc.position.x, rc.end.x), 0.0, rng.randf_range(rc.position.y, rc.end.y)
+		)
+		var along := at.dot(ax)
+		if side == 0:
+			at += ax * (rng.randf_range(-MID_BAND, MID_BAND) - along)
+		elif signf(along) != float(side):
+			at -= ax * 2.0 * along  # reflete para a metade pedida
+		if side != 0 and absf(along) <= MID_BAND:
+			continue
+		if not rc.has_point(Vector2(at.x, at.z)):
+			continue
+		if _spot_free(at, r, gap):
+			return at
+	return Vector3.INF
+
+
+func _spot_free(at: Vector3, r: float, gap: float) -> bool:
 	for s in [arena.player_spot, arena.enemy_spot]:
-		if _flat(at - s).length() < r + KEEP_SPOT or _flat(-at - s).length() < r + KEEP_SPOT:
-			return Vector3.INF
-	for o in obstacles:
-		if (
-			_flat(at - o.pos).length() < r + o.r + GAP
-			or _flat(-at - o.pos).length() < r + o.r + GAP
-		):
-			return Vector3.INF
-	return at
+		if _flat(at - s).length() < r + KEEP_SPOT:
+			return false
+	for o in obstacles + grass:
+		if _flat(at - o.pos).length() < r + float(o.r) + gap:
+			return false
+	for c in crate_spots:
+		if _flat(at - c).length() < r + BattleField.OBJ_R + gap:
+			return false
+	return true
 
 
 func _add(kind: String, at: Vector3, r: float, h: float) -> void:
@@ -133,11 +262,18 @@ func _add(kind: String, at: Vector3, r: float, h: float) -> void:
 	}
 	o.max_hp = o.hp
 	o.h0 = h
+	o.r0 = r
 	if kind == "pond":
 		o.hp = 0
 		o.top = r
 	_build_node(o)
 	obstacles.append(o)
+
+
+func _add_grass(at: Vector3, r: float) -> void:
+	var g := {"kind": "grass", "pos": _flat(at), "r": r}
+	_build_grass(g)
+	grass.append(g)
 
 
 # --- Altura e movimento ---
@@ -178,6 +314,30 @@ func pond_at(p: Vector3) -> Dictionary:
 
 func in_water(f: BattleFighter) -> bool:
 	return not pond_at(f.position).is_empty() and _grounded(f) and f.ground_y < 0.1
+
+
+## Dentro da água de verdade (lago não congelado).
+func wet(f: BattleFighter) -> bool:
+	return in_water(f) and float(pond_at(f.position).ice_t) <= 0.0
+
+
+func grass_at(p: Vector3) -> Dictionary:
+	for g in grass:
+		if _flat(p - g.pos).length() < g.r:
+			return g
+	return {}
+
+
+## Escondido na grama alta: dentro de uma moita, no chão (quem voa ou está no ar aparece).
+func in_grass(f: BattleFighter) -> bool:
+	if grass.is_empty() or not is_instance_valid(f) or f.motion == "tunnel":
+		return false
+	return not grass_at(f.position).is_empty() and _grounded(f) and f.ground_y < 0.1
+
+
+## Tem cenário (relevo ou grama) nesta luta.
+func has_scenery() -> bool:
+	return not obstacles.is_empty() or not grass.is_empty()
 
 
 func _grounded(f: BattleFighter) -> bool:
@@ -225,9 +385,16 @@ func move_mult(f: BattleFighter) -> float:
 	return 1.0
 
 
-## Energia: quem é de Água descansando no lago enche mais rápido.
+## Energia pelo chão: no lago Água e Grama enchem mais, os outros menos e Fogo bem menos; na grama alta
+## quem é de Grama enche mais.
 func regen_mult(f: BattleFighter) -> float:
-	return SWIM_REGEN if swimmer(f) and in_water(f) else 1.0
+	if wet(f):
+		if swimmer(f) or "grass" in f.types:
+			return SWIM_REGEN
+		return FIRE_WATER_REGEN if "fire" in f.types else WADE_REGEN
+	if "grass" in f.types and in_grass(f):
+		return GRASS_REGEN
+	return 1.0
 
 
 ## Deslocamento que tira o lutador de dentro de um pico que ele não escala.
@@ -245,10 +412,12 @@ func push_out(f: BattleFighter) -> Vector3:
 	return out
 
 
-## Por quadro, depois de cada lutador andar: chão sob ele, queda e o pico sólido.
+## Por quadro, depois de cada lutador andar: puxão/derrubada em curso, chão sob ele, queda e o pico
+## sólido.
 func settle(f: BattleFighter, dt: float) -> void:
 	if obstacles.is_empty() or not f.active():
 		return
+	_slide_step(f, dt)
 	f.position += push_out(f)
 	if f.motion == "tunnel" or f.hidden != "":
 		f.ground_y = 0.0
@@ -269,26 +438,57 @@ func settle(f: BattleFighter, dt: float) -> void:
 # --- Golpes ---
 
 
-## Precisão de quem está no alto: golpe à distância ou Voador contra quem está mais baixo.
+## Precisão pelo cenário: de cima, golpe à distância ou Voador contra quem está mais baixo acerta mais;
+## contra quem está escondido na grama alta (ou camuflado na areia) erra mais.
 func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> float:
-	if obstacles.is_empty() or not is_instance_valid(target) or not on_high(user):
+	if not has_scenery() or not is_instance_valid(target) or not is_instance_valid(user):
 		return 1.0
-	var ranged := (
-		String(mv.get("kind", "")) in RANGED_KINDS or String(mv.get("type", "")) == "flying"
-	)
-	if ranged and user.ground_y - target.ground_y >= HIGH_DIFF:
-		return HIGH_ACC
+	var kind := String(mv.get("kind", ""))
+	var ranged := kind in RANGED_KINDS or String(mv.get("type", "")) == "flying"
+	var k := 1.0
+	if ranged and on_high(user) and user.ground_y - target.ground_y >= HIGH_DIFF:
+		k *= HIGH_ACC
+	if not kind in RANGED_KINDS or float(mv.get("accuracy", 0)) <= 0.0:
+		return k
+	if in_grass(target) and user.flat_to(target).length() > GRASS_SEE:
+		k *= 1.0 - GRASS_EVADE
+		_tele("terrain_grass_cover", {"who": _uid(target), "by": _uid(user)})
+	elif _weather() == "sand" and target.types.any(func(t): return t in SAND_TYPES):
+		k *= 1.0 - SAND_EVADE
+		_tele("terrain_sand_cover", {"who": _uid(target), "by": _uid(user)})
+	return k
+
+
+## Dano pelo cenário (BattleMoves.extra_mult): Elétrico em quem está dentro da água bate mais forte.
+func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	if obstacles.is_empty() or not is_instance_valid(target):
+		return 1.0
+	if String(mv.get("type", "")) == "electric" and wet(target):
+		target.popup("Eletrocutado na água!", Dex.type_color("electric"), 0.9, 0.8)
+		_tele("terrain_shock_water", {"who": _uid(target), "by": _uid(user)})
+		return ELEC_WATER
 	return 1.0
+
+
+func _weather() -> String:
+	var mv = arena.get("moves")
+	if mv and mv.effects and mv.effects.has_method("weather"):
+		return String(mv.effects.weather())
+	return ""
 
 
 ## Um golpe chegou em `at` (BattleField.on_move_landed): Terra/Pedra/Lutador tiram vida do relevo,
 ## raio passa pela água, gelo congela o lago.
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
-	if obstacles.is_empty():
-		return
 	var type := String(mv.get("type", ""))
 	var power := float(mv.get("power", 0))
-	if power <= 0.0:
+	if power <= 0.0 or not has_scenery():
+		return
+	if type == "fire":
+		for g in grass.duplicate():
+			if _flat(at - g.pos).length() <= float(g.r) + radius * 0.5:
+				ignite(g, user)
+	if obstacles.is_empty():
 		return
 	if type in BREAKERS:
 		for o in obstacles.duplicate():
@@ -397,6 +597,148 @@ func _steam(pond: Dictionary, at: Vector3) -> void:
 		PixelFx.pop(arena, "wind", _flat(at) + Vector3(0, 0.5, 0), 1.8, 0.6)
 
 
+## Fogo na moita: com chuva não pega; senão queima todos dentro (menos Fogo), pode deixar queimado,
+## some e vira chão queimado. Com sol queima mais forte e pula para as moitas vizinhas.
+func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
+	if not grass.has(g):
+		return
+	var wx := _weather()
+	if wx == "rain":
+		if not g.get("wet_said", false):
+			g.wet_said = true
+			_tele("terrain_grass_wet", {"by": _uid(user)})
+			arena.popup(g.pos + Vector3(0, 0.8, 0), "Grama molhada!", Dex.type_color("water"))
+		return
+	grass.erase(g)
+	if is_instance_valid(g.get("node")):
+		g.node.queue_free()
+	var sun := wx == "sun"
+	var frac := GRASS_BURN_FRAC * (SUN_BURN_MULT if sun else 1.0)
+	_tele("terrain_grass_burn", {"by": _uid(user), "sun": sun, "spread": spread})
+	arena.say("A grama alta pegou fogo!")
+	if arena.field:
+		var side: int = user.side if is_instance_valid(user) else 0
+		arena.field._add_mark("scorch", g.pos, clampf(g.r, 0.8, 2.5), side)
+	if arena.is_inside_tree():
+		PixelFx.pop(arena, "fire", g.pos + Vector3(0, 0.5, 0), g.r * 2.0, 0.6)
+	for f in arena.fighters:
+		if not is_instance_valid(f) or not f.active() or "fire" in f.types:
+			continue
+		if _flat(f.position - g.pos).length() >= g.r or not _grounded(f) or f.ground_y > 0.1:
+			continue
+		var n := maxi(1, int(float(f.max_hp) * frac * f.dot_scale()))
+		var burned := false
+		if f.status == "" and arena.rng.randf() < GRASS_BURN_STATUS:
+			var ab = arena.get("abilities")
+			if not (ab and ab.blocks_status(f, "burn")):
+				burned = f.apply_status("burn", user)
+		f.popup("-%d Grama em chamas!" % n, Dex.type_color("fire"), 1.0, 0.7)
+		_tele(
+			"terrain_grass_burn_hit", {"who": _uid(f), "by": _uid(user), "dmg": n, "burned": burned}
+		)
+		f.take_damage(n, Vector3.ZERO, 0.0)
+	if not sun:
+		return
+	for o in grass.duplicate():
+		if _flat(o.pos - g.pos).length() <= float(o.r) + float(g.r) + SPREAD_GAP:
+			arena.later(SPREAD_DELAY, func() -> void: ignite(o, user, true))
+
+
+## Depois do acerto com empurrão (`knock` = força efetiva, já com eficácia/crítico/peso): golpe de Água
+## perto do lago puxa o alvo para dentro; empurrão forte em quem está no alto o derruba.
+func after_hit(
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: Vector3, knock: float
+) -> void:
+	if obstacles.is_empty() or not is_instance_valid(target) or not target.alive():
+		return
+	if not _grounded(target) or target.motion != "":
+		return
+	var id := target.get_instance_id()
+	if _shove_at.has(id) and _water_t - float(_shove_at[id]) < SHOVE_CD:
+		return
+	var type := String(mv.get("type", ""))
+	var strong_water := String(mv.get("id", "")) in PULL_MOVES or knock >= PULL_KNOCK
+	if type == "water" and strong_water and not swimmer(target) and not in_water(target):
+		var pond := _pond_near(target.position)
+		if not pond.is_empty():
+			var away := _flat(target.position - pond.pos)
+			if away.length() < 0.01:
+				away = Vector3.RIGHT
+			_shove_at[id] = _water_t
+			_slide(target, pond.pos + away.normalized() * float(pond.r) * 0.5, PULL_SECS)
+			target.interrupt_prepare()
+			target.popup("Puxado para a água!", Dex.type_color("water"), 1.0, 0.7)
+			_tele("terrain_pull", {"who": _uid(target), "by": _uid(user), "move": mv.get("id", "")})
+			return
+	if knock < DROP_KNOCK:
+		return
+	var o := obstacle_under(target)
+	if o.is_empty() or not on_high(target):
+		return
+	var off := _flat(target.position - o.pos)
+	if o.kind != "peak" and off.length() < float(o.top) * DROP_EDGE:
+		return  # no miolo do topo: segura firme
+	var d := _flat(dir)
+	if d.length() < 0.1:
+		d = off if off.length() > 0.01 else Vector3.RIGHT
+	d = d.normalized()
+	# Onde a reta do empurrão sai do pé do relevo (+ DROP_OUT).
+	var big: float = float(o.r) + DROP_OUT
+	var b := off.dot(d)
+	var t := -b + sqrt(maxf(b * b - (off.length_squared() - big * big), 0.0))
+	var to: Vector3 = o.pos + off + d * t
+	var inner: Rect2 = arena.rect.grow(-0.6)
+	to.x = clampf(to.x, inner.position.x, inner.end.x)
+	to.z = clampf(to.z, inner.position.y, inner.end.y)
+	if _flat(to - o.pos).length() < float(o.r):
+		return  # a parede segura: não tem para onde cair
+	var h := target.ground_y
+	_shove_at[id] = _water_t
+	_slide(target, to, DROP_SECS)
+	var n := maxi(1, int(float(target.max_hp) * DROP_FRAC * target.dot_scale()))
+	target.stun_t = maxf(target.stun_t, DROP_STUN + DROP_STUN_H * h)
+	target.interrupt_prepare()
+	target.popup("-%d Derrubado!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
+	_tele("terrain_knock_off", {"who": _uid(target), "by": _uid(user), "dmg": n, "kind": o.kind})
+	target.take_damage(n, Vector3.ZERO, 0.0)
+
+
+## Lago (não congelado) a até PULL_RANGE m da beira de `p`.
+func _pond_near(p: Vector3) -> Dictionary:
+	for o in obstacles:
+		if o.kind == "pond" and float(o.ice_t) <= 0.0:
+			if _flat(p - o.pos).length() < float(o.r) + PULL_RANGE:
+				return o
+	return {}
+
+
+func _slide(f: BattleFighter, to: Vector3, secs: float) -> void:
+	f.knock = Vector3.ZERO
+	f.impact_knock = Vector3.ZERO
+	_slides[f.get_instance_id()] = {
+		"from": _flat(f.position), "to": _flat(to), "t": 0.0, "dur": secs
+	}
+
+
+func _slide_step(f: BattleFighter, dt: float) -> void:
+	var id := f.get_instance_id()
+	if not _slides.has(id):
+		return
+	var s: Dictionary = _slides[id]
+	s.t = float(s.t) + dt
+	var k := clampf(float(s.t) / maxf(float(s.dur), 0.01), 0.0, 1.0)
+	var p: Vector3 = s.from.lerp(s.to, k)
+	f.position.x = p.x
+	f.position.z = p.z
+	f.knock = Vector3.ZERO
+	if k >= 1.0:
+		_slides.erase(id)
+
+
+func sliding(f: BattleFighter) -> bool:
+	return is_instance_valid(f) and _slides.has(f.get_instance_id())
+
+
 ## Um projétil parou no relevo ou num objeto em `p`: o objeto/relevo leva o golpe.
 func on_shot_blocked(user: BattleFighter, mv: Dictionary, p: Vector3) -> void:
 	if arena.field:
@@ -438,9 +780,11 @@ func has_cover() -> bool:
 
 func tick(dt: float) -> void:
 	_water_t += dt
+	var wx := _weather() if has_scenery() else ""
 	for o in obstacles:
 		o.cd = maxf(float(o.cd) - dt, 0.0)
 		if o.kind == "pond":
+			_pond_weather(o, wx, dt)
 			if float(o.ice_t) > 0.0:
 				o.ice_t = float(o.ice_t) - dt
 				if o.ice_t <= 0.0:
@@ -449,8 +793,48 @@ func tick(dt: float) -> void:
 			elif o.get("mat") is StandardMaterial3D:
 				o.mat.uv1_offset = Vector3(_water_t * 0.04, _water_t * 0.025, 0.0)
 	for f in arena.fighters:
-		if is_instance_valid(f) and not f.active():
+		if not is_instance_valid(f):
+			continue
+		if not f.active():
 			_fall_v.erase(f.get_instance_id())
+			_slides.erase(f.get_instance_id())
+			continue
+		_fire_in_water(f, dt)
+
+
+## Fogo dentro do lago: FIRE_WATER_DOT do HP por segundo (cobrado de segundo em segundo).
+func _fire_in_water(f: BattleFighter, dt: float) -> void:
+	var id := f.get_instance_id()
+	if not "fire" in f.types or not wet(f):
+		_fire_t.erase(id)
+		return
+	var t: float = float(_fire_t.get(id, 0.0)) + dt
+	if t >= 1.0:
+		t -= 1.0
+		var n := maxi(1, int(float(f.max_hp) * FIRE_WATER_DOT * f.dot_scale()))
+		n = f.residual_damage(n, "água", Dex.type_color("water"))
+		if n > 0:
+			_tele("terrain_fire_water", {"who": _uid(f), "dmg": n})
+	_fire_t[id] = t
+
+
+## Clima no lago: chuva enche, sol seca (o raio anda POND_GROW m/s até o alvo), granizo/neve congela.
+func _pond_weather(o: Dictionary, wx: String, dt: float) -> void:
+	if wx == "hail" and float(o.ice_t) <= 0.0:
+		freeze(o)
+	var want: float = (
+		float(o.r0) * (RAIN_POND if wx == "rain" else (SUN_POND if wx == "sun" else 1.0))
+	)
+	if is_equal_approx(float(o.r), want):
+		return
+	if String(o.get("wx", "")) != wx and wx in ["rain", "sun"]:
+		_tele("terrain_pond_" + ("grow" if wx == "rain" else "shrink"), {})
+	o.wx = wx
+	o.r = move_toward(float(o.r), want, POND_GROW * dt)
+	o.top = o.r
+	if is_instance_valid(o.get("node")):
+		var k: float = float(o.r) / float(o.r0)
+		o.node.scale = Vector3(k, 1.0, k)
 
 
 # --- IA ---
@@ -583,6 +967,82 @@ func _build_node(o: Dictionary) -> void:
 	arena.add_child(root)
 
 
+## Moita de grama alta: chão de grama escura e tufos de lâminas (quadros cruzados com transparência).
+func _build_grass(g: Dictionary) -> void:
+	var root := Node3D.new()
+	root.name = "Terrain_grass"
+	root.position = g.pos
+	var floor_ := _disc(g.r, tex("grass_dark"), 1.4)
+	floor_.position.y = 0.014
+	root.add_child(floor_)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(int(g.pos.x * 100.0), int(g.pos.z * 100.0)))
+	var mat := _blades_mat()
+	var n := int(6 + g.r * 6.0)
+	for i in n:
+		var a := rng.randf() * TAU
+		var d := sqrt(rng.randf()) * float(g.r) * 0.85
+		var h := GRASS_H * rng.randf_range(0.75, 1.15)
+		var tuft := Node3D.new()
+		tuft.position = Vector3(cos(a) * d, h * 0.5, sin(a) * d)
+		tuft.rotation.y = rng.randf() * PI
+		for k in 2:
+			var q := MeshInstance3D.new()
+			var qm := QuadMesh.new()
+			qm.size = Vector2(h * 0.9, h)
+			q.mesh = qm
+			q.material_override = mat
+			q.rotation.y = PI * 0.5 * k
+			q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			tuft.add_child(q)
+		root.add_child(tuft)
+	g.node = root
+	arena.add_child(root)
+
+
+static func _blades_mat() -> StandardMaterial3D:
+	if _tex.has("_blades_mat"):
+		return _tex["_blades_mat"]
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = blades_tex()
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	m.alpha_scissor_threshold = 0.5
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.roughness = 1.0
+	_tex["_blades_mat"] = m
+	return m
+
+
+## Lâminas de grama em pixel art (32 x 32, fundo transparente): traços verdes do chão para cima,
+## inclinados, mais claros na ponta.
+static func blades_tex() -> Texture2D:
+	if _tex.has("_blades"):
+		return _tex["_blades"]
+	var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var pal: Array = _palette("grass")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("blades")
+	for i in 11:
+		var x0 := 2.0 + i * 2.7 + rng.randf_range(-0.8, 0.8)
+		var tall := rng.randi_range(16, 31)
+		var lean := rng.randf_range(-0.25, 0.25)
+		for y in tall:
+			var x := int(round(x0 + lean * y))
+			if x < 0 or x > 31:
+				break
+			var c: int = (
+				0 if y < tall * 0.3 else (1 if y < tall * 0.65 else (2 if y < tall - 2 else 3))
+			)
+			img.set_pixel(x, 31 - y, pal[c])
+			if y < tall * 0.5 and x + 1 <= 31:
+				img.set_pixel(x + 1, 31 - y, pal[maxi(c - 1, 0)])
+	var t := ImageTexture.create_from_image(img)
+	_tex["_blades"] = t
+	return t
+
+
 func _set_water_look(pond: Dictionary) -> void:
 	if not (pond.get("mat") is StandardMaterial3D):
 		return
@@ -692,6 +1152,8 @@ static func _palette(kind: String) -> Array:
 	match kind:
 		"grass":
 			return [Color("2f6b2a"), Color("3f8a34"), Color("58a843"), Color("7cc25a")]
+		"grass_dark":
+			return [Color("1f4a1f"), Color("2a5e27"), Color("357330"), Color("4f8f3e")]
 		"earth":
 			return [Color("4f3220"), Color("6b452b"), Color("87603b"), Color("a27a4e")]
 		"water":
@@ -747,7 +1209,7 @@ static func _art_palette(file: String, fallback: Array) -> Array:
 static func _shade(kind: String, x: int, y: int, rng: RandomNumberGenerator) -> int:
 	var n := rng.randf()
 	match kind:
-		"grass":
+		"grass", "grass_dark":
 			if n < 0.08:
 				return 3
 			if (x * 7 + y * 3) % 11 == 0:

@@ -469,20 +469,20 @@ func hit(
 			dmg = BattleEnergy.entry_damage(target, dmg)
 		var hp_before := target.hp
 		target.last_hit_by = user
+		var knock := (
+			0.0
+			if effects.rooted(target)
+			else (
+				float(mv.get("knockback", 4.0))
+				* BattlePhysics.knock_mult(eff, res.crit, BattlePhysics.weight_of(target))
+			)
+		)
 		target.take_damage(
-			dmg,
-			dir,
-			(
-				0.0
-				if effects.rooted(target)
-				else (
-					float(mv.get("knockback", 4.0))
-					* BattlePhysics.knock_mult(eff, res.crit, BattlePhysics.weight_of(target))
-				)
-			),
-			{"source": user, "crit": res.crit, "eff": eff, "final": final}
+			dmg, dir, knock, {"source": user, "crit": res.crit, "eff": eff, "final": final}
 		)
 		phys.after_hit(user, target, mv, dir, eff, res.crit, final)
+		if arena.get("terrain"):
+			arena.terrain.after_hit(user, target, mv, dir, knock)  # puxa para a água / derruba do alto
 		dealt = dmg
 		if arena.combos and user.side != target.side:
 			arena.combos.on_hit(user, target, mv, dmg)
@@ -601,6 +601,8 @@ func extra_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> f
 	if arena.abilities:
 		m *= arena.abilities.damage_mult(user, target, mv)
 	m *= effects.damage_mult(user, target, mv)
+	if arena.get("terrain"):
+		m *= arena.terrain.damage_mult(user, target, mv)  # Elétrico em quem está na água
 	return m
 
 

@@ -1,9 +1,10 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_terrain.gd [-- N]
-## Relevo da quadra do treino (BattleTerrain): quadra 24 x 14 espelhada, treinadores no meio de cada
-## fundo, morro/pico/lago, altura do lutador, pico só para escaladores, lago, precisão do alto,
-## desabamento com queda e atordoamento, cobertura contra tiro e raio, corrente na água, gelo e lutas
-## inteiras no modo de energia com a IA usando o relevo (N lutas, padrão 6; imprime o resumo).
+## Relevo da quadra do treino (BattleTerrain): quadra 24 x 14 (entradas espelhadas; o cenário é
+## aleatório, ver test_terrain2.gd), treinadores no meio de cada fundo, morro/pico/lago, altura do
+## lutador, pico só para escaladores, lago, precisão do alto, desabamento com queda e atordoamento,
+## cobertura contra tiro e raio, corrente na água, gelo e lutas inteiras no modo de energia com a IA
+## usando o relevo (N lutas, padrão 6; imprime o resumo).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -71,15 +72,15 @@ func _layout() -> void:
 		var a := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s)
 		var t: BattleTerrain = a.terrain
 		check(a.rect.size == Cfg.ARENA, "quadra 24 x 14")
-		check(t.obstacles.size() >= 6, "relevo montado (%d)" % t.obstacles.size())
+		var n_scene: int = t.obstacles.size() + t.grass.size()
+		check(n_scene >= 6, "cenário montado (%d)" % n_scene)  # relevo + grama alta
 		var kinds := {}
 		for o in t.obstacles:
 			kinds[o.kind] = true
-			var mirror := false
+			# Cenário aleatório (não espelhado desde os cenários): espalhado, sem encostar em outro.
 			for q in t.obstacles:
-				if q.kind == o.kind and (q.pos + o.pos).length() < 0.01:
-					mirror = true
-			check(mirror, "relevo espelhado (%s)" % o.kind)
+				if q != o:
+					check((q.pos - o.pos).length() >= q.r + o.r, "relevo espalhado (%s)" % o.kind)
 			check(
 				a.rect.grow(-0.5).encloses(
 					Rect2(Vector2(o.pos.x, o.pos.z) - Vector2.ONE * o.r, Vector2.ONE * o.r * 2)
@@ -148,7 +149,8 @@ func _pond() -> void:
 	check(a.terrain.in_water(p) and a.terrain.in_water(s), "os dois na água")
 	check(a.terrain.move_mult(p) < 0.7, "fora do tipo Água anda devagar no lago")
 	check(a.terrain.move_mult(s) > 1.2, "Água nada rápido")
-	check(a.terrain.regen_mult(s) > 1.0 and a.terrain.regen_mult(p) == 1.0, "Água descansa melhor")
+	# Desde os cenários: na água só Água (e Grama) ganham; os outros recuperam menos.
+	check(a.terrain.regen_mult(s) > 1.0 and a.terrain.regen_mult(p) < 1.0, "Água descansa melhor")
 	var steer: Vector3 = a.terrain.steer(a.enemy, Vector3.RIGHT)
 	check(steer.length() > 0.9, "steer mantém o tamanho")
 	# Raio no lago: a corrente passa para quem está na mesma água.
