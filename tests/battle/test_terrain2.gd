@@ -111,7 +111,8 @@ func _layout() -> void:
 			all.append({"pos": o.pos, "r": BattleField.OBJ_R, "kind": "crate"})
 		var want := 0
 		for k in plan:
-			want += int(plan[k])
+			if not BattleProps.SIZES.has(k):
+				want += int(plan[k])  # objetos vivos (BattleProps): tests/battle/test_props.gd
 		check(all.size() == want, "%s: tudo montado (%d de %d)" % [t.scenario, all.size(), want])
 		check(a.field.objects.size() == t.crate_spots.size(), "caixas/pedras do cenário")
 		var halves := {1: 0, -1: 0}

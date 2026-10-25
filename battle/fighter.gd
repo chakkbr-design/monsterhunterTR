@@ -489,6 +489,7 @@ func walk_speed() -> float:
 			v *= arena.field.move_mult(self)
 		if arena.get("terrain"):
 			v *= arena.terrain.move_mult(self)
+			v *= arena.terrain.props.move_mult(self)  # tronco caído (BattleProps)
 		var ab = arena.get("abilities")
 		if ab and ab.has_method("walk_mult"):
 			v *= ab.walk_mult(self)

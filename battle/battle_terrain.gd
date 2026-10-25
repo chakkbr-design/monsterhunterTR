@@ -59,12 +59,24 @@ const VGC_LANE := 2.8
 ## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
 ## "crate" são as caixas/pedras do BattleField. Todo cenário sorteável tem ao menos um morro, um pico e
 ## um lago (a praia não tem lago: a maré faz o papel dele).
+## "tree", "bush", "voltorb" e "crystal" são os objetos vivos (BattleProps, só no modo de energia).
 const SCENARIOS := {
-	"campo": {"pond": 1, "hill": 2, "peak": 1, "grass": 5, "crate": 2},
-	"lagoa": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 1},
-	"pedreira": {"pond": 1, "hill": 2, "peak": 3, "grass": 1, "crate": 4},
-	"misto": {"pond": 2, "hill": 2, "peak": 2, "grass": 3, "crate": 2},
-	"praia": {"pond": 0, "hill": 1, "peak": 1, "grass": 1, "crate": 3},
+	"campo": {"pond": 1, "hill": 2, "peak": 1, "grass": 5, "crate": 2, "tree": 2, "bush": 1},
+	"lagoa": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 1, "tree": 1, "bush": 1},
+	"pedreira":
+	{"pond": 1, "hill": 2, "peak": 3, "grass": 1, "crate": 4, "crystal": 2, "voltorb": 1},
+	"misto":
+	{
+		"pond": 2,
+		"hill": 2,
+		"peak": 2,
+		"grass": 3,
+		"crate": 2,
+		"tree": 1,
+		"crystal": 1,
+		"voltorb": 1
+	},
+	"praia": {"pond": 0, "hill": 1, "peak": 1, "grass": 1, "crate": 3, "bush": 1, "voltorb": 1},
 }
 ## Cenários fora do sorteio: só quando escolhidos (opts.scenario). A praia (maré e lama, BattleGround) não
 ## tem lago e é do modo de energia.
@@ -155,6 +167,8 @@ var _shove_at := {}  ## id do lutador -> _water_t do último puxão/derrubada
 var _fire_t := {}  ## id do lutador de Fogo -> segundos acumulados dentro do lago
 ## Chão do modo de energia: lama, marcas de golpe e a maré da praia (BattleGround).
 var ground: BattleGround
+## Objetos vivos do cenário (árvore, Voltorb, arbusto, cristal): BattleProps.
+var props: BattleProps
 
 static var _tex := {}
 
@@ -162,6 +176,7 @@ static var _tex := {}
 func _init(a: Node) -> void:
 	arena = a
 	ground = BattleGround.new(self)
+	props = BattleProps.new(self)
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -197,9 +212,11 @@ func setup() -> void:
 	var plan: Dictionary = SCENARIOS[scenario]
 	# Cada obstáculo vai para a metade com menos coisa; o ímpar de cada tipo tenta a faixa do meio.
 	var count := {1: 0, -1: 0}
-	for kind in PLACE_ORDER:
+	for kind in PLACE_ORDER + BattleProps.ORDER:
 		var n := int(plan.get(kind, 0))
-		var sz: Array = SIZES[kind]
+		if BattleProps.SIZES.has(kind) and not props.enabled():
+			continue  # objetos vivos só no modo de energia
+		var sz: Array = SIZES[kind] if SIZES.has(kind) else BattleProps.SIZES[kind]
 		for i in n:
 			var r := rng.randf_range(sz[0], sz[1])
 			var h := rng.randf_range(sz[2], sz[3])
@@ -226,6 +243,8 @@ func setup() -> void:
 					_add_grass(at, r)
 				"crate":
 					crate_spots.append(at)
+				"tree", "bush", "voltorb", "crystal":
+					props.add(String(kind), at)
 				_:
 					_add(String(kind), at, r, h)
 	ground.setup()  # lama e maré (só no modo de energia)
@@ -270,7 +289,7 @@ func _spot_free(at: Vector3, r: float, gap: float) -> bool:
 	for c in crate_spots:
 		if _flat(at - c).length() < r + BattleField.OBJ_R + gap:
 			return false
-	return true
+	return props.spot_free(at, r, gap)
 
 
 ## VGC (posições fixas): nada entre as duas posições dos lados, senão tiro e raio de casa batem na
@@ -529,6 +548,7 @@ func _weather() -> String:
 ## raio passa pela água, gelo congela o lago.
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
 	ground.on_move_landed(user, mv, at, radius)  # lama, fenda, gelo, brasas, poça
+	props.on_move_landed(user, mv, at, radius)  # árvore, Voltorb, arbusto, cristal
 	var type := String(mv.get("type", ""))
 	var power := float(mv.get("power", 0))
 	if power <= 0.0 or not has_scenery():
@@ -811,7 +831,7 @@ func on_shot_blocked(user: BattleFighter, mv: Dictionary, p: Vector3) -> void:
 
 ## Projétil em `p` (local) bateu no relevo? Caixas e pedras do campo também param o tiro.
 func blocks_shot(p: Vector3) -> bool:
-	if p.y < height_at(p) - 0.05:
+	if p.y < height_at(p) - 0.05 or props.blocks_shot(p):
 		return true
 	if arena.field:
 		for o in arena.field.objects:
@@ -835,7 +855,7 @@ func shot_block(a: Vector3, b: Vector3) -> float:
 
 
 func has_cover() -> bool:
-	if not obstacles.is_empty():
+	if not obstacles.is_empty() or props.has_cover():
 		return true
 	return arena.field != null and not arena.field.objects.is_empty()
 
@@ -843,6 +863,7 @@ func has_cover() -> bool:
 func tick(dt: float) -> void:
 	_water_t += dt
 	ground.tick(dt)
+	props.tick(dt)
 	var wx := _weather() if has_scenery() or not burnt.is_empty() else ""
 	_regrow(dt, wx)
 	for o in obstacles:
@@ -962,6 +983,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 	if arena.field:
 		for o in arena.field.objects:
 			cands.append({"pos": o.pos, "r": BattleField.OBJ_R})
+	cands.append_array(props.cover_cands())  # árvore e cristal
 	var best := Vector3.INF
 	var best_d := max_d
 	for c in cands:

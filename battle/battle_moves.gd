@@ -208,6 +208,8 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		user.popup("Está confuso!", Dex.type_color("psychic"))
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
+	if arena.get("terrain"):
+		dir = arena.terrain.props.aim_dir(user, mv, dir)  # IA mirou num objeto (BattleProps)
 	user.facing = dir
 	# O nome do golpe não aparece sobre o Pokémon: fica na lateral (BattleHUD.callout, em on_move_used).
 	if kind == "arc" or kind == "multi_arc":
@@ -301,7 +303,9 @@ func _miss_dir(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
 	var tel = arena.get("telemetry")
 	if tel:
-		tel.note("miss", {"who": tel.uid(user), "tgt": tel.uid(target), "move": String(mv.get("id", ""))})
+		tel.note(
+			"miss", {"who": tel.uid(user), "tgt": tel.uid(target), "move": String(mv.get("id", ""))}
+		)
 	if phys.scripted(mv):
 		return  # salto/sumiço/túnel avisam no pouso
 	var delay := 0.15
@@ -554,7 +558,9 @@ func hit(
 
 ## Chance do efeito secundário/status do golpe pegar (dados; o status principal passa por
 ## BattleMoveEffects.status_chance_mult, que deixa veneno/queimadura/paralisia mais difíceis).
-func status_chance(user: BattleFighter, target: BattleFighter, mv: Dictionary, ef: Dictionary) -> float:
+func status_chance(
+	user: BattleFighter, target: BattleFighter, mv: Dictionary, ef: Dictionary
+) -> float:
 	var ch := float(ef.get("chance", 0.0))
 	if ef.has("status") and effects.has_method("status_chance_mult"):
 		ch *= effects.status_chance_mult(user, target, mv, String(ef.status))
@@ -846,6 +852,8 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 				var along := to.dot(dir)
 				if along > -0.5 and along < r and (to - dir * along).length() < w / 2.0 + 0.5:
 					hit(user, t, mv, dir)
+			if arena.get("terrain"):
+				arena.terrain.props.on_beam(user, mv, dir, r, w)  # árvore, Voltorb; cristal reflete
 			if mv.has("recharge") and user.alive():
 				# MUST RECHARGE: parado e vulnerável depois do golpe (Hyper Beam).
 				user.stun_t = maxf(user.stun_t, float(mv.recharge))
