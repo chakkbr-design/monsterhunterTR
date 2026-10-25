@@ -6,7 +6,8 @@ extends RefCounted
 ##    battle_size (1 ou 2), battle_mode ("energy" = barra de energia sem rodadas, padrão; "vgc" =
 ##    rodadas pela Speed com posições fixas), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
 ##    só na luta única: a série roda com IA), scenario ("" = aleatório, padrão; ou campo, lagoa,
-##    pedreira, misto, praia: o relevo da quadra, opts.scenario do BattleTerrain)}
+##    pedreira, misto, praia; só no modo de energia ruinas, montanha, vulcao, caverna, pantano: o relevo
+##    da quadra, opts.scenario do BattleTerrain)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
@@ -26,9 +27,30 @@ const LEVEL := 50
 ## Quadra fixa do treino: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
 const ARENA := Vector2(24, 14)
 ## Cenários do relevo para escolher na tela (os ids são os de BattleTerrain.SCENARIOS).
-const SCENARIOS := ["campo", "lagoa", "pedreira", "misto", "praia"]
+## Os biomas (ruínas em diante) são só do modo de energia (BattleTerrain.ENERGY_ONLY).
+const SCENARIOS := [
+	"campo",
+	"lagoa",
+	"pedreira",
+	"misto",
+	"praia",
+	"ruinas",
+	"montanha",
+	"vulcao",
+	"caverna",
+	"pantano"
+]
 const SCENARIO_NAMES := {
-	"campo": "Campo", "lagoa": "Lagoa", "pedreira": "Pedreira", "misto": "Misto", "praia": "Praia"
+	"campo": "Campo",
+	"lagoa": "Lagoa",
+	"pedreira": "Pedreira",
+	"misto": "Misto",
+	"praia": "Praia",
+	"ruinas": "Ruínas",
+	"montanha": "Montanha nevada",
+	"vulcao": "Vulcão",
+	"caverna": "Caverna escura",
+	"pantano": "Pântano",
 }
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).

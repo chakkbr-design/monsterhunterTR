@@ -983,6 +983,9 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 	scene = BattleGround.steer_ai(self, d)  # lama (Terra luta nela) e maré (Fogo sai)
 	if scene != Vector3.INF:
 		return scene
+	scene = BattleBiomes.steer_ai(self, d)  # runas, neve funda, lava, escuro e neblina
+	if scene != Vector3.INF:
+		return scene
 	if intent == "" or recover_t > 0.0:
 		return Vector3.INF
 	var need := BattleEnergy.secs_to(f, f.pp_cost_of(Dex.move(intent)))

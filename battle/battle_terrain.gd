@@ -77,10 +77,18 @@ const SCENARIOS := {
 		"voltorb": 1
 	},
 	"praia": {"pond": 0, "hill": 1, "peak": 1, "grass": 1, "crate": 3, "bush": 1, "voltorb": 1},
+	# Biomas (BattleBiomes, só no modo de energia; colunas, montes, lava e lama em BattleBiomes.EXTRAS).
+	"ruinas": {"pond": 1, "hill": 1, "peak": 1, "grass": 3, "crate": 2, "tree": 1},
+	"montanha": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 1},
+	"vulcao": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 2},
+	"caverna": {"pond": 1, "hill": 1, "peak": 4, "grass": 0, "crate": 1, "crystal": 3},
+	"pantano": {"pond": 3, "hill": 1, "peak": 1, "grass": 3, "crate": 0, "tree": 1},
 }
 ## Cenários fora do sorteio: só quando escolhidos (opts.scenario). A praia (maré e lama, BattleGround) não
 ## tem lago e é do modo de energia.
 const PICK_ONLY := ["praia"]
+## Cenários só do modo de energia (BattleBiomes): o VGC não sorteia nem monta (pedido no VGC = sorteio).
+const ENERGY_ONLY := ["ruinas", "montanha", "vulcao", "caverna", "pantano"]
 const PLACE_ORDER := ["pond", "hill", "peak", "grass", "crate"]  ## os grandes primeiro
 ## Tamanho por tipo: [raio mín., raio máx., altura mín., altura máx.].
 const SIZES := {
@@ -169,6 +177,8 @@ var _fire_t := {}  ## id do lutador de Fogo -> segundos acumulados dentro do lag
 var ground: BattleGround
 ## Objetos vivos do cenário (árvore, Voltorb, arbusto, cristal): BattleProps.
 var props: BattleProps
+## Biomas do modo de energia (ruínas, montanha, vulcão, caverna, pântano): BattleBiomes.
+var biomes: BattleBiomes
 
 static var _tex := {}
 
@@ -177,6 +187,7 @@ func _init(a: Node) -> void:
 	arena = a
 	ground = BattleGround.new(self)
 	props = BattleProps.new(self)
+	biomes = BattleBiomes.new(self)
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -201,15 +212,19 @@ func setup() -> void:
 		return
 	var rng: RandomNumberGenerator = arena.rng
 	scenario = String(arena.opts.get("scenario", ""))
-	if not SCENARIOS.has(scenario):
+	var energy: bool = not arena.has_method("energy_on") or arena.energy_on()
+	if not SCENARIOS.has(scenario) or (scenario in ENERGY_ONLY and not energy):
 		var names: Array = SCENARIOS.keys()
 		names = names.filter(func(n): return not n in PICK_ONLY)
+		if not energy:
+			names = names.filter(func(n): return not n in ENERGY_ONLY)
 		names.sort()
 		scenario = String(names[rng.randi() % names.size()])
 	var tel = arena.get("telemetry")
 	if tel:
 		tel.meta["scenario"] = scenario
 	var plan: Dictionary = SCENARIOS[scenario]
+	biomes.pre_setup()  # círculo de runas e rios de lava antes do relevo
 	# Cada obstáculo vai para a metade com menos coisa; o ímpar de cada tipo tenta a faixa do meio.
 	var count := {1: 0, -1: 0}
 	for kind in PLACE_ORDER + BattleProps.ORDER:
@@ -248,6 +263,7 @@ func setup() -> void:
 				_:
 					_add(String(kind), at, r, h)
 	ground.setup()  # lama e maré (só no modo de energia)
+	biomes.setup()  # colunas, montes, paredão, lama do pântano, chão e luz do bioma
 
 
 ## Ponto livre para um obstáculo de raio `r` na metade `side` (1 = lado de arena.axis, -1 = o outro,
@@ -289,7 +305,7 @@ func _spot_free(at: Vector3, r: float, gap: float) -> bool:
 	for c in crate_spots:
 		if _flat(at - c).length() < r + BattleField.OBJ_R + gap:
 			return false
-	return props.spot_free(at, r, gap)
+	return props.spot_free(at, r, gap) and biomes.spot_free(at, r, gap)
 
 
 ## VGC (posições fixas): nada entre as duas posições dos lados, senão tiro e raio de casa batem na
@@ -422,8 +438,12 @@ func on_high(f: BattleFighter) -> bool:
 	return f.ground_y >= HIGH
 
 
-## Multiplicador do andar pelo relevo (encosta, água, gelo).
+## Multiplicador do andar pelo relevo (encosta, água, gelo) e pelo bioma (neve).
 func move_mult(f: BattleFighter) -> float:
+	return biomes.move_mult(f) * _move_mult(f)
+
+
+func _move_mult(f: BattleFighter) -> float:
 	var gm := ground.move_mult(f)  # lama e maré (fora do relevo)
 	if gm != 1.0:
 		return gm
@@ -446,6 +466,10 @@ func move_mult(f: BattleFighter) -> float:
 ## Energia pelo chão: no lago Água e Grama enchem mais, os outros menos e Fogo bem menos; na grama alta
 ## quem é de Grama enche mais.
 func regen_mult(f: BattleFighter) -> float:
+	return biomes.regen_mult(f) * _regen_mult(f)  # runas, lava, pântano (BattleBiomes)
+
+
+func _regen_mult(f: BattleFighter) -> float:
 	var gr := ground.regen_mult(f)  # água rasa da maré
 	if gr != 1.0:
 		return gr
@@ -478,6 +502,7 @@ func push_out(f: BattleFighter) -> Vector3:
 func settle(f: BattleFighter, dt: float) -> void:
 	if f.active():
 		ground.settle(f, dt)  # embalo no gelo
+		biomes.settle(f, dt)  # colunas e montes sólidos, lava empurra
 	if obstacles.is_empty() or not f.active():
 		return
 	_slide_step(f, dt)
@@ -504,6 +529,10 @@ func settle(f: BattleFighter, dt: float) -> void:
 ## Precisão pelo cenário: de cima, golpe à distância ou Voador contra quem está mais baixo acerta mais;
 ## contra quem está escondido na grama alta (ou camuflado na areia) erra mais.
 func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> float:
+	return biomes.acc_mult(user, mv, target) * _acc_mult(user, mv, target)  # escuro, neblina, neve
+
+
+func _acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> float:
 	if not has_scenery() or not is_instance_valid(target) or not is_instance_valid(user):
 		return 1.0
 	var kind := String(mv.get("kind", ""))
@@ -525,6 +554,10 @@ func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> flo
 
 ## Dano pelo cenário (BattleMoves.extra_mult): Elétrico em quem está dentro da água bate mais forte.
 func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	return biomes.damage_mult(user, target, mv) * _damage_mult(user, target, mv)  # runas
+
+
+func _damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	var gd := ground.damage_mult(user, target, mv)  # Elétrico na maré
 	if gd != 1.0:
 		return gd
@@ -549,6 +582,7 @@ func _weather() -> String:
 func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: float) -> void:
 	ground.on_move_landed(user, mv, at, radius)  # lama, fenda, gelo, brasas, poça
 	props.on_move_landed(user, mv, at, radius)  # árvore, Voltorb, arbusto, cristal
+	biomes.on_move_landed(user, mv, at, radius)  # avalanche, neve derretida, lava esfriada
 	var type := String(mv.get("type", ""))
 	var power := float(mv.get("power", 0))
 	if power <= 0.0 or not has_scenery():
@@ -831,7 +865,7 @@ func on_shot_blocked(user: BattleFighter, mv: Dictionary, p: Vector3) -> void:
 
 ## Projétil em `p` (local) bateu no relevo? Caixas e pedras do campo também param o tiro.
 func blocks_shot(p: Vector3) -> bool:
-	if p.y < height_at(p) - 0.05 or props.blocks_shot(p):
+	if p.y < height_at(p) - 0.05 or props.blocks_shot(p) or biomes.blocks_shot(p):
 		return true
 	if arena.field:
 		for o in arena.field.objects:
@@ -855,7 +889,7 @@ func shot_block(a: Vector3, b: Vector3) -> float:
 
 
 func has_cover() -> bool:
-	if not obstacles.is_empty() or props.has_cover():
+	if not obstacles.is_empty() or props.has_cover() or biomes.has_cover():
 		return true
 	return arena.field != null and not arena.field.objects.is_empty()
 
@@ -864,6 +898,7 @@ func tick(dt: float) -> void:
 	_water_t += dt
 	ground.tick(dt)
 	props.tick(dt)
+	biomes.tick(dt)
 	var wx := _weather() if has_scenery() or not burnt.is_empty() else ""
 	_regrow(dt, wx)
 	for o in obstacles:
@@ -984,6 +1019,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 		for o in arena.field.objects:
 			cands.append({"pos": o.pos, "r": BattleField.OBJ_R})
 	cands.append_array(props.cover_cands())  # árvore e cristal
+	cands.append_array(biomes.cover_cands())  # colunas e montes de neve
 	var best := Vector3.INF
 	var best_d := max_d
 	for c in cands:
@@ -1003,6 +1039,7 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 ## Desvia a direção desejada da IA de picos que ela não escala e (quem não é de Água) do lago.
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
 	want = ground.steer(f, want)  # contorna a lama e as brasas
+	want = biomes.steer(f, want)  # colunas, lava e neve funda
 	if obstacles.is_empty() or want.length() < 0.05:
 		return want
 	var dir := want.normalized()
