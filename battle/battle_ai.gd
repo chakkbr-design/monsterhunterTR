@@ -1512,6 +1512,11 @@ func pick(avail: Array) -> String:
 		if not brk.is_empty():
 			why = "topple"
 			return String(brk[_rng().randi() % brk.size()])
+	if f.energy_mode:
+		var gk := BattleGround.ai_pick(self, avail)  # alvo no tronco: empurrão que derruba na água
+		if gk != "":
+			return gk
+		avail = BattleGround.ai_filter(self, avail)  # chuva: Elétrico não mira perto do pilar
 	var tac := _tactics()
 	if tac != null:
 		var chosen := tac.choose(avail)
