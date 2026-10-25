@@ -10,6 +10,8 @@ var _count := 0
 
 func _initialize() -> void:
 	_basics()
+	_duo_table()
+	_coord()
 	_full_fight()
 	print("combos: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -114,6 +116,102 @@ func _basics() -> void:
 	_run(a, 1.5)
 	check(foe.hp < hp0 or foe.immortal, "golpe de dupla causa dano")
 	check(c.sync_of(p.side) < 0.5, "Sintonia depois da dupla")
+	a.free()
+
+
+## Tabela de duplas: pares explícitos, campos válidos, nome, desenho e cobertura dos 18 tipos.
+func _duo_table() -> void:
+	var a := _arena(12, false)
+	var c: BattleCombos = a.combos
+	var want := [
+		["water", "electric", "thunderstorm"],
+		["fire", "grass", "sea_of_fire"],
+		["water", "ice", "deep_frost"],
+		["fire", "flying", "fire_whirl"],
+		["ground", "rock", "stone_wall"],
+		["psychic", "fighting", "mind_fist"],
+		["steel", "electric", "magnet_storm"],
+		["dragon", "fire", "dragon_flame"],
+		["dark", "ghost", "eclipse"],
+		["fairy", "grass", "enchanted_garden"],
+		["bug", "poison", "venom_swarm"],
+		["ice", "ground", "permafrost"],
+	]
+	for w in want:
+		check(c._find_duo(w[0], w[1]).get("id", "") == w[2], "dupla %s+%s = %s" % w)
+		check(c._find_duo(w[1], w[0]).get("id", "") == w[2], "dupla %s+%s simétrica" % [w[1], w[0]])
+	var types := {}
+	var ids := {}
+	for d in c._duos:
+		check(not ids.has(d.id), "id único %s" % d.id)
+		ids[d.id] = true
+		check(String(d.name) != "" and String(d.get("vis", "")) != "", "nome e vis em %s" % d.id)
+		check(d.effect in ["aoe", "field", "buff_team", "debuff_foes"], "efeito de %s" % d.id)
+		check(float(d.power) <= 80.0, "dupla modesta %s" % d.id)
+		for t in d.types:
+			types[t] = true
+	check(
+		c._find_duo("normal", "fire").get("id", "") == "coordinated", "normal + qualquer = curinga"
+	)
+	var missing := []
+	for t in [
+		"normal",
+		"fighting",
+		"flying",
+		"poison",
+		"ground",
+		"rock",
+		"bug",
+		"ghost",
+		"steel",
+		"fire",
+		"water",
+		"grass",
+		"electric",
+		"psychic",
+		"ice",
+		"dragon",
+		"dark",
+		"fairy"
+	]:
+		if not types.has(t):
+			missing.append(t)
+	check(missing.is_empty(), "todo tipo em alguma dupla %s" % [missing])
+	# Cada dupla dispara sem erro (visual + efeito) e põe a recarga.
+	var p: BattleFighter = a.player
+	var al: BattleFighter = a.ally
+	a.enemy.immortal = true
+	for d in c._duos:
+		c._duo_cd[p.side] = 0.0
+		c._fire_duo(p, al, d)
+		check(c._duo_cd[p.side] > 0.0, "dupla %s disparou" % d.id)
+		_run(a, 0.7)
+	a.free()
+
+
+## Coordenação da IA do par: o golpe que fecha dupla/reação é reconhecido.
+func _coord() -> void:
+	var a := _arena(13, false)
+	_run(a, 1.0)
+	var c: BattleCombos = a.combos
+	var p: BattleFighter = a.player
+	var al: BattleFighter = a.ally
+	var water := _mv("water_gun")
+	var ember := _mv("ember")
+	c._duo_cd[p.side] = 0.0
+	check(not c.completes_duo(p, ember), "sem golpe do parceiro não fecha dupla")
+	c.on_move_used(al, water)
+	check(c.completes_duo(p, ember), "fogo fecha dupla com água do parceiro")
+	check(not c.completes_duo(al, water), "o próprio golpe não conta")
+	c._duo_cd[p.side] = 3.0
+	check(not c.completes_duo(p, ember), "dupla em recarga não conta")
+	# Marca que o parceiro detona: com Thunder Shock no kit do parceiro, água prepara.
+	var keep: Array = p.moves.duplicate()
+	p.moves = ["thunder_shock"]
+	check(c.sets_up_reaction(al, p, water), "água prepara para o parceiro elétrico")
+	p.moves = ["tackle"]
+	check(not c.sets_up_reaction(al, p, water), "sem elétrico no kit não prepara")
+	p.moves = keep
 	a.free()
 
 

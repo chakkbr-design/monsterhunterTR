@@ -117,6 +117,11 @@ const LOS_KINDS := ["projectile", "beam", "homing"]
 const LOS_WAIT := 0.3
 ## Golpe que detona a marca de tipo do parceiro (BattleCombos) ganha este peso a mais na escolha.
 const COMBO_PICK := 1.3
+## Com a Sintonia a partir de BattleCombos.SYNC_COORD: peso extra da reação, do golpe que fecha a
+## dupla com o parceiro e do que deixa a marca para o parceiro detonar.
+const COMBO_SYNC_PICK := 0.6
+const DUO_PICK := 0.9
+const SETUP_PICK := 0.35
 ## Área avisada (aoe_target/zone com preparo) no modo de energia: segura até AREA_HOLD s esperando o
 ## alvo parado (preparando golpe, atordoado, preso ou andando a menos de AREA_SLOW m/s); a mira vai
 ## AREA_LEAD x o preparo à frente de quem anda (até AREA_LEAD_MAX m).
@@ -1497,10 +1502,21 @@ func pick(avail: Array) -> String:
 	var cmb = f.arena.get("combos")
 	if f.energy_mode and cmb and partner() != null:
 		# Sinergia 2x2: golpe que detona a marca do parceiro no alvo (Molhado + Elétrico...) vale mais.
+		# Com a Sintonia alta o par coordena de propósito: o peso sobe e também vale deixar a marca que o
+		# parceiro detona e fechar a dupla com o golpe que ele acabou de usar.
+		var sync: float = cmb.sync_of(f.side)
+		var coord: float = clampf(sync / maxf(BattleCombos.SYNC_COORD, 0.01), 0.0, 1.0)
+		var pt := partner()
 		for id in dmg:
-			var r: Dictionary = cmb._find_reaction(f, f.opponent, Dex.move(String(id)))
+			var mvd := Dex.move(String(id))
+			var r: Dictionary = cmb._find_reaction(f, f.opponent, mvd)
 			if not r.is_empty():
-				dmg[id] = float(dmg[id]) * float(r.mult) * COMBO_PICK
+				dmg[id] = float(dmg[id]) * float(r.mult) * (COMBO_PICK + COMBO_SYNC_PICK * coord)
+			if coord > 0.0:
+				if cmb.completes_duo(f, mvd):
+					dmg[id] = float(dmg[id]) * (1.0 + DUO_PICK * coord)
+				elif r.is_empty() and cmb.sets_up_reaction(f, pt, mvd):
+					dmg[id] = float(dmg[id]) * (1.0 + SETUP_PICK * coord)
 	if f.energy_mode:
 		# Energia: golpe que ainda falta energia rende menos pelo tempo de espera (o barato e rápido
 		# ganha quando a barra está baixa; com a barra cheia o forte continua valendo).
