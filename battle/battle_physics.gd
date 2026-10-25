@@ -310,6 +310,27 @@ func _land_strike(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> v
 # --- Aerial Ace: some e reaparece sobre o alvo ---
 
 
+## Teleport: some e reaparece em `dest` (BattleKanto.teleport_spot).
+func start_teleport(user: BattleFighter, dest: Vector3) -> void:
+	user.hidden = "blink"
+	if user.look:
+		user.look.visible = false
+	if arena.vfx and arena.is_inside_tree():
+		arena.vfx.puff(arena.to_global(user.position + Vector3(0, 0.45, 0)), 0.9)
+	user.start_motion("blink", user.position, 0.18, 0.0, null, _teleport_drop.bind(user, dest), 0.0)
+
+
+func _teleport_drop(user: BattleFighter, dest: Vector3) -> void:
+	if not is_instance_valid(user) or not user.active():
+		return
+	user.position = dest + Vector3(0, 0.0, 0)
+	if user.look:
+		user.look.visible = true
+	user.hidden = ""
+	if arena.vfx and arena.vfx.has_method("blink"):
+		arena.vfx.blink(user)
+
+
 func start_blink(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
 	user.hidden = "blink"
 	if user.look:
@@ -317,7 +338,13 @@ func start_blink(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	if arena.vfx and arena.is_inside_tree():
 		arena.vfx.puff(arena.to_global(user.position + Vector3(0, 0.45, 0)), 0.9)
 	user.start_motion(
-		"blink", user.position, 0.18, 0.0, null, _blink_drop.bind(user, mv, dir, miss), 0.0
+		"blink",
+		user.position,
+		float(mv.get("vanish", 0.18)),
+		0.0,
+		null,
+		_blink_drop.bind(user, mv, dir, miss),
+		0.0
 	)
 
 

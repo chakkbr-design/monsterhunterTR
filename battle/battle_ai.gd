@@ -1364,6 +1364,8 @@ func pick_target(dt: float) -> void:
 func want_trainer_item() -> bool:
 	if f.trainer_item == "" or f.item_used or not f.alive():
 		return false
+	if f.arena.moves.effects.active(f.arena.moves.effects.field, "magic"):
+		return false  # Magic Room
 	var tai = f.arena.get("trainer_ai")
 	var rounds = f.arena.get("turns")
 	if tai is Dictionary and tai.has(f.side) and rounds != null and rounds.on:

@@ -355,7 +355,10 @@ func expected_damage(
 	var power := effects.ai_power(user, target, mv)
 	if power <= 0.0:
 		return 0.0
-	var eff := Dex.effectiveness(String(mv.get("type", "")), target.types)
+	var ttypes: Array = target.types
+	if String(mv.get("special", "")) == "freeze_dry":
+		ttypes = BattleKanto.freeze_types(ttypes)
+	var eff := Dex.effectiveness(String(mv.get("type", "")), ttypes)
 	if eff <= 0.0:
 		return 0.0
 	var kind := String(mv.get("kind", ""))

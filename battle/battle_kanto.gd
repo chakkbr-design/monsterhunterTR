@@ -53,6 +53,10 @@ const GROUND_TYPE := {
 	"pond": "water",
 	"ice_pond": "ice",
 	"high": "rock",
+	"mud": "ground",
+	"ice": "ice",
+	"puddle": "water",
+	"ember": "fire",
 }
 const NATURE := {
 	"grassy": "energy_ball",
@@ -62,6 +66,10 @@ const NATURE := {
 	"pond": "hydro_pump",
 	"ice_pond": "ice_beam",
 	"high": "rock_slide",
+	"mud": "earth_power",
+	"ice": "ice_beam",
+	"puddle": "hydro_pump",
+	"ember": "flamethrower",
 }
 ## Habilidades ruins para quem as recebe (Entrainment só vale a pena com elas).
 const BAD_ABILITIES := ["truant", "slow_start", "defeatist", "klutz", "stall"]
@@ -142,7 +150,9 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 			var prop := nearest_prop(fx, user)
 			if not prop.is_empty():
 				user.popup(
-					"Ergueu %s!" % ("a pedra" if prop.rock else "a caixa"), Dex.type_color("ghost"), 0.9
+					"Ergueu %s!" % ("a pedra" if prop.rock else "a caixa"),
+					Dex.type_color("ghost"),
+					0.9
 				)
 				fx.arena.field._break(prop)
 
@@ -179,9 +189,7 @@ static func _reflect(
 	var m: Dictionary = fx.arena.moves._cast_copy(coat, mv)
 	if String(mv.get("kind", "")) == "debuff_aoe":
 		if not fx.debuff_move(coat, user, m) and mv.has("stat"):
-			fx.arena.moves.change_stage(
-				user, String(mv.stat), int(mv.get("stages", -1)), coat
-			)
+			fx.arena.moves.change_stage(user, String(mv.stat), int(mv.get("stages", -1)), coat)
 		return
 	var d := coat.flat_to(user)
 	fx.arena.moves.hit(coat, user, m, d.normalized() if d.length() > 0.01 else coat.facing)
@@ -235,7 +243,8 @@ static func hit_number(mv: Dictionary, target: BattleFighter) -> float:
 
 
 ## O que há sob o usuário: terreno de campo (grassy, electric, misty, psychic) ou relevo da quadra
-## (pond, ice_pond = lago congelado, high = em cima de morro ou pico). "" = chão comum ou no ar.
+## (pond, ice_pond = lago congelado, high = em cima de morro ou pico) ou chão vivo (mud, ice, puddle,
+## ember = marca de golpe). "" = chão comum ou no ar.
 static func ground_kind(fx: BattleMoveEffects, user: BattleFighter) -> String:
 	if not fx.grounded(user):
 		return ""
@@ -249,6 +258,13 @@ static func ground_kind(fx: BattleMoveEffects, user: BattleFighter) -> String:
 			return "ice_pond" if float(pond.ice_t) > 0.0 else "pond"
 		if ter.on_high(user):
 			return "high"
+		var g = ter.get("ground")  # chão vivo: lama e marcas de golpe (BattleGround)
+		if g != null and g.on:
+			for k in ["ice", "puddle", "ember"]:
+				if g.on_mark(user, k):
+					return k
+			if g.in_mud(user):
+				return "mud"
 	return ""
 
 
@@ -340,7 +356,9 @@ static func _conversion_2(fx: BattleMoveEffects, user: BattleFighter, s: Diction
 	var last := String(s.get("last_type", ""))
 	var pool: Array = []
 	if last != "":
-		pool = TYPES.filter(func(t): return Dex.effectiveness(last, [t]) < 1.0 and [t] != user.types)
+		pool = TYPES.filter(
+			func(t): return Dex.effectiveness(last, [t]) < 1.0 and [t] != user.types
+		)
 	if pool.is_empty():
 		fx._fail(user)
 		return
@@ -414,7 +432,9 @@ static func teleport_spot(fx: BattleMoveEffects, user: BattleFighter) -> Vector3
 	var best_score := -INF
 	for i in TELEPORT_TRIES:
 		var p := Vector3(
-			fx.rng.randf_range(r.position.x, r.end.x), 0.0, fx.rng.randf_range(r.position.y, r.end.y)
+			fx.rng.randf_range(r.position.x, r.end.x),
+			0.0,
+			fx.rng.randf_range(r.position.y, r.end.y)
 		)
 		if not _free_spot(arena, p):
 			continue
@@ -465,17 +485,23 @@ static func after_hit(
 				fx._fail(user)
 			else:
 				user.set_meta("ability_override", ab)
-				user.popup("Copiou %s!" % ab.capitalize().replace("_", " "), Dex.type_color("psychic"))
+				user.popup(
+					"Copiou %s!" % ab.capitalize().replace("_", " "), Dex.type_color("psychic")
+				)
 		"entrainment":
 			var mine := fx._ability(user)
 			if mine == "" or mine == fx._ability(target):
 				fx._fail(user)
 			else:
 				target.set_meta("ability_override", mine)
-				target.popup("Ganhou %s!" % mine.capitalize().replace("_", " "), Color(0.9, 0.85, 0.7))
+				target.popup(
+					"Ganhou %s!" % mine.capitalize().replace("_", " "), Color(0.9, 0.85, 0.7)
+				)
 		"split_stats":
 			for k in mv.get("swap", []):
-				var avg := floorf((float(user.stats.get(k, 10)) + float(target.stats.get(k, 10))) / 2.0)
+				var avg := floorf(
+					(float(user.stats.get(k, 10)) + float(target.stats.get(k, 10))) / 2.0
+				)
 				user.stats[k] = avg
 				target.stats[k] = avg
 			user.popup("Dividiu os atributos!", Dex.type_color("psychic"), 0.9)
@@ -516,7 +542,9 @@ static func _flatten(fx: BattleMoveEffects, user: BattleFighter, target: BattleF
 static func _seg_dist(p: Vector3, a: Vector3, b: Vector3) -> float:
 	var ab := Vector2(b.x - a.x, b.z - a.z)
 	var ap := Vector2(p.x - a.x, p.z - a.z)
-	var t := 0.0 if ab.length_squared() < 0.0001 else clampf(ap.dot(ab) / ab.length_squared(), 0.0, 1.0)
+	var t := (
+		0.0 if ab.length_squared() < 0.0001 else clampf(ap.dot(ab) / ab.length_squared(), 0.0, 1.0)
+	)
 	return (ap - ab * t).length()
 
 
@@ -568,7 +596,9 @@ static func ai_worth(fx: BattleMoveEffects, f: BattleFighter, mv: Dictionary) ->
 		"role_play":
 			return has_opp and fx._ability(opp) != "" and fx._ability(opp) != fx._ability(f)
 		"entrainment":
-			return has_opp and fx._ability(f) in BAD_ABILITIES and fx._ability(opp) != fx._ability(f)
+			return (
+				has_opp and fx._ability(f) in BAD_ABILITIES and fx._ability(opp) != fx._ability(f)
+			)
 		"split_stats":
 			return has_opp and _sum(opp, keys, false) > _sum(f, keys, false) * 1.12
 		"swap_stages":
@@ -601,7 +631,9 @@ static func ai_worth(fx: BattleMoveEffects, f: BattleFighter, mv: Dictionary) ->
 			return (
 				has_opp
 				and not BattleTransform.is_transformed(f)
-				and _sum(opp, BattleTransform.COPY_STATS, false)
-				>= _sum(f, BattleTransform.COPY_STATS, false) * 0.95
+				and (
+					_sum(opp, BattleTransform.COPY_STATS, false)
+					>= _sum(f, BattleTransform.COPY_STATS, false) * 0.95
+				)
 			)
 	return null

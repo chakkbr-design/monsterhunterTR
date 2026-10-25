@@ -45,6 +45,7 @@ const SIDE_ENDS := {
 }
 const FIELD_ENDS := {
 	"gravity": "A gravidade voltou ao normal.",
+	"magic": "Os itens voltaram a funcionar.",
 	"grassy": "O campo de grama sumiu.",
 	"electric": "O campo elétrico sumiu.",
 	"misty": "O campo de névoa sumiu.",
@@ -302,6 +303,8 @@ func _volatiles(f: BattleFighter) -> void:
 	if fx.count_round(s, "yawn"):
 		fx.yawn_sleep(f)
 		_note("yawn", f)
+	if BattleKanto.perish_tick(fx, f):
+		_note("perish", f)
 
 
 ## Lado (Reflect, Light Screen, Safeguard, Mist, Tailwind): conta a rodada e avisa quem acabou.
@@ -343,6 +346,9 @@ static func _weather_end_text(w: String) -> String:
 
 
 func _holds(f: BattleFighter) -> bool:
+	var fx := _fx()
+	if fx and fx.active(fx.field, "magic"):
+		return false  # Magic Room
 	return is_instance_valid(f) and f.trainer_item != "" and not f.item_used
 
 

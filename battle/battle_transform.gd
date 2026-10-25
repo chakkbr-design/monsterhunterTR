@@ -20,22 +20,26 @@ static func is_transformed(f: BattleFighter) -> bool:
 static func apply(arena: Node, user: BattleFighter, target: BattleFighter) -> bool:
 	if not _can_copy(arena, user, target):
 		return false
-	user.set_meta(
-		META_ORIG,
-		{
-			"types": user.types.duplicate(),
-			"stats": user.stats.duplicate(),
-			"moves": user.moves.duplicate(),
-			"species": user.look.species if user.look else "",
-			"body": user.body,
-			"jump_height": user.jump_height,
-			"jump_time": user.jump_time,
-			"look_h": user.look_h,
-			"profile": user.profile,
-			"prof": user.prof,
-			"fly_target": user.fly_target,
-			"ability": user.get_meta("ability_override") if user.has_meta("ability_override") else null,
-		}
+	(
+		user
+		. set_meta(
+			META_ORIG,
+			{
+				"types": user.types.duplicate(),
+				"stats": user.stats.duplicate(),
+				"moves": user.moves.duplicate(),
+				"species": user.look.species if user.look else "",
+				"body": user.body,
+				"jump_height": user.jump_height,
+				"jump_time": user.jump_time,
+				"look_h": user.look_h,
+				"profile": user.profile,
+				"prof": user.prof,
+				"fly_target": user.fly_target,
+				"ability":
+				user.get_meta("ability_override") if user.has_meta("ability_override") else null,
+			}
+		)
 	)
 	user.set_meta(META, true)
 	user.types = target.types.duplicate()

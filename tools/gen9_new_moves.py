@@ -543,7 +543,7 @@ NEW.update({
     "kinesis": (dict(TRICK, speed=12, effect={"stat": "acc", "stages": -1, "chance": 1.0}), "The user distracts the target by bending a spoon. This lowers the target's accuracy."),
     "lava_plume": (dict(BURST, power=80, radius=3.5, knockback=5, windup=0.4, effect={"status": "burn", "chance": 0.3}),
                    "The user torches everything around it with an explosion of scarlet flames. This may also leave those hit with a burn."),
-    "lick": ({"kind": "whip", "power": 30, "range": 2.8, "knockback": 1, "tips": 1, "tip_radius": 0.55, "effect": {"status": "paralysis", "chance": 0.3}},
+    "lick": ({"kind": "whip", "power": 30, "range": 3.6, "knockback": 1, "tips": 1, "tip_radius": 0.55, "spread": 12, "effect": {"status": "paralysis", "chance": 0.3}},
              "The target is licked with a long tongue, causing damage. This may also leave the target with paralysis."),
     "lovely_kiss": (dict(SHOT, speed=10, effect={"status": "sleep", "chance": 1.0}), "With a scary face, the user tries to give the target a kiss. The flinching target is put to sleep."),
     "mach_punch": (dict(QUICK, power=40, range=6.5, speed=21), "The user throws a punch at blinding speed. This move always goes first."),
