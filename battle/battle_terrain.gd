@@ -991,7 +991,6 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 		for o in arena.field.objects:
 			cands.append({"pos": o.pos, "r": BattleField.OBJ_R})
 	cands.append_array(props.cover_cands())  # árvore e cristal
-	cands.append_array(ground.extras.cover_cands())  # pilar, pedrinhas, neve
 	var best := Vector3.INF
 	var best_d := max_d
 	for c in cands:

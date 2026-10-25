@@ -108,11 +108,11 @@ const ROCK_CLEAR := 0.95  ## longe de quem está no chão
 const RAIN_FILL := 2.0  ## s de chuva até a fenda/cratera virar poça
 const HOLLOWS := ["crater", "hole"]  ## marcas do BattleField que a chuva enche
 const SUN_BERRY := 0.5  ## sol: a fruta do arbusto cresce 1,5x mais rápido
-const SNOW_EVERY := 7.0
+const SNOW_EVERY := 9.0
 const SNOW_R := 0.4
 const SNOW_H := 0.55
 const SNOW_LIFE := 20.0
-const SNOW_MAX := 3
+const SNOW_MAX := 2
 const SNOW_SUN := 4.0  ## sol derrete SNOW_SUN x mais rápido
 
 var ground  ## BattleGround (dono)
@@ -134,7 +134,7 @@ var rocks: Array = []
 var snow: Array = []
 var buried := false  ## areia cobrindo grama e pedrinhas
 var _rng := RandomNumberGenerator.new()
-var _on_log := {}  ## id -> estava no tronco
+var _on_log := {}  ## id -> _t da última vez no tronco
 var _route := {}  ## id -> lago que a IA atravessa pelo tronco
 var _vine_cd := {}  ## id -> _t em que pode ser preso de novo
 var _near_steel := {}  ## id -> estava perto do pilar (telemetria)
@@ -142,6 +142,7 @@ var _hide := {}  ## id -> s escondido no pilar (IA); negativo = espera
 var _ai_note := {}  ## id -> _t do último aviso de telemetria da IA
 var _snow_t := 0.0
 var _t := 0.0
+var _off: PackedStringArray = []  ## partes desligadas (opts.ground_off)
 
 static var _tex := {}
 
@@ -184,19 +185,20 @@ func _vis() -> bool:
 ## Tronco e pilar do cenário (BattleGround.setup, depois da lama). Sorteio com rng própria (semeada pela
 ## da arena sem gastá-la).
 func setup() -> void:
-	on = ground.on
+	on = ground.on and bool(arena.opts.get("ground_extras", true))
 	if not on:
 		return
+	_off = String(arena.opts.get("ground_off", "")).split(",", false)
 	visual = ground.visual
 	_rng.seed = hash("ground3_%d" % int(arena.rng.seed))
 	var plan: Dictionary = GROUND_EXTRAS.get(terrain.scenario, {})
 	var ponds: Array = terrain.obstacles.filter(func(o): return o.kind == "pond")
 	ponds.sort_custom(func(x, y): return float(x.r) > float(y.r))
-	for i in mini(int(plan.get("log_bridge", 0)), ponds.size()):
+	for i in mini(int(plan.get("log_bridge", 0)) * int(not "bridge" in _off), ponds.size()):
 		_place_bridge(ponds[i])
-	for i in int(plan.get("pylon", 0)):
+	for i in int(plan.get("pylon", 0)) * int(not "pylon" in _off):
 		var at := Vector3.INF
-		for side in [0, 1, -1]:
+		for side in [1, -1]:  # fora da faixa do meio (no meio tapava a linha de tiro: lutas 1x1 +10 s)
 			for _try in 4:
 				at = terrain._place(_rng, PYLON_SPACE, side, BattleTerrain.GAP)
 				if at != Vector3.INF and ground._mud_at(at, PYLON_SPACE + 0.3).is_empty():
@@ -311,19 +313,6 @@ func has_cover() -> bool:
 	return not pylons.is_empty() or (not rocks.is_empty() and not buried) or not snow.is_empty()
 
 
-## Esconderijos para BattleTerrain.cover_spot.
-func cover_cands() -> Array:
-	var out: Array = []
-	for py in pylons:
-		out.append({"pos": py.pos, "r": PYLON_SHOT})
-	if not buried:
-		for r in rocks:
-			out.append({"pos": r.pos, "r": ROCK_R})
-	for s in snow:
-		out.append({"pos": s.pos, "r": SNOW_R})
-	return out
-
-
 ## Grama alta coberta pela areia (BattleTerrain.in_grass).
 func grass_buried() -> bool:
 	return on and buried
@@ -344,7 +333,7 @@ func on_move_used(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 	if not on or not is_instance_valid(user):
 		return
 	var id := String(mv.get("id", ""))
-	if id in WIND_MOVES:
+	if id in WIND_MOVES and not "wind" in _off:
 		var d := _flat(dir)
 		if d.length() < 0.1:
 			d = _flat(user.facing)
@@ -361,7 +350,7 @@ func on_move_used(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 			for k in 3:
 				var p: Vector3 = _flat(user.position) + d * (1.5 + k * 1.6) + Vector3(0, 0.6, 0)
 				PixelFx.pop(arena, "wind", p, 1.6, 0.5)
-	elif id == "stealth_rock":
+	elif id == "stealth_rock" and not "rock" in _off:
 		var opp: BattleFighter = user.opponent
 		if is_instance_valid(opp) and opp.active():
 			var back := _flat(user.position - opp.position).normalized()
@@ -380,11 +369,11 @@ func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: fl
 	var power := float(mv.get("power", 0))
 	if type == "fire" and power > 0.0:
 		_burn(user, at, radius)
-	if id in WEB_MOVES:
+	if id in WEB_MOVES and not "web" in _off:
 		_add_web(at, user)
-	if id in VINE_MOVES:
+	if id in VINE_MOVES and not "web" in _off:
 		_vine(user, at, radius)
-	if id in ROCK_MOVES and power > 0.0:
+	if id in ROCK_MOVES and power > 0.0 and not "rock" in _off:
 		_add_rocks(at, radius * 0.6, 2 if power >= 75.0 else 1, user)
 
 
@@ -703,7 +692,8 @@ func tick(dt: float) -> void:
 		w.t = float(w.t) - dt
 		if float(w.t) <= 0.0:
 			winds.erase(w)
-	_weather_tick(dt, wx)
+	if not "weather" in _off:
+		_weather_tick(dt, wx)
 	for f in arena.fighters:
 		if not is_instance_valid(f):
 			continue
@@ -712,10 +702,10 @@ func tick(dt: float) -> void:
 			_on_log.erase(id)
 			_route.erase(id)
 			continue
-		var now := on_bridge(f)
-		if now and not bool(_on_log.get(id, false)):
-			_tele("bridge_cross", {"who": _uid(f), "ai": f.controller == "ai"})
-		_on_log[id] = now
+		if on_bridge(f):
+			if _t - float(_on_log.get(id, -INF)) > 1.0:  # pisar na beira várias vezes conta uma
+				_tele("bridge_cross", {"who": _uid(f), "ai": f.controller == "ai"})
+			_on_log[id] = _t
 		if not pylons.is_empty() and "steel" in f.types:
 			var near := not _pylon_near(f.position, STEEL_NEAR).is_empty()
 			if near and not bool(_near_steel.get(id, false)):
