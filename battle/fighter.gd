@@ -130,6 +130,8 @@ var status_immune_t := 0.0
 var last_status := ""
 ## Entrada protegida (BattleEnergy.ENTRY_GUARD): segundos que ainda faltam.
 var entry_t := 0.0
+## Fôlego (passiva do pulo de desespero): segundos com a energia enchendo mais rápido.
+var breath_t := 0.0
 ## Rodada (BattleTurns.round_n) em que o status / a confusão começou.
 var status_round := -1
 var confusion_round := -1
@@ -992,6 +994,7 @@ func tick(dt: float) -> void:
 	struggle_cd = maxf(struggle_cd - dt, 0.0)
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
 	entry_t = maxf(entry_t - dt, 0.0)
+	breath_t = maxf(breath_t - dt, 0.0)
 	status_immune_t = maxf(status_immune_t - dt, 0.0)
 	if status == "paralysis":
 		par_t -= dt

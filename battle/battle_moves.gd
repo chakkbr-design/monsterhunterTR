@@ -916,6 +916,8 @@ func _area_point(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	var t: BattleFighter = user.opponent
 	if is_instance_valid(t) and t.active() and user.flat_to(t).length() <= rng_m:
 		at = user.pos2(t.position)
+		if user.energy_mode and user.controller == "ai" and user.ai:
+			at += user.ai.area_lead(t, mv)  # IA do modo de energia mira à frente de quem anda
 	if miss != null:
 		var side := dir.cross(Vector3.UP).normalized() * (1.0 if rng.randf() < 0.5 else -1.0)
 		at += side * (radius + rng.randf_range(0.9, 1.5))

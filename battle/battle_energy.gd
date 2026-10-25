@@ -184,6 +184,8 @@ static func regen(f: BattleFighter) -> float:
 	var k := REST_MULT if resting(f) else 1.0
 	if k > 1.0 and f.arena and f.arena.get("terrain"):
 		k *= f.arena.terrain.regen_mult(f)  # Água descansando no lago
+	if f.breath_t > 0.0:
+		k *= BattlePassives.BREATH_REGEN  # Fôlego depois do pulo de desespero
 	return REGEN * speed_mult(f) * k
 
 
