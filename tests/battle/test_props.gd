@@ -3,7 +3,11 @@ extends SceneTree
 ## Objetos vivos do cenário (BattleProps, modo de energia): montagem pelos cenários, árvore (cobertura,
 ## energia de Grama, fogo, queda, tronco, golpe forte, Oran), Voltorb (acorda, aviso, explosão),
 ## arbusto (fruta, alcance de Grama/Inseto, queima e rebrota), cristal (reflete raio, carga e faísca,
-## quebra) e a IA (tiro no Voltorb, derrubar a árvore, tabela no cristal, fruta, fugir do aviso).
+## quebra), pedregulho (rola morro abaixo, acerta e derruba, vira pedra, bate em objeto), gêiser (aviso,
+## erupção, ar, vapor, Água/Fogo adianta), colmeia (enxame no mais perto, Inseto ignorado, Fogo espalha e
+## queima), cogumelos (nuvem ao pisar, sono/veneno, Grama imune, chuva) e a IA (tiro no Voltorb, derrubar
+## a árvore, tabela no cristal, rolar o pedregulho, enxame, gêiser, esporo, fruta, fugir do aviso,
+## desviar dos esporos e do gêiser).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -25,6 +29,10 @@ func _process(_d: float) -> bool:
 	_voltorb()
 	_bush()
 	_crystal()
+	_boulder()
+	_geyser()
+	_hive()
+	_mushroom()
 	_ai()
 	print("props: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -67,6 +75,9 @@ func _clean(a: Node) -> BattleProps:
 		pr._remove(o)
 	for b in pr.berries.duplicate():
 		pr._drop_berry_node(b)
+	for sw in pr.swarms.duplicate():
+		pr._end_swarm(sw, "test")
+	pr.clouds.clear()
 	a.telegraphs.clear()
 	return pr
 
@@ -103,6 +114,11 @@ func _layout() -> void:
 				check(n <= int(plan.get(k, 0)), "%s: %s no máximo o plano" % [sc, k])
 			for o in pr.items:
 				check(o.node is Node3D, "%s 3D" % o.kind)
+				if o.kind == "boulder":
+					# No topo de um morro (o mais perto do ponto sorteado), não espalhado.
+					var on_hill: bool = o.has("hill") and (o.pos - o.hill.pos).length() < 0.01
+					check(on_hill and float(o.y) > 0.5, "pedregulho no topo do morro")
+					continue
 				for sp in [a.player_spot, a.enemy_spot]:
 					var d: float = (o.pos - sp * Vector3(1, 0, 1)).length()
 					check(d >= o.r + BattleTerrain.KEEP_SPOT - 0.01, "%s longe da entrada" % o.kind)
@@ -293,6 +309,7 @@ func _bush() -> void:
 		{"scenario": "campo", "telemetry": "user://test_props_bush.json"}
 	)
 	var pr := _clean(a)
+	a._battle_size = 2  # cura no 2x2; no 1x1 só energia (fim do teste)
 	pr.add("bush", Vector3.ZERO)
 	var bu: Dictionary = pr.items[-1]
 	var c: BattleFighter = a.player
@@ -344,6 +361,17 @@ func _bush() -> void:
 	check(bu.burnt_t <= 0.0, "rebrotou")
 	_tick(a, P.BUSH_EVERY.y + 0.1)
 	check(pr.berries.size() == 1, "volta a dar fruta")
+	# 1x1: a Oran só dá energia (com a barra cheia fica no chão, mesmo com HP baixo).
+	a._battle_size = 1
+	b.hp = b.max_hp / 2
+	b.pp_max = BattleEnergy.MAX
+	_put(b, pr.berries[0].pos)
+	pr.tick(DT)
+	check(pr.berries.size() == 1, "1x1: barra cheia, não cura")
+	b.pp_max = 30.0
+	hp = b.hp
+	pr.tick(DT)
+	check(pr.berries.is_empty() and b.hp == hp and b.pp_max > 45.0, "1x1: Oran dá energia")
 	a.free()
 
 
@@ -406,6 +434,224 @@ func _crystal() -> void:
 	cr.cd = 0.0
 	a.field.on_move_landed(p, Dex.move("rock_throw"), Vector3(-0.4, 0, 0), 0.3)
 	check(not pr.items.has(cr), "Pedra quebra o cristal")
+	a.free()
+
+
+func _boulder() -> void:
+	var a := _arena(
+		[Mon.create("geodude", 50)],
+		[Mon.create("rattata", 50)],
+		6,
+		{"scenario": "pedreira", "telemetry": "user://test_props_boulder.json"}
+	)
+	var pr := _clean(a)
+	var t: BattleTerrain = a.terrain
+	t._add("hill", Vector3(-2, 0, 0), 1.8, 1.0)
+	pr.add("boulder", Vector3(-1, 0, 2))
+	var bo: Dictionary = pr.of_kind("boulder")[0]
+	check((bo.pos - Vector3(-2, 0, 0)).length() < 0.01, "pedregulho vai para o topo do morro")
+	check(float(bo.y) > 0.9, "pedregulho no alto (y %.2f)" % float(bo.y))
+	check(pr.blocks_shot(Vector3(-2, 1.4, 0)), "pedregulho é cobertura no alto do morro")
+	var g: BattleFighter = a.player
+	var r: BattleFighter = a.enemy
+	_put(g, Vector3(-6, 0, 0))
+	_put(r, Vector3(3, 0, 0.3))
+	# Golpe fraco de outro tipo não empurra.
+	pr.hit_prop(bo, g, Dex.move("water_gun"))
+	check(bo.state == "", "Água fraca não empurra")
+	bo.cd = 0.0
+	# Golpe de Pedra que cai no morro: treme e rola na direção do golpe.
+	pr.on_move_landed(g, Dex.move("rock_throw"), Vector3(-3.2, 0, 0), 0.3)
+	check(bo.state == "wobble", "Pedra no morro: o pedregulho treme")
+	check(Vector3(bo.dir).x > 0.99, "rola na direção do golpe")
+	var tl: Array = a.telegraphs.filter(func(e): return e.kind == "line" and int(e.side) == -1)
+	check(not tl.is_empty(), "linha de aviso para os dois lados")
+	check(_events(a, "boulder_push").size() == 1, "telemetria boulder_push")
+	var hp := r.hp
+	_tick(a, P.BOULDER_WARN + 0.05)
+	check(bo.state == "roll", "rola depois do aviso")
+	_tick(a, 2.0)
+	var want := maxi(1, int(float(r.max_hp) * P.BOULDER_FRAC * r.dot_scale()))
+	check(hp - r.hp == want, "acerta quem está no caminho (%d de %d)" % [hp - r.hp, want])
+	check(r.stun_t > 0.0, "derruba (atordoado)")
+	check(_events(a, "boulder_hit").size() == 1, "telemetria boulder_hit (uma vez)")
+	check(bo.kind == "stone", "parou e virou pedra")
+	var inner: Rect2 = a.rect.grow(-0.7)
+	var far := (
+		float(bo.done) >= P.BOULDER_MAX - 0.2 or not inner.has_point(Vector2(bo.pos.x, bo.pos.z))
+	)
+	check(far, "rolou até a parede ou o máximo (%.1f m)" % float(bo.done))
+	check(pr.blocks_shot(bo.pos + Vector3(0, 0.3, 0)), "pedra pequena é cobertura baixa")
+	check(not pr.blocks_shot(bo.pos + Vector3(0, 1.0, 0)), "pedra pequena: tiro alto passa")
+	pr.on_move_landed(g, Dex.move("rock_throw"), bo.pos, 0.3)
+	check(bo.kind == "stone" and bo.state == "", "pedra não rola de novo")
+	# Rola até o Voltorb: acorda.
+	pr._remove(bo)
+	t.obstacles.clear()
+	t._add("hill", Vector3(-2, 0, 0), 1.8, 1.0)
+	pr.add("boulder", Vector3(-2, 0, 0))
+	pr.add("voltorb", Vector3(3, 0, 0))
+	bo = pr.of_kind("boulder")[0]
+	_put(r, Vector3(6, 0, 5))
+	var path := pr.roll_path(bo, Vector3.RIGHT)
+	check(not path.into.is_empty() and path.into.kind == "voltorb", "o caminho para no Voltorb")
+	pr.hit_prop(bo, g, Dex.move("rock_throw"))
+	_tick(a, 1.2)
+	check(pr.of_kind("voltorb")[0].state == "armed", "o pedregulho acordou o Voltorb")
+	# Lago no caminho: afunda.
+	_clean(a)
+	t._add("hill", Vector3(-2, 0, 0), 1.8, 1.0)
+	t._add("pond", Vector3(3.5, 0, 0), 1.5, 0.0)
+	pr.add("boulder", Vector3(-2, 0, 0))
+	bo = pr.of_kind("boulder")[0]
+	check(bool(pr.roll_path(bo, Vector3.RIGHT).sink), "no lago afunda")
+	pr.hit_prop(bo, g, Dex.move("rock_throw"))
+	_tick(a, 1.5)
+	check(pr.of_kind("boulder").is_empty() and pr.of_kind("stone").is_empty(), "afundou e sumiu")
+	a.free()
+
+
+func _geyser() -> void:
+	var a := _arena(
+		[Mon.create("pidgey", 50)],
+		[Mon.create("rattata", 50)],
+		7,
+		{"scenario": "lagoa", "telemetry": "user://test_props_geyser.json"}
+	)
+	var pr := _clean(a)
+	pr.add("geyser", Vector3.ZERO)
+	var ge: Dictionary = pr.items[-1]
+	var p: BattleFighter = a.player
+	var r: BattleFighter = a.enemy
+	check(float(ge.timer) >= P.GEYSER_FIRST.x and float(ge.timer) <= P.GEYSER_FIRST.y, "1a erupção")
+	_put(p, Vector3(-6, 0, 0))
+	_put(r, Vector3(0.3, 0, 0))
+	ge.timer = P.GEYSER_WARN + 0.2
+	_tick(a, 0.25)
+	check(ge.state == "warn", "aviso de vapor antes da erupção")
+	check(not pr.blocks_shot(Vector3(0, 1, 0)), "no aviso o tiro ainda passa")
+	_tick(a, P.GEYSER_WARN)
+	check(ge.state == "steam", "erupção")
+	check(r.motion == "leap", "quem está em cima sobe")
+	check(_events(a, "geyser_launch").size() == 1, "telemetria geyser_launch")
+	check(pr.blocks_shot(Vector3(0, 1, 0)), "o vapor para tiro")
+	check(pr.damage_mult(p, r, Dex.move("gust")) == P.GEYSER_FLY, "Voador no ar acerta mais")
+	check(pr.damage_mult(p, r, Dex.move("water_gun")) == 1.0, "outros tipos: normal")
+	# Investida passa por baixo de quem está no ar.
+	for i in 20:
+		r._motion_step(DT)
+	check(p.passes_under(r), "investida passa por baixo de quem está no ar")
+	_tick(a, P.STEAM_SECS)
+	check(ge.state == "" and not pr.blocks_shot(Vector3(0, 1, 0)), "o vapor some")
+	check(float(ge.timer) >= P.GEYSER_EVERY.x, "próxima erupção a cada 11-13 s")
+	# Água adianta.
+	r.end_motion()
+	pr.hit_prop(ge, p, Dex.move("water_gun"))
+	check(ge.state == "warn" and float(ge.t) <= P.GEYSER_EARLY + 0.01, "Água adianta (aviso curto)")
+	check(_events(a, "geyser_early").size() == 1, "telemetria geyser_early")
+	a.free()
+
+
+func _hive() -> void:
+	var a := _arena(
+		[Mon.create("squirtle", 50)],
+		[Mon.create("rattata", 50)],
+		8,
+		{"scenario": "misto", "telemetry": "user://test_props_hive.json"}
+	)
+	var pr := _clean(a)
+	pr.add("hive", Vector3.ZERO)
+	var hv: Dictionary = pr.items[-1]
+	var s: BattleFighter = a.player
+	var r: BattleFighter = a.enemy
+	_put(s, Vector3(-6, 0, 0))
+	_put(r, Vector3(1.0, 0, 0))
+	check(pr.swarm_target(hv, s) == r, "enxame vai no mais perto da colmeia (o inimigo)")
+	_put(r, Vector3(7, 0, 4))
+	check(pr.swarm_target(hv, s) == s, "inimigo longe: vai em quem bateu")
+	var types: Array = r.types
+	r.types = ["bug"]
+	_put(r, Vector3(1.0, 0, 0))
+	check(pr.swarm_target(hv, s) == s, "Inseto é ignorado")
+	r.types = types
+	pr.hit_prop(hv, s, Dex.move("water_gun"))
+	check(pr.swarms.size() == 1 and pr.swarms[0].target == r, "golpe solta o enxame")
+	check(float(hv.rest_t) > 0.0, "colmeia quieta depois")
+	var hp := r.hp
+	_tick(a, 1.5)
+	check(r.hp < hp, "ferroada no alvo")
+	check(not _events(a, "swarm_sting").is_empty(), "telemetria swarm_sting")
+	_tick(a, P.SWARM_SECS)
+	check(pr.swarms.is_empty(), "o enxame acaba em 4 s")
+	# Fogo perto espalha.
+	hv.rest_t = 0.0
+	pr.hit_prop(hv, s, Dex.move("water_gun"))
+	check(pr.swarms.size() == 1, "solta de novo")
+	pr.on_move_landed(r, Dex.move("ember"), pr.swarms[0].pos, 0.3)
+	check(pr.swarms.is_empty(), "Fogo espalha o enxame")
+	check(_events(a, "swarm_fire").size() == 1, "telemetria swarm_fire")
+	# Fogo na colmeia: queima, sem enxame.
+	hv.cd = 0.0
+	hv.rest_t = 0.0
+	pr.hit_prop(hv, r, Dex.move("ember"))
+	check(pr.of_kind("hive").is_empty() and pr.swarms.is_empty(), "Fogo queima a colmeia")
+	a.free()
+
+
+func _mushroom() -> void:
+	var a := _arena(
+		[Mon.create("bulbasaur", 50)],
+		[Mon.create("rattata", 50)],
+		9,
+		{"scenario": "campo", "telemetry": "user://test_props_spore.json"}
+	)
+	var pr := _clean(a)
+	pr.add("mushroom", Vector3.ZERO)
+	var mu: Dictionary = pr.items[-1]
+	var b: BattleFighter = a.player
+	var r: BattleFighter = a.enemy
+	_put(b, Vector3(0.3, 0, 0.3))  # Grama: imune
+	_put(r, Vector3(3, 0, 0))
+	pr.tick(DT)
+	check(pr.clouds.size() == 1, "pisar solta a nuvem (mesmo Grama)")
+	check(_events(a, "spore_cloud").size() == 1, "telemetria spore_cloud")
+	_put(r, Vector3(0.8, 0, 0))
+	pr.tick(DT)
+	check(_events(a, "spore_status").size() == 1, "quem entra na nuvem sorteia uma vez")
+	check(
+		_events(a, "spore_status").all(func(e): return String(e.who) != a.telemetry.uid(b)),
+		"Grama é imune"
+	)
+	_tick(a, 0.5)
+	check(_events(a, "spore_status").size() == 1, "um sorteio por nuvem")
+	_tick(a, P.SPORE_SECS)
+	check(pr.clouds.is_empty(), "a nuvem some")
+	_put(r, Vector3(3, 0, 0))
+	pr.tick(DT)
+	_put(r, Vector3(0.2, 0, 0))
+	pr.tick(DT)
+	check(pr.clouds.is_empty(), "recarregando: não solta")
+	# Sono ~30%, veneno ~35% (sorteio).
+	var got := {"sleep": 0, "poison": 0, "": 0}
+	for i in 200:
+		r.status = ""
+		r.status_immune_t = 0.0
+		pr.clouds.append({"pos": Vector3.ZERO, "t": 1.0, "hit": {}, "by": null})
+		pr._tick_clouds(DT)
+		pr.clouds.clear()
+		got[r.status if r.status in got else ""] += 1
+	check(got.sleep > 35 and got.sleep < 85, "sono ~30%% (%s)" % [got])
+	check(got.poison > 45 and got.poison < 100, "veneno ~35%% (%s)" % [got])
+	r.status = ""
+	# Golpe nela também solta; chuva molha.
+	mu.rest_t = 0.0
+	a.abilities.weather = "rain"
+	pr.hit_prop(mu, r, Dex.move("tackle"))
+	check(pr.clouds.is_empty() and _events(a, "spore_wet").size() == 1, "chuva: esporo molhado")
+	a.abilities.weather = ""
+	mu.cd = 0.0
+	pr.hit_prop(mu, r, Dex.move("tackle"))
+	check(pr.clouds.size() == 1, "golpe solta a nuvem")
 	a.free()
 
 
@@ -507,7 +753,9 @@ func _ai() -> void:
 		var got := pr.aim_dir(c, mv, Vector3.RIGHT)
 		check(got.dot(aim_d) > 0.99, "o golpe sai na direção da tabela")
 		check(not c.has_meta("prop_aim"), "a mira é usada uma vez")
-	# Fruta: com HP baixo vai buscar se o caminho está livre; com inimigo no caminho, não.
+	# Fruta: com HP baixo vai buscar se o caminho está livre; com inimigo no caminho, não (2x2; no 1x1
+	# só com energia baixa).
+	a._battle_size = 2
 	pr._remove(pr.of_kind("crystal")[0])
 	pr.add("bush", Vector3(4, 0, 4))
 	pr._drop_berry(pr.of_kind("bush")[0], "bush", INF)
@@ -531,4 +779,80 @@ func _ai() -> void:
 	BattleProps.steer(c.ai, 8.0)
 	pr._t += P.BERRY_CHASE + 0.1
 	check(BattleProps.steer(c.ai, 8.0) == Vector3.INF, "desiste depois de BERRY_CHASE s")
+	a._battle_size = 1
+	pr._ai.clear()
+	check(BattleProps.steer(c.ai, 8.0) == Vector3.INF, "1x1: HP baixo com a barra cheia não vai")
+	c.pp_max = 10.0
+	pr._ai.clear()
+	check(BattleProps.steer(c.ai, 8.0) != Vector3.INF, "1x1: energia baixa vai")
+	pr._drop_berry_node(be)
+	_ai_new(a, pr, c, r)
 	a.free()
+
+
+## IA dos objetos novos: pedregulho, colmeia, gêiser, esporo, cristal carregado e o desvio.
+func _ai_new(a: Node, pr: BattleProps, c: BattleFighter, r: BattleFighter) -> void:
+	for o in pr.items.duplicate():
+		pr._remove(o)
+	a.telegraphs.clear()
+	var me := Vector3(-6, 0, 0)
+	_put(c, me)
+	var t: BattleTerrain = a.terrain
+	t._add("hill", Vector3(-2, 0, 0), 1.8, 1.0)
+	pr.add("boulder", Vector3(-2, 0, 1))
+	var bo: Dictionary = pr.of_kind("boulder")[0]
+	_put(r, Vector3(3, 0, 0.3))
+	var rock := Dex.move("rock_throw")
+	check(not pr._boulder_shot(c, rock, me, 9.0).is_empty(), "IA: rola o pedregulho no inimigo")
+	check(pr._boulder_shot(c, Dex.move("ember"), me, 9.0).is_empty(), "IA: Fogo fraco não empurra")
+	_put(r, Vector3(3, 0, 4))
+	check(pr._boulder_shot(c, rock, me, 9.0).is_empty(), "IA: fora da linha não rola")
+	pr._remove(bo)
+	t.obstacles.clear()
+	# Colmeia: inimigo colado nela, eu longe.
+	pr.add("hive", Vector3.ZERO)
+	_put(r, Vector3(1.0, 0, 0))
+	var wg := Dex.move("water_gun")
+	check(not pr._hive_shot(c, wg, me, 11.0).is_empty(), "IA: solta o enxame no inimigo colado")
+	_put(r, Vector3(5, 0, 4))
+	check(pr._hive_shot(c, wg, me, 11.0).is_empty(), "IA: inimigo longe da colmeia, não")
+	check(pr._hive_shot(c, Dex.move("ember"), me, 11.0).is_empty(), "IA: Fogo queimaria a colmeia")
+	pr._remove(pr.of_kind("hive")[0])
+	# Gêiser: Água/Fogo com o inimigo em cima.
+	pr.add("geyser", Vector3.ZERO)
+	var ge: Dictionary = pr.of_kind("geyser")[0]
+	ge.timer = 8.0
+	_put(r, Vector3(0.3, 0, 0))
+	check(not pr._geyser_shot(c, wg, me, 11.0).is_empty(), "IA: adianta o gêiser no inimigo")
+	check(pr._geyser_shot(c, Dex.move("rock_throw"), me, 11.0).is_empty(), "IA: Pedra não ferve")
+	# Desvio: perto da erupção não entra; longe, não liga.
+	_put(c, Vector3(-2.2, 0, 0.3))
+	var w := pr.avoid(c, Vector3(1, 0, 0))
+	check(w.is_equal_approx(Vector3(1, 0, 0)), "IA: gêiser longe da erupção, passa")
+	ge.timer = 0.8
+	w = pr.avoid(c, Vector3(1, 0, 0))
+	check(absf(w.z) > 0.2, "IA: gêiser quase explodindo, contorna (%s)" % w)
+	pr._remove(ge)
+	# Esporo: estoura com o inimigo dentro; contorna a mancha.
+	pr.add("mushroom", Vector3.ZERO)
+	_put(c, me)
+	_put(r, Vector3(0.4, 0, 0))
+	r.status = ""
+	check(not pr._spore_shot(c, wg, me, 11.0).is_empty(), "IA: estoura os esporos no inimigo")
+	_put(c, Vector3(-2.5, 0, 0.2))
+	w = pr.avoid(c, Vector3(1, 0, 0))
+	check(absf(w.z) > 0.2, "IA: contorna os esporos (%s)" % w)
+	pr._remove(pr.of_kind("mushroom")[0])
+	# Cristal: Elétrico carrega com o inimigo colado.
+	pr.add("crystal", Vector3.ZERO)
+	_put(c, me)
+	_put(r, Vector3(1.0, 0, 0))
+	var ts := Dex.move("thunder_shock")
+	check(not pr._charge_shot(c, ts, me, 11.0).is_empty(), "IA: carrega o cristal no inimigo")
+	pr._remove(pr.of_kind("crystal")[0])
+	# O enxame atrás de mim: foge correndo.
+	pr.add("hive", Vector3(-4, 0, 0))
+	pr._release_swarm(pr.of_kind("hive")[0], r)
+	check(not pr.swarms.is_empty() and pr.swarms[0].target == c, "enxame no mais perto (eu)")
+	w = pr.avoid(c, Vector3(0, 0, 1))
+	check(w.x < -0.1, "IA: foge do enxame (%s)" % w)

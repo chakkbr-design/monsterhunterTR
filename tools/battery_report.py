@@ -19,9 +19,13 @@ PROP_EVENTS = (
     "tree_ignite", "tree_fall", "tree_fall_hit", "log_block", "voltorb_wake", "voltorb_boom",
     "voltorb_hit", "berry_drop", "berry_pick", "bush_burn", "bush_regrow", "crystal_reflect",
     "crystal_reflect_hit", "crystal_charge", "crystal_spark", "crystal_break", "prop_ai_shot",
-    "prop_ai_berry",
+    "prop_ai_berry", "boulder_push", "boulder_hit", "boulder_stop", "geyser_erupt",
+    "geyser_launch", "geyser_early", "geyser_fly_hit", "hive_swarm", "swarm_sting", "swarm_fire",
+    "hive_burn", "spore_cloud", "spore_status", "spore_wet",
 )
-PROP_DMG = ("tree_fall_hit", "voltorb_hit", "crystal_spark")  # fora dos eventos "hit"
+PROP_DMG = (  # fora dos eventos "hit"
+    "tree_fall_hit", "voltorb_hit", "crystal_spark", "boulder_hit", "swarm_sting",
+)
 
 
 def pct(a, b):
