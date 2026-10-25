@@ -944,8 +944,8 @@ func _thresholds() -> void:
 	c.enemy.hp = 0
 	c.abilities.on_hit(c.player, c.enemy, tackle, 5)
 	check(
-		php - c.player.hp == left,
-		"Innards Out: quem bateu perde o HP que sobrava (%d)" % (php - c.player.hp)
+		php - c.player.hp == mini(left, php),  # não tira mais do que quem bateu tem
+		"Innards Out: quem bateu perde o HP que sobrava (%d de %d)" % [php - c.player.hp, left]
 	)
 	a.free()
 	b.free()
