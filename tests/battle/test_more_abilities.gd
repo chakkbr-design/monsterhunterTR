@@ -751,7 +751,7 @@ func _contact() -> void:
 	var hp0: int = a.player.hp
 	ab.on_hit(a.player, a.enemy, tackle, 5)
 	check(
-		hp0 - a.player.hp == maxi(1, int(a.player.max_hp * 0.125)),
+		hp0 - a.player.hp == a.player.paced(maxi(1, int(a.player.max_hp * 0.125))),
 		"Iron Barbs: 1/8 do HP de quem encosta"
 	)
 	_give(a.enemy, "mummy")
@@ -878,7 +878,10 @@ func _disguise_ice_face() -> void:
 	var hp0: int = a.enemy.hp
 	var d := ab.adjust_damage(a.player, a.enemy, Dex.move("tackle"), 30)
 	check(d == 0, "Disguise: o primeiro golpe é anulado")
-	check(a.enemy.hp == hp0 - maxi(1, int(a.enemy.max_hp * 0.125)), "Disguise: perde 1/8 do HP")
+	check(
+		a.enemy.hp == hp0 - a.enemy.paced(maxi(1, int(a.enemy.max_hp * 0.125))),
+		"Disguise: perde 1/8 do HP"
+	)
 	check(BattleAbilitiesMore.form_of(a.enemy) == "busted", "Disguise: o disfarce rompe")
 	check(
 		ab.adjust_damage(a.player, a.enemy, Dex.move("tackle"), 30) == 30,
@@ -1271,8 +1274,8 @@ func _items() -> void:
 	var e0: int = a.enemy.hp
 	et.held_check(a.player)
 	et.held_check(a.enemy)
-	check(a.player.hp - p0 == 20, "Ripen: Oran cura 20 (%d)" % (a.player.hp - p0))
-	check(a.enemy.hp - e0 == 10, "sem Ripen a Oran cura 10")
+	check(a.player.hp - p0 == a.player.paced(20), "Ripen: Oran cura 20 (%d)" % (a.player.hp - p0))
+	check(a.enemy.hp - e0 == a.enemy.paced(10), "sem Ripen a Oran cura 10")
 	_give(a.player, "klutz")
 	a.player.trainer_item = "oran_berry"
 	a.player.item_used = false
@@ -1283,7 +1286,13 @@ func _items() -> void:
 	var p1: int = a.player.hp
 	et.held_check(a.player)
 	check(
-		a.player.item_used and a.player.hp - p1 >= 10 + int(a.player.max_hp / 3.0) - 1,
+		(
+			a.player.item_used
+			and (
+				a.player.hp - p1
+				>= a.player.paced(10) + a.player.paced(int(a.player.max_hp / 3.0)) - 1
+			)
+		),
 		"Cheek Pouch: cura 10 e mais 1/3 (%d)" % (a.player.hp - p1)
 	)
 	_give(a.player, "cud_chew")
@@ -1321,7 +1330,7 @@ func _round_end() -> void:
 	var hp0: int = a.enemy.hp
 	ab.late_residual(a.player)
 	check(
-		hp0 - a.enemy.hp == maxi(1, int(a.enemy.max_hp * 0.125)),
+		hp0 - a.enemy.hp == a.enemy.paced(maxi(1, int(a.enemy.max_hp * 0.125))),
 		"Bad Dreams: 1/8 do HP de quem dorme"
 	)
 	a.free()

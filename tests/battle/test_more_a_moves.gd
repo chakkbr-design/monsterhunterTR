@@ -585,7 +585,8 @@ func _salt_cure() -> void:
 	var hp0 := e.hp
 	a.end_turn.run()
 	check(
-		hp0 - e.hp >= e.max_hp / 4 - 1, "Água em Salt Cure perde 1/4 por rodada (%d)" % (hp0 - e.hp)
+		hp0 - e.hp >= e.paced(e.max_hp / 4) - 1,
+		"Água em Salt Cure perde 1/4 por rodada (%d)" % (hp0 - e.hp)
 	)
 	a.free()
 

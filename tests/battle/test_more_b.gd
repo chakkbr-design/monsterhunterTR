@@ -615,7 +615,7 @@ func _status_moves() -> void:
 	_ready_all(p)
 	check(a.moves.use(p, "shore_up"), "usa Shore Up")
 	_run(a, 0.5)
-	check(p.hp >= p.max_hp / 2, "Shore Up cura metade do HP")
+	check(p.hp >= p.paced(p.max_hp / 2), "Shore Up cura metade do HP (x0,6 no modo de energia)")
 	_ready_all(p)
 	check(a.moves.use(p, "milk_drink"), "usa Milk Drink")
 	_ready_all(p)
@@ -861,7 +861,7 @@ func _misc() -> void:
 	check(d.moves.use(dp, "mind_blown"), "usa Mind Blown")
 	_run(d, 1.2)
 	check(
-		dp.hp <= dp.max_hp / 2 + 1,
+		dp.hp <= dp.max_hp - dp.paced(dp.max_hp / 2) + 1,
 		"Mind Blown custa metade do HP máximo (%d/%d)" % [dp.hp, dp.max_hp]
 	)
 	# Electro Shot carrega e sobe o At. Esp.
