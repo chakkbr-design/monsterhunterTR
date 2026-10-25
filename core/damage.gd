@@ -29,6 +29,8 @@ static func compute(
 ) -> Dictionary:
 	var type := String(move.get("type", "normal"))
 	var eff := Dex.effectiveness(type, defender.get("types", []))
+	if move.has("also_type"):
+		eff *= Dex.effectiveness(String(move.also_type), defender.get("types", []))  # Flying Press
 	var out := {"damage": 0, "eff": eff, "crit": false, "stab": false}
 	var power := float(move.get("power", 0)) * float(attacker.get("terrain_mult", 1.0))
 	if power <= 0.0 or eff == 0.0:

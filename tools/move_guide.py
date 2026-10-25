@@ -449,6 +449,8 @@ import moves_more_a, moves_more_b  # noqa: E402
 
 for _part in (moves_more_a, moves_more_b):
     BESPOKE.update(getattr(_part, "GUIDE", {}))
+    for _k, _v in getattr(_part, "SPECIAL", {}).items():
+        SPECIAL.setdefault(_k, _v)  # "" = o texto está no GUIDE do golpe
 
 
 # ---------------------------------------------------------------- montagem das linhas
@@ -710,7 +712,8 @@ def adaptation(m, warns):
         if t is None:
             warns.append("special sem texto: %s (%s)" % (sp, i))
         else:
-            lines.append(t(m) if callable(t) else t)
+            if t:
+                lines.append(t(m) if callable(t) else t)
     if i in BESPOKE:
         lines.append(BESPOKE[i])
     if i in BIND_MOVES:
