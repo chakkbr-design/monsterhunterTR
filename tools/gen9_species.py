@@ -1,10 +1,11 @@
-"""Atualiza data/species.json para a geração atual (PokeAPI) nos Pokémon de número 1..N (padrão 51); nas
-outras espécies do jogo atualiza só os golpes (learnset, evolução, TM, egg e tutor).
+"""Atualiza data/species.json para a geração atual (PokeAPI): todos os Pokémon de 1..N (padrão 151, Kanto
+inteiro) e também as espécies do jogo fora desse intervalo (ex.: Kingdra); as que faltam são criadas.
 
 Stats base, tipos, habilidades (normais + oculta), learnset por nível da versão mais recente em que a
 espécie aparece (SV > SwSh > BDSP > USUM), golpes de evolução (nível 0 da PokeAPI), TMs, egg e tutor.
 Só entram golpes que existem em data/moves.json; os que faltam são listados no fim.
-Espécies que faltam no jogo são criadas com os campos de jogo (forma, locomoção, pulo) de um modelo.
+Espécies que faltam no jogo são criadas com os campos de jogo calculados (new_fields: forma da PokeAPI,
+locomoção, pulo, nado, energia) e as exceções de LOCOMOTION.
 Rodar da raiz do projeto: python tools/gen9_species.py [cache_pokeapi] [N]
 """
 
@@ -13,7 +14,7 @@ import json, os, sys
 P = os.path.join(os.path.dirname(__file__), "..", "..", "pba-referencia", "dados", "pokeapi")
 if len(sys.argv) > 1:
     P = sys.argv[1]
-LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 51
+LAST = int(sys.argv[2]) if len(sys.argv) > 2 else 151
 ALL = True
 PREF = ["scarlet-violet", "sword-shield", "brilliant-diamond-shining-pearl", "ultra-sun-ultra-moon"]
 GROWTH = {
@@ -32,15 +33,41 @@ STAT = {
     "special-defense": "spd",
     "speed": "spe",
 }
-# Campos de jogo das espécies novas (não vêm da PokeAPI): copiados do modelo e ajustados.
-NEW_TEMPLATE = {
-    37: ("Vulpix", {"shape": "quadruped", "locomotion": "ground"}),
-    38: ("Ninetales", {"shape": "quadruped", "locomotion": "ground"}),
-    48: ("Venonat", {"shape": "upright", "locomotion": "ground"}),
-    49: ("Venomoth", {"shape": "bug-wings", "locomotion": "fly", "fly_height": 1.1}),
-}
 ITEM_EVO = {"fire-stone": "fire_stone", "moon-stone": "moon_stone", "thunder-stone": "thunder_stone",
             "leaf-stone": "leaf_stone", "water-stone": "water_stone"}
+# Espécies novas que não andam no chão: fly = sempre no ar, hover = flutua um pouco (data/species.json _doc).
+LOCOMOTION = {
+    "Farfetch'd": "fly", "Aerodactyl": "fly", "Articuno": "fly", "Zapdos": "fly", "Moltres": "fly",
+    "Dragonite": "fly", "Gastly": "hover", "Haunter": "hover", "Mew": "hover", "Porygon": "hover",
+}
+# Formas que não pulam (rastejam, rolam, flutuam ou são pesadas demais).
+NO_JUMP = {"squiggle", "blob", "armor", "fish", "ball", "heads", "tentacles"}
+COLOR = {"black": "#585858", "blue": "#5c7fc0", "brown": "#a0785a", "gray": "#9a9a9a", "green": "#6fbf8a",
+         "pink": "#e89ab8", "purple": "#9a70c0", "red": "#d0605a", "white": "#e8e8e8", "yellow": "#e8d060"}
+
+
+def new_fields(name, p, sp):
+    """Campos de jogo de uma espécie nova (não vêm prontos da PokeAPI)."""
+    types = [t["type"]["name"] for t in p["types"]]
+    h, w = p["height"] / 10.0, p["weight"] / 10.0
+    bst = sum(s["base_stat"] for s in p["stats"])
+    shape = sp["shape"]["name"] if sp.get("shape") else "upright"
+    e = {"shape": shape, "locomotion": LOCOMOTION.get(name, "ground")}
+    import math
+
+    if e["locomotion"] == "fly":
+        e["fly_height"] = round(min(1.6, max(0.6, 0.5 + 0.75 * h)), 2)
+    if e["locomotion"] != "ground" or shape in NO_JUMP or w >= 200:
+        e["jump_height"] = 0.0
+    else:
+        e["jump_height"] = round(min(1.2, max(0.3, 0.9 - 0.25 * math.log10(max(w, 1.0) / 10.0))), 2)
+    if "water" in types:
+        e["swimmer"] = True
+        e["swim_sink"] = 0.3
+    # Energia (barra do modo de energia): cresce com o total de stats, como nas espécies que já existiam.
+    e["pp"] = int(min(130, max(70, 5 * round((55 + 0.15 * bst) / 5))))
+    e["placeholder_tint"] = COLOR.get(sp["color"]["name"], "#ffffff")
+    return e
 
 
 def load(name):
@@ -116,19 +143,18 @@ def main():
         sp = load("pokemon-species_%d" % no)
         names[sp["name"]] = by_no.get(no) or next(
             n["name"] for n in sp["names"] if n["language"]["name"] == "en"
-        )
+        ).replace("\u2019", "'")
     missing = {}
     for no in sorted(set(range(1, LAST + 1)) | set(by_no)):
         p = load("pokemon_%d" % no)
         sp = load("pokemon-species_%d" % no)
         key = by_no.get(no)
         if key is None:
-            key, extra = NEW_TEMPLATE[no]
-            doc[key] = dict(extra)
+            key = names[sp["name"]]
+            doc[key] = new_fields(key, p, sp)
             doc[key]["dex_no"] = no
-            names[sp["name"]] = key
         e = doc[key]
-        full = no <= LAST  # depois do N: só os golpes (o resto da espécie fica como está)
+        full = True  # Kanto inteiro e as espécies extras do jogo (Kingdra) atualizam tudo
         if full:
             e["types"] = [t["type"]["name"] for t in sorted(p["types"], key=lambda t: t["slot"])]
             e["base"] = {STAT[s["stat"]["name"]]: s["base_stat"] for s in p["stats"]}
@@ -179,7 +205,7 @@ def main():
             if "flavor" not in e:
                 fl = [f for f in sp["flavor_text_entries"] if f["language"]["name"] == "en"]
                 e["flavor"] = " ".join(fl[-1]["flavor_text"].split()) if fl else ""
-            nxt = evo_chain_next(sp)
+            nxt = [n for n in evo_chain_next(sp) if names.get(n["species"]["name"])] or evo_chain_next(sp)
             if nxt:
                 n = nxt[0]
                 d = n["evolution_details"][0] if n["evolution_details"] else {}
@@ -190,6 +216,8 @@ def main():
                     e["evolution"] = {"method": "item", "item": ITEM_EVO.get(d["item"]["name"], mid(d["item"]["name"])), "into": into}
                 elif "evolution" not in e:
                     e["evolution"] = {"method": d.get("trigger", {}).get("name", "level-up"), "into": into}
+                if e.get("evolution", {}).get("into") is None:
+                    e.pop("evolution", None)  # evolui para uma espécie de fora do jogo (Crobat, Steelix...)
         e.setdefault("pp", 100)
         e.setdefault("jump_height", 0.35)
         e.setdefault("sprite", "res://assets/sprites/critter_purple.png")

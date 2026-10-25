@@ -304,14 +304,14 @@ static func block_pause_menu(tree: SceneTree, on: bool) -> void:
 
 # --- Times aleatórios ---
 
-## Times sorteados só com a Pokédex 1-51 (learnsets completos da Gen 9).
-const RANDOM_DEX_MAX := 51
 
-
+## Times sorteados só com evoluções finais: espécies sem evolução para outra espécie do jogo
+## (as que não evoluem também entram; Golbat e Onix contam como finais, Crobat e Steelix não existem).
 static func random_pool() -> Array:
 	var out: Array = []
 	for sp in Dex.all_species():
-		if int(Dex.species(sp).get("dex_no", 9999)) <= RANDOM_DEX_MAX:
+		var into := String(Dex.species(sp).get("evolution", {}).get("into", ""))
+		if into == "" or Dex.species(into).is_empty():
 			out.append(sp)
 	out.sort()  # mesma ordem sempre: a semente refaz os mesmos times
 	return out
@@ -323,8 +323,8 @@ static func randomize_sides(cfg: Dictionary, rng: RandomNumberGenerator) -> void
 		cfg.sides[s]["mons"] = random_mons(rng)
 
 
-## PARTY_MAX espécies diferentes da Pokédex 1-RANDOM_DEX_MAX (as de learnset completo), cada uma com
-## habilidade e golpes sorteados (random_moves). Equilibrado por tipo: sorteia primeiro um tipo (uniforme
+## PARTY_MAX espécies diferentes de random_pool() (evoluções finais), cada uma com habilidade
+## (normal ou oculta) e golpes sorteados (random_moves). Equilibrado por tipo: sorteia primeiro um tipo (uniforme
 ## entre os que têm espécie livre) e depois uma espécie dele; dupla tipagem conta nos dois tipos.
 static func random_mons(rng: RandomNumberGenerator) -> Array:
 	var pool := random_pool()
@@ -355,30 +355,179 @@ static func pick_by_type(pool: Array, rng: RandomNumberGenerator) -> String:
 	return String(list[rng.randi() % list.size()])
 
 
-## Até 4 golpes do learnset: um de dano de cada tipo da espécie (quando ela aprende), pelo menos um de
-## dano e um de status, e o resto livre.
+## Status que valem um espaço no sorteio: causam status de verdade (veneno, paralisia, sono...),
+## sobem atributo forte (+2 ou vários de uma vez) ou curam. Leer, Growl e afins ficam de fora.
+const RANDOM_STATUS := ["burn", "poison", "toxic", "paralysis", "sleep", "confusion", "freeze"]
+const RANDOM_HEAL := [
+	"rest",
+	"roost",
+	"recover",
+	"soft_boiled",
+	"milk_drink",
+	"slack_off",
+	"synthesis",
+	"moonlight",
+	"morning_sun",
+	"heal_weather",
+	"wish",
+	"life_dew",
+	"shore_up",
+	"strength_sap"
+]
+
+## Golpes de dano que só funcionam em condição rara (dormindo, depois de comer, terreno...) ou que
+## derrubam o próprio usuário: o sorteio não escolhe.
+const RANDOM_SKIP := [
+	"snore",
+	"dream_eater",
+	"belch",
+	"last_resort",
+	"spit_up",
+	"fling",
+	"natural_gift",
+	"steel_roller",
+	"synchronoise",
+	"self_destruct",
+	"explosion",
+	"misty_explosion",
+	"final_gambit",
+	"focus_punch",
+	"endeavor",
+	"poltergeist"
+]
+
+
+## Categoria preferida pelo maior ataque: "physical" (Atk), "special" (SpA) ou "" (empate até 10%).
+static func preferred_category(sp: String) -> String:
+	var b: Dictionary = Dex.species(sp).get("base", {})
+	var atk := float(b.get("atk", 0))
+	var spa := float(b.get("spa", 0))
+	if absf(atk - spa) <= maxf(atk, spa) * 0.1:
+		return ""
+	return "physical" if atk > spa else "special"
+
+
+static func _status_worth(mv: Dictionary) -> bool:
+	var eff: Dictionary = mv.get("effect", {})
+	if RANDOM_STATUS.has(String(eff.get("status", ""))) and float(eff.get("chance", 0)) >= 0.5:
+		return true
+	if (
+		mv.has("heal")
+		or RANDOM_HEAL.has(String(mv.get("id", "")))
+		or RANDOM_HEAL.has(String(mv.get("special", "")))
+	):
+		return true
+	if String(mv.get("kind", "")) == "self_buff":
+		return int(mv.get("stages", 0)) >= 2 or Dictionary(mv.get("stats", {})).size() >= 2
+	return false
+
+
+## Golpe de dano com efeito secundário que pesa (status com chance >= 10%, ou trava/dreno).
+static func _secondary_worth(mv: Dictionary) -> bool:
+	var eff: Dictionary = mv.get("effect", {})
+	if RANDOM_STATUS.has(String(eff.get("status", ""))) and float(eff.get("chance", 0)) >= 0.1:
+		return true
+	return mv.has("drain") or mv.has("trap")
+
+
+## Peso de um golpe de dano: o poder oficial (OHKO e dano fixo contam como 70).
+static func _power_weight(mv: Dictionary) -> float:
+	var bp := float(mv.get("bp", mv.get("power", 0)))
+	if bp <= 1.0:
+		bp = 70.0
+	return bp
+
+
+static func _weighted(ids: Array, weights: Array, rng: RandomNumberGenerator) -> int:
+	var total := 0.0
+	for w in weights:
+		total += float(w)
+	if total <= 0.0:
+		return -1
+	var r := rng.randf() * total
+	for i in ids.size():
+		r -= float(weights[i])
+		if r <= 0.0:
+			return i
+	return ids.size() - 1
+
+
+## 4 golpes do learnset, coerentes com a espécie:
+## 1. um golpe de dano de cada tipo da espécie (STAB), da categoria do maior ataque quando houver
+##    (Atk alto prefere físico, SpA alto prefere especial), sorteado pelo poder (o mais forte sai mais);
+## 2. o resto sorteado do learnset, ainda preferindo dano da categoria certa (tipos novos pesam mais);
+##    golpe da outra categoria só se tiver efeito secundário que pesa (queimar, paralisar...), e no
+##    máximo um golpe de status, só os que valem (status de verdade, +2, vários atributos ou cura).
 static func random_moves(sp: String, rng: RandomNumberGenerator) -> Array:
+	var cat := preferred_category(sp)
 	var dmg: Array = []
-	var other: Array = []
+	var status: Array = []
 	for e in learnable_moves(sp):
 		var mv := Dex.move(String(e.id))
-		if String(mv.get("category", "status")) == "status":
-			other.append(String(e.id))
-		else:
+		var c := String(mv.get("category", "status"))
+		if c == "status":
+			if _status_worth(mv):
+				status.append(String(e.id))
+		elif float(mv.get("power", 0)) > 0 and not RANDOM_SKIP.has(String(e.id)):
 			dmg.append(String(e.id))
+	var good := func(id: String) -> bool: return cat == "" or Dex.move(id).get("category") == cat
 	var picks: Array = []
+	var covered: Array = []
 	for t in Dex.species(sp).get("types", []):
-		var stab := dmg.filter(
-			func(id):
-				return Dex.move(id).get("type") == t and float(Dex.move(id).get("power", 0)) > 0
-		)
-		if not stab.is_empty():
-			picks.append(stab[rng.randi() % stab.size()])
-	if picks.is_empty() and not dmg.is_empty():
-		picks.append(dmg[rng.randi() % dmg.size()])
-	if not other.is_empty():
-		picks.append(other[rng.randi() % other.size()])
-	var rest := (dmg + other).filter(func(id): return not picks.has(id))
+		var stab := dmg.filter(func(id): return Dex.move(id).get("type") == t and not picks.has(id))
+		var best := stab.filter(good)
+		var list: Array = best if not best.is_empty() else stab
+		if list.is_empty():
+			continue
+		var w := list.map(func(id): return pow(_power_weight(Dex.move(id)), 2.0))
+		var i := _weighted(list, w, rng)
+		picks.append(list[i])
+		covered.append(t)
+	var n_status := 0
+	while picks.size() < Mon.MAX_MOVES:
+		var ids: Array = []
+		var w: Array = []
+		for id in dmg:
+			if picks.has(id):
+				continue
+			var mv := Dex.move(id)
+			var weight := 0.0
+			if good.call(id):
+				weight = _power_weight(mv) / 10.0
+				if not covered.has(mv.get("type")):
+					weight *= 2.0
+				if _secondary_worth(mv):
+					weight *= 1.3
+			elif _secondary_worth(mv):
+				weight = 3.0
+			if weight > 0.0:
+				ids.append(id)
+				w.append(weight)
+		if n_status == 0:
+			# Os golpes de status juntos valem ~1/4 do sorteio de cada espaço livre.
+			var free := status.filter(func(id): return not picks.has(id))
+			var total := 0.0
+			for x in w:
+				total += float(x)
+			for id in free:
+				ids.append(id)
+				w.append(maxf(2.0, total / 3.0 / free.size()))
+		var i := _weighted(ids, w, rng)
+		if i < 0:
+			break
+		var pick: String = ids[i]
+		picks.append(pick)
+		var mv := Dex.move(pick)
+		if String(mv.get("category")) == "status":
+			n_status += 1
+		elif not covered.has(mv.get("type")):
+			covered.append(mv.get("type"))
+	# Learnset curto demais para as regras acima: completa com qualquer golpe que a espécie aprende.
+	var rest := (dmg + status).filter(func(id): return not picks.has(id))
+	if picks.size() < Mon.MAX_MOVES:
+		for e in learnable_moves(sp):
+			if not picks.has(String(e.id)) and not rest.has(String(e.id)):
+				rest.append(String(e.id))
 	while picks.size() < Mon.MAX_MOVES and not rest.is_empty():
 		picks.append(rest.pop_at(rng.randi() % rest.size()))
 	return picks

@@ -69,8 +69,15 @@ func check_ok(ok: bool, what: String) -> void:
 func _check_moves() -> void:
 	var rng := RandomNumberGenerator.new()
 	check_ok(
-		Cfg.random_pool().size() == 51, "sorteio só da Pokédex 1-51 (%d)" % Cfg.random_pool().size()
+		Cfg.random_pool().size() >= 80,
+		"sorteio com as evoluções finais (%d)" % Cfg.random_pool().size()
 	)
+	for sp in Cfg.random_pool():
+		var into := String(Dex.species(sp).get("evolution", {}).get("into", ""))
+		check_ok(
+			into == "" or Dex.species(into).is_empty(),
+			"%s evolui para %s e está no sorteio" % [sp, into]
+		)
 	for sp in Cfg.random_pool():
 		for s in 5:
 			rng.seed = s * 977 + hash(sp)
@@ -86,9 +93,18 @@ func _check_moves() -> void:
 			if mv.any(func(id): return not learn.has(id)):
 				problems.append("%s: golpe fora do learnset %s" % [sp, mv])
 			var can_dmg := learn.any(func(id): return Dex.move(id).get("category") != "status")
-			var can_st := learn.any(func(id): return Dex.move(id).get("category") == "status")
-			if (can_dmg and dmg.is_empty()) or (can_st and st.is_empty()):
-				problems.append("%s: sem golpe de dano ou de status %s" % [sp, mv])
+			if can_dmg and dmg.is_empty():
+				problems.append("%s: sem golpe de dano %s" % [sp, mv])
+			if st.size() > 1:
+				problems.append("%s: mais de um golpe de status %s" % [sp, mv])
+			var cat := Cfg.preferred_category(sp)
+			var types: Array = Dex.species(sp).get("types", [])
+			for id in dmg:
+				var m: Dictionary = Dex.move(id)
+				if cat == "" or m.get("category") == cat or types.has(m.get("type")):
+					continue
+				if not Cfg._secondary_worth(m):
+					problems.append("%s: %s fora da categoria %s sem efeito %s" % [sp, id, cat, mv])
 			for t in Dex.species(sp).get("types", []):
 				var can := learn.any(
 					func(id):
