@@ -1027,7 +1027,7 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 				)
 			)
 		"low_kick":
-			var w := float(Dex.species(target.mon.species).get("weight_kg", 20.0))
+			var w := float(Dex.species(target.body_id()).get("weight_kg", 20.0))
 			p = (
 				20.0
 				if w < 10.0

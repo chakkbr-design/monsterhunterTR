@@ -239,7 +239,7 @@ NEW.update({
     "dragon_tail": (dict(ARC, power=60, range=2.2, angle=110, knockback=6), "The target is knocked away far from the user. Always moves late."),
     "drain_punch": (dict(PUNCH, power=75, drain=0.5), "An energy-draining punch. The user's HP is restored by half the damage taken by the target."),
     "draining_kiss": (dict(TACKLE, power=50, range=3.0, drain=0.75), "The user steals the target's HP with a kiss, restoring HP by 75% of the damage dealt."),
-    "dual_wingbeat": (dict(ARC, power=40, kind="multi_arc", hits=2, interval=0.18, angle=90),
+    "dual_wingbeat": (dict(ARC, power=40, kind="multi_arc", hits=2, interval=0.18, angle=90, hits_range=[2, 2]),
                       "The user slams the target with its wings. The target is hit twice in a row."),
     "eerie_impulse": (dict(DEBUFF, stat="spa", stages=-2), "The user's body generates an eerie impulse that harshly lowers the target's Sp. Atk."),
     "electric_terrain": (dict(SELF, special="electric_terrain"), "The ground is electrified for a while. Grounded Pokemon can't fall asleep and Electric moves get stronger."),
@@ -493,6 +493,187 @@ NEW.update({
                      "The user attacks by harshly dropping large icicles onto the target. It may also make the target flinch."),
 })
 
+# --- Kanto: os 57 golpes que faltavam para os 151 (learnsets Gen 9 de Bulbasaur a Mew) ---
+# Entrega e números do jogo aqui; tipo, categoria, PP, precisão, prioridade e alvo vêm da PokeAPI.
+# Mecânicas novas: battle/battle_kanto.gd (ganchos em battle_move_effects.gd) e battle/battle_transform.gd.
+KICK = {"kind": "arc", "range": 2.0, "knockback": 6, "angle": 80}
+QUICK = {"kind": "dash", "allowed_midair": False, "range": 6.5, "speed": 20, "knockback": 3, "windup": 0.02}
+MULTI = {"kind": "multi_arc", "range": 2.0, "knockback": 3, "angle": 80, "interval": 0.18}
+TRICK = dict(SHOT, speed=14)  # golpe psíquico de estado em alvo: raio que não erra, só se desvia andando
+
+NEW.update({
+    "axe_kick": (dict(RUSH, power=120, range=4.5, speed=14, knockback=9, windup=0.3, crash=0.5, leap={"secs": 0.42, "h": 1.7},
+                      effect={"status": "confusion", "chance": 0.3}),
+                 "The user kicks up into the air and slams its heel down on the target. It may confuse; if it misses, the user is hurt."),
+    "blaze_kick": (dict(KICK, power=85, angle=70, crit=1, effect={"status": "burn", "chance": 0.1}),
+                   "The user launches a kick that lands a critical hit more easily. It may also leave the target with a burn."),
+    "bone_rush": (dict(MULTI, power=25, knockback=2, hits=3, interval=0.14, hits_range=[2, 5]),
+                  "The user strikes the target with a hard bone two to five times in a row."),
+    "bonemerang": ({"kind": "projectile", "power": 50, "range": 9, "speed": 14, "knockback": 3, "boomerang": True, "hits": 2, "hits_range": [2, 2]},
+                   "The user throws the bone it holds. The bone loops around to hit the target twice, coming and going."),
+    "bullet_punch": (dict(QUICK, power=40, range=6.5, speed=20), "The user strikes the target with tough punches as fast as bullets. This move always goes first."),
+    "conversion": (dict(SELF, special="conversion"), "The user changes its type to match the type of one of the moves it has."),
+    "conversion_2": (dict(SELF, special="conversion_2"), "The user changes its type to make itself resistant to the type of the attack it was last hit by."),
+    "crabhammer": (dict(KICK, power=100, range=2.1, angle=90, knockback=9, windup=0.3, crit=1),
+                   "The target is hammered with a large pincer. Critical hits land more easily."),
+    "darkest_lariat": (dict(BURST, power=85, radius=2.4, knockback=8, windup=0.3, special="ignore_stages"),
+                       "The user swings both arms and strikes the target. The user ignores the target's stat changes."),
+    "detect": (dict(SELF, special="protect", insight=True),
+               "The user protects itself from all attacks for a moment, and reads the attacker: its next hit is a critical hit."),
+    "dream_eater": ({"kind": "projectile", "power": 100, "range": 9, "speed": 11, "knockback": 2, "drain": 0.5, "turn": 2.0, "special": "dream_eater"},
+                    "The user eats the dreams of a sleeping target and recovers half the damage dealt. It fails on a target that is awake."),
+    "dual_chop": (dict(MULTI, power=40, knockback=4, angle=90, hits=2, hits_range=[2, 2]),
+                  "The user attacks the target by hitting it with brutal strikes. The target is hit twice in a row."),
+    "entrainment": (dict(TRICK, speed=12, special="entrainment"), "The user dances rhythmically with the target and makes it copy the user's Ability."),
+    "extreme_speed": ({"kind": "dash", "allowed_midair": False, "power": 80, "range": 9.0, "speed": 26, "knockback": 6, "windup": 0.0},
+                      "The user charges at the target at blinding speed. This move always goes first."),
+    "first_impression": ({"kind": "dash", "allowed_midair": False, "power": 90, "range": 8.0, "speed": 22, "knockback": 6, "windup": 0.02, "special": "first_move"},
+                         "Although this move has great power and goes first, it only works as the first move the user makes in the battle."),
+    "freeze_dry": (dict(BALL, power=70, speed=14, knockback=3, effect={"status": "freeze", "chance": 0.1}, special="freeze_dry"),
+                   "The user rapidly cools the target. This may also leave the target frozen. This move is super effective on Water types."),
+    "guard_split": (dict(TRICK, special="split_stats", swap=["def", "spd"]), "The user employs its psychic power to average its Defense and Sp. Def with those of the target."),
+    "guard_swap": (dict(TRICK, special="swap_stages", swap=["def", "spd"]), "The user employs its psychic power to switch changes to its Defense and Sp. Def with the target's."),
+    "guillotine": ({"kind": "arc", "power": 1, "range": 2.0, "angle": 70, "knockback": 6, "windup": 0.4, "special": "ohko"},
+                   "A vicious tearing attack with big pincers. The target faints instantly if this hits."),
+    "hail": (dict(SELF, special="snowscape"), "The user summons a hailstorm lasting five turns. It damages all Pokemon except the Ice type."),
+    "heal_bell": (dict(SELF, special="aromatherapy", bell=True), "The user makes a soothing bell chime to heal the status conditions of all the party Pokemon."),
+    "high_jump_kick": ({"kind": "dash", "allowed_midair": False, "power": 130, "range": 5.0, "speed": 14, "knockback": 10, "windup": 0.3, "crash": 0.5,
+                        "leap": {"secs": 0.55, "h": 2.4}},
+                       "The target is attacked with a knee kick from a jump. If it misses, the user is hurt instead."),
+    "kinesis": (dict(TRICK, speed=12, effect={"stat": "acc", "stages": -1, "chance": 1.0}), "The user distracts the target by bending a spoon. This lowers the target's accuracy."),
+    "lava_plume": (dict(BURST, power=80, radius=3.5, knockback=5, windup=0.4, effect={"status": "burn", "chance": 0.3}),
+                   "The user torches everything around it with an explosion of scarlet flames. This may also leave those hit with a burn."),
+    "lick": ({"kind": "whip", "power": 30, "range": 2.8, "knockback": 1, "tips": 1, "tip_radius": 0.55, "effect": {"status": "paralysis", "chance": 0.3}},
+             "The target is licked with a long tongue, causing damage. This may also leave the target with paralysis."),
+    "lovely_kiss": (dict(SHOT, speed=10, effect={"status": "sleep", "chance": 1.0}), "With a scary face, the user tries to give the target a kiss. The flinching target is put to sleep."),
+    "mach_punch": (dict(QUICK, power=40, range=6.5, speed=21), "The user throws a punch at blinding speed. This move always goes first."),
+    "magic_coat": (dict(SELF, special="magic_coat"), "Moves like Leech Seed and moves that thwart the target are blocked by a barrier of energy and bounced back to the user."),
+    "magic_room": (dict(SELF, special="magic_room"), "The user creates a bizarre area in which Pokemon's held items lose their effects for five turns."),
+    "metal_burst": ({"kind": "homing", "power": 1, "range": 14, "speed": 20, "knockback": 6, "count": 1, "turn": 6, "special": "metal_burst"},
+                    "The user retaliates against the target that last inflicted damage on it with much greater power. It only works right after being hit."),
+    "mystical_fire": (dict(BALL, power=75, speed=13, knockback=4, effect={"stat": "spa", "stages": -1, "chance": 1.0}),
+                      "The user attacks by breathing a special, hot fire. This also lowers the target's Sp. Atk stat."),
+    "nature_power": (dict(SELF, special="nature_power"), "The user's attack makes use of the nature around it: the ground it stands on decides which move it becomes."),
+    "perish_song": (dict(SELF, special="perish_song"), "Any Pokemon that hears this song faints in three turns, unless it leaves the battle."),
+    "phantom_force": ({"kind": "dash", "allowed_midair": False, "power": 90, "range": 7.0, "speed": 14, "knockback": 7, "windup": 0.25, "blink": True, "vanish": 0.7, "special": "no_protect"},
+                      "The user vanishes somewhere, then strikes the target from the shadows. It can also hit a Pokemon using Protect."),
+    "poltergeist": ({"kind": "projectile", "power": 110, "range": 10, "speed": 13, "knockback": 8, "fx": "lob", "lob_height": 2.6, "special": "poltergeist"},
+                    "The user attacks the target by controlling the target's item or an object nearby. The move fails if there is nothing to hurl."),
+    "powder_snow": (dict(WAVE, power=40, range=4.5, angle=70, effect={"status": "freeze", "chance": 0.1}),
+                    "The user attacks opposing Pokemon with a blast of powdery snow. This may also leave them frozen."),
+    "power_split": (dict(TRICK, special="split_stats", swap=["atk", "spa"]), "The user employs its psychic power to average its Attack and Sp. Atk with those of the target."),
+    "power_swap": (dict(TRICK, special="swap_stages", swap=["atk", "spa"]), "The user employs its psychic power to switch changes to its Attack and Sp. Atk with the target's."),
+    "psystrike": (dict(BLAST, power=100, range=9, knockback=5, windup=0.45, radius=1.3, special="psyshock", fx="psy_rings"),
+                  "The user materializes an odd psychic wave to attack the target. This attack does physical damage."),
+    "raging_bull": (dict(RUSH, power=90, range=7.0, speed=17, knockback=9, special="screen_break"),
+                    "The user charges like a raging bull, breaking barriers such as Light Screen and Reflect."),
+    "raging_fury": ({"kind": "aoe_self", "power": 120, "radius": 2.4, "knockback": 8, "windup": 0.3, "special": "self_confuse"},
+                    "The user rampages around, spewing flames. Then it becomes confused."),
+    "reflect_type": (dict(TRICK, special="reflect_type"), "The user reflects the type of the target, making itself the same type."),
+    "retaliate": (dict(KICK, power=70, angle=90, special="retaliate"),
+                  "The user gets revenge for a fainted ally. Its power doubles if an ally fainted a moment ago."),
+    "role_play": (dict(TRICK, special="role_play"), "The user mimics the target completely, copying its Ability."),
+    "sheer_cold": ({"kind": "aoe_target", "power": 1, "range": 8, "knockback": 6, "windup": 0.9, "radius": 1.4, "special": "ohko"},
+                   "The target faints instantly if it hits. It is less accurate for non-Ice users, and Ice types are immune."),
+    "soft_boiled": (dict(SELF, special="heal_half", heal=0.5), "The user restores its own HP by up to half of its max HP."),
+    "sparkling_aria": ({"kind": "aoe_self", "power": 90, "radius": 3.6, "knockback": 3, "windup": 0.4, "special": "cure_burn"},
+                       "The user showers the surroundings with a burst of bubbles while singing. It also cures the burns of those hit."),
+    "speed_swap": (dict(TRICK, special="swap_stats", swap=["spe"]), "The user exchanges Speed stats with the target."),
+    "steel_roller": (dict(RUSH, power=130, range=7.5, speed=15, knockback=11, windup=0.4, special="steel_roller"),
+                     "The user flattens the ground it rolls over, ending any terrain, and flattens hills and peaks on its way. It fails with nothing to flatten."),
+    "storm_throw": (dict(KICK, power=60, angle=80, knockback=8, crit=3, push=2.0), "The user strikes the target with a fierce blow and hurls it. This attack always results in a critical hit."),
+    "teleport": (dict(SELF, special="teleport"), "The user blinks away to a safer spot, shaking off traps and holds."),
+    "terrain_pulse": (dict(BALL, power=50, speed=14, knockback=4, special="terrain_pulse"),
+                      "The user utilizes the power of the terrain it stands on: its type changes and its power doubles."),
+    "transform": (dict(SELF, special="transform", windup=0.4), "The user transforms into a copy of the target: its species, type, stats and moves, but not its HP."),
+    "triple_axel": (dict(MULTI, power=20, knockback=3, interval=0.22, hits=3, hits_range=[3, 3], special="triple_axel"),
+                    "A consecutive three-kick attack that becomes more powerful with each successive hit."),
+    "vice_grip": (dict(KICK, power=55, range=1.8, angle=70, knockback=1), "The target is gripped and squeezed from both sides to inflict damage."),
+    "vital_throw": (dict(KICK, power=70, angle=80, knockback=6, push=3.0), "The user hurls the target after the target attacks. This attack never misses."),
+    "wood_hammer": (dict(RUSH, power=120, range=7.0, speed=16, knockback=11, windup=0.3, recoil=0.33),
+                    "The user slams its rugged body into the target to attack. This also damages the user quite a lot."),
+})
+
+# Espetáculo (data/move_fx.json, moves.<id>.look) dos golpes acima; o resto vem dos padrões do kind e do tipo.
+FX = {
+    "axe_kick": {"hit": "hit_neutral", "look": {"cast": ["stomp"], "swing": "kick", "impact": ["dust", "crater"], "color": [1.0, 0.55, 0.35]}},
+    "blaze_kick": {"hit": "hit_neutral", "look": {"swing": "kick", "trail": "fire", "impact": ["fire"]}},
+    "bone_rush": {"hit": "hit_neutral", "look": {"swing": "jab", "impact": ["dust"], "color": [0.95, 0.9, 0.75]}},
+    "bonemerang": {"look": {"proj": "ground", "orb": "fang", "impact": ["dust"], "color": [0.95, 0.9, 0.75]}},
+    "bullet_punch": {"hit": "hit_neutral", "look": {"trail": "steel", "swing": "fist", "impact": ["sparks"], "color": [0.8, 0.85, 0.95]}},
+    "conversion": {"look": {"cast": ["aura", "sparkles"], "icon": "star", "color": [0.95, 0.92, 0.8]}},
+    "conversion_2": {"look": {"cast": ["aura", "shield"], "icon": "shield", "color": [0.95, 0.92, 0.8]}},
+    "crabhammer": {"hit": "hit_neutral", "look": {"swing": "chop", "impact": ["splash", "crater"]}},
+    "darkest_lariat": {"hit": "hit_neutral", "look": {"cast": ["spin", "smoke"], "land": ["burst", "dust"], "color": [0.45, 0.3, 0.55]}},
+    "detect": {"look": {"cast": ["shield", "aura"], "icon": "shield", "color": [1.0, 0.65, 0.45], "dur": 1.2}},
+    "dream_eater": {"look": {"proj": "glow", "impact": ["drain"], "color": [0.85, 0.5, 0.95]}},
+    "dual_chop": {"hit": "hit_neutral", "look": {"swing": "chop", "color": [0.55, 0.45, 1.0]}},
+    "entrainment": {"look": {"cast": ["emanate", "notes"], "to_targets": "notes", "icon": "note", "color": [0.9, 0.85, 0.7]}},
+    "extreme_speed": {"hit": "hit_neutral", "look": {"trail": "speed", "ghosts": True, "impact": ["burst", "stars"]}},
+    "first_impression": {"hit": "hit_neutral", "look": {"trail": "bug", "ghosts": True, "swing": "sting", "impact": ["burst"]}},
+    "freeze_dry": {"look": {"proj": "ice", "impact": ["burst"], "color": [0.7, 0.95, 1.0]}},
+    "guard_split": {"look": {"proj": "glow", "status_hit": ["rings", "icon"], "icon": "shield", "color": [1.0, 0.45, 0.85]}},
+    "guard_swap": {"look": {"proj": "glow", "status_hit": ["rings", "icon"], "icon": "swirl", "color": [1.0, 0.45, 0.85]}},
+    "guillotine": {"hit": "hit_neutral", "look": {"swing": "x", "impact": ["burst", "stars"], "color": [0.85, 0.85, 0.8]}},
+    "hail": {"look": {"cast": ["storm"], "icon": "snow", "color": [0.85, 0.95, 1.0]}},
+    "heal_bell": {"look": {"cast": ["sound", "notes"], "icon": "note", "color": [1.0, 0.9, 0.5]}},
+    "high_jump_kick": {"hit": "hit_neutral", "look": {"cast": ["stomp"], "swing": "kick", "impact": ["dust", "crater"]}},
+    "kinesis": {"look": {"proj": "glow", "status_hit": ["rings"], "color": [1.0, 0.45, 0.85]}},
+    "lava_plume": {"look": {"cast": ["flames"], "land": ["fire", "burst"], "color": [1.0, 0.45, 0.2]}},
+    "lick": {"look": {"swing": "slap", "impact": ["sparks"], "color": [0.6, 0.4, 0.8]}},
+    "lovely_kiss": {"look": {"proj": "heart", "status_hit": ["hearts"], "icon": "heart"}},
+    "mach_punch": {"hit": "hit_neutral", "look": {"trail": "speed", "swing": "fist", "impact": ["burst"]}},
+    "magic_coat": {"look": {"cast": ["shield", "sparkles"], "icon": "shield", "color": [1.0, 0.45, 0.85], "dur": 1.2}},
+    "magic_room": {"look": {"cast": ["gravity", "aura"], "color": [1.0, 0.45, 0.85]}},
+    "metal_burst": {"look": {"cast": ["metal", "shatter"], "proj": "steel", "impact": ["sparks"], "color": [0.8, 0.85, 0.95]}},
+    "mystical_fire": {"look": {"proj": "fire", "impact": ["fire"], "color": [0.85, 0.4, 1.0]}},
+    "nature_power": {"look": {"cast": ["aura", "sparkles"], "icon": "flower", "color": [0.6, 1.0, 0.6]}},
+    "perish_song": {"look": {"cast": ["sound", "emanate"], "to_targets": "notes", "icon": "note", "color": [0.55, 0.4, 0.75]}},
+    "phantom_force": {"hit": "curse", "look": {"ghosts": True, "trail": "ghost", "impact": ["burst"], "color": [0.5, 0.3, 0.8]}},
+    "poltergeist": {"look": {"proj": "ghost", "orb": "rocks", "impact": ["crater", "dust"], "color": [0.55, 0.35, 0.8]}},
+    "powder_snow": {"look": {"cast": ["wind"], "impact": ["burst"], "color": [0.85, 0.95, 1.0]}},
+    "power_split": {"look": {"proj": "glow", "status_hit": ["rings", "icon"], "icon": "swords", "color": [1.0, 0.45, 0.85]}},
+    "power_swap": {"look": {"proj": "glow", "status_hit": ["rings", "icon"], "icon": "swirl", "color": [1.0, 0.45, 0.85]}},
+    "psystrike": {"hit": "wave_circle_pink", "look": {"pre": ["swirl", "glow"], "land": ["ring", "flash", "shock"], "impact": ["shock"], "color": [1.0, 0.45, 0.85]}},
+    "raging_bull": {"hit": "hit_neutral", "look": {"trail": "speed", "swing": "horn", "impact": ["burst", "crater"]}},
+    "raging_fury": {"look": {"cast": ["flames", "stomp"], "land": ["fire", "burst"], "color": [1.0, 0.45, 0.2]}},
+    "reflect_type": {"look": {"proj": "glow", "status_hit": ["flash", "icon"], "icon": "swirl", "color": [0.9, 0.9, 0.95]}},
+    "retaliate": {"hit": "hit_neutral", "look": {"swing": "claw", "impact": ["burst"]}},
+    "role_play": {"look": {"proj": "glow", "status_hit": ["flash", "icon"], "icon": "star", "color": [1.0, 0.45, 0.85]}},
+    "sheer_cold": {"look": {"cast": ["storm"], "pre": ["cloud"], "land": ["pillar", "ring"], "impact": ["burst"], "color": [0.7, 0.95, 1.0]}},
+    "soft_boiled": {"look": {"cast": ["heal", "sparkles"], "icon": "heal", "color": [1.0, 0.95, 0.8]}},
+    "sparkling_aria": {"look": {"cast": ["sound", "notes"], "land": ["ring", "splash"], "color": [0.5, 0.8, 1.0]}},
+    "speed_swap": {"look": {"proj": "glow", "status_hit": ["rings", "icon"], "icon": "arrow", "color": [1.0, 0.45, 0.85]}},
+    "steel_roller": {"hit": "hit_neutral", "look": {"trail": "steel", "swing": "rough", "impact": ["dust", "crater"]}},
+    "storm_throw": {"hit": "hit_neutral", "look": {"swing": "jab", "impact": ["burst", "stars"]}},
+    "teleport": {"look": {"cast": ["sparkles", "glow"], "icon": "star", "color": [1.0, 0.45, 0.85]}},
+    "terrain_pulse": {"look": {"proj": "glow", "impact": ["burst"], "color": [0.9, 0.9, 0.8]}},
+    "transform": {"look": {"cast": ["smoke", "sparkles"], "icon": "swirl", "color": [0.8, 0.6, 0.9]}},
+    "triple_axel": {"hit": "hit_neutral", "look": {"swing": "kick", "trail": "ice", "impact": ["burst"]}},
+    "vice_grip": {"hit": "hit_neutral", "look": {"swing": "x", "impact": ["dust"]}},
+    "vital_throw": {"hit": "hit_neutral", "look": {"swing": "jab", "impact": ["dust", "stars"]}},
+    "wood_hammer": {"hit": "hit_neutral", "look": {"trail": "grass", "swing": "chop", "impact": ["crater", "dust"]}},
+}
+
+
+def merge_fx(path="data/move_fx.json"):
+    """Acrescenta (ou troca) as entradas FX em moves de move_fx.json, uma por linha como as outras."""
+    lines = open(path, encoding="utf-8").read().split("\n")
+    start = next(i for i, l in enumerate(lines) if l == '  "moves": {')
+    end = next(i for i in range(start, len(lines)) if lines[i] == "  },")
+    body = lines[start + 1:end]
+    rows = {}
+    for l in body:
+        l = l.strip().rstrip(",")
+        key, _, val = l.partition(": ")
+        rows[json.loads(key)] = val
+    for k, v in FX.items():
+        rows[k] = json.dumps(v, ensure_ascii=False)
+    out = ["    %s: %s" % (json.dumps(k), v) for k, v in rows.items()]
+    lines[start + 1:end] = [",\n".join(out)]
+    open(path, "w", encoding="utf-8", newline="\n").write("\n".join(lines))
+    return len(FX)
+
 
 # Correções nos golpes que já existiam (Gen 9 + mecânicas que faltavam). None apaga o campo.
 FIX = {
@@ -594,7 +775,7 @@ def main():
         if m.get("bp") and m.get("power") and m["power"] != m["bp"]:
             m["power"] = m["bp"]
     dump_moves(doc, path)
-    print(len(NEW), "golpes novos;", len(FIX), "corrigidos")
+    print(len(NEW), "golpes novos;", len(FIX), "corrigidos;", merge_fx(), "efeitos visuais")
 
 
 main()

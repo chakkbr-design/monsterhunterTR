@@ -201,6 +201,8 @@ var launch_t := 0.0
 var launch_total := 0.0
 var launch_lift := 0.0
 var look_h := 1.0
+## Espécie do corpo em luta quando ela difere da do Mon (Transform); "" = a do Mon.
+var body := ""
 
 var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
 ## Evoluindo no meio da luta (creature.gd evolving): a tela Evolution pinta o sprite, a luta fica parada.
@@ -412,6 +414,11 @@ func _place_status_fx() -> void:
 
 func alive() -> bool:
 	return hp > 0
+
+
+## Espécie do corpo (peso, golpes que olham o peso): a do Mon, ou a copiada pelo Transform.
+func body_id() -> String:
+	return body if body != "" else mon.species
 
 
 func active() -> bool:
@@ -979,6 +986,8 @@ func _faint() -> void:
 	root_t = 0.0
 	sprinting = false
 	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 0.7, 1.2)
+	if arena and arena.get("moves"):
+		arena.moves.effects.note_faint(self)  # Retaliate
 	preload("res://audio/cue.gd").sfx("faint")
 	if look:
 		look.tint = _tint()  # sem isso o clarão de um acerto anterior fica preso no sprite desmaiado
@@ -1317,6 +1326,7 @@ func sync_after_item() -> void:
 
 ## Zera estágios e efeitos temporários e grava HP/PP/status persistentes no Mon.
 func write_back() -> void:
+	BattleTransform.revert(self)
 	if not alive() and mon.hp > 0:
 		return  # desmaiou em campo e foi revivido por item depois: não desfaz o Revive
 	mon.hp = hp

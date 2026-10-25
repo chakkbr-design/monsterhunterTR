@@ -2748,6 +2748,8 @@ func _fighter_of(m: Mon) -> BattleFighter:
 func _sync_from_mon(f: BattleFighter) -> void:
 	f.level = f.mon.level
 	for k in StatCalc.STATS:
+		if BattleTransform.is_transformed(f) and k != "hp":
+			continue  # Transform: os stats copiados valem até sair de campo
 		f.stats[k] = f.mon.stat(k)
 	f.max_hp = f.mon.max_hp
 	f.hp = clampi(f.mon.hp, 0, f.max_hp)
