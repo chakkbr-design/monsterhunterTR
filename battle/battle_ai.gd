@@ -112,6 +112,42 @@ const ENERGY_KEEP := 1.0
 const REPEAT_AVOID := 0.8
 ## Peso da espera pela energia na escolha do golpe (dano / (1 + k x segundos até ter energia)).
 const ENERGY_WAIT_K := 0.35
+## Área avisada (aoe_target/zone com preparo) no modo de energia: segura até AREA_HOLD s esperando o
+## alvo parado (preparando golpe, atordoado, preso ou andando a menos de AREA_SLOW m/s); a mira vai
+## AREA_LEAD x o preparo à frente de quem anda (até AREA_LEAD_MAX m).
+const AREA_HOLD := 1.5
+const AREA_SLOW := 1.2
+const AREA_LEAD := 0.6
+const AREA_LEAD_MAX := 2.5
+## Escolha suave (modo de energia, no lugar do golpe aleatório de error_chance): chance de cada golpe
+## de dano ~ exp((nota / melhor nota - 1) / (SOFT_T x think_scale)). O melhor sai quase sempre; um
+## golpe com 80% da nota do melhor sai às vezes; um com metade quase nunca.
+const SOFT_T := 0.2
+## Movimento menos repetitivo (modo de energia): ângulo de aproximação sorteado até FLANK_MAX graus a
+## cada FLANK_SECS s; lado do strafe trocado a cada STRAFE_SECS s (perto da parede, para o lado do
+## centro); finta curta (FEINT_SECS s para frente) com FEINT_RATE por segundo esperando o golpe.
+const FLANK_MAX := 40.0
+const FLANK_SECS := Vector2(3.0, 6.0)
+const STRAFE_SECS := Vector2(1.5, 4.0)
+const FEINT_SECS := 0.3
+const FEINT_RATE := 0.12
+## Perto da parede (WALL_KEEP + WALL_BIAS m) o recuo e o strafe puxam para o centro.
+const WALL_BIAS := 0.5
+## Pânico/HP baixo no modo de energia: com o alvo abaixo de PANIC_STRIKE_EN de energia vai bater
+## (ele não tem como revidar logo).
+const PANIC_STRIKE_EN := 30.0
+## Sem golpe de dano que conecta, parado há STRUGGLE_IDLE s: vai no Desespero (não fica rodando).
+const STRUGGLE_IDLE := 10.0
+## Sinergia 2x2 (modo de energia): com o parceiro no mesmo alvo, cada um ataca de um lado (pinça,
+## PINCER_ANGLE graus entre os dois, puxando PINCER_W) em vez de empurrar o alvo para o canto juntos;
+## alvo abaixo de FOCUS_HP com o parceiro já nele ganha FOCUS_W na escolha do alvo.
+const PINCER_ANGLE := 140.0
+const PINCER_W := 0.7
+const PINCER_NEAR := 7.0
+const FOCUS_HP := 0.4
+const FOCUS_W := 1.5
+## 2x2: com o parceiro descansando, segura a luta (não recua para descansar) acima de HOLD_HP.
+const HOLD_HP := 0.4
 ## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
 enum { ATTACK, DEFEND, SUPPORT, FREE }
 
@@ -159,12 +195,29 @@ var _tactics_checked := false
 var _likes_high := -1
 ## O que a IA está fazendo neste quadro (telemetria): "dodge", "retreat", "rest_hide", "go_high"...
 var tag := ""
-## Por que o último golpe foi escolhido (telemetria): "ko", "best", "tactics", "status", "error"...
+## Por que o último golpe foi escolhido (telemetria): "ko", "best", "soft", "plan_<plano>", "tactics",
+## "status", "error"...
 var why := ""
+## Plano atual (BattlePlan, só no modo de energia; "" fora dele) e segundos até reavaliar.
+var plan := ""
+var plan_t := 0.0
+## Passivas de movimento (BattlePassives, modo de energia).
+var passives: BattlePassives
+## Variedade de movimento (modo de energia): ângulo de aproximação, trocas de strafe, finta, emboscada.
+var flank_a := 0.0
+var flank_t := 0.0
+var strafe_t := 0.0
+var feint_t := 0.0
+var ambush_t := 0.0
+var leap_t := 0.0
+var area_hold_t := 0.0
+## Depois de bater sai de lado (true) ou recua reto (sorteado pelo plano).
+var retreat_side := false
 
 
 func _init(fighter: BattleFighter) -> void:
 	f = fighter
+	passives = BattlePassives.new(fighter)
 
 
 func _rng() -> RandomNumberGenerator:
@@ -271,11 +324,20 @@ func step(dt: float) -> Vector3:
 			turns.done(f, "move")
 		return Vector3.ZERO
 	_mood()
+	var energy_free := f.energy_mode and not queued
+	if energy_free:
+		_energy_tick(dt)
+		if leap_t > 0.0:
+			tag = "desperate_leap"
+			return Vector3.ZERO
+		opp = f.opponent  # o plano pode ter trocado o alvo
 	var to_o := f.flat_to(opp)
 	var d := to_o.length()
 	var dir := to_o / maxf(d, 0.001)
 	var mode := ally_mode()
-	if _rng().randf() < 0.004 * float(_p("strafe", 0.5)) + 0.001:
+	if energy_free:
+		_vary_strafe(dt, dir)
+	elif _rng().randf() < 0.004 * float(_p("strafe", 0.5)) + 0.001:
 		strafe *= -1.0
 	var side_v := Vector3(-dir.z, 0.0, dir.x) * strafe
 	var dodge := _dodge(dt, d, side_v)
@@ -287,7 +349,7 @@ func step(dt: float) -> Vector3:
 		recover_t -= dt
 		think -= dt
 		retreat_t -= dt
-		tag = "retreat"
+		tag = "retreat_side" if energy_free and retreat_side and retreat_t > 0.0 else "retreat"
 		return _retreat_move(dir, side_v, d)
 	if not f.moves.is_empty():
 		if queued:
@@ -301,13 +363,19 @@ func step(dt: float) -> Vector3:
 	if queued and not up_next:
 		tag = "off_turn"
 		return _off_turn(dt, d, dir, side_v)
-	if f.energy_mode and not queued:
-		var ew := _energy_steer(d, dir, side_v)
-		if ew != Vector3.INF:
-			return ew
-		var tw := _terrain_steer(d)
-		if tw != Vector3.INF:
-			return tw
+	if energy_free:
+		# Parado há STALL_SECS sem soltar golpe: para de descansar/esperar e vai para cima.
+		idle_t += dt
+		if idle_t <= STALL_SECS:
+			var ew := _energy_steer(d, dir, side_v)
+			if ew != Vector3.INF:
+				return ew
+			var pw := _plan_steer(dt, d, dir, side_v)
+			if pw != Vector3.INF:
+				return pw
+			var tw := _terrain_steer(d)
+			if tw != Vector3.INF:
+				return tw
 	if queued:
 		tag = "turn"
 		return _turn_move(dt, d, dir, side_v)
@@ -316,10 +384,13 @@ func step(dt: float) -> Vector3:
 		if guard != Vector3.INF:
 			tag = "guard"
 			return guard
-	idle_t += dt
+	if not energy_free:
+		idle_t += dt
 	var stall := idle_t > STALL_SECS and not queued
 	var b := _band() * (0.7 if stall else 1.0)
 	var low := float(f.hp) <= float(f.max_hp) * LOW_HP and not stall and not queued
+	if low and energy_free and opp.pp_max < PANIC_STRIKE_EN:
+		low = false  # o alvo está sem energia: hora de bater mesmo com HP baixo
 	var kite := Vector2(b.x * 1.2, b.y * KITE_MULT) if low and f.mood_state != "fury" else b
 	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == "" and not queued
 	var want: Vector3
@@ -329,11 +400,14 @@ func step(dt: float) -> Vector3:
 		want = (side_v - dir * 0.4).normalized()
 		tag = "slip"
 	elif d > kite.y:
-		want = (dir + side_v * 0.3 * st).normalized()
+		var app := dir.rotated(Vector3.UP, deg_to_rad(flank_a)) if energy_free else dir
+		want = (app + side_v * 0.3 * st).normalized()
 		tag = "approach" if not stall else "stall_push"
 	elif d < kite.x:
 		want = (-dir + side_v * 0.5).normalized() * (1.0 if low else 0.8)
 		tag = "kite_low" if low else "back_off"
+		if energy_free and _wall_dist(f.pos2(f.position)) < WALL_KEEP + WALL_BIAS:
+			want = (want + _to_centre() * CENTRE_PULL).normalized()
 	elif intent != "" and in_range(intent, d) and (tactic_on or queued):
 		want = side_v * (0.0 if queued else 0.15 * st)
 		tag = "aim"
@@ -343,6 +417,8 @@ func step(dt: float) -> Vector3:
 		want = (side_v * (0.3 + WAIT_STRAFE * st) + radial * WAIT_RADIAL).normalized()
 	else:
 		want = side_v * 0.35
+	if energy_free and not slip and not stall:
+		want = _energy_variety(dt, d, dir, want)
 	want += f.arena.edge_push(f) + (_spread_all(true) if queued else _ally_spread())
 	if want.length() > 1.0:
 		want = want.normalized()
@@ -357,6 +433,235 @@ func step(dt: float) -> Vector3:
 		return want
 	f.sprinting = _sprint(dt, reason) and f.can_sprint(want.length() > 0.1)
 	return want
+
+
+# --- Modo de energia: planos, passivas, variedade de movimento e sinergia ---
+
+
+## Golpe de área avisado (o alvo vê o círculo e sai): espera um momento melhor por até AREA_HOLD s.
+func _area_wait(dt: float, opp: BattleFighter) -> bool:
+	var mv := Dex.move(intent)
+	if (
+		not String(mv.get("kind", "")) in ["aoe_target", "zone"]
+		or float(mv.get("windup", 0.0)) < 0.4
+	):
+		return false
+	if area_hold_t >= AREA_HOLD or _pinned(opp):
+		return false
+	area_hold_t += dt
+	return true
+
+
+## O alvo não tem como sair da frente agora.
+func _pinned(t: BattleFighter) -> bool:
+	if not is_instance_valid(t):
+		return true
+	return (
+		t.root_t > 0.0
+		or t.stun_t > 0.0
+		or t.trap_t > 0.0
+		or t.prepare_t > 0.0
+		or not t.can_act()
+		or Vector2(t.velocity.x, t.velocity.z).length() < AREA_SLOW
+	)
+
+
+## Mira da área à frente do alvo que anda (BattleMoves._area_point chama no modo de energia).
+func area_lead(t: BattleFighter, mv: Dictionary) -> Vector3:
+	if not is_instance_valid(t) or t.motion != "" or t.dash_t > 0.0 or t.lunge_t > 0.0:
+		return Vector3.ZERO
+	var v := Vector3(t.velocity.x, 0.0, t.velocity.z)
+	return (v * float(mv.get("windup", 0.0)) * AREA_LEAD).limit_length(AREA_LEAD_MAX)
+
+
+## Por passo no modo de energia: passivas (o pulo de desespero começa aqui), plano e sorteios do
+## movimento (ângulo de aproximação, finta).
+func _energy_tick(dt: float) -> void:
+	leap_t = maxf(leap_t - dt, 0.0)
+	feint_t = maxf(feint_t - dt, 0.0)
+	if passives.tick(dt):
+		return
+	plan_t -= dt
+	if plan == "" or plan_t <= 0.0:
+		choose_plan()
+	flank_t -= dt
+	if flank_t <= 0.0:
+		flank_t = _rng().randf_range(FLANK_SECS.x, FLANK_SECS.y)
+		flank_a = _rng().randf_range(-FLANK_MAX, FLANK_MAX) * float(_p("strafe", 0.5)) * 1.4
+
+
+## Escolhe (ou mantém) o plano pelos pesos de BattlePlan; a troca vai para a telemetria.
+func choose_plan() -> void:
+	var old := plan
+	plan = BattlePlan.choose(self)
+	plan_t = _rng().randf_range(BattlePlan.PLAN_SECS.x, BattlePlan.PLAN_SECS.y)
+	if plan == old:
+		return
+	ambush_t = 0.0
+	var tel = f.arena.get("telemetry")
+	if tel:
+		tel.note("plan", {"who": tel.uid(f), "p": plan, "from": old})
+
+
+## O pulo de desespero saiu (BattlePassives): larga o recuo e o golpe pela metade.
+func on_leap() -> void:
+	leap_t = BattlePassives.LEAP_SECS
+	recover_t = 0.0
+	retreat_t = 0.0
+	dodge_t = 0.0
+
+
+## Lado do strafe: troca a cada STRAFE_SECS s (mais vezes no perfil que anda de lado); perto da parede
+## gira para o lado do centro.
+func _vary_strafe(dt: float, dir: Vector3) -> void:
+	if _wall_dist(f.pos2(f.position)) < WALL_KEEP + WALL_BIAS:
+		var side := Vector3(-dir.z, 0.0, dir.x)
+		strafe = 1.0 if side.dot(_to_centre()) >= 0.0 else -1.0
+		return
+	strafe_t -= dt
+	if strafe_t > 0.0:
+		return
+	strafe_t = (
+		_rng().randf_range(STRAFE_SECS.x, STRAFE_SECS.y) / maxf(float(_p("strafe", 0.5)) + 0.5, 0.5)
+	)
+	if _rng().randf() < 0.6:
+		strafe *= -1.0
+
+
+## Variedade na faixa: pinça com o parceiro e finta curta enquanto espera o golpe.
+func _energy_variety(dt: float, d: float, dir: Vector3, want: Vector3) -> Vector3:
+	if tag == "orbit" or tag == "approach":
+		var pv := _pincer_pull()
+		if pv != Vector3.ZERO:
+			tag = "pincer"
+			return (want + pv * PINCER_W).normalized() * maxf(want.length(), 0.6)
+	if tag != "orbit":
+		return want
+	if feint_t <= 0.0 and _rng().randf() < FEINT_RATE * dt and d > 1.6:
+		feint_t = FEINT_SECS
+	if feint_t > 0.0:
+		tag = "feint"
+		return dir if feint_t > FEINT_SECS * 0.5 else -dir * 0.8
+	return want
+
+
+## 2x2: com o parceiro no mesmo alvo, a direção até o ponto do outro lado do alvo (PINCER_ANGLE graus
+## do parceiro, o lado mais longe da parede). ZERO = sem pinça.
+func _pincer_pull() -> Vector3:
+	var p := partner()
+	var t := f.opponent
+	if p == null or not is_instance_valid(t) or p.opponent != t:
+		return Vector3.ZERO
+	var me := f.pos2(f.position)
+	var tp := f.pos2(t.position)
+	var a := f.pos2(p.position) - tp
+	if a.length() > PINCER_NEAR or a.length() < 0.1 or (me - tp).length() > PINCER_NEAR:
+		return Vector3.ZERO
+	a = a.normalized()
+	var bd := _band()
+	var r := clampf((me - tp).length(), bd.x, bd.y)
+	var inner: Rect2 = f.arena.rect.grow(-WALL_KEEP)
+	var best := Vector3.INF
+	var best_s := -INF
+	for sgn in [1.0, -1.0]:
+		var spot: Vector3 = tp + a.rotated(Vector3.UP, deg_to_rad(PINCER_ANGLE * sgn)) * r
+		spot.x = clampf(spot.x, inner.position.x, inner.end.x)
+		spot.z = clampf(spot.z, inner.position.y, inner.end.y)
+		var s := _wall_dist(spot) - (spot - me).length() * 0.3
+		if s > best_s:
+			best_s = s
+			best = spot
+	var to := best - me
+	if to.length() < 0.8:
+		return Vector3.ZERO
+	return to.normalized()
+
+
+## Movimento pelo plano (modo de energia): emboscada e proteger. INF = segue a faixa normal.
+func _plan_steer(dt: float, d: float, dir: Vector3, side_v: Vector3) -> Vector3:
+	match plan:
+		BattlePlan.AMBUSH:
+			return _ambush_steer(dt, d, dir, side_v)
+		BattlePlan.PROTECT:
+			return _protect_steer(d)
+	return Vector3.INF
+
+
+## Emboscada: com o alvo cheio de energia e de frente, espera atrás de cobertura (ou longe, rodeando);
+## ataca quando ele fica sem energia, de costas, recuperando, ou depois de AMBUSH_MAX s.
+func _ambush_steer(dt: float, d: float, dir: Vector3, side_v: Vector3) -> Vector3:
+	var opp := f.opponent
+	if intent == "" or _ambush_open(opp, dir):
+		return Vector3.INF
+	ambush_t += dt
+	if ambush_t > BattlePlan.AMBUSH_MAX:
+		return Vector3.INF
+	var me := f.pos2(f.position)
+	var hide := Vector3.INF
+	var ter = f.arena.get("terrain")
+	if ter != null and ter.has_cover():
+		hide = ter.cover_spot(f, opp.position, COVER_MAX)
+	var want: Vector3
+	if hide != Vector3.INF:
+		var to_h := hide - me
+		want = (
+			to_h.normalized() * clampf(to_h.length(), 0.0, 1.0)
+			if to_h.length() > 0.3
+			else Vector3.ZERO
+		)
+		tag = "ambush_hide"
+	else:
+		var r := move_reach(intent)
+		var keep := _band().y * BattlePlan.AMBUSH_KEEP
+		if r < INF:
+			keep = maxf(keep, r + 1.0)
+		want = side_v * 0.5 + dir * clampf((d - keep) * 0.4, -0.6, 0.6)
+		tag = "ambush_wait"
+	want += f.arena.edge_push(f) + _ally_spread()
+	_fly(d)
+	return want.limit_length(1.0)
+
+
+## O alvo está aberto para a emboscada: sem energia, de costas, recuperando ou soltando golpe.
+func _ambush_open(opp: BattleFighter, dir: Vector3) -> bool:
+	if not is_instance_valid(opp):
+		return true
+	if opp.pp_max < BattlePlan.AMBUSH_EN or opp.gcd_t > 0.0 or opp.root_t > 0.0:
+		return true
+	if opp.ai != null and opp.ai.recover_t > 0.0:
+		return true
+	return opp.facing.dot(-dir) < BattlePlan.AMBUSH_BACK
+
+
+## Proteger (2x2): parceiro abaixo de PROTECT_HP; fica entre ele e o inimigo mais perto dele e mira
+## nesse inimigo.
+func _protect_steer(d: float) -> Vector3:
+	var p := partner()
+	if p == null or float(p.hp) >= float(p.max_hp) * BattlePlan.PROTECT_HP:
+		return Vector3.INF
+	var threat: BattleFighter = null
+	var best := INF
+	for g in f.arena.targets_of(f):
+		var dd := p.flat_to(g).length()
+		if dd < best:
+			best = dd
+			threat = g
+	if threat == null:
+		return Vector3.INF
+	if f.opponent != threat:
+		f.opponent = threat
+		retarget_t = 2.0
+	var to := p.flat_to(threat)
+	var spot := (
+		p.pos2(p.position) + to.normalized() * minf(BattlePlan.PROTECT_GAP, to.length() * 0.5)
+	)
+	var v := spot - f.pos2(f.position)
+	tag = "protect"
+	_fly(d)
+	if v.length() < 0.4:
+		return Vector3.ZERO
+	f.sprinting = v.length() > 2.5 and f.can_sprint(true)
+	return (v.normalized() * minf(1.0, v.length()) + _ally_spread() * 0.5).limit_length(1.0)
 
 
 ## Ritmo antigo (fila desligada): pensa THINK_MIN-MAX s, solta quando o golpe está pronto e ao alcance,
@@ -377,12 +682,27 @@ func _free_fire(dt: float, d: float) -> void:
 		intent = rush
 		why = "rush"
 	var fire := intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
+	if fire and f.energy_mode and _area_wait(dt, opp):
+		fire = false  # área avisada: espera o alvo parar (ou o tempo de espera acabar)
 	if punish and not punished and tactic_on:
 		fire = true
 		punished = true
 	# Sem PP: Desespero de perto (os dois sem PP ficavam rodando sem bater até o fim do tempo).
 	if f.out_of_pp() and d < 2.2:
 		fire = true
+	# Energia: sem golpe que conecta (ou sem nada planejado) há muito tempo, vai no Desespero de perto.
+	if (
+		f.energy_mode
+		and idle_t > STRUGGLE_IDLE
+		and (intent == "" or not _has_connecting_move())
+		and d < 2.2
+		and f.can_act()
+		and f.struggle()
+	):
+		why = "struggle"
+		idle_t = 0.0
+		recover_t = RECOVER
+		return
 	if fire and f.can_act():
 		tactic_on = _tactic_ok()
 		if _use_best_move(d):
@@ -449,6 +769,11 @@ func _after_fire(mode: int) -> void:
 	retreat_t = (
 		float(_p("retreat", 0.5)) * CMD_RETREAT[mode] * (0.3 if f.mood_state == "fury" else 1.0)
 	)
+	if f.energy_mode and plan != "":
+		retreat_t *= float(BattlePlan.RETREAT.get(plan, 1.0))
+		retreat_side = _rng().randf() < float(BattlePlan.SIDE_STEP.get(plan, 0.4))
+	ambush_t = 0.0
+	area_hold_t = 0.0
 	recover_t = maxf(recover_t, retreat_t)
 	intent = ""
 
@@ -523,11 +848,20 @@ func _plan() -> String:
 func _band() -> Vector2:
 	var pb: Vector2 = _p("band", Vector2(1.8, 3.0))
 	var b := pb
+	var hi := INF
 	if intent != "":
 		var r := move_reach(intent)
 		if r < INF:
-			var hi := maxf(r * 0.85, 0.7)
+			hi = maxf(r * 0.85, 0.7)
 			b = Vector2(minf(pb.x, hi * 0.6), minf(maxf(pb.y, hi * 0.7), hi))
+	var energy := f.energy_mode and plan != ""
+	if energy:
+		b *= float(BattlePlan.BAND.get(plan, 1.0))
+		if plan == BattlePlan.ARTILLERY and hi < INF and not is_contact(intent):
+			var r2 := move_reach(intent)
+			b = Vector2(
+				maxf(b.x, r2 * BattlePlan.ARTY_BAND.x), maxf(b.y, r2 * BattlePlan.ARTY_BAND.y)
+			)
 	var mode := ally_mode()
 	b *= CMD_BAND[mode]
 	if mode == SUPPORT:
@@ -535,7 +869,15 @@ func _band() -> Vector2:
 	if f.mood_state == "fury":
 		b *= 0.7
 	elif f.mood_state == "panic":
-		b *= 1.4
+		var opp := f.opponent
+		# Energia: com o alvo sem energia o pânico não foge (é a hora de bater).
+		if not (energy and is_instance_valid(opp) and opp.pp_max < PANIC_STRIKE_EN):
+			b *= 1.4
+	if energy and hi < INF:
+		# Energia: nada empurra a faixa para fora do alcance do golpe pretendido (ficava rodando longe).
+		var cap := move_reach(intent) * BattlePlan.ARTY_BAND.y
+		b.y = minf(b.y, maxf(cap, 0.7))
+		b.x = minf(b.x, b.y - 0.5)
 	b.x = maxf(b.x, 0.6)
 	b.y = maxf(b.y, b.x + 0.5)
 	return b
@@ -665,6 +1007,8 @@ func _holds_high(d: float) -> bool:
 
 
 func _wants_high() -> bool:
+	if f.energy_mode and plan == BattlePlan.ARTILLERY:
+		return true
 	if _likes_high < 0:
 		var p := (
 			HIGH_WANT_RANGED
@@ -699,6 +1043,18 @@ func _rest_spot() -> Vector3:
 func _stays_fighting() -> bool:
 	if f.mood_state == "fury" or ally_mode() == ATTACK:
 		return true
+	if f.energy_mode:
+		if plan in [BattlePlan.PRESS, BattlePlan.HUNT]:
+			return true
+		# 2x2: um descansa enquanto o outro segura (com HP para isso).
+		var p := partner()
+		if (
+			p != null
+			and p.ai != null
+			and String(p.ai.tag).begins_with("rest")
+			and float(f.hp) > float(f.max_hp) * HOLD_HP
+		):
+			return true
 	var opp := f.opponent
 	if is_instance_valid(opp) and float(opp.hp) <= float(opp.max_hp) * TARGET_FINISH_HP:
 		return true
@@ -720,6 +1076,8 @@ func _retreat_move(dir: Vector3, side_v: Vector3, d: float) -> Vector3:
 	if d >= to:
 		return side_v * 0.5
 	var w := (-dir + side_v * 0.6 * float(_p("strafe", 0.5))).normalized()
+	if f.energy_mode and retreat_side:
+		w = (side_v - dir * 0.25).normalized()  # sai de lado em vez de recuar reto
 	# Quem bateu perto da parede (ou encurralou alguém) volta para o centro, rodeando o alvo.
 	if _wall_dist(f.pos2(f.position)) < WALL_KEEP + 1.0:
 		w = (w + _to_centre() * CENTRE_PULL * 1.5).normalized()
@@ -908,6 +1266,13 @@ func pick_target(dt: float) -> void:
 			for id in f.moves:
 				best_d = maxf(best_d, f.arena.moves.expected_damage(f, t, Dex.move(String(id))))
 			w += clampf(best_d / maxf(float(t.hp), 1.0), 0.0, 1.5)
+		if f.energy_mode:
+			var hp_t := float(t.hp) / maxf(t.max_hp, 1)
+			var p := partner()
+			if p != null and p.opponent == t and hp_t <= FOCUS_HP:
+				w += FOCUS_W  # foco: o parceiro já está no alvo quase caindo
+			if plan == BattlePlan.HUNT:
+				w += 2.0 * (1.0 - hp_t)
 		w += rng.randf() * 0.2
 		if w > best_w:
 			best_w = w
@@ -1122,7 +1487,7 @@ func pick(avail: Array) -> String:
 		why = "area"
 		return area
 	var rng := _rng()
-	if rng.randf() < error_chance():
+	if not f.energy_mode and rng.randf() < error_chance():
 		why = "error"
 		return String(pool[rng.randi() % pool.size()])
 	var has_hit := dmg.values().any(func(v): return v > 0.0)
@@ -1137,7 +1502,8 @@ func pick(avail: Array) -> String:
 		var from := rng.randi() % kit.size()
 		for i in kit.size():
 			var id := String(kit[(from + i) % kit.size()])
-			if rng.randf() < status_weight(id) * k:
+			var pk := BattlePlan.status_mult(plan) if f.energy_mode else 1.0
+			if rng.randf() < status_weight(id) * k * pk:
 				why = "status"
 				return id
 		status_lock_t = maxf(status_lock_t, DECLINE_LOCK)
@@ -1146,7 +1512,50 @@ func pick(avail: Array) -> String:
 		if best == "":
 			return ""
 	why = "best" if best != "" else "random"
+	if f.energy_mode and best != "":
+		return _soft_pick(pool, dmg, best)
 	return best if best != "" else String(pool[rng.randi() % pool.size()])
+
+
+## Escolha suave (modo de energia): sorteio entre os golpes de dano pela nota (dano já pesado pela
+## espera da energia, vezes o bônus do plano), chance ~ exp((nota / melhor - 1) / temperatura). O
+## golpe com menos acertos até o KO (best) ganha um empurrão. why: "best", "plan_<plano>" (o plano
+## mudou o favorito) ou "soft" (saiu outro golpe razoável).
+func _soft_pick(pool: Array, dmg: Dictionary, best: String) -> String:
+	var cands: Array = pool.filter(func(id): return float(dmg.get(id, 0.0)) > 0.0)
+	if cands.size() <= 1:
+		why = "best"
+		return best
+	var score := {}
+	var top := 0.0
+	var top_id := best
+	for id in cands:
+		var s := float(dmg[id]) * (1.05 if id == best else 1.0)
+		if plan != "":
+			s *= BattlePlan.move_bonus(self, String(id))
+		score[id] = s
+		if s > top:
+			top = s
+			top_id = String(id)
+	var temp := maxf(SOFT_T * think_scale, 0.02)
+	var tot := 0.0
+	for id in cands:
+		score[id] = exp((float(score[id]) / maxf(top, 0.001) - 1.0) / temp)
+		tot += float(score[id])
+	var r := _rng().randf() * tot
+	var chosen := top_id
+	for id in cands:
+		r -= float(score[id])
+		if r <= 0.0:
+			chosen = String(id)
+			break
+	if chosen != top_id:
+		why = "soft"
+	elif top_id != best and plan != "":
+		why = "plan_" + plan
+	else:
+		why = "best"
+	return chosen
 
 
 ## Regras duras do status: o golpe faz sentido agora? Golpe de dano sempre passa. Na trava depois de um
@@ -1454,6 +1863,8 @@ func _dodge(dt: float, d: float, side_v: Vector3) -> Vector3:
 				return Vector3.ZERO
 			dodge_t = DODGE_TIME
 			_emit_dodge("body")
+			if f.energy_mode:
+				passives.on_body_dodge(f.opponent)
 		dodge_t -= dt
 		return side_v.normalized()
 	dodge_t = 0.0

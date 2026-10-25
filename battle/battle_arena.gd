@@ -2837,7 +2837,15 @@ func _doubles_refill(f: BattleFighter) -> bool:
 					var k := _replacement(0, 1 if as_ally else 0, party.find(m))
 					if party[k].is_fainted():
 						k = party.find(m)
-					if as_ally and is_instance_valid(player) and player.active():
+					# O lugar sai de quem está de pé agora (dois desmaios seguidos mandavam os dois
+					# substitutos como "player" e o lado ficava sem dono: luta sem fim).
+					var p_ok := is_instance_valid(player) and player.active()
+					if not p_ok and is_instance_valid(ally) and ally.active():
+						player = ally
+						player.controller = _player_ctrl()
+						ally = null
+						p_ok = true
+					if p_ok or (as_ally and is_instance_valid(player) and player.active()):
 						_send_ally(k, at)
 					else:
 						_send_player(k, at)
