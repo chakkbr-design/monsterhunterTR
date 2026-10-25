@@ -4,3 +4,4 @@
 docs/audio_preview/
 original/
 .claude/
+__pycache__/
