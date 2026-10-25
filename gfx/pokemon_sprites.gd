@@ -271,6 +271,8 @@ static func atlas(tex: Texture2D, index: int, frames: int) -> AtlasTexture:
 
 static func _frame0(s: Dictionary) -> Texture2D:
 	var tex: Texture2D = s.texture
+	if tex == null:
+		return null  # sem a arte do original (original/ fora do git, ex.: na nuvem)
 	var at := AtlasTexture.new()
 	at.atlas = tex
 	at.region = Rect2(0, 0, tex.get_width() / s.hframes, tex.get_height() / s.vframes)

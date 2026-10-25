@@ -123,6 +123,13 @@ var status := ""
 var sleep_turns := 0
 ## Segundos de paralisia que faltam (PARALYSIS_SECS).
 var par_t := 0.0
+## Modo de energia: segundos que o status grave ainda dura (BattleEnergy.STATUS_SECS) e imunidade
+## curta ao mesmo status depois que ele passa.
+var status_t := 0.0
+var status_immune_t := 0.0
+var last_status := ""
+## Entrada protegida (BattleEnergy.ENTRY_GUARD): segundos que ainda faltam.
+var entry_t := 0.0
 ## Rodada (BattleTurns.round_n) em que o status / a confusão começou.
 var status_round := -1
 var confusion_round := -1
@@ -669,6 +676,9 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 		sleep_turns = _roll(SLEEP_COUNTER)
 	elif s == "paralysis":
 		par_t = mon.par_left if mon.par_left > 0.0 else PARALYSIS_SECS
+	status_t = float(BattleEnergy.STATUS_SECS.get(s, 0.0)) if energy_mode else 0.0
+	if energy_mode and s == "paralysis":
+		par_t = minf(par_t, status_t)
 	if s in Mon.PERSIST_STATUS:
 		mon.status = s
 	elif s == "toxic":
@@ -695,6 +705,9 @@ func _tele_id(f) -> String:
 func clear_status() -> void:
 	if status != "":
 		_tele("cure", {"st": status})
+		last_status = status
+		status_immune_t = BattleEnergy.STATUS_IMMUNE if energy_mode else 0.0
+	status_t = 0.0
 	status = ""
 	sleep_turns = 0
 	toxic_n = 0
@@ -978,11 +991,19 @@ func tick(dt: float) -> void:
 	evasion_t = maxf(evasion_t - dt, 0.0)
 	struggle_cd = maxf(struggle_cd - dt, 0.0)
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
+	entry_t = maxf(entry_t - dt, 0.0)
+	status_immune_t = maxf(status_immune_t - dt, 0.0)
 	if status == "paralysis":
 		par_t -= dt
 		if par_t <= 0.0:
 			clear_status()
 			popup("Não está mais paralisado", Color(1, 1, 0.5), 0.8)
+	if energy_mode and status_t > 0.0 and status != "paralysis":
+		# Modo de energia: o status grave passa sozinho (descansando, mais rápido).
+		status_t -= dt * (BattleEnergy.REST_CURE if BattleEnergy.resting(self) else 1.0)
+		if status_t <= 0.0:
+			clear_status()
+			popup("O status passou!", Color(0.8, 1.0, 0.8), 0.8)
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)

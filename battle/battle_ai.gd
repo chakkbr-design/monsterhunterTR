@@ -110,6 +110,8 @@ const COVER_MAX := 7.0
 const POND_MAX := 6.0
 const ENERGY_KEEP := 1.0
 const REPEAT_AVOID := 0.8
+## Peso da espera pela energia na escolha do golpe (dano / (1 + k x segundos até ter energia)).
+const ENERGY_WAIT_K := 0.35
 ## Comandos (iguais aos da arena): Ofensivo, Defensivo, Suporte, Livre (perfil decide).
 enum { ATTACK, DEFEND, SUPPORT, FREE }
 
@@ -1105,6 +1107,13 @@ func pick(avail: Array) -> String:
 	if best != "" and dmg.get(best, 0.0) >= float(f.opponent.hp):
 		why = "ko"
 		return best
+	if f.energy_mode:
+		# Energia: golpe que ainda falta energia rende menos pelo tempo de espera (o barato e rápido
+		# ganha quando a barra está baixa; com a barra cheia o forte continua valendo).
+		for id in dmg:
+			var wait := BattleEnergy.secs_to(f, f.pp_cost_of(Dex.move(String(id))))
+			dmg[id] = float(dmg[id]) / (1.0 + ENERGY_WAIT_K * wait)
+		best = best_move(pool, dmg)
 	var area := _area_pick(pool, dmg)
 	if area != "":
 		why = "area"

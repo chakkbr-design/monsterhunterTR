@@ -465,6 +465,8 @@ func hit(
 			_landed(user, target, mv)
 			return
 		dmg = effects.cap_damage(user, target, mv, dmg)
+		if target.energy_mode:
+			dmg = BattleEnergy.entry_damage(target, dmg)
 		var hp_before := target.hp
 		target.last_hit_by = user
 		target.take_damage(

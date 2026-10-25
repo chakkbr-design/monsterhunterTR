@@ -765,6 +765,8 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
 		abilities.on_enter(f)
+	if energy_on() and state == "fight":
+		f.entry_t = BattleEnergy.ENTRY_GUARD  # entrada protegida (o 1º do time entra com a luta parada)
 	if telemetry:
 		telemetry.enter(f)
 	return f
@@ -1344,6 +1346,12 @@ func step(dt: float) -> void:
 			if _results_step(raw):
 				return
 	if state == "done":
+		return
+	if bool(opts.get("fast_sim", false)):
+		# Bateria de testes: sem sprites, câmera e HUD (só visual; o resultado não muda).
+		_tick_balls(dt)
+		if vfx:
+			vfx.tick(dt)
 		return
 	_visual_step(dt)
 	_update_camera(raw)
@@ -2915,7 +2923,7 @@ func say(text: String, kind_name := "info") -> void:
 	log_lines.append(text)
 	if log_lines.size() > LOG_MAX:
 		log_lines.pop_front()
-	if hud:
+	if hud and not bool(opts.get("fast_sim", false)):
 		hud.log_push(text, kind_name)
 
 
@@ -2942,7 +2950,7 @@ func popup(at: Vector3, text: String, col: Color, scale_k := 1.0, style := "") -
 	log_lines.append(text)
 	if log_lines.size() > LOG_MAX:
 		log_lines.pop_front()
-	if hud and is_inside_tree():
+	if hud and is_inside_tree() and not bool(opts.get("fast_sim", false)):
 		hud.add_popup(to_global(at), text, col, scale_k, style)
 
 
