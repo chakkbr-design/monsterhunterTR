@@ -3,10 +3,14 @@
   saem do *-Shadow.png (centro x, base y) e Idle/Walk/Hop fixam o pé no quadro, igual ao importador antigo;
 - front.png/back.png: BW animados (PokeAPI sprites) em tira de quadros quadrados, no máximo 8192 px de largura;
 - icon.png: frente HGSS 80x80; party_icon.png: ícone Gen 7 em 2x, 2 quadros (o 2º 2 px acima).
+Fora de Kanto (biblioteca para espécies futuras) os mesmos arquivos saem com o que existir: frente/costas
+BW animadas até o 649 (depois, as estáticas da PokeAPI), ícone HGSS até o 493 (depois, a frente padrão),
+ícone de grupo Gen 7 ou Gen 8; espécie sem pasta no SpriteCollab fica sem pmd/.
 Uso: git clone --filter=blob:none --sparse do PMDCollab/SpriteCollab (pastas sprite/NNNN) e
-python tools/kanto_sprites.py <SpriteCollab/sprite> <saída> <lista.json [[dex, nome], ...]>
+python tools/kanto_sprites.py <SpriteCollab/sprite> <saída> <lista.json [[dex, nome], ...] | 152-1025>
+(com um intervalo, os nomes em inglês vêm da PokeAPI).
 """
-import json, os, re, sys, io, urllib.request, xml.etree.ElementTree as ET
+import json, os, re, sys, io, urllib.request, urllib.error, xml.etree.ElementTree as ET
 from PIL import Image, ImageSequence
 SC = sys.argv[1]
 OUT = sys.argv[2]
@@ -24,10 +28,38 @@ def fetch(path):
     return open(fn, "rb").read()
 
 def slug(name):
-    return name.lower().replace(" ", "_").replace(".", "").replace("'", "")
+    # o mesmo de PokemonSprites.slug, sem os caracteres que o Windows não aceita em pasta (Type: Null)
+    s = name.lower().replace(" ", "_").replace(".", "").replace("'", "")
+    return re.sub(r'[<>:"/\\|?*]', "", s)
+
+
+def get(path):
+    """Arquivo do raw do GitHub ou None se não existe (404)."""
+    try:
+        return fetch(path)
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+def species_list():
+    if os.path.exists(LIST):
+        return json.load(open(LIST))
+    a, b = (int(x) for x in LIST.split("-"))
+    out = []
+    for no in range(a, b + 1):
+        fn = os.path.join(CACHE, "species_%d.json" % no)
+        if not os.path.exists(fn):
+            url = "https://pokeapi.co/api/v2/pokemon-species/%d/" % no
+            open(fn, "wb").write(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "x"}), timeout=60).read())
+        sp = json.load(open(fn, encoding="utf-8"))
+        out.append([no, next(n["name"] for n in sp["names"] if n["language"]["name"] == "en").replace("\u2019", "'")])
+    return out
 
 def anchors(name, d, w, h, dirs, nfr):
-    sh = Image.open(os.path.join(d, name + "-Shadow.png")).convert("RGBA")
+    shp = os.path.join(d, name + "-Shadow.png")
+    sh = Image.open(shp if os.path.exists(shp) else os.path.join(d, name + "-Anim.png")).convert("RGBA")
     an = Image.open(os.path.join(d, name + "-Anim.png")).convert("RGBA")
     out = []
     for di in range(dirs):
@@ -96,12 +128,29 @@ def strip(gif_bytes, path):
 
 
 def icon(no, path):
-    im = Image.open(io.BytesIO(fetch("PokeAPI/sprites/master/sprites/pokemon/versions/generation-iv/heartgold-soulsilver/%d.png" % no))).convert("RGBA")
-    im.save(path)
+    raw = get("PokeAPI/sprites/master/sprites/pokemon/versions/generation-iv/heartgold-soulsilver/%d.png" % no)
+    if raw is None:
+        raw = get("PokeAPI/sprites/master/sprites/pokemon/%d.png" % no)
+    if raw is not None:
+        Image.open(io.BytesIO(raw)).convert("RGBA").save(path)
 
-def party(name, path):
-    no = [n for n, nm in json.load(open(LIST)) if nm == name][0]
-    im = Image.open(io.BytesIO(fetch("PokeAPI/sprites/master/sprites/pokemon/versions/generation-vii/icons/%d.png" % no))).convert("RGBA")
+
+def front_back(no, dst):
+    for side, fn in (("", "front.png"), ("back/", "back.png")):
+        raw = get("PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/%s%d.gif" % (side, no))
+        if raw is None:
+            raw = get("PokeAPI/sprites/master/sprites/pokemon/%s%d.png" % (side, no))
+        if raw is not None:
+            strip(raw, os.path.join(dst, fn))
+
+
+def party(no, path):
+    raw = None
+    for gen in ("vii", "viii"):
+        raw = raw or get("PokeAPI/sprites/master/sprites/pokemon/versions/generation-%s/icons/%d.png" % (gen, no))
+    if raw is None:
+        return
+    im = Image.open(io.BytesIO(raw)).convert("RGBA")
     im = im.crop(im.getchannel("A").getbbox())
     k = min(2.0, 60.0 / max(im.size))
     im = im.resize((max(1, round(im.size[0] * k)), max(1, round(im.size[1] * k))), Image.NEAREST)
@@ -113,17 +162,22 @@ def party(name, path):
     out.save(path)
 
 
+def one(item):
+    no, name = item
+    dst = os.path.join(OUT, slug(name))
+    os.makedirs(dst, exist_ok=True)
+    anims = pmd(no, dst) if os.path.exists(os.path.join(SC, "%04d" % no, "AnimData.xml")) else []
+    front_back(no, dst)
+    icon(no, os.path.join(dst, "icon.png"))
+    party(no, os.path.join(dst, "party_icon.png"))
+    print(no, name, len(anims), "Idle" in anims, flush=True)
+
+
 def main():
-    new = json.load(open(LIST))
-    rep = {}
-    for no, name in new:
-        dst = os.path.join(OUT, slug(name))
-        os.makedirs(dst, exist_ok=True)
-        rep[name] = pmd(no, dst)
-        strip(fetch("PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/%d.gif" % no), os.path.join(dst, "front.png"))
-        strip(fetch("PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/back/%d.gif" % no), os.path.join(dst, "back.png"))
-        icon(no, os.path.join(dst, "icon.png"))
-        party(name, os.path.join(dst, "party_icon.png"))
-        print(no, name, len(rep[name]), "Idle" in rep[name], flush=True)
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(8) as ex:
+        list(ex.map(one, species_list()))
+
 
 main()
