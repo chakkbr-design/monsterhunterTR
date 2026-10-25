@@ -130,6 +130,9 @@ const ACUPRESSURE_STATS := ["atk", "def", "spa", "spd", "spe", "acc"]
 ## Golpes de som oficiais que existem no jogo (Throat Chop bloqueia; atravessam o Substitute).
 const SOUND_MOVES := [
 	"alluring_voice",
+	"heal_bell",
+	"perish_song",
+	"sparkling_aria",
 	"bug_buzz",
 	"disarming_voice",
 	"echoed_voice",
@@ -338,6 +341,11 @@ func crash_damage(user: BattleFighter, mv: Dictionary) -> void:
 	user.popup("-%d machucou-se!" % n, Color(1.0, 0.7, 0.5), 0.9)
 
 
+## Um lutador desmaiou (Retaliate olha o lado dele).
+func note_faint(f: BattleFighter) -> void:
+	BattleKanto.note_faint(self, f)
+
+
 ## Entrou em campo agora (Fake Out conta a partir daqui).
 func on_enter(f: BattleFighter) -> void:
 	st(f).entered = now
@@ -360,6 +368,8 @@ func mist_blocks(c: BattleFighter, src: BattleFighter) -> bool:
 
 
 func _has_item(f: BattleFighter) -> bool:
+	if active(field, "magic"):
+		return false  # Magic Room: item sem efeito
 	return is_instance_valid(f) and f.trainer_item != "" and not f.item_used
 
 
@@ -509,7 +519,7 @@ func _blocked(user: BattleFighter, mv: Dictionary) -> String:
 		"stockpile":
 			if int(st(user).stock) >= 3:
 				return "Não cabe mais!"
-	return ""
+	return BattleKanto.blocked(self, user, mv)
 
 
 func _last_of(f: BattleFighter) -> String:
@@ -667,6 +677,8 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 				if is_instance_valid(f) and f.active() and f.status == "sleep":
 					f.clear_status()
 					f.popup("Acordou com o barulho!", Color(1, 0.85, 0.5))
+		"steel_roller", "poltergeist":
+			BattleKanto.on_use(self, user, mv)
 		"self_confuse":
 			var wait := float(mv.get("duration", 0.0)) + float(mv.get("windup", 0.0)) + 0.6
 			arena.later(
@@ -707,6 +719,8 @@ func accuracy_of(user: BattleFighter, mv: Dictionary) -> float:
 		var t := user.opponent
 		if is_instance_valid(t):
 			acc += float(user.level - t.level)
+		if id == "sheer_cold" and not "ice" in user.types:
+			acc = 20.0 + (float(user.level - t.level) if is_instance_valid(t) else 0.0)  # oficial Gen 7+
 	if active(st(user), "lock"):
 		return 0.0  # Lock-On: não erra
 	if active(field, "gravity"):
@@ -736,7 +750,7 @@ func roll_hits(mv: Dictionary, user: BattleFighter = null) -> Dictionary:
 		n = int(hr[1])  # Skill Link: sempre o máximo de acertos
 	n = clampi(n, int(hr[0]), int(hr[1]))
 	var m := mv.duplicate()
-	if String(mv.get("kind", "")) == "projectile":
+	if String(mv.get("kind", "")) == "projectile" and not bool(mv.get("boomerang", false)):
 		m["count"] = n
 	else:
 		m["hits"] = n
@@ -791,6 +805,8 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 			sd.erase("quick_guard")
 			target.popup("A proteção caiu!", Color(1, 0.8, 0.5))
 		return false
+	if BattleKanto.blocks_hit(self, user, target, mv):
+		return true
 	if (
 		float(mv.get("power", 0)) <= 0.0
 		and int(ts.sub) > 0
@@ -803,6 +819,7 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		return false
 	if active(ts, "protect"):
 		target.popup("Protegeu-se!", Color(0.6, 0.9, 1.0), 1.1)
+		BattleKanto.on_protected(self, target)
 		us.fail = true
 		crash_damage(user, mv)
 		return true
@@ -833,14 +850,20 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 		target.popup("Era um presente!", Color(1, 0.85, 0.6))
 		_heal(target, int(ceil(target.max_hp / 4.0)))
 		return true
-	if not sp in ["ohko", "endeavor", "final_gambit"]:
+	if not sp in ["ohko", "endeavor", "final_gambit", "metal_burst"]:
 		return false
 	if eff == 0.0:
 		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
 		note_fail(user)
 		return true
 	var amount := 0
-	if sp == "ohko":
+	if sp == "ohko" and String(mv.get("id", "")) == "sheer_cold" and "ice" in target.types:
+		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		note_fail(user)
+		return true
+	if sp == "metal_burst":
+		amount = BattleKanto.burst_amount(self, user)
+	elif sp == "ohko":
 		if target.level > user.level or _ability(target) == "sturdy":
 			target.popup("Não afetou!", Color(0.8, 0.8, 0.8))
 			return true
@@ -884,7 +907,9 @@ func _break_screens(target: BattleFighter) -> void:
 ## Dano final que o alvo aguenta: Endure e False Swipe deixam 1 HP.
 ## Status mais difícil de pegar no modo de energia (BattleEnergy.status_chance_mult); no VGC, o oficial.
 ## Recém-curado do mesmo status (BattleEnergy.STATUS_IMMUNE) não pega.
-func status_chance_mult(_user: BattleFighter, target: BattleFighter, mv: Dictionary, s: String) -> float:
+func status_chance_mult(
+	_user: BattleFighter, target: BattleFighter, mv: Dictionary, s: String
+) -> float:
 	if not target.energy_mode:
 		return 1.0
 	if target.status_immune_t > 0.0 and target.last_status == s:
@@ -1004,6 +1029,16 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 		"assurance":
 			if now - float(st(target).hurt_t) <= ASSURANCE_WINDOW:
 				p *= 2.0
+		"retaliate":
+			if BattleKanto.ally_fell(self, user):
+				p *= 2.0
+		"triple_axel":
+			p *= BattleKanto.hit_number(m, target)
+		"terrain_pulse":
+			var pt := BattleKanto.pulse_type(self, user)
+			if pt != "":
+				p *= 2.0
+				ty = pt
 		"gyro_ball":
 			p = clampf(
 				floorf(25.0 * target.eff_spe() / maxf(user.eff_spe(), 1.0)) + 1.0, 1.0, 150.0
@@ -1027,7 +1062,7 @@ func adjust_move(user: BattleFighter, target: BattleFighter, m: Dictionary) -> D
 				)
 			)
 		"low_kick":
-			var w := float(Dex.species(target.mon.species).get("weight_kg", 20.0))
+			var w := float(Dex.species(target.body_id()).get("weight_kg", 20.0))
 			p = (
 				20.0
 				if w < 10.0
@@ -1090,6 +1125,15 @@ func defender_profile(user: BattleFighter, target: BattleFighter, m: Dictionary)
 		# Psyshock: golpe especial contra a Defesa física.
 		p["spd"] = p.def
 		p["crit_spd"] = p.crit_def
+	match String(m.get("special", "")):
+		"freeze_dry":
+			p["types"] = BattleKanto.freeze_types(p.types)
+		"ignore_stages":
+			# Darkest Lariat: ignora as mudanças de Defesa e Def. Esp. do alvo
+			p["def"] = float(target.stats.get("def", 1))
+			p["spd"] = float(target.stats.get("spd", 1))
+			p["crit_def"] = p.def
+			p["crit_spd"] = p.spd
 	if arena.abilities and arena.abilities.no_crit(target, user):
 		p["no_crit"] = true
 	return p
@@ -1200,6 +1244,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			user.popup("Levado pelo Destiny Bond!", Dex.type_color("ghost"))
 			user.take_damage(user.hp, Vector3.ZERO, 0.0)
 		_counter(user, target, mv, dealt)
+		BattleKanto.note_damage(self, user, target, mv, dealt)
 		if active(s, "laser"):
 			s.laser = -99.0
 		if String(mv.get("type", "")) == "electric":
@@ -1235,6 +1280,8 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			arena.moves.change_stage(user, String(k), int(ss[k]))
 	var ts := st(target)
 	match sp:
+		"reflect_type", "role_play", "entrainment", "split_stats", "swap_stages", "swap_stats", "cure_burn", "steel_roller":
+			BattleKanto.after_hit(self, user, target, mv, dealt)
 		"chain":
 			var c: Dictionary = s.chain.get(id, {})
 			if not c.is_empty() and int(c.hit) != int(c.cast):
@@ -1613,6 +1660,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				_fail(user)
 				return true
 			set_rounds(s, "protect", 1)
+			s.insight = bool(mv.get("insight", false))  # Detect lê o golpe
 			user.popup("Proteger!", Color(0.6, 0.9, 1.0), 1.1)
 			_vfx("protect_shield", [user, round_left()])
 		"quick_guard":
@@ -1762,7 +1810,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				if f != null:
 					_heal(f, int(ceil(f.max_hp * 0.25)))
 		"aromatherapy":
-			_aromatherapy(user)
+			_aromatherapy(user, bool(mv.get("bell", false)))
 		"haze":
 			for f in arena.fighters:
 				if is_instance_valid(f) and f.active():
@@ -1979,7 +2027,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				user.moves[i] = c2
 				user.popup("Copiou %s!" % Dex.move(c2).get("name", c2), Color(0.9, 0.9, 1.0))
 		_:
-			return false
+			return BattleKanto.self_move(self, user, mv)
 	return true
 
 
@@ -2024,7 +2072,7 @@ func _drop_stockpile(user: BattleFighter) -> void:
 	s.stock = 0
 
 
-func _aromatherapy(user: BattleFighter) -> void:
+func _aromatherapy(user: BattleFighter, bell := false) -> void:
 	var cured := 0
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active() and f.side == user.side and f.status in MAJOR:
@@ -2036,7 +2084,8 @@ func _aromatherapy(user: BattleFighter) -> void:
 			if m is Mon and m.hp > 0 and (m.status != "" or m.battle_status != ""):
 				m.cure()
 				cured += 1
-	user.popup("Aroma calmante!" if cured > 0 else "Ninguém precisava.", Color(0.7, 1.0, 0.7))
+	var said := "Sinos curativos!" if bell else "Aroma calmante!"
+	user.popup(said if cured > 0 else "Ninguém precisava.", Color(0.7, 1.0, 0.7))
 
 
 func _lay_toxic_spikes(user: BattleFighter) -> void:
@@ -2275,7 +2324,7 @@ func free_bind(f: BattleFighter) -> void:
 func end_turn_only() -> void:
 	for id in _st:
 		var s: Dictionary = _st[id]
-		for k in ["protect", "endure", "roost", "follow", "laser", "lock"]:
+		for k in ["protect", "endure", "roost", "follow", "laser", "lock", "coat"]:
 			count_round(s, k)
 	for sd in sides:
 		for k in ["quick_guard", "wide_guard"]:
@@ -2308,6 +2357,8 @@ func expected_exact(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 			return float(target.hp) * clampf(accuracy_of(user, mv) / 100.0, 0.0, 1.0)
 		"endeavor":
 			return float(maxi(target.hp - user.hp, 0))
+		"metal_burst":
+			return float(BattleKanto.burst_amount(self, user)) if usable(user, mv) else 0.0
 		"final_gambit":
 			# Só vale como último recurso: HP baixo e o golpe derruba.
 			if (
@@ -2329,6 +2380,8 @@ func ai_power(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> flo
 	match String(mv.get("special", "")):
 		"spit_up":
 			return 100.0 * int(st(user).stock)
+		"triple_axel":
+			return float(mv.power) * 2.0  # 1x, 2x e 3x: média de 2x por acerto
 		"beat_up":
 			var tot := 0.0
 			for x in _beat_powers(user):
@@ -2554,7 +2607,7 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 			if "ghost" in f.types:
 				return hp > 0.6
 			return int(f.stages.get("atk", 0)) < 2
-	return null
+	return BattleKanto.ai_worth(self, f, mv)
 
 
 func _has_type_hit(f: BattleFighter, type: String) -> bool:

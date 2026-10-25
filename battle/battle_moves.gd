@@ -358,6 +358,8 @@ func expected_damage(
 	var types: Array = target.types
 	if arena.abilities:
 		types = arena.abilities.hit_types(user, target, mv, types)  # Scrappy
+	if String(mv.get("special", "")) == "freeze_dry":
+		types = BattleKanto.freeze_types(types)
 	var eff := Dex.effectiveness(String(mv.get("type", "")), types)
 	if eff <= 0.0:
 		return 0.0

@@ -408,7 +408,7 @@ func spawn_clones(user: BattleFighter, mv: Dictionary) -> void:
 		c.manual = true
 		c.auto_motion = false
 		c.auto_face = false
-		c.species = user.mon.species
+		c.species = user.look.species if user.look else user.mon.species
 		arena.add_child(c)
 		c.set_alpha(0.5)
 		var ang: float = TAU * float(i) / maxf(n, 1) + arena.rng.randf() * 0.5

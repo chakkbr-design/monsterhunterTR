@@ -7,7 +7,13 @@ const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
 ## Golpes que derrubam o próprio usuário (a luta acabaria no meio do teste).
 const SACRIFICE := [
-	"healing_wish", "memento", "explosion", "self_destruct", "final_gambit", "lunar_dance"
+	"healing_wish",
+	"perish_song",
+	"memento",
+	"explosion",
+	"self_destruct",
+	"final_gambit",
+	"lunar_dance"
 ]
 const NEW_MOVES := "res://tests/battle/gen9_new_moves.txt"
 
