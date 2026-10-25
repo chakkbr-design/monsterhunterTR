@@ -53,6 +53,17 @@ func _init(a: Node) -> void:
 	arena = a
 
 
+func _tele(kind: String, data: Dictionary) -> void:
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.note(kind, data)
+
+
+func _uid(f) -> String:
+	var tel = arena.get("telemetry")
+	return tel.uid(f) if tel and is_instance_valid(f) else ""
+
+
 static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
@@ -328,6 +339,7 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 		arena.field._add_mark("crater", o.pos, clampf(o.r, 0.8, 2.5), 0)
 	preload("res://audio/cue.gd").sfx("hit_super")
 	var who := "" if user == null else " (%s)" % user.mon.display_name
+	_tele("terrain_collapse", {"kind": o.kind, "by": _uid(user)})
 	arena.say("O %s desabou!%s" % ["morro" if o.kind == "hill" else "pico", who])
 	for f in arena.fighters:
 		if not is_instance_valid(f) or not f.active():
@@ -341,6 +353,7 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 		f.stun_t = maxf(f.stun_t, FALL_STUN + FALL_STUN_H * f.ground_y)
 		f.interrupt_prepare()
 		f.popup("-%d Caiu!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
+		_tele("terrain_fall", {"who": _uid(f), "dmg": n})
 		f.take_damage(n, Vector3.ZERO, 0.0)
 		if arena.has_method("cut_in"):
 			arena.cut_in("DESABOU!", Color(0.85, 0.65, 0.4))
@@ -360,6 +373,7 @@ func _conduct(user: BattleFighter, mv: Dictionary, pond: Dictionary, at: Vector3
 			continue  # o próprio alvo do golpe
 		hit_any = true
 		f.popup("Choque na água!", Dex.type_color("electric"), 0.9, 0.8)
+		_tele("terrain_conduct", {"who": _uid(f), "by": _uid(user)})
 		arena.moves.hit(user, f, m, _flat(f.position - at).normalized(), CONDUCT)
 	if hit_any and arena.is_inside_tree():
 		PixelFx.pop(arena, "electric", pond.pos + Vector3(0, 0.2, 0), pond.r * 1.6, 0.5)
@@ -370,6 +384,7 @@ func freeze(pond: Dictionary) -> void:
 	pond.ice_t = FREEZE_SECS
 	if not was:
 		_set_water_look(pond)
+		_tele("terrain_freeze", {})
 		arena.say("O lago congelou!")
 
 

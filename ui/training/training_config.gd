@@ -158,6 +158,9 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 	for k in ["vgc_ai", "trainer_ai", "weather"]:
 		if cfg.has(k):
 			o[k] = cfg[k]
+	# Bateria de testes (tests/balance/battery.gd): telemetria, damage_pace etc. passam direto.
+	if cfg.get("extra_opts") is Dictionary:
+		o.merge(cfg.extra_opts, true)
 	return o
 
 

@@ -349,6 +349,9 @@ func _find_reaction(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 
 
 func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> void:
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.note("combo", {"who": tel.uid(user), "tgt": tel.uid(target), "r": String(r.get("name", r.get("id", "")))})
 	var tid := target.get_instance_id()
 	_icd[tid] = REACT_ICD
 	if _marks.has(tid):
@@ -523,6 +526,9 @@ func _find_duo(a: String, b: String) -> Dictionary:
 
 
 func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.note("duo", {"a": tel.uid(u1), "b": tel.uid(u2), "id": String(duo.get("id", ""))})
 	var foes: Array = arena.targets_of(u1)
 	if foes.is_empty():
 		return

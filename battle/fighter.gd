@@ -675,11 +675,26 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 		toxic_n = 0
 		mon.status = "poison"  # fora da luta o Toxic vira veneno comum (Gen 5+)
 	refresh_label()
+	_tele("status", {"st": s, "by": _tele_id(source)})
 	_held_check()
 	return true
 
 
+func _tele(kind: String, data: Dictionary) -> void:
+	var tel = arena.get("telemetry") if arena else null
+	if tel:
+		data["who"] = tel.uid(self)
+		tel.note(kind, data)
+
+
+func _tele_id(f) -> String:
+	var tel = arena.get("telemetry") if arena else null
+	return tel.uid(f) if tel and is_instance_valid(f) else ""
+
+
 func clear_status() -> void:
+	if status != "":
+		_tele("cure", {"st": status})
 	status = ""
 	sleep_turns = 0
 	toxic_n = 0
@@ -789,6 +804,7 @@ func residual_damage(amount: int, why: String, col: Color) -> int:
 	if ab and ab.has_method("no_indirect") and ab.no_indirect(self):
 		return 0
 	amount = mini(amount, hp)
+	_tele("residual", {"why": why, "dmg": amount, "frac": snappedf(float(amount) / maxf(max_hp, 1), 0.001)})
 	popup("-%d %s" % [amount, why], col, 0.85, 0.3)
 	take_damage(amount, Vector3.ZERO, 0.0)
 	flash(col.lerp(Color.WHITE, 0.3) * 1.6, RESIDUAL_FLASH)

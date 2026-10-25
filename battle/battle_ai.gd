@@ -155,6 +155,10 @@ var tactics: BattleTactics = null
 var _tactics_checked := false
 ## Este lutador gosta do alto (sorteado uma vez, pelo perfil).
 var _likes_high := -1
+## O que a IA está fazendo neste quadro (telemetria): "dodge", "retreat", "rest_hide", "go_high"...
+var tag := ""
+## Por que o último golpe foi escolhido (telemetria): "ko", "best", "tactics", "status", "error"...
+var why := ""
 
 
 func _init(fighter: BattleFighter) -> void:
@@ -246,6 +250,7 @@ func step(dt: float) -> Vector3:
 	_auto_command(dt)
 	var opp := f.opponent
 	if not is_instance_valid(opp) or not opp.active():
+		tag = "no_target"
 		return Vector3.ZERO
 	var turns = f.arena.get("turns")
 	var queued: bool = turns != null and turns.on and turns.tracked(f)
@@ -256,8 +261,10 @@ func step(dt: float) -> Vector3:
 		recover_t = RECOVER
 		if queued:
 			turns.done(f, "item")
+		tag = "item"
 		return Vector3.ZERO
 	if f.status == "sleep":
+		tag = "asleep"
 		if my_turn and _sleep_move(f.flat_to(opp).length()) and queued:
 			turns.done(f, "move")
 		return Vector3.ZERO
@@ -272,11 +279,13 @@ func step(dt: float) -> Vector3:
 	var dodge := _dodge(dt, d, side_v)
 	if dodge != Vector3.ZERO:
 		f.sprinting = f.can_sprint(true)
+		tag = "dodge"
 		return dodge
 	if recover_t > 0.0:
 		recover_t -= dt
 		think -= dt
 		retreat_t -= dt
+		tag = "retreat"
 		return _retreat_move(dir, side_v, d)
 	if not f.moves.is_empty():
 		if queued:
@@ -285,8 +294,10 @@ func step(dt: float) -> Vector3:
 		else:
 			_free_fire(dt, d)
 	if f.out_of_pp() and d > 1.4 and (not queued or up_next):
+		tag = "no_energy_charge"
 		return dir
 	if queued and not up_next:
+		tag = "off_turn"
 		return _off_turn(dt, d, dir, side_v)
 	if f.energy_mode and not queued:
 		var ew := _energy_steer(d, dir, side_v)
@@ -296,10 +307,12 @@ func step(dt: float) -> Vector3:
 		if tw != Vector3.INF:
 			return tw
 	if queued:
+		tag = "turn"
 		return _turn_move(dt, d, dir, side_v)
 	if mode == DEFEND or (mode == FREE and bool(_p("guard", false)) and _partner_hurt()):
 		var guard := guard_steer()
 		if guard != Vector3.INF:
+			tag = "guard"
 			return guard
 	idle_t += dt
 	var stall := idle_t > STALL_SECS and not queued
@@ -309,14 +322,19 @@ func step(dt: float) -> Vector3:
 	var slip := opp.root_t > 0.0 and d < b.y + 1.0 and intent == "" and not queued
 	var want: Vector3
 	var st := float(_p("strafe", 0.5))
+	tag = "stall_push" if stall else "orbit"
 	if slip:
 		want = (side_v - dir * 0.4).normalized()
+		tag = "slip"
 	elif d > kite.y:
 		want = (dir + side_v * 0.3 * st).normalized()
+		tag = "approach" if not stall else "stall_push"
 	elif d < kite.x:
 		want = (-dir + side_v * 0.5).normalized() * (1.0 if low else 0.8)
+		tag = "kite_low" if low else "back_off"
 	elif intent != "" and in_range(intent, d) and (tactic_on or queued):
 		want = side_v * (0.0 if queued else 0.15 * st)
+		tag = "aim"
 	elif tactic_on:
 		var centre := (b.x + b.y) * 0.5
 		var radial := dir * clampf((centre - d) / maxf(b.y - b.x, 0.1), -1.0, 1.0)
@@ -333,6 +351,7 @@ func step(dt: float) -> Vector3:
 	if (mode == ATTACK or stall or up_next) and d > b.y:
 		reason = true
 	if _try_jump(dt, d):
+		tag = "jump"
 		return want
 	f.sprinting = _sprint(dt, reason) and f.can_sprint(want.length() > 0.1)
 	return want
@@ -354,6 +373,7 @@ func _free_fire(dt: float, d: float) -> void:
 	var rush := _rush_move(d)
 	if rush != "":
 		intent = rush
+		why = "rush"
 	var fire := intent != "" and in_range(intent, d) and _ready(intent) and _reaches(opp, intent)
 	if punish and not punished and tactic_on:
 		fire = true
@@ -546,6 +566,7 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 	if need <= ENERGY_WAIT:
 		return Vector3.INF
 	if _stays_fighting():
+		tag = "fight_on_low_energy"
 		var cheap: Array = f.moves.filter(
 			func(id):
 				return (
@@ -574,10 +595,12 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 			else Vector3.ZERO
 		)
 		f.sprinting = d < keep and f.can_sprint(true)
+		tag = "rest_pond" if ter_swim(hide) else "rest_cover"
 		want += _ally_spread() * 0.5
 		_fly(d)
 		return want.normalized() if want.length() > 1.0 else want
 	if d < keep:
+		tag = "rest_flee"
 		want = (-dir + side_v * 0.5 * float(_p("strafe", 0.5))).normalized()
 		if _wall_dist(f.pos2(f.position)) < WALL_KEEP:
 			var esc := corner_escape()
@@ -585,10 +608,16 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 		f.sprinting = f.can_sprint(true)
 	else:
 		# Longe o bastante: rodeia devagar, de olho no alvo.
+		tag = "rest_circle"
 		want = side_v * 0.45 + dir * clampf((d - keep - 1.0) * 0.3, -0.3, 0.3)
 	want += f.arena.edge_push(f) + _ally_spread()
 	_fly(d)
 	return want.normalized() if want.length() > 1.0 else want
+
+
+func ter_swim(spot: Vector3) -> bool:
+	var ter = f.arena.get("terrain")
+	return ter != null and ter.swimmer(f) and not ter.pond_at(spot).is_empty()
 
 
 ## Relevo no modo de energia: quem vai atirar de longe sobe no morro/pico mais perto de onde o alvo
@@ -605,6 +634,7 @@ func _terrain_steer(d: float) -> Vector3:
 	var opp := f.opponent
 	if ter.on_high(f) and not ter.obstacle_under(f).is_empty() and d <= r * 0.9:
 		_fly(d)
+		tag = "hold_high"
 		return Vector3.ZERO  # no alto e com o alvo ao alcance: fica e atira
 	var spot: Vector3 = ter.high_spot(f, opp, r)
 	if spot == Vector3.INF:
@@ -613,6 +643,7 @@ func _terrain_steer(d: float) -> Vector3:
 	if to.length() > 3.0:
 		f.sprinting = f.can_sprint(true)
 	_fly(d)
+	tag = "go_high"
 	return (to.normalized() + f.arena.edge_push(f) * 0.5).limit_length(1.0)
 
 
@@ -1030,11 +1061,13 @@ func pick(avail: Array) -> String:
 				)
 		)
 		if not brk.is_empty():
+			why = "topple"
 			return String(brk[_rng().randi() % brk.size()])
 	var tac := _tactics()
 	if tac != null:
 		var chosen := tac.choose(avail)
 		if chosen != "":
+			why = "tactics"
 			return chosen
 	var mode := ally_mode()
 	var connects := _has_connecting_move()
@@ -1070,17 +1103,21 @@ func pick(avail: Array) -> String:
 	var pool: Array = usable if not usable.is_empty() else avail
 	var best := best_move(pool, dmg)
 	if best != "" and dmg.get(best, 0.0) >= float(f.opponent.hp):
+		why = "ko"
 		return best
 	var area := _area_pick(pool, dmg)
 	if area != "":
+		why = "area"
 		return area
 	var rng := _rng()
 	if rng.randf() < error_chance():
+		why = "error"
 		return String(pool[rng.randi() % pool.size()])
 	var has_hit := dmg.values().any(func(v): return v > 0.0)
 	var kit: Array = pool.filter(func(id): return float(Dex.move(id).get("power", 0)) <= 0.0)
 	if not kit.is_empty():
 		if not connects:
+			why = "status_only"
 			return String(kit[rng.randi() % kit.size()])
 		# Cada status passa pelo próprio peso (o urgente sempre); com o golpe de dano só esperando o
 		# cooldown o peso dobra (status de enchimento), e se nenhum passar a IA espera o ataque.
@@ -1089,12 +1126,14 @@ func pick(avail: Array) -> String:
 		for i in kit.size():
 			var id := String(kit[(from + i) % kit.size()])
 			if rng.randf() < status_weight(id) * k:
+				why = "status"
 				return id
 		status_lock_t = maxf(status_lock_t, DECLINE_LOCK)
 		if best == "":
 			best = best_move(full.filter(func(id): return dmg.get(id, 0.0) > 0.0), dmg)
 		if best == "":
 			return ""
+	why = "best" if best != "" else "random"
 	return best if best != "" else String(pool[rng.randi() % pool.size()])
 
 

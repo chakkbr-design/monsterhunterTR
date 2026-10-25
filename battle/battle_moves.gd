@@ -299,6 +299,9 @@ func _miss_dir(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 
 
 func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.note("miss", {"who": tel.uid(user), "tgt": tel.uid(target), "move": String(mv.get("id", ""))})
 	if phys.scripted(mv):
 		return  # salto/sumiço/túnel avisam no pouso
 	var delay := 0.15
@@ -508,15 +511,20 @@ func hit(
 		elif eff < 1.0:
 			target.popup("Pouco efetivo", Color(0.7, 0.7, 0.8), 1.0, 0.85, "weak")
 		arena.note_hit(user, target, mv, dmg, hp_before)
+		var tel = arena.get("telemetry")
+		if tel:
+			tel.hit(user, target, mv, dmg, hp_before, res.crit, eff)
 		if arena.vfx:
 			arena.vfx.on_hit(user, target, mv, dir, res.crit, eff)
 	var ef = mv.get("effect")
-	if (
-		ef is Dictionary
-		and target.alive()
-		and not effects.sheer_force(user, mv)
-		and rng.randf() < float(ef.get("chance", 0.0))
-	):
+	var ef_roll := false
+	if ef is Dictionary and target.alive() and not effects.sheer_force(user, mv):
+		var ch := status_chance(user, target, mv, ef)
+		ef_roll = rng.randf() < ch
+		var tel2 = arena.get("telemetry")
+		if tel2 and ef.has("status"):
+			tel2.status_roll(user, target, mv, String(ef.status), ch, ef_roll)
+	if ef_roll:
 		if ef.has("stat"):
 			if ef.get("self", false):
 				change_stage(user, String(ef.stat), int(ef.stages))
@@ -540,6 +548,15 @@ func hit(
 				)
 	effects.after_hit(user, target, mv, dealt)
 	_landed(user, target, mv)
+
+
+## Chance do efeito secundário/status do golpe pegar (dados; o status principal passa por
+## BattleMoveEffects.status_chance_mult, que deixa veneno/queimadura/paralisia mais difíceis).
+func status_chance(user: BattleFighter, target: BattleFighter, mv: Dictionary, ef: Dictionary) -> float:
+	var ch := float(ef.get("chance", 0.0))
+	if ef.has("status") and effects.has_method("status_chance_mult"):
+		ch *= effects.status_chance_mult(user, target, mv, String(ef.status))
+	return ch
 
 
 func _dodged(f: BattleFighter, what: String) -> void:

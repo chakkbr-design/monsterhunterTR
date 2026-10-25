@@ -121,6 +121,7 @@ var terrain: BattleTerrain  ## relevo 3D (morros, picos, lagos), opts.terrain
 var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
+var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta para a bateria
 ## IA do treinador por lado (BattleTrainerAI, opcional): round_start() no começo da rodada e
 ## pick_replacement(slot) -> índice de bench_of(side) (-1 = a arena escolhe).
 var trainer_ai := {}
@@ -271,6 +272,9 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
 	end_turn = BattleEndTurn.new(self)
+	if String(o.get("telemetry", "")) != "":
+		telemetry = BattleTelemetry.new(self, String(o.telemetry))
+		telemetry.meta = o.get("telemetry_meta", {})
 	# IA do treinador (BattleTrainerAI): o adversário treinador e, sem ninguém no teclado (autoplay,
 	# treino), o lado do jogador. opts.trainer_ai = false desliga ([lado 0, lado 1] por lado).
 	trainer_ai = {}
@@ -761,6 +765,8 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
 		abilities.on_enter(f)
+	if telemetry:
+		telemetry.enter(f)
 	return f
 
 
@@ -1231,6 +1237,8 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 	var at := out.position
 	at.y = 0.0
 	say("Volte, %s!" % out.mon.display_name, "trainer" if side == 1 else "info")
+	if telemetry:
+		telemetry.note("switch", {"who": telemetry.uid(out), "to": m.species})
 	var was_ally := out == ally
 	var slot := 1 if out == enemy2 else 0
 	var aimed: Array = fighters.filter(func(g): return is_instance_valid(g) and g.opponent == out)
@@ -1553,6 +1561,8 @@ func _fight_step(dt: float) -> void:
 	for p in projectiles.filter(func(q): return q.done):
 		projectiles.erase(p)
 		p.queue_free()
+	if telemetry:
+		telemetry.step(dt)
 
 
 ## CLASH: duas investidas de lados opostos se encontram de frente: as duas param, os dois são
@@ -2377,6 +2387,8 @@ func _capture_step(_dt: float) -> void:
 
 
 func _on_fainted(f: BattleFighter) -> void:
+	if telemetry:
+		telemetry.faint(f)
 	if state == "ending" or state == "done":
 		return
 	later(
@@ -2832,6 +2844,8 @@ func _end(outcome: String, delay: float, extra := {}) -> void:
 				m.set_friend(m.friend + FRIEND_WIN)
 	result = {"outcome": outcome}
 	result.merge(extra)
+	if telemetry:
+		telemetry.finish(result)
 	state = "ending"
 	_state_t = 0.0
 	_end_delay = delay
