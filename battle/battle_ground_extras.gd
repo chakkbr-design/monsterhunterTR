@@ -84,7 +84,8 @@ const WIND_MOVES := [
 	"tailwind",
 	"whirlwind",
 	"defog",
-	"bleakwind_storm"
+	"bleakwind_storm",
+	"fairy_wind"
 ]
 const WIND_SECS := 4.0
 const WIND_LEN := 6.0
@@ -409,16 +410,17 @@ func _burn(user: BattleFighter, at: Vector3, radius: float) -> void:
 			_tele("snow_melt", {})
 
 
-func _add_web(at: Vector3, user: BattleFighter) -> void:
+func _add_web(at: Vector3, user: BattleFighter, sticky := false) -> void:
 	if not terrain.pond_at(at).is_empty() or terrain.height_at(at) > 0.1:
 		return
 	for w in webs:
 		if _flat(at - w.pos).length() < 0.6:
 			w.t = WEB_SECS  # renova
+			w["sticky"] = bool(w.get("sticky", false)) or sticky
 			return
 	if webs.size() >= WEB_MAX:
 		_drop(webs, webs[0])
-	var w := {"pos": at, "r": WEB_R, "t": WEB_SECS, "hit": {}, "node": null}
+	var w := {"pos": at, "r": WEB_R, "t": WEB_SECS, "hit": {}, "node": null, "sticky": sticky}
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active() and _flat(f.position - at).length() < WEB_R:
 			w.hit[f.get_instance_id()] = true  # quem já está em cima não "entra"
@@ -741,6 +743,8 @@ func _webs_on(f: BattleFighter) -> void:
 		w.hit[id] = true
 		f.root_t = maxf(f.root_t, WEB_ROOT)
 		f.popup("Preso na teia!", Dex.type_color("bug"), 0.9, 0.6)
+		if bool(w.get("sticky", false)):
+			arena.moves.change_stage(f, "spe", -1)  # Sticky Web
 		_tele("web_stick", {"who": _uid(f)})
 
 

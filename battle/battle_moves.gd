@@ -428,8 +428,13 @@ func hit(
 		return
 	if arena.field and arena.field.absorb_hit(user, target, mv):
 		return
-	target = _cover(user, target, mv)
-	if arena.abilities and arena.abilities.has_method("redirect"):
+	if not bool(mv.get("snipe", false)):
+		target = _cover(user, target, mv)  # Snipe Shot não é desviado
+	if (
+		not bool(mv.get("snipe", false))
+		and arena.abilities
+		and arena.abilities.has_method("redirect")
+	):
 		target = arena.abilities.redirect(user, target, mv)  # Lightning Rod / Storm Drain
 	if arena.abilities and arena.abilities.immune(user, target, mv):
 		_landed(user, target, mv)

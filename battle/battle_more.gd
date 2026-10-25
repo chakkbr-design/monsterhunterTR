@@ -87,3 +87,16 @@ static func tick(fx: BattleMoveEffects, dt: float) -> void:
 static func end_turn(fx: BattleMoveEffects, f: BattleFighter) -> void:
 	BattleMoreA.end_turn(fx, f)
 	BattleMoreB.end_turn(fx, f)
+
+
+## debuff_aoe com "special" que o BattleMoveEffects não conhece (vários atributos, troca). true = tratado aqui.
+static func debuff_move(fx: BattleMoveEffects, user: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
+	return BattleMoreA.debuff_move(fx, user, t, mv) or BattleMoreB.debuff_move(fx, user, t, mv)
+
+
+## Poder que a IA conta neste golpe (poder condicional). Negativo = sem opinião (usa o padrão).
+static func ai_power(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
+	var r := BattleMoreA.ai_power(fx, user, target, mv)
+	if r >= 0.0:
+		return r
+	return BattleMoreB.ai_power(fx, user, target, mv)
