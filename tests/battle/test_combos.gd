@@ -78,8 +78,8 @@ func _basics() -> void:
 	c.on_hit(al, foe, spark, 5)
 	# Expira
 	c.on_hit(p, foe, ember, 5)
-	c.tick(3.1)
-	check(c.marks_of(foe).is_empty(), "marcas expiram em 3 s")
+	c.tick(BattleCombos.MARK_TIME + 0.1)
+	check(c.marks_of(foe).is_empty(), "marcas expiram em MARK_TIME s")
 	# Teto do multiplicador
 	c.tick(3.0)
 	c.on_hit(p, foe, water, 5)

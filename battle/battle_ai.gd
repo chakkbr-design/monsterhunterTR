@@ -112,6 +112,8 @@ const ENERGY_KEEP := 1.0
 const REPEAT_AVOID := 0.8
 ## Peso da espera pela energia na escolha do golpe (dano / (1 + k x segundos até ter energia)).
 const ENERGY_WAIT_K := 0.35
+## Golpe que detona a marca de tipo do parceiro (BattleCombos) ganha este peso a mais na escolha.
+const COMBO_PICK := 1.3
 ## Área avisada (aoe_target/zone com preparo) no modo de energia: segura até AREA_HOLD s esperando o
 ## alvo parado (preparando golpe, atordoado, preso ou andando a menos de AREA_SLOW m/s); a mira vai
 ## AREA_LEAD x o preparo à frente de quem anda (até AREA_LEAD_MAX m).
@@ -764,7 +766,10 @@ func _after_fire(mode: int) -> void:
 	returning = true
 	var turns = f.arena.get("turns")
 	acted_round = turns.round_n if turns != null else -1
-	idle_t = 0.0
+	# Status sem dano (Harden repetido) não conta como ação: senão quem só tem status nunca vai no
+	# Desespero e a luta trava (bateria 3, Kakuna só com Harden).
+	if not f.energy_mode or float(Dex.move(last_move).get("power", 0)) > 0.0:
+		idle_t = 0.0
 	think = _think_secs()
 	retreat_t = (
 		float(_p("retreat", 0.5)) * CMD_RETREAT[mode] * (0.3 if f.mood_state == "fury" else 1.0)
@@ -1475,6 +1480,13 @@ func pick(avail: Array) -> String:
 	if best != "" and dmg.get(best, 0.0) >= float(f.opponent.hp):
 		why = "ko"
 		return best
+	var cmb = f.arena.get("combos")
+	if f.energy_mode and cmb and partner() != null:
+		# Sinergia 2x2: golpe que detona a marca do parceiro no alvo (Molhado + Elétrico...) vale mais.
+		for id in dmg:
+			var r: Dictionary = cmb._find_reaction(f, f.opponent, Dex.move(String(id)))
+			if not r.is_empty():
+				dmg[id] = float(dmg[id]) * float(r.mult) * COMBO_PICK
 	if f.energy_mode:
 		# Energia: golpe que ainda falta energia rende menos pelo tempo de espera (o barato e rápido
 		# ganha quando a barra está baixa; com a barra cheia o forte continua valendo).

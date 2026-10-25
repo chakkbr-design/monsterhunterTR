@@ -7,7 +7,7 @@ extends RefCounted
 ##   a investida passa por baixo. Ao pousar ganha Fôlego: BREATH_ENERGY de energia e a barra enche
 ##   BREATH_REGEN x por BREATH_SECS s. Recarga LEAP_CD s por Pokémon.
 ## - Segundo fôlego: uma vez por entrada, com HP abaixo de SECOND_HP e energia abaixo de SECOND_EN,
-##   recupera SECOND_ENERGY de energia.
+##   recupera SECOND_ENERGY de energia (com chance SECOND_CHANCE).
 ## - Contra-ataque: esquiva perfeita (a investida passou por baixo, ou saiu de lado e a investida não
 ##   pegou) dá COUNTER_ENERGY de energia; recarga COUNTER_ICD s.
 
@@ -33,6 +33,8 @@ const BREATH_REGEN := 1.4
 const SECOND_HP := 0.25
 const SECOND_EN := 20.0
 const SECOND_ENERGY := 30.0
+## Chance do segundo fôlego quando a condição chega (bateria 3: com 100% saía em quase todo Pokémon).
+const SECOND_CHANCE := 0.4
 ## Contra-ataque.
 const COUNTER_ENERGY := 10.0
 const COUNTER_ICD := 6.0
@@ -187,6 +189,8 @@ func _second_wind() -> void:
 	if second_used or float(f.hp) > float(f.max_hp) * SECOND_HP or f.pp_max >= SECOND_EN:
 		return
 	second_used = true
+	if f.arena.rng.randf() >= SECOND_CHANCE:
+		return
 	f.pp_max = minf(f.pp_max + SECOND_ENERGY, f.pp_base)
 	f.popup("Segundo fôlego!", Color(0.6, 1.0, 0.7), 1.0, 0.8)
 	_note("segundo_folego")

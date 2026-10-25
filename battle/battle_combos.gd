@@ -3,7 +3,8 @@ extends RefCounted
 ## Marcas de tipo, reações entre parceiros, Ressonância, golpes de dupla e a Sintonia de cada lado.
 ## A arena cria um por luta (arena.combos) e chama os ganchos abaixo; tudo aqui é opcional para o resto.
 
-const MARK_TIME := 3.0
+## Duração da marca (5 s desde 2026-10-25: com 3 s o parceiro quase nunca chegava a tempo).
+const MARK_TIME := 5.0
 const REACT_ICD := 2.5
 const MULT_CAP := 1.5
 const RESONANCE_WINDOW := 1.0
