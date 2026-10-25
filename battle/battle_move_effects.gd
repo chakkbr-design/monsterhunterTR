@@ -384,8 +384,8 @@ func _party_of(f: BattleFighter) -> Array:
 
 
 func grounded(f: BattleFighter) -> bool:
-	if active(field, "gravity"):
-		return true
+	if active(field, "gravity") or active(st(f), "smacked"):
+		return true  # Gravity e Thousand Arrows (derrubado) deixam no chão
 	if active(st(f), "magnet"):
 		return false
 	return (
@@ -746,7 +746,7 @@ func roll_hits(mv: Dictionary, user: BattleFighter = null) -> Dictionary:
 		return mv
 	var n := int(hr[1])
 	var r := rng.randf()
-	for row in HITS_ODDS:
+	for row in mv.get("hits_odds", HITS_ODDS):
 		r -= float(row[1])
 		if r < 0.0:
 			n = int(row[0])
@@ -1463,6 +1463,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.popup("Sonolento...", Color(0.75, 0.8, 0.95))
 				set_rounds(ts, "yawn", YAWN_TURNS)
 				ts.yawn_by = user
+	BattleMore.after_hit(self, user, target, mv, dealt)
 
 
 ## Status de efeito extra pelas mesmas regras do hit (imunidade de tipo, habilidade, Safeguard).

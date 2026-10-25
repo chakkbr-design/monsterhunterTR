@@ -122,7 +122,10 @@ static func knock_mult(eff: float, crit: bool, weight_kg := WEIGHT_REF) -> float
 static func weight_of(f: BattleFighter) -> float:
 	if f == null or f.mon == null:
 		return WEIGHT_REF
-	return float(Dex.species(f.body_id()).get("weight_kg", WEIGHT_REF))
+	return (
+		float(Dex.species(f.body_id()).get("weight_kg", WEIGHT_REF))
+		* float(f.get_meta("weight_mult", 1.0))
+	)  # Autotomize
 
 
 ## Metros de arremesso de um acerto (0 = só o empurrão normal).

@@ -361,6 +361,8 @@ func expected_damage(
 	if String(mv.get("special", "")) == "freeze_dry":
 		types = BattleKanto.freeze_types(types)
 	var eff := Dex.effectiveness(String(mv.get("type", "")), types)
+	if mv.has("also_type"):
+		eff *= Dex.effectiveness(String(mv.also_type), types)
 	if eff <= 0.0:
 		return 0.0
 	var kind := String(mv.get("kind", ""))
@@ -757,6 +759,14 @@ func _projectiles(
 	elif n > 1:
 		d = dir.rotated(Vector3.UP, lerpf(-spread / 2.0, spread / 2.0, float(i) / (n - 1)))
 	var target: BattleFighter = user.opponent if is_instance_valid(user.opponent) else null
+	if mv.get("split", false):
+		# Dragon Darts: na dupla cada dardo vai num adversário
+		var foes: Array = targets_of(user)
+		if foes.size() >= 2:
+			target = foes[i % foes.size()]
+			var to := user.flat_to(target)
+			if to.length() > 0.01:
+				d = to.normalized()  # cada dardo já sai na direção do seu alvo
 	arena.spawn_projectile(user, mv, d, homing, miss, target)
 	if homing:
 		arena.later(0.08, _projectiles.bind(user, mv, dir, homing, miss, i + 1))
@@ -1157,8 +1167,8 @@ func _spend_hit(target: BattleFighter, mv: Dictionary) -> int:
 ## Golpe de alvo único acerta só um alvo por uso (o primeiro que alcança), mesmo que a geometria pegue dois.
 func _claim(target: BattleFighter, mv: Dictionary) -> bool:
 	var ctx = mv.get("_cast")
-	if not ctx is Dictionary or multi_target(mv) != "":
-		return true
+	if not ctx is Dictionary or multi_target(mv) != "" or mv.get("split", false):
+		return true  # (Dragon Darts, split: cada dardo pega o seu alvo)
 	var id := target.get_instance_id()
 	if int(ctx.lock) == 0:
 		ctx.lock = id
