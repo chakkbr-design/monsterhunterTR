@@ -1495,7 +1495,7 @@ func _kanto_on_hit(
 				_stage_up(target, "atk", 6)
 				if target.mood_state == "":
 					target.mood_state = "fury"  # a IA para de recuar
-				target.popup("Rage!", Color(1.0, 0.4, 0.3), 1.0, 0.9)
+				target.popup("Rage!", Color(1.0, 0.4, 0.3), 1.0, 0.9, "special")
 				_fire(target, Color(1.0, 0.4, 0.3))
 		"cursed_body":
 			var id := String(mv.get("id", ""))

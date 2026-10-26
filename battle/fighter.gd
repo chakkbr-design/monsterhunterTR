@@ -992,7 +992,7 @@ func _endure() -> bool:
 	if arena.rng.randf() >= ENDURE_CHANCE:
 		return false
 	endured = true
-	popup("Hung on for you!", Color(1, 0.75, 0.85), 1.1, 0.9)
+	popup("Hung on for you!", Color(1, 0.75, 0.85), 1.1, 0.9, "special")
 	if arena.has_method("cut_in"):
 		arena.cut_in("HUNG ON!", Color(1, 0.6, 0.75))
 	return true

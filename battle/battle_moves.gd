@@ -515,10 +515,11 @@ func hit(
 			var gain := maxi(1, int(float(dmg) * float(mv.drain)))
 			if not (arena.abilities and arena.abilities.drain_backfires(user, target, gain)):
 				user.heal(gain)
+		# Cor do número pela efetividade (o HUD quieto do modo de energia usa; branco = normal).
 		var col := (
 			Color(1, 0.75, 0.15)
 			if eff > 1.0
-			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
+			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color.WHITE)
 		)
 		if dmg > 0:
 			target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")

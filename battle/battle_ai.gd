@@ -1213,9 +1213,9 @@ func _mood() -> void:
 		t = 1 if _rng().randf() < 0.5 else -1
 	f.mood_state = "fury" if t > 0 else "panic"
 	if f.mood_state == "fury":
-		f.popup("FURY!", Color(1, 0.35, 0.25), 1.2, 0.9)
+		f.popup("FURY!", Color(1, 0.35, 0.25), 1.2, 0.9, "special")
 	else:
-		f.popup("PANIC!", Color(0.6, 0.75, 1.0), 1.2, 0.9)
+		f.popup("PANIC!", Color(0.6, 0.75, 1.0), 1.2, 0.9, "special")
 	if f.arena.has_method("say"):
 		f.arena.say(
 			"%s went into %s!" % [f.mon.display_name, "fury" if f.mood_state == "fury" else "panic"]
@@ -1560,9 +1560,8 @@ func pick(avail: Array) -> String:
 		return best
 	var cmb = f.arena.get("combos")
 	if f.energy_mode and cmb and partner() != null:
-		# Sinergia 2x2: golpe que detona a marca do parceiro no alvo (Molhado + Elétrico...) vale mais.
-		# Com a Sintonia alta o par coordena de propósito: o peso sobe e também vale deixar a marca que o
-		# parceiro detona e fechar a dupla com o golpe que ele acabou de usar.
+		# Sinergia 2x2: com a Sintonia alta o par fecha a dupla com o golpe que o parceiro acabou de usar.
+		# (As marcas e reações não existem no modo de energia: _find_reaction e sets_up_reaction dão vazio.)
 		var sync: float = cmb.sync_of(f.side)
 		var coord: float = clampf(sync / maxf(BattleCombos.SYNC_COORD, 0.01), 0.0, 1.0)
 		var pt := partner()

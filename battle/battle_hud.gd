@@ -29,6 +29,13 @@ const MODE_W := 84.0
 const MODE_H := 16.0
 const MODE_GAP := 2.0
 const MODE_X := CARD_MARGIN + CARD_W + 8.0
+## Modo de energia (quiet = true, a arena liga): na tela da luta só aparecem números de dano
+## (efetividade pela cor, crítico pelo tamanho), gatilhos especiais (style "special": Fúria, Pânico,
+## Segundo fôlego, Contra-ataque, Última esperança...) e o balão com o nome do golpe. Dano de cenário
+## ("-12 Fell!") vira só o número. O resto (estágios, status, Missed, avisos, faixas de habilidade,
+## textos de cenário) fica só no log.
+const QUIET_STYLES := ["damage", "special"]
+const SHOWN_MAX := 400
 
 ## Clique numa pílula de modo: slot "player"/"ally", mode = índice em BattleHUD.arena_script().ALLY_MODE_NAMES.
 signal mode_clicked(slot: String, mode: int)
@@ -50,6 +57,9 @@ var _log: BattleLogLine
 var _pause_bg: PanelContainer
 var _pause: Label
 var _mode_btns := {"player": [], "ally": []}
+var quiet := false
+## Textos que apareceram na tela da luta, para os testes: [{kind, text}] (os últimos SHOWN_MAX).
+var shown: Array = []
 
 
 func _init() -> void:
@@ -258,6 +268,14 @@ func fight_flash(text := "Fight!") -> void:
 func add_popup(world: Vector3, text: String, col: Color, scale_k := 1.0, style := "") -> void:
 	if style == "":
 		style = guess_style(text)
+	if quiet and not style in QUIET_STYLES:
+		var m := RegEx.create_from_string("^-(\\d+)\\b").search(text)
+		if m == null:
+			return
+		text = m.get_string(1)  # dano de cenário: só o número
+		style = "damage"
+		col = Color.WHITE
+	_note_shown(style, text)
 	var p := Pop.new()
 	p.world = world
 	p.text = text
@@ -265,6 +283,7 @@ func add_popup(world: Vector3, text: String, col: Color, scale_k := 1.0, style :
 	p.scale_k = scale_k
 	p.style = style
 	p.life = float(Pop.LIFE.get(style, 0.8))
+	p.tint = quiet
 	if style == "damage":
 		p.jitter = randf_range(-16.0, 16.0)
 	var cam := _pops.get_viewport().get_camera_3d() if _pops.is_inside_tree() else null
@@ -303,21 +322,32 @@ static func guess_style(text: String) -> String:
 ## "Batalha Viva": balão grande com o nome do golpe, do lado do usuário (1.0 s). Novo substitui o do lado.
 func callout(f: BattleFighter, text: String, col: Color) -> void:
 	if is_instance_valid(f):
+		_note_shown("move", text)
 		_viva.add_callout(f.side, text, col)
 
 
 ## Faixa diagonal de impacto ("NOCAUTE!", "CRITICAL!"); a arena congela a luta, o HUD só desenha.
-func cut_in(text: String, col: Color, secs := 0.4) -> void:
+## Com quiet só desenha a de gatilho especial (special = true).
+func cut_in(text: String, col: Color, secs := 0.4, special := false) -> void:
+	if quiet and not special:
+		return
+	_note_shown("cut_in", text)
 	_viva.start_cut(text, col, secs)
 
 
 ## Popup grande central (reações, golpes de dupla), 0.8 s.
 func combo(text: String, col: Color) -> void:
+	if quiet:
+		return
+	_note_shown("combo", text)
 	_viva.start_combo(text, col)
 
 
 ## Aviso curto embaixo da arena, acima da faixa de log (CLASH, Ressonância, reações): não cobre a luta.
 func warn(text: String, col: Color) -> void:
+	if quiet:
+		return
+	_note_shown("warn", text)
 	_viva.add_warn(text, col)
 
 
@@ -327,12 +357,21 @@ func warn_text() -> String:
 
 ## Faixa "[Pokémon] — [HABILIDADE]" do lado do lutador (1.2 s).
 func ability_banner(f: BattleFighter, ability_name: String) -> void:
+	if quiet:
+		return
 	if is_instance_valid(f):
+		_note_shown("ability", ability_name)
 		_viva.add_ability(f.side, "%s — %s" % [f.mon.display_name, ability_name])
 
 
 func callout_text(side: int) -> String:
 	return _viva.callout_text(side)
+
+
+func _note_shown(kind: String, text: String) -> void:
+	shown.append({"kind": kind, "text": text})
+	if shown.size() > SHOWN_MAX:
+		shown.pop_front()
 
 
 func cut_in_text() -> String:
@@ -987,6 +1026,7 @@ class Pop:
 		"dodge": 0.8,
 		"interrupted": 0.8,
 		"heal": 0.75,
+		"special": 1.1,
 		"info": 0.8
 	}
 	const SKEW := -0.2
@@ -1003,6 +1043,8 @@ class Pop:
 	var jitter := 0.0
 	var stack := 0.0
 	var screen := Vector2.ZERO
+	## Modo quieto: o número de dano usa `col` (efetividade); branco = cor normal.
+	var tint := false
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1071,7 +1113,10 @@ class Pop:
 		match style:
 			"damage":
 				var crit := scale_k > 1.45
-				_text(text, 40 if crit else 30, CRIT_TXT if crit else CREAM, 12)
+				var c := CRIT_TXT if crit else CREAM
+				if tint and not col.is_equal_approx(Color.WHITE):
+					c = col
+				_text(text, 40 if crit else 30, c, 12)
 			"crit":
 				_text(text, 19, Color(1.0, 0.85, 0.2))
 			"super":

@@ -319,6 +319,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
+	if hud:
+		hud.quiet = quiet_callouts()
 	_setup_stands()
 	terrain.setup()
 	field.setup()
@@ -926,6 +928,12 @@ func energy_on() -> bool:
 	return String(opts.get("battle_mode", "vgc")) == "energy"
 
 
+## Modo de energia: na tela só dano, gatilhos especiais e o nome do golpe (BattleHUD.quiet).
+## opts.loud_callouts = true volta a mostrar todos os textos.
+func quiet_callouts() -> bool:
+	return energy_on() and not bool(opts.get("loud_callouts", false))
+
+
 ## Quadra voxel (opts.voxel, o treino no modo de energia): obstáculos na grade de 0,25 m e piso, linhas
 ## e cerca em voxel no lugar da quadra dourada. Nunca no VGC.
 func voxel_court() -> bool:
@@ -984,13 +992,14 @@ func telegraph(e: Dictionary) -> void:
 
 
 ## Cena de impacto: o HUD desenha a faixa e a luta congela um instante (no máx. uma a cada CUT_IN_GAP).
-func cut_in(text: String, col: Color, secs := CUT_IN_SECS) -> bool:
-	if _cut_gap > 0.0:
-		return false
+## special = gatilho especial: aparece também com o HUD quieto do modo de energia.
+func cut_in(text: String, col: Color, secs := CUT_IN_SECS, special := false) -> bool:
+	if _cut_gap > 0.0 or (quiet_callouts() and not special):
+		return false  # HUD quieto: sem a faixa, congelar pareceria travada
 	_cut_gap = CUT_IN_GAP
 	_cut_t = secs
 	if hud and hud.has_method("cut_in"):
-		hud.cut_in(text, col, secs)
+		hud.cut_in(text, col, secs, special)
 	return true
 
 
@@ -2527,7 +2536,7 @@ func _last_stand(f: BattleFighter) -> void:
 	p.set_meta("last_stand", true)
 	moves.change_stage(p, "atk", 1)
 	moves.change_stage(p, "spa", 1)
-	p.popup("Last hope!", Color(1, 0.8, 0.4), 1.2, 1.1)
+	p.popup("Last hope!", Color(1, 0.8, 0.4), 1.2, 1.1, "special")
 
 
 func _other_enemy_up(f: BattleFighter) -> bool:

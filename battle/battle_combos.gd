@@ -2,6 +2,8 @@ class_name BattleCombos
 extends RefCounted
 ## Marcas de tipo, reações entre parceiros, Ressonância, golpes de dupla e a Sintonia de cada lado.
 ## A arena cria um por luta (arena.combos) e chama os ganchos abaixo; tudo aqui é opcional para o resto.
+## Modo de energia (Caio, 2026-10-26): sem marcas, reações nem Ressonância (não são mecânicas oficiais);
+## ficam os golpes de dupla e a Sintonia, e o nome da dupla sai no balão normal de golpe.
 
 ## Duração da marca (5 s desde 2026-10-25: com 3 s o parceiro quase nunca chegava a tempo).
 const MARK_TIME := 5.0
@@ -201,10 +203,15 @@ func tick(dt: float) -> void:
 			_sync[s] = maxf(0.0, _sync[s] - SYNC_DECAY * dt)
 
 
+## Marcas de tipo, reações e Ressonância ligadas? Só fora do modo de energia.
+func marks_on() -> bool:
+	return not (arena.has_method("energy_on") and arena.energy_on())
+
+
 ## Multiplicador aplicado no fim da fórmula de dano (1.0 = nada). Chamado antes de cada acerto com dano.
 func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	_pending = {}
-	if bool(mv.get("combo", false)) or not _ok(user) or not _ok(target):
+	if not marks_on() or bool(mv.get("combo", false)) or not _ok(user) or not _ok(target):
 		return 1.0
 	var react := _find_reaction(user, target, mv)
 	var reson := _resonates(user, target, mv)
@@ -221,6 +228,9 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 ## Depois de um acerto (com ou sem dano): coloca marcas, detona reações do parceiro.
 func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: int) -> void:
 	if bool(mv.get("combo", false)) or not _ok(user) or not _ok(target):
+		return
+	if not marks_on():
+		_note_near(user)  # a Sintonia continua (golpes de dupla)
 		return
 	var react: Dictionary = {}
 	var reson := false
@@ -297,6 +307,8 @@ func completes_duo(user: BattleFighter, mv: Dictionary) -> bool:
 
 ## Para a IA do par: o golpe `mv` deixa uma marca que algum golpe do parceiro detona?
 func sets_up_reaction(user: BattleFighter, partner: BattleFighter, mv: Dictionary) -> bool:
+	if not marks_on():
+		return false
 	var mid := _mark_for(mv)
 	if mid == "" or not _ok(partner):
 		return false
@@ -373,6 +385,8 @@ func _place_mark(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 
 ## Primeira reação da tabela que casa com uma marca do parceiro e o golpe.
 func _find_reaction(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dictionary:
+	if not marks_on():
+		return {}
 	var tid := target.get_instance_id()
 	if not _marks.has(tid) or _icd.has(tid):
 		return {}
@@ -592,9 +606,17 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 	_duo_cd[u1.side] = DUO_COOLDOWN
 	_used.clear()
 	_add_sync(u1.side, 0.0)
-	_notify("COMBO! %s" % String(duo.name), col)
-	var mid_at := (u1.pos2(u1.position) + u2.pos2(u2.position)) * 0.5
-	arena.popup(mid_at + Vector3(0, 2.2, 0), String(duo.name).to_upper() + "!", col, 2.2, "super")
+	if not marks_on():
+		# Modo de energia: o nome da dupla sai no balão de golpe de quem fechou, como um golpe normal.
+		arena.say("%s and %s: %s!" % [u1.mon.display_name, u2.mon.display_name, String(duo.name)])
+		if arena.hud and arena.hud.has_method("callout"):
+			arena.hud.callout(u1, String(duo.name), col)
+	else:
+		_notify("COMBO! %s" % String(duo.name), col)
+		var mid_at := (u1.pos2(u1.position) + u2.pos2(u2.position)) * 0.5
+		arena.popup(
+			mid_at + Vector3(0, 2.2, 0), String(duo.name).to_upper() + "!", col, 2.2, "super"
+		)
 	arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	_pixel_burst_key(u1, "sparkle", 1.4, 0.5)
