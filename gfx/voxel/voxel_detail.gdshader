@@ -51,7 +51,10 @@ void fragment() {
 	col *= 1.0 + edge_light * (1.0 - smoothstep(0.0, 0.12, ed));
 	vec3 wn = normalize((MODEL_MATRIX * vec4(n, 0.0)).xyz);
 	float up = smoothstep(0.6, 0.9, wn.y) * weather;
-	col = mix(col, vec3(0.86, 0.9, 0.96), up * smoothstep(0.1, 0.6, snow_cover));
+	// Snow on the tops, with a per-voxel grain (not one flat white).
+	vec3 vc = floor(g - n * 0.5);
+	float grain = 0.88 + 0.12 * fract(sin(dot(vc, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+	col = mix(col, vec3(0.86, 0.9, 0.96) * grain, up * smoothstep(0.1, 0.6, snow_cover));
 	col *= mix(1.0, 0.7, rain_wet * weather);
 	ALBEDO = col;
 	AO = COLOR.a;
