@@ -392,9 +392,7 @@ func _burn(user: BattleFighter, at: Vector3, radius: float) -> void:
 			if float(br.gone_t) <= 0.0 and _seg_dist(at, br.a, br.b) < BRIDGE_HALF + reach:
 				br.gone_t = BRIDGE_GONE
 				_tele("bridge_burn", {"by": _uid(user)})
-				arena.popup(
-					br.mid + Vector3(0, 0.8, 0), "O tronco queimou!", Dex.type_color("fire")
-				)
+				arena.popup(br.mid + Vector3(0, 0.8, 0), "The log burned!", Dex.type_color("fire"))
 				if is_instance_valid(br.get("node")):
 					br.node.visible = false
 					if _vis():
@@ -463,7 +461,7 @@ func _vine(user: BattleFighter, at: Vector3, radius: float) -> void:
 		if old.who == best:
 			_drop(vines, old)
 	best.root_t = maxf(best.root_t, VINE_ROOT)
-	best.popup("Preso no cipó!", Dex.type_color("grass"), 0.9, 0.6)
+	best.popup("Caught in the vines!", Dex.type_color("grass"), 0.9, 0.6)
 	var v := {"who": best, "t": VINE_ROOT, "node": null}
 	if _vis() and terrain.lattice:
 		v.node = ArenaVoxels.flat("vine", 0.55, best.position, "", ArenaVoxels.FINE)
@@ -552,7 +550,7 @@ func _zap(py: Dictionary, user: BattleFighter, mv: Dictionary) -> void:
 	if float(py.cd) > 0.0:
 		return
 	py.cd = ZAP_CD
-	arena.popup(py.pos + Vector3(0, PYLON_H, 0), "Para-raios!", Dex.type_color("electric"))
+	arena.popup(py.pos + Vector3(0, PYLON_H, 0), "Lightning rod!", Dex.type_color("electric"))
 	if _vis():
 		PixelFx.pop(arena, "electric", py.pos + Vector3(0, 1.2, 0), ZAP_R * 1.6, 0.5)
 	if not is_instance_valid(user):
@@ -680,7 +678,7 @@ func after_hit(
 	terrain._slide(target, to, BRIDGE_DROP_SECS)
 	target.interrupt_prepare()
 	target.stun_t = maxf(target.stun_t, BRIDGE_STUN)
-	target.popup("Caiu na água!", Dex.type_color("water"), 1.0, 0.7)
+	target.popup("Fell into the water!", Dex.type_color("water"), 1.0, 0.7)
 	_tele("bridge_drop", {"who": _uid(target), "by": _uid(user)})
 	return true
 
@@ -759,7 +757,7 @@ func _webs_on(f: BattleFighter) -> void:
 			continue
 		w.hit[id] = true
 		f.root_t = maxf(f.root_t, WEB_ROOT)
-		f.popup("Preso na teia!", Dex.type_color("bug"), 0.9, 0.6)
+		f.popup("Caught in the web!", Dex.type_color("bug"), 0.9, 0.6)
 		if bool(w.get("sticky", false)):
 			arena.moves.change_stage(f, "spe", -1)  # Sticky Web
 		_tele("web_stick", {"who": _uid(f)})

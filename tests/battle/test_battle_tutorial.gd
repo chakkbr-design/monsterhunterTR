@@ -98,7 +98,7 @@ func _lesson() -> void:
 	check(t.waiting_for_dismiss(), "intro espera o OK")
 	check(not paused, "lição não pausa a árvore")
 	check(
-		t._bubble.visible and t._bubble_body.text.begins_with("Aqui as batalhas"), "fala do intro"
+		t._bubble.visible and t._bubble_body.text.begins_with("Battles here"), "fala do intro"
 	)
 	var pos: Vector3 = a.enemy.position
 	_run(a, 1.5)
@@ -120,12 +120,12 @@ func _lesson() -> void:
 	_run(a, 1.5)
 	a.moves.use(a.player, "growl")
 	check(t.lesson_step() == "stat", "Growl avança para 'stat' (%s)" % t.lesson_step())
-	check(t._bubble_body.text.contains("Ataque"), "fala do ▼ cita o Ataque")
+	check(t._bubble_body.text.contains("Attack"), "fala do ▼ cita o Ataque")
 	_run(a, 0.5)
 	_tick(t, 3.6)
 	check(t.lesson_step() == "attack", "stat espera 3,5 s e vai para 'attack'")
 	check(a.tut_move == 0 and a.tut_walk and a.tut_hold_foe, "attack: Scratch e andar liberados")
-	check(t._bubble_body.text.contains("aperte 1"), "fala do attack: " + t._bubble_body.text)
+	check(t._bubble_body.text.contains("press 1"), "fala do attack: " + t._bubble_body.text)
 	# Encosta e acerta.
 	a.player.position = a.enemy.position + (a.player.position - a.enemy.position).normalized() * 0.9
 	a.player.facing = (a.enemy.position - a.player.position).normalized()
@@ -159,7 +159,7 @@ func _cards() -> void:
 	check(t.current_card() == "start", "cartão start")
 	check(paused, "cartão pausa a árvore")
 	check(g.flags.get("tut_start", false), "flag tut_start")
-	check(t._title.text == "Batalhas em tempo real", "título do start")
+	check(t._title.text == "Real-time battles", "título do start")
 	t._close()
 	check(not paused and not t.is_showing(), "fechar despausa")
 	a.player.gcd_t = 0.0
@@ -171,7 +171,7 @@ func _cards() -> void:
 	a.enemy.gcd_t = 0.0
 	a.moves.use(a.enemy, "tail_whip")
 	check(t.current_card() == "stat", "cartão stat (golpe de status do adversário)")
-	check(t._body.text.begins_with("Squirtle usou Tail Whip!"), "texto do stat: " + t._body.text)
+	check(t._body.text.begins_with("Squirtle used Tail Whip!"), "texto do stat: " + t._body.text)
 	t._close()
 	# Golpe com poder do adversário: dodge.
 	_run(a, 1.5)
@@ -182,7 +182,7 @@ func _cards() -> void:
 	a.player.hp = int(a.player.max_hp * 0.4)
 	_tick(t, DT)
 	check(t.current_card() == "hp", "cartão hp")
-	check(t._body.text.contains("Aperte E"), "hp com Poção: " + t._body.text)
+	check(t._body.text.contains("Press E"), "hp com Poção: " + t._body.text)
 	t._close()
 	check(not paused, "fila vazia despausa")
 	for id in ["start", "cooldown", "dodge", "stat", "hp"]:

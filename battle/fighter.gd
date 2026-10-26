@@ -633,7 +633,7 @@ func interrupt_prepare() -> void:
 	stun_t = maxf(stun_t, PREPARE_STUN)
 	if id != "":
 		move_cd[id] = minf(float(move_cd.get(id, 0.0)), gcd_t)
-	popup("Interrompido!", Color(0.9, 0.9, 0.9), 0.8)
+	popup("Interrupted!", Color(0.9, 0.9, 0.9), 0.8)
 
 
 func start_dash(mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
@@ -670,7 +670,7 @@ func struggle() -> bool:
 	struggle_cd = STRUGGLE_CD
 	gcd_t = Dex.GLOBAL_COOLDOWN / speed_factor()
 	var dir := aim_dir()
-	popup("Desespero", Color(0.9, 0.9, 0.9), 1.0, 0.9)
+	popup("Struggle", Color(0.9, 0.9, 0.9), 1.0, 0.9)
 	begin_prepare(
 		"",
 		LUNGE_PREPARE,
@@ -803,15 +803,15 @@ func try_act() -> void:
 		sleep_turns -= 1
 		if sleep_turns <= 0:
 			clear_status()
-			popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+			popup("Woke up!", Color(0.85, 0.9, 1.0), 0.9)
 	elif status == "freeze" and _chance(THAW_CHANCE):
 		clear_status()
-		popup("Descongelou!", Color(0.7, 0.95, 1.0), 0.9)
+		popup("Thawed out!", Color(0.7, 0.95, 1.0), 0.9)
 	if confusion_t > 0.0:
 		confusion_turns -= 1
 		if confusion_turns <= 0:
 			confusion_t = 0.0
-			popup("Saiu da confusão!", Color(0.9, 0.8, 1.0), 0.9)
+			popup("Snapped out of confusion!", Color(0.9, 0.8, 1.0), 0.9)
 
 
 ## Fim da rodada para quem não segue a fila: a rodada inteira vale como a tentativa de agir (menos a
@@ -824,15 +824,15 @@ func round_count() -> void:
 		sleep_turns -= 1
 		if sleep_turns <= 1:
 			clear_status()
-			popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+			popup("Woke up!", Color(0.85, 0.9, 1.0), 0.9)
 	elif status == "freeze" and r != status_round and _chance(THAW_CHANCE):
 		clear_status()
-		popup("Descongelou!", Color(0.7, 0.95, 1.0), 0.9)
+		popup("Thawed out!", Color(0.7, 0.95, 1.0), 0.9)
 	if confusion_t > 0.0 and r != confusion_round:
 		confusion_turns -= 1
 		if confusion_turns <= 1:
 			confusion_t = 0.0
-			popup("Saiu da confusão!", Color(0.9, 0.8, 1.0), 0.9)
+			popup("Snapped out of confusion!", Color(0.9, 0.8, 1.0), 0.9)
 
 
 func _chance(p: float) -> bool:
@@ -974,7 +974,7 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 		if immortal:
 			hp = max_hp
 			mon.hp = hp
-			popup("KO! (recarregado)", Color(1, 0.4, 0.4))
+			popup("KO! (recharged)", Color(1, 0.4, 0.4))
 			refresh_label()
 			return imp
 		_faint()
@@ -992,9 +992,9 @@ func _endure() -> bool:
 	if arena.rng.randf() >= ENDURE_CHANCE:
 		return false
 	endured = true
-	popup("Aguentou firme por você!", Color(1, 0.75, 0.85), 1.1, 0.9)
+	popup("Hung on for you!", Color(1, 0.75, 0.85), 1.1, 0.9)
 	if arena.has_method("cut_in"):
-		arena.cut_in("AGUENTOU!", Color(1, 0.6, 0.75))
+		arena.cut_in("HUNG ON!", Color(1, 0.6, 0.75))
 	return true
 
 
@@ -1006,7 +1006,7 @@ func _faint() -> void:
 	lunge_t = 0.0
 	root_t = 0.0
 	sprinting = false
-	popup("%s desmaiou!" % mon.display_name, Color(1, 0.4, 0.4), 0.7, 1.2)
+	popup("%s fainted!" % mon.display_name, Color(1, 0.4, 0.4), 0.7, 1.2)
 	if arena and arena.get("moves"):
 		arena.moves.effects.note_faint(self)  # Retaliate
 	preload("res://audio/cue.gd").sfx("faint")
@@ -1057,13 +1057,13 @@ func tick(dt: float) -> void:
 		par_t -= dt
 		if par_t <= 0.0:
 			clear_status()
-			popup("Não está mais paralisado", Color(1, 1, 0.5), 0.8)
+			popup("No longer paralyzed", Color(1, 1, 0.5), 0.8)
 	if energy_mode and status_t > 0.0 and status != "paralysis":
 		# Modo de energia: o status grave passa sozinho (descansando, mais rápido).
 		status_t -= dt * (BattleEnergy.REST_CURE if BattleEnergy.resting(self) else 1.0)
 		if status_t <= 0.0:
 			clear_status()
-			popup("O status passou!", Color(0.8, 1.0, 0.8), 0.8)
+			popup("The status wore off!", Color(0.8, 1.0, 0.8), 0.8)
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)
@@ -1299,7 +1299,7 @@ func _check_dash_hit() -> void:
 		if passes_under(t):
 			if not dash_dodged.has(t.get_instance_id()):
 				dash_dodged[t.get_instance_id()] = true
-				t.popup("DESVIOU!", Color(0.75, 0.9, 1.0))
+				t.popup("DODGED!", Color(0.75, 0.9, 1.0))
 				if arena.has_signal("dodged"):
 					arena.emit_signal("dodged", t, "under")
 			continue
@@ -1317,12 +1317,12 @@ func _check_lunge_hit() -> void:
 	lunge_done = true
 	lunge_t = 0.0
 	if passes_under(opponent):
-		opponent.popup("DESVIOU!", Color(0.75, 0.9, 1.0))
+		opponent.popup("DODGED!", Color(0.75, 0.9, 1.0))
 		return
 	arena.moves.hit(self, opponent, STRUGGLE, lunge_dir)
 	if alive():
 		take_damage(paced(maxi(1, int(max_hp / 4.0))), Vector3.ZERO, 0.0)
-		popup("Recuo", Color(0.9, 0.6, 0.6), 0.8)
+		popup("Recoil", Color(0.9, 0.6, 0.6), 0.8)
 
 
 ## Evoluiu no meio da luta (evolution.gd _complete: creature.apply_species): espécie, tipos, golpes e altura

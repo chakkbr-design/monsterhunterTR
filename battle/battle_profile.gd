@@ -7,12 +7,12 @@ extends RefCounted
 
 const PATH := "res://data/battle_profiles.json"
 const NAMES := {
-	"brawler": "Brigão",
-	"shooter": "Atirador",
-	"skirmisher": "Escaramuçador",
-	"wall": "Muralha",
-	"trickster": "Trapaceiro",
-	"flyer": "Voador",
+	"brawler": "Brawler",
+	"shooter": "Shooter",
+	"skirmisher": "Skirmisher",
+	"wall": "Wall",
+	"trickster": "Trickster",
+	"flyer": "Flyer",
 }
 ## band: distância preferida sem golpe em mente; retreat: s recuando depois de bater (e até onde);
 ## strafe: quanto anda de lado; dodge: chance de reagir a golpe avisado; think: ritmo de decisão;

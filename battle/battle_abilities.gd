@@ -774,10 +774,10 @@ func _entry(f: BattleFighter) -> bool:
 			return _do_trace(f)
 		"pressure":
 			_fire(f, Color(0.75, 0.55, 0.9))
-			f.popup("Pressão!", Color(0.75, 0.55, 0.9), 0.9, 0.9)
+			f.popup("Pressure!", Color(0.75, 0.55, 0.9), 0.9, 0.9)
 		"neutralizing_gas":
 			_fire(f, Color(0.7, 0.9, 0.5))
-			f.popup("Gás tóxico!", Color(0.7, 0.9, 0.5), 0.9, 0.9)
+			f.popup("Neutralizing Gas!", Color(0.7, 0.9, 0.5), 0.9, 0.9)
 		"imposter":
 			return _do_imposter(f)
 		_:
@@ -855,7 +855,7 @@ func _do_frisk(f: BattleFighter) -> bool:
 		if held != "":
 			it = String(Dex.item(held).get("name", held))
 		f.popup(
-			"%s: %s" % [t.mon.display_name, it if it != "" else "sem item"],
+			"%s: %s" % [t.mon.display_name, it if it != "" else "no item"],
 			Color(0.7, 0.9, 1.0),
 			0.8,
 			0.9
@@ -926,7 +926,7 @@ func _do_anticipation(f: BattleFighter) -> bool:
 			if _dangerous(Dex.move(String(id)), f.types):
 				s.shudder = true
 	if s.shudder:
-		f.popup("Arrepio!", Color(0.8, 0.7, 1.0), 0.9, 0.9)
+		f.popup("Shudder!", Color(0.8, 0.7, 1.0), 0.9, 0.9)
 		_fire(f, Color(0.8, 0.7, 1.0))
 	return true
 
@@ -959,7 +959,7 @@ func _do_forewarn(f: BattleFighter) -> bool:
 		if best != "":
 			s.warn[t.get_instance_id()] = best
 			f.popup(
-				"Alerta: %s" % String(Dex.move(best).get("name", best)),
+				"Forewarn: %s" % String(Dex.move(best).get("name", best)),
 				Color(1.0, 0.8, 0.5),
 				0.85,
 				0.9
@@ -1003,7 +1003,7 @@ func _do_trace(f: BattleFighter) -> bool:
 	var got := String(pool[arena.rng.randi() % pool.size()])
 	f.set_meta("ability_override", got)
 	f.popup(
-		"Copiou %s" % String(Dex.ability(got).get("name", got.to_upper())),
+		"Copied %s" % String(Dex.ability(got).get("name", got.to_upper())),
 		Color(0.7, 0.9, 1.0),
 		0.9,
 		0.9
@@ -1031,7 +1031,7 @@ func _foresaw(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> boo
 		chance = FOREWARN_DODGE
 	if not _roll(chance):
 		return false
-	target.popup("Previu!", Color(0.8, 0.9, 1.0), 1.0, 0.5)
+	target.popup("Foresaw!", Color(0.8, 0.9, 1.0), 1.0, 0.5)
 	_fire(target, Color(0.8, 0.9, 1.0))
 	return true
 
@@ -1309,7 +1309,7 @@ func immune(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
 		and user.side != target.side
 		and "dark" in target.types
 	):
-		target.popup("Não afeta...", Color(0.7, 0.7, 0.7))
+		target.popup("It doesn't affect...", Color(0.7, 0.7, 0.7))
 		return true
 	if user.side != target.side and _foresaw(user, target, mv):
 		return true  # Anticipation / Forewarn: viu o golpe vindo
@@ -1435,7 +1435,7 @@ func on_hit(
 				)
 		elif ta == "cute_charm" and ua != "oblivious" and _attracts(user, target):
 			user.gcd_t += 1.2
-			user.popup("Enfeitiçado!", Color(1.0, 0.55, 0.75))
+			user.popup("Infatuated!", Color(1.0, 0.55, 0.75))
 			_fire(target, Color(1.0, 0.55, 0.75))
 		elif ta == "rough_skin" and ua != "magic_guard":
 			var chip := user.paced(maxi(1, int(user.max_hp / 8.0)))
@@ -1485,7 +1485,7 @@ func _kanto_on_hit(
 		):
 			_fire(user, Color(0.75, 0.35, 0.95))
 			target.popup(
-				String(BattleMoves.STATUS_WORDS.get("poison", "ENVENENADO!")), Color(1, 0.9, 0.6)
+				String(BattleMoves.STATUS_WORDS.get("poison", "POISONED!")), Color(1, 0.9, 0.6)
 			)
 	if user.side == target.side or power <= 0.0:
 		return
@@ -1495,14 +1495,14 @@ func _kanto_on_hit(
 				_stage_up(target, "atk", 6)
 				if target.mood_state == "":
 					target.mood_state = "fury"  # a IA para de recuar
-				target.popup("Fúria!", Color(1.0, 0.4, 0.3), 1.0, 0.9)
+				target.popup("Rage!", Color(1.0, 0.4, 0.3), 1.0, 0.9)
 				_fire(target, Color(1.0, 0.4, 0.3))
 		"cursed_body":
 			var id := String(mv.get("id", ""))
 			if user.alive() and id != "" and _roll(CURSED_CHANCE):
 				user.move_cd[id] = maxf(float(user.move_cd.get(id, 0.0)), CURSED_LOCK)
 				user.popup(
-					"%s travado!" % String(mv.get("name", id)), Color(0.6, 0.45, 0.8), 0.9, 0.7
+					"%s locked!" % String(mv.get("name", id)), Color(0.6, 0.45, 0.8), 0.9, 0.7
 				)
 				_fire(target, Color(0.6, 0.45, 0.8))
 		"rattled":
@@ -1840,11 +1840,11 @@ func weather_residual(f: BattleFighter) -> void:
 				_round_heal(f, 1.0 / 8.0, "Dry Skin")
 		"sun":
 			if a in ["dry_skin", "solar_power"] and not guard:
-				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3), "sol")
+				_weather_chip(f, 1.0 / 8.0, Color(1.0, 0.75, 0.3), "sun")
 				_fire(f, Color(1.0, 0.75, 0.3))
 		"sand":
 			if not _sand_proof(f, a):
-				_weather_chip(f, 1.0 / 16.0, Color(0.85, 0.72, 0.42), "areia")
+				_weather_chip(f, 1.0 / 16.0, Color(0.85, 0.72, 0.42), "sand")
 		"hail":
 			if a == "ice_body":
 				_round_heal(f, 1.0 / 16.0, "Ice Body")
@@ -1906,7 +1906,7 @@ func _early_bird(f: BattleFighter) -> void:
 	f.sleep_turns -= 1
 	if f.sleep_turns <= 1:
 		f.clear_status()
-		f.popup("Acordou!", Color(0.85, 0.9, 1.0), 0.9)
+		f.popup("Woke up!", Color(0.85, 0.9, 1.0), 0.9)
 		_fire(f, Color(1.0, 0.9, 0.5))
 
 
@@ -1919,7 +1919,7 @@ func _harvest(f: BattleFighter) -> void:
 	f.item_used = false
 	f.set_meta("ate_berry", false)
 	_state(f).unburdened = false
-	f.popup("Colheu a frutinha!", Color(0.6, 1.0, 0.5), 0.9, 0.7)
+	f.popup("Harvested a Berry!", Color(0.6, 1.0, 0.5), 0.9, 0.7)
 	_fire(f, Color(0.6, 1.0, 0.5))
 	var et = arena.get("end_turn")
 	if et and et.has_method("held_check"):
@@ -1935,7 +1935,7 @@ func _healer(f: BattleFighter) -> void:
 	if not _roll(HEALER_CHANCE if p != null else HEALER_SELF):
 		return
 	who.clear_status()
-	who.popup("Curado!", Color(0.6, 1.0, 0.7), 0.9)
+	who.popup("Cured!", Color(0.6, 1.0, 0.7), 0.9)
 	_fire(f, Color(0.6, 1.0, 0.7))
 
 

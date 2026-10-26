@@ -577,7 +577,7 @@ func _pause() -> void:
 	_run(a, 2.0)
 	check(e.position == at and e.hp == hp, "a luta para com a pausa aberta")
 	a.step(DT)
-	check(a.hud.pause_text().contains("FUGIR"), "HUD mostra a lista da pausa")
+	check(a.hud.pause_text().contains("RUN"), "HUD mostra a lista da pausa")
 	a.choose_pause("resume")
 	check(not a.pause_open and a.state == "fight", "VOLTAR fecha a pausa")
 	a.open_pause()
@@ -591,7 +591,7 @@ func _pause() -> void:
 	t.open_pause()
 	t.choose_pause("run")
 	check(t.pause_open and t.state == "fight", "FUGIR recusa em treinador e a pausa fica aberta")
-	check(t.log_lines[-1].begins_with("Não! Não dá para fugir"), "aviso de treinador no log")
+	check(t.log_lines[-1].begins_with("No! There's no running"), "aviso de treinador no log")
 	_done(t)
 	var party := [Mon.create("charmander", 12), Mon.create("squirtle", 12)]
 	var d := _arena(party, [Mon.create("rattata", 12)], {"seed": 21})
@@ -613,15 +613,16 @@ func _trainer_lines() -> void:
 		{"kind": "trainer", "trainer_id": "bug_catcher_rick", "seed": 6}
 	)
 	var nm: String = a.trainer_name()
-	check(nm != "" and not nm.begins_with("O treinador"), "nome do treinador (%s)" % nm)
+	check(nm != "" and not nm.begins_with("The trainer"), "nome do treinador (%s)" % nm)
 	check(
-		a.hud.banner_text() == "%s quer lutar!" % nm, "faixa de desafio (%s)" % a.hud.banner_text()
+		a.hud.banner_text() == "%s wants to battle!" % nm,
+		"faixa de desafio (%s)" % a.hud.banner_text()
 	)
 	check(not a.enemy.visible, "1º Pokémon só aparece depois do desafio")
 	_run(a, 1.3)
 	check(a.enemy.visible, "1º Pokémon aparece")
 	check(
-		a.hud.banner_text() == "%s mandou Weedle!" % nm,
+		a.hud.banner_text() == "%s sent out Weedle!" % nm,
 		"mandou com o nome (%s)" % a.hud.banner_text()
 	)
 	_run(a, 1.3)
@@ -629,11 +630,11 @@ func _trainer_lines() -> void:
 	a.enemy.controller = "none"
 	a.enemy.take_damage(a.enemy.hp, Vector3.ZERO, 0.0)
 	a.step(DT)
-	check("Volte, Weedle!" in a.log_lines, "Volte, X! na troca")
+	check("Come back, Weedle!" in a.log_lines, "Volte, X! na troca")
 	_run(a, 0.6)
 	_next_round(a)  # o substituto entra no fim da rodada
 	check(
-		("%s vai mandar Caterpie!" % nm) in a.log_lines,
+		("%s is about to send out Caterpie!" % nm) in a.log_lines,
 		"vai mandar com o nome (%s)" % [a.log_lines.slice(-3)]
 	)
 	_run(a, 2.0)
@@ -672,17 +673,17 @@ func _results() -> void:
 		if a.state == "results" and a.hud._player_card.script_xp >= 0.0:
 			saw_fill = true
 	var lines: Array = a.log_lines
-	var gained := lines.filter(func(l): return l.contains(" ganhou ") and l.ends_with(" de EXP."))
+	var gained := lines.filter(func(l): return l.contains(" gained ") and l.ends_with(" EXP."))
 	check(gained.size() == 1, "linha de EXP no resultado (%s)" % [lines.slice(-6)])
 	check(saw_fill, "barra de EXP enche no cartão")
 	if mine.level > lv0:
 		check(
-			lines.has("%s subiu para o Nv %d!" % [mine.display_name, mine.level]),
+			lines.has("%s grew to Lv %d!" % [mine.display_name, mine.level]),
 			"linha de nível no resultado"
 		)
 	var prize: int = g.trainer_payout("brock", 12)
 	check(
-		lines[-1] == "Você ganhou ₽%d pela vitória!" % prize,
+		lines[-1] == "You got ₽%d for winning!" % prize,
 		"linha do prêmio por último (%s)" % lines[-1]
 	)
 	check(a.state == "done" and a.get_meta("got").outcome == "win", "resultado termina a batalha")
@@ -707,7 +708,7 @@ func _capture_pc_and_ball() -> void:
 		t += DT
 	var line := String(a.log_lines[-1])
 	check(
-		line.contains("foi capturado!") and line.ends_with("Pidgey foi mandado para o PC."),
+		line.contains("was caught!") and line.ends_with("Pidgey was sent to the PC."),
 		"equipe cheia avisa o PC (%s)" % line
 	)
 	check(int(g.bag.get("master_ball", 0)) == 0, "gastou a bola escolhida")
@@ -734,7 +735,7 @@ func _auto_battle() -> void:
 		foes,
 		{
 			"kind": "trainer",
-			"trainer_name": "Time B",
+			"trainer_name": "Team B",
 			"seed": 9,
 			"auto_battle": true,
 			"tutorial": true,

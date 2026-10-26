@@ -227,51 +227,51 @@ const FORMS := {
 		"m": {"atk": 0.21, "def": 1.9, "spa": 4.7, "spd": 1.9, "spe": 0.58},
 		"tint": Color(0.7, 0.8, 1.15),
 		"type": "psychic",
-		"text": "Modo Zen!",
+		"text": "Zen Mode!",
 	},
 	"blade":
 	{
 		"m": {"atk": 2.8, "def": 0.36, "spa": 2.8, "spd": 0.36},
 		"tint": Color(1.25, 0.85, 0.85),
-		"text": "Forma Lâmina!",
+		"text": "Blade Forme!",
 	},
 	"school":
 	{
 		"m": {"atk": 7.0, "def": 6.5, "spa": 5.6, "spd": 5.4, "spe": 0.75},
 		"tint": Color(0.85, 0.95, 1.25),
 		"scale": 1.6,
-		"text": "Cardume!",
+		"text": "School Form!",
 	},
 	"core":
 	{
 		"m": {"atk": 1.67, "def": 0.6, "spa": 1.67, "spd": 0.6, "spe": 2.0},
 		"tint": Color(1.3, 1.1, 0.8),
 		"scale": 0.8,
-		"text": "Forma Núcleo!",
+		"text": "Core Form!",
 	},
 	"noice":
 	{
 		"m": {"def": 0.64, "spd": 0.56, "spe": 2.6},
 		"tint": Color(0.85, 0.9, 1.1),
-		"text": "Gelo quebrado!",
+		"text": "Ice broke!",
 	},
-	"busted": {"m": {}, "tint": Color(0.6, 0.55, 0.7), "text": "Disfarce rompido!"},
+	"busted": {"m": {}, "tint": Color(0.6, 0.55, 0.7), "text": "Disguise busted!"},
 	"hero":
 	{
 		"m": {"atk": 2.29, "def": 1.35, "spa": 2.0, "spd": 1.4},
 		"tint": Color(0.8, 1.1, 1.3),
 		"scale": 1.2,
-		"text": "Forma Herói!",
+		"text": "Hero Form!",
 	},
 	"terastal":
 	{
 		"m": {"atk": 1.46, "def": 1.29, "spa": 1.62, "spd": 1.29, "spe": 1.42},
 		"tint": Color(1.2, 1.15, 1.3),
-		"text": "Forma Terastal!",
+		"text": "Terastal Form!",
 	},
-	"hangry": {"m": {}, "tint": Color(1.2, 0.8, 0.9), "text": "Faminto!"},
-	"gulp_arrokuda": {"m": {}, "tint": Color(0.8, 1.15, 0.9), "text": "Engoliu uma presa!"},
-	"gulp_pikachu": {"m": {}, "tint": Color(1.2, 1.2, 0.7), "text": "Engoliu uma presa!"},
+	"hangry": {"m": {}, "tint": Color(1.2, 0.8, 0.9), "text": "Hangry!"},
+	"gulp_arrokuda": {"m": {}, "tint": Color(0.8, 1.15, 0.9), "text": "Swallowed prey!"},
+	"gulp_pikachu": {"m": {}, "tint": Color(1.2, 1.2, 0.7), "text": "Swallowed prey!"},
 }
 
 ## Castform: o clima muda o tipo e o tom.
@@ -601,9 +601,9 @@ static func move_for(ab: BattleAbilities, user: BattleFighter, mv: Dictionary) -
 static func move_blocked(ab: BattleAbilities, user: BattleFighter, _mv: Dictionary) -> String:
 	var a := ab.ability_of(user)
 	if a == "truant" and int(_s(ab, user).get("loaf", 0)) == 2:
-		return "Está vadiando..."
+		return "Loafing around..."
 	if a == "commander" and user.hidden == "commander":
-		return "Está na boca do Dondozo!"
+		return "Inside Dondozo's mouth!"
 	return ""
 
 
@@ -623,7 +623,7 @@ static func on_move_used(ab: BattleAbilities, user: BattleFighter, mv: Dictionar
 			):
 				s["protean"] = true  # uma vez por entrada em campo (Gen 9)
 				user.types = [type]
-				user.popup("Tipo %s!" % type.to_upper(), Dex.type_color(type), 0.9, 0.7)
+				user.popup("%s type!" % type.to_upper(), Dex.type_color(type), 0.9, 0.7)
 				ab._fire(user, Dex.type_color(type))
 		"stance_change":
 			if damaging:
@@ -705,7 +705,7 @@ static func immune(
 				and power > 0.0
 				and Dex.effectiveness(type, ab.hit_types(user, target, mv, target.types)) <= 1.0
 			):
-				target.popup("Guarda-Maravilha!", Color(0.8, 0.9, 1.0), 1.0, 0.8)
+				target.popup("Wonder Guard!", Color(0.8, 0.9, 1.0), 1.0, 0.8)
 				ab._fire(target, Color(0.8, 0.9, 1.0))
 				return true
 	return false
@@ -722,7 +722,7 @@ static func blocks_hit(
 	if status:
 		match ta:
 			"good_as_gold":
-				target.popup("Bom como ouro!", Color(1.0, 0.9, 0.5), 1.0, 0.8)
+				target.popup("Good as Gold!", Color(1.0, 0.9, 0.5), 1.0, 0.8)
 				ab._fire(target, Color(1.0, 0.9, 0.5))
 				return true
 			"wind_rider":
@@ -733,7 +733,7 @@ static func blocks_hit(
 			"magic_bounce":
 				if not ab.bouncing and not bool(mv.get("bounced", false)):
 					ab._fire(target, Color(0.85, 0.7, 1.0))
-					target.popup("Rebateu!", Color(0.85, 0.7, 1.0), 1.1)
+					target.popup("Bounced back!", Color(0.85, 0.7, 1.0), 1.1)
 					ab.bouncing = true
 					BattleKanto._reflect(_fx(ab), user, target, mv)
 					ab.bouncing = false
@@ -749,7 +749,7 @@ static func blocks_hit(
 				ga in ["queenly_majesty", "dazzling", "armor_tail"]
 				and not (ab._breaker(user) and not ga in BattleAbilities.UNBREAKABLE)
 			):
-				target.popup("Prioridade barrada!", Color(1.0, 0.8, 0.9), 1.0, 0.8)
+				target.popup("Priority blocked!", Color(1.0, 0.8, 0.9), 1.0, 0.8)
 				ab._fire(g, Color(1.0, 0.8, 0.9))
 				return true
 	return false
@@ -765,7 +765,7 @@ static func _aroma(
 		return false
 	if ab._breaker(user) or not team_has(ab, target, "aroma_veil"):
 		return false
-	target.popup("Aroma protege!", Color(1.0, 0.8, 0.9), 1.0, 0.8)
+	target.popup("Aroma Veil!", Color(1.0, 0.8, 0.9), 1.0, 0.8)
 	return true
 
 
@@ -827,7 +827,7 @@ static func on_status(
 		and f.alive()
 	):
 		if f.apply_status("confusion", src):
-			f.popup("Confuso!", Dex.type_color("psychic"), 0.9, 0.7)
+			f.popup("Confused!", Dex.type_color("psychic"), 0.9, 0.7)
 			ab._fire(src, Dex.type_color("poison"))
 
 
@@ -972,7 +972,7 @@ static func _victim(
 				ab._fire(target, BattleAbilities.WEATHER_COLORS.sand)
 		"seed_sower":
 			if not fx.active(fx.field, "grassy"):
-				fx._set_terrain("grassy", target, "Campo de grama!", "grass")
+				fx._set_terrain("grassy", target, "Grassy Terrain!", "grass")
 				ab._fire(target, Dex.type_color("grass"))
 		"cotton_down":
 			ab._fire(target, Color(1.0, 1.0, 1.0))
@@ -987,7 +987,7 @@ static func _victim(
 		"color_change":
 			if type != "" and not (target.types.size() == 1 and target.types[0] == type):
 				target.types = [type]
-				target.popup("Tipo %s!" % type.to_upper(), Dex.type_color(type), 0.9, 0.7)
+				target.popup("%s type!" % type.to_upper(), Dex.type_color(type), 0.9, 0.7)
 				ab._fire(target, Dex.type_color(type))
 		"gulp_missile":
 			_spit(ab, user, target, s)
@@ -1019,7 +1019,7 @@ static func _eject(ab: BattleAbilities, f: BattleFighter) -> void:
 	if not ab.arena.energy_on() or not _fx(ab).has_reserve(f):
 		return
 	ab._fire(f, Color(0.8, 0.9, 1.0))
-	f.popup("Fugiu!", Color(0.8, 0.9, 1.0), 1.0, 0.8)
+	f.popup("Fled!", Color(0.8, 0.9, 1.0), 1.0, 0.8)
 	ab.arena.later(
 		SWITCH_DELAY,
 		func() -> void:
@@ -1050,7 +1050,7 @@ static func _spit(
 			and not ab.blocks_status(user, "paralysis", target)
 			and user.apply_status("paralysis", target)
 		):
-			user.popup("PARALISADO!", Color(1, 0.9, 0.6))
+			user.popup("PARALYZED!", Color(1, 0.9, 0.6))
 
 
 static func _charge(ab: BattleAbilities, f: BattleFighter) -> void:
@@ -1058,7 +1058,7 @@ static func _charge(ab: BattleAbilities, f: BattleFighter) -> void:
 	var st := fx.st(f)
 	if not fx.active(st, "charged"):
 		st.charged = fx.now + BattleMoveEffects.FOREVER
-		f.popup("Carregado!", Dex.type_color("electric"))
+		f.popup("Charged!", Dex.type_color("electric"))
 		ab._fire(f, Dex.type_color("electric"))
 
 
@@ -1108,7 +1108,7 @@ static func _swap(ab: BattleAbilities, user: BattleFighter, target: BattleFighte
 		return
 	target.set_meta("ability_override", ua)
 	user.set_meta("ability_override", "wandering_spirit")
-	user.popup("Trocou de habilidade!", Color(0.8, 0.8, 1.0), 0.9, 0.7)
+	user.popup("Swapped Abilities!", Color(0.8, 0.8, 1.0), 0.9, 0.7)
 	ab._fire(target, Color(0.8, 0.8, 1.0))
 
 
@@ -1120,9 +1120,7 @@ static func _perish(ab: BattleAbilities, user: BattleFighter, target: BattleFigh
 		var fs := fx.st(f)
 		if not fx.active(fs, "perish"):
 			fx.set_rounds(fs, "perish", BattleKanto.PERISH_TURNS)
-			f.popup(
-				"Canção da morte: %d" % BattleKanto.PERISH_TURNS, BattleKanto.PERISH_COL, 1.0, 0.7
-			)
+			f.popup("Perish count: %d" % BattleKanto.PERISH_TURNS, BattleKanto.PERISH_COL, 1.0, 0.7)
 			any = true
 	if any:
 		ab._fire(target, BattleKanto.PERISH_COL)
@@ -1136,7 +1134,7 @@ static func _unveil(ab: BattleAbilities, f: BattleFighter) -> void:
 	s["illusion"] = ""
 	if f.look:
 		f.look.species = f.mon.species
-	f.popup("Ilusão desfeita!", Color(0.9, 0.7, 0.95), 1.0, 0.8)
+	f.popup("Illusion broke!", Color(0.9, 0.7, 0.95), 1.0, 0.8)
 	ab._fire(f, Color(0.9, 0.7, 0.95))
 
 
@@ -1217,10 +1215,10 @@ static func _terrain(ab: BattleAbilities, f: BattleFighter, kind: String) -> voi
 			f,
 			String(
 				{
-					"grassy": "Campo de grama!",
-					"electric": "Campo elétrico!",
-					"misty": "Campo de névoa!",
-					"psychic": "Campo psíquico!"
+					"grassy": "Grassy Terrain!",
+					"electric": "Electric Terrain!",
+					"misty": "Misty Terrain!",
+					"psychic": "Psychic Terrain!"
 				}[kind]
 			),
 			type
@@ -1264,7 +1262,7 @@ static func entry(ab: BattleAbilities, f: BattleFighter) -> bool:
 				return false
 			if _once(ab, f, a):
 				ab._fire(f, Color(1.0, 0.8, 0.4))
-				f.popup("Xarope!", Color(1.0, 0.8, 0.4), 0.9, 0.9)
+				f.popup("Syrup!", Color(1.0, 0.8, 0.4), 0.9, 0.9)
 				for t in foes:
 					ab.arena.moves.change_stage(t, "spe", -1, f)
 		"hospitality":
@@ -1290,9 +1288,9 @@ static func entry(ab: BattleAbilities, f: BattleFighter) -> bool:
 						cleared = true
 			if cleared:
 				ab._fire(f, Color(0.8, 1.0, 1.0))
-				f.popup("Telas limpas!", Color(0.8, 1.0, 1.0), 0.9, 0.9)
+				f.popup("Screens cleaned!", Color(0.8, 1.0, 1.0), 0.9, 0.9)
 		"slow_start":
-			f.popup("Começou devagar...", Color(0.75, 0.75, 0.85), 0.9, 0.9)
+			f.popup("Slow start...", Color(0.75, 0.75, 0.85), 0.9, 0.9)
 			ab._fire(f, Color(0.75, 0.75, 0.85))
 		"illusion":
 			_veil(ab, f)
@@ -1340,7 +1338,7 @@ static func _mimic_type(ab: BattleAbilities, f: BattleFighter, suffix: String) -
 	if ty == "" or (f.types.size() == 1 and f.types[0] == ty):
 		return
 	f.types = [ty]
-	f.popup("Tipo %s!" % ty.to_upper(), Dex.type_color(ty), 0.9, 0.9)
+	f.popup("%s type!" % ty.to_upper(), Dex.type_color(ty), 0.9, 0.9)
 	ab._fire(f, Dex.type_color(ty))
 
 
@@ -1389,7 +1387,7 @@ static func _watch_faints(ab: BattleAbilities) -> void:
 			elif ga == "receiver" and g.side == f.side and fa != "" and not fa in NO_COPY:
 				g.set_meta("ability_override", fa)
 				g.popup(
-					"Recebeu %s" % String(Dex.ability(fa).get("name", fa.to_upper())),
+					"Received %s" % String(Dex.ability(fa).get("name", fa.to_upper())),
 					Color(0.8, 0.9, 1.0),
 					0.9,
 					0.9
@@ -1418,7 +1416,7 @@ static func _tick_fighter(ab: BattleAbilities, f: BattleFighter) -> void:
 		"ice_face":
 			if form_of(f) == "noice" and ab.weather_now() == "hail":
 				set_form(f, "")
-				f.popup("Gelo refeito!", Color(0.8, 0.95, 1.0), 0.9, 0.8)
+				f.popup("Ice restored!", Color(0.8, 0.95, 1.0), 0.9, 0.8)
 		"protosynthesis", "quark_drive":
 			var on := boosted(ab, f) != ""
 			if on != bool(s.get("paradox", false)):
@@ -1454,12 +1452,12 @@ static func _forecast(ab: BattleAbilities, f: BattleFighter, s: Dictionary) -> v
 		f.types = [String(row[0])]
 		f.set_meta("form_tint", row[1])
 		f.popup(
-			"Previsão: %s" % String(row[0]).to_upper(), Dex.type_color(String(row[0])), 0.9, 0.8
+			"Forecast: %s" % String(row[0]).to_upper(), Dex.type_color(String(row[0])), 0.9, 0.8
 		)
 	else:
 		f.types = (s.forecast_types as Array).duplicate()
 		f.remove_meta("form_tint")
-		f.popup("Previsão: normal", Color(0.9, 0.9, 0.9), 0.9, 0.8)
+		f.popup("Forecast: normal", Color(0.9, 0.9, 0.9), 0.9, 0.8)
 	ab._fire(f, Color(0.9, 0.95, 1.0))
 
 
@@ -1473,13 +1471,13 @@ static func _commander(ab: BattleAbilities, f: BattleFighter, s: Dictionary) -> 
 		f.visible = false
 		for k in BOOST_KEYS:
 			ab._stage_up(p, k, 2)
-		p.popup("Comandado!", Color(1.0, 0.8, 0.4), 1.0, 0.9)
+		p.popup("Commanding!", Color(1.0, 0.8, 0.4), 1.0, 0.9)
 		ab._fire(f, Color(1.0, 0.8, 0.4))
 	elif not host and bool(s.get("cmd", false)):
 		s["cmd"] = false
 		f.hidden = ""
 		f.visible = true
-		f.popup("Saiu da boca!", Color(1.0, 0.8, 0.4), 0.9, 0.9)
+		f.popup("Left the mouth!", Color(1.0, 0.8, 0.4), 0.9, 0.9)
 	if bool(s.get("cmd", false)) and p != null:
 		f.position = p.position
 
@@ -1496,7 +1494,7 @@ static func _symbiosis(ab: BattleAbilities, f: BattleFighter) -> void:
 	f.item_used = true
 	ab._fire(f, Color(0.7, 1.0, 0.8))
 	p.popup(
-		"Recebeu %s" % String(Dex.item(p.trainer_item).get("name", p.trainer_item)),
+		"Received %s" % String(Dex.item(p.trainer_item).get("name", p.trainer_item)),
 		Color(0.7, 1.0, 0.8),
 		0.9,
 		0.8
@@ -1535,19 +1533,19 @@ static func late(ab: BattleAbilities, f: BattleFighter, a: String, s: Dictionary
 				if t.status == "sleep" and ab.ability_of(t) != "magic_guard":
 					ab._fire(f, COLORS.bad)
 					t.residual_damage(
-						t.paced(maxi(1, int(t.max_hp * BAD_DREAMS_CHIP))), "pesadelo", COLORS.bad
+						t.paced(maxi(1, int(t.max_hp * BAD_DREAMS_CHIP))), "Bad Dreams", COLORS.bad
 					)
 		"truant":
 			var loaf := int(s.get("loaf", 0))
 			if loaf == 1:
 				s["loaf"] = 2
-				f.popup("Vai vadiar...", Color(0.75, 0.75, 0.8), 0.9, 0.8)
+				f.popup("About to loaf...", Color(0.75, 0.75, 0.8), 0.9, 0.8)
 				ab._fire(f, Color(0.75, 0.75, 0.8))
 			elif loaf == 2:
 				s["loaf"] = 0
 		"slow_start":
 			if ab.rounds - int(s.enter_round) == SLOW_START_ROUNDS - 1:
-				f.popup("Pegou ritmo!", Color(1.0, 0.9, 0.5), 0.9, 0.8)
+				f.popup("Found its rhythm!", Color(1.0, 0.9, 0.5), 0.9, 0.8)
 		"hunger_switch":
 			set_form(f, "" if form_of(f) == "hangry" else "hangry")
 			ab._fire(f, Color(1.0, 0.8, 0.5))
@@ -1577,7 +1575,7 @@ static func _cud(ab: BattleAbilities, f: BattleFighter, s: Dictionary) -> void:
 	s["cud_busy"] = true
 	f.item_used = false
 	ab._fire(f, Color(0.8, 1.0, 0.7))
-	f.popup("Remastigou!", Color(0.8, 1.0, 0.7), 0.9, 0.8)
+	f.popup("Cud Chew!", Color(0.8, 1.0, 0.7), 0.9, 0.8)
 	var et = ab.arena.get("end_turn")
 	if et and et.has_method("held_check"):
 		et.held_check(f)
@@ -1590,7 +1588,7 @@ static func on_berry(ab: BattleAbilities, f: BattleFighter) -> void:
 	match ab.ability_of(f):
 		"cheek_pouch":
 			ab._fire(f, Color(1.0, 0.85, 0.7))
-			f.residual_heal(f.paced(maxi(1, int(f.max_hp * CHEEK_HEAL))), "bochechas")
+			f.residual_heal(f.paced(maxi(1, int(f.max_hp * CHEEK_HEAL))), "Cheek Pouch")
 		"cud_chew":
 			if not bool(s.get("cud_busy", false)):
 				s["cud_round"] = ab.rounds + 1

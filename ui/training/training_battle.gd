@@ -51,7 +51,7 @@ const STAGE_COLORS := {
 	"pantano": [Color(0.28, 0.36, 0.24), Color(0.38, 0.36, 0.26)],
 }
 
-## Placar da série enquanto a config não muda (sobrevive a "Repetir").
+## Placar da série enquanto a config não muda (sobrevive a "Repeat").
 ## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
 static var series := {"key": "", "a": 0, "b": 0, "draw": 0, "n": 0}
 ## Série com times sorteados a cada luta (Cfg.randomize_sides, pela semente da luta).
@@ -362,7 +362,7 @@ func _check_time_limit() -> void:
 	if limit <= 0.0 or fight_time < limit or not is_instance_valid(arena):
 		return
 	if String(arena.get("state")) == "fight":
-		arena.say("Tempo esgotado!")
+		arena.say("Time's up!")
 		arena.call("_end", "timeout", 0.0)
 
 
@@ -491,7 +491,7 @@ func _build_ui() -> void:
 	_info.add_theme_color_override("font_color", Color.WHITE)
 	_info.add_theme_font_size_override("font_size", 16)
 	row.add_child(_info)
-	_stop = _button("Parar (Esc)", stop_fight)
+	_stop = _button("Stop (Esc)", stop_fight)
 	row.add_child(_stop)
 	_build_result(root)
 
@@ -516,7 +516,7 @@ func _refresh_info() -> void:
 	if _info == null:
 		return
 	var s := (
-		"%s %s x %s %s   ·   %s   ·   Série: %d x %d"
+		"%s %s x %s %s   ·   %s   ·   Series: %d x %d"
 		% [
 			Cfg.side_name(cfg, 0),
 			_alive(team_a),
@@ -528,11 +528,11 @@ func _refresh_info() -> void:
 		]
 	)
 	if int(series.draw) > 0:
-		s += " (%d sem vencedor)" % series.draw
+		s += " (%d without a winner)" % series.draw
 	if scenario() != "":
 		s += "   ·   %s" % Cfg.SCENARIO_NAMES.get(scenario(), scenario())
 	if auto_left > 0:
-		s += "   ·   faltam %d" % auto_left
+		s += "   ·   %d left" % auto_left
 	_info.text = s
 	_stop.visible = not _result_box.visible
 
@@ -548,32 +548,32 @@ static func _clock(t: float) -> String:
 
 func _show_result() -> void:
 	Kit.clear(_result_box)
-	var w: Array = Kit.panel("RESULTADO", Vector2(760, 0), 6)
+	var w: Array = Kit.panel("RESULT", Vector2(760, 0), 6)
 	_result_box.add_child(w[0])
 	var col: VBoxContainer = w[1]
 	var win := winner_name()
-	var head := "%s venceu!" % win
+	var head := "%s won!" % win
 	if win == "":
 		head = (
-			"Tempo esgotado: sem vencedor"
+			"Time's up: no winner"
 			if String(result.get("outcome", "")) == "timeout"
-			else "Luta interrompida"
+			else "Fight stopped"
 		)
 	col.add_child(Kit.header(head, Kit.RED, 24))
 	col.add_child(
 		Kit.label(
 			(
-				"Duração da luta: %s (tempo de jogo) · semente %d · cenário %s"
-				% [_clock(fight_time), last_seed, Cfg.SCENARIO_NAMES.get(scenario(), "sem relevo")]
+				"Fight length: %s (game time) · seed %d · scenario %s"
+				% [_clock(fight_time), last_seed, Cfg.SCENARIO_NAMES.get(scenario(), "flat")]
 			)
 		)
 	)
 	var line := (
-		"Série: %s %d x %d %s em %d lutas"
+		"Series: %s %d x %d %s in %d fights"
 		% [Cfg.side_name(cfg, 0), series.a, series.b, Cfg.side_name(cfg, 1), series.n]
 	)
 	if int(series.draw) > 0:
-		line += " (%d sem vencedor)" % series.draw
+		line += " (%d without a winner)" % series.draw
 	col.add_child(Kit.label(line))
 	# Os dois times lado a lado (6 x 6 cabe na tela).
 	var teams := HBoxContainer.new()
@@ -589,35 +589,35 @@ func _show_result() -> void:
 	var rep := HBoxContainer.new()
 	rep.add_theme_constant_override("separation", 8)
 	col.add_child(rep)
-	rep.add_child(_button("Repetir", _repeat.bind(0)))
+	rep.add_child(_button("Repeat", _repeat.bind(0)))
 	var count := SpinBox.new()
 	count.min_value = 2
 	count.max_value = 200
 	count.value = 10
-	count.suffix = "lutas"
+	count.suffix = "fights"
 	rep.add_child(count)
-	rep.add_child(_button("Rodar série", func() -> void: _repeat(int(count.value) - 1)))
+	rep.add_child(_button("Run series", func() -> void: _repeat(int(count.value) - 1)))
 	var rnd := CheckBox.new()
-	rnd.text = "Sortear times a cada luta"
+	rnd.text = "Random teams every fight"
 	rnd.focus_mode = Control.FOCUS_NONE
 	rnd.button_pressed = random_series
 	rnd.toggled.connect(func(on: bool) -> void: random_series = on)
 	rep.add_child(rnd)
-	rep.add_child(_button("Zerar placar", _reset_series))
+	rep.add_child(_button("Reset score", _reset_series))
 	var nav := HBoxContainer.new()
 	nav.add_theme_constant_override("separation", 8)
 	col.add_child(nav)
-	nav.add_child(_button("Editar times", go_setup))
-	nav.add_child(_button("Copiar registro", _copy_log))
-	nav.add_child(_button("Voltar ao título", go_title))
+	nav.add_child(_button("Edit teams", go_setup))
+	nav.add_child(_button("Copy log", _copy_log))
+	nav.add_child(_button("Back to title", go_title))
 	_result_box.visible = true
 
 
 func _mon_line(m: Mon) -> String:
 	var st := "" if m.status == "" else " · " + String(Cfg.STATUS_NAMES.get(m.status, m.status))
 	return (
-		"%s Nv %d: %d/%d HP%s"
-		% [m.display_name, m.level, m.hp, m.max_hp, " · desmaiou" if m.is_fainted() else st]
+		"%s Lv %d: %d/%d HP%s"
+		% [m.display_name, m.level, m.hp, m.max_hp, " · fainted" if m.is_fainted() else st]
 	)
 
 
@@ -644,4 +644,4 @@ func _keep_log() -> void:
 		_last_log = arena.log_lines.duplicate()
 		# A faixa de log da arena guarda só as últimas LOG_MAX linhas.
 		if _last_log.size() >= int(arena.LOG_MAX):
-			_last_log.push_front("(registro truncado: as primeiras linhas da luta se perderam)")
+			_last_log.push_front("(log truncated: the first lines of the fight were lost)")

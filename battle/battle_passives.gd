@@ -137,7 +137,7 @@ func leap() -> bool:
 		_trail if visual else Callable(),
 		f.ground_y
 	)
-	f.popup("Pulo de desespero!", Color(0.75, 0.95, 1.0), 1.0, 0.8)
+	f.popup("Desperate leap!", Color(0.75, 0.95, 1.0), 1.0, 0.8)
 	_note("pulo_desespero")
 	if f.ai:
 		f.ai.on_leap()
@@ -196,7 +196,7 @@ func _land() -> void:
 		return
 	f.pp_max = minf(f.pp_max + BREATH_ENERGY, f.pp_base)
 	f.breath_t = BREATH_SECS
-	f.popup("Fôlego!", Color(0.6, 1.0, 0.7), 0.9, 0.6)
+	f.popup("Breather!", Color(0.6, 1.0, 0.7), 0.9, 0.6)
 	if not _fast():
 		_landing_fx()
 
@@ -208,7 +208,7 @@ func _second_wind() -> void:
 	if f.arena.rng.randf() >= SECOND_CHANCE:
 		return
 	f.pp_max = minf(f.pp_max + SECOND_ENERGY, f.pp_base)
-	f.popup("Segundo fôlego!", Color(0.6, 1.0, 0.7), 1.0, 0.8)
+	f.popup("Second wind!", Color(0.6, 1.0, 0.7), 1.0, 0.8)
 	_note("segundo_folego")
 
 
@@ -283,7 +283,7 @@ func _counter() -> void:
 		return
 	counter_cd = COUNTER_ICD
 	f.pp_max = minf(f.pp_max + COUNTER_ENERGY, f.pp_base)
-	f.popup("Contra-ataque!", Color(1.0, 0.9, 0.5), 0.9, 0.6)
+	f.popup("Counterattack!", Color(1.0, 0.9, 0.5), 0.9, 0.6)
 	_note("contra_ataque")
 
 

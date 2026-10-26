@@ -120,39 +120,39 @@ static func blocked(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) 
 	var id := String(mv.get("id", ""))
 	var sp := String(mv.get("special", ""))
 	if fx.active(s, "throat") and id in SOUND:
-		return "Garganta ferida!"
+		return "Sore throat!"
 	if fx.active(s, "bide") and sp != "bide":
-		return "Guardando energia!"
+		return "Storing energy!"
 	match sp:
 		"bide":
 			if fx.active(s, "bide"):
-				return "Já está guardando!"
+				return "Already storing!"
 		"no_repeat":
 			if String(s.last) == id:
-				return "Não dá duas vezes seguidas!"
+				return "Can't use it twice in a row!"
 		"double_shock":
 			if not "electric" in user.types:
-				return "Não é mais Elétrico!"
+				return "No longer Electric type!"
 		"natural_gift":
 			if _berry(fx, user) == "":
-				return "Sem frutinha!"
+				return "No Berry!"
 		"aurora_veil":
 			if not _snow(fx):
-				return "Só na neve!"
+				return "Only in snow!"
 			if fx.active(fx._sd(user.side), "aurora_veil"):
-				return "Já está ativo!"
+				return "Already active!"
 		"clangorous_soul":
 			if user.hp <= user.max_hp / 3:
-				return "HP insuficiente!"
+				return "Not enough HP!"
 		"fillet_away":
 			if user.hp <= user.max_hp / 2:
-				return "HP insuficiente!"
+				return "Not enough HP!"
 		"ally_buff":
 			if fx.partner(user) == null:
-				return "Mas falhou!"
+				return "But it failed!"
 		"gear_up":
 			if fx._ability(user) not in ["plus", "minus"] and not _mate_plus(fx, user):
-				return "Mas falhou!"
+				return "But it failed!"
 	return ""
 
 
@@ -175,20 +175,20 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 		fx.field["fusion_flare_t"] = fx.now
 	if sp == "glaive":
 		s["glaive"] = fx.now + GLAIVE_SECS
-		user.popup("Sem guarda!", Color(1, 0.6, 0.4), 0.9)
+		user.popup("No guard!", Color(1, 0.6, 0.4), 0.9)
 	elif s.has("glaive"):
 		s.erase("glaive")  # o próximo golpe do usuário acaba com a vulnerabilidade
 	if sp == "protect":
 		s["protect_fx"] = ""
 	match sp:
 		"beak_blast":
-			user.popup("Esquentando o bico!", Dex.type_color("fire"), 0.9)
+			user.popup("Heating up its beak!", Dex.type_color("fire"), 0.9)
 		"natural_gift":
 			var b := _berry(fx, user)
 			if b != "":
 				user.item_used = true
 				user.set_meta("ate_berry", true)
-				user.popup("Usou %s!" % fx._item_name(user), Color(1, 0.85, 0.5), 0.8)
+				user.popup("Used %s!" % fx._item_name(user), Color(1, 0.85, 0.5), 0.8)
 		"ignore_ability":
 			_mold_breaker(fx, user, mv)
 	if id in IGNORE_ABILITY_IDS:
@@ -206,7 +206,7 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 			func() -> void:
 				if is_instance_valid(user) and user.alive():
 					user.stun_t = maxf(user.stun_t, rest)
-					user.popup("Precisa recarregar!", Color(1, 0.7, 0.4), 1.0, 0.9)
+					user.popup("Must recharge!", Color(1, 0.7, 0.4), 1.0, 0.9)
 		)
 
 
@@ -254,20 +254,20 @@ static func blocks_hit(
 		and target.prepare_t > 0.0
 		and not fx.active(ts, "protect")
 	):
-		target.popup("Bico em brasa!", Dex.type_color("fire"), 0.9)
+		target.popup("Beak Blast!", Dex.type_color("fire"), 0.9)
 		fx._status(target, user, "burn")
 	if (
 		not dmg
 		and String(mv.get("category", "")) == "status"
 		and fx.active(fx._sd(target.side), "crafty_shield")
 	):
-		target.popup("Escudo astuto!", Color(1, 0.7, 0.9))
+		target.popup("Crafty Shield!", Color(1, 0.7, 0.9))
 		fx.note_fail(user)
 		return true
 	if sp in ["no_protect", "feint"]:
 		return false
 	if dmg and fx.active(ts, "kshield"):
-		target.popup("Escudo do rei!", Color(0.8, 0.85, 0.95), 1.1)
+		target.popup("King's Shield!", Color(0.8, 0.85, 0.95), 1.1)
 		if contact and user.alive():
 			fx.arena.moves.change_stage(user, "atk", -1, target)
 		fx.note_fail(user)
@@ -371,7 +371,7 @@ static func attacker(
 			target.stages[k] = 0
 			took = true
 	if took:
-		user.popup("Roubou os aumentos!", Dex.type_color("ghost"), 0.9)
+		user.popup("Stole the boosts!", Dex.type_color("ghost"), 0.9)
 		var np := user.damage_profile()
 		for k in np:
 			p[k] = np[k]
@@ -420,7 +420,7 @@ static func after_hit(
 				if not "ghost" in target.types:
 					ts["trapped"] = true
 				target.trap_t = maxf(target.trap_t, PIN_SECS)
-				target.popup("Preso no lugar!", Color(0.8, 0.7, 0.9))
+				target.popup("Stuck in place!", Color(0.8, 0.7, 0.9))
 		"dire_claw":
 			if not sheer and dealt > 0 and target.alive() and fx.rng.randf() < 0.5:
 				fx._status(user, target, ["poison", "paralysis", "sleep"][fx.rng.randi() % 3])
@@ -428,14 +428,14 @@ static func after_hit(
 			if dealt > 0 and int(s.get("ds_cast", -1)) != user.cast_n:
 				s["ds_cast"] = user.cast_n
 				user.types = user.types.filter(func(t): return t != "electric")
-				user.popup("Perdeu o tipo Elétrico!", Dex.type_color("electric"), 0.9)
+				user.popup("Lost the Electric type!", Dex.type_color("electric"), 0.9)
 		"jaw_lock":
 			if dealt > 0 and user.alive() and target.alive():
 				_jaw_lock(fx, user, target)
 		"thousand_arrows":
 			if target.alive():
 				if target.fly_h > 0.3 or target.fly_target > 0.0 or fx.active(ts, "magnet"):
-					target.popup("Derrubado!", Dex.type_color("ground"), 1.0)
+					target.popup("Knocked down!", Dex.type_color("ground"), 1.0)
 				ts.erase("magnet")
 				ts.erase("magnet#")
 				target.fly_target = 0.0
@@ -443,11 +443,11 @@ static func after_hit(
 		"trap_all":
 			if target.alive() and not "ghost" in target.types:
 				ts["trapped"] = true
-				target.popup("Não pode fugir!", Color(0.85, 0.7, 0.45))
+				target.popup("Can't escape!", Color(0.85, 0.7, 0.45))
 		"salt_cure":
 			if dealt > 0 and target.alive() and not bool(ts.get("salted", false)):
 				ts["salted"] = true
-				target.popup("Curado no sal!", COL_SALT)
+				target.popup("Salt cured!", COL_SALT)
 		"stone_axe":
 			if dealt > 0 and int(s.get("axe_cast", -1)) != user.cast_n:
 				s["axe_cast"] = user.cast_n
@@ -458,7 +458,7 @@ static func after_hit(
 		"plasma_fists":
 			if dealt > 0:
 				fx.set_rounds(fx.field, "plasma", 1)
-				user.popup("Ion elétrico!", Dex.type_color("electric"), 0.9)
+				user.popup("Ion Deluge!", Dex.type_color("electric"), 0.9)
 		"order_up":
 			if dealt > 0 and int(s.get("order_cast", -1)) != user.cast_n:
 				s["order_cast"] = user.cast_n
@@ -467,7 +467,7 @@ static func after_hit(
 			var a := String(user.mon.gender)
 			var b := String(target.mon.gender)
 			if a == "" or b == "" or a == b:
-				target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+				target.popup("No effect...", Color(0.7, 0.7, 0.7))
 				fx.note_fail(user)
 			else:
 				fx.arena.moves.change_stage(target, "spa", -2, user)
@@ -479,14 +479,14 @@ static func after_hit(
 				for g in [user, fx.partner(user)]:
 					if g != null:
 						g.set_meta("ability_override", ab)
-				user.popup("Copiou %s!" % ab.replace("_", " "), Color(0.9, 0.9, 0.95), 0.9)
+				user.popup("Copied %s!" % ab.replace("_", " "), Color(0.9, 0.9, 0.95), 0.9)
 		"electrify":
 			fx.set_rounds(ts, "electrify", 1)
-			target.popup("Eletrizado!", Dex.type_color("electric"))
+			target.popup("Electrified!", Dex.type_color("electric"))
 		"foresight":
 			ts["foresight"] = true
 			target.evasion_t = 0.0
-			target.popup("Descoberto!", Color(0.95, 0.95, 0.85))
+			target.popup("Exposed!", Color(0.95, 0.95, 0.85))
 		"forests_curse":
 			if "grass" in target.types:
 				fx._fail(user)
@@ -494,17 +494,17 @@ static func after_hit(
 				var t: Array = target.types.duplicate()
 				t.append("grass")
 				target.types = t
-				target.popup("Ganhou o tipo Planta!", Dex.type_color("grass"))
+				target.popup("Gained the Grass type!", Dex.type_color("grass"))
 		"instruct":
 			var last := fx._last_of(target)
 			if fx._copyable(last) == "":
 				fx._fail(user)
 			else:
-				target.popup("Repete!", Color(1, 0.7, 0.9))
+				target.popup("Again!", Color(1, 0.7, 0.9))
 				fx._call(target, last)
 		"corrosive_gas":
 			if fx._has_item(target):
-				target.popup("Perdeu %s!" % fx._item_name(target), Color(0.75, 0.5, 0.85))
+				target.popup("Lost %s!" % fx._item_name(target), Color(0.75, 0.5, 0.85))
 				target.item_used = true
 
 
@@ -531,7 +531,7 @@ static func _jaw_lock(fx: BattleMoveEffects, a: BattleFighter, b: BattleFighter)
 		fx.set_rounds(s, "jaw", JAW_TURNS)
 		s["jaw_with"] = pair[1]
 		s["trapped"] = true
-		f.popup("Presos pela mordida!", COL_TETHER, 0.9)
+		f.popup("Locked by the jaws!", COL_TETHER, 0.9)
 
 
 static func _jaw_free(fx: BattleMoveEffects, f: BattleFighter) -> void:
@@ -562,7 +562,7 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 		"autotomize":
 			moves.change_stage(user, "spe", int(mv.get("stages", 2)))
 			user.set_meta("weight_mult", maxf(float(user.get_meta("weight_mult", 1.0)) * 0.5, 0.1))
-			user.popup("Ficou leve!", Color(0.85, 0.9, 1.0), 0.9)
+			user.popup("Became lighter!", Color(0.85, 0.9, 1.0), 0.9)
 		"aurora_veil":
 			fx.set_rounds(sd, "aurora_veil", BattleMoveEffects.FIELD_TURNS)
 			user.popup("Aurora Veil!", Color(0.7, 0.95, 1.0))
@@ -581,23 +581,25 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 				fx.set_rounds(s, "protect", 1)
 				s["insight"] = false
 				s["protect_fx"] = String(mv.get("protect_fx", ""))
-				user.popup("Proteger!", Color(0.6, 0.9, 1.0), 1.1)
+				user.popup("Protect!", Color(0.6, 0.9, 1.0), 1.1)
 				fx._vfx("protect_shield", [user, fx.round_left()])
 		"kings_shield":
 			if not fx._stall_ok(s):
 				fx._fail(user)
 			else:
 				fx.set_rounds(s, "kshield", 1)
-				user.popup("Escudo do rei!", Color(0.8, 0.85, 0.95), 1.1)
+				user.popup("King's Shield!", Color(0.8, 0.85, 0.95), 1.1)
 				fx._vfx("protect_shield", [user, fx.round_left()])
 		"crafty_shield":
 			fx.set_rounds(sd, "crafty_shield", 1)
-			user.popup("Escudo astuto!", Color(1, 0.7, 0.9))
+			user.popup("Crafty Shield!", Color(1, 0.7, 0.9))
 			fx._vfx("protect_shield", [user, fx.round_left()])
 		"chilly_reception":
 			fx.set_weather("hail", BattleMoveEffects.FIELD_TURNS, user)
 			fx.arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Piada gelada! Nevou.", Dex.type_color("ice")
+				user.position + Vector3(0, 1.6, 0),
+				"Chilly Reception! It started to snow.",
+				Dex.type_color("ice")
 			)
 			if fx.has_reserve(user):
 				fx.arena.later(
@@ -626,7 +628,7 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 		"fairy_lock":
 			fx.set_rounds(fx.field, "fairy_lock", FAIRY_LOCK_TURNS)
 			fx.arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Ninguém foge!", Dex.type_color("fairy")
+				user.position + Vector3(0, 1.6, 0), "No one can escape!", Dex.type_color("fairy")
 			)
 		"floral_healing":
 			var to2 := mate if mate != null else user
@@ -647,7 +649,7 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 					moves.change_stage(g, "spa", 1)
 		"grudge":
 			fx.set_rounds(s, "grudge", 1)
-			user.popup("Rancor!", Dex.type_color("ghost"), 0.9)
+			user.popup("Grudge!", Dex.type_color("ghost"), 0.9)
 		"heal_cure_team":
 			for g in [user, mate]:
 				if g != null:
@@ -657,7 +659,7 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 			s["bide_dmg"] = 0
 			s["bide_by"] = null
 			fx.set_rounds(s, "bide", BIDE_TURNS)
-			user.popup("Guardando energia!", Color(0.9, 0.85, 0.7), 1.0)
+			user.popup("Storing energy!", Color(0.9, 0.85, 0.7), 1.0)
 		_:
 			return false
 	return true
@@ -696,7 +698,7 @@ static func _court_change(fx: BattleMoveEffects, user: BattleFighter) -> void:
 		for m in fl.marks:
 			if m.kind == "spikes":
 				m["side"] = 1 - int(m.side)
-	fx.arena.popup(user.position + Vector3(0, 1.6, 0), "Quadra trocada!", Color(0.9, 0.9, 0.95))
+	fx.arena.popup(user.position + Vector3(0, 1.6, 0), "Court changed!", Color(0.9, 0.9, 0.95))
 
 
 # --- A IA ---
@@ -829,7 +831,7 @@ static func _grudge(fx: BattleMoveEffects, f: BattleFighter, by: BattleFighter) 
 	s.erase("grudge")
 	s.erase("grudge#")
 	by.move_cd[id] = BattleMoveEffects.LOCK_CD
-	by.popup("%s zerado!" % Dex.move(id).get("name", id), Dex.type_color("ghost"), 0.9)
+	by.popup("%s depleted!" % Dex.move(id).get("name", id), Dex.type_color("ghost"), 0.9)
 
 
 ## Todo frame (fx.now já avançou): coleira do Jaw Lock, Thousand Arrows no chão, Fairy Lock.
@@ -877,19 +879,19 @@ static func end_turn(fx: BattleMoveEffects, f: BattleFighter) -> void:
 	var s := fx.st(f)
 	if bool(s.get("salted", false)):
 		var k := 0.25 if ("water" in f.types or "steel" in f.types) else 0.125
-		f.residual_damage(f.paced(maxi(1, int(f.max_hp * k))), "sal", COL_SALT)
+		f.residual_damage(f.paced(maxi(1, int(f.max_hp * k))), "salt", COL_SALT)
 	for key in ["electrify", "grudge", "kshield", "smacked"]:
 		fx.count_round(s, key)
 	if fx.count_round(s, "jaw"):
 		_jaw_free(fx, f)
-		f.popup("A mordida soltou.", COL_HOLD, 0.8)
+		f.popup("The jaws let go.", COL_HOLD, 0.8)
 	if fx.count_round(s, "bide"):
 		_unleash(fx, f)
 	# o que é do lado ou do campo conta uma vez só (pelo primeiro lutador ativo)
 	if f == _first(fx, f.side):
 		var sd := fx._sd(f.side)
 		if fx.count_round(sd, "aurora_veil"):
-			f.popup("O Aurora Veil acabou.", COL_FIELD, 0.8)
+			f.popup("Aurora Veil wore off.", COL_FIELD, 0.8)
 		fx.count_round(sd, "crafty_shield")
 	if f == _first(fx):
 		for key in ["plasma", "fairy_lock"]:
@@ -905,9 +907,9 @@ static func _unleash(fx: BattleMoveEffects, f: BattleFighter) -> void:
 	s.erase("bide_by")
 	var to: BattleFighter = by if is_instance_valid(by) and by.active() else f.opponent
 	if dmg <= 0 or not is_instance_valid(to) or not to.active():
-		f.popup("Nada para devolver...", COL_HOLD, 0.9)
+		f.popup("Nothing to return...", COL_HOLD, 0.9)
 		return
-	f.popup("Liberou a energia!", Color(1, 0.7, 0.35), 1.1)
+	f.popup("Unleashed energy!", Color(1, 0.7, 0.35), 1.1)
 	fx._direct(f, to, dmg, 8.0)
 
 

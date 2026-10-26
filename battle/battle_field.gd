@@ -154,7 +154,7 @@ func _tick_marks(dt: float) -> void:
 					var n := mini(int(st.acc), f.hp - 1)
 					st.acc -= int(st.acc)
 					if n >= 1:
-						f.popup("-%d queimado" % n, Dex.type_color("fire"), 0.7)
+						f.popup("-%d burned" % n, Dex.type_color("fire"), 0.7)
 						f.take_damage(n, Vector3.ZERO, 0.0)
 			elif m.kind == "spikes" and f.side != m.side and not m.hit.has(id) and _on_ground(f):
 				m.hit[id] = true
@@ -407,7 +407,7 @@ func _tick_objects(dt: float) -> void:
 					var n: int = f.paced(maxi(1, int(f.max_hp / 10.0)))
 					f.heal(n)
 					f.set_meta("ate_berry", true)  # Belch
-					f.popup("+%d Frutinha" % n, Color(0.5, 1.0, 0.5), 0.8)
+					f.popup("+%d Berry" % n, Color(0.5, 1.0, 0.5), 0.8)
 					taken = true
 					break
 		if taken or b.t <= 0.0:
@@ -506,7 +506,7 @@ func absorb_hit(_user: BattleFighter, target: BattleFighter, _mv: Dictionary) ->
 		return false
 	_remove_clone(cs[0], true)
 	arena.popup(
-		target.position + Vector3(0, target.look_h, 0), "Era um clone!", Color(0.9, 0.9, 1.0)
+		target.position + Vector3(0, target.look_h, 0), "It was a decoy!", Color(0.9, 0.9, 1.0)
 	)
 	return true
 

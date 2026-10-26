@@ -71,17 +71,17 @@ const SPOT_COLOR := Color(1.0, 0.95, 0.86)
 ## Fan banners on the parapets: size (m), texture size (1/16 m texels) and their cheers.
 const BANNER := Vector2(4.0, 1.0)
 const BANNER_PX := Vector2i(64, 16)
-const BANNER_CHEERS := ["VAI!", "FORCA", "GO GO", "OLE!", "UHUL!", "VAMOS"]
+const BANNER_CHEERS := ["GO!", "PUSH", "GO GO", "OLE!", "WOO!", "COME ON"]
 const PANEL := Vector2(2.5, 1.0)
 const PANEL_PX := Vector2i(40, 16)
 const SPONSORS := [
-	"LIGA KANTO",
+	"KANTO LEAGUE",
 	"SILPH CO.",
 	"POKE MART",
-	"CENTRO POKEMON",
-	"LAB. CARVALHO",
+	"POKEMON CENTER",
+	"OAK LAB",
 	"PALLET",
-	"TREINO",
+	"TRAINING",
 	"DEVON",
 ]
 const PANEL_COLORS := [
@@ -249,7 +249,7 @@ static var _ring_tex := {}
 
 var mood := "dia"
 var scenario := ""
-var names := ["Time A", "Time B"]
+var names := ["Team A", "Team B"]
 var env: Environment
 var world_env: WorldEnvironment
 var sun: DirectionalLight3D

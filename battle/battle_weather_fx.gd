@@ -43,7 +43,7 @@ const LIGHTNING_GAP := Vector2(6.0, 14.0)
 const SHAFTS := 6
 ## Neve no chão do mundo: não chega ao branco puro, para os flocos aparecerem por cima.
 const WORLD_SNOW_MAX := 0.82
-const NAMES := {"rain": "Chuva", "hail": "Neve", "sun": "Sol forte", "sand": "Areia"}
+const NAMES := {"rain": "Rain", "hail": "Snow", "sun": "Harsh sun", "sand": "Sandstorm"}
 ## Energy mode: metres of cover around arena.rect when there is no stadium to ask, and the rain
 ## heightfield.
 const STANDS_MARGIN := 12.0

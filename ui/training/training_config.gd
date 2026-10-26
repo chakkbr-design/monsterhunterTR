@@ -47,30 +47,26 @@ const SCENARIOS := [
 	"pantano"
 ]
 const SCENARIO_NAMES := {
-	"campo": "Campo",
-	"lagoa": "Lagoa",
-	"pedreira": "Pedreira",
-	"misto": "Misto",
-	"praia": "Praia",
-	"ruinas": "Ruínas",
-	"montanha": "Montanha nevada",
-	"vulcao": "Vulcão",
-	"caverna": "Caverna escura",
-	"pantano": "Pântano",
+	"campo": "Field",
+	"lagoa": "Pond",
+	"pedreira": "Quarry",
+	"misto": "Mixed",
+	"praia": "Beach",
+	"ruinas": "Ruins",
+	"montanha": "Snowy Mountain",
+	"vulcao": "Volcano",
+	"caverna": "Dark Cave",
+	"pantano": "Swamp",
 }
 ## Hora do dia no estádio do modo de energia (ArenaStadium.MOODS): de noite os refletores acendem.
 const TIMES := ["dia", "tarde", "noite"]
-const TIME_NAMES := {"dia": "Dia", "tarde": "Pôr do sol", "noite": "Noite"}
+const TIME_NAMES := {"dia": "Day", "tarde": "Sunset", "noite": "Night"}
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
 const TURBO_STEPS := 12
 const STATUSES := ["", "burn", "poison", "paralysis", "sleep"]
 const STATUS_NAMES := {
-	"": "Nenhum",
-	"burn": "Queimado",
-	"poison": "Envenenado",
-	"paralysis": "Paralisado",
-	"sleep": "Dormindo"
+	"": "None", "burn": "Burned", "poison": "Poisoned", "paralysis": "Paralyzed", "sleep": "Asleep"
 }
 
 ## Configuração em uso entre a tela de montar e a da luta (sobrevive à troca de cena).
@@ -82,13 +78,13 @@ static func default_config() -> Dictionary:
 		"sides":
 		[
 			{
-				"name": "Time A",
+				"name": "Team A",
 				"item": "",
 				"think_scale": 1.0,
 				"mons": [mon_entry("Magnemite", LEVEL), mon_entry("Pidgey", LEVEL)]
 			},
 			{
-				"name": "Time B",
+				"name": "Team B",
 				"item": "",
 				"think_scale": 1.0,
 				"mons": [mon_entry("Bulbasaur", LEVEL), mon_entry("Charmander", LEVEL)]
@@ -159,10 +155,10 @@ static func can_start(cfg: Dictionary) -> bool:
 	return not build_side(cfg, 0).is_empty() and not build_side(cfg, 1).is_empty()
 
 
-## Nome do time para mostrar ("Time A"/"Time B" quando está em branco).
+## Nome do time para mostrar ("Team A"/"Team B" quando está em branco).
 static func side_name(cfg: Dictionary, side: int) -> String:
 	var n := String(cfg.sides[side].get("name", "")).strip_edges()
-	return n if n != "" else ("Time A" if side == 0 else "Time B")
+	return n if n != "" else ("Team A" if side == 0 else "Team B")
 
 
 ## opts da arena (contrato em battle/battle_arena.gd). Com p1_control "manual" o Time A é do

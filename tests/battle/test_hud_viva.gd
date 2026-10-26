@@ -27,7 +27,7 @@ func _initialize() -> void:
 	check(BattleHUD.VivaTags.stage_tags(e)[0].text == "+2 ATK", "texto +2 ATK")
 	var extra := {
 		"foe2": p,
-		"commands": {"player": "LIVRE", "ally": "OFENSIVO"},
+		"commands": {"player": "FREE", "ally": "OFFENSE"},
 		"obey": {"player": true, "ally": false},
 		"sync": [1.0, 0.5],
 		"marks": {e.get_instance_id(): [{"id": "x", "name": "Marca", "color": Color.RED, "t": 3.0}]}

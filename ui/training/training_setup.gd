@@ -21,10 +21,10 @@ const THINK_MAX := 4.0
 const STAT_BAR_W := 150
 const STAT_BAR_MAX := 160.0
 const THINK_TIP := (
-	"Multiplica o tempo entre golpes e a chance de erro: até 0,8 = sem erro e mais rápida;"
-	+ " 1 = treinador normal; 1,6 ou mais = golpe sempre aleatório (salvo o que nocauteia)"
+	"Multiplies the time between moves and the error chance: up to 0.8 = no errors and faster;"
+	+ " 1 = normal trainer; 1.6 or more = always a random move (except one that knocks out)"
 )
-const STAT_ABBR := {"atk": "Atq", "def": "Def", "spa": "At.Esp", "spd": "Def.Esp", "spe": "Vel"}
+const STAT_ABBR := {"atk": "Atk", "def": "Def", "spa": "SpA", "spd": "SpD", "spe": "Spe"}
 
 var cfg: Dictionary = {}
 ## Pokémon em edição: lado (0 = Time A, 1 = Time B) e posição no time (-1 = time vazio).
@@ -153,7 +153,7 @@ func set_move(k: int, id: String) -> void:
 	if e.is_empty() or k < 0 or k >= Mon.MAX_MOVES:
 		return
 	if id != "" and not can_use_move(id):
-		_note("%s não aprende %s." % [e.species, Kit.move_name(id)])
+		_note("%s can't learn %s." % [e.species, Kit.move_name(id)])
 		return
 	var mv: Array = (e.get("moves", []) as Array).duplicate()
 	var j := mv.find(id)
@@ -161,7 +161,7 @@ func set_move(k: int, id: String) -> void:
 		if k >= mv.size():
 			return
 		if mv.size() <= 1:
-			_note("O Pokémon precisa de pelo menos um golpe.")
+			_note("The Pokémon needs at least one move.")
 			return
 		mv.remove_at(k)
 	elif j >= 0:
@@ -246,7 +246,7 @@ func copy_side(from: int) -> void:
 	dst["item"] = String(src.get("item", ""))
 	dst["think_scale"] = float(src.get("think_scale", 1.0))
 	select(side, slot)
-	_note("%s copiado para o %s." % [_side_name(from), _side_name(1 - from)])
+	_note("%s copied to %s." % [_side_name(from), _side_name(1 - from)])
 
 
 ## Sorteia os dois times (Cfg.randomize_sides).
@@ -255,7 +255,7 @@ func random_teams() -> void:
 	rng.randomize()
 	Cfg.randomize_sides(cfg, rng)
 	select(side, 0)
-	_note("Times sorteados.")
+	_note("Teams randomized.")
 
 
 ## Troca os dois times de lado (com nome, item e nível da IA).
@@ -264,7 +264,7 @@ func swap_sides() -> void:
 	cfg.sides[0] = cfg.sides[1]
 	cfg.sides[1] = a
 	select(1 - side, slot)
-	_note("Times trocados de lado.")
+	_note("Teams swapped sides.")
 
 
 func set_team_name(s: int, text: String) -> void:
@@ -337,10 +337,10 @@ func set_time_limit(v: int) -> void:
 func save_team(s: int, k: int) -> void:
 	_commit_edits()
 	if _mons(s).is_empty():
-		_note("O %s está vazio: nada para salvar." % _side_name(s))
+		_note("%s is empty: nothing to save." % _side_name(s))
 		return
 	Cfg.save_team(k, cfg.sides[s])
-	_note("%s salvo no slot %d." % [_side_name(s), k + 1])
+	_note("%s saved to slot %d." % [_side_name(s), k + 1])
 	_refresh_picker()
 
 
@@ -348,19 +348,19 @@ func save_team(s: int, k: int) -> void:
 func load_team(s: int, k: int) -> void:
 	var t: Dictionary = Cfg.load_teams()[k] if k >= 0 and k < Cfg.TEAM_SLOTS else {}
 	if t.is_empty():
-		_note("O slot %d está vazio." % (k + 1))
+		_note("Slot %d is empty." % (k + 1))
 		return
 	t.erase("saved_at")
 	t["mons"] = (t.mons as Array).slice(0, Cfg.PARTY_MAX)
 	cfg.sides[s] = t
 	select(s, 0)
-	_note("Slot %d carregado no %s." % [k + 1, "Time A" if s == 0 else "Time B"])
+	_note("Slot %d loaded into %s." % [k + 1, "Team A" if s == 0 else "Team B"])
 	close_picker()
 
 
 func clear_team_slot(k: int) -> void:
 	Cfg.save_team(k, {})
-	_note("Slot %d apagado." % (k + 1))
+	_note("Slot %d deleted." % (k + 1))
 	_refresh_picker()
 
 
@@ -368,7 +368,7 @@ func reset_default() -> void:
 	cfg = Cfg.default_config()
 	Cfg.current = cfg
 	select(0, 0)
-	_note("Times e opções padrão restaurados.")
+	_note("Default teams and options restored.")
 
 
 func start() -> void:
@@ -455,7 +455,7 @@ func pick(value) -> void:
 			close_picker()
 			if _pick_slot < 0:
 				add_mon(_pick_side, sp)
-				_note("%s entrou no %s." % [sp, _side_name(_pick_side)])
+				_note("%s joined %s." % [sp, _side_name(_pick_side)])
 			else:
 				select(_pick_side, _pick_slot)
 				set_species(sp)
@@ -493,7 +493,7 @@ func _refresh_picker() -> void:
 			_fill_moves()
 		"teams":
 			_fill_teams()
-	var b := _btn("Fechar (Esc)", close_picker)
+	var b := _btn("Close (Esc)", close_picker)
 	_ov_buttons.add_child(b)
 
 
@@ -503,11 +503,11 @@ func _fill_species() -> void:
 	if editing and _pick_slot < _mons(_pick_side).size():
 		cur = Dex.canon(String(_mons(_pick_side)[_pick_slot].get("species", "")))
 	_ov_title.text = (
-		"Trocar a espécie (%s, %dº)" % [_side_name(_pick_side), _pick_slot + 1]
+		"Change species (%s, #%d)" % [_side_name(_pick_side), _pick_slot + 1]
 		if editing
-		else "Novo Pokémon no %s" % _side_name(_pick_side)
+		else "New Pokémon for %s" % _side_name(_pick_side)
 	)
-	_ov_hint.text = "Clique numa espécie. A busca acha nome, número ou tipo."
+	_ov_hint.text = "Click a species. Search by name, number or type."
 	var q := _ov_search.text.strip_edges().to_lower()
 	for sp in _species_order:
 		var d := Dex.species(sp)
@@ -536,23 +536,23 @@ func _fill_moves() -> void:
 	var sp := String(e.get("species", ""))
 	var mv: Array = e.get("moves", [])
 	var cur := String(mv[_pick_move]) if _pick_move < mv.size() else ""
-	_ov_title.text = "Golpe %d de %s (Nv %d)" % [_pick_move + 1, sp, Cfg.LEVEL]
-	_ov_hint.text = "Todos os golpes que %s aprende, em qualquer nível." % sp
+	_ov_title.text = "Move %d of %s (Lv %d)" % [_pick_move + 1, sp, Cfg.LEVEL]
+	_ov_hint.text = "Every move %s learns, at any level." % sp
 	var q := _ov_search.text.strip_edges().to_lower()
 	if cur != "" and mv.size() > 1:
-		var i0 := _ov_list.add_item("(vazio): tirar %s deste slot" % Kit.move_name(cur))
+		var i0 := _ov_list.add_item("(empty): remove %s from this slot" % Kit.move_name(cur))
 		_ov_list.set_item_metadata(i0, "")
 	for le in Cfg.learnable_moves(sp):
 		var id := String(le.id)
 		var m := Dex.move(id)
 		var t := String(m.get("type", "normal"))
-		var when := "qualquer nível" if int(le.level) == 0 else "Nv %d" % int(le.level)
+		var when := "any level" if int(le.level) == 0 else "Lv %d" % int(le.level)
 		var text := (
 			"%s   ·   %s   ·   %s   ·   %s"
 			% [Kit.move_name(id), Kit.type_name(t), _move_info(id), when]
 		)
 		if mv.has(id):
-			text += "   (já tem)"
+			text += "   (already known)"
 		if q != "" and not ("%s %s %s" % [id, t, text.to_lower()]).contains(q):
 			continue
 		var i := _ov_list.add_item(text, _type_icon(t))
@@ -565,14 +565,12 @@ func _fill_moves() -> void:
 
 func _fill_teams() -> void:
 	var s := _pick_side
-	_ov_title.text = "Times salvos (%s)" % _side_name(s)
-	_ov_hint.text = (
-		"Marque um slot e escolha: salvar o %s nele ou carregar o time dele." % (_side_name(s))
-	)
+	_ov_title.text = "Saved teams (%s)" % _side_name(s)
+	_ov_hint.text = ("Pick a slot and choose: save %s into it or load its team." % (_side_name(s)))
 	var all := Cfg.load_teams()
 	for k in all.size():
 		var t: Dictionary = all[k]
-		var text := "Slot %d   ·   (vazio)" % (k + 1)
+		var text := "Slot %d   ·   (empty)" % (k + 1)
 		var icon: Texture2D = null
 		if not t.is_empty():
 			var names := PackedStringArray()
@@ -583,7 +581,7 @@ func _fill_teams() -> void:
 				"Slot %d   ·   %s   ·   %s   ·   %s"
 				% [
 					k + 1,
-					nm if nm != "" else "(sem nome)",
+					nm if nm != "" else "(no name)",
 					", ".join(names),
 					String(t.get("saved_at", "")).replace("T", " ").left(16)
 				]
@@ -596,11 +594,11 @@ func _fill_teams() -> void:
 		_ov_list.select(_team_slot)
 	var has := _team_slot >= 0
 	var full: bool = has and not (all[_team_slot] as Dictionary).is_empty()
-	var sv := _btn("Salvar o %s aqui" % _side_name(s), func(): save_team(s, _team_slot))
+	var sv := _btn("Save %s here" % _side_name(s), func(): save_team(s, _team_slot))
 	sv.disabled = not has
-	var ld := _btn("Carregar no %s" % _side_name(s), func(): load_team(s, _team_slot))
+	var ld := _btn("Load into %s" % _side_name(s), func(): load_team(s, _team_slot))
 	ld.disabled = not full
-	var cl := _btn("Confirmar: apagar?" if _confirm_clear else "Apagar slot", _on_clear_team_slot)
+	var cl := _btn("Confirm: delete?" if _confirm_clear else "Delete slot", _on_clear_team_slot)
 	cl.disabled = not full
 	for b in [sv, ld, cl]:
 		_ov_buttons.add_child(b)
@@ -660,7 +658,7 @@ static func _valid_gender(sp: String, g: String) -> String:
 static func _nature_text(n: String) -> String:
 	var d: Array = StatCalc.NATURES.get(n, [])
 	if d.is_empty():
-		return "%s (neutra)" % n.capitalize()
+		return "%s (neutral)" % n.capitalize()
 	return "%s (+%s −%s)" % [n.capitalize(), STAT_ABBR[d[0]], STAT_ABBR[d[1]]]
 
 
@@ -679,14 +677,14 @@ static func _move_info(id: String) -> String:
 		"%s · %s · %s"
 		% [
 			Kit.CATEGORIES.get(cat, cat),
-			("Poder %d" % power) if power > 0 else ("Poder —" if dmg else "Sem dano"),
-			("%d%%" % acc) if acc > 0 else "Sempre acerta"
+			("Power %d" % power) if power > 0 else ("Power —" if dmg else "No damage"),
+			("%d%%" % acc) if acc > 0 else "Never misses"
 		]
 	)
 
 
 static func _mon_line(d: Dictionary) -> String:
-	var t := "%s  Nv %d" % [String(d.get("species", "?")), Cfg.LEVEL]
+	var t := "%s  Lv %d" % [String(d.get("species", "?")), Cfg.LEVEL]
 	if int(d.get("hp_pct", 100)) < 100:
 		t += " · %d%%" % int(d.hp_pct)
 	if String(d.get("status", "")) != "":
@@ -888,26 +886,24 @@ func _build_top() -> Control:
 	var col: VBoxContainer = pc[1]
 	var r1 := _hbox(8)
 	col.add_child(r1)
-	r1.add_child(_btn("‹ Título", back_to_title, "Volta ao título (Esc); a config fica guardada"))
-	var h := Kit.header("MODO DE TREINAMENTO", Kit.INK, 22)
+	r1.add_child(_btn("‹ Title", back_to_title, "Back to the title (Esc); the setup is kept"))
+	var h := Kit.header("TRAINING MODE", Kit.INK, 22)
 	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	r1.add_child(h)
-	r1.add_child(
-		_btn("Trocar lados", swap_sides, "Troca o Time A e o Time B de lado (com nome e item)")
-	)
-	r1.add_child(_btn("Padrão", reset_default, "Volta para os times e opções padrão"))
+	r1.add_child(_btn("Swap sides", swap_sides, "Swaps Team A and Team B (with name and item)"))
+	r1.add_child(_btn("Default", reset_default, "Back to the default teams and options"))
 	(
 		r1
 		. add_child(
 			_btn(
-				"Times aleatórios",
+				"Random teams",
 				random_teams,
-				"Sorteia 6 Pokémon para cada lado, com golpes do learnset (dano do tipo dele e um de status)"
+				"Rolls 6 Pokémon for each side, with learnset moves (damage of its own type and one status move)"
 			)
 		)
 	)
-	_start_btn = _btn("Começar batalha", start, "As duas equipes lutam sozinhas, pela IA")
+	_start_btn = _btn("Start battle", start, "Both teams fight on their own, through the AI")
 	_start_btn.add_theme_stylebox_override("normal", _box(Kit.RED, Kit.INK, 6, 14, 3))
 	_start_btn.add_theme_stylebox_override(
 		"hover", _box(Kit.RED.lightened(0.15), Kit.INK, 6, 14, 3)
@@ -918,53 +914,53 @@ func _build_top() -> Control:
 
 	var r2 := _hbox(6)
 	col.add_child(r2)
-	r2.add_child(_small("Formato"))
+	r2.add_child(_small("Format"))
 	_battle = OptionButton.new()
 	_battle.add_item("1x1")
 	_battle.add_item("2x2")
-	_battle.tooltip_text = "Quantos Pokémon de cada time lutam ao mesmo tempo"
+	_battle.tooltip_text = "How many Pokémon of each team fight at the same time"
 	_battle.item_selected.connect(_on_battle)
 	r2.add_child(_battle)
-	r2.add_child(_small("Modo"))
+	r2.add_child(_small("Mode"))
 	_mode = OptionButton.new()
-	_mode.add_item("Energia")
+	_mode.add_item("Energy")
 	_mode.add_item("VGC")
 	_mode.set_item_metadata(0, "energy")
 	_mode.set_item_metadata(1, "vgc")
 	_mode.tooltip_text = (
-		"Energia: barra que enche com o tempo, golpes gastam energia, movimento livre\n"
-		+ "VGC: rodadas pela Speed, posições fixas"
+		"Energy: a bar that fills over time, moves spend energy, free movement\n"
+		+ "VGC: rounds by Speed, fixed positions"
 	)
 	_mode.item_selected.connect(_on_mode)
 	r2.add_child(_mode)
-	r2.add_child(_small("Cenário"))
+	r2.add_child(_small("Scenery"))
 	_scenario = OptionButton.new()
-	_scenario.add_item("Aleatório")
+	_scenario.add_item("Random")
 	_scenario.set_item_metadata(0, "")
 	for id in Cfg.SCENARIOS:
 		_scenario.add_item(String(Cfg.SCENARIO_NAMES[id]))
 		_scenario.set_item_metadata(_scenario.item_count - 1, id)
-	_scenario.tooltip_text = "Relevo da quadra (morros, lagos, grama alta...). Aleatório sorteia a cada luta"
+	_scenario.tooltip_text = "Court terrain (hills, lakes, tall grass...). Random rolls one every fight"
 	_scenario.item_selected.connect(_on_scenario)
 	r2.add_child(_scenario)
-	r2.add_child(_small("Hora"))
+	r2.add_child(_small("Time"))
 	_time = OptionButton.new()
 	for id in Cfg.TIMES:
 		_time.add_item(String(Cfg.TIME_NAMES[id]))
 		_time.set_item_metadata(_time.item_count - 1, id)
-	_time.tooltip_text = "Hora do dia no estádio (modo de energia). De noite os refletores acendem"
+	_time.tooltip_text = "Time of day at the stadium (energy mode). At night the floodlights turn on"
 	_time.item_selected.connect(_on_time)
 	r2.add_child(_time)
-	r2.add_child(_small("Jogador 1"))
+	r2.add_child(_small("Player 1"))
 	_p1 = OptionButton.new()
-	_p1.add_item("IA")
+	_p1.add_item("AI")
 	_p1.add_item("Manual")
 	_p1.set_item_metadata(0, "ai")
 	_p1.set_item_metadata(1, "manual")
-	_p1.tooltip_text = "Manual: você controla o Time A pelo teclado (na série, a IA luta)"
+	_p1.tooltip_text = "Manual: you control Team A with the keyboard (in a series, the AI fights)"
 	_p1.item_selected.connect(_on_p1)
 	r2.add_child(_p1)
-	r2.add_child(_small("Velocidade"))
+	r2.add_child(_small("Speed"))
 	_speed = OptionButton.new()
 	for v in Cfg.SPEEDS:
 		_speed.add_item(_speed_text(v))
@@ -973,18 +969,18 @@ func _build_top() -> Control:
 	_turbo = CheckBox.new()
 	_turbo.text = "Turbo"
 	_turbo.focus_mode = Control.FOCUS_NONE
-	_turbo.tooltip_text = "Roda as lutas o mais rápido possível, para séries longas"
+	_turbo.tooltip_text = "Runs the fights as fast as possible, for long series"
 	_turbo.button_down.connect(_commit_edits)
 	_turbo.toggled.connect(_on_turbo)
 	r2.add_child(_turbo)
-	r2.add_child(_small("Limite (s)"))
+	r2.add_child(_small("Limit (s)"))
 	_limit = _spin(0, 3600, 5.0, 72)
-	_limit.tooltip_text = "Tempo de jogo máximo; ao passar, a luta termina sem vencedor (0 = sem)"
+	_limit.tooltip_text = "Maximum game time; past it the fight ends without a winner (0 = none)"
 	_limit.value_changed.connect(_on_limit)
 	r2.add_child(_limit)
-	r2.add_child(_small("Semente"))
+	r2.add_child(_small("Seed"))
 	_seed = _spin(-1, 2147483647, 1.0, 110)
-	_seed.tooltip_text = "-1 = aleatória; fixa = série reproduzível (luta k da série: semente + k)"
+	_seed.tooltip_text = "-1 = random; fixed = reproducible series (fight k of the series: seed + k)"
 	_seed.value_changed.connect(_on_seed)
 	r2.add_child(_seed)
 	_status = _clip(Kit.label("", Kit.INK, SMALL_SIZE))
@@ -1001,34 +997,34 @@ func _build_team(i: int) -> Control:
 	var t := {}
 	var head := _hbox(6)
 	col.add_child(head)
-	t.head = Kit.header("TIME A" if i == 0 else "TIME B", Kit.INK, 20)
+	t.head = Kit.header("TEAM A" if i == 0 else "TEAM B", Kit.INK, 20)
 	t.head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t.head)
 	head.add_child(
-		_btn("Times salvos", open_teams.bind(i), "Salvar este time num slot ou carregar um salvo")
+		_btn("Saved teams", open_teams.bind(i), "Save this team to a slot or load a saved one")
 	)
 	t.name = LineEdit.new()
-	t.name.placeholder_text = "Nome do treinador"
+	t.name.placeholder_text = "Trainer name"
 	t.name.text_changed.connect(_on_team_name.bind(i))
 	col.add_child(t.name)
 	var row := _hbox(6)
 	col.add_child(row)
 	t.item = _option()
-	t.item.add_item("Nenhum")
+	t.item.add_item("None")
 	t.item.set_item_metadata(0, "")
 	for id in Cfg.battle_items():
 		t.item.add_item(Kit.item_name(id))
 		t.item.set_item_metadata(t.item.item_count - 1, id)
-	t.item.tooltip_text = "A IA usa o item uma vez por Pokémon (cura de HP ou de status)"
+	t.item.tooltip_text = "The AI uses the item once per Pokémon (HP or status cure)"
 	t.item.item_selected.connect(_on_team_item.bind(i))
-	var iv := _labeled("Item do treinador", t.item)
+	var iv := _labeled("Trainer item", t.item)
 	iv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(iv)
 	t.think = _spin(THINK_MIN, THINK_MAX, 0.05, 68)
 	t.think.tooltip_text = THINK_TIP
 	t.think.value_changed.connect(_on_think.bind(i))
-	row.add_child(_labeled("Nível da IA", t.think))
-	col.add_child(_small("Pokémon (o 1º entra primeiro)"))
+	row.add_child(_labeled("AI level", t.think))
+	col.add_child(_small("Pokémon (the 1st goes in first)"))
 	t.slots = []
 	for k in Cfg.PARTY_MAX:
 		var b := _btn("", click_slot.bind(i, k))
@@ -1041,19 +1037,19 @@ func _build_team(i: int) -> Control:
 		t.slots.append(b)
 	var r1 := _hbox(4)
 	col.add_child(r1)
-	t.up = _btn("▲", func(): move_mon(i, _sel(i), -1), "Sobe na ordem")
-	t.down = _btn("▼", func(): move_mon(i, _sel(i), 1), "Desce na ordem")
-	t.dup = _btn("Duplicar", func(): duplicate_mon(i, _sel(i)), "Cópia logo abaixo")
-	t.rm = _btn("Remover", func(): remove_mon(i, _sel(i)))
+	t.up = _btn("▲", func(): move_mon(i, _sel(i), -1), "Move up")
+	t.down = _btn("▼", func(): move_mon(i, _sel(i), 1), "Move down")
+	t.dup = _btn("Duplicate", func(): duplicate_mon(i, _sel(i)), "Copy right below")
+	t.rm = _btn("Remove", func(): remove_mon(i, _sel(i)))
 	for k in ["up", "down", "dup", "rm"]:
 		var b: Button = t[k]
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		r1.add_child(b)
 	col.add_child(
 		_btn(
-			"Copiar para o Time %s" % ("B" if i == 0 else "A"),
+			"Copy to Team %s" % ("B" if i == 0 else "A"),
 			copy_side.bind(i),
-			"Copia os Pokémon, o item e o nível da IA para o outro time"
+			"Copies the Pokémon, the item and the AI level to the other team"
 		)
 	)
 	_teams.append(t)
@@ -1071,7 +1067,7 @@ func _build_editor() -> Control:
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col: VBoxContainer = pc[1]
 	_empty_note = _wrap(
-		Kit.label("Time vazio: clique em “+ Adicionar Pokémon” num dos times.", Kit.DIM)
+		Kit.label("Empty team: click “+ Add Pokémon” on one of the teams.", Kit.DIM)
 	)
 	col.add_child(_empty_note)
 	var ed := VBoxContainer.new()
@@ -1104,7 +1100,7 @@ func _build_head(box: VBoxContainer) -> void:
 	_title = _clip(Kit.header("", Kit.INK, 24))
 	name_row.add_child(_title)
 	name_row.add_child(
-		_btn("Trocar espécie", func(): open_species(side, slot), "Abre a lista de espécies")
+		_btn("Change species", func(): open_species(side, slot), "Opens the species list")
 	)
 	_types = _hbox(4)
 	info.add_child(_types)
@@ -1113,16 +1109,16 @@ func _build_head(box: VBoxContainer) -> void:
 	g.add_theme_constant_override("h_separation", 8)
 	g.add_theme_constant_override("v_separation", 1)
 	box.add_child(g)
-	_level = Kit.label("Nv %d" % Cfg.LEVEL, Kit.INK, SMALL_SIZE + 1)
+	_level = Kit.label("Lv %d" % Cfg.LEVEL, Kit.INK, SMALL_SIZE + 1)
 	_nature = _option()
 	for n in StatCalc.NATURES:
 		_nature.add_item(_nature_text(n))
 		_nature.set_item_metadata(_nature.item_count - 1, n)
-	_nature.tooltip_text = "+10% num atributo e −10% em outro (as neutras não mudam nada)"
+	_nature.tooltip_text = "+10% to one stat and −10% to another (neutral ones change nothing)"
 	_nature.item_selected.connect(_on_option.bind(_nature, "nature"))
 	_ability = _option()
 	_ability.item_selected.connect(_on_option.bind(_ability, "ability_slot"))
-	for h in ["Nível", "Natureza", "Habilidade"]:
+	for h in ["Level", "Nature", "Ability"]:
 		g.add_child(_small(h))
 	for c in [_level, _nature, _ability]:
 		g.add_child(c)
@@ -1136,7 +1132,7 @@ func _build_stats(box: HBoxContainer) -> void:
 	v.add_theme_constant_override("separation", 2)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(v)
-	v.add_child(_small("Atributos (base → no nível, com a natureza)"))
+	v.add_child(_small("Stats (base → at this level, with the nature)"))
 	for s in StatCalc.STATS:
 		var r := _hbox(6)
 		v.add_child(r)
@@ -1170,7 +1166,7 @@ func _build_start_state(box: HBoxContainer) -> void:
 	g.add_theme_constant_override("v_separation", 4)
 	g.custom_minimum_size.x = 210
 	box.add_child(g)
-	var head := _small("Começa a luta com")
+	var head := _small("Starts the fight with")
 	g.add_child(head)
 	g.add_child(Control.new())
 	_hp = _spin(1, 100, 1.0, 72)
@@ -1200,11 +1196,11 @@ func _build_start_state(box: HBoxContainer) -> void:
 func _build_moves(box: VBoxContainer) -> void:
 	var head := _hbox(8)
 	box.add_child(head)
-	var l := _small("Golpes (clique num golpe para trocar)")
+	var l := _small("Moves (click a move to change it)")
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(l)
 	head.add_child(
-		_btn("Golpes do nível", moves_for_level, "Os 4 últimos golpes que aprende até o Nv 50")
+		_btn("Level-up moves", moves_for_level, "The last 4 moves it learns up to Lv 50")
 	)
 	var g := GridContainer.new()
 	g.columns = 2
@@ -1223,7 +1219,7 @@ func _build_moves(box: VBoxContainer) -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.clip_text = true
 		row.add_child(b)
-		var x := _btn("×", set_move.bind(k, ""), "Tirar este golpe")
+		var x := _btn("×", set_move.bind(k, ""), "Remove this move")
 		row.add_child(x)
 		var line := _hbox(4)
 		cell.add_child(line)
@@ -1259,7 +1255,7 @@ func _build_overlay() -> void:
 	_ov_hint = _wrap(_small("", Kit.DIM))
 	col.add_child(_ov_hint)
 	_ov_search = LineEdit.new()
-	_ov_search.placeholder_text = "Buscar..."
+	_ov_search.placeholder_text = "Search..."
 	_ov_search.clear_button_enabled = true
 	_ov_search.text_changed.connect(func(_t: String): _refresh_picker())
 	_ov_search.text_submitted.connect(_on_search_enter)
@@ -1334,11 +1330,11 @@ func _sync_team(i: int) -> void:
 			var sp := Dex.canon(String(d.get("species", "")))
 			b.text = "%d. %s" % [k + 1, _mon_line(d)]
 			b.icon = Kit.mon_fitted(sp, ICON_PX) if sp != "" else null
-			b.tooltip_text = "Clique para editar"
+			b.tooltip_text = "Click to edit"
 		elif k == mons.size():
-			b.text = "+ Adicionar Pokémon"
+			b.text = "+ Add Pokémon"
 			b.icon = null
-			b.tooltip_text = "Abre a lista de espécies"
+			b.tooltip_text = "Opens the species list"
 		else:
 			b.text = ""
 			b.icon = null
@@ -1359,8 +1355,8 @@ func _sync_editor() -> void:
 	var sp := Dex.canon(String(e.get("species", "")))
 	var spd := Dex.species(sp)
 	var m := Cfg.build_mon(e)
-	_where.text = "%s · %dº Pokémon" % [_side_name(side), slot + 1]
-	_title.text = sp if sp != "" else "(espécie inválida)"
+	_where.text = "%s · Pokémon #%d" % [_side_name(side), slot + 1]
+	_title.text = sp if sp != "" else "(invalid species)"
 	_sprite.texture = Kit.mon_front(sp) if sp != "" else null
 	Kit.clear(_types)
 	for t in spd.get("types", []):
@@ -1372,29 +1368,23 @@ func _sync_editor() -> void:
 	for k in abil.size():
 		var a := Dex.ability(String(abil[k]))
 		var nm := String(a.get("name", abil[k])).capitalize()
-		_ability.add_item(nm + (" (oculta)" if String(abil[k]) == hidden else ""))
+		_ability.add_item(nm + (" (hidden)" if String(abil[k]) == hidden else ""))
 		_ability.set_item_metadata(k, k)
-		_ability.set_item_tooltip(k, String(a.get("desc_pt", a.get("desc", ""))))
+		_ability.set_item_tooltip(k, String(a.get("desc", "")))
 	if abil.is_empty():
 		_ability.add_item("—")
 		_ability.set_item_metadata(0, 0)
 	var ak := clampi(m.ability_slot, 0, _ability.item_count - 1)
 	_ability.select(ak)
 	_ability_desc.text = (
-		String(
-			Dex.ability(String(abil[ak])).get(
-				"desc_pt", Dex.ability(String(abil[ak])).get("desc", "")
-			)
-		)
-		if not abil.is_empty()
-		else ""
+		String(Dex.ability(String(abil[ak])).get("desc", "")) if not abil.is_empty() else ""
 	)
 	_hp.value = int(e.get("hp_pct", 100))
 	_hp_info.text = "%d / %d" % [m.hp, m.max_hp]
 	_cond.select(maxi(Cfg.STATUSES.find(m.status), 0))
 	_pp.max_value = m.pp_base
 	_pp.value = m.pp
-	_pp_info.text = "de %d" % int(m.pp_base)
+	_pp_info.text = "of %d" % int(m.pp_base)
 	var nat: Array = StatCalc.NATURES.get(m.nature, [])
 	var total := 0
 	for s in StatCalc.STATS:
@@ -1416,7 +1406,7 @@ func _sync_editor() -> void:
 		var r: Dictionary = _move_rows[k]
 		var id := String(mv[k]) if k < mv.size() else ""
 		var b: Button = r.btn
-		b.text = "%d. %s" % [k + 1, Kit.move_name(id) if id != "" else "+ escolher golpe"]
+		b.text = "%d. %s" % [k + 1, Kit.move_name(id) if id != "" else "+ choose move"]
 		b.disabled = k > mv.size()
 		r.x.disabled = id == "" or mv.size() <= 1
 		Kit.clear(r.tags)
@@ -1426,7 +1416,7 @@ func _sync_editor() -> void:
 		var info := _move_info(id) if id != "" else ""
 		var lv := Cfg.learn_level(sp, id) if id != "" else 0
 		if lv < 0:
-			info = "não aprende!  " + info
+			info = "can't learn it!  " + info
 		r.info.text = info
 		r.info.add_theme_color_override("font_color", Kit.RED if lv < 0 else Kit.INK)
 		b.tooltip_text = String(Dex.move(id).get("desc", ""))
@@ -1435,7 +1425,7 @@ func _sync_editor() -> void:
 func _refresh_status() -> void:
 	var ok := Cfg.can_start(cfg)
 	_start_btn.disabled = not ok
-	_status.text = _msg if ok else "Cada time precisa de pelo menos um Pokémon para começar."
+	_status.text = _msg if ok else "Each team needs at least one Pokémon to start."
 	_status.add_theme_color_override("font_color", Kit.INK if ok else Kit.RED)
 
 

@@ -29,23 +29,23 @@ const CONTACT_KINDS := ["dash", "arc", "multi_arc", "whip"]
 const KNOCKDOWN := 7.0
 const DUO_PATH := "res://data/duo_moves.json"
 const STAT_WORDS := {
-	"atk": "Ataque",
-	"def": "Defesa",
-	"spa": "At. Esp.",
-	"spd": "Def. Esp.",
-	"spe": "Velocidade",
-	"acc": "Precisão"
+	"atk": "Attack",
+	"def": "Defense",
+	"spa": "Sp. Atk",
+	"spd": "Sp. Def",
+	"spe": "Speed",
+	"acc": "Accuracy"
 }
 
 ## Marcas: id -> nome, tipo da cor.
 const MARKS := {
-	"wet": {"name": "Molhado", "color": "water"},
-	"burning": {"name": "Em brasa", "color": "fire"},
-	"pollen": {"name": "Pólen", "color": "grass"},
-	"dust": {"name": "Pó", "color": "ground"},
-	"down": {"name": "Derrubado", "color": "fighting"},
-	"psy": {"name": "Confuso", "color": "psychic"},
-	"slow": {"name": "Lento", "color": "ice"},
+	"wet": {"name": "Wet", "color": "water"},
+	"burning": {"name": "Smoldering", "color": "fire"},
+	"pollen": {"name": "Pollen", "color": "grass"},
+	"dust": {"name": "Dust", "color": "ground"},
+	"down": {"name": "Knocked down", "color": "fighting"},
+	"psy": {"name": "Confused", "color": "psychic"},
+	"slow": {"name": "Slowed", "color": "ice"},
 }
 ## Tipo do golpe -> marca que ele deixa (derrubado/lento têm regra própria em _mark_for).
 const TYPE_MARK := {
@@ -63,7 +63,7 @@ const REACTIONS := [
 		"id": "shock",
 		"mark": "wet",
 		"by": ["electric"],
-		"name": "Eletrocutado!",
+		"name": "Electrocuted!",
 		"color": "electric",
 		"mult": 1.35,
 		"status": ["paralysis", 0.4]
@@ -72,7 +72,7 @@ const REACTIONS := [
 		"id": "freeze",
 		"mark": "wet",
 		"by": ["ice"],
-		"name": "Congelou!",
+		"name": "Froze!",
 		"color": "ice",
 		"mult": 1.15,
 		"root": 1.2,
@@ -82,7 +82,7 @@ const REACTIONS := [
 		"id": "venom",
 		"mark": "wet",
 		"by": ["poison"],
-		"name": "Veneno diluído!",
+		"name": "Diluted venom!",
 		"color": "poison",
 		"mult": 1.25,
 		"status": ["poison", 0.5]
@@ -91,7 +91,7 @@ const REACTIONS := [
 		"id": "blaze_grass",
 		"mark": "burning",
 		"by": ["grass"],
-		"name": "Incêndio!",
+		"name": "Wildfire!",
 		"color": "fire",
 		"mult": 1.2,
 		"area": [40, 1.8, "fire"]
@@ -100,7 +100,7 @@ const REACTIONS := [
 		"id": "blaze_wind",
 		"mark": "burning",
 		"by": ["flying"],
-		"name": "Incêndio!",
+		"name": "Wildfire!",
 		"color": "fire",
 		"mult": 1.2,
 		"area": [40, 1.8, "fire"]
@@ -109,7 +109,7 @@ const REACTIONS := [
 		"id": "pollen_blast",
 		"mark": "pollen",
 		"by": ["fire"],
-		"name": "Explosão de pólen!",
+		"name": "Pollen blast!",
 		"color": "grass",
 		"mult": 1.4,
 		"area": [35, 1.6, "grass"]
@@ -118,7 +118,7 @@ const REACTIONS := [
 		"id": "mud",
 		"mark": "dust",
 		"by": ["water"],
-		"name": "Lama!",
+		"name": "Mud!",
 		"color": "ground",
 		"mult": 1.1,
 		"slow": 4.0,
@@ -128,7 +128,7 @@ const REACTIONS := [
 		"id": "sandstorm",
 		"mark": "dust",
 		"by": ["flying"],
-		"name": "Tempestade de areia!",
+		"name": "Sandstorm!",
 		"color": "rock",
 		"mult": 1.15,
 		"acc": 4.0,
@@ -138,23 +138,16 @@ const REACTIONS := [
 		"id": "ground_combo",
 		"mark": "down",
 		"contact": true,
-		"name": "Combo de chão!",
+		"name": "Ground combo!",
 		"color": "fighting",
 		"mult": 1.35
 	},
-	{
-		"id": "melt",
-		"mark": "slow",
-		"by": ["fire"],
-		"name": "Derreteu!",
-		"color": "fire",
-		"mult": 1.3
-	},
+	{"id": "melt", "mark": "slow", "by": ["fire"], "name": "Melted!", "color": "fire", "mult": 1.3},
 	{
 		"id": "nightmare",
 		"mark": "psy",
 		"by": ["ghost", "dark"],
-		"name": "Pesadelo!",
+		"name": "Nightmare!",
 		"color": "ghost",
 		"mult": 1.3,
 		"confuse": true
@@ -461,7 +454,7 @@ func _resonates(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 
 func _hit_resonance(_user: BattleFighter, _target: BattleFighter, mv: Dictionary) -> void:
 	var col := Dex.type_color(String(mv.get("type", "normal")))
-	_notify("Ressonância!", col)
+	_notify("Resonance!", col)
 
 
 ## Acertos dos dois parceiros próximos no tempo enchem a Sintonia.
@@ -633,7 +626,7 @@ func _duo_effect(
 				if _ok(f):
 					_temp_stage(f, String(duo.stat), int(duo.stages), float(duo.dur))
 					f.popup(
-						"%s do time!" % String(STAT_WORDS.get(String(duo.stat), "Status")),
+						"Team %s!" % String(STAT_WORDS.get(String(duo.stat), "Status")),
 						Dex.type_color(ty),
 						1.0,
 						0.5,

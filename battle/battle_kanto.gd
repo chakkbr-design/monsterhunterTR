@@ -91,19 +91,19 @@ static func blocked(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) 
 		"first_move":
 			# First Impression: só como primeiro golpe da luta do usuário (o "primeiro turno" do oficial).
 			if not (s.used as Dictionary).is_empty():
-				return "Só como primeiro golpe!"
+				return "Only as the first move!"
 		"steel_roller":
 			if not rollable(fx, user):
-				return "Nada para aplainar!"
+				return "Nothing to flatten!"
 		"poltergeist":
 			if foe_ok and not fx._has_item(foe) and nearest_prop(fx, user).is_empty():
-				return "Nada para arremessar!"
+				return "Nothing to throw!"
 		"metal_burst":
 			if fx.now - float(s.hurt_t) > BURST_WINDOW or int(s.get("last_dmg", 0)) <= 0:
-				return "Ninguém me acertou!"
+				return "Nobody hit me!"
 		"dream_eater":
 			if foe_ok and foe.status != "sleep":
-				return "O alvo está acordado!"
+				return "The target is awake!"
 	return ""
 
 
@@ -145,12 +145,12 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 		"poltergeist":
 			var foe := user.opponent
 			if is_instance_valid(foe) and fx._has_item(foe):
-				user.popup("Controlou %s!" % fx._item_name(foe), Dex.type_color("ghost"), 0.9)
+				user.popup("Controlled %s!" % fx._item_name(foe), Dex.type_color("ghost"), 0.9)
 				return
 			var prop := nearest_prop(fx, user)
 			if not prop.is_empty():
 				user.popup(
-					"Ergueu %s!" % ("a pedra" if prop.rock else "a caixa"),
+					"Lifted %s!" % ("the rock" if prop.rock else "the crate"),
 					Dex.type_color("ghost"),
 					0.9
 				)
@@ -165,7 +165,7 @@ static func blocks_hit(
 	fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter, mv: Dictionary
 ) -> bool:
 	if String(mv.get("special", "")) == "dream_eater" and target.status != "sleep":
-		target.popup("Não afetou!", Color(0.8, 0.8, 0.8))
+		target.popup("No effect!", Color(0.8, 0.8, 0.8))
 		fx.note_fail(user)
 		return true
 	var ts := fx.st(target)
@@ -176,7 +176,7 @@ static func blocks_hit(
 	):
 		ts.erase("coat")
 		ts.erase("coat#")
-		target.popup("Rebateu!", Dex.type_color("psychic"), 1.1)
+		target.popup("Bounced back!", Dex.type_color("psychic"), 1.1)
 		_reflect(fx, user, target, mv)
 		return true
 	return false
@@ -200,7 +200,7 @@ static func on_protected(fx: BattleMoveEffects, target: BattleFighter) -> void:
 	var ts := fx.st(target)
 	if bool(ts.get("insight", false)):
 		fx.set_rounds(ts, "laser", BattleMoveEffects.LASER_TURNS)
-		target.popup("Leu o golpe!", Color(1, 0.6, 0.3), 0.9, 0.8)
+		target.popup("Read the move!", Color(1, 0.6, 0.3), 0.9, 0.8)
 
 
 # --- Dano guardado (Metal Burst, Conversion 2) e Retaliate ---
@@ -311,14 +311,14 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 			_conversion_2(fx, user, s)
 		"magic_coat":
 			fx.set_rounds(s, "coat", 1)
-			user.popup("Capa mágica!", Dex.type_color("psychic"), 1.1)
+			user.popup("Magic Coat!", Dex.type_color("psychic"), 1.1)
 			fx._vfx("protect_shield", [user, fx.round_left()])
 		"magic_room":
 			_magic_room(fx, user)
 		"nature_power":
 			var id := nature_move(fx, user)
 			user.popup(
-				"Poder da natureza: %s!" % Dex.move(id).get("name", id), Color(0.6, 1.0, 0.6), 0.9
+				"Nature Power: %s!" % Dex.move(id).get("name", id), Color(0.6, 1.0, 0.6), 0.9
 			)
 			fx._call(user, id)
 		"perish_song":
@@ -335,7 +335,7 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 
 static func _set_types(user: BattleFighter, t: String) -> void:
 	user.types = [t]
-	user.popup("Virou %s!" % t.capitalize(), Dex.type_color(t), 1.0, 0.8)
+	user.popup("Became %s!" % t.capitalize(), Dex.type_color(t), 1.0, 0.8)
 
 
 ## Conversion: vira o tipo de um dos próprios golpes (um que ainda não é o seu).
@@ -371,10 +371,10 @@ static func _magic_room(fx: BattleMoveEffects, user: BattleFighter) -> void:
 	if fx.active(fx.field, "magic"):
 		fx.field.erase("magic")
 		fx.field.erase("magic#")
-		fx.arena.popup(at, "Os itens voltaram a funcionar!", Dex.type_color("psychic"))
+		fx.arena.popup(at, "Items work again!", Dex.type_color("psychic"))
 		return
 	fx.set_rounds(fx.field, "magic", BattleMoveEffects.FIELD_TURNS)
-	fx.arena.popup(at, "Itens anulados!", Dex.type_color("psychic"))
+	fx.arena.popup(at, "Items suppressed!", Dex.type_color("psychic"))
 	fx._vfx("gravity", [BattleMoveEffects.rounds_secs(BattleMoveEffects.FIELD_TURNS)])
 
 
@@ -388,13 +388,13 @@ static func _perish(fx: BattleMoveEffects, user: BattleFighter) -> void:
 		if f != user and _flat(f.position, user.position) > PERISH_R:
 			continue
 		if fx._ability(f) == "soundproof":
-			f.popup("Não ouve!", Color(0.8, 0.8, 0.8))
+			f.popup("Can't hear it!", Color(0.8, 0.8, 0.8))
 			continue
 		var fs := fx.st(f)
 		if fx.active(fs, "perish"):
 			continue
 		fx.set_rounds(fs, "perish", PERISH_TURNS)
-		f.popup("Canção da morte: %d" % PERISH_TURNS, PERISH_COL, 1.0, 0.7)
+		f.popup("Perish count: %d" % PERISH_TURNS, PERISH_COL, 1.0, 0.7)
 		n += 1
 	if n == 0:
 		fx._fail(user)
@@ -408,10 +408,10 @@ static func perish_tick(fx: BattleMoveEffects, f: BattleFighter) -> bool:
 	if not fx.active(s, "perish"):
 		return false
 	if fx.count_round(s, "perish"):
-		f.popup("A canção chegou ao fim!", PERISH_COL, 1.2, 0.8)
+		f.popup("The song ended!", PERISH_COL, 1.2, 0.8)
 		f.take_damage(f.hp, Vector3.ZERO, 0.0)
 		return true
-	f.popup("Canção da morte: %d" % fx.rounds_left(s, "perish"), PERISH_COL, 1.0, 0.7)
+	f.popup("Perish count: %d" % fx.rounds_left(s, "perish"), PERISH_COL, 1.0, 0.7)
 	return false
 
 
@@ -474,7 +474,7 @@ static func after_hit(
 			else:
 				user.types = target.types.duplicate()
 				user.popup(
-					"Virou %s!" % "/".join(user.types.map(func(t): return String(t).capitalize())),
+					"Became %s!" % "/".join(user.types.map(func(t): return String(t).capitalize())),
 					Dex.type_color(String(user.types[0])),
 					1.0,
 					0.8
@@ -486,7 +486,7 @@ static func after_hit(
 			else:
 				user.set_meta("ability_override", ab)
 				user.popup(
-					"Copiou %s!" % ab.capitalize().replace("_", " "), Dex.type_color("psychic")
+					"Copied %s!" % ab.capitalize().replace("_", " "), Dex.type_color("psychic")
 				)
 		"entrainment":
 			var mine := fx._ability(user)
@@ -495,7 +495,7 @@ static func after_hit(
 			else:
 				target.set_meta("ability_override", mine)
 				target.popup(
-					"Ganhou %s!" % mine.capitalize().replace("_", " "), Color(0.9, 0.85, 0.7)
+					"Gained %s!" % mine.capitalize().replace("_", " "), Color(0.9, 0.85, 0.7)
 				)
 		"split_stats":
 			for k in mv.get("swap", []):
@@ -504,23 +504,23 @@ static func after_hit(
 				)
 				user.stats[k] = avg
 				target.stats[k] = avg
-			user.popup("Dividiu os atributos!", Dex.type_color("psychic"), 0.9)
+			user.popup("Split the stats!", Dex.type_color("psychic"), 0.9)
 		"swap_stages":
 			for k in mv.get("swap", []):
 				var t := int(user.stages.get(k, 0))
 				user.stages[k] = int(target.stages.get(k, 0))
 				target.stages[k] = t
-			user.popup("Trocou as mudanças!", Dex.type_color("psychic"), 0.9)
+			user.popup("Swapped stat changes!", Dex.type_color("psychic"), 0.9)
 		"swap_stats":
 			for k in mv.get("swap", []):
 				var t2 = user.stats.get(k, 10)
 				user.stats[k] = target.stats.get(k, 10)
 				target.stats[k] = t2
-			user.popup("Trocou a Velocidade!", Dex.type_color("psychic"), 0.9)
+			user.popup("Swapped Speed!", Dex.type_color("psychic"), 0.9)
 		"cure_burn":
 			if target.alive() and target.status == "burn" and not fx.sheer_force(user, mv):
 				target.clear_status()
-				target.popup("Queimadura curada!", Color(0.6, 0.9, 1.0), 0.9)
+				target.popup("Burn healed!", Color(0.6, 0.9, 1.0), 0.9)
 		"steel_roller":
 			if dealt > 0:
 				_flatten(fx, user, target)

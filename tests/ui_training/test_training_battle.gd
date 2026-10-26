@@ -115,7 +115,7 @@ func _run() -> void:
 		String(tb.result.get("outcome", "")) == "win",
 		"Time A venceu (%s)" % tb.result.get("outcome")
 	)
-	check(tb.winner_name() == "Time A", "nome do vencedor")
+	check(tb.winner_name() == "Team A", "nome do vencedor")
 	check(int(tb.series.a) == 1 and int(tb.series.n) == 1, "placar 1 x 0")
 	check(tb.team_a[0].level == Cfg.LEVEL, "sem XP: todos no Nv %d (salvo no 60)" % Cfg.LEVEL)
 	check(tb.result.get("exp", []).is_empty(), "sem XP no resultado")
@@ -166,7 +166,7 @@ func _run() -> void:
 	)
 	check(int(tb.series.draw) == 1 and int(tb.series.n) == 1, "placar conta sem vencedor")
 	check(tb.fight_time < 4.0, "parou perto do limite (%.1f s)" % tb.fight_time)
-	check(Cfg.side_name(tb.cfg, 0) == "Time A", "nome em branco vira Time A")
+	check(Cfg.side_name(tb.cfg, 0) == "Team A", "nome em branco vira Time A")
 	var items := Cfg.battle_items()
 	check(
 		items.has("potion") and items.has("antidote") and not items.has("persim_berry"),

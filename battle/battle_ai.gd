@@ -1213,15 +1213,12 @@ func _mood() -> void:
 		t = 1 if _rng().randf() < 0.5 else -1
 	f.mood_state = "fury" if t > 0 else "panic"
 	if f.mood_state == "fury":
-		f.popup("FÚRIA!", Color(1, 0.35, 0.25), 1.2, 0.9)
+		f.popup("FURY!", Color(1, 0.35, 0.25), 1.2, 0.9)
 	else:
-		f.popup("PÂNICO!", Color(0.6, 0.75, 1.0), 1.2, 0.9)
+		f.popup("PANIC!", Color(0.6, 0.75, 1.0), 1.2, 0.9)
 	if f.arena.has_method("say"):
 		f.arena.say(
-			(
-				"%s entrou em %s!"
-				% [f.mon.display_name, "fúria" if f.mood_state == "fury" else "pânico"]
-			)
+			"%s went into %s!" % [f.mon.display_name, "fury" if f.mood_state == "fury" else "panic"]
 		)
 
 

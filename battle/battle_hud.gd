@@ -2,7 +2,7 @@ class_name BattleHUD
 extends CanvasLayer
 ## HUD da batalha no visual do original (ui/battle_hud.gd + fx_popups.gd + battle_intro.gd):
 ## cartões de lutador (retrato, nome, Lv, tipos, status, HP com rastro, PP, EXP), cartão do aliado,
-## golpes em losango, banner em pílula, faixas de introdução + "Lutem!", popups de dano em tela e menu rápido.
+## golpes em losango, banner em pílula, faixas de introdução + "Fight!", popups de dano em tela e menu rápido.
 ## API usada pela arena: banner(text, secs), refresh(player, enemy, dt, ally, info), add_popup(...), intro_bars(on), fight_flash().
 
 ## Os quatro cartões da dupla têm o mesmo tamanho: desenhados no tamanho de projeto e reduzidos por escala.
@@ -22,7 +22,7 @@ const MOVE_DX := 92.0
 const MOVE_DY := 68.0
 const DIAMOND_AT := Vector2(-182.0, -134.0)
 const BAR_H := 72.0
-const HELP := "WASD anda  Shift corre  Espaço pula  1-4 golpes  E bolsa  Tab troca  F aliado  Q bola  Esc pausa"
+const HELP := "WASD move  Shift run  Space jump  1-4 moves  E bag  Tab switch  F ally  Q ball  Esc pause"
 const PAUSE_W := 300.0
 ## Pílulas de modo (OFENSIVO..LIVRE) em coluna ao lado do cartão: fora do meio da tela, sem tapar a luta.
 const MODE_W := 84.0
@@ -249,8 +249,8 @@ func intro_bars(on: bool) -> void:
 	_intro.want = 1.0 if on else 0.0
 
 
-## "Lutem!" grande no centro (fim da introdução).
-func fight_flash(text := "Lutem!") -> void:
+## "Fight!" grande no centro (fim da introdução).
+func fight_flash(text := "Fight!") -> void:
 	_intro.flash(text)
 
 
@@ -281,21 +281,21 @@ static func guess_style(text: String) -> String:
 	if text.is_valid_int():
 		return "damage"
 	match text:
-		"CRÍTICO!":
+		"CRITICAL!":
 			return "crit"
-		"SUPEREFETIVO!":
+		"SUPER EFFECTIVE!":
 			return "super"
-		"Pouco efetivo":
+		"Not very effective":
 			return "weak"
-		"Errou!":
+		"Missed!":
 			return "miss"
-		"DESVIOU!":
+		"DODGED!":
 			return "dodge"
-		"Interrompido!":
+		"Interrupted!":
 			return "interrupted"
 	if text.begins_with("+") and text.ends_with("HP"):
 		return "heal"
-	if text.begins_with("Vai, ") or text.begins_with("Subiu") or text.begins_with("Aprendeu"):
+	if text.begins_with("Go, ") or text.begins_with("Grew") or text.begins_with("Learned"):
 		return "callout"
 	return "info"
 
@@ -306,7 +306,7 @@ func callout(f: BattleFighter, text: String, col: Color) -> void:
 		_viva.add_callout(f.side, text, col)
 
 
-## Faixa diagonal de impacto ("NOCAUTE!", "CRÍTICO!"); a arena congela a luta, o HUD só desenha.
+## Faixa diagonal de impacto ("NOCAUTE!", "CRITICAL!"); a arena congela a luta, o HUD só desenha.
 func cut_in(text: String, col: Color, secs := 0.4) -> void:
 	_viva.start_cut(text, col, secs)
 
@@ -369,7 +369,7 @@ func refresh(
 		p.step(dt)
 	_player_card.body = player if is_instance_valid(player) else null
 	_foe_card.body = enemy if is_instance_valid(enemy) else null
-	_foe_card.tag = String(info.get("foe_tag", "SELVAGEM"))
+	_foe_card.tag = String(info.get("foe_tag", "WILD"))
 	_foe_card.balls = info.get("foe_balls", [])
 	var has_ally := is_instance_valid(ally) and ally.active()
 	_ally_card.body = ally if has_ally else null
@@ -510,12 +510,12 @@ class FighterCard:
 
 	var foe := false
 	var body: BattleFighter
-	var tag := "SELVAGEM"
+	var tag := "WILD"
 	var balls: Array = []
 	var drawn_name := ""
 	var cmd := ""
 	var obey := true
-	## Modo do aliado ("OFENSIVO"...), escrito ao lado do nome; vazio no lutador controlado e nos adversários.
+	## Modo do aliado ("OFFENSE"...), escrito ao lado do nome; vazio no lutador controlado e nos adversários.
 	var mode := ""
 	var marks: Array = []
 	## Onde os chips de estágio (▲▼) foram desenhados, local ao cartão (holofote do tutorial).
@@ -970,7 +970,7 @@ class IntroLayer:
 
 
 ## Popup de batalha (porte do Pop do fx_popups.gd): número de dano creme, CRÍTICO/SUPEREFETIVO,
-## estágios com setas, "Errou!" com riscos de velocidade, chamadas com pílula.
+## estágios com setas, "Missed!" com riscos de velocidade, chamadas com pílula.
 class Pop:
 	extends Control
 	const LIFE := {
@@ -1026,7 +1026,7 @@ class Pop:
 		screen = cam.unproject_position(world)
 		var rise := (30.0 if style == "damage" else 18.0) * ease(clampf(age / life, 0.0, 1.0), 0.4)
 		var side := Vector2(46.0, 0.0) if style == "callout" else Vector2.ZERO
-		# "Interrompido!" sai junto do número de dano: fica embaixo dele.
+		# "Interrupted!" sai junto do número de dano: fica embaixo dele.
 		if style == "interrupted":
 			side = Vector2(0.0, 40.0)
 		position = screen + Vector2(jitter, stack - rise) + side
@@ -1163,7 +1163,7 @@ class BattleLogLine:
 	const CHIP_GAP := 8.0
 	const H := 32.0
 	const TOP := 116.0
-	const BOTTOM := 96.0  # acima da barra de status e do "Parar (Esc)" do treino
+	const BOTTOM := 96.0  # acima da barra de status e do "Stop (Esc)" do treino
 	const FONT_SIZE := 15
 	const APPEAR := 0.25
 
@@ -1250,10 +1250,10 @@ class BattleLogLine:
 ## Etiqueta de comando, chips de marcas e tags de estágio dos cartões ("Batalha Viva").
 class VivaTags:
 	const CMD_COL := {
-		"OFENSIVO": Color(0.91, 0.35, 0.28),
-		"DEFENSIVO": Color(0.3, 0.55, 0.92),
-		"SUPORTE": Color(0.3, 0.7, 0.4),
-		"LIVRE": Color(0.6, 0.63, 0.68)
+		"OFFENSE": Color(0.91, 0.35, 0.28),
+		"DEFENSE": Color(0.3, 0.55, 0.92),
+		"SUPPORT": Color(0.3, 0.7, 0.4),
+		"FREE": Color(0.6, 0.63, 0.68)
 	}
 	const STAGE_TAG := {
 		"atk": "ATK", "def": "DEF", "spa": "SPA", "spd": "SPD", "spe": "SPE", "acc": "ACC"
@@ -1262,10 +1262,10 @@ class VivaTags:
 	const H := 14.0
 	const ICON := 12.0
 	const CMD_ICON := {
-		"OFENSIVO": "cmd_ofensivo",
-		"DEFENSIVO": "cmd_defensivo",
-		"SUPORTE": "cmd_suporte",
-		"LIVRE": "cmd_livre"
+		"OFFENSE": "cmd_ofensivo",
+		"DEFENSE": "cmd_defensivo",
+		"SUPPORT": "cmd_suporte",
+		"FREE": "cmd_livre"
 	}
 
 	## Sigla de 3 letras de um stat ("atk" -> "ATK"), para os popups de mudança e os chips.
@@ -1323,7 +1323,7 @@ class VivaTags:
 		var x := x0
 		var y := card.y - 1.0
 		if cmd != "":
-			var c: Color = CMD_COL.get(cmd, CMD_COL["LIVRE"])
+			var c: Color = CMD_COL.get(cmd, CMD_COL["FREE"])
 			x += chip(
 				ci,
 				Vector2(x, y),
@@ -1461,8 +1461,8 @@ class VivaLayer:
 			if full and fmod(_time, 0.5) < 0.32:
 				# Embaixo da arena, com os avisos, e não sobre a luta: a barra do jogador à esquerda, a do adversário à direita.
 				var by := size.y - BattleHUD.BattleLogLine.BOTTOM - BattleHUD.BattleLogLine.H - 34.0
-				var bx := x if i == 0 else x + w - UiDraw.text_width("SINTONIA!", 12)
-				UiDraw.text(self, Vector2(bx, by), "SINTONIA!", 12, UiDraw.AMBER, 3)
+				var bx := x if i == 0 else x + w - UiDraw.text_width("SYNC!", 12)
+				UiDraw.text(self, Vector2(bx, by), "SYNC!", 12, UiDraw.AMBER, 3)
 
 	func _draw_callout(side: int) -> void:
 		var c: Dictionary = _callouts[side]

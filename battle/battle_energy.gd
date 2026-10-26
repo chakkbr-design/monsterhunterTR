@@ -218,5 +218,5 @@ static func entry_damage(f: BattleFighter, dmg: int) -> int:
 	dmg = maxi(1, int(round(float(dmg) * ENTRY_MULT)))
 	if dmg >= f.hp and f.hp >= f.max_hp:
 		dmg = f.hp - 1
-		f.popup("Aguentou a entrada!", Color(0.7, 0.9, 1.0), 1.0, 0.7)
+		f.popup("Held on at entry!", Color(0.7, 0.9, 1.0), 1.0, 0.7)
 	return dmg
