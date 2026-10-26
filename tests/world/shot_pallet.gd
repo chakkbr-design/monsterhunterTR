@@ -47,6 +47,7 @@ var weather := "clear"
 var hours: PackedStringArray = []  ## --hours=HH:MM,...: pinned hours (continuous TimeOfDay)
 var far := 0.0  ## --far=<m>: overview distance (debug)
 var pitch := 0.0  ## --pitch=<deg>
+var no_lamps := false  ## --no-lamps: hide every OmniLight3D (look-dev: what the sky alone gives)
 
 
 func _initialize() -> void:
@@ -57,6 +58,8 @@ func _initialize() -> void:
 			spots = a.substr(8).split(",")
 		elif a.begins_with("--periods="):
 			periods = a.substr(10).split(",")
+		elif a == "--no-lamps":
+			no_lamps = true
 		elif a.begins_with("--hours="):
 			hours = a.substr(8).split(",")
 		elif a.begins_with("--weather="):
@@ -158,6 +161,14 @@ func _run() -> void:
 		await _wait(30)
 		if tod and "state" in tod:
 			print("look %s: %s" % [period, tod.state])
+		for d in root.find_children("*", "DirectionalLight3D", true, false):
+			var dl := d as DirectionalLight3D
+			print(
+				(
+					"  light %s: visible %s energy %.2f dir %s"
+					% [dl.get_path(), dl.is_visible_in_tree(), dl.light_energy, -dl.global_basis.z]
+				)
+			)
 		for s in spots:
 			if not SPOTS.has(s):
 				continue
@@ -168,6 +179,9 @@ func _run() -> void:
 			_globals(period)
 			await _wait(45)
 			_globals(period)
+			if no_lamps:
+				for l in root.find_children("*", "OmniLight3D", true, false):
+					(l as OmniLight3D).visible = false
 			print("spot %s: player at %s" % [s, p.global_position])
 			var suffix := "" if weather == "clear" else "_" + weather
 			if far > 0.0:

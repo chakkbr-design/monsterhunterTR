@@ -12,18 +12,18 @@ const PROP_VS := 0.125
 const WOOD_FENCE := Color("9a7a58")
 const IRON := Color("2b3530")  ## dark bottle-green cast iron
 const IRON_LIGHT := Color("4a5a50")
-const GLASS_WARM := Color("f2dba4")
+const GLASS_WARM := Color("f2c681")
 const BRASS := Color("c8a050")
 
 ## model -> [light offset from the base centre (m, model frame; just under the lantern so the
 ## light is never inside its own glass), colour, energy, range] for models that carry a light.
 const LIGHTS := {
-	"prop_lamp": [Vector3(0, 2.05, 0.22), Color(1.0, 0.8, 0.52), 3.2, 9.0],
-	"prop_lamp_double": [Vector3(0, 1.6, 0.25), Color(1.0, 0.8, 0.52), 3.8, 10.0],
-	"prop_lantern_post": [Vector3(0.25, 0.78, 0), Color(1.0, 0.74, 0.44), 1.8, 6.0],
-	"prop_lantern": [Vector3(0, 0.36, 0.42), Color(1.0, 0.8, 0.52), 2.6, 8.0],
-	"prop_wall_lantern": [Vector3(0, 0.55, 0.72), Color(1.0, 0.76, 0.48), 2.2, 6.5],
-	"prop_wall_lamp_lab": [Vector3(0, 0.3, 0.5), Color(0.9, 0.92, 1.0), 2.4, 7.0],
+	"prop_lamp": [Vector3(0, 2.05, 0.22), Color(1.0, 0.8, 0.52), 2.6, 6.5],
+	"prop_lamp_double": [Vector3(0, 1.6, 0.25), Color(1.0, 0.8, 0.52), 2.4, 7.0],
+	"prop_lantern_post": [Vector3(0.25, 0.78, 0), Color(1.0, 0.74, 0.44), 1.6, 5.0],
+	"prop_lantern": [Vector3(0, 0.36, 0.42), Color(1.0, 0.8, 0.52), 2.2, 6.0],
+	"prop_wall_lantern": [Vector3(0, 0.55, 0.72), Color(1.0, 0.76, 0.48), 2.0, 5.0],
+	"prop_wall_lamp_lab": [Vector3(0, 0.3, 0.5), Color(0.9, 0.92, 1.0), 2.0, 5.5],
 }
 const GUTTER := Color("5d5c62")
 const COPPER := Color("9a6a48")

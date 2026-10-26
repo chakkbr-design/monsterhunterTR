@@ -14,13 +14,24 @@ extends MapBuilder
 const FADE_GROW := 0.6  ## house fader rect past the footprint (eaves)
 const TOWN_TREE_FADE := 2.6  ## half size of a town tree's fader rect
 const PROP_FADE := 0.7  ## half size of a tall prop's fader rect (lamps)
-const LAMP_ENERGY := 1.7  ## OmniLight energy per metadata energy unit
+const LAMP_ENERGY := 1.2  ## OmniLight energy per metadata energy unit
 const GLASS_ALPHA := 0.55  ## transparency of a "glass" building part (greenhouse panes)
 const BUILD_STEP := 6  ## nodes added per frame while streaming
 const WEATHER_GROUP := "weather"  ## WorldWeather.GROUP (by name: no compile-time dependency)
 const SNOW_BURY := 0.45  ## snow cover (global snow_cover) that buries flowers and tall grass
-## Decor buried by deep snow besides VoxelFlora.FLOWERS / WILD.
-const SNOW_BURIES := ["sunflower", "tuft_tall", "grass_clump", "clover", "iris", "sprout"]
+## Decor buried by deep snow besides VoxelFlora.FLOWERS / WILD (dry tufts still poke through).
+const SNOW_BURIES := [
+	"sunflower",
+	"tuft_0",
+	"tuft_1",
+	"tuft_2",
+	"tuft_dark",
+	"tuft_tall",
+	"grass_clump",
+	"clover",
+	"iris",
+	"sprout",
+]
 ## Washing-line garments (VoxelZone._laundry): the order they are pegged in, sizes (m), tints.
 const LAUNDRY := ["shirt", "towel", "sheet", "trousers", "shirt", "towel", "socks"]
 const LAUNDRY_SIZE := {
@@ -388,8 +399,9 @@ static func fade_rect(bb: AABB, half: float, reach: float) -> Rect2:
 
 
 ## Deep snow buries the flowers and tall grass (the decor shader only whitens their tops). The
-## cover is read once a second from the weather node (the same value it publishes as the
-## snow_cover global; global_shader_parameter_get is editor-only and stalls the renderer).
+## cover is read once a second from the weather node: its snow_cover() when it has one, else
+## battle_cover.g (outdoors), the value it publishes as the snow_cover global
+## (global_shader_parameter_get is editor-only and stalls the renderer).
 func _process(delta: float) -> void:
 	_snow_poll -= delta
 	if _snow_poll > 0.0 or (_buried.is_empty() and butterflies == null):
@@ -397,6 +409,9 @@ func _process(delta: float) -> void:
 	_snow_poll = 1.0
 	var w := get_tree().get_first_node_in_group(WEATHER_GROUP)
 	if w == null:
+		return
+	if w.has_method("snow_cover"):  # a world weather that snows by itself
+		set_snow(float(w.snow_cover()))
 		return
 	var cover = w.get("battle_cover")
 	set_snow(0.0 if w.get("indoor") == true or not cover is Color else (cover as Color).g)
@@ -546,7 +561,7 @@ func _lights(meta: Dictionary) -> void:
 		light.light_color = Color(String(l.get("color", "ffc880")))
 		light.light_energy = float(l.get("energy", 3.0)) * LAMP_ENERGY
 		light.omni_range = float(l.get("range", 7.0))
-		light.omni_attenuation = 0.9
+		light.omni_attenuation = 1.8  # pools of light, darker between the lamps
 		light.shadow_enabled = false
 		light.position = _v3(l.pos)
 		g.add_child(light)
