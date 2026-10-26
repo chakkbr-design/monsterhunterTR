@@ -122,7 +122,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 
 ## 7. Arenas do treino (modo de energia)
 
-- **Tamanho:** 34 × 20 m (o dobro da área de 24 × 14). O VGC continua com 24 × 14, sem nenhuma mudança.
+- **Tamanho:** 48 × 28 m (comprimento e largura dobrados em relação a 24 × 14; 4× a área). O VGC continua com 24 × 14, sem nenhuma mudança.
 - **Obstáculos:** são sorteados como hoje (dicionários analíticos de `BattleTerrain` etc. = jogabilidade).
   - As quantidades crescem na proporção da área.
   - O visual é voxel, gerado a partir desses dicionários.
