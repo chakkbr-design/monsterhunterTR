@@ -55,7 +55,7 @@ func _sprite_mode() -> void:
 	evo.finished.connect(func(e: bool) -> void: got.append(e), CONNECT_ONE_SHOT)
 	check(evo.begin_on(m, look, g, {"driven": true}), "begin_on começou")
 	check(evo.state == "anim" and evo.is_open(), "no sprite vai direto para a animação")
-	check(evo.message == "O quê? Charmander está evoluindo!", "texto: " + evo.message)
+	check(evo.message == "What? Charmander is evolving!", "texto: " + evo.message)
 	check(not evo._bg.visible and not evo._stage.visible, "sem tela cheia (só o painel)")
 	evo.tick(0.9)
 	check(look.tint.r > 3.0, "sprite acende (tint %s)" % look.tint)
@@ -69,7 +69,8 @@ func _sprite_mode() -> void:
 	check(evo.state == "done" and m.species == "Charmeleon", "evoluiu no fim")
 	check(look.species == "Charmeleon", "sprite fica com a forma nova")
 	check(
-		evo.message == "Parabéns! Seu Charmander evoluiu para Charmeleon!", "texto: " + evo.message
+		evo.message == "Congratulations! Your Charmander evolved into Charmeleon!",
+		"texto: " + evo.message
 	)
 	evo.tick(0.7)
 	check(look.tint.r < 1.5, "brilho volta ao normal em 0,6 s (tint %s)" % look.tint)
@@ -104,7 +105,7 @@ func _sprite_mode() -> void:
 	evo.tick(3.0)
 	evo.press("back")
 	check(evo.state == "cancelled" and look.species == "Squirtle", "cancelou no sprite")
-	check(evo.message == "Hã? Squirtle parou de evoluir!", "texto: " + evo.message)
+	check(evo.message == "Huh? Squirtle stopped evolving!", "texto: " + evo.message)
 	check(c.evo_cancelled_level == 16 and c.evolution_target() == "", "travado até o Nv 17")
 	evo.tick(0.5)  # auto: a fala passa sozinha
 	check(evo.state == "", "auto confirma a fala")

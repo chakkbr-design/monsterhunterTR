@@ -26,17 +26,17 @@ const CREDITS_SPEED := 30.0
 ## [título, linhas, [[nome, detalhe], ...]]
 const CREDITS := [
 	[
-		"JOGO ORIGINAL",
+		"ORIGINAL GAME",
 		[
-			"Port pessoal do Pokemon Battle Arena 0.2.0 demo, sem fins comerciais. A arte, os sons e o desenho do jogo são do projeto original."
+			"Personal port of Pokemon Battle Arena 0.2.0 demo, non-commercial. The art, sounds and game design belong to the original project."
 		],
 		[]
 	],
 	[
-		"SPRITES DOS POKÉMON",
+		"POKÉMON SPRITES",
 		[
-			"Sprites de Pokémon Mystery Dungeon do PMD SpriteCollab — sprites.pmdcollab.org",
-			"Licença CC BY-NC 4.0"
+			"Pokémon Mystery Dungeon sprites from PMD SpriteCollab — sprites.pmdcollab.org",
+			"License CC BY-NC 4.0"
 		],
 		[
 			[
@@ -62,36 +62,39 @@ const CREDITS := [
 		]
 	],
 	[
-		"EFEITOS DOS GOLPES",
+		"MOVE EFFECTS",
 		[
-			"Coleção de recursos Pokémon Mystery Dungeon Origins (PMDCollab)",
-			"Efeitos de Pokémon Mystery Dungeon, Pokémon Ruby, Sapphire e Emerald e Pokémon Ranger"
+			"Pokémon Mystery Dungeon Origins resource collection (PMDCollab)",
+			"Effects from Pokémon Mystery Dungeon, Pokémon Ruby, Sapphire and Emerald, and Pokémon Ranger"
 		],
 		[]
 	],
 	[
-		"MÚSICA E SOM",
+		"MUSIC AND SOUND",
 		[],
 		[
-			["Kenney", "Interface, UI, Impact, RPG, Digital e Sci-Fi Sounds, Music Jingles — CC0"],
+			[
+				"Kenney",
+				"Interface, UI, Impact, RPG, Digital and Sci-Fi Sounds, Music Jingles — CC0"
+			],
 			["Aureolus_Omicron", "15 Melodic RPG Chiptunes — CC0"],
-			["AkitsukiShintai", "Sons dos golpes (pacote Pokémon HD-2D)"],
-			["Sons originais", "Gritos e efeitos sintetizados feitos para o jogo"],
+			["AkitsukiShintai", "Move sounds (Pokémon HD-2D pack)"],
+			["Original sounds", "Cries and synthesized effects made for the game"],
 		]
 	],
 	[
-		"MODELOS 3D",
+		"3D MODELS",
 		[],
 		[
 			["Kenney", "City Kit Suburban, Nature Kit, Fantasy Town Kit — CC0"],
 			[
-				"Pokémon HeartGold e SoulSilver",
-				"Modelos do mundo © Nintendo / Creatures Inc. / GAME FREAK inc."
+				"Pokémon HeartGold and SoulSilver",
+				"World models © Nintendo / Creatures Inc. / GAME FREAK inc."
 			],
 		]
 	],
 	[
-		"FONTES",
+		"FONTS",
 		[],
 		[
 			["Nunito", "The Nunito Project Authors — SIL Open Font License 1.1"],
@@ -101,7 +104,7 @@ const CREDITS := [
 	[
 		"POKÉMON",
 		[
-			"Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc. Pokémon Mystery Dungeon © Spike Chunsoft. Este é um projeto de fã, gratuito e sem fins comerciais, sem ligação com eles e sem o apoio deles."
+			"Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc. Pokémon Mystery Dungeon © Spike Chunsoft. This is a free, non-commercial fan project, not affiliated with or endorsed by them."
 		],
 		[]
 	],
@@ -111,27 +114,27 @@ const CREDITS := [
 static var boot_to_menu := false
 
 const INTRO := [
-	"Olá, olá! Que bom ver você por aqui!\nSeja bem-vindo ao mundo dos monstros!",
-	"Meu nome é Carvalho, mas por aqui todo mundo\nme chama de Professor.",
-	"Este mundo é cheio de criaturas fantásticas.\nTem gente que vive com elas como amigas...",
-	"...e tem gente que treina com elas para batalhar.\nEu dedico a minha vida a estudá-las.",
-	"Mas chega de falar de mim!\nMe conte um pouco sobre você.",
+	"Hello, hello! Good to see you here!\nWelcome to the world of monsters!",
+	"My name is Oak, but everyone around here\ncalls me the Professor.",
+	"This world is full of fantastic creatures.\nSome people live with them as friends...",
+	"...and some train with them to battle.\nI have dedicated my life to studying them.",
+	"But enough about me!\nTell me a little about yourself.",
 ]
-const ASK_GENDER := "Você é um menino ou uma menina?"
+const ASK_GENDER := "Are you a boy or a girl?"
 const AFTER_NAME := [
-	"{PLAYER}, não é? Que nome bacana!",
-	"E este aqui é o meu neto. Vocês dois disputam\ntudo um com o outro desde pequenos.",
-	"...Hã, como é mesmo o nome dele?\nA memória já não é a mesma...",
+	"So your name is {PLAYER}? What a great name!",
+	"And this is my grandson. You two have been\ncompeting with each other since you were little.",
+	"...Er, what was his name again?\nMy memory isn't what it used to be...",
 ]
 const FINALE := [
-	"Isso mesmo! Agora eu lembro: {RIVAL}!",
-	"{PLAYER}! A sua própria aventura com os monstros\nestá prestes a começar!",
-	"Um mundo inteiro de sonhos e descobertas espera\npor você. Vamos lá!",
+	"That's right! Now I remember: {RIVAL}!",
+	"{PLAYER}! Your very own monster adventure\nis about to begin!",
+	"A whole world of dreams and discoveries awaits\nyou. Let's go!",
 ]
 const SUGGEST := {
-	"male": ["Léo", "Davi", "Rafa", "Tiago", "Caio"],
-	"female": ["Bia", "Lara", "Nina", "Duda", "Lia"],
-	"rival": ["Gael", "Bruno", "Igor", "Vítor", "Enzo"],
+	"male": ["Leo", "David", "Ryan", "Tim", "Alex"],
+	"female": ["Beth", "Lara", "Nina", "Daisy", "Lia"],
+	"rival": ["Gary", "Bruno", "Ian", "Victor", "Evan"],
 }
 
 ## Injetáveis (testes). game vazio = autoload /root/Game.
@@ -238,7 +241,7 @@ func _build() -> void:
 	center.add_child(_title_box)
 	_logo = Logo.new()
 	_title_box.add_child(_logo)
-	_press = Kit.header("PRESSIONE ENTER", Kit.PAPER, 30)
+	_press = Kit.header("PRESS ENTER", Kit.PAPER, 30)
 	_press.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.4))
 	_press.add_theme_constant_override("shadow_offset_y", 3)
 	_title_box.add_child(_press)
@@ -253,14 +256,14 @@ func _build() -> void:
 	_menu_box = VBoxContainer.new()
 	_menu_box.add_theme_constant_override("separation", 6)
 	menu_panel.add_child(_menu_box)
-	_card = Kit.Win.new("CONTINUAR")
+	_card = Kit.Win.new("CONTINUE")
 	_card.custom_minimum_size = Vector2(360, 0)
 	_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_menu_row.add_child(_card)
 	_card_box = VBoxContainer.new()
 	_card.add_child(_card_box)
 
-	_splash = Kit.label("Um projeto independente\nfeito com Godot", Kit.TEXT, 30)
+	_splash = Kit.label("An independent project\nmade with Godot", Kit.TEXT, 30)
 	_splash.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_splash.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_full(_splash)
@@ -334,7 +337,7 @@ func _build() -> void:
 	_text = Kit.label("", Kit.TEXT, 22)
 	_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	dv.add_child(_text)
-	_more = Kit.hint("Enter continuar")
+	_more = Kit.hint("Enter: continue")
 	dv.add_child(_more)
 
 	# Créditos (credits_panel do original): janela no meio que rola sozinha.
@@ -346,7 +349,7 @@ func _build() -> void:
 	_credits.add_child(cdim)
 	var ccc := _full(CenterContainer.new())
 	_credits.add_child(ccc)
-	var cwin := Kit.Win.new("CRÉDITOS")
+	var cwin := Kit.Win.new("CREDITS")
 	cwin.custom_minimum_size = Vector2(620, 534)
 	ccc.add_child(cwin)
 	var ccol := VBoxContainer.new()
@@ -383,7 +386,7 @@ func _build() -> void:
 			dl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			row.add_child(dl)
 			body.add_child(row)
-	var ch := Kit.hint("↑/↓ rola · Esc volta")
+	var ch := Kit.hint("↑/↓ scroll · Esc back")
 	ch.size_flags_horizontal = Control.SIZE_SHRINK_END
 	ccol.add_child(ch)
 
@@ -448,12 +451,12 @@ func _go_options() -> void:
 
 
 const MENU_TEXT := {
-	"continue": "CONTINUAR",
-	"new": "NOVO JOGO",
-	"training": "MODO DE TREINAMENTO",
-	"options": "OPÇÕES",
-	"credits": "CRÉDITOS",
-	"quit": "SAIR"
+	"continue": "CONTINUE",
+	"new": "NEW GAME",
+	"training": "TRAINING MODE",
+	"options": "OPTIONS",
+	"credits": "CREDITS",
+	"quit": "QUIT"
 }
 
 
@@ -468,7 +471,7 @@ func _go_credits() -> void:
 func _go_controls() -> void:
 	state = "controls"
 	Kit.clear(_controls)
-	var w: Array = Kit.panel("CONTROLES", Vector2(minf(900.0, size.x - 40.0), 0), 10)
+	var w: Array = Kit.panel("CONTROLS", Vector2(minf(900.0, size.x - 40.0), 0), 10)
 	_controls.add_child(w[0])
 	preload("res://ui/pause_menu.gd").controls_into(w[1])
 	_controls.visible = true
@@ -482,14 +485,14 @@ func _render() -> void:
 		"menu":
 			for i in menu_items.size():
 				_menu_box.add_child(Kit.row([MENU_TEXT[menu_items[i]]], [240], i == cursor))
-			_menu_box.add_child(Kit.hint("Setas escolhem · Enter confirma"))
-			_card.title = "CONTINUAR"
+			_menu_box.add_child(Kit.hint("Arrows select · Enter confirms"))
+			_card.title = "CONTINUE"
 			if menu_items[cursor] == "continue":
 				_fill_card()
 		"options":
-			_menu_box.add_child(Kit.header("OPÇÕES", Kit.BLUE, 20))
+			_menu_box.add_child(Kit.header("OPTIONS", Kit.BLUE, 20))
 			Kit.option_rows(_menu_box, settings, cursor)
-			_menu_box.add_child(Kit.hint("↑/↓ escolhe · ←/→ muda · E abre · Esc volta"))
+			_menu_box.add_child(Kit.hint("↑/↓ select · ←/→ change · E open · Esc back"))
 
 
 ## Resumo do save lido direto do arquivo (não mexe no Game).
@@ -518,7 +521,7 @@ func save_summary() -> Dictionary:
 		var nm := String(m.get("nickname", ""))
 		if nm == "":
 			nm = String(Dex.species(sp).get("name", sp.capitalize())) if sp != "" else "?"
-		out.lead = "%s  Nv. %d" % [nm, int(m.get("level", 1))]
+		out.lead = "%s  Lv. %d" % [nm, int(m.get("level", 1))]
 	var mt := FileAccess.get_modified_time(game.save_path)
 	if mt > 0:
 		var dt := Time.get_datetime_dict_from_unix_time(
@@ -556,10 +559,10 @@ func _fill_card() -> void:
 		return
 	_card.visible = true
 	var rows := [
-		["JOGADOR", s.name],
-		["TEMPO", s.time],
+		["PLAYER", s.name],
+		["TIME", s.time],
 		["POKéMON", str(s.count)],
-		["LOCAL", s.location],
+		["LOCATION", s.location],
 	]
 	_card_box.add_child(Kit.info_grid(rows, 24))
 
@@ -613,8 +616,8 @@ func _start_new() -> void:
 		state = "overwrite"
 		cursor = 1
 		_render_ask(
-			"Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)",
-			["Sim", "Não"]
+			"A saved game already exists. Start a new one?\n(The old save is only replaced when you save.)",
+			["Yes", "No"]
 		)
 		return
 	_begin_intro()
@@ -652,9 +655,7 @@ func _render_pick() -> void:
 		f.kind = "boy" if i == 0 else "girl"
 		p.add_child(f)
 		v.add_child(p)
-		var l := Kit.header(
-			"MENINO" if i == 0 else "MENINA", Kit.RED if i == cursor else Kit.PAPER, 24
-		)
+		var l := Kit.header("BOY" if i == 0 else "GIRL", Kit.RED if i == cursor else Kit.PAPER, 24)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(l)
 		_pick.add_child(v)
@@ -663,13 +664,13 @@ func _render_pick() -> void:
 func _ask_player_name() -> void:
 	state = "name"
 	_intro_view(false, false, false, false)
-	_entry.ask("Qual é o seu nome?", SUGGEST[gender])
+	_entry.ask("What is your name?", SUGGEST[gender])
 
 
 func _ask_rival_name() -> void:
 	state = "rival"
 	_intro_view(false, false, false, false)
-	_entry.ask("Qual é o nome do neto do professor?", SUGGEST.rival)
+	_entry.ask("What is the name of the Professor's grandson?", SUGGEST.rival)
 
 
 func _on_name_done(text: String) -> void:
@@ -699,10 +700,10 @@ func _go_confirm() -> void:
 	_intro_view(true, false, false, false)
 	_render_ask(
 		(
-			"Você: %s (%s)\nRival: %s\n\nEstá tudo certo?"
-			% [player_name, "menino" if gender == "male" else "menina", rival_name]
+			"You: %s (%s)\nRival: %s\n\nIs everything correct?"
+			% [player_name, "boy" if gender == "male" else "girl", rival_name]
 		),
-		["Sim, vamos lá!", "Não, mudar os nomes"]
+		["Yes, let's go!", "No, change the names"]
 	)
 
 
@@ -866,8 +867,8 @@ func press(a: String) -> void:
 			if a == "up" or a == "down" or a == "left" or a == "right":
 				cursor = 1 - cursor
 				_render_ask(
-					"Já existe um jogo salvo. Começar um novo?\n(O save antigo só é substituído quando você salvar.)",
-					["Sim", "Não"]
+					"A saved game already exists. Start a new one?\n(The old save is only replaced when you save.)",
+					["Yes", "No"]
 				)
 			elif a == "back" or (a == "ok" and cursor == 1):
 				_ask.visible = false
@@ -895,10 +896,10 @@ func press(a: String) -> void:
 				cursor = 1 - cursor
 				_render_ask(
 					(
-						"Você: %s (%s)\nRival: %s\n\nEstá tudo certo?"
-						% [player_name, "menino" if gender == "male" else "menina", rival_name]
+						"You: %s (%s)\nRival: %s\n\nIs everything correct?"
+						% [player_name, "boy" if gender == "male" else "girl", rival_name]
 					),
-					["Sim, vamos lá!", "Não, mudar os nomes"]
+					["Yes, let's go!", "No, change the names"]
 				)
 			elif a == "ok" and cursor == 0:
 				_ask.visible = false

@@ -30,26 +30,26 @@ static func use(id: String, m: Mon) -> String:
 	var fx: Dictionary = Dex.item(id).get("effect", {})
 	if fx.has("revive"):
 		m.hp = maxi(1, m.max_hp / 2)
-		return "%s se recuperou!" % m.display_name
+		return "%s recovered!" % m.display_name
 	if fx.has("hp"):
 		var before := m.hp
 		m.hp = m.max_hp if str(fx.hp) == "full" else mini(m.max_hp, m.hp + int(fx.hp))
-		return "%s recuperou %d de HP." % [m.display_name, m.hp - before]
+		return "%s recovered %d HP." % [m.display_name, m.hp - before]
 	if fx.has("cure"):
 		m.cure()
-		return "%s está curado." % m.display_name
+		return "%s was cured." % m.display_name
 	if fx.has("level"):
 		m.add_exp(Growth.exp_for_level(m.growth, m.level + int(fx.level)) - m.xp)
-		return "%s subiu para o nível %d!" % [m.display_name, m.level]
+		return "%s grew to Lv. %d!" % [m.display_name, m.level]
 	if fx.has("teach"):
 		if m.moves.size() < Mon.MAX_MOVES:
 			m.moves.append(fx.teach)
-			return "%s aprendeu %s!" % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
+			return "%s learned %s!" % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
 		return ""
 	if fx.has("evolve"):
 		var from := m.display_name
 		m.evolve(evolution_by_item(m, id))
-		return "%s evoluiu para %s!" % [from, m.species]
+		return "%s evolved into %s!" % [from, m.species]
 	return ""
 
 

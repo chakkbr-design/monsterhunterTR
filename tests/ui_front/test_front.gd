@@ -100,7 +100,7 @@ func _options_video(t: Node) -> void:
 	check(Settings.ROWS[t.cursor][0] == "quality", "GRÁFICOS logo depois de JANELA")
 	var q := shown(t, "quality")
 	check(
-		q != null and q.text == "Alto",
+		q != null and q.text == "High",
 		"GRÁFICOS mostra Alto, o padrão (%s)" % (q.text if q else "?")
 	)
 	await key(KEY_RIGHT)
@@ -118,7 +118,7 @@ func _options_video(t: Node) -> void:
 	q = shown(t, "quality")
 	check(
 		(
-			q.text == "Médio"
+			q.text == "Medium"
 			and int(saved("video", "graphics")) == 1
 			and int(saved("options", "quality")) == 0
 			and Settings.load_cfg(CFG).quality == 1
@@ -136,7 +136,7 @@ func _options_video(t: Node) -> void:
 	await key(KEY_DOWN)
 	var row: Array = Settings.ROWS[t.cursor]
 	check(
-		row[0] == "weather_mist" and row[1] == "NÉVOA DO CLIMA" and row[2] == "toggle",
+		row[0] == "weather_mist" and row[1] == "WEATHER MIST" and row[2] == "toggle",
 		"NÉVOA DO CLIMA (Sim/Não) logo depois de GRÁFICOS"
 	)
 	var m := shown(t, "weather_mist")
@@ -215,9 +215,7 @@ func _run() -> void:
 	check(t._entry.value == "Ab", "teclado na tela digita Ab (valor: %s)" % t._entry.value)
 	for i in 4:
 		await key(KEY_DOWN)
-	check(
-		t._entry.current_key() == "Espaço", "linha de baixo: Espaço (%s)" % t._entry.current_key()
-	)
+	check(t._entry.current_key() == "Space", "bottom row: Space (%s)" % t._entry.current_key())
 	await key(KEY_RIGHT)
 	await key(KEY_ENTER)
 	check(

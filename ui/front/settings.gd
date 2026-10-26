@@ -12,12 +12,12 @@ extends RefCounted
 ## world/sky/weather.gd), gravada em [video] weather_mist (padrão ligada), a chave do painel F9.
 
 const PATH := "user://settings.cfg"
-const TEXT_SPEEDS := ["Lento", "Médio", "Rápido", "Instantâneo"]
+const TEXT_SPEEDS := ["Slow", "Medium", "Fast", "Instant"]
 const TEXT_CPS := [25.0, 45.0, 90.0, 0.0]
-const BATTLE_SPEED_NAMES := ["Lento", "Rápido"]
+const BATTLE_SPEED_NAMES := ["Slow", "Fast"]
 const BATTLE_SPEED_MULT := [0.6, 1.0]
-const WINDOW_MODES := ["Janela", "Tela cheia"]
-const QUALITY_NAMES := ["Baixo", "Médio", "Alto", "Ultra"]  ## = GfxQuality.NAMES
+const WINDOW_MODES := ["Windowed", "Fullscreen"]
+const QUALITY_NAMES := ["Low", "Medium", "High", "Ultra"]  ## = GfxQuality.NAMES
 const QUALITY_DEFAULT := 2  ## Alto
 const WEATHER_SCRIPT := "res://world/sky/weather.gd"  ## WorldWeather (névoa do clima)
 const DEFAULTS := {
@@ -34,15 +34,15 @@ const DEFAULTS := {
 ## Linhas da tela de Opções (título e menu de pausa), na ordem do original:
 ## [chave, rótulo, tipo ("choice" "volume" "toggle" "action"), nomes das escolhas].
 const ROWS := [
-	["text_speed", "VELOC. DO TEXTO", "choice", TEXT_SPEEDS],
-	["battle_speed", "VELOC. DA BATALHA", "choice", BATTLE_SPEED_NAMES],
-	["music", "MÚSICA", "volume", []],
-	["sfx", "SOM", "volume", []],
-	["fullscreen", "JANELA", "choice", WINDOW_MODES],
-	["quality", "GRÁFICOS", "choice", QUALITY_NAMES],
-	["weather_mist", "NÉVOA DO CLIMA", "toggle", []],
-	["battle_tips", "DICAS DE BATALHA", "toggle", []],
-	["controls", "CONTROLES", "action", []],
+	["text_speed", "TEXT SPEED", "choice", TEXT_SPEEDS],
+	["battle_speed", "BATTLE SPEED", "choice", BATTLE_SPEED_NAMES],
+	["music", "MUSIC", "volume", []],
+	["sfx", "SOUND", "volume", []],
+	["fullscreen", "WINDOW", "choice", WINDOW_MODES],
+	["quality", "GRAPHICS", "choice", QUALITY_NAMES],
+	["weather_mist", "WEATHER MIST", "toggle", []],
+	["battle_tips", "BATTLE TIPS", "toggle", []],
+	["controls", "CONTROLS", "action", []],
 	["back", "VOLTAR", "action", []],
 ]
 

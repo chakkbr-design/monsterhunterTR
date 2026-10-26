@@ -54,14 +54,14 @@ func _run() -> void:
 	send(KEY_S)  # pidgey
 	send(KEY_E)
 	check(game.party == [a] and game.pc == [c, b], "pidgey guardado no PC")
-	check(pc.screen == "msg" and "Caixa 1" in pc.message, "mensagem de guardado: " + pc.message)
+	check(pc.screen == "msg" and "Box 1" in pc.message, "mensagem de guardado: " + pc.message)
 	send(KEY_E)
 	check(pc.screen == "party", "volta para a equipe")
 
 	# 3. Último Pokémon de pé: recusado.
 	send(KEY_E)  # tenta guardar bulbasaur (único)
 	check(
-		game.party == [a] and pc.screen == "msg" and "último" in pc.message,
+		game.party == [a] and pc.screen == "msg" and "last" in pc.message,
 		"recusa o único: " + pc.message
 	)
 	send(KEY_E)
@@ -71,7 +71,7 @@ func _run() -> void:
 	pc._party_cur = 0
 	send(KEY_E)
 	check(
-		game.party.size() == 2 and "de pé" in pc.message,
+		game.party.size() == 2 and "able to battle" in pc.message,
 		"recusa deixar só desmaiados: " + pc.message
 	)
 	send(KEY_E)

@@ -10,45 +10,45 @@ const Settings := preload("res://ui/front/settings.gd")
 const TITLE_SCENE := "res://ui/front/title.tscn"
 ## Ações de um Pokémon na tela da equipe (party_panel._show_actions do original).
 const PARTY_ACTS := [
-	["summary", "RESUMO"], ["switch", "TROCAR"], ["item", "ITEM"], ["cancel", "CANCELAR"]
+	["summary", "SUMMARY"], ["switch", "SWITCH"], ["item", "ITEM"], ["cancel", "CANCEL"]
 ]
 ## Mon.mood do original (faixas da amizade).
-const MOODS := [[70, "Desconfiado"], [150, "Contente"], [220, "Feliz"], [256, "Dedicado"]]
+const MOODS := [[70, "Wary"], [150, "Content"], [220, "Happy"], [256, "Devoted"]]
 ## Tipo de entrega dos golpes (campo "kind" do moves.json), como o resumo do original mostra.
 const KINDS := {
-	"arc": "arco",
-	"projectile": "projétil",
-	"beam": "raio",
-	"dash": "investida",
-	"aoe_self": "área em volta",
-	"aoe_target": "área no alvo",
-	"debuff_aoe": "enfraquece em área",
-	"multi_arc": "arco múltiplo",
-	"self_buff": "reforço próprio",
-	"stream": "jato",
-	"homing": "teleguiado",
+	"arc": "arc",
+	"projectile": "projectile",
+	"beam": "beam",
+	"dash": "dash",
+	"aoe_self": "area around user",
+	"aoe_target": "area on target",
+	"debuff_aoe": "area debuff",
+	"multi_arc": "multi-arc",
+	"self_buff": "self buff",
+	"stream": "stream",
+	"homing": "homing",
 	"clones": "clones",
-	"whip": "chicote",
-	"zone": "zona",
+	"whip": "whip",
+	"zone": "zone",
 }
-const MONTHS := ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
+const MONTHS := ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 const CATS := [
-	["medicine", "Remédios"],
-	["berries", "Frutas"],
-	["tm", "MTs"],
-	["balls", "Pokébolas"],
-	["key", "Itens-chave"]
+	["medicine", "Medicine"],
+	["berries", "Berries"],
+	["tm", "TMs"],
+	["balls", "Poké Balls"],
+	["key", "Key Items"]
 ]
-const SUMMARY_PAGES := ["INFO", "HABILIDADES", "GOLPES"]
+const SUMMARY_PAGES := ["INFO", "SKILLS", "MOVES"]
 const BADGES := [
-	["boulder", "ROCHA", "9aa0a8"],
-	["cascade", "CASCATA", "58a0e8"],
-	["thunder", "TROVÃO", "e8b030"],
-	["rainbow", "ARCO-ÍRIS", "68c070"],
-	["soul", "ALMA", "e078b0"],
-	["marsh", "PÂNTANO", "d8b848"],
-	["volcano", "VULCÃO", "e0503a"],
-	["earth", "TERRA", "70a050"]
+	["boulder", "BOULDER", "9aa0a8"],
+	["cascade", "CASCADE", "58a0e8"],
+	["thunder", "THUNDER", "e8b030"],
+	["rainbow", "RAINBOW", "68c070"],
+	["soul", "SOUL", "e078b0"],
+	["marsh", "MARSH", "d8b848"],
+	["volcano", "VOLCANO", "e0503a"],
+	["earth", "EARTH", "70a050"]
 ]
 const PORTRAIT := "res://original/assets/sprites/trainer.png"
 const PORTRAIT_GREEN := "res://original/assets/sprites/trainer_green.png"
@@ -56,30 +56,30 @@ const PORTRAIT_FRAME := Rect2(8, 11, 16, 20)
 const DEX_ROWS := 11
 const CONTROLS := [
 	[
-		"MUNDO",
+		"WORLD",
 		[
-			["Andar", "WASD/Setas"],
-			["Correr", "Shift"],
-			["Interagir", "E"],
-			["Dar comida", "F"],
-			["Mandar/recolher", "1-6"],
+			["Walk", "WASD/Arrows"],
+			["Run", "Shift"],
+			["Interact", "E"],
+			["Feed", "F"],
+			["Send out/recall", "1-6"],
 			["Menu", "Esc"]
 		]
 	],
 	[
-		"BATALHA",
+		"BATTLE",
 		[
-			["Golpes", "1-4"],
-			["Correr", "Shift"],
-			["Pular", "Espaço"],
-			["Jogar Pokébola", "Q"],
-			["Trocar Pokémon", "Tab"],
-			["Fugir", "R"],
-			["Modo do aliado", "F"],
-			["Bolsa rápida", "E"]
+			["Moves", "1-4"],
+			["Run", "Shift"],
+			["Jump", "Space"],
+			["Throw Poké Ball", "Q"],
+			["Switch Pokémon", "Tab"],
+			["Run away", "R"],
+			["Ally mode", "F"],
+			["Quick Bag", "E"]
 		]
 	],
-	["MENUS", [["Navegar", "Setas/WASD"], ["Confirmar", "E/Enter"], ["Voltar", "Esc/Q"]]],
+	["MENUS", [["Navigate", "Arrows/WASD"], ["Confirm", "E/Enter"], ["Back", "Esc/Q"]]],
 ]
 
 ## Instâncias injetáveis (testes). Vazias = autoloads /root/Game e /root/LearnMove.
@@ -234,16 +234,16 @@ func _entry_label(id: String) -> String:
 		"pokemon":
 			return "POKéMON"
 		"bag":
-			return "BOLSA"
+			return "BAG"
 		"picnic":
-			return "PIQUENIQUE"
+			return "PICNIC"
 		"trainer":
 			return String(game.player_name).to_upper()
 		"save":
-			return "SALVAR"
+			return "SAVE"
 		"options":
-			return "OPÇÕES"
-	return "TÍTULO"
+			return "OPTIONS"
+	return "TITLE"
 
 
 func _unhandled_input(ev: InputEvent) -> void:
@@ -318,7 +318,7 @@ func press(a: String) -> void:
 						_go("options")
 					"title":
 						_ask(
-							"Voltar à tela de título? O progresso desde o último save será perdido.",
+							"Return to the title screen? Progress since your last save will be lost.",
 							_to_title,
 							"main",
 							false
@@ -372,7 +372,7 @@ func press(a: String) -> void:
 				var m: Mon = game.party[_party_cur]
 				var text: String = game.use_item(id, m)
 				if text == "":
-					text = "%s não teria efeito em %s." % [Kit.item_name(id), m.display_name]
+					text = "%s would have no effect on %s." % [Kit.item_name(id), m.display_name]
 				_open_party_items(text)
 				return
 			if a in ["up", "down"]:
@@ -414,7 +414,7 @@ func press(a: String) -> void:
 			elif a == "alt" and not items.is_empty():
 				_item = items[_bag_cur]
 				if _cat_of(_item) in ["key", "tm"]:
-					_bag_note = "Isso é importante demais para jogar fora!"
+					_bag_note = "That's too important to throw away!"
 				else:
 					_toss_qty = 1
 					_bag_note = ""
@@ -432,7 +432,7 @@ func press(a: String) -> void:
 			elif a == "ok":
 				var n := mini(_toss_qty, int(game.bag.get(_item, 0)))
 				_ask(
-					"Jogar fora %d %s?" % [n, Kit.item_name(_item)],
+					"Throw away %d %s?" % [n, Kit.item_name(_item)],
 					_toss.bind(_item, n),
 					"bag",
 					true
@@ -529,7 +529,7 @@ func _ask(text: String, then: Callable, back: String, yes_first := true) -> void
 
 func _toss(id: String, n: int) -> void:
 	if n > 0 and game.take_item(id, n):
-		_bag_note = "Jogou fora %d %s." % [n, Kit.item_name(id)]
+		_bag_note = "Threw away %d %s." % [n, Kit.item_name(id)]
 	_fix_bag_cursor()
 	_go("bag")
 
@@ -557,7 +557,7 @@ func _party_items() -> Array:
 
 func _open_party_items(note: String) -> void:
 	if _party_items().is_empty():
-		_act_note = note if note != "" else "Nenhum item para usar num Pokémon."
+		_act_note = note if note != "" else "No items to use on a Pokémon."
 		_go("party_act")
 		return
 	_pitem_note = note
@@ -570,12 +570,12 @@ func _bag_use(id: String) -> void:
 	var fx: Dictionary = Dex.item(id).get("effect", {})
 	if _cat_of(id) == "balls":
 		game.flags["selected_ball"] = id
-		_bag_note = "%s → bola da tecla Q na batalha." % Kit.item_name(id)
+		_bag_note = "%s → ball for the Q key in battle." % Kit.item_name(id)
 		_go("bag")
 	elif fx.has("repel") and game.has_method("use_field_item"):
 		var t: String = game.use_field_item(id)
 		if t == "":
-			_msg("Não dá para usar isso agora.", "bag")
+			_msg("You can't use that right now.", "bag")
 			return
 		_bag_note = t
 		_fix_bag_cursor()
@@ -583,9 +583,9 @@ func _bag_use(id: String) -> void:
 	elif fx.has("escape"):
 		_escape_rope(id)
 	elif not _usable_outside(id):
-		_msg("Não dá para usar isso agora.", "bag")
+		_msg("You can't use that right now.", "bag")
 	elif game.party.is_empty():
-		_msg("Você não tem Pokémon.", "bag")
+		_msg("You have no Pokémon.", "bag")
 	else:
 		_party_cur = 0
 		_go("target")
@@ -595,7 +595,7 @@ func _bag_use(id: String) -> void:
 func _escape_rope(id: String) -> void:
 	var w: Node = get_tree().get_first_node_in_group("ow_root") if is_inside_tree() else null
 	if w == null or not w.has_method("escape_rope"):
-		_msg("Não dá para usar isso agora.", "bag")
+		_msg("You can't use that right now.", "bag")
 		return
 	close()
 	var used: bool = await w.escape_rope()
@@ -603,7 +603,7 @@ func _escape_rope(id: String) -> void:
 		game.take_item(id)
 	var hud := get_tree().get_first_node_in_group("ow_hud") if is_inside_tree() else null
 	if hud and hud.has_method("toast"):
-		hud.toast("Usou uma %s!" % Kit.item_name(id) if used else "Não dá para usar isso aqui.")
+		hud.toast("Used %s!" % Kit.item_name(id) if used else "You can't use that here.")
 
 
 func _fix_bag_cursor() -> void:
@@ -673,14 +673,14 @@ func _save() -> void:
 	elif p:
 		var v: Vector3 = p.save_position() if p.has_method("save_position") else p.global_position
 		extra = {"pos": [v.x, v.y, v.z]}
-	_msg("Jogo salvo." if game.save_game(extra) else "Não foi possível salvar.", "main")
+	_msg("Game saved." if game.save_game(extra) else "Couldn't save the game.", "main")
 
 
 func _use(m: Mon) -> void:
 	var iname := Kit.item_name(_item)
 	var text: String = game.use_item(_item, m)
 	if text == "":
-		text = "%s não teria efeito em %s." % [iname, m.display_name]
+		text = "%s would have no effect on %s." % [iname, m.display_name]
 	if not game.bag.has(_item):
 		_bag_cur = 0
 		if _items().is_empty():
@@ -865,42 +865,42 @@ func _render() -> void:
 		"main":
 			_render_main()
 		"party":
-			_render_party("Escolha um Pokémon.", "↑/↓ escolhe · E confirma · Esc volta")
+			_render_party("Choose a Pokémon.", "↑/↓ select · E confirm · Esc back")
 		"party_act":
 			var m: Mon = game.party[_party_cur]
 			var acts: Array = []
 			for e in PARTY_ACTS:
 				acts.append(e[1])
 			_render_party(
-				m.display_name.to_upper() + ("   ·   segue você" if _party_cur == 0 else ""),
-				"↑/↓ escolhe · E confirma · Esc volta",
+				m.display_name.to_upper() + ("   ·   following you" if _party_cur == 0 else ""),
+				"↑/↓ select · E confirm · Esc back",
 				acts,
 				_act_cur,
 				_act_note
 			)
 		"party_switch":
 			_render_party(
-				"Mover %s para onde?" % game.party[_switch_from].display_name,
-				"↑/↓ escolhe · E troca · Esc volta",
+				"Move %s where?" % game.party[_switch_from].display_name,
+				"↑/↓ select · E swap · Esc back",
 				[],
 				-1,
-				"Escolha outro lugar e confirme para trocar. O lugar 1 é o da frente."
+				"Pick another slot and confirm to swap. Slot 1 leads the party."
 			)
 		"party_item":
 			var rows: Array = []
 			for id in _party_items():
 				rows.append("%s  ×%d" % [Kit.item_name(id), int(game.bag[id])])
-			rows.append("CANCELAR")
+			rows.append("CANCEL")
 			_render_party(
-				"Usar em %s:" % game.party[_party_cur].display_name,
-				"↑/↓ escolhe · E usa · Esc volta",
+				"Use on %s:" % game.party[_party_cur].display_name,
+				"↑/↓ select · E use · Esc back",
 				rows,
 				_pitem_cur,
 				_pitem_note
 			)
 		"target":
 			_render_party(
-				"Usar %s em qual Pokémon?" % Kit.item_name(_item), "↑/↓ escolhe · E usa · Esc volta"
+				"Use %s on which Pokémon?" % Kit.item_name(_item), "↑/↓ select · E use · Esc back"
 			)
 		"summary":
 			_render_summary()
@@ -933,8 +933,8 @@ func _render() -> void:
 		_box.add_child(d)
 		d.show_line("", _ask_text, true)
 		var col := _add_win("", Vector2(vp.x - 290, vp.y - 290), Vector2(170, 0), 2)
-		col.add_child(Kit.row(["SIM"], [110], _ask_yes))
-		col.add_child(Kit.row(["NÃO"], [110], not _ask_yes))
+		col.add_child(Kit.row(["YES"], [110], _ask_yes))
+		col.add_child(Kit.row(["NO"], [110], not _ask_yes))
 
 
 func _render_main() -> void:
@@ -944,13 +944,11 @@ func _render_main() -> void:
 	for i in ents.size():
 		var off: bool = ents[i] == "picnic" and not can_picnic()  # "disabled" do original
 		col.add_child(Kit.row([_entry_label(ents[i])], [], i == _main_cur, off))
-	var money := Kit.label(
-		"Dinheiro  " + Kit.format_money(int(game.money)), Kit.GREEN, Kit.SIZE_SMALL
-	)
+	var money := Kit.label("Money  " + Kit.format_money(int(game.money)), Kit.GREEN, Kit.SIZE_SMALL)
 	money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(money)
 	if screen == "main":
-		_hints("↑/↓ escolhe · E confirma · Esc fecha", Vector2(vp.x - 24, vp.y - 48), true)
+		_hints("↑/↓ select · E confirm · Esc close", Vector2(vp.x - 24, vp.y - 48), true)
 
 
 func _render_party(
@@ -961,14 +959,14 @@ func _render_party(
 	var pw := minf(640.0, vp.x - 520.0)
 	var col := _add_win("POKéMON", Vector2(24, 26), Vector2(pw, vp.y - 52), 2)
 	if game.party.is_empty():
-		col.add_child(Kit.label("Nenhum Pokémon.", Kit.DIM))
+		col.add_child(Kit.label("No Pokémon.", Kit.DIM))
 	var rh := clampf((vp.y - 110.0) / 6.0, 60.0, 88.0)
 	for i in game.party.size():
 		var r := Kit.PartyRow.new(game.party[i], rh)
 		r.selected = i == _party_cur
 		r.source = screen == "party_switch" and i == _switch_from
 		if screen == "target" or (screen == "msg" and _back_to == "target"):
-			r.note = "" if Items.can_use(_item, game.party[i]) else "sem efeito"
+			r.note = "" if Items.can_use(_item, game.party[i]) else "no effect"
 		col.add_child(r)
 	var side := _add_win("", Vector2(pw + 48, 26), Vector2(vp.x - pw - 72, 0), 10)
 	var c := Kit.label(context, Kit.BLUE, Kit.SIZE_SMALL)
@@ -994,7 +992,7 @@ func _render_party(
 		info.add_child(
 			Kit.label(
 				(
-					"Nv %d · %s"
+					"Lv. %d · %s"
 					% [
 						m.level,
 						" / ".join(PackedStringArray(m.types.map(func(t): return Kit.type_name(t))))
@@ -1028,7 +1026,7 @@ func _render_summary() -> void:
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 4)
 	top.add_child(col)
-	col.add_child(Kit.header("%s     Nv %d" % [m.display_name, m.level]))
+	col.add_child(Kit.header("%s     Lv. %d" % [m.display_name, m.level]))
 	var tabs: Array = []
 	for i in SUMMARY_PAGES.size():
 		tabs.append(
@@ -1062,17 +1060,17 @@ func _render_summary() -> void:
 			_summary_skills(body, m, sp)
 		_:
 			_summary_moves(body, m)
-	var hint := "←/→ página · ↑/↓ Pokémon (%d/%d) · Esc volta" % [_party_cur + 1, game.party.size()]
+	var hint := "←/→ page · ↑/↓ Pokémon (%d/%d) · Esc back" % [_party_cur + 1, game.party.size()]
 	if summary_page == 2:
 		hint = (
-			"↑/↓ escolhe · E %s · ←/→ página · Esc volta"
-			% ("solta" if _move_held >= 0 else "segura para trocar")
+			"↑/↓ select · E %s · ←/→ page · Esc back"
+			% ("drop" if _move_held >= 0 else "pick up to swap")
 		)
 	root.add_child(Kit.hint(hint))
 
 
 func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
-	var card: Array = Kit.panel("FICHA DO TREINADOR")
+	var card: Array = Kit.panel("TRAINER MEMO")
 	card[0].size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(card[0])
 	var ab := Dex.ability(m.ability)
@@ -1080,15 +1078,15 @@ func _summary_info(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	for t in m.types:
 		types.append(Kit.type_name(t).to_upper())
 	var rows := [
-		["Nº", "%03d" % int(sp.get("dex_no", 0))],
-		["TIPO", " / ".join(PackedStringArray(types)) if not types.is_empty() else "—"],
-		["TREINADOR", String(game.player_name)],
-		["Nº ID", trainer_id_text()],
-		["NATUREZA", Kit.nature_text(m.nature)],
-		["Humor", mood_text(int(m.friend))],
-		["HABILIDADE", String(ab.get("name", m.ability.capitalize())) if m.ability != "" else "—"],
-		["ENCONTRO", met_text(m)],
-		["ITEM", "Nenhum"],
+		["No.", "%03d" % int(sp.get("dex_no", 0))],
+		["TYPE", " / ".join(PackedStringArray(types)) if not types.is_empty() else "—"],
+		["TRAINER", String(game.player_name)],
+		["ID No.", trainer_id_text()],
+		["NATURE", Kit.nature_text(m.nature)],
+		["Mood", mood_text(int(m.friend))],
+		["ABILITY", String(ab.get("name", m.ability.capitalize())) if m.ability != "" else "—"],
+		["MET", met_text(m)],
+		["ITEM", "None"],
 	]
 	card[1].add_child(Kit.info_grid(rows))
 
@@ -1114,7 +1112,7 @@ static func met_text(m: Mon) -> String:
 	if zone == null or String(zone) == "":
 		return "—"
 	var lv := int(m.get("met_level")) if m.get("met_level") != null else 0
-	return ("Nv %d em %s" % [lv, zone]) if lv > 0 else ("Em %s" % zone)
+	return ("Lv. %d at %s" % [lv, zone]) if lv > 0 else ("At %s" % zone)
 
 
 func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
@@ -1125,7 +1123,7 @@ func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	grid.add_theme_constant_override("h_separation", 34)
 	grid.add_theme_constant_override("v_separation", 0)
 	body.add_child(grid)
-	for h in ["ATRIBUTO", "BASE", "IV", "EV", "VALOR"]:
+	for h in ["STAT", "BASE", "IV", "EV", "VALUE"]:
 		var l := Kit.label(h, Kit.DIM, Kit.SIZE_SMALL)
 		l.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
 		grid.add_child(l)
@@ -1156,9 +1154,9 @@ func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 	exp_head.add_child(
 		Kit.label(
 			(
-				"nível máximo"
+				"max level"
 				if m.level >= Growth.MAX_LEVEL
-				else "%d XP para o Nv %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
+				else "%d XP to Lv. %d" % [maxi(m.exp_next_level - m.xp, 0), m.level + 1]
 			),
 			Kit.DIM,
 			Kit.SIZE_SMALL
@@ -1168,7 +1166,7 @@ func _summary_skills(body: VBoxContainer, m: Mon, sp: Dictionary) -> void:
 
 func _summary_moves(body: VBoxContainer, m: Mon) -> void:
 	if m.moves.is_empty():
-		body.add_child(Kit.label("Nenhum golpe.", Kit.DIM))
+		body.add_child(Kit.label("No moves.", Kit.DIM))
 		return
 	_move_cur = clampi(_move_cur, 0, m.moves.size() - 1)
 	for i in m.moves.size():
@@ -1205,9 +1203,9 @@ func _summary_moves(body: VBoxContainer, m: Mon) -> void:
 		var kind := String(mv.get("kind", ""))
 		for kv in [
 			["PP", "%d" % int(round(Dex.pp_cost(mv))), Kit.PP_BLUE],
-			["PODER", str(power) if power > 0 else "—", Kit.INK],
-			["PREC.", ("%d%%" % acc) if mv.has("accuracy") else "—", Kit.INK],
-			["RECARGA", "%.1fs" % Dex.cooldown(mv), Kit.INK],
+			["POWER", str(power) if power > 0 else "—", Kit.INK],
+			["ACC.", ("%d%%" % acc) if mv.has("accuracy") else "—", Kit.INK],
+			["COOLDOWN", "%.1fs" % Dex.cooldown(mv), Kit.INK],
 			["", String(KINDS.get(kind, kind.replace("_", " "))), Kit.DIM]
 		]:
 			var l := Kit.label(("%s %s" % [kv[0], kv[1]]).strip_edges(), kv[2], Kit.SIZE_SMALL)
@@ -1228,18 +1226,18 @@ func _render_bag() -> void:
 	_dim(0.3)
 	var size := Vector2(minf(680.0, vp.x - 40.0), minf(560.0, vp.y - 90.0))
 	var pos := Vector2((vp.x - size.x) * 0.5, 34).floor()
-	var v := _add_win("BOLSA", pos, size, 10)
+	var v := _add_win("BAG", pos, size, 10)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	v.add_child(head)
-	head.add_child(Kit.label("DINHEIRO", Kit.DIM, Kit.SIZE_SMALL))
+	head.add_child(Kit.label("MONEY", Kit.DIM, Kit.SIZE_SMALL))
 	head.add_child(Kit.label(Kit.format_money(int(game.money)), Kit.GREEN, 22))
 	var cats := _cats()
 	if cats.is_empty():
-		var e := Kit.label("A bolsa está vazia.", Kit.DIM)
+		var e := Kit.label("Your Bag is empty.", Kit.DIM)
 		e.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		v.add_child(e)
-		_hints("Esc volta", Vector2(pos.x, pos.y + size.y + 10))
+		_hints("Esc back", Vector2(pos.x, pos.y + size.y + 10))
 		return
 	if not cats.has(_cat):
 		_cat = cats[0]
@@ -1303,7 +1301,7 @@ func _render_bag() -> void:
 	desc_box.add_child(dv)
 	var d := Kit.label(
 		(
-			("Jogar fora %s?" % Kit.item_name(sel_id))
+			("Throw away %s?" % Kit.item_name(sel_id))
 			if tossing
 			else String(Dex.item(sel_id).get("description", "")) if sel_id != "" else ""
 		),
@@ -1319,20 +1317,19 @@ func _render_bag() -> void:
 	v.add_child(desc_box)
 	if tossing:
 		var tv := _add_win(
-			"JOGAR FORA", Vector2(pos.x + size.x - 256, pos.y + size.y - 196), Vector2(236, 96), 4
+			"TOSS", Vector2(pos.x + size.x - 256, pos.y + size.y - 196), Vector2(236, 96), 4
 		)
-		tv.add_child(Kit.label("Jogar fora quantos?", Kit.INK, Kit.SIZE_SMALL))
+		tv.add_child(Kit.label("Throw away how many?", Kit.INK, Kit.SIZE_SMALL))
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		row.add_child(Kit.label("▲▼", Kit.INK, 14))
 		row.add_child(Kit.ItemIcon.new(sel_id, 30))
 		row.add_child(Kit.label("× %d" % _toss_qty, Kit.INK, 26))
 		tv.add_child(row)
-		_hints("↑/↓ quantidade · E joga fora · Esc cancela", Vector2(pos.x, pos.y + size.y + 10))
+		_hints("↑/↓ quantity · E throw away · Esc cancel", Vector2(pos.x, pos.y + size.y + 10))
 		return
 	_hints(
-		"←/→ categoria · ↑/↓ item · E usa · Z joga fora · Esc volta",
-		Vector2(pos.x, pos.y + size.y + 10)
+		"←/→ category · ↑/↓ item · E use · Z toss · Esc back", Vector2(pos.x, pos.y + size.y + 10)
 	)
 
 
@@ -1342,9 +1339,9 @@ func _render_dex() -> void:
 	var size := Vector2(minf(720.0, vp.x - 40.0), minf(580.0, vp.y - 40.0))
 	var v := _centered("POKéDEX", size, 8)
 	var c := dex_counts()
-	v.add_child(Kit.label("VISTOS %d  ·  CAPTURADOS %d" % [c.x, c.y], Kit.INK, 20))
+	v.add_child(Kit.label("SEEN %d  ·  CAUGHT %d" % [c.x, c.y], Kit.INK, 20))
 	if _dex.is_empty():
-		var e := Kit.label("Nenhum Pokémon registrado ainda.", Kit.DIM)
+		var e := Kit.label("No Pokémon registered yet.", Kit.DIM)
 		e.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		v.add_child(e)
 	else:
@@ -1370,7 +1367,7 @@ func _render_dex() -> void:
 			list.add_child(
 				Kit.row([["%03d" % int(e.no), Kit.DIM], mark, ic, nm], [50, 22, 30], i == _dex_cur)
 			)
-	v.add_child(Kit.hint("↑/↓ move · E abre · Esc fecha"))
+	v.add_child(Kit.hint("↑/↓ move · E open · Esc close"))
 
 
 func _render_dex_entry() -> void:
@@ -1393,7 +1390,7 @@ func _render_dex_entry() -> void:
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_theme_constant_override("separation", 4)
 	top.add_child(info)
-	info.add_child(Kit.label("Nº %03d" % int(sp.get("dex_no", 0)), Kit.BLUE, 18))
+	info.add_child(Kit.label("No. %03d" % int(sp.get("dex_no", 0)), Kit.BLUE, 18))
 	info.add_child(Kit.header(sp_name.to_upper(), Kit.INK, 30))
 	info.add_child(
 		Kit.label(String(sp.get("category", "")).replace("Pokémon", "Pokémon"), Kit.INK, 18)
@@ -1406,29 +1403,25 @@ func _render_dex_entry() -> void:
 		info.add_child(types)
 	info.add_child(
 		Kit.label(
-			"ALTURA   %s m" % (("%.1f" % float(sp.get("height_m", 0.0))) if caught else "??"),
+			"HEIGHT   %s m" % (("%.1f" % float(sp.get("height_m", 0.0))) if caught else "??"),
 			Kit.INK,
 			18
 		)
 	)
 	info.add_child(
 		Kit.label(
-			"PESO     %s kg" % (("%.1f" % float(sp.get("weight_kg", 0.0))) if caught else "??"),
+			"WEIGHT   %s kg" % (("%.1f" % float(sp.get("weight_kg", 0.0))) if caught else "??"),
 			Kit.INK,
 			18
 		)
 	)
 	info.add_child(
 		Kit.label(
-			"CAPTURADO" if caught else "SÓ VISTO", Kit.GREEN if caught else Kit.DIM, Kit.SIZE_SMALL
+			"CAUGHT" if caught else "SEEN ONLY", Kit.GREEN if caught else Kit.DIM, Kit.SIZE_SMALL
 		)
 	)
 	var fl := Kit.label(
-		(
-			String(sp.get("flavor", ""))
-			if caught
-			else "Capture este Pokémon para ver os dados completos."
-		),
+		String(sp.get("flavor", "")) if caught else "Catch this Pokémon to see its full data.",
 		Kit.INK if caught else Kit.DIM,
 		18
 	)
@@ -1438,8 +1431,8 @@ func _render_dex_entry() -> void:
 	var areas := _area_names(sp_name)
 	var ar := Kit.label(
 		(
-			"ÁREA   %s"
-			% ("  ·  ".join(PackedStringArray(areas)) if not areas.is_empty() else "Desconhecida")
+			"AREA   %s"
+			% ("  ·  ".join(PackedStringArray(areas)) if not areas.is_empty() else "Unknown")
 		),
 		Kit.INK,
 		16
@@ -1447,7 +1440,7 @@ func _render_dex_entry() -> void:
 	ar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ar.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(ar)
-	v.add_child(Kit.hint("↑/↓ anterior/próximo · Esc volta"))
+	v.add_child(Kit.hint("↑/↓ previous/next · Esc back"))
 
 
 ## Insígnia: textura do original quando existir; senão o octógono desenhado (cinza se não ganha).
@@ -1512,7 +1505,7 @@ class BadgeSlot:
 
 func _render_card() -> void:
 	_dim()
-	var v := _centered("CARTÃO DE TREINADOR", Vector2(560, 0), 12)
+	var v := _centered("TRAINER CARD", Vector2(560, 0), 12)
 	if card_front:
 		var h := HBoxContainer.new()
 		h.add_theme_constant_override("separation", 22)
@@ -1531,22 +1524,22 @@ func _render_card() -> void:
 		)
 		h.add_child(frame)
 		var rows := [
-			["NOME", String(game.player_name)],
+			["NAME", String(game.player_name)],
 			["RIVAL", String(game.rival_name)],
-			["Nº ID", trainer_id_text()],
-			["DINHEIRO", Kit.money_text(int(game.money))]
+			["ID No.", trainer_id_text()],
+			["MONEY", Kit.money_text(int(game.money))]
 		]
 		if game.flags.get("has_pokedex", false):
-			rows.append(["POKéDEX", "%d capturados" % dex_counts().y])
-		rows.append(["TEMPO DE JOGO", Kit.format_time(float(game.play_time))])
+			rows.append(["POKéDEX", "%d caught" % dex_counts().y])
+		rows.append(["PLAY TIME", Kit.format_time(float(game.play_time))])
 		var started := format_started(int(game.flags.get("started_at", 0)))
 		if started != "":
-			rows.append(["INÍCIO", started])
+			rows.append(["STARTED", started])
 		var g := Kit.info_grid(rows)
 		g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(g)
 	else:
-		var head := Kit.header("INSÍGNIAS DE KANTO")
+		var head := Kit.header("KANTO BADGES")
 		head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(head)
 		var grid := GridContainer.new()
@@ -1567,7 +1560,7 @@ func _render_card() -> void:
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			cv.add_child(l)
 			grid.add_child(cv)
-	v.add_child(Kit.hint("←/→ vira o cartão · Esc volta"))
+	v.add_child(Kit.hint("←/→ flip card · Esc back"))
 
 
 ## "23 OUT 2026" (GameState.format_started do original); "" sem data.
@@ -1580,15 +1573,15 @@ static func format_started(ts: int) -> String:
 
 func _render_options() -> void:
 	_dim()
-	var v := _centered("OPÇÕES", Vector2(620, 0), 6)
+	var v := _centered("OPTIONS", Vector2(620, 0), 6)
 	Kit.option_rows(v, _settings, _opt_cur)
-	v.add_child(Kit.hint("↑/↓ escolhe · ←/→ muda · E abre · Esc volta"))
+	v.add_child(Kit.hint("↑/↓ select · ←/→ change · E open · Esc back"))
 
 
 func _render_controls() -> void:
 	_dim()
 	var vp := _vp()
-	var v := _centered("CONTROLES", Vector2(minf(900.0, vp.x - 40.0), 0), 10)
+	var v := _centered("CONTROLS", Vector2(minf(900.0, vp.x - 40.0), 0), 10)
 	controls_into(v)
 
 
@@ -1615,4 +1608,4 @@ static func controls_into(v: VBoxContainer) -> void:
 			for k in String(r[1]).split("/"):
 				h.add_child(Kit.KeyCap.new(k))
 			box.add_child(h)
-	v.add_child(Kit.hint("Esc volta"))
+	v.add_child(Kit.hint("Esc back"))

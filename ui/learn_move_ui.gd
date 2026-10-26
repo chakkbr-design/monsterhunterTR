@@ -1,8 +1,8 @@
 extends CanvasLayer
 ## Tela de aprender golpe com 4 golpes (autoload LearnMove), no roteiro do progression._teach do original:
 ## "X está tentando aprender Y." / "Mas X não pode aprender mais de quatro golpes." / "Apagar um golpe
-## para dar lugar a Y?" SIM/NÃO / lista para esquecer / "Parar de aprender Y?" e, no fim, "1, 2 e… … … Puf!",
-## "X esqueceu Z.", "E…", "X aprendeu Y!". Resolve Game.pending_learns inteira, um por vez.
+## para dar lugar a Y?" SIM/NÃO / lista para esquecer / "Parar de aprender Y?" e, no fim, "1, 2, and... ... ... Poof!",
+## "X esqueceu Z.", "And...", "X aprendeu Y!". Resolve Game.pending_learns inteira, um por vez.
 ## Teclado: cima/baixo escolhe, E/Enter confirma, Esc/Q volta.
 
 const Kit := preload("res://ui/ui_kit.gd")
@@ -33,7 +33,7 @@ func _ready() -> void:
 		game = get_node_or_null("/root/Game")
 	if game:
 		game.learn_requested.connect(_on_learn_requested)
-	var w := Kit.window(self, Vector2(760, 0), "NOVO GOLPE")
+	var w := Kit.window(self, Vector2(760, 0), "NEW MOVE")
 	_root = w[0]
 	_box = w[1]
 	_root.visible = false
@@ -79,8 +79,8 @@ func _begin() -> void:
 	var mon: String = p.mon.display_name
 	_talk(
 		[
-			"%s está tentando aprender %s." % [mon, Kit.move_name(p.move)],
-			"Mas %s não pode aprender mais de quatro golpes." % mon
+			"%s is trying to learn %s." % [mon, Kit.move_name(p.move)],
+			"But %s can't learn more than four moves." % mon
 		],
 		_ask.bind("delete")
 	)
@@ -102,9 +102,9 @@ func _ask(which: String) -> void:
 	question = which
 	var mv := Kit.move_name(_current().move)
 	message = (
-		("Apagar um golpe para dar lugar a %s?" % mv)
+		("Delete a move to make room for %s?" % mv)
 		if which == "delete"
-		else ("Parar de aprender %s?" % mv)
+		else ("Stop learning %s?" % mv)
 	)
 	_yes = true
 	state = "ask"
@@ -183,10 +183,10 @@ func _forget(slot: int) -> void:
 		au.sfx("level_up")
 	_talk(
 		[
-			"1, 2 e… … … Puf!",
-			"%s esqueceu %s." % [mon, Kit.move_name(old)],
-			"E…",
-			"%s aprendeu %s!" % [mon, mv]
+			"1, 2, and... ... ... Poof!",
+			"%s forgot %s." % [mon, Kit.move_name(old)],
+			"And...",
+			"%s learned %s!" % [mon, mv]
 		],
 		_next
 	)
@@ -194,7 +194,7 @@ func _forget(slot: int) -> void:
 
 func _give_up() -> void:
 	var p := _current()
-	var text := "%s não aprendeu %s." % [p.mon.display_name, Kit.move_name(p.move)]
+	var text := "%s did not learn %s." % [p.mon.display_name, Kit.move_name(p.move)]
 	game.resolve_learn(-1)
 	_talk([text], _next)
 
@@ -218,12 +218,12 @@ func _render() -> void:
 		if state == "ask":
 			var h := HBoxContainer.new()
 			h.add_theme_constant_override("separation", 12)
-			h.add_child(Kit.row(["SIM"], [80], _yes))
-			h.add_child(Kit.row(["NÃO"], [80], not _yes))
+			h.add_child(Kit.row(["YES"], [80], _yes))
+			h.add_child(Kit.row(["NO"], [80], not _yes))
 			_box.add_child(h)
-			_box.add_child(Kit.hint("←/→ escolhe · E/Enter confirma"))
+			_box.add_child(Kit.hint("←/→ select · E/Enter confirm"))
 		else:
-			_box.add_child(Kit.hint("E/Enter continuar"))
+			_box.add_child(Kit.hint("E/Enter: continue"))
 		return
 	var p := _current()
 	var m: Mon = p.mon
@@ -232,16 +232,16 @@ func _render() -> void:
 	top.add_child(Kit.sprite_rect(Kit.party_icon(m.species), Vector2(72, 72)))
 	var tc := VBoxContainer.new()
 	tc.add_theme_constant_override("separation", 0)
-	tc.add_child(Kit.label("%s  Nv %d" % [m.display_name, m.level], Kit.DIM, 15))
-	tc.add_child(Kit.label("Qual golpe deve ser esquecido?", Kit.TEXT, 22))
+	tc.add_child(Kit.label("%s  Lv. %d" % [m.display_name, m.level], Kit.DIM, 15))
+	tc.add_child(Kit.label("Which move should be forgotten?", Kit.TEXT, 22))
 	top.add_child(tc)
 	_box.add_child(top)
-	_box.add_child(Kit.row(["Golpe", "Tipo", "Categoria", "Poder", "Prec."], WIDTHS, false, true))
+	_box.add_child(Kit.row(["Move", "Type", "Category", "Power", "Acc."], WIDTHS, false, true))
 	for i in m.moves.size():
 		_box.add_child(Kit.row(Kit.move_cols(m.moves[i]), WIDTHS, cursor == i))
 	var sep := HSeparator.new()
 	_box.add_child(sep)
 	var new_cols := Kit.move_cols(p.move)
-	new_cols[0] = [new_cols[0] + "  · NOVO", Kit.ACCENT]
+	new_cols[0] = [new_cols[0] + "  · NEW", Kit.ACCENT]
 	_box.add_child(Kit.row(new_cols, WIDTHS, cursor == m.moves.size()))
-	_box.add_child(Kit.hint("↑/↓ escolhe · E/Enter esquece o golpe marcado · Esc volta"))
+	_box.add_child(Kit.hint("↑/↓ select · E/Enter forget the marked move · Esc back"))
