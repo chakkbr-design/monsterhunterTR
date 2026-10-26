@@ -5,8 +5,8 @@ extends RefCounted
 ## stand section (so the sections are culled on their own), one shared material
 ## (battle/voxel/crowd.gdshader) whose uniforms make the whole crowd cheer or run a Mexican wave.
 ## The figure is a handful of 1/16 m boxes (voxel look): trousers, shirt (the instance colour),
-## arms that rise when cheering, head, hair or cap. Fans near each end mostly wear that side's colour
-## (side A red at -x, side B blue at +x) and cheer for it. Looks never use the battle RNG.
+## arms that rise when cheering, head, hair or cap. Fans near each end mostly wear that side's
+## colour (side A red at -x, side B blue at +x) and cheer for it. Looks never use the battle RNG.
 
 const SHADER := "res://battle/voxel/crowd.gdshader"
 ## Share of the seats taken.

@@ -58,6 +58,11 @@ const C_STONE := [Color("a59c8c"), Color("978e7f"), Color("b1a796"), Color("9c92
 const C_PILASTER := Color("c6bca9")
 const C_PLINTH := Color("7d7568")
 const C_ROOF := Color("d8693a")
+## Plaza trees: beach palms and the volcano's charred trees.
+const C_PALM_BARK := [Color("8c6c48"), Color("6f5337")]
+const C_FRONDS := [Color("3e8a34"), Color("2f6e2a"), Color("5aa83f")]
+const C_COCONUT := Color("5b3d22")
+const C_CHAR := [Color("3b322d"), Color("2b2421"), Color("4a3f38")]
 const C_ROOF_DARK := Color("b5532b")
 const C_WINDOW := Color("f2c66c")
 const C_GLASS := Color("3b4858")
@@ -594,10 +599,6 @@ static func ball_image(px: int, alive: bool) -> Image:
 
 # --- Plaza ---
 
-const C_PALM_BARK := [Color("8c6c48"), Color("6f5337")]
-const C_FRONDS := [Color("3e8a34"), Color("2f6e2a"), Color("5aa83f")]
-const C_COCONUT := Color("5b3d22")
-
 
 ## Palm tree for the beach plaza (VS voxels, scaled up by ArenaStadium like the other trees): a thin
 ## ringed trunk bending to one side, a crown of drooping fronds (part TOP, it sways) and coconuts.
@@ -642,9 +643,6 @@ static func palm(variant: int) -> VoxelGrid:
 		if _h(d.x, d.y, d.z, salt) < 0.75:
 			g.put(top + d, C_COCONUT, VoxelMat.BARK, BODY)
 	return g
-
-
-const C_CHAR := [Color("3b322d"), Color("2b2421"), Color("4a3f38")]
 
 
 ## Charred dead tree for the volcano plaza: a bare trunk with a few branches reaching up, an ember

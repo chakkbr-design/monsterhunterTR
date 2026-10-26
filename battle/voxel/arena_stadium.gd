@@ -3,7 +3,7 @@ extends Node3D
 ## Voxel stadium around the energy-mode training field (docs/VOXEL.md §7), built once per training
 ## scene (TrainingBattle._build_stage; never under fast_sim, never in VGC). Visual only: no
 ## physics bodies at all, so the arena's wall queries (layer 1) never see it.
-## Layout (metres, field centre at the origin; the field is 48 x 28 with its barrier at 24.5 x 14.5):
+## Layout (metres, field centre at the origin; the field is 48 x 28, its barrier at 24.5 x 14.5):
 ## - a bowl of stands (StadiumParts) whose front walls run on |x| = IN_X and |z| = IN_Z: 10 m
 ##   sections on the long sides, 8 m sections on the ends (the middle one holds that side's players'
 ##   tunnel, behind its trainer), four corner pieces; 12 rows rising 0.5 m per metre, so the +z
@@ -23,6 +23,7 @@ extends Node3D
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const Kit := preload("res://ui/ui_kit.gd")
+const FLAG_SHADER := preload("res://battle/voxel/flag.gdshader")
 
 ## Stand front walls (half extents).
 const IN_X := 30.0
@@ -665,7 +666,7 @@ func _build_flags() -> void:
 		spots_at.append(Vector3(-IN_X - back, h, z))
 		spots_at.append(Vector3(IN_X + back, h, z))
 	var mat_base := ShaderMaterial.new()
-	mat_base.shader = load("res://battle/voxel/flag.gdshader")
+	mat_base.shader = FLAG_SHADER
 	var quad := QuadMesh.new()
 	quad.size = Vector2(1.6, 1.0)
 	quad.center_offset = Vector3(0.8, 0, 0)
@@ -696,7 +697,7 @@ func _build_banners() -> void:
 	root.name = "Banners"
 	add_child(root)
 	var mat_base := ShaderMaterial.new()
-	mat_base.shader = load("res://battle/voxel/flag.gdshader")
+	mat_base.shader = FLAG_SHADER
 	mat_base.set_shader_parameter("hang", 1.0)
 	mat_base.set_shader_parameter("span", BANNER.y)
 	mat_base.set_shader_parameter("amp", 0.05)
