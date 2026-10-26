@@ -128,13 +128,15 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
   - O visual é voxel, gerado a partir desses dicionários.
   - Nunca use `arena.rng` para o visual.
   - Com `fast_sim` não se gera nada visual.
-- **Estádio voxel em volta, fora dos limites:**
-  - arquibancadas com torcida;
-  - torres de refletor;
-  - placar;
-  - emblema de Poké Ball;
-  - linhas do campo.
-- O piso continua com o topo em y = 0.
+- **Estádio voxel em volta, fora dos limites** (`ArenaStadium`, battle/voxel/arena_stadium.gd):
+  - montado uma vez por cena de treino (`TrainingBattle._build_stage`), só no modo de energia; nunca no VGC nem com `fast_sim`; sem corpo físico (a arena consulta paredes na camada 1);
+  - arquibancada em anel de 12 fileiras (`StadiumParts`: cadeiras, escadas, vomitórios, parapeito, fachada, túneis dos treinadores no meio das cabeceiras); a da frente (+z) fica abaixo da linha de 30° da câmera de ação;
+  - torcida (`ArenaCrowd` + crowd.gdshader): um MultiMesh por setor; `cheer(lado, força)` e `wave()` (ola);
+  - torres de refletor (SpotLight3D, sombra só nas duas do fundo), placar principal com a Poké Bola e dois placares nas cabeceiras (`score({names, alive, clock, scene, series})`), bandeiras e faixas ao vento (flag.gdshader), praça, árvores;
+  - céu, sol e ambiente próprios (stadium_sky.gdshader, AgX, SSAO, brilho); `set_mood("dia" | "tarde" | "noite")` pela opção Hora do treino (`time_of_day`); `theme(cenário)` repinta o gramado de fora e muda o céu (caverna de noite, pântano nublado, vulcão) sem mexer no sol e no ambiente que o `BattleBiomes` ajustou para a luta.
+- O piso continua com o topo em y = 0; o tapete do time e o botão da Poké Bola no centro são pintura do `ArenaFloor`.
+- **Água das arenas:** lagos com `WaterSurface` redonda (`shape: "ellipse"`), o nível sobe e desce no buraco pelo raio; congelar usa o gelo do shader (`set_freeze`). A maré da praia é uma lâmina `sea` rasa (5 cm) com absorção forte e espuma só na beira.
+- **Fotos:** `tests/battle/shot_arena_stadium.gd` (começo, meio, KO, aberta, placar, túnel, torcida, lago, gelo, maré).
 
 ## 8. Ferramentas
 
