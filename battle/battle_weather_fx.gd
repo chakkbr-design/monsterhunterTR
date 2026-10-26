@@ -10,6 +10,18 @@ extends Node3D
 ## No mundo (há WorldWeather) o chão é o do mundo: o clima vai para WorldWeather.battle_cover e os
 ## shaders do mapa ficam molhados ou brancos. Sem mundo (treino, cena de teste) vai um piso próprio.
 ## Também mostra o nome do clima e as rodadas que faltam no alto da tela.
+##
+## Energy mode (arena.energy_on(): training and energy fights) uses the shared gfx/weather pieces
+## instead of the VGC particles, sized from arena.rect plus STANDS_MARGIN so they cover the stands:
+## - WeatherRig fixed over the court: velocity-aligned rain that stops on roofs and stands (collision
+##   heightfield) and splashes where it lands, snowflakes that settle; amounts follow GfxQuality;
+## - WeatherLightning in heavy rain: a real light flash (plus an ambient spike on the stadium's
+##   WorldEnvironment), voxel bolts outside the stands, thunder delayed by distance;
+## - WeatherAudio: rain loop by intensity, wind, thunder;
+## - with no world (training) it also drives the weather globals (rain_amount, rain_wet,
+##   rain_puddle, snow_cover, cloud_cover, lightning_flash) and dims the stadium sun, and puts
+##   everything back when the fight ends (_exit_tree).
+## The VGC path (and its look) is unchanged.
 
 const KINDS := ["rain", "hail", "sun", "sand"]
 ## Força: segundos para entrar/sair; a neve no chão acumula e derrete mais devagar.
@@ -26,6 +38,16 @@ const SHAFTS := 6
 ## Neve no chão do mundo: não chega ao branco puro, para os flocos aparecerem por cima.
 const WORLD_SNOW_MAX := 0.82
 const NAMES := {"rain": "Chuva", "hail": "Neve", "sun": "Sol forte", "sand": "Areia"}
+## Energy mode: metres of cover around arena.rect (the stands), and its rain heightfield.
+const STANDS_MARGIN := 12.0
+const ENERGY_FIELD_RES := GPUParticlesCollisionHeightField3D.RESOLUTION_1024
+## Energy mode: keep the wet / snowy / sandy overlay plane on the court (the stands read the
+## weather globals instead). Turn off once the court floor itself reads rain_wet / snow_cover.
+const ENERGY_GROUND_OVERLAY := true
+## Energy mode in training (no world): the globals this node drives and restores.
+const GLOBALS := [
+	"rain_amount", "rain_wet", "rain_puddle", "snow_cover", "cloud_cover", "lightning_flash"
+]
 const LABEL_COLORS := {
 	"rain": Color(0.7, 0.85, 1.0),
 	"hail": Color(0.9, 0.97, 1.0),
@@ -59,6 +81,16 @@ var _bolt_t := 8.0
 var _bolt_seq: Array = []
 var _world: Node
 var _built := false
+## Energy mode (see the header).
+var energy := false
+var rig: WeatherRig
+var bolts: WeatherLightning
+var audio: WeatherAudio
+var published := {}  ## training: last value written to each weather global
+var _globals_base := {}
+var _env: Environment
+var _suns := {}  ## DirectionalLight3D -> [base energy, energy we set]
+var _t := 0.0
 
 
 func _init(a: Node = null) -> void:
@@ -75,11 +107,15 @@ func _build() -> void:
 		_half = r.size * 0.5
 		_center = Vector3(r.get_center().x, 0.0, r.get_center().y)
 	_world = get_tree().get_first_node_in_group("weather") if is_inside_tree() else null
-	_build_rain()
-	_build_snow()
+	energy = arena != null and arena.has_method("energy_on") and bool(arena.energy_on())
+	if energy:
+		_build_energy()
+	else:
+		_build_rain()
+		_build_snow()
 	_build_sand()
 	_build_sun()
-	if _world == null:
+	if _world == null and (not energy or ENERGY_GROUND_OVERLAY):
 		_build_ground()
 	_build_screen()
 	_bolt_t = _rng.randf_range(LIGHTNING_GAP.x, LIGHTNING_GAP.y)
@@ -99,6 +135,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if _built:
 		_set_world_cover(Color(0, 0, 0, 0))
+	_restore_training()
 
 
 ## Clima que vale agora ("" = nenhum); "snow" vira "hail" (a neve da Gen 9).
@@ -135,10 +172,13 @@ func _process(dt: float) -> void:
 	wet_ground = move_toward(
 		wet_ground, rain, dt / (FADE_IN if rain > wet_ground else WET_DRY_SECS)
 	)
-	_lightning(dt, rain)
-	_emit(_rain, rain)
-	_emit(_splash, rain * 0.9)
-	_emit(_snow, snow)
+	if energy:
+		_update_energy(dt, rain, snow)
+	else:
+		_lightning(dt, rain)
+		_emit(_rain, rain)
+		_emit(_splash, rain * 0.9)
+		_emit(_snow, snow)
 	_emit(_sand_grains, sand)
 	_emit(_motes, sun)
 	_update_shafts(sun)
@@ -158,8 +198,9 @@ func _process(dt: float) -> void:
 	_screen.visible = rain + snow + sand + sun > 0.001
 	var gm := _glow.material as ShaderMaterial
 	gm.set_shader_parameter("sun", sun)
-	gm.set_shader_parameter("flash", flash)
-	_glow.visible = sun > 0.001 or flash > 0.001
+	var screen_flash := flash * (0.25 if energy else 1.0)  # energy: the real light does the work
+	gm.set_shader_parameter("flash", screen_flash)
+	_glow.visible = sun > 0.001 or screen_flash > 0.001
 	_update_label(w)
 
 
@@ -238,7 +279,12 @@ func _mat(tex: Texture2D, col: Color, billboard: int, add := false) -> StandardM
 
 
 func _area(thick: float) -> Vector3:
-	return Vector3(_half.x + MARGIN, thick, _half.y + MARGIN)
+	return Vector3(_half.x + _margin(), thick, _half.y + _margin())
+
+
+## Cover around the court: the stands in energy mode, the VGC margin otherwise.
+func _margin() -> float:
+	return STANDS_MARGIN if energy else MARGIN
 
 
 func _build_rain() -> void:
@@ -296,8 +342,8 @@ func _build_snow() -> void:
 
 
 func _build_sand() -> void:
-	var box := Vector3(1.5, 1.3, _half.y + MARGIN)
-	var at := Vector3(-_half.x - MARGIN - 1.0, 1.3, 0)
+	var box := Vector3(1.5, 1.3, _half.y + _margin())
+	var at := Vector3(-_half.x - _margin() - 1.0, 1.3, 0)
 	_sand_grains = _particles(1800, 2.4, box, at)
 	var pm := _sand_grains.process_material as ParticleProcessMaterial
 	pm.direction = Vector3(1.0, -0.05, 0.12)
@@ -383,7 +429,8 @@ func _update_shafts(k: float) -> void:
 func _build_ground() -> void:
 	_ground = MeshInstance3D.new()
 	var pm := PlaneMesh.new()
-	pm.size = (_half + Vector2(MARGIN, MARGIN)) * 2.0
+	var gm := 1.0 if energy else MARGIN  # energy: the court only, the stands read the globals
+	pm.size = (_half + Vector2(gm, gm)) * 2.0
 	pm.subdivide_width = 0
 	_ground.mesh = pm
 	_ground_mat = ShaderMaterial.new()
@@ -426,74 +473,166 @@ func _full_rect(shader: String) -> ColorRect:
 	return r
 
 
+# --- Energy mode ---
+
+
+func _build_energy() -> void:
+	var c := global_transform * _center if is_inside_tree() else _center
+	var area := _half + Vector2(STANDS_MARGIN, STANDS_MARGIN)
+	rig = (
+		WeatherRig
+		. make(
+			{
+				"name": "WeatherRig",
+				"area": area,
+				"follow": false,
+				"center": c,
+				"mist": false,
+				"resolution": ENERGY_FIELD_RES,
+			}
+		)
+	)
+	add_child(rig)
+	bolts = WeatherLightning.new()
+	bolts.name = "Lightning"
+	bolts.driven = true
+	bolts.gap = LIGHTNING_GAP
+	bolts.focus = c
+	bolts.ground_y = c.y
+	var reach := maxf(area.x, area.y)
+	bolts.near_range = Vector2(reach + 4.0, reach + 22.0)  # seen bolts land past the stands
+	bolts.far_range = Vector2(reach + 30.0, reach + 120.0)
+	bolts.in_view_chance = 0.35
+	add_child(bolts)
+	bolts.thunder.connect(_on_thunder)
+	audio = WeatherAudio.new()
+	audio.name = "WeatherAudio"
+	add_child(audio)
+	add_to_group(GfxQuality.GROUP)
+	if _world == null:
+		_capture_training()
+		bolts.drive_env = _env
+
+
+## Graphics tier changed: the rig follows the new particle budget.
+func apply_quality() -> void:
+	if rig:
+		rig.set_budget(GfxQuality.particles())
+
+
+func _update_energy(dt: float, rain: float, snow: float) -> void:
+	_t += dt
+	var gust := 0.5 + 0.5 * sin(_t * 0.73) * sin(_t * 1.31 + 1.0)
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	rig.rain = rain * 0.85
+	rig.snow = snow
+	rig.wind = (
+		Vector2(1.0, 0.35).normalized() * (0.6 + 2.4 * rain + 0.8 * snow) * (0.7 + 0.6 * gust)
+	)
+	rig.update(rig.center, cam, dt)
+	bolts.storm = smoothstep(0.6, 1.0, rain)
+	if cam:
+		bolts.view_dir = -cam.global_transform.basis.z
+	bolts.tick(dt)
+	flash = bolts.flash
+	audio.rain = rain
+	audio.wind = 0.35 * rain + 0.25 * snow
+	audio.gust = gust
+	if _world == null:
+		_drive_training(rain, snow)
+
+
+func _on_thunder(distance: float, power: float) -> void:
+	if audio:
+		audio.thunder(distance, power)
+
+
+## Training: the values of the weather globals and the stadium lights before the fight.
+func _capture_training() -> void:
+	for g in GLOBALS:
+		var v = RenderingServer.global_shader_parameter_get(g)
+		_globals_base[g] = float(v) if v is float or v is int else 0.0
+	if not is_inside_tree():
+		return
+	for we in get_tree().root.find_children("*", "WorldEnvironment", true, false):
+		if (we as WorldEnvironment).environment:
+			_env = (we as WorldEnvironment).environment
+			break
+	for l in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
+		if not is_ancestor_of(l) and (l as DirectionalLight3D).visible:
+			_suns[l] = [(l as DirectionalLight3D).light_energy, -1.0]
+
+
+## Training: the court and stands get wet or white through the globals; clouds dim the sun.
+func _drive_training(rain: float, snow: float) -> void:
+	var dry := 1.0 - 0.85 * snow_pile
+	_set_global("rain_amount", rain)
+	_set_global("rain_wet", wet_ground * dry)
+	_set_global("rain_puddle", smoothstep(0.5, 1.0, wet_ground) * 0.6 * (1.0 - snow_pile))
+	_set_global("snow_cover", snow_pile * WORLD_SNOW_MAX)
+	_set_global("cloud_cover", maxf(rain, snow) * 0.8)
+	_set_global("lightning_flash", flash)
+	var k := 1.0 - 0.45 * rain - 0.3 * snow
+	for l in _suns.keys():
+		if not is_instance_valid(l):
+			_suns.erase(l)
+			continue
+		var d: Array = _suns[l]
+		var sun := l as DirectionalLight3D
+		if float(d[1]) >= 0.0 and not is_equal_approx(sun.light_energy, float(d[1])):
+			d[0] = sun.light_energy  # someone else changed it (biome light): new base
+		d[1] = float(d[0]) * k
+		sun.light_energy = float(d[1])
+
+
+func _set_global(n: String, v: float) -> void:
+	if is_equal_approx(float(published.get(n, -1.0)), v):
+		return
+	published[n] = v
+	RenderingServer.global_shader_parameter_set(n, v)
+
+
+## The fight is over: globals and lights as they were.
+func _restore_training() -> void:
+	for g in _globals_base:
+		if published.has(g):
+			RenderingServer.global_shader_parameter_set(g, float(_globals_base[g]))
+	published.clear()
+	_globals_base.clear()
+	for l in _suns:
+		if is_instance_valid(l):
+			var d: Array = _suns[l]
+			var sun := l as DirectionalLight3D
+			if float(d[1]) < 0.0 or is_equal_approx(sun.light_energy, float(d[1])):
+				sun.light_energy = float(d[0])
+	_suns.clear()
+
+
 # --- Texturas procedurais ---
 
 
 static func _curve_tex(pts: Array) -> CurveTexture:
-	var c := Curve.new()
-	for p in pts:
-		c.add_point(p)
-	var t := CurveTexture.new()
-	t.curve = c
-	return t
+	return WeatherKit.curve_tex(pts)
 
 
 static func _color_ramp(a: Color, b: Color) -> GradientTexture1D:
-	var g := Gradient.new()
-	g.set_color(0, a)
-	g.set_color(1, b)
-	var t := GradientTexture1D.new()
-	t.gradient = g
-	return t
+	return WeatherKit.color_ramp(a, b)
 
 
 ## Gota/grão: claro no meio do comprimento, some nas pontas (vertical, ou horizontal com `wide`).
 static func _gradient_tex(wide := false) -> ImageTexture:
-	var n := 32
-	var img := Image.create(4 if not wide else n, n if not wide else 4, false, Image.FORMAT_RGBA8)
-	for y in img.get_height():
-		for x in img.get_width():
-			var u := float(y if not wide else x) / (n - 1)
-			var a := sin(u * PI) * (0.4 + 0.6 * u if not wide else 1.0)
-			img.set_pixel(x, y, Color(1, 1, 1, a))
-	return ImageTexture.create_from_image(img)
+	return WeatherKit.gradient_tex(wide)
 
 
 ## Ponto macio (floco, poeira); `core` > 0 deixa o miolo mais duro.
 static func _dot_tex(core := 0.35) -> ImageTexture:
-	var n := 32
-	var c := (n - 1) * 0.5
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x - c, y - c).length() / c
-			var a := clampf(1.0 - smoothstep(core, 1.0, d), 0.0, 1.0)
-			img.set_pixel(x, y, Color(1, 1, 1, a * a))
-	return ImageTexture.create_from_image(img)
+	return WeatherKit.dot_tex(core)
 
 
 ## Floco: miolo branco com uma borda azul-acinzentada, para aparecer até por cima da neve.
 static func _flake_tex() -> ImageTexture:
-	var n := 32
-	var c := (n - 1) * 0.5
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x - c, y - c).length() / c
-			var a := clampf(1.0 - smoothstep(0.55, 1.0, d), 0.0, 1.0)
-			var col := Color(1, 1, 1).lerp(Color(0.55, 0.64, 0.8), smoothstep(0.3, 0.75, d))
-			col.a = a
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
+	return WeatherKit.flake_tex()
 
 
 static func _ring_tex() -> ImageTexture:
-	var n := 24
-	var c := (n - 1) * 0.5
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x - c, y - c).length() / c
-			var a := smoothstep(0.5, 0.72, d) * (1.0 - smoothstep(0.86, 1.02, d))
-			img.set_pixel(x, y, Color(1, 1, 1, a))
-	return ImageTexture.create_from_image(img)
+	return WeatherKit.ring_tex(24, Vector2(0.5, 0.72), Vector2(0.86, 1.02))

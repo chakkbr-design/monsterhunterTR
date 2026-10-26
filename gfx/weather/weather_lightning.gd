@@ -52,6 +52,14 @@ var _amb_set := -1.0
 
 
 func _ready() -> void:
+	_setup()
+
+
+## Builds the light, the bolt and the glow (once; tick() calls it too, for owners that drive the
+## node before its _ready).
+func _setup() -> void:
+	if light:
+		return
 	_rng.randomize()
 	_next = _rng.randf_range(gap.x * 0.4, gap.y * 0.6)
 	light = DirectionalLight3D.new()
@@ -107,6 +115,7 @@ func _process(delta: float) -> void:
 ## Advances the strikes, the flash and the pending thunder (the owner calls it when `driven`, so
 ## the flash it publishes is this frame's).
 func tick(delta: float) -> void:
+	_setup()
 	_t += delta
 	if storm > 0.05:
 		_next -= delta * clampf(storm, 0.0, 1.0)
@@ -141,6 +150,7 @@ func tick(delta: float) -> void:
 
 ## A strike now. `at` (optional) is the ground point; by default a far one, or one in view.
 func strike(at := Vector3.INF) -> void:
+	_setup()
 	strikes += 1
 	var seen := at != Vector3.INF
 	if not seen:

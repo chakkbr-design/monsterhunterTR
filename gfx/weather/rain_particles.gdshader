@@ -12,6 +12,7 @@ uniform vec3 wind = vec3(0.0);  // m/s
 uniform vec2 scale_range = vec2(0.8, 1.25);
 uniform float gravity = 3.0;
 uniform bool splashes = true;
+uniform float splash_chance = 0.55;  // share of the drops that leave a visible splash
 
 float rnd(uint s) {
 	s = (s ^ 61u) ^ (s >> 16u);
@@ -49,7 +50,7 @@ void process() {
 	VELOCITY.y -= gravity * DELTA;
 	if (COLLIDED) {
 		vec3 hit = TRANSFORM[3].xyz + COLLISION_NORMAL * COLLISION_DEPTH;
-		if (splashes) {
+		if (splashes && rnd(NUMBER * 31u + RANDOM_SEED) < splash_chance) {
 			mat4 x = mat4(1.0);
 			x[3].xyz = hit + COLLISION_NORMAL * 0.01;
 			emit_subparticle(x, vec3(0.0), vec4(1.0), vec4(COLLISION_NORMAL, 0.0), FLAG_EMIT_POSITION);

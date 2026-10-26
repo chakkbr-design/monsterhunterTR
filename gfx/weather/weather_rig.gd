@@ -189,7 +189,7 @@ static func _splash_mat(tex: Texture2D, crown: bool) -> StandardMaterial3D:
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.vertex_color_use_as_albedo = true
 	m.albedo_texture = tex
-	m.albedo_color = Color(0.9, 0.94, 1.0, 0.32 if not crown else 0.8)
+	m.albedo_color = Color(0.9, 0.94, 1.0, 0.3 if not crown else 0.68)
 	m.roughness = 0.2
 	m.texture_filter = (
 		BaseMaterial3D.TEXTURE_FILTER_NEAREST if crown else BaseMaterial3D.TEXTURE_FILTER_LINEAR
@@ -213,7 +213,7 @@ func _build_snow() -> void:
 	_snow_mat.set_shader_parameter("extents", Vector3(area.x, 0.8, area.y))
 	snow_p.process_material = _snow_mat
 	var q := QuadMesh.new()
-	q.size = Vector2(0.11, 0.11)
+	q.size = Vector2(0.13, 0.13)
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.vertex_color_use_as_albedo = true
@@ -231,8 +231,8 @@ func _build_snow() -> void:
 	m.emission = Color(0.55, 0.6, 0.7)
 	m.emission_energy_multiplier = 0.06
 	m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA  # no giant flakes on the lens
-	m.distance_fade_min_distance = 1.5
-	m.distance_fade_max_distance = 4.0
+	m.distance_fade_min_distance = 3.0
+	m.distance_fade_max_distance = 7.0
 	q.material = m
 	snow_p.draw_pass_1 = q
 
@@ -263,7 +263,7 @@ func _build_mist() -> void:
 ## levels and the wind. `cam` (optional) puts more of the rain between the lens and the focus.
 func update(focus: Vector3, cam: Camera3D, delta: float) -> void:
 	if not _built:
-		return
+		_build()  # driven before its _ready
 	var at := focus if follow else center
 	_focus = at
 	var gy := at.y if follow else ground_y

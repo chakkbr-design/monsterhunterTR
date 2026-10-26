@@ -79,50 +79,51 @@ static func flake_tex() -> ImageTexture:
 	return _cache.flake
 
 
-## Pixel snowflake sheet (4 frames side by side, 8 px each): a dot, a plus, an x and a small star,
-## so flakes read as voxel-scale crystals up close and as soft dots far away (mipmaps).
+## Pixel snowflake sheet (4 frames side by side, 8 px each): soft round flakes of four sizes
+## ("#" solid, "+" half-transparent rim), so they read as snow and never as crisp symbols, and
+## turn into soft dots far away (mipmaps).
 static func flake_sheet() -> ImageTexture:
 	if _cache.has("flake_sheet"):
 		return _cache.flake_sheet
 	var shapes := [
 		[
-			"...##...",
-			"..####..",
-			".######.",
-			"########",
-			"########",
-			".######.",
-			"..####..",
-			"...##..."
+			"........",
+			"..++++..",
+			".+####+.",
+			".+####+.",
+			".+####+.",
+			".+####+.",
+			"..++++..",
+			"........"
 		],
 		[
-			"...##...",
-			"...##...",
-			"...##...",
-			"########",
-			"########",
-			"...##...",
-			"...##...",
-			"...##..."
+			"........",
+			"........",
+			"...++...",
+			"..+##+..",
+			"..+##+..",
+			"...++...",
+			"........",
+			"........"
 		],
 		[
-			"##....##",
-			".##..##.",
-			"..####..",
-			"...##...",
-			"...##...",
-			"..####..",
-			".##..##.",
-			"##....##"
+			"........",
+			"...+....",
+			"..+#+...",
+			".+###+..",
+			"..+#+...",
+			"...+....",
+			"........",
+			"........"
 		],
 		[
-			"...#....",
-			".#.#.#..",
-			"..###...",
-			"#######.",
-			"..###...",
-			".#.#.#..",
-			"...#....",
+			"........",
+			"........",
+			"........",
+			"...##...",
+			"...##...",
+			"........",
+			"........",
 			"........"
 		],
 	]
@@ -131,27 +132,30 @@ static func flake_sheet() -> ImageTexture:
 		var rows: Array = shapes[f]
 		for y in 8:
 			for x in 8:
-				if String(rows[y])[x] == "#":
-					var edge := x == 0 or y == 0 or x == 7 or y == 7
-					img.set_pixel(f * 8 + x, y, Color(1, 1, 1, 0.8 if edge else 1.0))
+				var ch := String(rows[y])[x]
+				if ch != ".":
+					img.set_pixel(f * 8 + x, y, Color(1, 1, 1, 1.0 if ch == "#" else 0.45))
 	_cache.flake_sheet = ImageTexture.create_from_image(img)
 	return _cache.flake_sheet
 
 
-## Thin ring (splash ripple seen from above).
-static func ring_tex() -> ImageTexture:
-	if _cache.has("ring"):
-		return _cache.ring
-	var n := 32
+## Thin ring (splash ripple seen from above): alpha rises over `inner` and falls over `outer`
+## (fractions of the radius) on an `n` x `n` texture.
+static func ring_tex(
+	n := 32, inner := Vector2(0.66, 0.8), outer := Vector2(0.88, 1.0)
+) -> ImageTexture:
+	var key := "ring%d%s%s" % [n, inner, outer]
+	if _cache.has(key):
+		return _cache[key]
 	var c := (n - 1) * 0.5
 	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	for y in n:
 		for x in n:
 			var d := Vector2(x - c, y - c).length() / c
-			var a := smoothstep(0.66, 0.8, d) * (1.0 - smoothstep(0.88, 1.0, d))
+			var a := smoothstep(inner.x, inner.y, d) * (1.0 - smoothstep(outer.x, outer.y, d))
 			img.set_pixel(x, y, Color(1, 1, 1, a))
-	_cache.ring = ImageTexture.create_from_image(img)
-	return _cache.ring
+	_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
 
 
 ## Splash crown, 4 frames of 8 x 8 px side by side (32 x 8): the drop lands, a crown of
@@ -161,7 +165,7 @@ static func crown_sheet() -> ImageTexture:
 		return _cache.crown
 	var img := Image.create(32, 8, false, Image.FORMAT_RGBA8)
 	var frames := [
-		[[3, 7], [4, 7], [3, 6], [4, 6]],
+		[[3, 7], [4, 7], [4, 6]],
 		[[2, 6], [5, 6], [3, 5], [4, 4], [2, 7], [5, 7]],
 		[[1, 5], [6, 4], [3, 3], [5, 2], [2, 6]],
 		[[1, 7], [6, 6], [4, 4], [2, 5]],
