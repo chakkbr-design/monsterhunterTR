@@ -137,6 +137,19 @@ func _run() -> void:
 	st.set_mood("noite")
 	check(st.spots.all(func(l): return l.visible and l.light_energy > 1.0), "à noite acendem")
 	check(st.sun.light_energy < 0.5, "à noite o sol vira lua fraca")
+	# Night darker than day: cool floodlights with a steeper falloff, no extra exposure.
+	check(
+		st.spots.all(
+			func(l): return l.spot_attenuation > 0.5 and l.light_color.b > l.light_color.r
+		),
+		"à noite os refletores fazem poças de luz frias"
+	)
+	check(st.env.tonemap_exposure <= 1.0, "à noite sem exposição a mais")
+	st.set_mood("tarde")
+	check(
+		st.spots.all(func(l): return is_equal_approx(l.spot_attenuation, ArenaStadium.SPOT_ATT)),
+		"ao pôr do sol os refletores ficam como eram"
+	)
 	st.set_mood("dia")
 	st.theme("caverna")
 	check(st.spots.all(func(l): return l.visible), "caverna escura: refletores acesos")
@@ -259,6 +272,10 @@ func _weather_light(st: ArenaStadium) -> void:
 	var top: Color = st.global_value("sky_top_color")
 	check(top.s < top0.s, "céu da água acinzenta com a nuvem")
 	check(st.spots.all(func(l): return l.visible), "tempestade de dia: refletores acesos")
+	check(
+		st.spots.all(func(l): return is_equal_approx(l.spot_attenuation, ArenaStadium.SPOT_ATT)),
+		"tempestade de dia: refletores com o alcance de sempre"
+	)
 	var amb_cloud := st.env.ambient_light_energy
 	st.weather_light(0.9, 1.0)
 	check(st.env.ambient_light_energy > amb_cloud * 2.0, "relâmpago: clarão no ambiente")
