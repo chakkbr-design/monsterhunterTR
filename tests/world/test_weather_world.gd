@@ -241,9 +241,18 @@ func _node() -> void:
 	await frames(int(WorldWeather.FORCE_FADE * 60.0) + 10)
 	check(wx.type == "snow", "panel: snow")
 	check(wx.published("snow_cover") > 0.8, "snow lying (%.2f)" % wx.published("snow_cover"))
+	check(
+		absf(wx.snow_cover() - wx.published("snow_cover")) < 0.01,
+		"snow_cover() reads what the global says (%.3f)" % wx.snow_cover()
+	)
 	check(wx.published("rain_wet") < 0.3, "snow hides the wet ground")
 	check(wx.rig.snow_p.emitting and not wx.rig.rain_p.emitting, "flakes instead of drops")
 	check(WorldFx.weather_image.get_pixel(0, 0).g > 0.8, "HGSS texel snowy")
+	tod.apply_location({}, true)
+	await frames(2)
+	check(wx.snow_cover() == 0.0 and wx.published("snow_cover") == 0.0, "no snow indoors")
+	tod.apply_location({"env": "voxel_env.tres"}, false)
+	await frames(2)
 	# Storm: wind, gloom, lightning with thunder.
 	WorldWeather.forced = "storm"
 	wx.snap()
@@ -286,9 +295,13 @@ func _node() -> void:
 		wx.published("rain_wet") > 0.9 and wx.published("cloud_cover") > 0.6,
 		"battle rain wets the map"
 	)
+	wx.battle_cover = Color(0.0, 1.0, 0.0, 0.7)
+	await frames(2)
+	check(wx.snow_cover() > 0.9, "battle snow lies on the map (snow_cover())")
 	wx.battle_cover = Color(0, 0, 0, 0)
 	await frames(2)
 	check(wx.published("rain_wet") < 0.05, "and dries back when the battle ends")
+	check(wx.snow_cover() == 0.0, "and the battle snow goes with it")
 	# F9 panel list.
 	var choices := wx.debug_choices()
 	check(
