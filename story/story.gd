@@ -388,6 +388,7 @@ func begin(id: String) -> void:
 	if p:
 		p.locked = true
 		p.velocity = Vector3.ZERO
+		await p.settle()  # grade: termina o passo em andamento, a cena começa no centro de um tile
 	cutscene_started.emit(id)
 
 
@@ -400,6 +401,7 @@ func end() -> void:
 	var p := player()
 	if p:
 		p.locked = false
+		p.resnap()  # grade: volta ao centro de um tile livre se a cena o deixou fora
 	cutscene_finished.emit(id)
 	# cutscene.gd:36 do original: toda cena termina com SaveGame.autosave().
 	if world and is_instance_valid(world) and Game.has_method("autosave"):
@@ -436,7 +438,8 @@ func walk(actor: Node3D, to: Vector3, speed := StoryNpc.WALK_SPEED) -> void:
 	await StoryNpc.move_node(actor, to, speed)
 
 
-## Anda até ficar a `gap` metros de `target`, de frente para ele.
+## Anda até ficar a `gap` metros de `target`, de frente para ele. Nas zonas de grade o gap vira tiles
+## inteiros (1 = vizinho), no eixo dominante, e o último trecho anda direto para o alvo.
 func approach(actor: Node3D, target: Node3D, gap := 1.4) -> void:
 	if actor == null or target == null:
 		return
@@ -444,7 +447,17 @@ func approach(actor: Node3D, target: Node3D, gap := 1.4) -> void:
 	to.y = 0.0
 	if to.length() < 0.01:
 		to = Vector3(0, 0, 1)
-	await walk(actor, target.global_position + to.normalized() * gap)
+	if GridMotion.grid_for(actor):
+		var d := GridMotion.card(to)
+		var at: Vector3 = (
+			target.save_position() if target.has_method("save_position") else target.global_position
+		)
+		var cell := TileGrid.cell_of(at) + d * maxi(1, roundi(gap))
+		await StoryNpc.move_node(
+			actor, Vector3(cell.x, actor.global_position.y, cell.y), StoryNpc.WALK_SPEED, absi(d.y)
+		)
+	else:
+		await walk(actor, target.global_position + to.normalized() * gap)
 	face_each_other(actor, target)
 
 
