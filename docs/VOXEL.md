@@ -424,7 +424,9 @@ contornos de construção.
 - **O chão segue no tempo de jogo:** molha com a chuva e seca depois (1,2 h), as poças enchem e secam
   mais devagar (3 h), a neve assenta e derrete (mais rápido na chuva e no sol).
 - Publica os globais de clima (§3) e o texel do `weather_map` dos shaders HGSS (R molhado, G neve,
-  B névoa, A nuvem). Dentro de casa nada cai, os globais ficam secos e a chuva se ouve abafada.
+  B névoa, A nuvem). O clima de uma batalha (`battle_cover`) entra por cima como antes: o molhado da
+  batalha sem a escala 0,8 do mundo e a areia/névoa dela no B. Dentro de casa nada cai, os globais
+  ficam secos e a chuva se ouve abafada.
 - Liga o céu (nuvem apaga o sol, tempestade escurece, relâmpago acende o ambiente) e o vento (na
   tempestade mais forte e com rajadas; a chuva inclina com ele).
 - **Efeitos** (`gfx/weather/`, também usados no treino de energia):

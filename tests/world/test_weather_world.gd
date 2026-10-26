@@ -295,6 +295,16 @@ func _node() -> void:
 		wx.published("rain_wet") > 0.9 and wx.published("cloud_cover") > 0.6,
 		"battle rain wets the map"
 	)
+	var bt := WorldFx.weather_image.get_pixel(0, 0)
+	check(bt.r > 0.95 and bt.a > 0.65, "battle rain: HGSS texel fully wet, as before (%s)" % bt)
+	wx.battle_cover = Color(0.6, 0.0, 0.0, 0.42)
+	await frames(2)
+	bt = WorldFx.weather_image.get_pixel(0, 0)
+	check(absf(bt.r - 0.6) < 0.01, "battle wet goes to the texel unscaled (%.3f)" % bt.r)
+	wx.battle_cover = Color(0.0, 0.0, 0.5, 0.0)
+	await frames(2)
+	bt = WorldFx.weather_image.get_pixel(0, 0)
+	check(absf(bt.b - 0.5) < 0.01, "battle sandstorm keeps the texel's sand/fog (%s)" % bt)
 	wx.battle_cover = Color(0.0, 1.0, 0.0, 0.7)
 	await frames(2)
 	check(wx.snow_cover() > 0.9, "battle snow lies on the map (snow_cover())")

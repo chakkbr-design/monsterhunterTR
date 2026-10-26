@@ -8,7 +8,7 @@ extends Node3D
 ## What it drives:
 ## - shader globals (docs/VOXEL.md §3): rain_amount, rain_wet, rain_puddle, snow_cover,
 ##   cloud_cover, lightning_flash; and the old weather_map texel for the HGSS shaders
-##   (R wet, G snow, B mist, A cloud). Only written when they change;
+##   (R wet, G snow, B mist or the battle's sand/fog, A cloud). Only written when they change;
 ## - WorldTimeOfDay reads `cloud` (dims the sun and moon, softens shadows, greys and lifts the
 ##   ambient), `gloom` (storm darkness) and `flash` (lightning) on every write;
 ## - WorldWind gets the storm wind (`storm`): stronger and gustier; the rain slants with it;
@@ -285,8 +285,9 @@ func _publish(force: bool) -> void:
 	var snow := 0.0 if out else float(state.snow_cover)
 	var cl := 0.0 if out else cloud
 	var fog := 0.0 if out else mist
+	var world_wet := gw
+	var b := battle_cover if not out else Color(0, 0, 0, 0)
 	if not out:
-		var b := battle_cover
 		gw = maxf(gw, b.r)
 		pud = maxf(pud, smoothstep(0.5, 1.0, b.r) * 0.6)
 		snow = maxf(snow, b.g)
@@ -298,10 +299,12 @@ func _publish(force: bool) -> void:
 	_global("snow_cover", clampf(snow, 0.0, 1.0), force)
 	_global("cloud_cover", clampf(cl, 0.0, 1.0), force)
 	_global("lightning_flash", clampf(flash, 0.0, 1.0), force)
+	# HGSS texel as the base had it: only the world's own wet is scaled by 0.8, the battle's wet
+	# (Rain Dance, Drizzle) and its sand/fog (B) go in unscaled, on top of the world's.
 	var cov := Color(
-		clampf(gw * dry, 0.0, 1.0) * 0.8,
+		maxf(clampf(world_wet * dry, 0.0, 1.0) * 0.8, clampf(b.r, 0.0, 1.0)),
 		clampf(snow, 0.0, 1.0),
-		clampf(fog, 0.0, 1.0),
+		clampf(maxf(fog, b.b), 0.0, 1.0),
 		clampf(cl, 0.0, 1.0)
 	)
 	if force or not cov.is_equal_approx(_cov):  # texture upload only when the coverage changes
