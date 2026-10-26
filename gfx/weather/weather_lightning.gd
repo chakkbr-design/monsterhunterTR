@@ -3,8 +3,9 @@ extends Node3D
 ## Storm lightning shared by the overworld (WorldWeather) and the training stadium (BattleWeatherFx):
 ## - a real light flash: its own bluish DirectionalLight3D coming from the strike's side, pulsing
 ##   2-4 times in half a second (a return stroke and its restrikes), with `flash` (0..1) for the
-##   owner to publish as the lightning_flash global (sky, water, rain streaks) and to spike the
-##   ambient light (drive_env, or WorldTimeOfDay reading the weather's flash);
+##   owner to publish as the lightning_flash global (sky, water, rain streaks); whoever owns the
+##   scene's light spikes its ambient from it (WorldTimeOfDay reading the weather's flash, the
+##   training stadium's weather_light), never this node;
 ## - now and then a voxel bolt: a jagged path from the cloud base to the ground (midpoint
 ##   displacement plus a branch or two) drawn as 0.3 m emissive cubes, with a glow at the foot.
 ##   Most strikes are far away (flash and thunder only); some land where the camera can see them;
@@ -20,7 +21,6 @@ const VOX := 0.3
 const SPEED_OF_SOUND := 343.0
 const PULSE_DECAY := 0.07  ## s
 const BOLT_SECS := 0.5
-const AMBIENT_SPIKE := 2.5  ## drive_env: ambient energy x (1 + this x flash)
 
 var gap := Vector2(6.0, 16.0)
 var storm := 0.0
@@ -30,7 +30,6 @@ var in_view_chance := 0.22
 var near_range := Vector2(3.0, 9.0)  ## in-view strikes: metres ahead of the focus (top-down camera)
 var far_range := Vector2(45.0, 130.0)
 var ground_y := 0.0
-var drive_env: Environment = null
 var flash := 0.0
 var driven := false  ## the owner calls tick() itself
 var last_strike := Vector3.INF
@@ -47,8 +46,6 @@ var _pulses: Array = []  ## [start, peak]
 var _pending: Array = []  ## [seconds left, distance, power]
 var _bolt_t := 0.0
 var _bolt_mat: StandardMaterial3D
-var _amb_base := -1.0
-var _amb_set := -1.0
 
 
 func _ready() -> void:
@@ -103,10 +100,6 @@ func _setup() -> void:
 	add_child(glow)
 
 
-func _exit_tree() -> void:
-	_restore_env()
-
-
 func _process(delta: float) -> void:
 	if not driven:
 		tick(delta)
@@ -145,7 +138,6 @@ func tick(delta: float) -> void:
 		if float(_pending[i][0]) <= 0.0:
 			thunder.emit(float(_pending[i][1]), float(_pending[i][2]))
 			_pending.remove_at(i)
-	_drive_env()
 
 
 ## A strike now. `at` (optional) is the ground point; by default a far one, or one in view.
@@ -247,22 +239,3 @@ static func _voxelize(pts: Array, size: float, cells: Dictionary) -> void:
 			var v := p.lerp(q, float(s) / n) / VOX
 			var c := Vector3i(roundi(v.x), roundi(v.y), roundi(v.z))
 			cells[c] = maxf(float(cells.get(c, 0.0)), size)
-
-
-## Battle stages: the ambient light spikes with the flash (in the world WorldTimeOfDay does it).
-func _drive_env() -> void:
-	if drive_env == null:
-		return
-	if _amb_set >= 0.0 and not is_equal_approx(drive_env.ambient_light_energy, _amb_set):
-		_amb_base = drive_env.ambient_light_energy  # someone else changed it: new base
-	if _amb_base < 0.0:
-		_amb_base = drive_env.ambient_light_energy
-	_amb_set = _amb_base * (1.0 + AMBIENT_SPIKE * flash)
-	drive_env.ambient_light_energy = _amb_set
-
-
-func _restore_env() -> void:
-	if drive_env and _amb_base >= 0.0 and is_equal_approx(drive_env.ambient_light_energy, _amb_set):
-		drive_env.ambient_light_energy = _amb_base
-	_amb_base = -1.0
-	_amb_set = -1.0

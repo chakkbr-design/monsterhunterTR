@@ -213,6 +213,10 @@ func _weather_chain(tb: Node) -> void:
 		return
 	var want := st.weather_area().size * 0.5
 	check(fx.rig.area.is_equal_approx(want), "chuva cobre a tigela do estádio (%s)" % fx.rig.area)
+	check(
+		fx.rig.rain_far == float(BattleWeatherFx.BOWL.rain_far) and fx.rig.splash_far > 0.0,
+		"chuva da tigela vista de longe na vista aberta, respingos só perto da câmera"
+	)
 	check(fx._ground == null, "quadra voxel sem a placa lisa de chão molhado")
 	check(st.cloud > 0.5, "estádio recebe a nuvem da chuva (%.2f)" % st.cloud)
 	check(st.sun.light_energy < sun_before, "sol do estádio escurece na chuva")
@@ -232,9 +236,9 @@ func _weather_chain(tb: Node) -> void:
 	)
 
 
-## Clima da luta na luz do estádio (BattleWeatherFx -> weather_light): nuvem escurece e amacia o sol,
-## sobe o ambiente, acinzenta o céu da água e acende os refletores na tempestade; o clarão sobe o
-## ambiente; quem muda o sol por fora (BattleBiomes) vira a nova base; (0, 0) devolve tudo.
+## Clima da luta na luz do estádio (BattleWeatherFx -> weather_light): nuvem escurece e amacia o
+## sol, sobe o ambiente, acinzenta o céu da água e acende os refletores na tempestade; o clarão sobe
+## o ambiente; quem muda o sol por fora (BattleBiomes) vira a nova base; (0, 0) devolve tudo.
 func _weather_light(st: ArenaStadium) -> void:
 	check(st.is_in_group(BattleWeatherFx.LIGHT_GROUP), "estádio é o dono da luz do clima")
 	var area := st.weather_area()

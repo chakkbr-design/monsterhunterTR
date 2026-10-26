@@ -39,6 +39,12 @@ var field_resolution := GPUParticlesCollisionHeightField3D.RESOLUTION_512
 var amount_max := AMOUNT_MAX  ## drops / flakes cap (the stadium's bowl is bigger than a street)
 var snow_h := SNOW_H  ## m above the ground where flakes are born (over the stands in the stadium)
 var refresh := REFRESH  ## s between heightfield refreshes while something falls
+var splash_scale := 1.0  ## splash ring and crown size (smaller seen from a far camera)
+var rain_far := 60.0  ## m from the camera where the streaks have faded out (rain.gdshader far_fade)
+var far_stretch := 1.0  ## far streaks this much longer and fainter (rain.gdshader far_stretch)
+## m from the camera where splashes have faded out (0 = never): from a far camera a lit crown is a
+## white dot, not a splash.
+var splash_far := 0.0
 
 var rain := 0.0
 var snow := 0.0
@@ -60,7 +66,8 @@ var _built := false
 
 
 ## A rig with `opts` (area, follow, center, budget, rain_density, snow_density, collide, mist,
-## resolution, amount_max, snow_h, refresh), ready to add to the tree.
+## resolution, amount_max, snow_h, refresh, splash_scale, rain_far, far_stretch, splash_far), ready to
+## add to the tree.
 static func make(opts := {}) -> WeatherRig:
 	var r := WeatherRig.new()
 	r.name = String(opts.get("name", "WeatherRig"))
@@ -77,6 +84,10 @@ static func make(opts := {}) -> WeatherRig:
 	r.amount_max = int(opts.get("amount_max", AMOUNT_MAX))
 	r.snow_h = float(opts.get("snow_h", SNOW_H))
 	r.refresh = float(opts.get("refresh", REFRESH))
+	r.splash_scale = float(opts.get("splash_scale", 1.0))
+	r.rain_far = float(opts.get("rain_far", r.rain_far))
+	r.far_stretch = float(opts.get("far_stretch", r.far_stretch))
+	r.splash_far = float(opts.get("splash_far", r.splash_far))
 	return r
 
 
@@ -165,6 +176,8 @@ func _build_rain() -> void:
 	q.size = Vector2(0.018, 0.42)
 	_rain_mat = ShaderMaterial.new()
 	_rain_mat.shader = load("res://gfx/weather/rain.gdshader")
+	_rain_mat.set_shader_parameter("far_fade", rain_far)
+	_rain_mat.set_shader_parameter("far_stretch", far_stretch)
 	q.material = _rain_mat
 	rain_p.draw_pass_1 = q
 	if not collide:
@@ -175,24 +188,26 @@ func _build_rain() -> void:
 	splash_p.fixed_fps = 0
 	var sm := ShaderMaterial.new()
 	sm.shader = load("res://gfx/weather/splash_particles.gdshader")
+	sm.set_shader_parameter("ring_scale", Vector2(0.5, 1.4) * splash_scale)
 	splash_p.process_material = sm
 	splash_p.draw_passes = 2
 	var ring := PlaneMesh.new()
 	ring.size = Vector2(0.26, 0.26)
-	ring.material = _splash_mat(WeatherKit.ring_tex(), false)
+	ring.material = _splash_mat(WeatherKit.ring_tex(), false, splash_far)
 	splash_p.draw_pass_1 = ring
 	var crown := QuadMesh.new()
 	crown.size = Vector2(0.26, 0.26)
 	crown.center_offset = Vector3(0.0, 0.12, 0.0)
-	var cm := _splash_mat(WeatherKit.crown_sheet(), true)
+	var cm := _splash_mat(WeatherKit.crown_sheet(), true, splash_far)
 	crown.material = cm
 	splash_p.draw_pass_2 = crown
 	rain_p.sub_emitter = rain_p.get_path_to(splash_p)
 
 
 ## Splash look: lit (never glowing at night), alpha from the particle colour; the crown is a
-## billboard that plays its 4 frames over the splash's life.
-static func _splash_mat(tex: Texture2D, crown: bool) -> StandardMaterial3D:
+## billboard that plays its 4 frames over the splash's life. `far` > 0: gone that far from the
+## camera (fading out over its last third).
+static func _splash_mat(tex: Texture2D, crown: bool, far := 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.vertex_color_use_as_albedo = true
@@ -209,6 +224,11 @@ static func _splash_mat(tex: Texture2D, crown: bool) -> StandardMaterial3D:
 		m.particles_anim_h_frames = 4
 		m.particles_anim_v_frames = 1
 		m.particles_anim_loop = false
+	if far > 0.0:
+		# Reversed distance fade (max < min): opaque up to max, gone at min.
+		m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
+		m.distance_fade_max_distance = far * 0.66
+		m.distance_fade_min_distance = far
 	return m
 
 

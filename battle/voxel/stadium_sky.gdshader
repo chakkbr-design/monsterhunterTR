@@ -85,5 +85,10 @@ void sky() {
 	// Lightning lights the cloud deck from inside (brightest overhead, a glow down to the horizon).
 	float above = smoothstep(-0.02, 0.06, h);
 	col += vec3(0.75, 0.8, 1.0) * lightning_flash * (1.0 + 1.6 * cc) * above * (0.55 + 0.45 * h);
+	// Reflections (wet floor, water, seats) see a storm sky darker than the eye does: wet ground
+	// reads dark under a grey sky instead of mirroring a bright dome.
+	if (AT_CUBEMAP_PASS) {
+		col *= mix(1.0, 0.55, cc);
+	}
 	COLOR = col;
 }

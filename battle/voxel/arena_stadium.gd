@@ -46,14 +46,20 @@ const TOWER_OUT := 2.25
 ## Ground out to here (m) and the plaza ring around the stands (m).
 const GROUND_HALF := Vector2(150, 140)
 const PLAZA := 10
+## Colour grading of the stadium environment (saturation).
+const SATURATION := 1.08
 ## Battle weather (weather_light): cloud 1 takes this much of the sun and of its shadow, adds this
-## much ambient, pulls the depth fog this much closer and greys it; a storm this cloudy turns the
-## floodlights on (spots energy, lamp glow) even by day. Rain and snow cover the bowl out to the
-## parapet plus WEATHER_PAD (m).
+## much ambient, pulls the depth fog this much closer and darkens its grey, takes this much of the
+## saturation; a lightning flash multiplies the ambient by 1 + FLASH_AMBIENT x flash (the flash's
+## own light gives the direction); a storm this cloudy turns the floodlights on (spots energy, lamp
+## glow) even by day. Rain and snow cover the bowl out to the parapet plus WEATHER_PAD (m).
 const CLOUD_SUN_DIM := 0.62
 const CLOUD_SHADOW := 0.55
-const CLOUD_AMBIENT := 0.45
-const CLOUD_FOG := 0.55
+const CLOUD_AMBIENT := 0.15
+const CLOUD_FOG := 0.25
+const CLOUD_FOG_DARK := 0.3
+const CLOUD_DESAT := 0.3
+const FLASH_AMBIENT := 1.3
 const STORM_LIGHTS := Vector2(0.45, 0.85)
 const STORM_SPOTS := 2.2
 const STORM_LAMPS := 0.55
@@ -1156,7 +1162,7 @@ func _build_env() -> void:
 	env.fog_sky_affect = 0.0
 	env.fog_aerial_perspective = 0.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.08
+	env.adjustment_saturation = SATURATION
 	env.adjustment_contrast = 1.04
 	world_env = WorldEnvironment.new()
 	world_env.name = "StadiumEnv"
@@ -1264,15 +1270,17 @@ func _light() -> void:
 		_amb_base = env.ambient_light_energy / maxf(_k_amb, 0.05)
 	var c := cloud
 	_k_sun = 1.0 - CLOUD_SUN_DIM * c
-	_k_amb = (1.0 + CLOUD_AMBIENT * c) * (1.0 + WeatherLightning.AMBIENT_SPIKE * flash)
+	_k_amb = (1.0 + CLOUD_AMBIENT * c) * (1.0 + FLASH_AMBIENT * flash)
 	_sun_set = _sun_base * _k_sun
 	_amb_set = _amb_base * _k_amb
 	sun.light_energy = _sun_set
 	sun.shadow_opacity = 1.0 - CLOUD_SHADOW * c
 	env.ambient_light_energy = _amb_set
-	env.fog_light_color = overcast(md.fog, c)
+	env.adjustment_saturation = SATURATION * (1.0 - CLOUD_DESAT * c)
+	# Rain haze: the distance (outer stands, trees) fades into a darker grey; the field stays clear.
+	env.fog_light_color = overcast(md.fog, c) * (1.0 - CLOUD_FOG_DARK * c)
 	env.fog_depth_begin = float(md.fog_begin) * (1.0 - CLOUD_FOG * c)
-	env.fog_depth_end = float(md.fog_end) * (1.0 - CLOUD_FOG * 0.8 * c)
+	env.fog_depth_end = float(md.fog_end) * (1.0 - CLOUD_FOG * 2.0 * c)
 	# A dark storm switches the floodlights on, even by day.
 	var storm := smoothstep(STORM_LIGHTS.x, STORM_LIGHTS.y, c)
 	var se := maxf(float(md.spots), STORM_SPOTS * storm)

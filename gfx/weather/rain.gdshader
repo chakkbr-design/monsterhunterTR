@@ -15,6 +15,10 @@ uniform float near_fade = 3.0;  // m from the camera
 uniform float far_fade = 60.0;
 uniform float backlight = 0.75;
 uniform float sky_fill = 0.16;  // a touch of the sky colour, so daytime rain reads against stone
+// Far streaks (widened 4-8x past their real width, ~50-100 m from the camera at 720p) stretched this
+// many times longer and as much fainter (the same light): a far drop lit by a floodlight is a dot of
+// a pixel or two that reads as snow; stretched, the far rain is a haze of faint lines. 1 = off.
+uniform float far_stretch = 1.0;
 
 global uniform vec4 sky_horizon_color;
 global uniform float lightning_flash;
@@ -24,11 +28,15 @@ varying float v_fade;
 void vertex() {
 	vec3 c = (MODELVIEW_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 	float d = max(-c.z, 0.05);
-	float px = 2.0 * d / (PROJECTION_MATRIX[1][1] * VIEWPORT_SIZE.y);  // metres per pixel there
+	// Metres per pixel there (abs: the Vulkan projection can flip Y, and a negative size would keep
+	// every streak at its real width, far ones a bright sub-pixel dot).
+	float px = 2.0 * d / (abs(PROJECTION_MATRIX[1][1]) * VIEWPORT_SIZE.y);
 	float w = width * length((MODELVIEW_MATRIX * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
 	float f = max(1.0, min_px * px / max(w, 1e-5));
 	VERTEX.x *= f;
-	v_fade = 1.0 / f;
+	float st = mix(1.0, far_stretch, smoothstep(4.0, 8.0, f));
+	VERTEX.y *= st;
+	v_fade = 1.0 / (f * st);
 	v_fade *= smoothstep(near_fade * 0.5, near_fade * 1.5, d) * (1.0 - smoothstep(far_fade * 0.7, far_fade, d));
 }
 

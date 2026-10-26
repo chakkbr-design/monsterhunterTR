@@ -48,14 +48,22 @@ const NAMES := {"rain": "Chuva", "hail": "Neve", "sun": "Sol forte", "sand": "Ar
 ## heightfield.
 const STANDS_MARGIN := 12.0
 const ENERGY_FIELD_RES := GPUParticlesCollisionHeightField3D.RESOLUTION_1024
-## Energy mode over the training stadium's bowl: rain drops per square metre in the air (the bowl is
-## big, so a little sparser than the overworld), the most drops and flakes on the best tier, a
-## higher snow cloud (over the 8 m stands) and a slower heightfield refresh (nothing moves there but
-## the fighters).
-const BOWL_RAIN_DENSITY := 5.2
-const BOWL_AMOUNT_MAX := 32000
-const BOWL_SNOW_H := 11.0
-const BOWL_REFRESH := 0.6
+## Energy mode over the training stadium's bowl (WeatherRig options): rain drops per square metre
+## in the air (the bowl is big, so a little sparser than the overworld), the most drops and flakes
+## on the best tier, a higher snow cloud (over the 8 m stands), a slower heightfield refresh
+## (nothing moves there but the fighters), smaller splashes gone past the field (the action camera
+## is 30-50 m away) and streaks that stay visible far out (the wide view is over 100 m away),
+## stretched into faint lines there so the far rain under the floodlights is a haze, not white dots.
+const BOWL := {
+	"rain_density": 5.2,
+	"amount_max": 32000,
+	"snow_h": 11.0,
+	"refresh": 0.6,
+	"splash_scale": 0.75,
+	"splash_far": 75.0,
+	"rain_far": 160.0,
+	"far_stretch": 6.0,
+}
 ## Energy mode in training (no world): the globals this node owns, and the group of the node that
 ## owns the light (the stadium: weather_light(cloud, flash), weather_area()).
 const GLOBALS := [
@@ -214,7 +222,7 @@ func _process(dt: float) -> void:
 	_screen.visible = rain + snow + sand + sun > 0.001
 	var gm := _glow.material as ShaderMaterial
 	gm.set_shader_parameter("sun", sun)
-	var screen_flash := flash * (0.25 if energy else 1.0)  # energy: the real light does the work
+	var screen_flash := flash * (0.1 if energy else 1.0)  # energy: the real light does the work
 	gm.set_shader_parameter("flash", screen_flash)
 	_glow.visible = sun > 0.001 or screen_flash > 0.001
 	_update_label(w)
@@ -508,17 +516,7 @@ func _build_energy() -> void:
 		var bowl: Rect2 = light_owner.weather_area()
 		area = bowl.size * 0.5
 		c = Vector3(bowl.get_center().x, c.y, bowl.get_center().y)
-		(
-			opts
-			. merge(
-				{
-					"rain_density": BOWL_RAIN_DENSITY,
-					"amount_max": BOWL_AMOUNT_MAX,
-					"snow_h": BOWL_SNOW_H,
-					"refresh": BOWL_REFRESH,
-				}
-			)
-		)
+		opts.merge(BOWL)
 	opts.area = area
 	opts.center = c
 	rig = WeatherRig.make(opts)
