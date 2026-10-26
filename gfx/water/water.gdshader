@@ -11,8 +11,12 @@ render_mode blend_mix, depth_draw_always, cull_back;
 // falls back to the sky globals. Patterns use world metres (optionally quantised to the 1/16 m
 // detail grid, the "voxel pixel" look); only the ellipse shape and the life paths follow the node's
 // transform, so scaling the node grows / dries a pond without stretching the ripples.
-// Budget per pixel: 2 + ssr_steps + 4 depth taps (3 more on streams), 2 screen taps, 1 leaf tap,
-// 3 gradient-noise octaves, 4-iteration caustic, 3x3 rain cells only while it rains.
+// Budget per water pixel: depth taps = 2 (surface, refracted bed) + 4 waterline probes +
+// ssr_steps (20) + 4 refines (+3 wake probes on streams); 2 screen taps (refraction with mip blur,
+// reflection), 1 leaf tap; 3 gradient-noise octaves, a 3x3 Voronoi caustic, <= 4 fish and
+// ripple_count (<= 12) ripple sources; 3x3 rain cells only while it rains, 3x3 ice cells only where
+// it is frozen. The SSR march is the largest share: ssr_steps = 0 (sky only) for low-end GPUs.
+// The node casts no shadow and is not in GI.
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap, repeat_disable;
 uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
@@ -489,7 +493,7 @@ void fragment() {
 	}
 
 	// Ice: from the shallows outwards with `freeze`, a thin rim of frost with heavy snow.
-	float ice_thr = freeze * max(depth_hint * 3.0, 1.5) + smoothstep(0.55, 1.0, snow_cover) * 0.32 * frost;
+	float ice_thr = freeze * max(depth_hint * 1.4, 0.35) + smoothstep(0.55, 1.0, snow_cover) * 0.32 * frost;
 	float ice = freeze > 0.995 ? 1.0 : (1.0 - smoothstep(ice_thr * 0.75, ice_thr + 0.001, fd + (fn - 0.5) * 0.08));
 	ice *= step(0.001, ice_thr);
 	ice = max(ice, step(0.12, near) * smoothstep(0.55, 0.9, snow_cover) * frost);
@@ -660,6 +664,7 @@ void fragment() {
 
 	// ---------------- ice / frost
 	vec3 ice_c = vec3(0.0);
+	float ice_a = 0.0;
 	if (ice > 0.0) {
 		// Cracks along the edges of a jittered 0.6 m cell grid, then snow dusting.
 		vec2 ip = pq * 1.6;
@@ -679,8 +684,12 @@ void fragment() {
 			}
 		}
 		float crack = 1.0 - smoothstep(0.02, 0.07, second - best);
-		ice_c = mix(vec3(0.42, 0.62, 0.72), vec3(0.75, 0.88, 0.95), fn) * (1.0 - crack * 0.35);
-		ice_c = mix(ice_c, vec3(0.86, 0.9, 0.96), smoothstep(0.3, 0.9, snow_cover) * (0.4 + 0.6 * fn));
+		// Clear ice shows the dark water under it; cracks are white; snow settles in patches.
+		ice_c = mix(vec3(0.3, 0.5, 0.6), vec3(0.62, 0.8, 0.88), fn);
+		ice_c = mix(ice_c, vec3(0.9, 0.95, 1.0), crack * 0.7);
+		float dust = smoothstep(0.3, 0.9, snow_cover) * smoothstep(0.35, 0.65, vnoise(pq * 0.9 + seed * 3.1));
+		ice_c = mix(ice_c, vec3(0.88, 0.92, 0.97), dust);
+		ice_a = ice * mix(0.72, 0.97, max(dust, crack * 0.5));
 	}
 
 	// ---------------- compose
@@ -689,8 +698,8 @@ void fragment() {
 	emis *= 1.0 - foam;
 	albedo = mix(albedo, leaf_c, leaf_a);
 	emis *= 1.0 - leaf_a;
-	albedo = mix(albedo, ice_c, ice * 0.9);
-	emis = mix(emis, refr * tr * 0.3 + refl * fres * 0.6, ice);
+	albedo = mix(albedo, ice_c, ice_a);
+	emis = mix(emis, refr * tr * 0.3 + refl * fres * 0.6, ice_a);
 
 	if (debug_view > 0) {
 		albedo = vec3(0.0);

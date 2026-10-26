@@ -61,8 +61,8 @@ func setup(s: Dictionary) -> void:
 	_splash_mat = _drop_material(true, Color(0.9, 0.97, 1.0, 0.8))
 	for b in s.get("basins", []):
 		_basin(b)
-	var splash := _splash_system()
 	var landings: Array[Vector3] = []
+	var splash: GPUParticles3D = null if s.get("jets", []).is_empty() else _splash_system()
 	for j in s.get("jets", []):
 		landings.append_array(_jet(j, splash))
 	var lines: Array[Vector3] = []

@@ -553,7 +553,8 @@ func _water() -> void:
 # ---------------------------------------------------------------- decor (detail voxels)
 
 
-func _detail_mm(mesh: Mesh, xforms: Array, sway: float) -> MultiMeshInstance3D:
+## `weather` 0 keeps rain and snow off decor that sits under the water (weeds).
+func _detail_mm(mesh: Mesh, xforms: Array, sway: float, weather := 1.0) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = mesh
@@ -562,7 +563,9 @@ func _detail_mm(mesh: Mesh, xforms: Array, sway: float) -> MultiMeshInstance3D:
 		mm.set_instance_transform(i, xforms[i])
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
-	mmi.material_override = VoxelMat.detail_material({"sway": sway, "backlight": 0.25})
+	mmi.material_override = VoxelMat.detail_material(
+		{"sway": sway, "backlight": 0.25, "weather": weather}
+	)
 	root.add_child(mmi)
 	return mmi
 
@@ -678,7 +681,7 @@ func _decor() -> void:
 		weed_xf.append(
 			Transform3D(Basis(Vector3.UP, rng.randf() * TAU), Vector3(p.x, _bed_top(p.x, p.y), p.y))
 		)
-	_detail_mm(VoxelMesher.colored(weed, VoxelMat.DETAIL), weed_xf, 0.35)
+	_detail_mm(VoxelMesher.colored(weed, VoxelMat.DETAIL), weed_xf, 0.35, 0.0)
 	# Flowers around the fountain plaza and on the bank.
 	var fl := VoxelGrid.new(Vector3i(-1, 0, -1), Vector3i(3, 5, 3))
 	fl.fill(Vector3i(0, 0, 0), Vector3i(0, 2, 0), Color(0.25, 0.5, 0.2), VoxelMat.FLOWER)

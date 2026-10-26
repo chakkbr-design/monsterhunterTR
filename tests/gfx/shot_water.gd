@@ -301,7 +301,9 @@ func _snow(root: Node3D) -> void:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	m.albedo_color = Color(0.95, 0.97, 1.0)
+	# Alpha-blended so flakes below the water line are hidden (opaque ones would show refracted).
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.95, 0.97, 1.0, 0.95)
 	q.material = m
 	gp.draw_pass_1 = q
 	gp.position = Vector3(0, 9, -1)

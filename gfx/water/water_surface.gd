@@ -132,10 +132,9 @@ static func material(opts := {}) -> ShaderMaterial:
 		m.set_shader_parameter("deep_color", opts.tint)
 	var shp := str(opts.get("shape", "rect"))
 	m.set_shader_parameter("shape", 1 if shp in ["ellipse", "disc", "circle"] else 0)
-	if opts.has("pixel"):
-		var px = opts.pixel
-		var grid := (VoxelMat.DETAIL if px else 0.0) if typeof(px) == TYPE_BOOL else float(px)
-		m.set_shader_parameter("pixel", grid)
+	var px: Variant = opts.get("pixel", true)
+	var grid := (VoxelMat.DETAIL if px else 0.0) if typeof(px) == TYPE_BOOL else float(px)
+	m.set_shader_parameter("pixel", grid)
 	if not bool(opts.get("life", true)):
 		for k in ["fish_count", "leaf_density", "petal_density"]:
 			m.set_shader_parameter(k, 0)
@@ -175,7 +174,7 @@ static func make(size: Vector2, opts := {}) -> MeshInstance3D:
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
-	mi.set_meta("water_kind", str(opts.get("kind", "pond")))
+	mi.set_meta("water_kind", KINDS[int(m.get_shader_parameter("kind"))])
 	return mi
 
 
