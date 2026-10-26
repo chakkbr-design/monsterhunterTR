@@ -38,6 +38,11 @@ const GROUND_TINTS := {
 	"tint_a": Color(1, 1, 0.92), "tint_b": Color(0.78, 0.9, 0.78), "tint_c": Color(1.06, 1.02, 0.8)
 }
 const STORM_SHADOW_TINT := Color(0.3, 0.36, 0.52)  ## post-fx shadow toning in a storm
+const GOLDEN_FILL := 0.16  ## low-sun share of the fill light (x the look's sun energy)
+const NIGHT_GRADE := 0.7  ## post-fx night grade at full night (dim areas lose colour)
+## Share of the night fill kept under a full moon: a sprite in a moon shadow (a lamp post's, a
+## tree's) is lit by nothing else.
+const FILL_FLOOR := 0.35
 const INDOOR_MINUTE := 750.0  ## interiors keep the 12:30 look (the keys' identity)
 const LOOK_BLEND := 1.5  ## s to blend two outdoor looks (walking across a zone edge)
 const WRITE_STEP := 0.04  ## game minutes between environment writes
@@ -695,7 +700,7 @@ func _write(force: bool) -> void:
 	var sun_col: Color = k.sun_color
 	_set_light(_sun, sun_dir, sun_col, sun_e, float(k.shadow_blur) + cloud * 1.8)
 	_set_light(_moon, moon_dir, cycle.moon.color, moon_e, 1.4 + cloud)
-	var fill_e := _write_fill(sv, moon_e, b, cloud)
+	var fill_e := _write_fill(sv, moon_e, b, cloud, moon_dir, Vector2(sa.x, sun_e), sun_col)
 	# Environment.
 	var top := (b.sky_top as Color).lerp(k.sky_top, float(k.sky_weight))
 	var hor := (b.sky_horizon as Color).lerp(k.sky_horizon, float(k.sky_weight))
@@ -727,6 +732,8 @@ func _write(force: bool) -> void:
 		_post.shadow_tint = _post.shadow_tint.lerp(STORM_SHADOW_TINT, gloom * 0.5)
 		_post.weather_desat = 0.2 * cloud + 0.14 * gloom
 		_post.weather_dim = 0.16 * gloom * (1.0 - flash)
+		# From civil dusk to full night (by the sun's depth), never indoors.
+		_post.night = 0.0 if indoor else NIGHT_GRADE * (1.0 - smoothstep(-14.0, -1.0, sa.x))
 	_write_ground(k)
 	var bs := get_tree().get_nodes_in_group("map_builder") if is_inside_tree() else []
 	if not bs.is_empty():  # (not MapBuilder by name: it would pull the Game autoload into --script tests)
@@ -806,24 +813,45 @@ func _set_light(l: DirectionalLight3D, to_body: Vector3, col: Color, e: float, b
 ## Night fill: a soft shadowless light from behind the camera that tops up the moon while the sun
 ## is down, so the sprites (upright cards facing the camera) and the facades the camera sees never
 ## fall to black in the twilight gaps (sun set, moon not up yet) or on a new moon. It fades out as
-## the moon brightens and never shines by day.
-func _write_fill(sv: float, moon_e: float, b: Dictionary, cloud: float) -> float:
+## the moon brightens (down to FILL_FLOOR) and never shines by day. Only the moonlight that reaches
+## what the camera sees counts (`moon_dir` against the fill's own direction): a low moon in the
+## east leaves the camera-facing sprites dark, so the fill stays up then.
+## Golden hour: a low sun (`sun` = elevation, energy) throws long shadows over the whole town and
+## lights the sprites from the side or behind, so a warm share of the fill (GOLDEN_FILL) comes up
+## around sunrise and sunset too.
+func _write_fill(
+	sv: float,
+	moon_e: float,
+	b: Dictionary,
+	cloud: float,
+	moon_dir := Vector3.UP,
+	sun := Vector2(90.0, 0.0),
+	sun_col := Color.WHITE
+) -> float:
 	if _fill == null:
 		return 0.0
 	var f: Dictionary = cycle.fill
 	var full := float(f.energy) * float(b.moon_energy)
-	var e := 0.0
-	if not indoor and full > 0.0:
-		var moon_full := float(cycle.moon.energy) * float(b.moon_energy)
-		var topped := clampf(1.0 - moon_e / maxf(moon_full, 0.001), 0.0, 1.0)
-		e = full * (1.0 - sv) * topped * (1.0 - 0.4 * cloud)
 	var yaw := 0.0
 	var rig := get_tree().get_first_node_in_group("ow_camera") if is_inside_tree() else null
 	if rig and rig.has_method("yaw"):
 		yaw = rad_to_deg(float(rig.yaw()))
 	var to_fill := SkyCycle.to_dir(float(f.elevation), 180.0 - yaw)
+	var e := 0.0
+	if not indoor and full > 0.0:
+		var moon_full := float(cycle.moon.energy) * float(b.moon_energy)
+		var facing := clampf(moon_dir.dot(to_fill) * 1.25, 0.0, 1.0)
+		var topped := clampf(1.0 - moon_e * facing / maxf(moon_full, 0.001), FILL_FLOOR, 1.0)
+		e = full * (1.0 - sv) * topped * (1.0 - 0.4 * cloud)
+	var col: Color = f.color
+	if not indoor and sun.y > 0.0:
+		var low := 1.0 - smoothstep(4.0, 22.0, sun.x)
+		var ge := GOLDEN_FILL * float(b.sun_energy) * low * sv * (1.0 - 0.5 * cloud)
+		if ge > 0.0005:
+			col = col.lerp(sun_col.lerp(Color.WHITE, 0.35), ge / (ge + e))
+			e += ge
 	_fill.global_transform.basis = Basis.looking_at(-to_fill, Vector3.UP)
-	_fill.light_color = f.color
+	_fill.light_color = col
 	_fill.light_energy = e
 	_fill.visible = e > 0.0005
 	return e
