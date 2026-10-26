@@ -146,6 +146,15 @@ func _sun() -> float:
 	return clampf(float(tod.state.get("sun_visible", 0.0)), 0.0, 1.0)
 
 
+## Snow lying on the ground here (0..1, 0 indoors): what this node publishes as the snow_cover
+## global, a battle's snow included. VoxelZone polls it to bury its flowers and tall grass (the
+## globals cannot be read back at runtime).
+func snow_cover() -> float:
+	if indoor:
+		return 0.0
+	return clampf(maxf(float(state.get("snow_cover", 0.0)), battle_cover.g), 0.0, 1.0)
+
+
 ## (wet, snow) where the camera is: ambient particles (pollen, fireflies) hide in rain and snow.
 func camera_cover() -> Dictionary:
 	if indoor:

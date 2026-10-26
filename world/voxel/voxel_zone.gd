@@ -16,10 +16,18 @@ const TOWN_TREE_FADE := 2.6  ## half size of a town tree's fader rect
 const PROP_FADE := 0.7  ## half size of a tall prop's fader rect (lamps)
 const LAMP_ENERGY := 1.2  ## OmniLight energy per metadata energy unit
 const GLASS_ALPHA := 0.55  ## transparency of a "glass" building part (greenhouse panes)
+## Lamplight in the windows at night (voxel.gdshader window_glow): a deep orange, since AgX
+## desaturates bright light (the cream window voxels came out white); on screen it reads amber.
+const WINDOW_GLOW := Color("ff6e10")
+const WINDOW_EMIT := 2.0  ## voxel.gdshader emit_window for the zone (brighter goes peach)
+## Sky-light floor of the decor, trees and props (voxel_detail / voxel.gdshader shade_lift): in the
+## shade SDFGI left the sides of grass tufts and the undersides of the bushes black.
+const SHADE_LIFT := 0.1
 const BUILD_STEP := 6  ## nodes added per frame while streaming
 const WEATHER_GROUP := "weather"  ## WorldWeather.GROUP (by name: no compile-time dependency)
 const SNOW_BURY := 0.45  ## snow cover (global snow_cover) that buries flowers and tall grass
-## Decor buried by deep snow besides VoxelFlora.FLOWERS / WILD (dry tufts still poke through).
+## Decor buried by deep snow besides VoxelFlora.FLOWERS / WILD: green tufts, fallen leaves,
+## petals and apples, mushrooms, pebbles and shells (dry tufts and ferns still poke through).
 const SNOW_BURIES := [
 	"sunflower",
 	"tuft_0",
@@ -31,6 +39,17 @@ const SNOW_BURIES := [
 	"clover",
 	"iris",
 	"sprout",
+	"leaves",
+	"petals",
+	"windfall",
+	"mushroom_brown",
+	"mushroom_red",
+	"pebble_0",
+	"pebble_1",
+	"pebble_2",
+	"pebble_3",
+	"pebble_4",
+	"shell",
 ]
 ## Washing-line garments (VoxelZone._laundry): the order they are pegged in, sizes (m), tints.
 const LAUNDRY := ["shirt", "towel", "sheet", "trousers", "shirt", "towel", "socks"]
@@ -282,6 +301,8 @@ func _grid_material(tex: Texture3D, tops: Texture2D, o: Vector3i, s: Vector3i) -
 	m.set_shader_parameter("mat_lut", VoxelMat.lut())
 	m.set_shader_parameter("grid_origin", o)
 	m.set_shader_parameter("grid_size", s)
+	m.set_shader_parameter("window_glow", WINDOW_GLOW)
+	m.set_shader_parameter("emit_window", WINDOW_EMIT)
 	return m
 
 
@@ -432,7 +453,9 @@ func set_snow(cover: float) -> void:
 
 func _tree_mat(model: String) -> ShaderMaterial:
 	if not _tree_mats.has(model):
-		_tree_mats[model] = bake.tree_material(model)
+		var m := bake.tree_material(model)
+		m.set_shader_parameter("shade_lift", SHADE_LIFT)
+		_tree_mats[model] = m
 	return _tree_mats[model]
 
 
@@ -442,6 +465,7 @@ func _decor_mat(model: String) -> ShaderMaterial:
 		var params := {
 			"sway": float(e.get("sway", 0.0)) * 0.02,
 			"weather": float(e.get("weather", 1.0)),
+			"shade_lift": SHADE_LIFT,
 		}
 		if float(e.get("backlight", 0.0)) > 0.0:
 			params["backlight"] = float(e.backlight)
@@ -486,6 +510,8 @@ func _water_surfaces(meta: Dictionary) -> void:
 		g.add_child(mi)
 		bodies.append(mi)
 		water_surfaces.append(mi)
+		var d := float(w.get("depth", 1.0))
+		_rain_stop(g, mi.position, Vector3(rr.size.x, d, rr.size.y))
 		_bump("water")
 	for c in meta.get("cascades", []):
 		var low := int(c.get("low", -1))
@@ -550,8 +576,24 @@ func _fountains(meta: Dictionary) -> void:
 		fx.name = "Fountain"
 		add_child(fx)
 		fx.setup(spec)
+		for b in spec.basins:  # inside the rim (round basins): rain stops on the water
+			var bs: Vector2 = b.size * (0.82 if b.shape == "ellipse" else 1.0)
+			_rain_stop(fx, b.pos, Vector3(bs.x, b.depth, bs.y))
 		fountain = fx
 		_bump("fountains")
+
+
+## Rain and snow stop on a water surface (`top` = its centre at the water level): the weather's
+## collision heightfield only sees opaque geometry, so without this the drops fell through the
+## transparent water onto the carved bed and splashed under it.
+func _rain_stop(parent: Node, top: Vector3, size: Vector3) -> void:
+	var c := GPUParticlesCollisionBox3D.new()
+	c.name = "RainStop%d" % parent.get_child_count()
+	c.size = size
+	c.position = top - Vector3(0.0, size.y * 0.5, 0.0)
+	c.cull_mask = WeatherKit.LAYER  # only the weather (the fountain's jets have their own catch)
+	parent.add_child(c)
+	_bump("rain_stops")
 
 
 func _lights(meta: Dictionary) -> void:
@@ -727,8 +769,8 @@ func _butterflies(meta: Dictionary) -> void:
 	_bump("butterflies", pts.size())
 
 
-## Flags on the flagpoles: a subdivided quad hung from the pole top, rippling in the breeze
-## (voxel_flag.gdshader), painted from a small pixel texture.
+## Flags on the flagpoles: a subdivided quad hung from the pole top, flying downwind and rippling
+## with the wind globals (voxel_flag.gdshader), painted from a small pixel texture.
 func _flags(meta: Dictionary) -> void:
 	for f in meta.get("flags", []):
 		var quad := QuadMesh.new()
@@ -744,6 +786,7 @@ func _flags(meta: Dictionary) -> void:
 		mi.mesh = quad
 		mi.material_override = m
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.extra_cull_margin = 1.4  # the shader turns it round the pole to fly downwind
 		var b := Basis(Vector3.UP, int(f.rot) * PI * 0.5)
 		mi.transform = Transform3D(b, _v3(f.pos) + b * Vector3(0.66, -0.4, 0.0))
 		_group("Life").add_child(mi)
