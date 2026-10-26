@@ -267,6 +267,7 @@ var _ground_grid: VoxelGrid
 var _ring_mi: MeshInstance3D
 var _ring_grid: VoxelGrid
 var _trees: Node3D
+var _main_board: Node3D  ## the main board (screen_corners)
 var _boards := {}  ## "main" / "a" / "b" -> {labels..., balls: [Sprite3D]}
 var _ball_tex := []
 var _score_key := ""
@@ -592,6 +593,13 @@ func _build_scoreboards() -> void:
 	main.position = Vector3(0, StadiumParts.TOP_V * VoxelGrid.VS, -IN_Z - walk_d)
 	main.rotation.y = PI
 	add_child(main)
+	_main_board = main
+	main.set_meta(
+		"screen",
+		Vector4(
+			w_v * VoxelGrid.VS * 0.5, legs_v * VoxelGrid.VS, (legs_v + h_v + 2) * VoxelGrid.VS, 0.0
+		)
+	)
 	var em := _model("emblem", func() -> VoxelGrid: return StadiumParts.emblem(10))
 	var e := ArenaVoxels.instance(em, "Emblem")
 	var by := (legs_v + 1) * VoxelGrid.VS
@@ -665,8 +673,21 @@ func _balls(parent: Node3D, at: Vector3, step: float) -> Array:
 	return out
 
 
+## Global corners of the main board's screen (the training opening frames it, BattleOpening).
+func screen_corners() -> Array:
+	if _main_board == null or not _main_board.is_inside_tree():
+		return []
+	var sc: Vector4 = _main_board.get_meta("screen")
+	var out: Array = []
+	for x in [-sc.x, sc.x]:
+		for y in [sc.y, sc.z]:
+			out.append(_main_board.to_global(Vector3(x, y, 0.0)))
+	return out
+
+
 ## Live scoreboard info (TrainingBattle._refresh_info): names [a, b], alive: [[bool...], [bool...]],
-## clock (String), scene (String), series (String).
+## clock (String), scene (String), series (String), headline (String, optional: shown big in the
+## clock's place, e.g. "VS" in the training opening).
 func score(info: Dictionary) -> void:
 	var key := str(info)
 	if key == _score_key:
@@ -688,8 +709,10 @@ func score(info: Dictionary) -> void:
 			_fit(eb.name, text, 9)
 			eb.clock.text = String(info.get("clock", ""))
 			_set_balls(eb.balls, team)
+	var head := String(info.get("headline", ""))
 	if mb.has("clock"):
-		mb.clock.text = String(info.get("clock", ""))
+		mb.clock.text = head if head != "" else String(info.get("clock", ""))
+		mb.clock.pixel_size = float(mb.clock.get_meta("px")) * (1.7 if head != "" else 1.0)
 		_fit(mb.scene, String(info.get("scene", "")).to_upper(), 10)
 		mb.series.text = String(info.get("series", ""))
 

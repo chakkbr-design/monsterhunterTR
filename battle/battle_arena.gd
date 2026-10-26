@@ -21,6 +21,13 @@ signal hit_landed(user: BattleFighter, target: BattleFighter, mv: Dictionary)
 ## (saiu da área/raio/projétil avisado), "jump" (pulou), "evasion" (errou pela evasão), "under"
 ## (a investida passou por baixo de quem estava no ar).
 signal dodged(f: BattleFighter, what: String)
+## Uma bola terminou de soltar o Pokémon (troca, substituto, abertura do treino): f já está em campo
+## e visível (null se ele saiu antes). Com a câmera de ação o zoom nele ainda dura
+## BattleDirector.MON_BEAT depois disto (director.holding()).
+signal send_out_done(side: int, f: BattleFighter)
+## Abertura do treino (BattleOpening): "vs" (telão com os nomes), "wide" (a arena inteira), "throw"
+## (o 1º treinador joga), "fight" (o "Fight!") e "done" (a luta começou).
+signal opening_beat(beat: String)
 
 const ARENA_SIZE := 12.0
 const START_GAP := 6.0
@@ -107,6 +114,8 @@ const EXP_LEVEL_SECS := 0.7
 const BATTLE_SPEEDS := [0.6, 1.0]
 const SETTINGS := "res://ui/front/settings.gd"
 const TUTORIAL := preload("res://battle/battle_tutorial.gd")
+const BallShow := preload("res://battle/battle_ball_show.gd")
+const BattleOpening := preload("res://battle/battle_opening.gd")
 ## Evolução no meio da luta (progression.gd check_evolutions, a cada 0,4 s): o controlado que já pode
 ## evoluir evolui no próprio sprite com a luta parada (Battle.pause_for_evolution).
 const EVO_CHECK := 0.4
@@ -144,6 +153,9 @@ var _round_end_q: Array = []
 var _stands := {}
 var _stand_owned := {}
 var _balls: Array = []
+var _ball_show: BallShow = null
+## Abertura do treino em andamento (state "opening", opts.opening com a câmera de ação).
+var opening: BattleOpening = null
 var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
 var _turn_pulse := 0.0
 var hud: BattleHUD
@@ -381,6 +393,11 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	state = "intro"
 	_state_t = 0.0
 	hud.intro_bars(true)
+	if director and bool(o.get("opening", false)):
+		# Treino (modo de energia, câmera de ação): telão com os nomes, a arena inteira, cada
+		# treinador joga a bola e só então a luta começa (BattleOpening).
+		state = "opening"
+		opening = BattleOpening.new(self)
 	_update_camera(1.0)
 
 
@@ -773,18 +790,15 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	fighters.append(f)
 	if moves:
 		moves.effects.on_enter(f)
-	if state == "fight" and _stands.has(side):
+	if state == "fight" and (_stands.has(side) or director):
 		# Troca/substituto: o treinador joga a bola; o Pokémon aparece quando ela abre.
 		f.visible = false
 		f.stun_t = maxf(f.stun_t, SEND_FLIGHT + 0.1)
-		throw_ball_fx(
-			side,
-			at,
-			func() -> void:
-				if is_instance_valid(f) and f.on_field:
-					f.visible = true
-					f.flash_spawn()
-		)
+		var show_f := func() -> void:
+			if is_instance_valid(f) and f.on_field:
+				f.visible = true
+				f.flash_spawn()
+		throw_ball_fx(side, at, show_f, f)
 	elif vfx and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
@@ -1104,61 +1118,141 @@ func _hand(side: int) -> Vector3:
 	return trainer_spot(side) + Vector3(0, 1.1, 0)
 
 
-## Bola jogada pelo treinador até `to` (local): voa em arco, abre, solta fumaça e chama `on_open`.
-func throw_ball_fx(side: int, to: Vector3, on_open: Callable) -> void:
+## Bola jogada pelo treinador até `to` (local): voa em arco, abre, solta o clarão e chama `on_open`.
+## who = quem sai da bola (materializa na abertura e vai no sinal send_out_done). Com a câmera de
+## ação a troca é coreografada (BallShow: preparo do treinador, voo, quique, abertura no alto); sem
+## ela os tempos são os antigos (SEND_FLIGHT, SEND_OPEN) e só o visual muda.
+func throw_ball_fx(side: int, to: Vector3, on_open: Callable, who: BattleFighter = null) -> void:
 	var ball := PokeBall3D.create()
 	add_child(ball)
 	var from := _hand(side)
 	ball.position = from
+	var cine := director != null
+	var e := {
+		"ball": ball,
+		"from": from,
+		"to": Vector3(to.x, 0.35, to.z),
+		"t": 0.0,
+		"cb": on_open,
+		"opened": false,
+		"side": side,
+		"who": who,
+		"windup": BallShow.WINDUP if cine else 0.0,
+		"flight": BallShow.FLIGHT if cine else SEND_FLIGHT,
+		"bounce": BallShow.BOUNCE if cine else 0.0,
+		"open": BallShow.OPEN if cine else SEND_OPEN,
+		"peak": 1.2,
+		"ground": 0.0,
+		"thrown": false,
+		"bounced": false,
+	}
+	if cine:
+		ball.scale = Vector3.ONE * BallShow.BALL_SCALE
+		e.ground = maxf(to.y, 0.0)
+		e.to = Vector3(to.x, e.ground + PokeBall3D.R * BallShow.BALL_SCALE, to.z)
+		e.peak = 2.0 + from.distance_to(e.to) * 0.12
+	_balls.append(e)
 	if director:
 		director.on_send(side, to)
-	_balls.append(
-		{
-			"ball": ball,
-			"from": from,
-			"to": Vector3(to.x, 0.35, to.z),
-			"t": 0.0,
-			"cb": on_open,
-			"opened": false
-		}
-	)
-	preload("res://audio/cue.gd").sfx("ball_throw")
+
+
+## Espetáculo da bola (BallShow): nunca no fast_sim nem fora da árvore.
+func ball_show() -> BallShow:
+	if bool(opts.get("fast_sim", false)) or not is_inside_tree():
+		return null
+	if _ball_show == null:
+		_ball_show = BallShow.new(self)
+	return _ball_show
+
+
+## Alguma bola ainda no ar ou abrindo (troca, substituto, abertura do treino).
+func sending_out() -> bool:
+	return not _balls.is_empty()
 
 
 func _tick_balls(dt: float) -> void:
+	var show := ball_show()
+	if show:
+		show.tick(dt)
 	for e in _balls.duplicate():
 		e.t += dt
 		var ball: PokeBall3D = e.ball
-		var k := clampf(e.t / SEND_FLIGHT, 0.0, 1.0)
+		var w: float = e.windup
+		var fl: float = e.flight
+		var bo: float = e.bounce
+		var big := w > 0.0
+		if show:
+			show.trainer_pose(int(e.side), float(e.t) - w)
+		if e.t < w:
+			# Preparo: a bola recua na mão do treinador e o botão acende.
+			var back: Vector3 = (e.from - e.to) * Vector3(1, 0, 1)
+			back = back.normalized() if back.length() > 0.01 else Vector3.ZERO
+			var kw: float = e.t / w
+			ball.position = e.from + back * 0.4 * sin(kw * PI * 0.5) + Vector3(0, 0.25 * kw, 0.25)
+			ball.set_glow(Color(1.0, 0.9, 0.6), 2.0 * kw)
+			continue
+		if not e.thrown:
+			e.thrown = true
+			preload("res://audio/cue.gd").sfx("ball_throw")
+		var k := clampf((e.t - w) / fl, 0.0, 1.0)
 		if k < 1.0:
 			var p: Vector3 = e.from.lerp(e.to, k)
-			p.y += sin(k * PI) * 1.2
+			p.y += sin(k * PI) * float(e.peak)
 			ball.position = p
-			ball.set_spin(-k * TAU * 2.0)
+			ball.set_spin(-k * TAU * (5.0 if big else 2.0))
+			if show:
+				show.trail(ball, dt, big)
+			continue
+		if bo > 0.0 and e.t < w + fl + bo:
+			# Quique: bate no chão e sobe até BallShow.HOVER, onde abre.
+			if not e.bounced:
+				e.bounced = true
+				preload("res://audio/cue.gd").sfx("ball_shake", -4.0)
+				if show and ball.is_inside_tree():
+					show.bounce(to_global(Vector3(e.to.x, e.ground, e.to.z)), true)
+			var kb: float = (e.t - w - fl) / bo
+			ball.position = e.to + Vector3(0, BallShow.HOVER * sin(kb * PI * 0.5), 0)
+			ball.set_spin(-TAU * 5.0 - kb * PI * 1.5)
 			continue
 		if not e.opened:
 			e.opened = true
-			ball.position = e.to
 			ball.set_spin(0.0)
 			ball.set_lid(1.0)
 			ball.set_glow(Color(1, 1, 1), 3.0)
 			if vfx and ball.is_inside_tree():
 				vfx.puff(ball.global_position, 1.6)
+			if show and ball.is_inside_tree():
+				show.burst(ball.global_position, to_global(Vector3(e.to.x, e.ground, e.to.z)), big)
+				preload("res://audio/cue.gd").sfx("ball_open")
 			e.cb.call()
+			var who = e.who
+			if show and is_instance_valid(who) and who.visible:
+				show.materialise(who, big)
 			if director:
-				director.on_ball_open()
-		if e.t >= SEND_FLIGHT + SEND_OPEN:
+				director.on_ball_open(who if is_instance_valid(who) else null)
+		if big:
+			# Aberta, a bola sobe um pouco, encolhe e some.
+			var ko := clampf((e.t - w - fl - bo) / float(e.open), 0.0, 1.0)
+			ball.position.y += dt * 0.8
+			ball.scale = Vector3.ONE * BallShow.BALL_SCALE * maxf(1.0 - ko * ko, 0.01)
+		if e.t >= w + fl + bo + float(e.open):
 			ball.queue_free()
 			_balls.erase(e)
+			var who2 = e.who
+			send_out_done.emit(int(e.side), who2 if is_instance_valid(who2) else null)
 
 
-## Raio vermelho do Pokémon recolhido até a mão do treinador.
+## Raio vermelho do Pokémon recolhido até a mão do treinador; o Pokémon encolhe numa luz vermelha.
 func _recall_beam(f: BattleFighter) -> void:
 	var from := f.position + Vector3(0, 0.5, 0)
 	var to := _hand(f.side)
 	var d := to - from
-	fx_beam(from, d, d.length(), 0.09, Color(1.0, 0.15, 0.15, 0.9), RECALL_BEAM)
+	var big := director != null
+	fx_beam(from, d, d.length(), 0.18 if big else 0.09, Color(1.0, 0.15, 0.15, 0.9), RECALL_BEAM)
 	fx_disc(f.position * Vector3(1, 0, 1), 0.4, Color(1.0, 0.2, 0.2, 0.6), RECALL_BEAM)
+	var show := ball_show()
+	if show:
+		show.recall(f, to_global(to), maxf(RECALL_BEAM, 0.35 if big else 0.0))
 
 
 ## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial, e depois a entrada
@@ -1360,6 +1454,9 @@ func step(dt: float) -> void:
 	_state_t += dt
 	_tick_fx(raw)
 	match state:
+		"opening":
+			if opening == null or opening.tick(dt):
+				_opening_done()
 		"intro":
 			if not _revealed and _state_t >= TRAINER_CHALLENGE:
 				_reveal_trainer_mon()
@@ -1398,11 +1495,12 @@ func step(dt: float) -> void:
 		return
 	_visual_step(dt)
 	_update_camera(raw)
+	var cards := state != "opening"  # na abertura do treino os cartões só entram com a luta
 	hud.refresh(
-		player,
+		player if cards else null,
 		enemy if _revealed else null,  # o cartão do adversário só depois da bola
 		raw,
-		ally,
+		ally if cards else null,
 		{
 			"ally_mode": ALLY_MODE_NAMES[ally_mode],
 			"foe2": enemy2 if _revealed and is_instance_valid(enemy2) and enemy2.on_field else null,
@@ -1449,6 +1547,20 @@ func _marks_info() -> Dictionary:
 			if not mk.is_empty():
 				out[f.get_instance_id()] = mk
 	return out
+
+
+## Fim da abertura do treino (BattleOpening): a luta começa.
+func _opening_done() -> void:
+	opening = null
+	_revealed = true
+	state = "fight"
+	_state_t = 0.0
+	hud.intro_bars(false)
+	for f in fighters:
+		if is_instance_valid(f) and f.on_field:
+			f.visible = true
+	fight_started.emit()
+	opening_beat.emit("done")
 
 
 ## Fim da abertura do treinador: a bola cai e o 1º Pokémon aparece ("<NOME> mandou X!").
@@ -2283,7 +2395,7 @@ func _menu_text() -> String:
 func _recall(f: BattleFighter) -> void:
 	if director and f.visible and state == "fight":
 		director.on_recall(f)
-	if f.visible and _stands.has(f.side) and state == "fight":
+	if f.visible and (_stands.has(f.side) or director) and state == "fight":
 		_recall_beam(f)  # raio vermelho de volta para a bola na mão do treinador
 	elif vfx and f.visible and f.is_inside_tree():
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.4)

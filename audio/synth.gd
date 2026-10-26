@@ -15,6 +15,7 @@ const SFX_NAMES := [
 	"faint",
 	"ball_throw",
 	"ball_shake",
+	"ball_open",
 	"catch_ok",
 	"catch_fail",
 	"level_up",
@@ -297,6 +298,16 @@ static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 					0.04,
 					{"wave": "triangle", "f0": 190.0, "f1": 150.0, "vol": 0.4, "r": 0.02}
 				)
+		"ball_open":
+			# Pokébola abrindo e soltando o Pokémon: estouro de ruído claro e um brilho que sobe.
+			b = _buf(0.5)
+			voice(b, 0, 0.08, {"wave": "noise", "f0": 6000.0, "f1": 2000.0, "vol": 0.3, "r": 0.06})
+			_arp(
+				b, 0.04, ["C6", "E6", "G6", "C7"], 0.05, {"duty": 0.25, "vol": 0.14, "r": 0.04}, 0.2
+			)
+			voice(
+				b, 0.02, 0.3, {"wave": "triangle", "f0": 330.0, "f1": 660.0, "vol": 0.25, "r": 0.08}
+			)
 		"catch_ok":
 			b = _buf(1.0)
 			_arp(

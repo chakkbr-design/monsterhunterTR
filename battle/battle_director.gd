@@ -9,7 +9,11 @@ extends RefCounted
 ##   do golpe pela previsão de dano (Caio, 2026-10-26: o alvo desviava e o zoom vinha mesmo assim);
 ## - golpe grande (poder >= BIG_BP): enquadra quem usou e o alvo, câmera um pouco lenta (BIG_SCALE);
 ## - troca (recolher ou soltar): todo mundo para (holding) até o antigo sair e o novo cair, com a
-##   câmera no treinador e no ponto da bola.
+##   câmera no treinador e no ponto da bola;
+## - soltar (shot "send", toda bola com a câmera de ação, BallShow): close no treinador enquanto
+##   ele prepara o arremesso, a câmera segue a bola até o ponto onde cai e fecha no Pokémon que
+##   saiu por MON_BEAT s; depois volta a enquadrar todos;
+## - cena fixa (set_cine, a abertura do treino): enquadra os pontos dados (o telão, a arena inteira).
 ## Os tempos das cenas são em segundos de luta (dt já escalado), para casarem com o desmaio e a bola.
 
 const FOV := 50.0
@@ -59,6 +63,19 @@ const OPEN_HOLD := 0.5
 ## O treinador entra no quadro da troca se estiver a menos disto (m) do ponto da bola: na quadra de
 ## 48 m ele fica a 24,8 m do centro e a bola cai a ENTRY_X = 6 m (ou onde o anterior estava).
 const SWITCH_TRAINER := 20.0
+## Soltar (shot "send"): close no treinador (distância mínima, margem, inclinação), a bola em voo
+## (a bola e o ponto onde cai) e o Pokémon que saiu, que segura a luta MON_BEAT s depois de a bola
+## abrir.
+const SEND_TRAINER_DIST := 5.0
+const SEND_TRAINER_MARGIN := 1.2
+const SEND_TRAINER_PITCH := deg_to_rad(16.0)
+const SEND_BALL_DIST := 8.0
+const SEND_BALL_MARGIN := 2.0
+const SEND_BALL_PITCH := deg_to_rad(26.0)
+const SEND_MON_DIST := 4.5
+const SEND_MON_MARGIN := 1.0
+const SEND_MON_PITCH := deg_to_rad(20.0)
+const MON_BEAT := 0.8
 const HOLD_MAX := 6.0
 ## Obstacles in the way fade (GeometryInstance3D.transparency, like the overworld camera's
 ## buildings) to FADE_ALPHA at FADE_RATE per real second: what stands between the eye and a
@@ -77,7 +94,7 @@ const RELIEF_PAD := 0.1
 const FADE_STEP := 1.0 / 30.0
 
 var arena: Node
-## Cena atual: "" (enquadrar todos), "ko", "big", "switch".
+## Cena atual: "" (enquadrar todos), "ko", "big", "switch", "send".
 var shot := ""
 var shot_t := 0.0
 var target: BattleFighter = null
@@ -87,6 +104,10 @@ var _switch_side := 0
 var _hold_t := 0.0
 var _held := 0.0
 var _await_send := false
+## Quem saiu da bola na cena "send" (o zoom depois de ela abrir).
+var _spot: Array = []
+## Cena fixa {pts (locais da arena), margin, pitch, min_d} (set_cine); vazio = as cenas normais.
+var cine := {}
 var _ko_hit := 0.0
 var _big_gap := 0.0
 var _focus := Vector3.ZERO
@@ -130,12 +151,17 @@ func tick(dt: float) -> void:
 	else:
 		_held = 0.0
 		_await_send = false
-		if shot == "switch":
+		if shot in ["switch", "send"]:
 			shot = ""
+			_spot.clear()
 	if shot in ["ko", "big"]:
 		shot_t -= dt
 		if shot_t <= 0.0:
 			shot = ""
+			var side := _ball_side()
+			if side >= 0:
+				shot = "send"  # o zoom do desmaio acabou com uma bola no ar: segue a bola
+				_switch_side = side
 	if _await_send and not _waiting_replacement():
 		_await_send = false
 
@@ -153,7 +179,7 @@ func _waiting_replacement() -> bool:
 
 
 func on_move(u: BattleFighter, mv: Dictionary) -> void:
-	if shot in ["switch", "ko"] or String(mv.get("category", "")) == "status":
+	if shot in ["switch", "send", "ko"] or String(mv.get("category", "")) == "status":
 		return
 	var t = u.opponent
 	if _big_gap <= 0.0 and BattleEnergy.nominal_bp(mv) >= BIG_BP and float(mv.get("bp", 0)) > 0:
@@ -182,12 +208,80 @@ func on_recall(f: BattleFighter) -> void:
 
 
 func on_send(side: int, at: Vector3) -> void:
+	if shot != "send" or side != _switch_side:
+		_spot.clear()
 	_start_switch(side, at)
+	if shot == "switch":
+		shot = "send"
 
 
-func on_ball_open() -> void:
-	_hold_t = maxf(_hold_t, OPEN_HOLD)
+## A bola abriu; f = quem saiu dela (o zoom de MON_BEAT s nele).
+func on_ball_open(f: BattleFighter = null) -> void:
+	_hold_t = maxf(_hold_t, MON_BEAT if f else OPEN_HOLD)
 	_await_send = _waiting_replacement()
+	if f and not _spot.has(f):
+		_spot.append(f)
+
+
+## Cena fixa: enquadra `pts` (locais da arena) com essa margem, inclinação (rad) e distância mínima
+## até clear_cine(). A abertura do treino usa para o telão e a arena inteira.
+func set_cine(pts: Array, margin: float, pitch: float, min_d: float) -> void:
+	cine = {"pts": pts, "margin": margin, "pitch": pitch, "min_d": min_d}
+
+
+func clear_cine() -> void:
+	cine = {}
+
+
+## Lado da 1ª bola ainda fechada (-1 = nenhuma).
+func _ball_side() -> int:
+	for e in arena.get("_balls"):
+		if not bool(e.get("opened", true)):
+			return int(e.get("side", 0))
+	return -1
+
+
+## Bolas ainda fechadas do lado da cena "send".
+func _side_balls() -> Array:
+	var out: Array = []
+	for e in arena.get("_balls"):
+		if not bool(e.get("opened", true)) and int(e.get("side", -1)) == _switch_side:
+			out.append(e)
+	return out
+
+
+## Quadro da cena "send": [pontos, margem, inclinação, distância mínima]. Com o treinador ainda
+## preparando: ele de perto; com a bola no ar: a bola e onde ela cai; depois: quem saiu (framed).
+func _send_frame() -> Array:
+	var balls := _side_balls()
+	if balls.is_empty():
+		var pts: Array = []
+		if _spot_fighters().is_empty():
+			pts = [_switch_at, _switch_at + Vector3(0, BODY_H, 0)]
+		return [pts, SEND_MON_MARGIN, SEND_MON_PITCH, SEND_MON_DIST]
+	if balls.all(func(e) -> bool: return float(e.t) < float(e.get("windup", 0.0))):
+		var tp: Vector3 = arena.trainer_spot(_switch_side)
+		return [
+			[tp, tp + Vector3(0, BODY_H + 0.3, 0)],
+			SEND_TRAINER_MARGIN,
+			SEND_TRAINER_PITCH,
+			SEND_TRAINER_DIST
+		]
+	var pts: Array = []
+	for e in balls:
+		var b = e.get("ball")
+		if b is Node3D and is_instance_valid(b):
+			pts.append((b as Node3D).position)
+		var to: Vector3 = e.get("to", _switch_at)
+		pts.append(Vector3(to.x, float(e.get("ground", 0.0)), to.z))
+		pts.append(Vector3(to.x, float(e.get("ground", 0.0)) + BODY_H, to.z))
+	return [pts, SEND_BALL_MARGIN, SEND_BALL_PITCH, SEND_BALL_DIST]
+
+
+func _spot_fighters() -> Array:
+	return _spot.filter(
+		func(f) -> bool: return f is BattleFighter and is_instance_valid(f) and f.visible
+	)
 
 
 func _start_switch(side: int, at: Vector3) -> void:
@@ -207,8 +301,25 @@ func camera(cam: Camera3D, raw: float) -> void:
 	cam.fov = FOV
 	var pts: Array = []
 	var margin := float({"ko": KO_MARGIN, "big": BIG_MARGIN}.get(shot, CAM_MARGIN))
-	var ease := EASE_SHOT if _scene_fighters().size() > 0 or shot == "switch" else EASE
-	if shot == "switch":
+	var ease := (
+		EASE_SHOT
+		if _scene_fighters().size() > 0 or shot in ["switch", "send"] or not cine.is_empty()
+		else EASE
+	)
+	var pitch := _shot_pitch()
+	var min_d := KO_DIST if shot == "ko" else MIN_DIST
+	if not cine.is_empty():
+		pts = (cine.pts as Array).duplicate()
+		margin = float(cine.margin)
+		pitch = float(cine.pitch)
+		min_d = float(cine.min_d)
+	elif shot == "send":
+		var fr := _send_frame()
+		pts = fr[0]
+		margin = fr[1]
+		pitch = fr[2]
+		min_d = fr[3]
+	elif shot == "switch":
 		pts.append(_switch_at)
 		pts.append(_switch_at + Vector3(0, BODY_H, 0))
 		if arena.has_method("trainer_spot"):
@@ -226,12 +337,12 @@ func camera(cam: Camera3D, raw: float) -> void:
 	var box := _box(pts, margin)
 	var band := _band(cam)
 	var want_focus := Vector3((box[0].x + box[1].x) * 0.5, box[0].y, (box[0].z + box[1].z) * 0.5)
-	var want_d := _need(box, want_focus, _shot_pitch(), band, KO_DIST if shot == "ko" else MIN_DIST)
+	var want_d := _need(box, want_focus, pitch, band, min_d)
 	var k := 1.0 if _snap else clampf(raw * ease, 0.0, 1.0)
 	_snap = false
 	_focus = _focus.lerp(want_focus, k)
 	_dist = lerpf(_dist, want_d, k)
-	_pitch = lerpf(_pitch, _shot_pitch(), k)
+	_pitch = lerpf(_pitch, pitch, k)
 	# The eased camera must still hold what it frames inside the band (a switch of scene, fighters
 	# spreading out): catch up quickly, the focus first, then back off to what still does not fit.
 	if _need(box, _focus, _pitch, band, 0.0) > _dist:
@@ -416,8 +527,10 @@ func _shot_pitch() -> float:
 ## The fighters the camera frames now: the scene's (knockout, big move) or, without one,
 ## everyone on the field. Empty in the switch scene, which frames the trainer and the ball spot.
 func framed() -> Array:
-	if shot == "switch":
+	if shot == "switch" or not cine.is_empty():
 		return []
+	if shot == "send":
+		return [] if not _side_balls().is_empty() else _spot_fighters()
 	var out := _scene_fighters()
 	if out.is_empty():
 		for f in arena.get("fighters"):

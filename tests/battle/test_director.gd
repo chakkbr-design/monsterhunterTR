@@ -76,7 +76,7 @@ func _watch_band(ar: Node, d: BattleDirector, st: Dictionary) -> void:
 		st.settled = int(st.get("settled", 0)) + 1
 		if int(st.get("settled", 0)) <= 3:
 			print("  sob o HUD: %s cena '%s' topo %.0f < %.0f" % [framed, d.shot, st.worst, band])
-	if d.shot == "" and "intro" == String(ar.state):
+	if d.shot == "" and String(ar.state) in ["intro", "opening"]:
 		st.intro = int(st.get("intro", 0)) + 1
 	if d.shot == "ko":
 		st.ko = int(st.get("ko", 0)) + 1

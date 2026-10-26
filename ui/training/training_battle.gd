@@ -92,6 +92,8 @@ var _stadium: ArenaStadium
 ## até a próxima ola.
 var _down := [0, 0]
 var _wave_in := WAVE_FIRST
+## Texto grande no telão durante a abertura da luta ("VS", "FIGHT!"; arena.opening_beat).
+var _headline := ""
 
 
 func _ready() -> void:
@@ -299,6 +301,14 @@ func start_fight() -> void:
 	# Câmera de ação no modo de energia (BattleDirector): enquadra a ação, KO em câmera lenta e
 	# todo mundo parado na troca. A bateria (fast_sim) não tem câmera.
 	o["action_cam"] = true
+	# Abertura (BattleOpening, só com a câmera de ação): os nomes no telão, a arena inteira, os
+	# treinadores jogam os titulares e só então a luta começa. Sem efeito no fast_sim nem no VGC.
+	if not o.has("opening"):
+		o["opening"] = true
+	o["opening_names"] = [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)]
+	if _stadium:
+		o["opening_screen"] = _stadium.screen_corners()
+	_headline = ""
 	# Acima de 1x a arena anda em vários passos de no máximo 1x por quadro: um passo grande faria
 	# golpes rápidos atravessarem o alvo e mudaria o resultado da luta.
 	var turbo := bool(cfg.get("turbo", false))
@@ -309,6 +319,8 @@ func start_fight() -> void:
 	arena.manual = true
 	add_child(arena)
 	arena.finished.connect(_on_finished)
+	if arena.has_signal("opening_beat"):
+		arena.opening_beat.connect(_on_opening_beat)
 	arena.start(team_a, team_b, o)
 	_paint_stage()
 	_fit_camera()
@@ -387,6 +399,7 @@ func _stadium_tick(dt: float) -> void:
 				"clock": "%d:%02d" % [int(fight_time) / 60, int(fight_time) % 60],
 				"scene": String(Cfg.SCENARIO_NAMES.get(scenario(), "")),
 				"series": "%d x %d" % [series.a, series.b],
+				"headline": _headline,
 			}
 		)
 	)
@@ -400,6 +413,25 @@ func _stadium_tick(dt: float) -> void:
 		if _wave_in <= 0.0:
 			_stadium.wave()
 			_wave_in = WAVE_GAP + WAVE_JITTER * fposmod(fight_time * 0.618, 1.0)
+
+
+## Abertura da luta: o telão mostra "VS" com os nomes e "FIGHT!", e a torcida grita.
+func _on_opening_beat(beat: String) -> void:
+	match beat:
+		"vs":
+			_headline = "VS"
+			if _stadium:
+				_stadium.cheer(0, 1.0)
+				_stadium.cheer(1, 1.0)
+		"throw":
+			_headline = ""
+		"fight":
+			_headline = "FIGHT!"
+			if _stadium:
+				_stadium.cheer(0, 1.0)
+				_stadium.cheer(1, 1.0)
+		"done":
+			_headline = ""
 
 
 static func _alive_list(team: Array) -> Array:
