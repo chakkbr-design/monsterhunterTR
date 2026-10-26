@@ -330,7 +330,7 @@ func _fights() -> void:
 			for f in a.fighters:
 				if not is_instance_valid(f):
 					continue
-				var id := f.get_instance_id()
+				var id: int = f.get_instance_id()
 				var prev: Array = cds.get(id, [0.0, 0.0])
 				if f.jump_cd > float(prev[0]) + 1.0:
 					jumps += 1

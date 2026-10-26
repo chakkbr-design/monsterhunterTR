@@ -105,7 +105,7 @@ func filled() -> bool:
 func home() -> bool:
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active():
-			var d := start_of(f) - f.position
+			var d: Vector3 = start_of(f) - f.position
 			d.y = 0.0
 			if d.length() > NEAR:
 				return false
