@@ -184,7 +184,7 @@ func begin_on(m: Mon, body: Node3D, g: Node = null, o := {}) -> bool:
 	_lines.clear()
 	_parts.clear()
 	_set_mode(true)
-	_set_state("anim", "O quê? %s está evoluindo!" % m.display_name)
+	_set_state("anim", "What? %s is evolving!" % m.display_name)
 	_root.visible = true
 	_pop("Evoluindo!", Color(1, 1, 0.75), 1.1)
 	return true
@@ -244,7 +244,7 @@ func _begin(m: Mon) -> void:
 	into = m.evolution_target()
 	_parts.clear()
 	_spawn_acc = 0.0
-	_set_state("intro", "O quê? %s está evoluindo!" % m.display_name)
+	_set_state("intro", "What? %s is evolving!" % m.display_name)
 	_root.visible = true
 
 
@@ -255,12 +255,12 @@ func _set_state(s: String, msg: String) -> void:
 	_label.text = msg
 	match s:
 		"intro":
-			_hint.text = "E/Enter: continuar · Esc/Q: parar a evolução"
+			_hint.text = "E/Enter: continue · Esc/Q: stop evolution"
 		"anim":
-			_hint.text = "Esc/Q: parar a evolução"
+			_hint.text = "Esc/Q: stop evolution"
 			preload("res://audio/cue.gd").sfx("evolution")
 		_:
-			_hint.text = "E/Enter: continuar"
+			_hint.text = "E/Enter: continue"
 	_stage.queue_redraw()
 
 
@@ -371,9 +371,9 @@ func _complete() -> void:
 	for id in mon.moves:
 		if not before.has(id):
 			_lines.append(
-				"%s aprendeu %s!" % [mon.display_name, String(Dex.move(id).get("name", id))]
+				"%s learned %s!" % [mon.display_name, String(Dex.move(id).get("name", id))]
 			)
-	_set_state("done", "Parabéns! Seu %s evoluiu para %s!" % [old_name, into])
+	_set_state("done", "Congratulations! Your %s evolved into %s!" % [old_name, into])
 	preload("res://audio/cue.gd").sfx("item_get")
 	if is_instance_valid(look):
 		look.species = into
@@ -397,7 +397,7 @@ func _complete() -> void:
 
 func _cancel() -> void:
 	_g.resolve_evolution(mon, false)
-	_set_state("cancelled", "Hã? %s parou de evoluir!" % mon.display_name)
+	_set_state("cancelled", "Huh? %s stopped evolving!" % mon.display_name)
 	_parts.clear()
 	if is_instance_valid(look):
 		look.species = from_species

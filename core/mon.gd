@@ -62,7 +62,7 @@ var exp_next_level: int:
 static func create(species_id: String, lv: int, rng: RandomNumberGenerator = null) -> Mon:
 	var m := Mon.new()
 	m.species = Dex.canon(species_id)
-	assert(m.species != "", "espécie desconhecida: %s" % species_id)
+	assert(m.species != "", "unknown species: %s" % species_id)
 	m.level = clampi(lv, 1, Growth.MAX_LEVEL)
 	m.ivs = StatCalc.random_ivs(rng)
 	m.evs = StatCalc.zero_evs()

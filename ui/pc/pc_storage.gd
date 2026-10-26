@@ -5,8 +5,8 @@ extends CanvasLayer
 ## Não pausa a árvore: o jogador do overworld consulta PCStorage.is_open() para não andar.
 
 const Kit := preload("res://ui/ui_kit.gd")
-const ENTRIES := ["Guardar Pokémon", "Retirar Pokémon", "Mover/organizar", "Sair"]
-const ACTIONS := ["Retirar", "Soltar", "Cancelar"]
+const ENTRIES := ["Deposit Pokémon", "Withdraw Pokémon", "Move/organize", "Exit"]
+const ACTIONS := ["Withdraw", "Release", "Cancel"]
 const COLS := 6
 const PARTY_W := [170, 70, 120, 50]
 const SLOT_SIZE := Vector2(104, 76)
@@ -37,7 +37,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if game == null:
 		game = get_node_or_null("/root/Game")
-	var w := Kit.window(self, Vector2(1060, 0), "PC DE ARMAZENAMENTO")
+	var w := Kit.window(self, Vector2(1060, 0), "STORAGE PC")
 	_root = w[0]
 	_box = w[1]
 	_root.visible = false
@@ -213,28 +213,28 @@ func selected_mon() -> Mon:
 ## Motivo para não poder guardar o Pokémon i da equipe ("" = pode).
 func deposit_refusal(i: int) -> String:
 	if i < 0 or i >= game.party.size():
-		return "Não há Pokémon aí."
+		return "There is no Pokémon there."
 	if game.pc_full():
-		return "O PC está cheio! Solte ou retire algum Pokémon antes de guardar outro."
+		return "The PC is full! Release or withdraw a Pokémon before depositing another."
 	for j in game.party.size():
 		if j != i and not game.party[j].is_fainted():
 			return ""
 	if game.party.size() == 1:
-		return "Não dá para guardar o seu último Pokémon."
-	return "Não dá para guardar: a equipe ficaria sem nenhum Pokémon de pé."
+		return "You can't deposit your last Pokémon."
+	return "You can't deposit it: your party would have no Pokémon able to battle."
 
 
 func _deposit() -> void:
 	var m: Mon = game.party[_party_cur]
 	var why := deposit_refusal(_party_cur)
 	if why == "" and not game.deposit(_party_cur):
-		why = "Não foi possível guardar %s." % m.display_name
+		why = "Couldn't deposit %s." % m.display_name
 	if why != "":
 		_msg(why, "party")
 		return
 	_party_cur = clampi(_party_cur, 0, maxi(0, game.party.size() - 1))
 	var b: int = (game.pc.size() - 1) / game.BOX_SIZE + 1
-	_msg("%s foi guardado na Caixa %d." % [m.display_name, b], "party")
+	_msg("%s was deposited in Box %d." % [m.display_name, b], "party")
 
 
 func _withdraw() -> void:
@@ -243,18 +243,18 @@ func _withdraw() -> void:
 		_go("box")
 		return
 	if game.party.size() >= game.PARTY_MAX:
-		_msg("Sua equipe já está cheia (%d Pokémon)." % game.PARTY_MAX, "box")
+		_msg("Your party is already full (%d Pokémon)." % game.PARTY_MAX, "box")
 		return
 	if game.withdraw(pc_index()):
-		_msg("%s entrou na sua equipe." % m.display_name, "box")
+		_msg("%s joined your party." % m.display_name, "box")
 	else:
-		_msg("Não foi possível retirar %s." % m.display_name, "box")
+		_msg("Couldn't withdraw %s." % m.display_name, "box")
 
 
 func _release() -> void:
 	var m := selected_mon()
 	if m != null and game.release(pc_index()):
-		_msg("%s foi solto. Tchau, %s!" % [m.display_name, m.display_name], "box")
+		_msg("%s was released. Bye-bye, %s!" % [m.display_name, m.display_name], "box")
 	else:
 		_go("box")
 
@@ -301,13 +301,13 @@ func _render() -> void:
 	var side_mon: Mon = null
 	match screen:
 		"menu":
-			main.add_child(Kit.label("O que você quer fazer?", Kit.DIM))
+			main.add_child(Kit.label("What would you like to do?", Kit.DIM))
 			for i in ENTRIES.size():
 				main.add_child(Kit.row([ENTRIES[i]], [240], i == _menu_cur))
 			main.add_child(
 				Kit.label(
 					(
-						"Equipe: %d/%d · PC: %d/%d"
+						"Party: %d/%d · PC: %d/%d"
 						% [
 							game.party.size(),
 							game.PARTY_MAX,
@@ -319,7 +319,7 @@ func _render() -> void:
 					15
 				)
 			)
-			_box.add_child(Kit.hint("↑/↓ escolhe · E/Enter confirma · Esc/Q sai"))
+			_box.add_child(Kit.hint("↑/↓ select · E/Enter confirm · Esc/Q exit"))
 			return
 		"box", "action", "confirm":
 			_render_box(main)
@@ -337,25 +337,25 @@ func _render() -> void:
 			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			l.custom_minimum_size.x = 600
 			main.add_child(l)
-			_box.add_child(Kit.hint("E/Enter: continuar"))
+			_box.add_child(Kit.hint("E/Enter: continue"))
 			return
 	h.add_child(_summary(side_mon))
 	var hint := ""
 	match screen:
 		"box":
-			hint = "Setas movem · ←/→ na borda ou PgUp/PgDn (Z/C) trocam de caixa · E escolhe · Esc volta"
+			hint = "Arrows move · ←/→ at the edge or PgUp/PgDn (Z/C) change box · E select · Esc back"
 		"action":
-			hint = "↑/↓ escolhe · E confirma · Esc volta"
+			hint = "↑/↓ select · E confirm · Esc back"
 		"confirm":
-			hint = "←/→ Sim/Não · E confirma · Esc cancela"
+			hint = "←/→ Yes/No · E confirm · Esc cancel"
 		"party":
 			hint = (
-				"↑/↓ escolhe · E guarda no PC · Esc volta"
+				"↑/↓ select · E deposit in PC · Esc back"
 				if party_mode == "deposit"
 				else (
-					"↑/↓ escolhe o destino · E troca · Esc cancela"
+					"↑/↓ choose destination · E swap · Esc cancel"
 					if _held >= 0
-					else "↑/↓ escolhe · E pega para mover · Esc volta"
+					else "↑/↓ select · E pick up to move · Esc back"
 				)
 			)
 	_box.add_child(Kit.hint(hint))
@@ -363,7 +363,7 @@ func _render() -> void:
 
 func _render_box(main: VBoxContainer) -> void:
 	var head := HBoxContainer.new()
-	head.add_child(Kit.label("◀  Caixa %d  ▶" % (box + 1), Kit.SEL, 22))
+	head.add_child(Kit.label("◀  Box %d  ▶" % (box + 1), Kit.SEL, 22))
 	var cnt := Kit.label("%d/%d" % [box_count(box), game.BOX_SIZE], Kit.DIM)
 	cnt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cnt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -404,7 +404,7 @@ func _slot_card(m: Mon, selected: bool) -> PanelContainer:
 	n.clip_text = true
 	n.custom_minimum_size.x = SLOT_SIZE.x - 8
 	v.add_child(n)
-	var lv := Kit.label("Nv %d" % m.level, Kit.DIM, 12)
+	var lv := Kit.label("Lv. %d" % m.level, Kit.DIM, 12)
 	lv.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(lv)
 	return p
@@ -435,7 +435,7 @@ func _icon(m: Mon, size: int) -> Control:
 
 func _render_actions(main: VBoxContainer) -> void:
 	var m := selected_mon()
-	main.add_child(Kit.label("%s, Nv %d:" % [m.display_name, m.level], Kit.TEXT, 18))
+	main.add_child(Kit.label("%s, Lv. %d:" % [m.display_name, m.level], Kit.TEXT, 18))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 8)
 	for i in ACTIONS.size():
@@ -445,19 +445,19 @@ func _render_actions(main: VBoxContainer) -> void:
 
 func _render_confirm(main: VBoxContainer) -> void:
 	var m := selected_mon()
-	main.add_child(Kit.label("Soltar %s? Ele não vai voltar." % m.display_name, Kit.BAD, 18))
+	main.add_child(Kit.label("Release %s? It won't come back." % m.display_name, Kit.BAD, 18))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 8)
-	h.add_child(Kit.row(["Sim"], [60], _yes))
-	h.add_child(Kit.row(["Não"], [60], not _yes))
+	h.add_child(Kit.row(["Yes"], [60], _yes))
+	h.add_child(Kit.row(["No"], [60], not _yes))
 	main.add_child(h)
 
 
 func _render_party(main: VBoxContainer) -> void:
-	var title := "Guardar qual Pokémon?" if party_mode == "deposit" else "Organizar a equipe"
+	var title := "Deposit which Pokémon?" if party_mode == "deposit" else "Organize the party"
 	main.add_child(Kit.label(title, Kit.TEXT, 20))
 	if game.party.is_empty():
-		main.add_child(Kit.label("Nenhum Pokémon na equipe.", Kit.DIM))
+		main.add_child(Kit.label("No Pokémon in the party.", Kit.DIM))
 	for i in game.party.size():
 		var m: Mon = game.party[i]
 		var r := HBoxContainer.new()
@@ -465,10 +465,10 @@ func _render_party(main: VBoxContainer) -> void:
 		r.add_child(_icon(m, 28))
 		var cols := [
 			m.display_name,
-			"Nv %d" % m.level,
+			"Lv. %d" % m.level,
 			["HP %d/%d" % [m.hp, m.max_hp], Kit.hp_color(m)],
 			[Kit.status_text(m), Kit.BAD],
-			["◆ movendo" if i == _held else "", Kit.ACCENT]
+			["◆ moving" if i == _held else "", Kit.ACCENT]
 		]
 		var row := Kit.row(cols, PARTY_W, i == _party_cur)
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -493,14 +493,14 @@ func _summary(m: Mon) -> PanelContainer:
 	v.add_theme_constant_override("separation", 6)
 	p.add_child(v)
 	if m == null:
-		v.add_child(Kit.label("Espaço vazio", Kit.DIM))
+		v.add_child(Kit.label("Empty slot", Kit.DIM))
 		return p
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 10)
 	top.add_child(_icon(m, 48))
 	var nm := VBoxContainer.new()
 	nm.add_child(Kit.label(m.display_name, Kit.TEXT, 20))
-	nm.add_child(Kit.label("Nv %d" % m.level, Kit.DIM))
+	nm.add_child(Kit.label("Lv. %d" % m.level, Kit.DIM))
 	top.add_child(nm)
 	v.add_child(top)
 	var types := HBoxContainer.new()
@@ -508,7 +508,7 @@ func _summary(m: Mon) -> PanelContainer:
 	for t in m.types:
 		types.add_child(_type_tag(String(t)))
 	v.add_child(types)
-	v.add_child(Kit.label("Natureza: %s" % Kit.nature_text(m.nature), Kit.TEXT, 15))
+	v.add_child(Kit.label("Nature: %s" % Kit.nature_text(m.nature), Kit.TEXT, 15))
 	var st := Kit.status_text(m)
 	v.add_child(Kit.label("HP %d/%d %s" % [m.hp, m.max_hp, st], Kit.hp_color(m)))
 	var bar := ProgressBar.new()
@@ -525,7 +525,7 @@ func _summary(m: Mon) -> PanelContainer:
 	bar.add_theme_stylebox_override("fill", fill)
 	bar.add_theme_stylebox_override("background", bg)
 	v.add_child(bar)
-	v.add_child(Kit.label("Golpes", Kit.DIM, 15))
+	v.add_child(Kit.label("Moves", Kit.DIM, 15))
 	for id in m.moves:
 		var t := String(Dex.move(id).get("type", "normal"))
 		var r := HBoxContainer.new()

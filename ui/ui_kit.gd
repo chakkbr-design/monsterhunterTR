@@ -39,50 +39,50 @@ const BADGE_DIR := "res://original/assets/ui/badges/"
 
 const TYPES := {
 	"normal": "Normal",
-	"fire": "Fogo",
-	"water": "Água",
-	"grass": "Planta",
-	"electric": "Elétrico",
-	"ice": "Gelo",
-	"fighting": "Lutador",
-	"poison": "Venenoso",
-	"ground": "Terrestre",
-	"flying": "Voador",
-	"psychic": "Psíquico",
-	"bug": "Inseto",
-	"rock": "Pedra",
-	"ghost": "Fantasma",
-	"dragon": "Dragão",
-	"dark": "Sombrio",
-	"steel": "Aço",
-	"fairy": "Fada",
+	"fire": "Fire",
+	"water": "Water",
+	"grass": "Grass",
+	"electric": "Electric",
+	"ice": "Ice",
+	"fighting": "Fighting",
+	"poison": "Poison",
+	"ground": "Ground",
+	"flying": "Flying",
+	"psychic": "Psychic",
+	"bug": "Bug",
+	"rock": "Rock",
+	"ghost": "Ghost",
+	"dragon": "Dragon",
+	"dark": "Dark",
+	"steel": "Steel",
+	"fairy": "Fairy",
 }
-const CATEGORIES := {"physical": "Físico", "special": "Especial", "status": "Status"}
+const CATEGORIES := {"physical": "Physical", "special": "Special", "status": "Status"}
 const STATS := {
 	"hp": "HP",
-	"atk": "Ataque",
-	"def": "Defesa",
-	"spa": "At. Esp.",
-	"spd": "Def. Esp.",
-	"spe": "Velocidade"
+	"atk": "Attack",
+	"def": "Defense",
+	"spa": "Sp. Atk",
+	"spd": "Sp. Def",
+	"spe": "Speed"
 }
 const STATUS := {
-	"burn": "QUE",
-	"poison": "ENV",
+	"burn": "BRN",
+	"poison": "PSN",
 	"paralysis": "PAR",
-	"sleep": "DOR",
-	"freeze": "CON",
-	"toxic": "ENV"
+	"sleep": "SLP",
+	"freeze": "FRZ",
+	"toxic": "PSN"
 }
 ## Pílulas de status (texto, cor), como o STATUS_TAGS do original.
 const STATUS_TAGS := {
-	"burn": ["QUE", Color(0.93, 0.45, 0.2)],
-	"poison": ["ENV", Color(0.65, 0.3, 0.75)],
-	"toxic": ["ENV", Color(0.65, 0.3, 0.75)],
+	"burn": ["BRN", Color(0.93, 0.45, 0.2)],
+	"poison": ["PSN", Color(0.65, 0.3, 0.75)],
+	"toxic": ["PSN", Color(0.65, 0.3, 0.75)],
 	"paralysis": ["PAR", Color(0.95, 0.8, 0.2)],
-	"sleep": ["DOR", Color(0.55, 0.6, 0.7)],
-	"freeze": ["CON", Color(0.55, 0.85, 0.9)],
-	"faint": ["DES", Color(0.45, 0.45, 0.5)]
+	"sleep": ["SLP", Color(0.55, 0.6, 0.7)],
+	"freeze": ["FRZ", Color(0.55, 0.85, 0.9)],
+	"faint": ["FNT", Color(0.45, 0.45, 0.5)]
 }
 
 static var _theme: Theme
@@ -569,7 +569,7 @@ static func move_cols(id: String) -> Array:
 
 static func status_text(m: Mon) -> String:
 	if m.is_fainted():
-		return "DES"
+		return "FNT"
 	return STATUS.get(m.status, "")
 
 
@@ -582,7 +582,7 @@ static func status_key(m: Mon) -> String:
 static func nature_text(nature: String) -> String:
 	var n: Array = StatCalc.NATURES.get(nature, [])
 	if n.is_empty():
-		return "%s (neutra)" % nature.capitalize()
+		return "%s (neutral)" % nature.capitalize()
 	return "%s (+%s −%s)" % [nature.capitalize(), STATS[n[0]], STATS[n[1]]]
 
 
@@ -1040,7 +1040,7 @@ class PartyRow:
 		draw_string(
 			f,
 			Vector2(size.x - 116, y1),
-			"Nv %d" % m.level,
+			"Lv. %d" % m.level,
 			HORIZONTAL_ALIGNMENT_RIGHT,
 			100,
 			K.SIZE_BODY,
@@ -1185,7 +1185,7 @@ class OptionValue:
 				draw_string(
 					f,
 					Vector2(r.position.x, cy + 6),
-					"SIM" if on else "NÃO",
+					"ON" if on else "OFF",
 					HORIZONTAL_ALIGNMENT_CENTER,
 					r.size.x,
 					16,

@@ -65,7 +65,7 @@ func _run() -> void:
 	check(b.evolution_target() == "Ivysaur", "Bulbasaur 16 pode evoluir")
 	request([b])
 	check(evo.is_open() and evo.state == "intro", "abriu na intro")
-	check(evo.message == "O quê? Bulbasaur está evoluindo!", "texto da intro: " + evo.message)
+	check(evo.message == "What? Bulbasaur is evolving!", "texto da intro: " + evo.message)
 	evo.advance(evo.INTRO + 0.05)
 	check(evo.state == "anim", "intro passa sozinha para a animação")
 	evo.advance(2.0)
@@ -73,7 +73,7 @@ func _run() -> void:
 	finish_anim()
 	check(evo.state == "done" and b.species == "Ivysaur", "evoluiu ao fim da animação")
 	check(
-		evo.message == "Parabéns! Seu Bulbasaur evoluiu para Ivysaur!",
+		evo.message == "Congratulations! Your Bulbasaur evolved into Ivysaur!",
 		"texto final: " + evo.message
 	)
 	check(game.pending_evolutions.is_empty(), "fila vazia depois de aceitar")
@@ -93,7 +93,7 @@ func _run() -> void:
 	send(KEY_ESCAPE)
 	check(evo.state == "cancelled" and c.species == "Charmander", "Esc cancelou")
 	check(
-		evo.message == "Hã? Charmander parou de evoluir!", "texto do cancelamento: " + evo.message
+		evo.message == "Huh? Charmander stopped evolving!", "texto do cancelamento: " + evo.message
 	)
 	check(
 		c.evolution_target() == "" and game.pending_evolutions.is_empty(),
@@ -117,7 +117,7 @@ func _run() -> void:
 	check(s.species == "Wartortle", "Squirtle evoluiu")
 	evo.press("ok")
 	check(evo.state == "intro" and evo.mon == b2, "segundo da fila sem fechar a tela")
-	check(evo.message == "O quê? Bulbasaur está evoluindo!", "intro do segundo")
+	check(evo.message == "What? Bulbasaur is evolving!", "intro do segundo")
 	send(KEY_Q)
 	check(evo.state == "cancelled" and b2.species == "Bulbasaur", "Q cancela na intro")
 	evo.advance(1.0)

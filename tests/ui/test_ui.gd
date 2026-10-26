@@ -112,7 +112,7 @@ func _run() -> void:
 	check(learn.state == "ask" and learn.question == "stop", "Esc na lista pergunta parar")
 	send(KEY_E)  # SIM
 	check(
-		learn.state == "talk" and "não aprendeu" in learn.message and m.moves == before,
+		learn.state == "talk" and "did not learn" in learn.message and m.moves == before,
 		"desistiu sem mudar golpes"
 	)
 	check(game.pending_learns.is_empty(), "fila vazia depois de desistir")
@@ -136,7 +136,7 @@ func _run() -> void:
 		p.hp == mini(21, p.max_hp) and int(game.bag.get("potion", 0)) == 2,
 		"poção curou e foi descontada"
 	)
-	check(menu.screen == "msg" and "recuperou" in menu.message, "mensagem do item: " + menu.message)
+	check(menu.screen == "msg" and "recovered" in menu.message, "mensagem do item: " + menu.message)
 	send(KEY_E)
 	check(menu.screen == "bag", "volta para a bolsa")
 	send(KEY_D)  # Pokébolas
@@ -169,7 +169,7 @@ func _run() -> void:
 	send(KEY_D)  # MTs (fica entre Remédios e Pokébolas)
 	check(menu._cat == "tm", "aba MTs")
 	send(KEY_Z)
-	check(menu.screen == "bag" and "importante" in menu._bag_note, "MT não se joga fora")
+	check(menu.screen == "bag" and "important" in menu._bag_note, "MT não se joga fora")
 	send(KEY_E)
 	send(KEY_E)  # usa em f
 	check(learn.is_open() and menu.is_open(), "MT abriu LearnMove por cima do menu")
@@ -287,7 +287,7 @@ func _run() -> void:
 	menu.press("ok")
 	check(menu.screen == "card" and menu.card_front, "cartão de treinador (frente)")
 	check(menu.trainer_id_text() == "36969", "Nº ID = Game.trainer_id")
-	check(menu.format_started(1792800000).ends_with("OUT 2026"), "linha INÍCIO")
+	check(menu.format_started(1792800000).ends_with("OCT 2026"), "linha INÍCIO")
 	check(Kit.money_text(3000) == "₽3000" and Kit.format_money(72) == "₽72", "dinheiro ₽3000")
 	menu.press("right")
 	check(
@@ -369,7 +369,7 @@ func _run() -> void:
 	var hud = Hud.new()
 	root.add_child(hud)
 	hud.show_saving()
-	check(hud._saving.modulate.a == 1.0 and "Salvando" in hud._saving.text, "Salvando… aparece")
+	check(hud._saving.modulate.a == 1.0 and "Saving" in hud._saving.text, "Salvando… aparece")
 	hud.queue_free()
 	check(Kit.body_font().has_char(0x20BD), "fonte tem o ₽")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_settings_ui.cfg"))

@@ -12,10 +12,9 @@ const ROWS := [
 	["A", "B", "C", "D", "E", "F", "G", "H", "I"],
 	["J", "K", "L", "M", "N", "O", "P", "Q", "R"],
 	["S", "T", "U", "V", "W", "X", "Y", "Z", "-"],
-	["Á", "É", "Í", "Ó", "Ú", "Ã", "Õ", "Ç", "Ê"],
-	["Aa", "Espaço", "Sugerir", "Apagar", "OK"],
+	["Aa", "Space", "Suggest", "Erase", "OK"],
 ]
-const SPECIAL := ["Aa", "Espaço", "Sugerir", "Apagar", "OK"]
+const SPECIAL := ["Aa", "Space", "Suggest", "Erase", "OK"]
 
 var value := ""
 var row := 0
@@ -48,7 +47,9 @@ func _ready() -> void:
 	_grid = VBoxContainer.new()
 	_grid.add_theme_constant_override("separation", 4)
 	v.add_child(_grid)
-	var h := Kit.hint("Teclado digita · Setas movem · Enter escolhe · Backspace apaga · Esc volta")
+	var h := Kit.hint(
+		"Type with the keyboard · Arrows move · Enter selects · Backspace erases · Esc back"
+	)
 	v.add_child(h)
 	visible = false
 
@@ -146,15 +147,15 @@ func activate() -> void:
 		"Aa":
 			caps = not caps
 			_refresh()
-		"Espaço":
+		"Space":
 			type_char(" ")
-		"Sugerir":
+		"Suggest":
 			if not suggestions.is_empty():
 				_sug = (_sug + 1) % suggestions.size()
 				value = String(suggestions[_sug]).left(MAX_LEN)
 				_auto_caps()
 				_refresh()
-		"Apagar":
+		"Erase":
 			erase()
 		"OK":
 			confirm()
@@ -214,7 +215,7 @@ func _refresh() -> void:
 	_value_label.text = value + ("_" if value.length() < MAX_LEN else "")
 	_count.text = "%d/%d" % [value.length(), MAX_LEN]
 	if value == "" and not suggestions.is_empty():
-		_count.text = "vazio = %s   0/%d" % [suggestions[0], MAX_LEN]
+		_count.text = "empty = %s   0/%d" % [suggestions[0], MAX_LEN]
 	Kit.clear(_grid)
 	for r in ROWS.size():
 		var hb := HBoxContainer.new()

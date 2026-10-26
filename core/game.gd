@@ -137,7 +137,7 @@ func send_out(i: int) -> String:
 	if i < 0 or i >= party.size() or is_out(i):
 		return ""
 	if party[i].is_fainted():
-		return "%s desmaiou!" % party[i].display_name
+		return "%s fainted!" % party[i].display_name
 	out.append(party[i])
 	return ""
 
@@ -176,7 +176,7 @@ func pet(i: int) -> Dictionary:
 		return {"ok": false, "text": ""}
 	var m: Mon = party[i]
 	if float(_friend_cd.get(m, 0.0)) > 0.0:
-		return {"ok": false, "text": "%s ainda está feliz com o último carinho." % m.display_name}
+		return {"ok": false, "text": "%s is still happy from the last pat." % m.display_name}
 	m.set_friend(m.friend + PET_GAIN)
 	_friend_cd[m] = PET_CD
 	return {"ok": true, "text": ""}
@@ -188,7 +188,7 @@ func feed(i: int) -> Dictionary:
 		return {"ok": false, "text": ""}
 	var m: Mon = party[i]
 	if float(_friend_cd.get(m, 0.0)) > 0.0:
-		return {"ok": false, "text": "%s não está com fome agora." % m.display_name}
+		return {"ok": false, "text": "%s isn't hungry right now." % m.display_name}
 	m.set_friend(m.friend + FEED_GAIN)
 	_friend_cd[m] = FEED_CD
 	return {"ok": true, "text": ""}
@@ -367,7 +367,7 @@ func use_item(id: String, m: Mon) -> String:
 	if fx.has("teach") and m.moves.size() >= Mon.MAX_MOVES:
 		queue_learn(m, fx.teach)
 		learn_requested.emit()
-		return "%s quer aprender %s." % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
+		return "%s wants to learn %s." % [m.display_name, Dex.move(fx.teach).get("name", fx.teach)]
 	var wanted: Array = []
 	if fx.has("level"):
 		for e in Dex.species(m.species).get("learnset", []):
@@ -524,7 +524,7 @@ func use_field_item(id: String) -> String:
 	if not take_item(id):
 		return ""
 	repel_steps = int(fx.get("repel", REPEL_STEPS.get(id, 100)))
-	return "Repel usado! Pokémon selvagens não vão aparecer por um tempo."
+	return "Repel used! Wild Pokémon won't appear for a while."
 
 
 func repel_active() -> bool:
