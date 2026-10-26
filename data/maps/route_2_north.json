@@ -1,6 +1,6 @@
 {
  "id": "route_2_north",
- "name": "ROTA 2",
+ "name": "ROUTE 2",
  "rect": [
   -30,
   -383,
@@ -1887,7 +1887,7 @@
  ],
  "npcs": [
   {
-   "name": "Escalador",
+   "name": "Climber",
    "node": "NPC_Climber",
    "pos": [
     4.5,
@@ -1896,8 +1896,8 @@
    "sprite": "npc_camper.png",
    "facing": 1,
    "lines": [
-    "Uma coisa enorme acabou de voar por cima das pedras.",
-    "Um pássaro grande, de bico comprido e afiado. Foi pousar do outro lado, onde ninguém anda."
+    "Something huge just flew over the rocks.",
+    "A big bird with a long, sharp beak. It landed on the other side, where nobody walks."
    ],
    "y": 0.0
   }
@@ -1909,12 +1909,12 @@
     5.5,
     -361.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/route_2/sign",
    "model_scale": 0.8,
    "lines": [
-    "ROTA 2",
-    "VIRIDIAN - PEWTER"
+    "ROUTE 2",
+    "VIRIDIAN CITY - PEWTER CITY"
    ],
    "y": 0.0
   }

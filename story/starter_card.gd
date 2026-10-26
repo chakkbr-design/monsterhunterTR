@@ -62,12 +62,12 @@ func _ready() -> void:
 	h.add_theme_constant_override("separation", 24)
 	v.add_child(h)
 	_yes = Button.new()
-	_yes.text = "Sim"
+	_yes.text = "Yes"
 	_yes.custom_minimum_size = Vector2(120, 36)
 	_yes.pressed.connect(_answer.bind(true))
 	h.add_child(_yes)
 	_no = Button.new()
-	_no.text = "Não"
+	_no.text = "No"
 	_no.custom_minimum_size = Vector2(120, 36)
 	_no.pressed.connect(_answer.bind(false))
 	h.add_child(_no)
@@ -109,8 +109,8 @@ func _label(t: String, fs: int, c: Color) -> Label:
 
 
 func _refresh() -> void:
-	_yes.text = ("> Sim" if choice else "Sim")
-	_no.text = ("Não" if choice else "> Não")
+	_yes.text = ("> Yes" if choice else "Yes")
+	_no.text = ("No" if choice else "> No")
 
 
 func _process(delta: float) -> void:

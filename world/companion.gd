@@ -317,8 +317,8 @@ func bump(dir: Vector3) -> void:
 
 func prompt() -> String:
 	if act == Act.ASK:
-		return "E: Descansar comigo"
-	return "E: Acariciar · F: Dar comida"
+		return "E: Rest with me"
+	return "E: Pet · F: Feed"
 
 
 ## E no companheiro: descansa com ele se está pedindo, senão carinho.
@@ -450,7 +450,7 @@ func _tick_status(delta: float) -> void:
 			popup("-%d %s" % [dmg, STATUS_WORD.get(_status, _status)], Color(0.75, 0.4, 0.9), 0.3)
 			if mon.hp == 0:
 				mon.status = ""
-				_toast("%s desmaiou!" % mon.display_name)
+				_toast("%s fainted!" % mon.display_name)
 				Game.recall(index())
 				return
 	if _status_t <= 0.0:

@@ -141,7 +141,7 @@ func _doors() -> void:
 				and Defs.DOOR_TARGETS.get(c.target_spawn, [""])[0] == pair[0]
 			):
 				door = c
-		check(door != null and door.prompt() == "E: Entrar", "pewter door leads to %s" % pair[0])
+		check(door != null and door.prompt() == "E: Enter", "pewter door leads to %s" % pair[0])
 		if door == null:
 			continue
 		await door.interact(p)
@@ -272,7 +272,7 @@ func _mart_and_gym() -> void:
 	var brock: Node = gym.npcs.get("brock")
 	var liam: Node = gym.npcs.get("liam")
 	check(
-		brock != null and brock.trainer_id == "brock" and brock.npc_name == "Líder Brock",
+		brock != null and brock.trainer_id == "brock" and brock.npc_name == "Leader Brock",
 		"Brock in the gym (%s)" % (brock.npc_name if brock else "-")
 	)
 	check(

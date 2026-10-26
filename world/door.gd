@@ -2,8 +2,8 @@ class_name WorldDoor
 extends WorldNpc
 ## Building door. If the map's target_spawn leads to a known interior (InteriorDefs.DOOR_TARGETS) and the
 ## map root can travel (RouteWorld), walking into it enters, like the original door.gd (Area3D
-## body_entered); in grid zones pushing into it from the tile in front does (walk_in). "E: Entrar"
-## still works. Otherwise it shows its lines ("Fechado.") with E.
+## body_entered); in grid zones pushing into it from the tile in front does (walk_in). "E: Enter"
+## still works. Otherwise it shows its lines ("It's locked.") with E.
 
 var target_scene := ""
 var target_spawn := ""
@@ -78,7 +78,7 @@ func leads_inside() -> bool:
 
 
 func prompt() -> String:
-	return "E: Entrar" if leads_inside() else "E: Olhar"
+	return "E: Enter" if leads_inside() else "E: Look"
 
 
 func interact(_p: OverworldPlayer) -> void:

@@ -40,7 +40,7 @@ func _process(delta: float) -> void:
 
 
 func prompt() -> String:
-	return "E: Ver Poké Ball"
+	return "E: Look at Poké Ball"
 
 
 func interact(_p: Node) -> void:

@@ -71,7 +71,7 @@ func _auto_advance() -> void:
 
 func _clock() -> void:
 	var tod = w.get_node("TimeOfDay")
-	check(tod.clock_label() == "SEG 9:00", "clock starts MON 9:00 (%s)" % tod.clock_label())
+	check(tod.clock_label() == "MON 9:00", "clock starts MON 9:00 (%s)" % tod.clock_label())
 	await frames(120)
 	var t1: float = tod.total
 	check(t1 > 540.0, "clock runs while the player is free (%.2f)" % t1)
@@ -179,14 +179,14 @@ func _whiteout() -> void:
 	await w._white_out(p, 1500)
 	check(_said.size() == 4, "white-out shows 4 lines (%s)" % " | ".join(_said))
 	check(_said.size() > 1 and _said[1].contains("₽1500"), "money lost line")
-	check(_said.size() > 3 and _said[3].contains("para casa"), "home line")
+	check(_said.size() > 3 and _said[3].contains("home"), "home line")
 	check(w.location_id == "player_house", "back home (%s)" % w.location_id)
 	check(not p.locked, "player free again")
 	_said = []
 	game.flags["last_heal"] = "pokemon_center_pewter"
 	await w._white_out(p, 0)
 	check(_said.size() == 3, "no money line when nothing was lost (%d)" % _said.size())
-	check(_said.size() > 2 and _said[2].contains("Centro Pokémon"), "Pokémon Center line")
+	check(_said.size() > 2 and _said[2].contains("Pokémon Center"), "Pokémon Center line")
 	check(w.location_id == "pokemon_center_pewter", "at the Pewter center (%s)" % w.location_id)
 
 

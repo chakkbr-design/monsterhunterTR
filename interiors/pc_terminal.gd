@@ -5,15 +5,15 @@ extends WorldNpc
 
 func _ready() -> void:
 	super._ready()
-	if lines.size() == 1 and lines[0] == "Olá!":
+	if lines.size() == 1 and lines[0] == "Hello!":
 		lines = PackedStringArray(
-			["{PLAYER} ligou o PC.", "O sistema de armazenamento ainda está em manutenção."]
+			["{PLAYER} turned on the PC.", "The storage system is still under maintenance."]
 		)
 
 
 func _build_body() -> void:
 	if InteriorLook.furniture(
-		self, "Computador", Vector3(0, 1.15, 0), Vector3(0.8, 0.6, 0.5), Color(0.82, 0.84, 0.88)
+		self, "Computer", Vector3(0, 1.15, 0), Vector3(0.8, 0.6, 0.5), Color(0.82, 0.84, 0.88)
 	):
 		show_tag = false
 		return
@@ -34,7 +34,7 @@ func _build_body() -> void:
 
 
 func prompt() -> String:
-	return "E: Usar"
+	return "E: Use"
 
 
 func interact(_p: OverworldPlayer) -> void:
@@ -42,7 +42,7 @@ func interact(_p: OverworldPlayer) -> void:
 		return
 	var pcs := get_node_or_null("/root/PCStorage")
 	if pcs and pcs.has_method("open"):
-		await say(PackedStringArray(["{PLAYER} ligou o PC."]))
+		await say(PackedStringArray(["{PLAYER} turned on the PC."]))
 		if pcs.open():
 			while is_inside_tree() and pcs.is_open():
 				await get_tree().process_frame

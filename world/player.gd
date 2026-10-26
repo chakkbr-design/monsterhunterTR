@@ -282,7 +282,7 @@ func _repel_step() -> void:
 	if g and g.has_method("repel_step") and g.repel_step():
 		var hud := Overworld.hud_of(self)
 		if hud:
-			hud.toast("O efeito do Repel acabou.", 2.5)
+			hud.toast("The effect of the Repel wore off.", 2.5)
 
 
 ## Repel on: no tall-grass encounters at all (original player.gd:211, _grass_step).
@@ -379,10 +379,10 @@ func _update_focus(active: bool) -> void:
 
 func _prompt_for(n: Node3D) -> String:
 	if n is WildMon:
-		return "E: Batalhar com %s" % (n as WildMon).mon.display_name
+		return "E: Battle %s" % (n as WildMon).mon.display_name
 	if n.has_method("prompt"):
 		return n.prompt()
-	return "E: Falar"
+	return "E: Talk"
 
 
 func _interact(n: Node3D) -> void:

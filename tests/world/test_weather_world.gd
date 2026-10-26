@@ -94,7 +94,7 @@ func _schedule() -> void:
 		)
 	)
 	var names := a.names()
-	check(names.size() == 7 and names[0][1] == "Limpo", "seven types with Portuguese names")
+	check(names.size() == 7 and names[0][1] == "Clear", "seven types with English names")
 	var f := a.target(3 * 1440.0 + 600.0, "storm")
 	check(
 		f.type == "storm" and f.rain == 1.0 and f.storm == 1.0, "a forced type wins over the plan"

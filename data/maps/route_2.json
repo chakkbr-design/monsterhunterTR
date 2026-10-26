@@ -1,6 +1,6 @@
 {
  "id": "route_2",
- "name": "ROTA 2",
+ "name": "ROUTE 2",
  "rect": [
   -30.0,
   -253.0,
@@ -4313,7 +4313,7 @@
  ],
  "npcs": [
   {
-   "name": "Observador de Pássaros",
+   "name": "Bird Watcher",
    "node": "NPC_BirdWatcher",
    "pos": [
     -10.6,
@@ -4322,13 +4322,13 @@
    "sprite": "npc_girl.png",
    "facing": 2,
    "lines": [
-    "Vi um pássaro grande rodeando as árvores perto da portaria da floresta...",
-    "Ele pousou em algum lugar fora da trilha. Vá devagar, ele se assusta fácil."
+    "I saw a big bird circling the trees near the forest gatehouse...",
+    "It landed somewhere off the trail. Go slowly, it spooks easily."
    ],
    "y": 0.9
   },
   {
-   "name": "Caçador de Insetos",
+   "name": "Bug Catcher",
    "node": "NPC_Kid",
    "pos": [
     -17.0,
@@ -4337,9 +4337,9 @@
    "sprite": "npc_bug_catcher.png",
    "wander": 1.5,
    "lines": [
-    "Vim pegar insetos, mas hoje só tem Pidgey e Rattata.",
-    "O mato alto ao lado da estrada está cheio deles. Bichinhos espertos!",
-    "Aquela caverna a leste é a Caverna dos Diglett. Ela passa por baixo da região inteira."
+    "I came to catch bugs, but today there's only Pidgey and Rattata.",
+    "The tall grass beside the road is full of them. Clever little critters!",
+    "That cave to the east is Diglett's Cave. It runs under the entire region."
    ],
    "y": 0.0
   }
@@ -4351,12 +4351,12 @@
     4.5,
     -198.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/route_2/sign",
    "model_scale": 0.8,
    "lines": [
-    "ROTA 2",
-    "VIRIDIAN - PEWTER"
+    "ROUTE 2",
+    "VIRIDIAN CITY - PEWTER CITY"
    ],
    "y": 0.0
   },
@@ -4366,13 +4366,13 @@
     0.0,
     -207.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/route_2/sign",
    "model_scale": 0.8,
    "lines": [
-    "ROTA 2",
-    "OESTE: FLORESTA DE VIRIDIAN  /  LESTE: CAVERNA DOS DIGLETT",
-    "NORTE: os dois caminhos.  SUL: Viridian."
+    "ROUTE 2",
+    "WEST: VIRIDIAN FOREST  /  EAST: DIGLETT'S CAVE",
+    "NORTH: both paths.  SOUTH: Viridian."
    ],
    "y": 0.0
   },
@@ -4382,11 +4382,11 @@
     24.5,
     -243.6
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/route_2/sign",
    "model_scale": 0.8,
    "lines": [
-    "CAVERNA DOS DIGLETT"
+    "DIGLETT'S CAVE"
    ],
    "y": 0.0
   }

@@ -95,8 +95,8 @@ func _hidden_item() -> void:
 	check(
 		(
 			lines.size() == 2
-			and lines[0] == "Você encontrou Potion!"
-			and lines[1] == "Você guardou Potion no bolso de Remédios."
+			and lines[0] == "You found Potion!"
+			and lines[1] == "You put the Potion in the Medicine pocket."
 		),
 		"pickup lines: %s" % [lines]
 	)
@@ -123,8 +123,8 @@ func _pet() -> void:
 	)
 	if pet == null or pet.get("owner_name") == null:
 		return
-	check(pet.npc_name == "Pidgey de Lily", "pet name '%s'" % pet.npc_name)
-	check(pet.is_in_group("ow_interact") and pet.prompt() == "E: Falar", "pet talks with E")
+	check(pet.npc_name == "Lily's Pidgey", "pet name '%s'" % pet.npc_name)
+	check(pet.is_in_group("ow_interact") and pet.prompt() == "E: Talk", "pet talks with E")
 	check(pet.lines.size() == 2 and pet.lines[0] == "Pidgey: Pidge! Pidge!", "pet lines")
 	check(pet.global_position.distance_to(Vector3(-3, 0, 7)) < 4.5, "pet stays near home")
 
@@ -197,7 +197,7 @@ func _cave_items() -> void:
 	var n := 0
 	for id in ["tiny1", "tiny2", "tiny3", "big1", "big2", "big3"]:
 		var it = b1.get_node_or_null("Item_mmb1f_%s" % id)
-		if it and not it.hidden and it.prompt() == "E: Pegar":
+		if it and not it.hidden and it.prompt() == "E: Pick up":
 			n += 1
 	check(n == 6, "B1F: 6 mushrooms with prompt, no ball (%d)" % n)
 	var ms = b2.get_node_or_null("Item_mmb2f_hidden_moon_stone")
@@ -224,7 +224,7 @@ func _cut_trees() -> void:
 		for c in b.data.get("cut_trees", []):
 			var sp = b.get_node_or_null("Cut_%s" % c.uid)
 			check(
-				sp != null and sp.npc_name == "Árvore" and sp.lines.size() == 2,
+				sp != null and sp.npc_name == "Tree" and sp.lines.size() == 2,
 				"%s: cut tree %s built" % [zone, c.uid]
 			)
 			var at := Vector3(float(c.pos[0]), float(c.get("y", 0.0)) + 0.9, float(c.pos[1]))

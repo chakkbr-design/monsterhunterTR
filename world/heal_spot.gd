@@ -19,7 +19,7 @@ func _build_body() -> void:
 
 
 func prompt() -> String:
-	return "E: Falar"
+	return "E: Talk"
 
 
 func interact(_p: OverworldPlayer) -> void:

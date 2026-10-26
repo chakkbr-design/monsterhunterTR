@@ -221,7 +221,7 @@ func _doors() -> void:
 			):
 				door = c
 		check(
-			door != null and door.prompt() == "E: Entrar",
+			door != null and door.prompt() == "E: Enter",
 			"%s: map door leads to %s" % [pair[0], pair[2]]
 		)
 		if door == null:
@@ -256,7 +256,7 @@ func _center() -> void:
 	var nurse: Node = w.interior("pokemon_center_viridian").npcs.nurse
 	await frames(5)
 	check(p.focus == nurse, "nurse in reach from the counter spawn")
-	check(nurse.prompt() == "E: Falar", "nurse prompt in Portuguese")
+	check(nurse.prompt() == "E: Talk", "nurse prompt")
 	await _talk(nurse)
 	check(m.hp == m.max_hp, "Pokémon Center heals (%d/%d)" % [m.hp, m.max_hp])
 	check(game.flags.get("last_heal") == "pokemon_center_viridian", "last_heal recorded")
@@ -275,7 +275,7 @@ func _center() -> void:
 	w.set_interact_hook("pokemon_center_viridian", "nurse", Callable())
 	m.heal_full()
 	var pc: Node = w.interior("pokemon_center_viridian").npcs.pc
-	check(pc != null and pc.prompt() == "E: Usar", "PC terminal present")
+	check(pc != null and pc.prompt() == "E: Use", "PC terminal present")
 
 
 func _mart() -> void:
@@ -427,9 +427,9 @@ func _original_npcs() -> void:
 			"hidden Potion found once (flag item_bedroom_pc)"
 		)
 	for e in [
-		["player_house", "pidgey", "Pidgey da Mamãe"],
-		["rival_house", "rattata", "Rattata da Margarida"],
-		["oak_lab", "pidgey", "Pidgey do Laboratório"]
+		["player_house", "pidgey", "Mom's Pidgey"],
+		["rival_house", "rattata", "Daisy's Rattata"],
+		["oak_lab", "pidgey", "Lab Pidgey"]
 	]:
 		var pet: Node = w.interior(e[0]).npcs.get(e[1])
 		check(

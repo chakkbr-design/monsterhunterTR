@@ -1,108 +1,111 @@
 class_name TrainerText
 extends RefCounted
-## Portuguese lines for the trainers placed up to Pewter (data/trainers.json keeps the original English).
+## English lines for the trainers placed up to Pewter (override data/trainers.json when present).
 ## lines(id, key, fallback): key = intro | defeat | after | lose | badge_speech | gift_speech.
 
 const CLASS_PT := {
-	"bug_catcher": "Caçador de Insetos",
-	"camper": "Campista",
-	"gym_leader": "Líder",
+	"bug_catcher": "Bug Catcher",
+	"camper": "Camper",
+	"gym_leader": "Leader",
 	"rival": "Rival",
-	"youngster": "Jovem",
-	"lass": "Moça",
-	"picnicker": "Piqueniqueira",
-	"hiker": "Alpinista",
+	"youngster": "Youngster",
+	"lass": "Lass",
+	"picnicker": "Picnicker",
+	"hiker": "Hiker",
 }
 
 const TEXT := {
 	"bug_catcher_rick":
 	{
-		"intro": ["Ei! Você tem Pokémon!", "Vamos lá, vamos batalhar!"],
-		"defeat": ["Não!", "O Caterpie não aguentou!"],
-		"after": ["Psiu! Você vai espantar os insetos.", "Fica para outra vez, tá?"],
+		"intro": ["Hey! You have Pokémon!", "Come on, let's battle!"],
+		"defeat": ["No!", "Caterpie couldn't take it!"],
+		"after": ["Shh! You'll scare the bugs away.", "Maybe another time, okay?"],
 	},
 	"bug_catcher_doug":
 	{
-		"intro": ["Ei!", "Treinador Pokémon não foge de batalha!"],
-		"defeat": ["Hã?", "Acabaram os meus Pokémon!"],
-		"after": ["Que droga! Vou capturar uns mais fortes!"],
+		"intro": ["Hey!", "Pokémon Trainers never run from a battle!"],
+		"defeat": ["Huh?", "I'm out of Pokémon!"],
+		"after": ["Darn! I'm going to go catch some stronger ones!"],
 	},
 	"bug_catcher_anthony":
 	{
-		"intro": ["Posso ser pequeno, mas não pegue leve comigo!"],
-		"defeat": ["Ah, poxa.", "Nada deu certo."],
-		"after": ["Perdi parte da minha mesada..."],
+		"intro": ["I may be small, but don't go easy on me!"],
+		"defeat": ["Aw, shoot.", "Nothing went right."],
+		"after": ["There goes part of my allowance..."],
 	},
 	"bug_catcher_charlie":
 	{
-		"intro": ["Sabia que os Pokémon evoluem?"],
-		"defeat": ["Ah!", "Eu perdi!"],
-		"after": ["Pokémon inseto evoluem rápido.", "São muito divertidos!"],
+		"intro": ["Did you know that Pokémon evolve?"],
+		"defeat": ["Aah!", "I lost!"],
+		"after": ["Bug Pokémon evolve quickly.", "They're a lot of fun!"],
 	},
 	"bug_catcher_sammy":
 	{
-		"intro": ["Ei, espere aí!", "Qual é a pressa?"],
-		"defeat": ["Desisto!", "Você é bom nisso!"],
+		"intro": ["Hey, wait up!", "What's the hurry?"],
+		"defeat": ["I give up!", "You're good at this!"],
 		"after":
-		["Às vezes dá para achar coisas no chão.", "Estou procurando o que deixei cair. Me ajuda?"],
+		[
+			"Sometimes you can find things on the ground.",
+			"I'm looking for something I dropped. Can you help?"
+		],
 	},
 	"camper_liam":
 	{
-		"intro": ["Pare aí, garoto!", "Você está a anos-luz de enfrentar o Brock!"],
-		"defeat": ["Droga!", "Ano-luz não mede tempo... mede distância!"],
-		"after": ["Você é bom...", "Mas não tão bom quanto o Brock!"],
+		"intro": ["Stop right there, kid!", "You're light-years away from challenging Brock!"],
+		"defeat": ["Darn!", "A light-year isn't a measure of time... it measures distance!"],
+		"after": ["You're good...", "But not as good as Brock!"],
 	},
 	"brock":
 	{
 		"intro":
 		[
-			"Então você veio. Eu sou Brock, o Líder do Ginásio de Pewter.",
-			"Minha força de vontade é dura como pedra, e meus Pokémon também.",
-			"Isso mesmo: meus Pokémon são todos do tipo Pedra!",
-			"Vai me desafiar mesmo sabendo que vai perder?",
-			"Muito bem! Mostre o seu melhor!"
+			"So, you're here. I'm Brock, the Pewter Gym Leader.",
+			"My willpower is rock hard, and so are my Pokémon.",
+			"That's right: my Pokémon are all the Rock type!",
+			"You'll challenge me even though you know you'll lose?",
+			"Very well! Show me your best!"
 		],
 		"defeat":
 		[
-			"Subestimei você, e por isso perdi.",
-			"Como prova da sua vitória, aceite a INSÍGNIA DA ROCHA oficial da Liga Pokémon."
+			"I took you for granted, and so I lost.",
+			"As proof of your victory, accept the official Pokémon League BOULDERBADGE."
 		],
 		"after":
 		[
-			"Há todo tipo de treinador neste mundo enorme.",
-			"Você parece ter muito talento.",
-			"Uma sugestão: vá ao Ginásio de Cerulean e teste as suas habilidades."
+			"There are all kinds of trainers in this huge world.",
+			"You appear to be very talented.",
+			"A suggestion: go to the Cerulean Gym and test your skills."
 		],
 		"badge_speech":
 		[
-			"Só de ter a INSÍGNIA DA ROCHA, seus Pokémon ficam mais fortes.",
-			"Ela também permite usar o golpe FLASH fora das batalhas."
+			"Just having the BOULDERBADGE makes your Pokémon stronger.",
+			"It also lets you use the move FLASH outside of battle."
 		],
 		"gift_speech":
 		[
-			"Espere! Leve isto também.",
-			"Um TM, Máquina Técnica, guarda uma técnica para Pokémon.",
-			"O TM39 contém TUMBA DE PEDRAS.",
-			"Ele lança rochas no inimigo e reduz a VELOCIDADE dele."
+			"Wait! Take this with you.",
+			"A TM, or Technical Machine, contains a technique for Pokémon.",
+			"TM39 contains ROCK TOMB.",
+			"It hurls rocks at the foe and lowers its SPEED."
 		],
 	},
 	"rival_blue_route22":
 	{
 		"intro":
 		[
-			"Ei! {PLAYER}!",
-			"Vai para a Liga Pokémon? Esqueça!",
-			"Aposto que você nem tem insígnias.",
-			"O guarda não deixa passar sem elas.",
-			"Aliás, seus Pokémon ficaram mais fortes?"
+			"Hey! {PLAYER}!",
+			"Heading to the Pokémon League? Forget it!",
+			"I bet you don't even have any Badges.",
+			"The guard won't let you through without them.",
+			"By the way, have your Pokémon gotten any stronger?"
 		],
-		"defeat": ["Ahh!", "Você só teve sorte!"],
-		"lose": ["Isso! Eu sou demais ou não sou?"],
+		"defeat": ["Aah!", "You just got lucky!"],
+		"lose": ["Yeah! Am I great or what?"],
 		"after":
 		[
-			"Ouvi dizer que a Liga Pokémon está cheia de treinadores fortes.",
-			"Preciso descobrir como passar por eles.",
-			"E você, pare de enrolar e siga em frente!"
+			"I hear the Pokémon League is full of strong trainers.",
+			"I have to figure out how to get past them.",
+			"And you, quit stalling and move along!"
 		],
 	},
 }

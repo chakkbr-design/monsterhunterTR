@@ -67,7 +67,7 @@ const CAVE_GAP_Z := 60.0
 const ROOMS := {
 	"player_room":
 	{
-		"name": "Quarto",
+		"name": "Bedroom",
 		"zone": "pallet_town",
 		"size": [11, 8],
 		"floor": "#b9a27e",
@@ -84,15 +84,15 @@ const ROOMS := {
 		{"bed": [-4.2, -2.5, "s"], "desk_potion": [0.6, -3.0, "s"], "tv": [-1.2, 1.4, "n"]},
 		"furniture":
 		[
-			["Cama", [-4.2, -2.5], [1.5, 0.55, 2.4], "#d0503f"],
-			["Travesseiro", [-4.2, -3.4], [1.2, 0.75, 0.5], "#f4f1ea"],
-			["Escrivaninha", [0.6, -3.5], [2.2, 0.85, 0.8], "#8a6b45"],
-			["Computador", [0.6, -3.55, 0.85], [0.8, 0.6, 0.5], "#d1d6e0", false],
-			["Estante", [-1.8, -3.6], [1.4, 2.0, 0.6], "#6f5236"],
+			["Bed", [-4.2, -2.5], [1.5, 0.55, 2.4], "#d0503f"],
+			["Pillow", [-4.2, -3.4], [1.2, 0.75, 0.5], "#f4f1ea"],
+			["Desk", [0.6, -3.5], [2.2, 0.85, 0.8], "#8a6b45"],
+			["Computer", [0.6, -3.55, 0.85], [0.8, 0.6, 0.5], "#d1d6e0", false],
+			["Bookcase", [-1.8, -3.6], [1.4, 2.0, 0.6], "#6f5236"],
 			["TV", [-1.2, 1.6], [1.4, 1.0, 0.6], "#2b2d33"],
-			["Videogame", [-1.2, 0.8], [0.6, 0.15, 0.4], "#7d7f86"],
-			["Tapete", [0.5, 0.0], [3.0, 0.02, 2.0], "#4f79b8", false],
-			["Planta", [4.6, 3.2], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Game Console", [-1.2, 0.8], [0.6, 0.15, 0.4], "#7d7f86"],
+			["Rug", [0.5, 0.0], [3.0, 0.02, 2.0], "#4f79b8", false],
+			["Plant", [4.6, 3.2], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		# Original Bedroom.tscn: no PC terminal, only a hidden Potion at the desk (PCPotion, uid bedroom_pc).
 		"npcs":
@@ -109,7 +109,7 @@ const ROOMS := {
 	},
 	"player_house":
 	{
-		"name": "Casa",
+		"name": "House",
 		"zone": "pallet_town",
 		"size": [12, 7],
 		"floor": "#c4a77c",
@@ -131,42 +131,42 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Mesa", [0.4, -0.4], [2.2, 0.8, 1.4], "#9a7448"],
-			["Cadeira", [0.4, 0.75], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [1.9, -0.4], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Bancada", [-3.3, -3.0], [3.6, 1.0, 0.7], "#d8d4cc"],
-			["Fogão", [-1.0, -3.0], [1.0, 1.0, 0.7], "#5a5d63"],
+			["Table", [0.4, -0.4], [2.2, 0.8, 1.4], "#9a7448"],
+			["Chair", [0.4, 0.75], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [1.9, -0.4], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Kitchen Counter", [-3.3, -3.0], [3.6, 1.0, 0.7], "#d8d4cc"],
+			["Stove", [-1.0, -3.0], [1.0, 1.0, 0.7], "#5a5d63"],
 			["TV", [-5.2, -1.0], [0.6, 1.0, 1.4], "#2b2d33"],
-			["Planta", [-5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "mom",
 				"marker": "mom",
-				"name": "Mamãe",
+				"name": "Mom",
 				"color": "#d77fa1",
 				# Original PlayerHouse.tscn NPC_Mom (action HEAL): lines, heal with fade, after_heal_lines.
-				"lines": ["{PLAYER}! Você devia descansar um pouco."],
-				"after_heal": ["Que bom! Você e seus Pokémon estão ótimos. Cuide-se!"]
+				"lines": ["{PLAYER}! You should take a rest."],
+				"after_heal": ["Great! You and your Pokémon look just fine. Take care!"]
 			},
 			# MomsPidgey (creature.gd, owner_name Mom).
 			{
 				"type": "pet",
 				"marker": "pidgey",
 				"species": "Pidgey",
-				"name": "Pidgey da Mamãe",
+				"name": "Mom's Pidgey",
 				"lines":
 				[
 					"Pidgey: Pidge...",
-					"O Pidgey da Mamãe está cochilando no tapete. Ele faz parte da família há anos."
+					"Mom's Pidgey is dozing on the rug. It's been part of the family for years."
 				]
 			}
 		],
 	},
 	"rival_house":
 	{
-		"name": "Casa do Rival",
+		"name": "Rival's House",
 		"zone": "pallet_town",
 		"size": [12, 7],
 		"floor": "#c9b08a",
@@ -177,23 +177,23 @@ const ROOMS := {
 		{"daisy": [1.5, -1.0, "s"], "table": [0.4, -0.6, "s"], "rattata": [2.6, 0.9, "s"]},
 		"furniture":
 		[
-			["Mesa", [0.0, -0.6], [2.2, 0.8, 1.4], "#9a7448"],
-			["Estante", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
-			["Estante", [4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
-			["Quadro", [0.0, -3.3], [1.6, 1.1, 0.1], "#6aa0d8"],
-			["Planta", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Table", [0.0, -0.6], [2.2, 0.8, 1.4], "#9a7448"],
+			["Bookcase", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
+			["Bookcase", [4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
+			["Painting", [0.0, -3.3], [1.6, 1.1, 0.1], "#6aa0d8"],
+			["Plant", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "daisy",
-				"name": "Margarida",
+				"name": "Daisy",
 				"color": "#e3a85b",
 				"lines":
 				[
-					"Oi, {PLAYER}! Meu irmão {RIVAL} foi ver o Prof. Carvalho.",
-					"Ele vive dizendo que vai ser o melhor treinador."
+					"Hi, {PLAYER}! My brother {RIVAL} went to see Prof. Oak.",
+					"He keeps saying he'll be the best trainer."
 				]
 			},
 			# DaisysRattata (creature.gd, owner_name Daisy).
@@ -201,14 +201,14 @@ const ROOMS := {
 				"type": "pet",
 				"marker": "rattata",
 				"species": "Rattata",
-				"name": "Rattata da Margarida",
-				"lines": ["Rattata: Ratta! Rattata!", "Ele cheira sua mão e abana o rabo."]
+				"name": "Daisy's Rattata",
+				"lines": ["Rattata: Ratta! Rattata!", "It sniffs your hand and wags its tail."]
 			}
 		],
 	},
 	"oak_lab":
 	{
-		"name": "Laboratório do Prof. Carvalho",
+		"name": "Prof. Oak's Lab",
 		"zone": "pallet_town",
 		"size": [13, 16],
 		"floor": "#b9b3a6",
@@ -233,42 +233,42 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Mesa das Pokébolas", [3.2, -4.6], [3.0, 0.9, 1.0], "#8d6a43"],
-			["Máquina", [-4.6, -6.9], [2.6, 2.0, 1.2], "#7f8ea3"],
-			["Estante", [-5.9, -4.6], [0.6, 2.2, 3.0], "#6f5236"],
-			["Estante", [5.9, -6.2], [0.6, 2.2, 3.0], "#6f5236"],
-			["Estante", [-4.6, 5.5], [3.0, 2.2, 0.6], "#6f5236"],
-			["Estante", [4.6, 5.5], [3.0, 2.2, 0.6], "#6f5236"],
-			["Computador", [3.8, -6.9], [2.4, 1.1, 0.9], "#4c5563"],
-			["Mesa", [-2.2, -7.4], [1.8, 0.85, 1.0], "#b7b2a4"],
-			["Mesa", [0.6, -7.4], [1.8, 0.85, 1.0], "#b7b2a4"],
-			["Tapete", [0.0, 0.0], [2.0, 0.02, 9.0], "#6c8ac0", false],
-			["Planta", [-6.0, -7.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Poké Ball Table", [3.2, -4.6], [3.0, 0.9, 1.0], "#8d6a43"],
+			["Machine", [-4.6, -6.9], [2.6, 2.0, 1.2], "#7f8ea3"],
+			["Bookcase", [-5.9, -4.6], [0.6, 2.2, 3.0], "#6f5236"],
+			["Bookcase", [5.9, -6.2], [0.6, 2.2, 3.0], "#6f5236"],
+			["Bookcase", [-4.6, 5.5], [3.0, 2.2, 0.6], "#6f5236"],
+			["Bookcase", [4.6, 5.5], [3.0, 2.2, 0.6], "#6f5236"],
+			["Computer", [3.8, -6.9], [2.4, 1.1, 0.9], "#4c5563"],
+			["Table", [-2.2, -7.4], [1.8, 0.85, 1.0], "#b7b2a4"],
+			["Table", [0.6, -7.4], [1.8, 0.85, 1.0], "#b7b2a4"],
+			["Rug", [0.0, 0.0], [2.0, 0.02, 9.0], "#6c8ac0", false],
+			["Plant", [-6.0, -7.4], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "aide_1",
-				"name": "Pesquisador-chefe",
+				"name": "Head Researcher",
 				"color": "#e9e9e9",
 				"sprite": "npc_scientist",
 				"lines":
 				[
-					"O professor? Ele saiu faz um tempinho...",
-					"Essas Pokébolas na mesa são para treinadores novatos, mas só o Prof. Carvalho pode entregá-las."
+					"The professor? He stepped out a little while ago...",
+					"Those Poké Balls on the table are for new trainers, but only Prof. Oak can hand them out."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "aide_2",
-				"name": "Assistente do Laboratório",
+				"name": "Lab Assistant",
 				"color": "#e9e9e9",
 				"sprite": "npc_scientist",
 				"lines":
 				[
-					"Estou anotando como os Pokémon reagem aos treinadores. Uns fogem, uns avançam, outros só observam.",
-					"Pokémon de treinadores ficam calmos perto das pessoas. Tente falar com o Pidgey!"
+					"I'm noting how Pokémon react to trainers. Some flee, some charge, others just watch.",
+					"A trainer's Pokémon stay calm around people. Try talking to the Pidgey!"
 				]
 			},
 			# LabPidgey (creature.gd, npc_name "the Lab's Pidgey").
@@ -276,18 +276,18 @@ const ROOMS := {
 				"type": "pet",
 				"marker": "pidgey",
 				"species": "Pidgey",
-				"name": "Pidgey do Laboratório",
+				"name": "Lab Pidgey",
 				"lines":
 				[
 					"Pidgey: Pidge! Pidge!",
-					"Um Pidgey de pesquisa. Ele vem pulando ver se você tem algum petisco."
+					"A research Pidgey. It hops over to see if you have a treat."
 				]
 			},
 		],
 	},
 	"pokemon_center_viridian":
 	{
-		"name": "Centro Pokémon",
+		"name": "Pokémon Center",
 		"zone": "viridian_city",
 		"size": [15, 7],
 		"floor": "#d8c7b8",
@@ -305,66 +305,64 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Balcão", [0.0, -1.95], [5.0, 1.1, 0.5], "#e05a52"],
-			["Máquina de cura", [-1.5, -3.0], [1.4, 1.3, 0.6], "#c9cfd8"],
-			["Banco", [-5.5, 1.0], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Banco", [5.5, 1.0], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Mesa do PC", [5.6, -3.0], [1.6, 0.85, 0.7], "#8b929c"],
-			["Planta", [-7.0, -3.0], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [7.0, 3.0], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Counter", [0.0, -1.95], [5.0, 1.1, 0.5], "#e05a52"],
+			["Healing Machine", [-1.5, -3.0], [1.4, 1.3, 0.6], "#c9cfd8"],
+			["Bench", [-5.5, 1.0], [2.4, 0.5, 0.8], "#cf7a52"],
+			["Bench", [5.5, 1.0], [2.4, 0.5, 0.8], "#cf7a52"],
+			["PC Desk", [5.6, -3.0], [1.6, 0.85, 0.7], "#8b929c"],
+			["Plant", [-7.0, -3.0], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [7.0, 3.0], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "nurse",
 				"marker": "nurse",
-				"name": "Enfermeira",
+				"name": "Nurse",
 				"color": "#f2a3c0",
 				# Original NPC_Nurse (action HEAL): lines, heal with fade, after_heal_lines.
 				"lines":
 				[
-					"Bem-vindo ao nosso Centro Pokémon!",
-					"Quer que eu cure seus Pokémon e os deixe em perfeita saúde?",
-					"Certo, vou levar seus Pokémon por alguns segundos."
+					"Welcome to our Pokémon Center!",
+					"Shall I heal your Pokémon back to perfect health?",
+					"Okay, I'll take your Pokémon for a few seconds."
 				],
 				"after_heal":
-				[
-					"Obrigada por esperar. Seus Pokémon estão totalmente recuperados. Esperamos vê-lo de novo!"
-				]
+				["Thank you for waiting. Your Pokémon are fully healed. We hope to see you again!"]
 			},
 			{"type": "pc", "marker": "pc", "name": "PC"},
 			# viridian/PokemonCenter.tscn: Attendant, Traveller, Youngster (the Cable Club is not ported).
 			{
 				"type": "npc",
 				"marker": "attendant",
-				"name": "Atendente",
+				"name": "Attendant",
 				"sprite": "npc_scientist",
 				"lines":
 				[
-					"Os Centros Pokémon curam Pokémon cansados, feridos ou desmaiados.",
-					"Eles deixam todos os Pokémon completamente saudáveis."
+					"Pokémon Centers heal tired, hurt or fainted Pokémon.",
+					"They leave all your Pokémon completely healthy."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "traveller",
-				"name": "Viajante",
+				"name": "Traveler",
 				"sprite": "npc_oldman",
 				"lines":
 				[
-					"Há um Centro Pokémon em cada cidade daqui para a frente.",
-					"Eles não cobram nada, então não tenha vergonha de curar seus Pokémon."
+					"There's a Pokémon Center in every town from here on.",
+					"They don't charge anything, so don't be shy about healing your Pokémon."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "youngster",
-				"name": "Garoto",
+				"name": "Boy",
 				"sprite": "npc_youngster",
 				"lines":
 				[
-					"Fique à vontade para usar aquele PC no canto.",
-					"Foi a recepcionista que me disse. Ela é tão gentil!"
+					"Feel free to use that PC in the corner.",
+					"The receptionist told me. She's so kind!"
 				]
 			},
 		],
@@ -387,17 +385,17 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Balcão", [-3.6, -0.4], [0.6, 1.1, 2.8], "#2f6cc9"],
-			["Caixa", [-3.6, -1.3], [0.5, 0.3, 0.5], "#30343b"],
-			["Prateleira", [2.8, -2.2], [4.0, 1.7, 0.6], "#c0c6ce"],
-			["Prateleira", [2.8, -0.3], [4.0, 1.7, 0.6], "#c0c6ce"],
+			["Counter", [-3.6, -0.4], [0.6, 1.1, 2.8], "#2f6cc9"],
+			["Register", [-3.6, -1.3], [0.5, 0.3, 0.5], "#30343b"],
+			["Shelf", [2.8, -2.2], [4.0, 1.7, 0.6], "#c0c6ce"],
+			["Shelf", [2.8, -0.3], [4.0, 1.7, 0.6], "#c0c6ce"],
 		],
 		"npcs":
 		[
 			{
 				"type": "clerk",
 				"marker": "clerk",
-				"name": "Vendedor",
+				"name": "Clerk",
 				"color": "#4d86d8",
 				"shop": "viridian"
 			},
@@ -405,26 +403,26 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "girl",
-				"name": "Moça",
+				"name": "Lass",
 				"sprite": "npc_girl",
-				"lines": ["Ouvi dizer que esta loja vende muito Antídoto."]
+				"lines": ["I hear this shop sells a lot of Antidote."]
 			},
 			{
 				"type": "npc",
 				"marker": "old_man",
-				"name": "Senhor",
+				"name": "Old Man",
 				"sprite": "npc_oldman",
 				"lines":
 				[
-					"Preciso comprar umas Poções.",
-					"Nunca se sabe quando seus Pokémon vão precisar de uma cura rápida."
+					"I need to buy some Potions.",
+					"You never know when your Pokémon will need a quick heal."
 				]
 			},
 		],
 	},
 	"trainer_school_viridian":
 	{
-		"name": "Escola de Treinadores",
+		"name": "Trainer School",
 		"zone": "viridian_city",
 		"size": [10, 6],
 		"floor": "#c8b48f",
@@ -434,43 +432,43 @@ const ROOMS := {
 		"markers": {"teacher": [0.0, -2.1, "s"], "student": [2.5, 1.9, "n"]},
 		"furniture":
 		[
-			["Lousa", [0.0, -2.85], [4.0, 1.6, 0.1], "#2f4a3a"],
-			["Carteira", [-2.5, -0.6], [1.2, 0.7, 0.7], "#9a7448"],
-			["Carteira", [2.5, -0.6], [1.2, 0.7, 0.7], "#9a7448"],
-			["Carteira", [-2.5, 1.0], [1.2, 0.7, 0.7], "#9a7448"],
-			["Carteira", [2.5, 1.0], [1.2, 0.7, 0.7], "#9a7448"],
+			["Blackboard", [0.0, -2.85], [4.0, 1.6, 0.1], "#2f4a3a"],
+			["School Desk", [-2.5, -0.6], [1.2, 0.7, 0.7], "#9a7448"],
+			["School Desk", [2.5, -0.6], [1.2, 0.7, 0.7], "#9a7448"],
+			["School Desk", [-2.5, 1.0], [1.2, 0.7, 0.7], "#9a7448"],
+			["School Desk", [2.5, 1.0], [1.2, 0.7, 0.7], "#9a7448"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "teacher",
-				"name": "Professora",
+				"name": "Teacher",
 				"color": "#9a6fc4",
 				"sprite": "npc_woman",
 				"lines":
 				[
-					"Bem-vindo à Escola de Treinadores!",
-					"Fogo vence Planta, Planta vence Água, Água vence Fogo.",
-					"Aprenda as vantagens de tipo e seus Pokémon vão agradecer."
+					"Welcome to the Trainer School!",
+					"Fire beats Grass, Grass beats Water, Water beats Fire.",
+					"Learn the type advantages and your Pokémon will thank you."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "student",
-				"name": "Aluno",
+				"name": "Student",
 				"sprite": "npc_kid",
 				"lines":
 				[
-					"Estou copiando as anotações da lousa...",
-					"Golpes de status como Growl não causam dano, mas fazem diferença!"
+					"I'm copying the notes from the blackboard...",
+					"Status moves like Growl don't deal damage, but they make a difference!"
 				]
 			},
 		],
 	},
 	"viridian_house":
 	{
-		"name": "Casa",
+		"name": "House",
 		"zone": "viridian_city",
 		"size": [12, 7],
 		"floor": "#c4a77c",
@@ -480,9 +478,9 @@ const ROOMS := {
 		"markers": {"old_man": [2.0, 0.9, "n"], "girl": [-4.4, -1.7, "s"]},
 		"furniture":
 		[
-			["Mesa", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
-			["Estante", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
-			["Planta", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Table", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
+			["Bookcase", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
+			["Plant", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
@@ -490,20 +488,20 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "old_man",
-				"name": "Senhor",
+				"name": "Old Man",
 				"sprite": "npc_oldman",
 				"lines":
 				[
-					"Inventar apelidos é divertido, mas não é tão fácil.",
-					"Nomes espertos são legais, mas nomes simples são mais fáceis de lembrar."
+					"Coming up with nicknames is fun, but it's not that easy.",
+					"Clever names are cool, but simple names are easier to remember."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "girl",
-				"name": "Menina",
+				"name": "Little Girl",
 				"sprite": "npc_little_girl",
-				"lines": ["Meu papai também adora Pokémon."]
+				"lines": ["My daddy loves Pokémon too."]
 			},
 		],
 	},
@@ -511,7 +509,7 @@ const ROOMS := {
 	# ForestSouthGate.tscn / ForestNorthGate.tscn: 16.25 x 12.5, mesas, cadeiras, plantas e 3 NPCs.
 	"forest_gate_south":
 	{
-		"name": "Portaria da Floresta",
+		"name": "Forest Gatehouse",
 		"zone": "route_2",
 		"size": [16.25, 12.5],
 		"floor": "#c9c2b0",
@@ -527,41 +525,41 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Tapete", [0.0, 0.625], [3.75, 0.02, 8.75], "#6c8ac0", false],
-			["Mesa", [5.625, -1.25], [1.4, 0.8, 1.0], "#9a7448"],
-			["Mesa", [5.625, 2.5], [1.4, 0.8, 1.0], "#9a7448"],
-			["Cadeira", [4.375, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [6.875, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [4.375, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [6.875, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Planta", [-7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-7.5, -1.25], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-7.5, 2.5], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Rug", [0.0, 0.625], [3.75, 0.02, 8.75], "#6c8ac0", false],
+			["Table", [5.625, -1.25], [1.4, 0.8, 1.0], "#9a7448"],
+			["Table", [5.625, 2.5], [1.4, 0.8, 1.0], "#9a7448"],
+			["Chair", [4.375, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [6.875, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [4.375, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [6.875, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Plant", [-7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-7.5, -1.25], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-7.5, 2.5], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "woman_1",
-				"name": "Mulher",
+				"name": "Woman",
 				"sprite": "npc_woman",
 				"lines":
 				[
-					"Você vai para a Floresta de Viridian? Lá dentro é um labirinto natural. Cuidado para não se perder."
+					"Are you going into Viridian Forest? It's a natural maze in there. Be careful not to get lost."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "woman_2",
-				"name": "Mulher",
+				"name": "Woman",
 				"sprite": "npc_woman",
 				"lines":
 				[
-					"O Rattata pode ser pequeno, mas não subestime a mordida dele.",
-					"Você já pegou um?"
+					"Rattata may be small, but don't underestimate its bite.",
+					"Have you caught one yet?"
 				]
 			},
 			# Ajudante do Prof. Carvalho (original NPC_Aide, action GIFT -> Story.aide_reward):
@@ -569,22 +567,22 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "aide_hm05",
-				"name": "Ajudante",
+				"name": "Aide",
 				"sprite": "npc_scientist",
 				"lines":
 				[
-					"Oi! Lembra de mim? Sou um dos ajudantes do Prof. Carvalho.",
-					"Se a sua Pokédex tiver dados completos de dez espécies, devo lhe dar uma recompensa.",
-					"O Prof. Carvalho me confiou o HM05 para você.",
-					"Então, {PLAYER}, deixe-me perguntar.",
-					"Você já reuniu dados de pelo menos dez tipos de Pokémon?"
+					"Hi! Remember me? I'm one of Prof. Oak's aides.",
+					"If your Pokédex has complete data on ten species, I'm supposed to give you a reward.",
+					"Prof. Oak entrusted me with HM05 for you.",
+					"So, {PLAYER}, let me ask you.",
+					"Have you gathered data on at least ten kinds of Pokémon?"
 				]
 			},
 		],
 	},
 	"forest_gate_north":
 	{
-		"name": "Portaria da Floresta",
+		"name": "Forest Gatehouse",
 		"zone": "route_2_north",
 		"size": [16.25, 12.5],
 		"floor": "#c9c2b0",
@@ -600,54 +598,54 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Tapete", [0.0, 0.625], [3.75, 0.02, 8.75], "#6c8ac0", false],
-			["Mesa", [5.625, -1.25], [1.4, 0.8, 1.0], "#9a7448"],
-			["Mesa", [5.625, 2.5], [1.4, 0.8, 1.0], "#9a7448"],
-			["Cadeira", [4.375, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [6.875, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [4.375, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Cadeira", [6.875, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
-			["Planta", [-7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-7.5, -1.25], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [-7.5, 2.5], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Rug", [0.0, 0.625], [3.75, 0.02, 8.75], "#6c8ac0", false],
+			["Table", [5.625, -1.25], [1.4, 0.8, 1.0], "#9a7448"],
+			["Table", [5.625, 2.5], [1.4, 0.8, 1.0], "#9a7448"],
+			["Chair", [4.375, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [6.875, -1.25], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [4.375, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Chair", [6.875, 2.5], [0.6, 0.5, 0.6], "#7b5a36"],
+			["Plant", [-7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [2.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [7.5, -4.375], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-7.5, -1.25], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [-7.5, 2.5], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "youngster",
-				"name": "Garoto",
+				"name": "Boy",
 				"sprite": "npc_youngster",
 				"lines":
 				[
-					"Muitos Pokémon só vivem em florestas e cavernas.",
-					"Você precisa ser persistente e procurar em todo lugar para achar tipos diferentes."
+					"Many Pokémon live only in forests and caves.",
+					"You have to be persistent and search everywhere to find different kinds."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "old_man",
-				"name": "Senhor",
+				"name": "Old Man",
 				"sprite": "npc_oldman",
 				"lines":
 				[
-					"Você reparou nas árvores finas à beira do caminho?",
-					"Dizem que dá para cortá-las com um golpe Pokémon especial."
+					"Have you noticed the thin trees along the path?",
+					"They say you can cut them down with a special Pokémon move."
 				]
 			},
 			{
 				"type": "npc",
 				"marker": "cooltrainer",
-				"name": "Treinadora",
+				"name": "Trainer",
 				"sprite": "npc_cooltrainer_f",
 				"lines":
 				[
-					"Você conhece a técnica de cancelar a evolução?",
-					"Quando um Pokémon está evoluindo, você pode interromper o processo.",
-					"É uma técnica para criar Pokémon do jeito que eles são."
+					"Do you know the trick of canceling evolution?",
+					"When a Pokémon is evolving, you can interrupt the process.",
+					"It's a technique for raising Pokémon just as they are."
 				]
 			},
 		],
@@ -655,7 +653,7 @@ const ROOMS := {
 	# --- Pewter ---
 	"pokemon_center_pewter":
 	{
-		"name": "Centro Pokémon",
+		"name": "Pokémon Center",
 		"zone": "pewter_city",
 		"size": [16, 8],
 		"floor": "#d8c7b8",
@@ -666,31 +664,31 @@ const ROOMS := {
 		{"nurse": [0.0, -3.1, "s"], "counter": [0.0, -2.45, "s"], "pc": [6.0, -3.4, "s"]},
 		"furniture":
 		[
-			["Balcão", [0.0, -2.45], [5.0, 1.1, 0.5], "#e05a52"],
-			["Máquina de cura", [-1.5, -3.5], [1.4, 1.3, 0.6], "#c9cfd8"],
-			["Banco", [-6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Banco", [6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Mesa do PC", [6.0, -3.5], [1.6, 0.85, 0.7], "#8b929c"],
-			["Planta", [-7.4, -3.4], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [7.4, 3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Counter", [0.0, -2.45], [5.0, 1.1, 0.5], "#e05a52"],
+			["Healing Machine", [-1.5, -3.5], [1.4, 1.3, 0.6], "#c9cfd8"],
+			["Bench", [-6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["Bench", [6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["PC Desk", [6.0, -3.5], [1.6, 0.85, 0.7], "#8b929c"],
+			["Plant", [-7.4, -3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [7.4, 3.4], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "nurse",
 				"marker": "nurse",
-				"name": "Enfermeira",
+				"name": "Nurse",
 				"color": "#f2a3c0",
 				# Original pewter/PokemonCenter.tscn NPC_Nurse: all four lines before the heal, then the
 				# default after_heal_lines of npc.gd.
 				"lines":
 				[
-					"Bem-vindo ao nosso Centro Pokémon!",
-					"Quer que eu cure seus Pokémon e os deixe em perfeita saúde?",
-					"Certo, vou levar seus Pokémon por alguns segundos.",
-					"Obrigada por esperar. Seus Pokémon estão totalmente recuperados. Esperamos vê-lo de novo!"
+					"Welcome to our Pokémon Center!",
+					"Shall I heal your Pokémon back to perfect health?",
+					"Okay, I'll take your Pokémon for a few seconds.",
+					"Thank you for waiting. Your Pokémon are fully healed. We hope to see you again!"
 				],
-				"after_heal": ["Pronto! Você e seus Pokémon estão ótimos. Cuide-se!"]
+				"after_heal": ["There! You and your Pokémon look great. Take care!"]
 			},
 			{"type": "pc", "marker": "pc", "name": "PC"},
 		],
@@ -707,17 +705,17 @@ const ROOMS := {
 		"markers": {"clerk": [-4.9, -0.4, "e"], "counter": [-4.1, -0.4, "e"]},
 		"furniture":
 		[
-			["Balcão", [-4.1, -0.4], [0.6, 1.1, 2.8], "#2f6cc9"],
-			["Caixa", [-4.1, -1.3], [0.5, 0.3, 0.5], "#30343b"],
-			["Prateleira", [2.8, -2.6], [4.0, 1.7, 0.6], "#c0c6ce"],
-			["Prateleira", [2.8, -0.6], [4.0, 1.7, 0.6], "#c0c6ce"],
+			["Counter", [-4.1, -0.4], [0.6, 1.1, 2.8], "#2f6cc9"],
+			["Register", [-4.1, -1.3], [0.5, 0.3, 0.5], "#30343b"],
+			["Shelf", [2.8, -2.6], [4.0, 1.7, 0.6], "#c0c6ce"],
+			["Shelf", [2.8, -0.6], [4.0, 1.7, 0.6], "#c0c6ce"],
 		],
 		"npcs":
 		[
 			{
 				"type": "clerk",
 				"marker": "clerk",
-				"name": "Vendedor",
+				"name": "Clerk",
 				"color": "#4d86d8",
 				"shop": "pewter"
 			},
@@ -725,7 +723,7 @@ const ROOMS := {
 	},
 	"pewter_gym":
 	{
-		"name": "Ginásio de Pewter",
+		"name": "Pewter Gym",
 		"zone": "pewter_city",
 		"size": [22, 22],
 		"floor": "#9c958a",
@@ -743,15 +741,15 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Rocha", [-7.5, -6.0], [2.2, 1.6, 2.0], "#7d766b"],
-			["Rocha", [7.5, -6.5], [2.6, 1.8, 2.2], "#7d766b"],
-			["Rocha", [-8.0, 3.0], [2.0, 1.4, 2.4], "#857e72"],
-			["Rocha", [8.0, 2.0], [2.4, 1.2, 2.0], "#857e72"],
-			["Rocha", [-6.0, 7.5], [1.6, 1.0, 1.6], "#8e877b"],
-			["Rocha", [6.5, 7.0], [1.8, 1.2, 1.4], "#8e877b"],
-			["Plataforma", [0.0, -8.4], [5.0, 0.04, 2.4], "#6e675d", false],
-			["Estátua", [-2.0, 9.6], [0.8, 1.8, 0.8], "#a8a39a"],
-			["Estátua", [2.0, 9.6], [0.8, 1.8, 0.8], "#a8a39a"],
+			["Rock", [-7.5, -6.0], [2.2, 1.6, 2.0], "#7d766b"],
+			["Rock", [7.5, -6.5], [2.6, 1.8, 2.2], "#7d766b"],
+			["Rock", [-8.0, 3.0], [2.0, 1.4, 2.4], "#857e72"],
+			["Rock", [8.0, 2.0], [2.4, 1.2, 2.0], "#857e72"],
+			["Rock", [-6.0, 7.5], [1.6, 1.0, 1.6], "#8e877b"],
+			["Rock", [6.5, 7.0], [1.8, 1.2, 1.4], "#8e877b"],
+			["Platform", [0.0, -8.4], [5.0, 0.04, 2.4], "#6e675d", false],
+			["Statue", [-2.0, 9.6], [0.8, 1.8, 0.8], "#a8a39a"],
+			["Statue", [2.0, 9.6], [0.8, 1.8, 0.8], "#a8a39a"],
 		],
 		"npcs":
 		[
@@ -760,25 +758,25 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "guide",
-				"name": "Guia do Ginásio",
+				"name": "Gym Guide",
 				"color": "#e0e0e0",
 				"sprite": "npc_gym_guide",
 				"lines":
 				[
-					"Opa! Você quer sonhar alto?",
-					"Tem coragem de sonhar em se tornar o campeão Pokémon?",
-					"Não sou treinador, mas posso dar dicas de como vencer.",
-					"Deixa que eu levo você até o topo!",
-					"O primeiro Pokémon a entrar numa luta é o da esquerda na lista de Pokémon.",
-					"Mudando a ordem dos Pokémon, você pode ganhar vantagem.",
-					"Experimente ordens diferentes de acordo com a equipe do adversário."
+					"Whoa! Do you dream big?",
+					"Do you dare to dream of becoming the Pokémon champion?",
+					"I'm not a trainer, but I can give you tips on how to win.",
+					"Leave it to me, I'll take you to the top!",
+					"The first Pokémon to enter a fight is the one at the top of your Pokémon list.",
+					"By changing the order of your Pokémon, you can gain an edge.",
+					"Try different orders depending on your opponent's team."
 				]
 			},
 		],
 	},
 	"pewter_museum":
 	{
-		"name": "Museu de Ciências de Pewter",
+		"name": "Pewter Museum of Science",
 		"zone": "pewter_city",
 		"size": [20, 10],
 		"floor": "#bdb2a0",
@@ -788,27 +786,27 @@ const ROOMS := {
 		"markers": {"clerk": [-6.0, 1.0, "e"]},
 		"furniture":
 		[
-			["Balcão", [-7.0, 1.0], [0.6, 1.1, 2.6], "#8b6a46"],
-			["Fóssil de Aerodactyl", [0.0, -3.9], [4.0, 1.4, 1.0], "#d9cfbd"],
-			["Fóssil de Kabutops", [6.5, -3.9], [2.4, 1.6, 1.0], "#d4c8b2"],
-			["Pedra da Lua", [-6.5, -3.4], [1.2, 1.2, 1.2], "#9aa4c8"],
-			["Vitrine", [3.5, 1.5], [2.2, 1.0, 1.0], "#a8c6d8"],
+			["Counter", [-7.0, 1.0], [0.6, 1.1, 2.6], "#8b6a46"],
+			["Aerodactyl Fossil", [0.0, -3.9], [4.0, 1.4, 1.0], "#d9cfbd"],
+			["Kabutops Fossil", [6.5, -3.9], [2.4, 1.6, 1.0], "#d4c8b2"],
+			["Moon Stone", [-6.5, -3.4], [1.2, 1.2, 1.2], "#9aa4c8"],
+			["Display Case", [3.5, 1.5], [2.2, 1.0, 1.0], "#a8c6d8"],
 		],
 		"npcs":
 		[
 			{
 				"type": "npc",
 				"marker": "clerk",
-				"name": "Recepcionista",
+				"name": "Receptionist",
 				"color": "#c46a6a",
 				"sprite": "npc_woman",
-				"lines": ["Temos dois fósseis de Pokémon raros e pré-históricos em exposição."]
+				"lines": ["We have two rare, prehistoric Pokémon fossils on display."]
 			},
 		],
 	},
 	"pewter_house1":
 	{
-		"name": "Casa",
+		"name": "House",
 		"zone": "pewter_city",
 		"size": [12, 7],
 		"floor": "#c4a77c",
@@ -818,8 +816,8 @@ const ROOMS := {
 		"markers": {"woman": [2.0, 0.9, "n"]},
 		"furniture":
 		[
-			["Mesa", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
-			["Estante", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
+			["Table", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
+			["Bookcase", [-4.0, -3.0], [2.4, 2.0, 0.6], "#6f5236"],
 		],
 		"npcs":
 		[
@@ -827,19 +825,19 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "woman",
-				"name": "Mulher",
+				"name": "Woman",
 				"sprite": "npc_woman",
 				"lines":
 				[
-					"Bem-vindo à Cidade de Pewter!",
-					"Vale a pena visitar o Museu de Ciências: tem fósseis de Pokémon antigos!"
+					"Welcome to Pewter City!",
+					"The Museum of Science is worth a visit: it has fossils of ancient Pokémon!"
 				]
 			},
 		],
 	},
 	"pewter_house2":
 	{
-		"name": "Casa",
+		"name": "House",
 		"zone": "pewter_city",
 		"size": [12, 7],
 		"floor": "#c4a77c",
@@ -849,8 +847,8 @@ const ROOMS := {
 		"markers": {"girl": [2.0, 1.9, "n"]},
 		"furniture":
 		[
-			["Mesa", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
-			["Planta", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Table", [2.0, -0.2], [2.0, 0.8, 1.2], "#9a7448"],
+			["Plant", [5.4, 2.9], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
@@ -858,12 +856,12 @@ const ROOMS := {
 			{
 				"type": "npc",
 				"marker": "girl",
-				"name": "Moça",
+				"name": "Lass",
 				"sprite": "npc_girl",
 				"lines":
 				[
-					"Os Pokémon aprendem técnicas novas conforme crescem.",
-					"Mas alguns golpes precisam ser ensinados por pessoas."
+					"Pokémon learn new techniques as they grow.",
+					"But some moves have to be taught by people."
 				]
 			},
 		],
@@ -871,7 +869,7 @@ const ROOMS := {
 	# --- Rota 4 / Monte da Lua ---
 	"pokemon_center_mt_moon":
 	{
-		"name": "Centro Pokémon",
+		"name": "Pokémon Center",
 		"zone": "route_3",
 		"size": [16, 8],
 		"floor": "#d8c7b8",
@@ -888,50 +886,48 @@ const ROOMS := {
 		},
 		"furniture":
 		[
-			["Balcão", [0.0, -2.45], [5.0, 1.1, 0.5], "#e05a52"],
-			["Máquina de cura", [-1.5, -3.5], [1.4, 1.3, 0.6], "#c9cfd8"],
-			["Banco", [-6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Banco", [6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
-			["Mesa do PC", [6.0, -3.5], [1.6, 0.85, 0.7], "#8b929c"],
-			["Planta", [-7.4, -3.4], [0.6, 1.2, 0.6], "#3f8a45"],
-			["Planta", [7.4, 3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Counter", [0.0, -2.45], [5.0, 1.1, 0.5], "#e05a52"],
+			["Healing Machine", [-1.5, -3.5], [1.4, 1.3, 0.6], "#c9cfd8"],
+			["Bench", [-6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["Bench", [6.0, 1.6], [2.4, 0.5, 0.8], "#cf7a52"],
+			["PC Desk", [6.0, -3.5], [1.6, 0.85, 0.7], "#8b929c"],
+			["Plant", [-7.4, -3.4], [0.6, 1.2, 0.6], "#3f8a45"],
+			["Plant", [7.4, 3.4], [0.6, 1.2, 0.6], "#3f8a45"],
 		],
 		"npcs":
 		[
 			{
 				"type": "nurse",
 				"marker": "nurse",
-				"name": "Enfermeira",
+				"name": "Nurse",
 				"color": "#f2a3c0",
 				# Original NPC_Nurse (action HEAL): lines, heal with fade, after_heal_lines.
 				"lines":
 				[
-					"Bem-vindo ao nosso Centro Pokémon!",
-					"Quer que eu cure seus Pokémon e os deixe em perfeita saúde?",
-					"Certo, vou levar seus Pokémon por alguns segundos."
+					"Welcome to our Pokémon Center!",
+					"Shall I heal your Pokémon back to perfect health?",
+					"Okay, I'll take your Pokémon for a few seconds."
 				],
 				"after_heal":
-				[
-					"Obrigada por esperar. Seus Pokémon estão totalmente recuperados. Esperamos vê-lo de novo!"
-				]
+				["Thank you for waiting. Your Pokémon are fully healed. We hope to see you again!"]
 			},
 			{"type": "pc", "marker": "pc", "name": "PC"},
 			{
 				"type": "npc",
 				"marker": "salesman",
-				"name": "Vendedor",
+				"name": "Clerk",
 				"color": "#c9a94a",
-				"lines": ["Ei, você aí! Tenho uma oferta imperdível!"]
+				"lines": ["Hey, you there! I've got an offer you can't pass up!"]
 			},
 			{
 				"type": "npc",
 				"marker": "visitor",
-				"name": "Moça",
+				"name": "Lass",
 				"color": "#e39ab0",
 				"lines":
 				[
-					"Dizem que o Monte da Lua está cheio de Zubat.",
-					"Leve bastante Poção, a caverna é comprida!"
+					"They say Mt. Moon is full of Zubat.",
+					"Bring plenty of Potions, the cave is long!"
 				]
 			},
 		],
@@ -940,7 +936,7 @@ const ROOMS := {
 	"mt_moon_1f":
 	{
 		# CaveBuilder.decorate (data/maps/mt_moon_floors.json + mt_moon_events.json), 0,9 m por tile (48 x 40).
-		"name": "Monte da Lua 1F",
+		"name": "Mt. Moon 1F",
 		"zone": "route_3",
 		"size": [43.2, 36.0],
 		"cave": "1f",
@@ -949,7 +945,7 @@ const ROOMS := {
 	},
 	"mt_moon_b1f":
 	{
-		"name": "Monte da Lua B1F",
+		"name": "Mt. Moon B1F",
 		"zone": "route_3",
 		"size": [43.2, 36.0],
 		"cave": "b1f",
@@ -958,7 +954,7 @@ const ROOMS := {
 	},
 	"mt_moon_b2f":
 	{
-		"name": "Monte da Lua B2F",
+		"name": "Mt. Moon B2F",
 		"zone": "route_3",
 		"size": [43.2, 36.0],
 		"cave": "b2f",

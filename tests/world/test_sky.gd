@@ -148,7 +148,7 @@ func _world() -> void:
 	tod.name = "TimeOfDay"
 	w.add_child(tod)
 	await frames(2)
-	check(tod.clock_label() == "SEG 9:00", "clock starts MON 9:00 (%s)" % tod.clock_label())
+	check(tod.clock_label() == "MON 9:00", "clock starts MON 9:00 (%s)" % tod.clock_label())
 	check(tod.get_node_or_null("Moon") is DirectionalLight3D, "moon light made")
 	var env := we.environment
 	check(env != null and env == tod.env, "TimeOfDay owns one live Environment")
@@ -389,7 +389,7 @@ func _panel(tod: WorldTimeOfDay) -> void:
 
 
 func _tiers() -> void:
-	check(GfxQuality.parse("ultra") == 3 and GfxQuality.parse("Médio") == 1, "tier names parse")
+	check(GfxQuality.parse("ultra") == 3 and GfxQuality.parse("Medium") == 1, "tier names parse")
 	check(GfxQuality.parse("medio") == 1 and GfxQuality.parse("0") == 0, "tier numbers parse")
 	var e := Environment.new()
 	e.ssao_enabled = true

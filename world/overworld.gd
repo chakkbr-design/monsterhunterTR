@@ -77,10 +77,10 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 			[
 				(
 					{
-						"win": "Vitória!",
-						"lose": "Você perdeu...",
-						"run": "Fugiu.",
-						"caught": "Capturado!"
+						"win": "Victory!",
+						"lose": "You lost...",
+						"run": "Got away.",
+						"caught": "Caught!"
 					}
 					. get(outcome, outcome)
 				)
@@ -88,7 +88,7 @@ func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 		)
 		# o prêmio já aparece no fim da batalha ("Você ganhou ₽X pela vitória!", battle_arena)
 		for e in _result.get("evolved", []):
-			lines.append("%s evoluiu para %s!" % e)
+			lines.append("%s evolved into %s!" % e)
 		hud.toast(" ".join(lines), 3.5)
 	if whiteout:
 		await _white_out(p, maxi(money_before - int(Game.money), 0))

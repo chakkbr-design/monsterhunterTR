@@ -10,7 +10,7 @@ var after_heal_lines := PackedStringArray()
 
 
 func prompt() -> String:
-	return "E: Falar"
+	return "E: Talk"
 
 
 func interact(p: OverworldPlayer) -> void:

@@ -119,7 +119,7 @@ static func material(opts := {}) -> ShaderMaterial:
 	m.render_priority = RENDER_PRIORITY
 	var kind := str(opts.get("kind", "pond"))
 	if not kind in KINDS:
-		push_warning("WaterSurface: tipo de água desconhecido '%s', usando pond" % kind)
+		push_warning("WaterSurface: unknown water type '%s', using pond" % kind)
 		kind = "pond"
 	m.set_shader_parameter("kind", KINDS.find(kind))
 	var preset: Dictionary = PRESETS[kind]

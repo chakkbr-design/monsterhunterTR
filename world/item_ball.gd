@@ -8,12 +8,12 @@ extends WorldNpc
 const BALL_SCRIPT := "res://gfx/poke_ball_3d.gd"
 ## Items.POCKETS of the original, with the pause menu's names.
 const POCKETS := {
-	"medicine": "Remédios",
-	"berries": "Frutas",
-	"balls": "Pokébolas",
-	"battle": "Itens de Batalha",
-	"tm": "MTs",
-	"key": "Itens-chave"
+	"medicine": "Medicine",
+	"berries": "Berries",
+	"balls": "Poké Balls",
+	"battle": "Battle Items",
+	"tm": "TMs",
+	"key": "Key Items"
 }
 
 var uid := ""
@@ -34,7 +34,7 @@ static func taken(item_uid: String) -> bool:
 
 static func pocket_name(id: String) -> String:
 	var cat := String(Dex.item(id).get("category", "key"))
-	return String(POCKETS.get(cat, "Itens"))
+	return String(POCKETS.get(cat, "Items"))
 
 
 func _ready() -> void:
@@ -74,7 +74,7 @@ func _process(delta: float) -> void:
 
 
 func prompt() -> String:
-	return "" if hidden or _taken else "E: Pegar"
+	return "" if hidden or _taken else "E: Pick up"
 
 
 ## The original's two lines: "You found X!" / "You put the X in the <pocket> pocket."
@@ -82,10 +82,7 @@ func pickup_lines() -> PackedStringArray:
 	var nm := String(Dex.item(item_id).get("name", item_id.replace("_", " ").to_upper()))
 	var what := ("%d× %s" % [count, nm]) if count > 1 else nm
 	return PackedStringArray(
-		[
-			"Você encontrou %s!" % what,
-			"Você guardou %s no bolso de %s." % [nm, pocket_name(item_id)]
-		]
+		["You found %s!" % what, "You put the %s in the %s pocket." % [nm, pocket_name(item_id)]]
 	)
 
 

@@ -8,7 +8,7 @@ const GROUP := "ow_interact"
 const LAYER := 8
 
 @export var npc_name := "Villager"
-@export var lines: PackedStringArray = ["Olá!"]
+@export var lines: PackedStringArray = ["Hello!"]
 @export var color := Color(0.3, 0.45, 0.85)
 @export var body_height := 1.6
 @export var sprite_sheet := ""  ## file in original/assets/sprites ("npc_oak.png"); "" = guess
@@ -44,6 +44,7 @@ const NAME_SHEETS := [
 	["cientista", "npc_scientist"],
 	["scientist", "npc_scientist"],
 	["assistente", "npc_scientist"],
+	["assistant", "npc_scientist"],
 	["aide", "npc_scientist"],
 	["guia", "npc_gym_guide"],
 	["guide", "npc_gym_guide"],
@@ -55,17 +56,23 @@ const NAME_SHEETS := [
 	["inseto", "npc_bug_catcher"],
 	["lass", "npc_lass"],
 	["professora", "npc_cooltrainer_f"],
+	["teacher", "npc_cooltrainer_f"],
 	["treinador", "npc_camper"],
+	["trainer", "npc_camper"],
 	["garoto", "npc_youngster"],
+	["little boy", "npc_kid"],
+	["boy", "npc_youngster"],
 	["youngster", "npc_youngster"],
 	["menino", "npc_kid"],
 	["kid", "npc_kid"],
 	["menina", "npc_little_girl"],
+	["little girl", "npc_little_girl"],
 	["girl", "npc_girl"],
 	["moça", "npc_girl"],
 	["senhora", "npc_woman"],
 	["woman", "npc_woman"],
 	["recepcionista", "npc_woman"],
+	["receptionist", "npc_woman"],
 	["senhor", "npc_oldman"],
 	["old", "npc_oldman"],
 	["velho", "npc_oldman"],
@@ -435,7 +442,7 @@ func _build_body() -> void:
 
 
 func prompt() -> String:
-	return "E: Falar"
+	return "E: Talk"
 
 
 ## Turns toward `pos` (onto the nearest of the four axes in grid zones).

@@ -14,7 +14,7 @@ extends CanvasLayer
 const TOGGLE_KEY := KEY_F9
 const SPEED_MIN := 0.5
 const SPEED_MAX := 120.0
-const FALLBACK_WEATHER := [["", "Automático"], ["clear", "Limpo"], ["rain", "Chuva"]]
+const FALLBACK_WEATHER := [["", "Auto"], ["clear", "Clear"], ["rain", "Rain"]]
 
 var _panel: PanelContainer
 var _hour: HSlider
@@ -71,7 +71,7 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 6)
 	_panel.add_child(box)
 	var title := Label.new()
-	title.text = "Céu e clima (F9)"
+	title.text = "Sky and weather (F9)"
 	title.add_theme_font_size_override("font_size", 18)
 	box.add_child(title)
 	_hour_label = _label(box)
@@ -83,17 +83,17 @@ func _build() -> void:
 	var row := HBoxContainer.new()
 	box.add_child(row)
 	_pause = CheckBox.new()
-	_pause.text = "Pausar"
+	_pause.text = "Pause"
 	_pause.focus_mode = Control.FOCUS_NONE
 	_pause.toggled.connect(func(on: bool): WorldTimeOfDay.paused = on)
 	row.add_child(_pause)
 	var normal := Button.new()
-	normal.text = "Velocidade normal"
+	normal.text = "Normal speed"
 	normal.focus_mode = Control.FOCUS_NONE
 	normal.pressed.connect(_on_normal_speed)
 	row.add_child(normal)
 	var wl := _label(box)
-	wl.text = "Clima"
+	wl.text = "Weather"
 	_weather = OptionButton.new()
 	_weather.focus_mode = Control.FOCUS_NONE
 	_weather.item_selected.connect(_on_weather)
@@ -101,12 +101,12 @@ func _build() -> void:
 	var wrow := HBoxContainer.new()
 	box.add_child(wrow)
 	_mist = CheckBox.new()
-	_mist.text = "Névoa no chão"
+	_mist.text = "Ground mist"
 	_mist.focus_mode = Control.FOCUS_NONE
 	_mist.toggled.connect(func(on: bool): WorldWeather.set_mist_option(on))
 	wrow.add_child(_mist)
 	var bolt := Button.new()
-	bolt.text = "Raio"
+	bolt.text = "Lightning"
 	bolt.focus_mode = Control.FOCUS_NONE
 	bolt.pressed.connect(_on_strike)
 	wrow.add_child(bolt)
@@ -114,7 +114,7 @@ func _build() -> void:
 	_weather_info.add_theme_font_size_override("font_size", 13)
 	_weather_info.add_theme_color_override("font_color", Color(0.78, 0.86, 0.95))
 	var tl := _label(box)
-	tl.text = "Gráficos (só nesta sessão)"
+	tl.text = "Graphics (this session only)"
 	_tier = OptionButton.new()
 	_tier.focus_mode = Control.FOCUS_NONE
 	for n in GfxQuality.NAMES:
@@ -181,11 +181,8 @@ func _sync_speed() -> void:
 	var mps := tod.speed() if tod else 1.0 / 3.0
 	_speed.set_value_no_signal(speed_to_slider(maxf(mps, SPEED_MIN)))
 	_speed_label.text = (
-		"Velocidade: %s min de jogo/s%s"
-		% [
-			String.num(mps, 2).replace(".", ","),
-			" (normal)" if WorldTimeOfDay.minutes_per_sec < 0.0 else ""
-		]
+		"Speed: %s game min/s%s"
+		% [String.num(mps, 2), " (normal)" if WorldTimeOfDay.minutes_per_sec < 0.0 else ""]
 	)
 
 
@@ -233,7 +230,7 @@ func _process(delta: float) -> void:
 	var tod := _tod()
 	if tod == null:
 		return
-	_hour_label.text = "Hora: %s  (%s)" % [SkyCycle.format_hm(tod.look_minute()), tod.period]
+	_hour_label.text = "Time: %s  (%s)" % [SkyCycle.format_hm(tod.look_minute()), tod.period]
 	_hour.set_value_no_signal(tod.look_minute())
 	_info_t -= delta
 	if _info_t > 0.0:
@@ -244,9 +241,9 @@ func _process(delta: float) -> void:
 		return
 	_info.text = (
 		(
-			"Sol %.0f° az %.0f° · energia %.2f\nLua %.0f° · energia %.2f · preenchimento %.2f\n"
-			+ "Exposição %.2f · ambiente %.2f · nuvens %.2f\n"
-			+ "Postes %.2f · janelas %.2f · sombras de poste %d"
+			"Sun %.0f° az %.0f° · energy %.2f\nMoon %.0f° · energy %.2f · fill %.2f\n"
+			+ "Exposure %.2f · ambient %.2f · clouds %.2f\n"
+			+ "Lamps %.2f · windows %.2f · lamp shadows %d"
 		)
 		% [
 			s.sun_elevation,
@@ -277,21 +274,18 @@ func _weather_text() -> String:
 	var st := w.state
 	return (
 		(
-			(
-				"%s · chuva %.2f · chão %.2f · poças %.2f\nneve %.2f (no chão %.2f) · nuvens %.2f"
-				+ " · névoa %.2f · vento %.2f"
-			)
-			% [
-				String(names.get(w.type, w.type)),
-				st.rain,
-				st.wet,
-				st.puddle_level,
-				st.snow,
-				st.snow_cover,
-				w.cloud,
-				w.mist,
-				st.wind,
-			]
+			"%s · rain %.2f · ground %.2f · puddles %.2f\nsnow %.2f (on ground %.2f) · clouds %.2f"
+			+ " · mist %.2f · wind %.2f"
 		)
-		. replace(".", ",")
+		% [
+			String(names.get(w.type, w.type)),
+			st.rain,
+			st.wet,
+			st.puddle_level,
+			st.snow,
+			st.snow_cover,
+			w.cloud,
+			w.mist,
+			st.wind,
+		]
 	)

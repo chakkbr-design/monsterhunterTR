@@ -64,7 +64,7 @@ func _ready() -> void:
 	_info.modulate = Color(0.85, 0.88, 0.95)
 	v.add_child(_info)
 	var help := Label.new()
-	help.text = "W/S escolhe   A/D quantidade   E confirma   Esc volta"
+	help.text = "W/S choose   A/D quantity   E confirm   Esc back"
 	help.add_theme_font_size_override("font_size", 12)
 	help.modulate = Color(1, 1, 1, 0.55)
 	v.add_child(help)
@@ -152,7 +152,7 @@ func press(act: String) -> void:
 						state = "qty"
 					else:
 						_info.text = (
-							"Dinheiro insuficiente." if not selling else "Você não tem esse item."
+							"Not enough money." if not selling else "You don't have that item."
 						)
 						return
 		"qty":
@@ -176,18 +176,18 @@ func press(act: String) -> void:
 					var msg := ""
 					if ok and selling:
 						msg = (
-							"Vendeu %d %s por P$%d."
+							"Sold %d %s for P$%d."
 							% [qty, MartShop.item_name(id), MartShop.sell_price(id) * qty]
 						)
 					elif ok:
 						msg = (
-							"Comprou %d %s por P$%d."
+							"Bought %d %s for P$%d."
 							% [qty, MartShop.item_name(id), MartShop.price(id) * qty]
 						)
 						if id == MartShop.BONUS_FOR and qty >= MartShop.BONUS_AT:
-							msg += " Ganhou também uma Premier Ball!"
+							msg += " You also got a Premier Ball!"
 					else:
-						msg = "Não deu certo."
+						msg = "That didn't work."
 					state = "list"
 					if selling:
 						items = MartShop.sellable(game)
@@ -226,24 +226,24 @@ func _redraw() -> void:
 		"menu":
 			_title.text = "POKé MART"
 			for i in 3:
-				_row(["Comprar", "Vender", "Sair"][i], "", i == cursor)
-			_info.text = "Posso ajudar?"
+				_row(["Buy", "Sell", "Exit"][i], "", i == cursor)
+			_info.text = "May I help you?"
 		"list", "qty":
-			_title.text = "VENDER" if selling else "COMPRAR"
+			_title.text = "SELL" if selling else "BUY"
 			if items.is_empty():
-				_row("(nada para vender)" if selling else "(sem estoque)", "", false)
+				_row("(nothing to sell)" if selling else "(out of stock)", "", false)
 			for i in items.size():
 				var id: String = items[i]
 				var unit := MartShop.sell_price(id) if selling else MartShop.price(id)
 				var have := MartShop.count(id, game)
 				_row("%s  x%d" % [MartShop.item_name(id), have], "P$%d" % unit, i == cursor)
-			_row("Voltar", "", cursor >= items.size())
+			_row("Back", "", cursor >= items.size())
 			if cursor < items.size():
 				var id2: String = items[cursor]
 				_info.text = String(Dex.item(id2).get("description", ""))
 				if state == "qty":
 					var unit2 := MartShop.sell_price(id2) if selling else MartShop.price(id2)
-					_info.text = "Quantidade: ◀ %d ▶   Total: P$%d" % [qty, unit2 * qty]
+					_info.text = "Quantity: ◀ %d ▶   Total: P$%d" % [qty, unit2 * qty]
 
 
 func _row(text: String, right: String, sel: bool) -> void:

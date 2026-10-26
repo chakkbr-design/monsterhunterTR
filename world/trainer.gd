@@ -81,7 +81,7 @@ func text(key: String) -> PackedStringArray:
 
 
 func prompt() -> String:
-	return "E: Falar" if beaten() else "E: Desafiar"
+	return "E: Talk" if beaten() else "E: Challenge"
 
 
 func _physics_process(delta: float) -> void:
