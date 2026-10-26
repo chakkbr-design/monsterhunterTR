@@ -4,7 +4,7 @@ extends SceneTree
 ##     --resolution 1600x900 --script res://tests/gfx/shot_water.gd -- --out=/tmp/water.png \
 ##     [--hour=noon|morning|golden|dusk|night] [--weather=clear|rain|storm|snow|windy]
 ##     [--view=pond,fountain,stream,near,far,wide,low,arena,jets,puddle] [--wait=frames]
-##     [--freeze=0..1] [--debug=1..6] [--arena-kind=sea|puddle|fountain|stream]
+##     [--freeze=0..1] [--debug=1..6] [--arena-kind=sea|puddle|fountain|stream] [--bench]
 ## Builds the voxel diorama of tests/gfx/shot_water_scene.gd (pond, stream + cascade, three-tier
 ## fountain, dock, sprites) under a simple sun + sky that reads the same globals as the water
 ## (the sky lane owns the real environment), sets the time-of-day and weather globals directly and
@@ -105,6 +105,7 @@ var wait := 14
 var freeze := -1.0
 var debug := 0
 var arena_kind := ""
+var bench := false
 var cam: Camera3D
 var sun: DirectionalLight3D
 var env: Environment
@@ -127,6 +128,8 @@ func _initialize() -> void:
 			freeze = float(a.substr(9))
 		elif a.begins_with("--debug="):
 			debug = int(a.substr(8))
+		elif a == "--bench":
+			bench = true
 		elif a.begins_with("--arena-kind="):
 			arena_kind = a.substr(13)
 	_run.call_deferred()
@@ -177,7 +180,38 @@ func _run() -> void:
 		var path := out if views.size() == 1 else out.get_basename() + "_" + v + ".png"
 		img.save_png(path)
 		print("saved ", path)
+		if bench:
+			await _bench(v)
 	quit(0)
+
+
+## GPU time of the frame with all water as built, with the SSR off, and with no water at all
+## (lavapipe numbers are only useful as ratios).
+func _bench(v: String) -> void:
+	var rid := get_root().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(rid, true)
+	var waters: Array = [scene.pond, scene.stream, scene.arena_pond, scene.puddle]
+	waters.append_array(scene.fountain.basins)
+	var res := {}
+	for mode in ["water", "no_ssr", "no_water"]:
+		for w in waters:
+			w.visible = mode != "no_water"
+			WaterSurface.set_param(w, "ssr_steps", 0 if mode == "no_ssr" else 20)
+		for i in 8:
+			await process_frame
+		var tot := 0.0
+		for i in 20:
+			await process_frame
+			tot += RenderingServer.viewport_get_measured_render_time_gpu(rid)
+		res[mode] = tot / 20.0
+	for w in waters:
+		w.visible = true
+	print(
+		(
+			"bench %s: gpu ms water %.2f, water without SSR %.2f, no water %.2f"
+			% [v, res.water, res.no_ssr, res.no_water]
+		)
+	)
 
 
 func _light(root: Node3D) -> void:
