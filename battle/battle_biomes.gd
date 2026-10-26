@@ -458,7 +458,7 @@ func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> flo
 				k *= DARK_ACC
 				_tele("dark", {"who": _uid(target), "by": _uid(user)})
 				if _pop_ok(target, "dark"):
-					target.popup("No escuro!", Color(0.55, 0.5, 0.75), 0.8, 0.4)
+					target.popup("In the dark!", Color(0.55, 0.5, 0.75), 0.8, 0.4)
 			if d > SHADOW_SEE and _has_type(target, SHADOW_TYPES):
 				k *= SHADOW_ACC
 				_tele("shadow", {"who": _uid(target), "by": _uid(user)})
@@ -467,7 +467,7 @@ func acc_mult(user: BattleFighter, mv: Dictionary, target: BattleFighter) -> flo
 				k *= FOG_ACC
 				_tele("fog", {"who": _uid(target), "by": _uid(user)})
 				if _pop_ok(target, "fog"):
-					target.popup("Neblina!", Color(0.7, 0.78, 0.7), 0.8, 0.4)
+					target.popup("Fog!", Color(0.7, 0.78, 0.7), 0.8, 0.4)
 		"montanha":
 			if "ice" in target.types and in_deep(target) and d > SNOW_SEE:
 				k *= 1.0 - SNOW_EVADE
@@ -483,7 +483,7 @@ func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> 
 		return 1.0
 	_tele("rune_power", {"by": _uid(user), "who": _uid(target)})
 	if _pop_ok(user, "rune_power"):
-		user.popup("Poder das runas!", Color(0.8, 0.55, 1.0), 0.9, 0.5)
+		user.popup("Rune power!", Color(0.8, 0.55, 1.0), 0.9, 0.5)
 	return RUNE_POWER
 
 
@@ -630,7 +630,7 @@ func _tick_rune(dt: float) -> void:
 			_tele("rune_hold", {"side": holder})
 			for f in arena.fighters:
 				if is_instance_valid(f) and f.side == holder and in_rune(f) and _pop_ok(f, "rune"):
-					f.popup("Runas: energia!", Color(0.8, 0.55, 1.0), 0.9, 0.5)
+					f.popup("Runes: energy!", Color(0.8, 0.55, 1.0), 0.9, 0.5)
 		elif holder == -2:
 			_tele("rune_contest", {})
 		_rune_look()
@@ -741,7 +741,7 @@ func _warn_avalanche(user: BattleFighter, at: Vector3) -> void:
 		}
 	)
 	_tele("avalanche_warn", {"by": _uid(user)})
-	arena.say("O paredão tremeu: avalanche!")
+	arena.say("The cliff shook: avalanche!")
 	if visual:
 		arena.fx_beam(
 			from + Vector3(0, 0.05, 0), ax, AV_LEN, AV_DEPTH, Color(0.9, 0.95, 1.0, 0.3), AV_WARN
@@ -815,7 +815,7 @@ func _melt(user: BattleFighter, at: Vector3, r: float) -> void:
 			)
 	if n > 0:
 		_tele("snow_melt", {"by": _uid(user), "n": n})
-		arena.popup(at + Vector3(0, 0.8, 0), "A neve derreteu!", Dex.type_color("fire"))
+		arena.popup(at + Vector3(0, 0.8, 0), "The snow melted!", Dex.type_color("fire"))
 
 
 func _drop_cell(c: Dictionary) -> void:
@@ -844,7 +844,7 @@ func _cool(user: BattleFighter, at: Vector3, r: float, water: bool) -> void:
 		return
 	if water:
 		_tele("lava_cool", {"by": _uid(user), "n": n})
-		arena.popup(at + Vector3(0, 0.8, 0), "A lava esfriou!", Dex.type_color("water"))
+		arena.popup(at + Vector3(0, 0.8, 0), "The lava cooled!", Dex.type_color("water"))
 		if visual:
 			PixelFx.pop(arena, "wind", at + Vector3(0, 0.5, 0), 1.6, 0.5)
 	else:
@@ -874,7 +874,7 @@ func _erupt() -> void:
 			r.node = _ring(at, ERUPT_R, Color(1.0, 0.35, 0.1, 0.3))
 		rocks.append(r)
 	_tele("eruption", {})
-	arena.say("O vulcão entrou em erupção!")
+	arena.say("The volcano erupted!")
 
 
 func _rock_hit(r: Dictionary) -> void:
@@ -887,7 +887,7 @@ func _rock_hit(r: Dictionary) -> void:
 		if rel.length() > ERUPT_R + 0.2 or f.height() > 2.0:
 			continue
 		var n := _dmg(f, ERUPT_FRAC)
-		f.popup("-%d Pedra vulcânica!" % n, Color(1.0, 0.5, 0.25), 1.0, 0.6)
+		f.popup("-%d Volcanic rock!" % n, Color(1.0, 0.5, 0.25), 1.0, 0.6)
 		f.take_damage(n, rel.normalized() if rel.length() > 0.05 else Vector3.RIGHT, ERUPT_KNOCK)
 		_tele(
 			"eruption_hit",

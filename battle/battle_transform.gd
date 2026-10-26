@@ -64,7 +64,7 @@ static func apply(arena: Node, user: BattleFighter, target: BattleFighter) -> bo
 	if arena.get("vfx") and arena.is_inside_tree():
 		arena.vfx.puff(arena.to_global(user.position + Vector3(0, 0.5, 0)), 1.6)
 	user.popup(
-		"Virou %s!" % target.mon.display_name,
+		"Became %s!" % target.mon.display_name,
 		Dex.type_color(String(target.types[0]) if not target.types.is_empty() else "normal"),
 		1.1,
 		0.9

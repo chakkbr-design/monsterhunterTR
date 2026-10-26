@@ -12,23 +12,23 @@ const STATUS_IMMUNE := {
 	"freeze": "ice"
 }
 const STAT_NAMES := {
-	"atk": "Ataque",
-	"def": "Defesa",
-	"spa": "At. Esp.",
-	"spd": "Def. Esp.",
-	"spe": "Velocidade",
-	"acc": "Precisão"
+	"atk": "Attack",
+	"def": "Defense",
+	"spa": "Sp. Atk",
+	"spd": "Sp. Def",
+	"spe": "Speed",
+	"acc": "Accuracy"
 }
 const STATUS_WORDS := {
-	"burn": "QUEIMADO!",
-	"poison": "ENVENENADO!",
-	"toxic": "MUITO ENVENENADO!",
-	"freeze": "CONGELADO!",
-	"paralysis": "PARALISADO!",
-	"sleep": "DORMINDO!",
-	"leech": "SEMEADO!",
-	"flinch": "HESITOU!",
-	"confusion": "CONFUSO!"
+	"burn": "BURNED!",
+	"poison": "POISONED!",
+	"toxic": "BADLY POISONED!",
+	"freeze": "FROZEN!",
+	"paralysis": "PARALYZED!",
+	"sleep": "ASLEEP!",
+	"leech": "SEEDED!",
+	"flinch": "FLINCHED!",
+	"confusion": "CONFUSED!"
 }
 const PARALYSIS_FAIL := 0.2
 ## Ritmo +-5% nos cooldowns; golpe de prioridade (Quick Attack) sai quase sem preparo e com GCD menor.
@@ -94,7 +94,7 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	if user.pp_max < cost:
 		if feedback:
 			user.popup(
-				"Sem energia!" if user.energy_mode else "PP insuficiente!", Color(1, 0.6, 0.4)
+				"Not enough energy!" if user.energy_mode else "Not enough PP!", Color(1, 0.6, 0.4)
 			)
 		return false
 	user.spend(cost)
@@ -108,7 +108,7 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 		Dex.GLOBAL_COOLDOWN / sf * (PRIORITY_GCD if int(mv.get("priority", 0)) > 0 else 1.0)
 	)
 	if user.status == "paralysis" and rng.randf() < PARALYSIS_FAIL:
-		user.popup("Paralisado!", Dex.type_color("electric"))
+		user.popup("Paralyzed!", Dex.type_color("electric"))
 		return true
 	if effects.infatuated_fail(user):
 		return true
@@ -205,7 +205,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 			dir = _miss_dir(user, aimed, mv, dir)
 		_announce_miss(user, aimed, mv)
 	if user.confusion_t > 0.0 and rng.randf() < CONFUSION_CHANCE:
-		user.popup("Está confuso!", Dex.type_color("psychic"))
+		user.popup("It's confused!", Dex.type_color("psychic"))
 		dir = Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1))
 		dir = dir.normalized() if dir.length() > 0.01 else Vector3.BACK
 	if arena.get("terrain"):
@@ -262,7 +262,7 @@ func deliver(user: BattleFighter, mv: Dictionary) -> void:
 		"clones":
 			user.evasion_t = float(mv.get("duration", 5.0))
 			user.evasion = float(mv.get("evasion", 0.4))
-			user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
+			user.popup("EVASION+!", Color(0.95, 0.6, 0.9))
 			if arena.field:
 				arena.field.spawn_clones(user, mv)
 		_:
@@ -322,7 +322,7 @@ func _announce_miss(user: BattleFighter, target: BattleFighter, mv: Dictionary) 
 		delay,
 		func() -> void:
 			if is_instance_valid(target) and target.active():
-				target.popup("Errou!", Color(0.75, 0.85, 1.0))
+				target.popup("Missed!", Color(0.75, 0.85, 1.0))
 	)
 
 
@@ -423,7 +423,7 @@ func hit(
 		return  # escondido (Dig, Fly...): o golpe passa
 	power_scale *= reach
 	if target.evasion_t > 0.0 and rng.randf() < target.evasion:
-		target.popup("Errou!", Color(0.9, 0.9, 1.0))
+		target.popup("Missed!", Color(0.9, 0.9, 1.0))
 		_dodged(target, "evasion")
 		if arena.field:
 			arena.field.on_evaded(target)
@@ -464,7 +464,7 @@ func hit(
 		effects.on_damage_roll(user, target, m, res)
 		var eff := float(res.eff)
 		if eff == 0.0:
-			target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+			target.popup("No effect...", Color(0.7, 0.7, 0.7))
 			effects.crash_damage(user, mv)
 			_landed(user, target, mv)
 			return
@@ -515,10 +515,11 @@ func hit(
 			var gain := maxi(1, int(float(dmg) * float(mv.drain)))
 			if not (arena.abilities and arena.abilities.drain_backfires(user, target, gain)):
 				user.heal(gain)
+		# Cor do número pela efetividade (o HUD quieto do modo de energia usa; branco = normal).
 		var col := (
 			Color(1, 0.75, 0.15)
 			if eff > 1.0
-			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color(0.95, 0.3, 0.25))
+			else (Color(0.55, 0.58, 0.66) if eff < 1.0 else Color.WHITE)
 		)
 		if dmg > 0:
 			target.popup(str(dmg), col, 1.5 if res.crit else 1.0, 0.35, "damage")
@@ -530,11 +531,11 @@ func hit(
 			)
 		)
 		if res.crit:
-			target.popup("CRÍTICO!", Color(1, 0.55, 0.3), 1.0, 0.6, "crit")
+			target.popup("CRITICAL!", Color(1, 0.55, 0.3), 1.0, 0.6, "crit")
 		if eff > 1.0:
-			target.popup("SUPEREFETIVO!", Color(1, 0.8, 0.2), 1.0, 0.85, "super")
+			target.popup("SUPER EFFECTIVE!", Color(1, 0.8, 0.2), 1.0, 0.85, "super")
 		elif eff < 1.0:
-			target.popup("Pouco efetivo", Color(0.7, 0.7, 0.8), 1.0, 0.85, "weak")
+			target.popup("Not very effective", Color(0.7, 0.7, 0.8), 1.0, 0.85, "weak")
 		arena.note_hit(user, target, mv, dmg, hp_before)
 		var tel = arena.get("telemetry")
 		if tel:
@@ -561,7 +562,7 @@ func hit(
 				STATUS_IMMUNE.get(st, "-") in target.types
 				and not BattleAbilitiesMore.corrodes(arena.abilities, user, st)
 			):
-				target.popup("Imune a %s" % st, Color(0.8, 0.8, 0.8))
+				target.popup("Immune to %s" % st, Color(0.8, 0.8, 0.8))
 			elif arena.abilities and arena.abilities.blocks_status(target, st, user):
 				pass
 			elif effects.blocks_status(user, target, st):
@@ -617,7 +618,7 @@ func _cover(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Battl
 	if not guard or float(target.hp) > float(target.max_hp) * 0.6 or rng.randf() >= COVER_CHANCE:
 		return target
 	p.position = target.position.lerp(user.position, 0.25)
-	p.popup("Protegeu %s!" % target.mon.display_name, Color(0.6, 0.85, 1.0), 1.1, 0.9)
+	p.popup("Protected %s!" % target.mon.display_name, Color(0.6, 0.85, 1.0), 1.1, 0.9)
 	return p
 
 
@@ -663,7 +664,10 @@ func change_stage(c: BattleFighter, k: String, delta: int, src: BattleFighter = 
 	var nv := clampi(cur + delta, -6, 6)
 	var short := BattleHUD.VivaTags.short_stat(k)
 	if nv == cur:
-		c.popup("%s não %s mais!" % [short, "sobe" if delta > 0 else "desce"], Color(0.8, 0.8, 0.8))
+		c.popup(
+			"%s won't go any %s!" % [short, "higher" if delta > 0 else "lower"],
+			Color(0.8, 0.8, 0.8)
+		)
 		return
 	c.stages[k] = nv
 	effects.note_stage(c, nv - cur)
@@ -891,14 +895,14 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 			if mv.has("recharge") and user.alive():
 				# MUST RECHARGE: parado e vulnerável depois do golpe (Hyper Beam).
 				user.stun_t = maxf(user.stun_t, float(mv.recharge))
-				user.popup("Precisa recarregar!", Color(1, 0.7, 0.4), 1.0, 0.9)
+				user.popup("Must recharge!", Color(1, 0.7, 0.4), 1.0, 0.9)
 	)
 
 
 ## Future Sight: avisa agora e o golpe cai no fim do 2º turno depois deste (BattleEndTurn), no alvo de
 ## então (o usuário fica livre).
 func _future_sight(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> void:
-	user.popup("Previu o futuro!", Dex.type_color("psychic"))
+	user.popup("Foresaw an attack!", Dex.type_color("psychic"))
 	effects.add_future(user, mv, miss)
 
 
@@ -1035,13 +1039,12 @@ func _self_buff(user: BattleFighter, mv: Dictionary) -> void:
 		var before := user.crit_stage
 		user.crit_stage = mini(user.crit_stage + int(mv.get("stages", 1)), 4)
 		user.popup(
-			"Está se concentrando!" if user.crit_stage != before else "Já está concentrado!",
-			Color(1, 0.8, 0.4)
+			"Focusing!" if user.crit_stage != before else "Already focused!", Color(1, 0.8, 0.4)
 		)
 	elif st == "evasion":
 		user.evasion_t = float(mv.get("duration", 5.0))
 		user.evasion = float(mv.get("evasion", 0.4))
-		user.popup("EVASÃO+!", Color(0.95, 0.6, 0.9))
+		user.popup("EVASION+!", Color(0.95, 0.6, 0.9))
 	else:
 		change_stage(user, st, int(mv.get("stages", 1)))
 

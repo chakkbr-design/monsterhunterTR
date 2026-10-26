@@ -149,16 +149,16 @@ func _run() -> void:
 	scr.set_field("moves", [String(entry(scr).moves[0])])
 	scr.set_move(0, "")
 	check(
-		entry(scr).moves.size() == 1 and scr._status.text.contains("pelo menos um golpe"),
+		entry(scr).moves.size() == 1 and scr._status.text.contains("at least one move"),
 		"não tira o último golpe"
 	)
 	scr.moves_for_level()
 	check(entry(scr).moves == Dex.moves_at("Bulbasaur", Cfg.LEVEL), "golpes do Nv 50")
 	if not Dex.move("flamethrower").is_empty():
 		var bp := int(Dex.move("flamethrower").get("bp", 0))
-		check(scr._move_info("flamethrower").contains("Poder %d" % bp), "poder pelo bp (stream)")
+		check(scr._move_info("flamethrower").contains("Power %d" % bp), "poder pelo bp (stream)")
 	if not Dex.move("seismic_toss").is_empty():
-		check(scr._move_info("seismic_toss").contains("Poder —"), "poder variável mostra —")
+		check(scr._move_info("seismic_toss").contains("Power —"), "poder variável mostra —")
 
 	# --- Golpe de nível alto (acima do 50) entra num Pokémon novo, sem bloqueio ---
 	var hi_sp := ""
@@ -263,9 +263,9 @@ func _run() -> void:
 	scr.select(1, 0)
 	scr.set_field("hp_pct", 5)
 	check(int(scr.cfg.sides[0].mons[0].hp_pct) != 5, "cópia entre times não compartilha")
-	scr.set_team_name(1, "Time B")
+	scr.set_team_name(1, "Team B")
 	scr.swap_sides()
-	check(scr.cfg.sides[0].name == "Time B" and scr.side == 0, "troca os times de lado")
+	check(scr.cfg.sides[0].name == "Team B" and scr.side == 0, "troca os times de lado")
 
 	# --- Começar pelo botão: a config gravada tem o Nv 50 ---
 	check(not scr._start_btn.disabled, "Começar habilitado")
@@ -300,7 +300,7 @@ func _run() -> void:
 	check(Cfg.build_side(scr.cfg, 0)[0].level == Cfg.LEVEL, "e a luta o monta no Nv 50")
 	scr.select(0, 0)
 	check(stats_match(scr), "tela mostra as stats do Nv 50 para o Nv 12 salvo")
-	check(scr._mon_line(entry(scr)).contains("Nv %d" % Cfg.LEVEL), "lista mostra Nv %d" % Cfg.LEVEL)
+	check(scr._mon_line(entry(scr)).contains("Lv %d" % Cfg.LEVEL), "lista mostra Nv %d" % Cfg.LEVEL)
 
 	# Times aleatórios: 6 por lado, da Pokédex 1-51, com dano e status quando a espécie aprende.
 	scr.random_teams()
@@ -331,7 +331,7 @@ func _run() -> void:
 	check(not Cfg.arena_opts(scr.cfg, Vector3.ZERO).has("scenario"), "aleatório: opts sem cenário")
 	scr.set_scenario("lagoa")
 	check(scr.cfg.scenario == "lagoa", "cenário Lagoa na config")
-	check(scr._scenario.get_item_text(scr._scenario.selected) == "Lagoa", "e no seletor")
+	check(scr._scenario.get_item_text(scr._scenario.selected) == "Pond", "e no seletor")
 	check(Cfg.arena_opts(scr.cfg, Vector3.ZERO).get("scenario") == "lagoa", "e nas opts da arena")
 	scr.set_scenario("xyz")
 	check(Cfg.scenario(scr.cfg) == "", "cenário inválido volta a aleatório")
@@ -342,7 +342,7 @@ func _run() -> void:
 	check(Cfg.time_of_day(scr.cfg) == "dia" and scr._time.selected == 0, "hora padrão: Dia")
 	scr.set_time_of_day("noite")
 	check(scr.cfg.time_of_day == "noite", "hora Noite na config")
-	check(scr._time.get_item_text(scr._time.selected) == "Noite", "e no seletor")
+	check(scr._time.get_item_text(scr._time.selected) == "Night", "e no seletor")
 	scr.set_time_of_day("meio-dia")
 	check(Cfg.time_of_day(scr.cfg) == "dia", "hora inválida volta a Dia")
 	scr.set_battle_mode("vgc")

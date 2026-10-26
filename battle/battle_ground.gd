@@ -323,7 +323,7 @@ func _sand_camo(f: BattleFighter) -> bool:
 func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	if not on or String(mv.get("type", "")) != "electric" or not in_tide(target):
 		return 1.0
-	target.popup("Eletrocutado na água!", Dex.type_color("electric"), 0.9, 0.8)
+	target.popup("Shocked in the water!", Dex.type_color("electric"), 0.9, 0.8)
 	_tele("tide_shock", {"who": terrain._uid(target), "by": terrain._uid(user)})
 	return BattleTerrain.ELEC_WATER
 
@@ -502,7 +502,7 @@ func tick(dt: float) -> void:
 		var now := in_mud(f) and not mud_immune(f)
 		if bool(_was_mud.get(id, false)) and not now:
 			muddy[id] = MUDDY_SECS
-			f.popup("Enlameado!", Color(0.55, 0.4, 0.25), 0.8, 0.5)
+			f.popup("Muddy!", Color(0.55, 0.4, 0.25), 0.8, 0.5)
 			_tele("muddy", {"who": terrain._uid(f)})
 		_was_mud[id] = now
 		_embers_on(f)
@@ -564,7 +564,7 @@ func _embers_on(f: BattleFighter) -> void:
 			continue
 		m.hit[id] = true
 		var n := maxi(1, int(float(f.max_hp) * EMBER_FRAC * f.dot_scale()))
-		n = f.residual_damage(n, "brasas", Dex.type_color("fire"))
+		n = f.residual_damage(n, "embers", Dex.type_color("fire"))
 		var burned := false
 		if f.alive() and f.status == "" and arena.rng.randf() < EMBER_BURN:
 			var ab = arena.get("abilities")
@@ -582,7 +582,7 @@ func _tick_tide(dt: float) -> void:
 			"dry":
 				tide.phase = "warn"
 				tide.t = TIDE_WARN
-				arena.say("A maré está subindo!")
+				arena.say("The tide is rising!")
 			"warn":
 				tide.phase = "in"
 				tide.t = TIDE_IN

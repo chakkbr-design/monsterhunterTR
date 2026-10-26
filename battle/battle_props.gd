@@ -465,7 +465,7 @@ func _reflect(
 			}
 		)
 	_tele("crystal_reflect", {"by": _uid(user), "move": String(mv.get("id", "")), "hits": hits})
-	arena.popup(o.pos + Vector3(0, 1.5, 0), "Refletiu!", Color(0.6, 0.95, 1.0))
+	arena.popup(o.pos + Vector3(0, 1.5, 0), "Reflected!", Color(0.6, 0.95, 1.0))
 	if _vis():
 		var col := Dex.type_color(String(mv.get("type", "normal")))
 		arena.fx_beam(start + Vector3(0, 0.6, 0), out, left, maxf(w * 0.7, 0.3), col, 0.3)
@@ -501,7 +501,7 @@ func hit_prop(o: Dictionary, user: BattleFighter, mv: Dictionary) -> void:
 				if float(o.charge_t) <= 0.0:
 					_tele("crystal_charge", {"by": _uid(user)})
 					arena.popup(
-						o.pos + Vector3(0, 1.5, 0), "Cristal carregado!", Dex.type_color("electric")
+						o.pos + Vector3(0, 1.5, 0), "Crystal charged!", Dex.type_color("electric")
 					)
 				o.charge_t = CHARGE
 				o.spark_t = 0.0
@@ -537,7 +537,7 @@ func _ignite_tree(o: Dictionary, user: BattleFighter) -> void:
 	o.fall_dir = _fall_dir(o, user)
 	o.warned = false
 	_tele("tree_ignite", {"by": _uid(user)})
-	arena.popup(o.pos + Vector3(0, 2.2, 0), "A árvore pegou fogo!", Dex.type_color("fire"))
+	arena.popup(o.pos + Vector3(0, 2.2, 0), "The tree caught fire!", Dex.type_color("fire"))
 	if is_instance_valid(o.get("canopy_mat")):
 		ArenaVoxels.tint_mat(o.canopy_mat, Color(1.0, 0.55, 0.3))
 
@@ -550,7 +550,7 @@ func _tip_tree(o: Dictionary, user: BattleFighter, secs: float, cause: String) -
 	if not o.has("fall_dir"):
 		o.fall_dir = _fall_dir(o, user)
 	_warn_line(o, secs)
-	arena.popup(o.pos + Vector3(0, 2.2, 0), "Vai cair!", Color(1.0, 0.8, 0.5))
+	arena.popup(o.pos + Vector3(0, 2.2, 0), "It's falling!", Color(1.0, 0.8, 0.5))
 
 
 func _warn_line(o: Dictionary, secs: float) -> void:
@@ -614,7 +614,7 @@ func _fell(o: Dictionary) -> void:
 		var push := perp.normalized() if perp.length() > 0.05 else Vector3(-d.z, 0, d.x)
 		if by:
 			f.last_hit_by = by
-		f.popup("-%d Árvore caiu!" % n, Color(0.75, 0.55, 0.3), 1.0, 0.7)
+		f.popup("-%d Tree fell!" % n, Color(0.75, 0.55, 0.3), 1.0, 0.7)
 		f.take_damage(n, push, TREE_KNOCK)
 		frac += float(n) / maxf(f.max_hp, 1)
 		hits.append(_uid(f))
@@ -628,7 +628,7 @@ func _fell(o: Dictionary) -> void:
 			}
 		)
 	_tele("tree_fall", {"by": _uid(by), "cause": String(o.get("cause", "fire")), "hits": hits})
-	arena.say("A árvore caiu!")
+	arena.say("The tree fell!")
 	# Vira tronco no chão (baixo: não cobre, anda devagar, para investida).
 	o.kind = "log"
 	o.state = "fallen"
@@ -688,7 +688,7 @@ func _tick_log(o: Dictionary, dt: float) -> void:
 		if to.normalized().dot(f.dash_dir) > 0.3:
 			f.dash_t = 0.0
 			f.knock = Vector3.ZERO
-			f.popup("Bateu no tronco!", Color(0.8, 0.65, 0.45), 0.8, 0.5)
+			f.popup("Hit the log!", Color(0.8, 0.65, 0.45), 0.8, 0.5)
 			_tele("log_block", {"who": _uid(f)})
 
 
@@ -700,7 +700,7 @@ func _wake(o: Dictionary, user: BattleFighter) -> void:
 	o.t = VOLT_WARN
 	o.by = user
 	arena.telegraph({"kind": "disc", "side": -1, "t": VOLT_WARN, "at": o.pos, "r": VOLT_R})
-	arena.popup(o.pos + Vector3(0, 1.0, 0), "Voltorb acordou!", Color(1.0, 0.4, 0.3), 1.1)
+	arena.popup(o.pos + Vector3(0, 1.0, 0), "Voltorb woke up!", Color(1.0, 0.4, 0.3), 1.1)
 	_tele("voltorb_wake", {"by": _uid(user)})
 	if _vis():
 		var ring := MeshInstance3D.new()
@@ -734,7 +734,7 @@ func _boom(o: Dictionary) -> void:
 		var n := _dmg(f, VOLT_FRAC)
 		if by:
 			f.last_hit_by = by
-		f.popup("-%d Explosão!" % n, Color(1.0, 0.5, 0.3), 1.1, 0.7)
+		f.popup("-%d Explosion!" % n, Color(1.0, 0.5, 0.3), 1.1, 0.7)
 		f.take_damage(n, rel.normalized() if rel.length() > 0.05 else Vector3.RIGHT, VOLT_KNOCK)
 		hits.append(_uid(f))
 		_tele(
@@ -747,12 +747,12 @@ func _boom(o: Dictionary) -> void:
 			}
 		)
 	_tele("voltorb_boom", {"by": _uid(by), "hits": hits})
-	arena.say("O Voltorb explodiu!")
+	arena.say("The Voltorb exploded!")
 	if _vis():
 		PixelFx.pop(arena, "fire", o.pos + Vector3(0, 0.6, 0), VOLT_R * 1.6, 0.5)
 		PixelFx.pop(arena, "electric", o.pos + Vector3(0, 0.5, 0), VOLT_R * 1.2, 0.4)
 		if arena.has_method("cut_in") and not hits.is_empty():
-			arena.cut_in("BUM!", Color(1.0, 0.45, 0.3))
+			arena.cut_in("BOOM!", Color(1.0, 0.45, 0.3))
 	# Outro Voltorb perto acorda (corrente).
 	for v in items.duplicate():
 		if v.kind == "voltorb" and v.state == "" and _flat(v.pos - o.pos).length() <= VOLT_R + 0.5:
@@ -782,7 +782,7 @@ func _burn_bush(o: Dictionary, user: BattleFighter) -> void:
 		if b.owner == o:
 			_drop_berry_node(b)
 	_tele("bush_burn", {"by": _uid(user)})
-	arena.popup(o.pos + Vector3(0, 1.0, 0), "O arbusto queimou!", Dex.type_color("fire"))
+	arena.popup(o.pos + Vector3(0, 1.0, 0), "The bush burned!", Dex.type_color("fire"))
 	if _vis():
 		PixelFx.pop(arena, "fire", o.pos + Vector3(0, 0.5, 0), 1.4, 0.5)
 		if is_instance_valid(o.get("node")):
@@ -897,7 +897,7 @@ func _eat(f: BattleFighter, b: Dictionary) -> void:
 		var e0: float = f.pp_max
 		f.pp_max = minf(f.pp_max + BERRY_EN, BattleEnergy.MAX)
 		n = int(round(f.pp_max - e0))
-		f.popup("+%d energia (Oran)" % n, Color(0.55, 0.95, 0.6), 0.9, 0.3, "heal")
+		f.popup("+%d energy (Oran)" % n, Color(0.55, 0.95, 0.6), 0.9, 0.3, "heal")
 	f.set_meta("ate_berry", true)  # Belch
 	_tele("berry_pick", {"who": _uid(f), "src": String(b.src), "gain": gain, "n": n})
 	_drop_berry_node(b)
@@ -938,7 +938,7 @@ func _spark(o: Dictionary) -> void:
 		if _flat(f.position - o.pos).length() > SPARK_R or f.height() > 1.6:
 			continue
 		var n := _dmg(f, SPARK_FRAC)
-		f.popup("-%d Faísca" % n, Dex.type_color("electric"), 0.8, 0.3)
+		f.popup("-%d Spark" % n, Dex.type_color("electric"), 0.8, 0.3)
 		f.take_damage(n, Vector3.ZERO, 0.0)
 		any = true
 		_tele(
@@ -951,7 +951,7 @@ func _spark(o: Dictionary) -> void:
 
 func _break_crystal(o: Dictionary, user: BattleFighter) -> void:
 	_tele("crystal_break", {"by": _uid(user)})
-	arena.popup(o.pos + Vector3(0, 1.2, 0), "O cristal quebrou!", Color(0.7, 0.95, 1.0))
+	arena.popup(o.pos + Vector3(0, 1.2, 0), "The crystal broke!", Color(0.7, 0.95, 1.0))
 	if _vis():
 		PixelFx.pop(arena, "stone", o.pos + Vector3(0, 0.6, 0), 1.4, 0.4)
 	_remove(o)
@@ -1034,7 +1034,9 @@ func _push_boulder(o: Dictionary, user: BattleFighter, mv: Dictionary) -> void:
 		}
 	)
 	arena.popup(
-		o.pos + Vector3(0, float(o.y) + 1.3, 0), "O pedregulho vai rolar!", Color(0.85, 0.75, 0.6)
+		o.pos + Vector3(0, float(o.y) + 1.3, 0),
+		"The boulder is about to roll!",
+		Color(0.85, 0.75, 0.6)
 	)
 	_tele(
 		"boulder_push",
@@ -1097,7 +1099,7 @@ func _boulder_hits(o: Dictionary) -> void:
 			f.last_hit_by = by
 		f.stun_t = maxf(f.stun_t, BOULDER_STUN)
 		f.interrupt_prepare()
-		f.popup("-%d Pedregulho!" % n, Color(0.8, 0.7, 0.55), 1.1, 0.7)
+		f.popup("-%d Boulder!" % n, Color(0.8, 0.7, 0.55), 1.1, 0.7)
 		f.take_damage(n, push, BOULDER_KNOCK)
 		_tele(
 			"boulder_hit",
@@ -1109,7 +1111,7 @@ func _boulder_hits(o: Dictionary) -> void:
 			}
 		)
 		if _vis() and arena.has_method("cut_in"):
-			arena.cut_in("ROLOU!", Color(0.8, 0.65, 0.45))
+			arena.cut_in("ROLLED!", Color(0.8, 0.65, 0.45))
 
 
 func _boulder_stop(o: Dictionary) -> void:
@@ -1125,7 +1127,7 @@ func _boulder_stop(o: Dictionary) -> void:
 	if _vis():
 		PixelFx.pop(arena, "dust", o.pos + Vector3(0, float(o.y) + 0.3, 0), 1.6, 0.4)
 	if bool(o.path.sink):
-		arena.popup(o.pos + Vector3(0, 0.6, 0), "Afundou!", Dex.type_color("water"))
+		arena.popup(o.pos + Vector3(0, 0.6, 0), "Sank!", Dex.type_color("water"))
 		_remove(o)
 		return
 	# Vira pedra pequena: cobertura baixa.
@@ -1166,7 +1168,7 @@ func _geyser_warn(o: Dictionary, secs: float, by: BattleFighter = null) -> void:
 	# Sem aviso no chão para a esquiva (com ele ninguém subia: bateria 2): só o vapor e o desvio da IA.
 	if by:
 		_tele("geyser_early", {"by": _uid(by)})
-		arena.popup(o.pos + Vector3(0, 1.0, 0), "O gêiser ferveu!", Color(0.8, 0.9, 1.0))
+		arena.popup(o.pos + Vector3(0, 1.0, 0), "The geyser is boiling!", Color(0.8, 0.9, 1.0))
 	if _vis() and is_instance_valid(o.get("steam")):
 		o.steam.visible = true
 		o.steam.scale = Vector3(0.6, 0.25, 0.6)
@@ -1194,12 +1196,12 @@ func _erupt(o: Dictionary) -> void:
 			"leap", land, GEYSER_AIR, GEYSER_H, null, Callable(), 0.0, Callable(), f.ground_y
 		)
 		f.set_meta("geyser_air", _t + GEYSER_AIR)
-		f.popup("Jogado para o alto!", Color(0.8, 0.9, 1.0), 1.0, 0.6)
+		f.popup("Launched into the air!", Color(0.8, 0.9, 1.0), 1.0, 0.6)
 		launched.append(_uid(f))
 		_tele("geyser_launch", {"who": _uid(f)})
 	_tele("geyser_erupt", {"early": bool(o.get("early", false)), "launched": launched})
 	if not launched.is_empty():
-		arena.say("O gêiser explodiu!")
+		arena.say("The geyser erupted!")
 	if _vis():
 		PixelFx.pop(arena, "water", o.pos + Vector3(0, 1.2, 0), 2.0, 0.6)
 		if is_instance_valid(o.get("steam")):
@@ -1244,7 +1246,7 @@ func damage_mult(_user: BattleFighter, target: BattleFighter, mv: Dictionary) ->
 		return 1.0
 	if not target.has_meta("geyser_air") or _t > float(target.get_meta("geyser_air")) + 0.2:
 		return 1.0
-	target.popup("Indefeso no ar!", Color(0.8, 0.9, 1.0), 0.9, 0.6)
+	target.popup("Helpless in the air!", Color(0.8, 0.9, 1.0), 0.9, 0.6)
 	_tele("geyser_fly_hit", {"who": _uid(target)})
 	return GEYSER_FLY
 
@@ -1276,7 +1278,7 @@ func _release_swarm(o: Dictionary, user: BattleFighter) -> void:
 	o.rest_t = HIVE_CD
 	var tgt := swarm_target(o, user)
 	if tgt == null:
-		arena.popup(o.pos + Vector3(0, 1.2, 0), "Os Beedrill nem ligaram.", Color(0.95, 0.85, 0.3))
+		arena.popup(o.pos + Vector3(0, 1.2, 0), "The Beedrill didn't care.", Color(0.95, 0.85, 0.3))
 		_tele("hive_swarm", {"by": _uid(user), "who": ""})
 		return
 	var sw := {"pos": o.pos, "target": tgt, "t": SWARM_SECS, "tick": 0.3, "by": user, "hive": o}
@@ -1285,8 +1287,8 @@ func _release_swarm(o: Dictionary, user: BattleFighter) -> void:
 		sw.node.position = o.pos + Vector3(0, 1.0, 0)
 		arena.add_child(sw.node)
 	swarms.append(sw)
-	arena.popup(o.pos + Vector3(0, 1.3, 0), "Enxame de Beedrill!", Color(0.95, 0.85, 0.3), 1.1)
-	tgt.popup("O enxame vem atrás!", Color(0.95, 0.85, 0.3), 0.9, 0.6)
+	arena.popup(o.pos + Vector3(0, 1.3, 0), "Beedrill swarm!", Color(0.95, 0.85, 0.3), 1.1)
+	tgt.popup("The swarm is coming!", Color(0.95, 0.85, 0.3), 0.9, 0.6)
 	_tele("hive_swarm", {"by": _uid(user), "who": _uid(tgt), "self": tgt == user})
 
 
@@ -1310,7 +1312,7 @@ func _tick_swarms(dt: float) -> void:
 		var by: BattleFighter = sw.by if is_instance_valid(sw.get("by")) else null
 		if by and by.side != tgt.side:
 			tgt.last_hit_by = by
-		tgt.popup("-%d Ferroada" % n, Color(0.95, 0.85, 0.3), 0.8, 0.3)
+		tgt.popup("-%d Sting" % n, Color(0.95, 0.85, 0.3), 0.8, 0.3)
 		tgt.take_damage(n, Vector3.ZERO, 0.0)
 		var poisoned := false
 		if arena.rng.randf() < SWARM_POISON:
@@ -1332,7 +1334,7 @@ func _end_swarm(sw: Dictionary, why: String, by: BattleFighter = null) -> void:
 		sw.node.queue_free()
 	if why == "fire":
 		arena.popup(
-			sw.pos + Vector3(0, 1.2, 0), "O fogo espantou o enxame!", Dex.type_color("fire")
+			sw.pos + Vector3(0, 1.2, 0), "The fire scared the swarm away!", Dex.type_color("fire")
 		)
 		_tele("swarm_fire", {"by": _uid(by)})
 		if _vis():
@@ -1341,7 +1343,7 @@ func _end_swarm(sw: Dictionary, why: String, by: BattleFighter = null) -> void:
 
 func _burn_hive(o: Dictionary, user: BattleFighter) -> void:
 	_tele("hive_burn", {"by": _uid(user)})
-	arena.popup(o.pos + Vector3(0, 1.2, 0), "A colmeia queimou!", Dex.type_color("fire"))
+	arena.popup(o.pos + Vector3(0, 1.2, 0), "The hive burned!", Dex.type_color("fire"))
 	if _vis():
 		PixelFx.pop(arena, "fire", o.pos + Vector3(0, 0.6, 0), 1.4, 0.5)
 	_remove(o)
@@ -1369,7 +1371,7 @@ func _spore(o: Dictionary, by: BattleFighter, step: bool) -> void:
 	if terrain._weather() == "rain":
 		if _t - float(o.wet_t) >= SPORE_WET_SAY or float(o.wet_t) <= 0.0:
 			o.wet_t = maxf(_t, 0.001)
-			arena.popup(o.pos + Vector3(0, 0.6, 0), "Esporos molhados", Dex.type_color("water"))
+			arena.popup(o.pos + Vector3(0, 0.6, 0), "Wet spores", Dex.type_color("water"))
 			_tele("spore_wet", {})
 		return
 	o.rest_t = SPORE_CD
@@ -1381,7 +1383,7 @@ func _spore(o: Dictionary, by: BattleFighter, step: bool) -> void:
 		if is_instance_valid(o.get("node")):
 			o.node.scale = Vector3(1.0, 0.5, 1.0)
 	clouds.append(c)
-	arena.popup(o.pos + Vector3(0, 0.9, 0), "Nuvem de esporos!", Color(0.85, 0.6, 0.95))
+	arena.popup(o.pos + Vector3(0, 0.9, 0), "Spore cloud!", Color(0.85, 0.6, 0.95))
 	_tele("spore_cloud", {"by": _uid(by), "step": step})
 
 

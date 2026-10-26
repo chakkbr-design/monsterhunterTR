@@ -325,7 +325,7 @@ func _heal(f: BattleFighter, n: int) -> void:
 	if n <= 0 or not f.alive():
 		return
 	if heal_blocked(f):
-		f.popup("Não pode se curar!", Color(0.8, 0.6, 0.9), 0.8)
+		f.popup("Can't heal!", Color(0.8, 0.6, 0.9), 0.8)
 		return
 	f.heal(n)
 	f.popup("+%d" % n, HEAL_COL, 0.9, 0.3, "heal")
@@ -333,7 +333,7 @@ func _heal(f: BattleFighter, n: int) -> void:
 
 
 func _fail(f: BattleFighter) -> void:
-	f.popup("Mas falhou!", Color(0.8, 0.8, 0.8))
+	f.popup("But it failed!", Color(0.8, 0.8, 0.8))
 	note_fail(f)
 
 
@@ -349,7 +349,7 @@ func crash_damage(user: BattleFighter, mv: Dictionary) -> void:
 		return
 	var n := user.paced(maxi(1, int(ceil(float(user.max_hp) * float(mv.crash)))))
 	user.take_damage(n, Vector3.ZERO, 0.0)
-	user.popup("-%d machucou-se!" % n, Color(1.0, 0.7, 0.5), 0.9)
+	user.popup("-%d hurt itself!" % n, Color(1.0, 0.7, 0.5), 0.9)
 
 
 ## Um lutador desmaiou (Retaliate olha o lado dele).
@@ -375,7 +375,7 @@ func note_stage(f: BattleFighter, delta: int) -> void:
 func mist_blocks(c: BattleFighter, src: BattleFighter) -> bool:
 	if not is_instance_valid(src) or src.side == c.side or not side_active(c.side, "mist"):
 		return false
-	c.popup("Protegido pela névoa!", Color(0.8, 0.9, 1.0))
+	c.popup("Protected by the Mist!", Color(0.8, 0.9, 1.0))
 	return true
 
 
@@ -467,74 +467,74 @@ func _blocked(user: BattleFighter, mv: Dictionary) -> String:
 			return ab_why
 	for foe in _foes(user):
 		if bool(st(foe).imprison) and id in foe.moves:
-			return "Aprisionado!"
+			return "Imprisoned!"
 	if active(s, "taunt") and String(mv.get("category", "")) == "status":
-		return "Provocado!"
+		return "Taunted!"
 	if active(s, "throat") and id in SOUND_MOVES:
-		return "Garganta ferida!"
+		return "Sore throat!"
 	match String(mv.get("special", "")):
 		"baton_pass":
 			if not has_reserve(user):
-				return "Ninguém para entrar!"
+				return "No one to switch in!"
 		"fake_out":
 			if now - float(s.entered) > FAKE_OUT_WINDOW:
-				return "Só logo ao entrar!"
+				return "Only right after entering!"
 		"upper_hand":
 			if not _priority_windup(user.opponent):
-				return "Mas falhou!"
+				return "But it failed!"
 		"fling":
 			if not _has_item(user):
-				return "Sem item para arremessar!"
+				return "No item to fling!"
 		"last_resort":
 			for mid in user.moves:
 				if String(mid) != id and not s.used.has(String(mid)):
-					return "Ainda não!"
+					return "Not yet!"
 			if user.moves.size() < 2:
-				return "Mas falhou!"
+				return "But it failed!"
 		"sleep_only", "sleep_talk":
 			if user.status != "sleep":
-				return "Só dormindo!"
+				return "Only while asleep!"
 		"belly_drum":
 			if user.hp <= user.max_hp / 2 or int(user.stages.get("atk", 0)) >= 6:
-				return "Mas falhou!"
+				return "But it failed!"
 		"substitute":
 			if int(s.sub) > 0:
-				return "Já tem um substituto!"
+				return "Already has a substitute!"
 			if user.hp <= user.max_hp / 4:
-				return "HP insuficiente!"
+				return "Not enough HP!"
 		"dragon_cheer":
 			if partner(user) == null:
-				return "Mas falhou!"
+				return "But it failed!"
 		"wish":
 			for w in _sd(user.side).get("wishes", []):
 				if int(w.id) == user.get_instance_id():
-					return "Mas falhou!"
+					return "But it failed!"
 		"spit_up", "swallow":
 			if int(st(user).stock) <= 0:
-				return "Nada guardado!"
+				return "Nothing stored!"
 		"belch":
 			if not user.has_meta("ate_berry"):
-				return "Precisa comer frutinha!"
+				return "Must eat a Berry first!"
 		"healing_wish":
 			if not has_reserve(user):
-				return "Ninguém para entrar!"
+				return "No one to switch in!"
 		"rest":
 			if user.hp >= user.max_hp or user.status == "sleep":
-				return "Mas falhou!"
+				return "But it failed!"
 			if _ability(user) in ["insomnia", "vital_spirit"]:
-				return "Não consegue dormir!"
+				return "Can't fall asleep!"
 		"mimic":
 			if _copyable(_last_of(user.opponent)) == "":
-				return "Nada para copiar!"
+				return "Nothing to copy!"
 		"copycat":
 			if _copyable(last_any) == "":
-				return "Nada para copiar!"
+				return "Nothing to copy!"
 		"after_you":
 			if partner(user) == null:
-				return "Mas falhou!"
+				return "But it failed!"
 		"stockpile":
 			if int(st(user).stock) >= 3:
-				return "Não cabe mais!"
+				return "Can't hold any more!"
 	var k := BattleKanto.blocked(self, user, mv)
 	if k != "":
 		return k
@@ -600,7 +600,7 @@ func move_for(user: BattleFighter, mv: Dictionary) -> Dictionary:
 func infatuated_fail(f: BattleFighter) -> bool:
 	if not active(st(f), "attract") or rng.randf() >= ATTRACT_FAIL:
 		return false
-	f.popup("Está apaixonado!", Color(1, 0.55, 0.75))
+	f.popup("It's in love!", Color(1, 0.55, 0.75))
 	return true
 
 
@@ -656,7 +656,7 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 			func() -> void:
 				if is_instance_valid(user) and user.alive():
 					user.take_damage(lose, Vector3.ZERO, 0.0)
-					user.popup("-%d recuo" % lose, Color(0.9, 0.6, 0.6), 0.8)
+					user.popup("-%d recoil" % lose, Color(0.9, 0.6, 0.6), 0.8)
 		)
 	if float(mv.get("power", 0)) > 0.0 and now - float(s.helped) <= HELP_WINDOW:
 		# Helping Hand: o próximo golpe de dano do parceiro sai com 1,5x
@@ -693,16 +693,16 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 			_drop_stockpile(user)
 		"focus_punch":
 			s.focus_t = now
-			user.popup("Concentrando...", Color(1, 0.75, 0.4), 0.8)
+			user.popup("Focusing...", Color(1, 0.75, 0.4), 0.8)
 		"fling":
 			user.item_used = true
-			user.popup("Arremessou %s!" % _item_name(user), Color(1, 0.85, 0.5), 0.8)
+			user.popup("Flung %s!" % _item_name(user), Color(1, 0.85, 0.5), 0.8)
 		"uproar":
 			set_rounds(field, "uproar", UPROAR_TURNS)
 			for f in arena.fighters:
 				if is_instance_valid(f) and f.active() and f.status == "sleep":
 					f.clear_status()
-					f.popup("Acordou com o barulho!", Color(1, 0.85, 0.5))
+					f.popup("Woke up from the noise!", Color(1, 0.85, 0.5))
 		"steel_roller", "poltergeist":
 			BattleKanto.on_use(self, user, mv)
 		"self_confuse":
@@ -711,7 +711,7 @@ func on_use(user: BattleFighter, mv: Dictionary) -> void:
 				wait,
 				func() -> void:
 					if is_instance_valid(user) and user.alive() and user.apply_status("confusion"):
-						user.popup("Ficou confuso de cansaço!", Dex.type_color("psychic"))
+						user.popup("Confused from fatigue!", Dex.type_color("psychic"))
 			)
 	var cs = mv.get("charge_stats")
 	if cs is Dictionary:
@@ -806,17 +806,17 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 	var sp := String(mv.get("special", ""))
 	var us := st(user)
 	if sp == "focus_punch" and float(us.hurt_t) > float(us.focus_t):
-		user.popup("Perdeu a concentração!", Color(0.85, 0.85, 0.85))
+		user.popup("Lost its focus!", Color(0.85, 0.85, 0.85))
 		us.fail = true
 		return true
 	if (
 		bool(mv.get("powder", false))
 		and ("grass" in target.types or _ability(target) == "overcoat")
 	):
-		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		target.popup("No effect...", Color(0.7, 0.7, 0.7))
 		return true
 	if sp == "thunder_wave" and "ground" in target.types:
-		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		target.popup("No effect...", Color(0.7, 0.7, 0.7))
 		return true
 	if (
 		String(mv.get("type", "")) == "ground"
@@ -824,7 +824,7 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		and active(st(target), "magnet")
 		and not active(field, "gravity")
 	):
-		target.popup("Levitando!", Color(0.8, 0.9, 1.0))
+		target.popup("Levitating!", Color(0.8, 0.9, 1.0))
 		return true
 	var ts := st(target)
 	var sd := _sd(target.side)
@@ -832,7 +832,7 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		if active(ts, "protect") or active(sd, "quick_guard"):
 			ts.protect = -99.0
 			sd.erase("quick_guard")
-			target.popup("A proteção caiu!", Color(1, 0.8, 0.5))
+			target.popup("The protection fell!", Color(1, 0.8, 0.5))
 		return false
 	if BattleKanto.blocks_hit(self, user, target, mv):
 		return true
@@ -845,7 +845,7 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		and int(ts.sub) > 0
 		and not String(mv.get("id", "")) in SOUND_MOVES
 	):
-		target.popup("O substituto bloqueou!", Color(0.85, 0.85, 0.85))
+		target.popup("The substitute blocked it!", Color(0.85, 0.85, 0.85))
 		us.fail = true
 		return true
 	if sp == "no_protect":
@@ -854,21 +854,21 @@ func blocks_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> b
 		active(ts, "protect")
 		and not (arena.abilities and arena.abilities.pierces_protect(user, mv))
 	):
-		target.popup("Protegeu-se!", Color(0.6, 0.9, 1.0), 1.1)
+		target.popup("Protected itself!", Color(0.6, 0.9, 1.0), 1.1)
 		BattleKanto.on_protected(self, target)
 		us.fail = true
 		crash_damage(user, mv)
 		return true
 	if active(field, "psychic") and int(mv.get("priority", 0)) > 0 and grounded(target):
-		target.popup("O campo psíquico protege!", Dex.type_color("psychic"))
+		target.popup("The Psychic Terrain protects!", Dex.type_color("psychic"))
 		us.fail = true
 		return true
 	if int(mv.get("priority", 0)) > 0 and active(sd, "quick_guard"):
-		target.popup("Guarda Rápida!", Color(0.6, 0.9, 1.0))
+		target.popup("Quick Guard!", Color(0.6, 0.9, 1.0))
 		us.fail = true
 		return true
 	if BattleMoves.multi_target(mv) != "" and active(sd, "wide_guard"):
-		target.popup("Guarda Ampla!", Color(0.6, 0.9, 1.0))
+		target.popup("Wide Guard!", Color(0.6, 0.9, 1.0))
 		us.fail = true
 		return true
 	return false
@@ -883,25 +883,25 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 		_break_screens(target)
 	if sp == "present" and rng.randf() < PRESENT_HEAL:
 		# Present: às vezes o "presente" cura o alvo em 1/4.
-		target.popup("Era um presente!", Color(1, 0.85, 0.6))
+		target.popup("It was a present!", Color(1, 0.85, 0.6))
 		_heal(target, int(ceil(target.max_hp / 4.0)))
 		return true
 	if not sp in ["ohko", "endeavor", "final_gambit", "metal_burst"]:
 		return false
 	if eff == 0.0:
-		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		target.popup("No effect...", Color(0.7, 0.7, 0.7))
 		note_fail(user)
 		return true
 	var amount := 0
 	if sp == "ohko" and String(mv.get("id", "")) == "sheer_cold" and "ice" in target.types:
-		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		target.popup("No effect...", Color(0.7, 0.7, 0.7))
 		note_fail(user)
 		return true
 	if sp == "metal_burst":
 		amount = BattleKanto.burst_amount(self, user)
 	elif sp == "ohko":
 		if target.level > user.level or _ability(target) == "sturdy":
-			target.popup("Não afetou!", Color(0.8, 0.8, 0.8))
+			target.popup("No effect!", Color(0.8, 0.8, 0.8))
 			return true
 		amount = target.hp
 	elif sp == "final_gambit":
@@ -921,7 +921,7 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 	)
 	target.popup(str(amount), Color(0.95, 0.3, 0.25), 1.2, 0.35, "damage")
 	if sp == "ohko" and not target.alive():
-		target.popup("NOCAUTE EM UM GOLPE!", Color(1, 0.55, 0.3), 1.2, 0.8, "crit")
+		target.popup("ONE-HIT KO!", Color(1, 0.55, 0.3), 1.2, 0.8, "crit")
 	arena.note_hit(user, target, mv, amount, hp_before)
 	if amount >= hp_before and arena.has_method("on_knocked_out"):
 		arena.on_knocked_out(user, target)
@@ -937,7 +937,7 @@ func _break_screens(target: BattleFighter) -> void:
 	if active(sd, "reflect") or active(sd, "light_screen"):
 		sd.erase("reflect")
 		sd.erase("light_screen")
-		target.popup("As barreiras quebraram!", Color(1, 0.8, 0.5))
+		target.popup("The barriers shattered!", Color(1, 0.8, 0.5))
 
 
 ## Dano final que o alvo aguenta: Endure e False Swipe deixam 1 HP.
@@ -959,7 +959,7 @@ func cap_damage(user: BattleFighter, target: BattleFighter, mv: Dictionary, dmg:
 	if String(mv.get("special", "")) == "false_swipe":
 		return maxi(target.hp - 1, 0)
 	if active(st(target), "endure"):
-		target.popup("Aguentou!", Color(1, 0.85, 0.5), 1.1)
+		target.popup("Endured!", Color(1, 0.85, 0.5), 1.1)
 		return target.hp - 1
 	return dmg
 
@@ -975,9 +975,9 @@ func substitute_soak(user: BattleFighter, target: BattleFighter, mv: Dictionary,
 	):
 		return false
 	ts.sub = maxi(int(ts.sub) - dmg, 0)
-	target.popup("Substituto -%d" % dmg, Color(0.85, 0.85, 0.85), 0.9)
+	target.popup("Substitute -%d" % dmg, Color(0.85, 0.85, 0.85), 0.9)
 	if int(ts.sub) <= 0:
-		target.popup("O substituto quebrou!", Color(1, 0.8, 0.5))
+		target.popup("The substitute broke!", Color(1, 0.8, 0.5))
 		_vfx("substitute", [target, false])
 	return true
 
@@ -1244,16 +1244,16 @@ func blocks_status(user: BattleFighter, target: BattleFighter, s: String) -> boo
 		and ("steel" in target.types or "poison" in target.types)
 		and not BattleAbilitiesMore.corrodes(arena.abilities, user, s)
 	):
-		target.popup("Imune a veneno", Color(0.8, 0.8, 0.8))
+		target.popup("Immune to poison", Color(0.8, 0.8, 0.8))
 		return true
 	if (
 		s == "sleep"
 		and (active(field, "uproar") or (active(field, "electric") and grounded(target)))
 	):
-		target.popup("Não consegue dormir!", Color(0.85, 0.85, 0.85))
+		target.popup("Can't fall asleep!", Color(0.85, 0.85, 0.85))
 		return true
 	if (s in MAJOR or s == "confusion") and active(field, "misty") and grounded(target):
-		target.popup("Protegido pelo campo de névoa!", Color(0.95, 0.75, 0.95))
+		target.popup("Protected by the Misty Terrain!", Color(0.95, 0.75, 0.95))
 		return true
 	if (
 		(s in MAJOR or s == "confusion")
@@ -1261,7 +1261,7 @@ func blocks_status(user: BattleFighter, target: BattleFighter, s: String) -> boo
 		and user.side != target.side
 		and active(_sd(target.side), "safeguard")
 	):
-		target.popup("Protegido pelo Safeguard!", Color(0.7, 0.9, 1.0))
+		target.popup("Protected by Safeguard!", Color(0.7, 0.9, 1.0))
 		return true
 	return false
 
@@ -1287,7 +1287,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			s.lock = -99.0
 		if not target.alive() and bool(st(target).destiny) and user.alive():
 			st(target).destiny = false
-			user.popup("Levado pelo Destiny Bond!", Dex.type_color("ghost"))
+			user.popup("Taken down by Destiny Bond!", Dex.type_color("ghost"))
 			user.take_damage(user.hp, Vector3.ZERO, 0.0)
 		_counter(user, target, mv, dealt)
 		BattleKanto.note_damage(self, user, target, mv, dealt)
@@ -1302,11 +1302,11 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			and target.alive()
 		):
 			target.clear_status()
-			target.popup("Descongelou!", Color(0.7, 0.95, 1.0))
+			target.popup("Thawed out!", Color(0.7, 0.95, 1.0))
 		if mv.has("recoil") and user.alive() and _ability(user) != "rock_head":
 			var r := maxi(1, int(float(dealt) * float(mv.recoil)))
 			user.take_damage(r, Vector3.ZERO, 0.0)
-			user.popup("-%d recuo" % r, Color(0.9, 0.6, 0.6), 0.8)
+			user.popup("-%d recoil" % r, Color(0.9, 0.6, 0.6), 0.8)
 	if not sheer and target.alive():
 		if mv.has("flinch") and rng.randf() < float(mv.flinch):
 			_status(user, target, "flinch")
@@ -1351,28 +1351,28 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			if dealt > 0 and target.alive():
 				for k in target.stages:
 					target.stages[k] = 0
-				target.popup("Atributos zerados!", Color(0.8, 0.9, 1.0))
+				target.popup("Stat changes reset!", Color(0.8, 0.9, 1.0))
 		"soak":
 			if target.types == ["water"]:
 				_fail(user)
 			else:
 				target.types = ["water"]
-				target.popup("Virou Water!", Dex.type_color("water"))
+				target.popup("Became Water type!", Dex.type_color("water"))
 		"simple_beam":
 			if _ability(target) == "simple":
 				_fail(user)
 			else:
 				target.set_meta("ability_override", "simple")
-				target.popup("Habilidade virou Simple!", Color(0.7, 0.9, 0.5))
+				target.popup("Ability became Simple!", Color(0.7, 0.9, 0.5))
 		"lock_on":
 			set_rounds(s, "lock", LOCK_TURNS)
-			user.popup("Mira travada!", Color(1, 0.6, 0.3))
+			user.popup("Locked on!", Color(1, 0.6, 0.3))
 		"mean_look":
 			if "ghost" in target.types:
-				target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+				target.popup("No effect...", Color(0.7, 0.7, 0.7))
 			else:
 				ts.trapped = true
-				target.popup("Não pode fugir!", Color(0.8, 0.6, 0.9))
+				target.popup("Can't escape!", Color(0.8, 0.6, 0.9))
 		"spite":
 			var last := _last_of(target)
 			if last == "":
@@ -1382,8 +1382,10 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				target.pp_max = maxf(target.pp_max - cut, 0.0)
 				if not target.energy_mode:
 					target.mon.pp = target.pp_max
-				var said := "PP de %s caiu!" % Dex.move(last).get("name", last)
-				target.popup("Energia caiu!" if target.energy_mode else said, Color(0.8, 0.6, 0.9))
+				var said := "%s's PP fell!" % Dex.move(last).get("name", last)
+				target.popup(
+					"Energy dropped!" if target.energy_mode else said, Color(0.8, 0.6, 0.9)
+				)
 		"disable":
 			var last2 := _last_of(target)
 			if last2 == "":
@@ -1394,7 +1396,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				ts.disable_move = last2
 				target.move_cd[last2] = LOCK_CD
 				target.popup(
-					"%s desativado!" % Dex.move(last2).get("name", last2), Color(0.8, 0.8, 0.9)
+					"%s disabled!" % Dex.move(last2).get("name", last2), Color(0.8, 0.8, 0.9)
 				)
 		"encore":
 			var last3 := _last_of(target)
@@ -1408,16 +1410,16 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 					if String(mid) != last3:
 						target.move_cd[mid] = LOCK_CD
 				target.popup(
-					"Bis! Só %s!" % Dex.move(last3).get("name", last3), Color(1, 0.85, 0.6)
+					"Encore! Only %s!" % Dex.move(last3).get("name", last3), Color(1, 0.85, 0.6)
 				)
 		"gastro_acid":
 			target.set_meta("ability_override", "")
-			target.popup("Habilidade anulada!", Color(0.7, 0.9, 0.5))
+			target.popup("Ability suppressed!", Color(0.7, 0.9, 0.5))
 		"worry_seed":
 			target.set_meta("ability_override", "insomnia")
 			if target.status == "sleep":
 				target.clear_status()
-			target.popup("Habilidade virou Insomnia!", Color(0.7, 0.9, 0.5))
+			target.popup("Ability became Insomnia!", Color(0.7, 0.9, 0.5))
 		"flatter":
 			# Flatter: At. Esp. +1; Swagger ("flatter_stat": "atk"): Ataque +2.
 			var fk := String(mv.get("flatter_stat", "spa"))
@@ -1434,15 +1436,15 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 		"knock_off":
 			if dealt > 0 and _has_item(target):
 				target.item_used = true
-				target.popup("Perdeu %s!" % _item_name(target), Color(1, 0.75, 0.5))
+				target.popup("Lost %s!" % _item_name(target), Color(1, 0.75, 0.5))
 		"heal_block":
 			if target.alive():
 				set_rounds(ts, "heal_block", HEAL_BLOCK_TURNS)
-				target.popup("Não pode se curar!", Color(0.8, 0.6, 0.9))
+				target.popup("Can't heal!", Color(0.8, 0.6, 0.9))
 		"throat_chop":
 			if dealt > 0 and target.alive():
 				set_rounds(ts, "throat", THROAT_TURNS)
-				target.popup("Garganta ferida!", Color(0.85, 0.6, 0.6))
+				target.popup("Sore throat!", Color(0.85, 0.6, 0.6))
 		"terrain_clear":
 			_clear_terrain(target)
 		"pivot":
@@ -1453,7 +1455,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			_attract(user, target)
 		"taunt":
 			set_rounds(ts, "taunt", TAUNT_TURNS)
-			target.popup("Provocado!", Color(1, 0.55, 0.4))
+			target.popup("Taunted!", Color(1, 0.55, 0.4))
 		"memento":
 			arena.moves.change_stage(target, "atk", -2, user)
 			arena.moves.change_stage(target, "spa", -2, user)
@@ -1466,13 +1468,13 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 					f.take_damage(f.hp - avg, Vector3.ZERO, 0.0)
 				elif f.hp < avg:
 					f.heal(avg - f.hp)
-				f.popup("HP dividido!", Color(0.9, 0.9, 1.0), 0.8)
+				f.popup("HP split!", Color(0.9, 0.9, 1.0), 0.8)
 		"skill_swap":
 			var a := _ability(user)
 			var b := _ability(target)
 			user.set_meta("ability_override", b)
 			target.set_meta("ability_override", a)
-			user.popup("Trocou de habilidade!", Dex.type_color("psychic"))
+			user.popup("Swapped Abilities!", Dex.type_color("psychic"))
 		"strength_sap":
 			if int(target.stages.get("atk", 0)) <= -6:
 				_fail(user)
@@ -1489,13 +1491,13 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 				user.item_used = false
 				target.trainer_item = mine
 				target.item_used = false
-				user.popup("Trocou os itens!", Color(1, 0.85, 0.5))
+				user.popup("Swapped items!", Color(1, 0.85, 0.5))
 		"yawn":
 			if target.status != "" or active(ts, "yawn"):
 				_fail(user)
 			else:
 				# dorme no fim do turno seguinte (BattleEndTurn: yawn_sleep)
-				target.popup("Sonolento...", Color(0.75, 0.8, 0.95))
+				target.popup("Drowsy...", Color(0.75, 0.8, 0.95))
 				set_rounds(ts, "yawn", YAWN_TURNS)
 				ts.yawn_by = user
 	BattleMore.after_hit(self, user, target, mv, dealt)
@@ -1531,7 +1533,7 @@ func _counter(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt:
 	):
 		return
 	ts.counter = -99.0
-	target.popup("Revidou!", Color(1, 0.6, 0.35), 1.1)
+	target.popup("Retaliated!", Color(1, 0.6, 0.35), 1.1)
 	_direct(target, user, dealt * COUNTER_MULT)
 
 
@@ -1554,13 +1556,13 @@ func _attract(user: BattleFighter, target: BattleFighter) -> void:
 	var a := String(user.mon.gender)
 	var b := String(target.mon.gender)
 	if a == "" or b == "":
-		target.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+		target.popup("No effect...", Color(0.7, 0.7, 0.7))
 		note_fail(user)
 	elif a == b or active(st(target), "attract"):
 		_fail(user)
 	else:
 		st(target).attract = now + FOREVER  # oficial: até sair de campo
-		target.popup("Apaixonou-se!", Color(1, 0.55, 0.75))
+		target.popup("Fell in love!", Color(1, 0.55, 0.75))
 
 
 ## Troca de golpe (Baton Pass, U-turn...): o próximo do banco entra no lugar. pass_stats = Baton Pass.
@@ -1575,7 +1577,7 @@ func _switch(user: BattleFighter, pass_stats: bool) -> void:
 	elif pass_stats:
 		nf.stages = keep
 		nf.crit_stage = crit
-		nf.popup("Recebeu o bastão!", Color(0.8, 0.9, 1.0))
+		nf.popup("Received the baton!", Color(0.8, 0.9, 1.0))
 
 
 func _clear_terrain(near: BattleFighter) -> void:
@@ -1585,7 +1587,7 @@ func _clear_terrain(near: BattleFighter) -> void:
 			had = true
 		field.erase(k)
 	if had:
-		near.popup("O terreno sumiu!", Color(0.85, 0.85, 0.85))
+		near.popup("The terrain disappeared!", Color(0.85, 0.85, 0.85))
 
 
 func _set_terrain(kind: String, user: BattleFighter, text: String, type: String) -> void:
@@ -1603,7 +1605,7 @@ func _steal_item(user: BattleFighter, target: BattleFighter) -> void:
 	user.item_used = false
 	target.item_used = true
 	var nm := String(Dex.item(user.trainer_item).get("name", user.trainer_item))
-	user.popup("Roubou %s!" % nm, Color(1, 0.85, 0.5))
+	user.popup("Stole %s!" % nm, Color(1, 0.85, 0.5))
 
 
 func _berries_near(target: BattleFighter) -> Array:
@@ -1631,14 +1633,14 @@ func _eat_berry_near(user: BattleFighter, target: BattleFighter) -> void:
 		return
 	_drop_berry(near[0])
 	user.set_meta("ate_berry", true)
-	user.popup("Comeu a frutinha!", Color(0.5, 1.0, 0.5), 0.8)
+	user.popup("Ate the Berry!", Color(0.5, 1.0, 0.5), 0.8)
 	_heal(user, maxi(1, int(user.max_hp / 10.0)))
 
 
 func _burn_berries_near(target: BattleFighter) -> void:
 	for b in _berries_near(target):
 		_drop_berry(b)
-		target.popup("A frutinha queimou!", Dex.type_color("fire"), 0.8)
+		target.popup("The Berry burned!", Dex.type_color("fire"), 0.8)
 
 
 func _rapid_spin(user: BattleFighter) -> void:
@@ -1665,7 +1667,7 @@ func debuff_move(user: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
 				for k in ["atk", "spa", "spe"]:
 					arena.moves.change_stage(t, k, -1, user)
 			else:
-				t.popup("Sem efeito...", Color(0.7, 0.7, 0.7))
+				t.popup("No effect...", Color(0.7, 0.7, 0.7))
 		_:
 			return BattleMore.debuff_move(self, user, t, mv)
 	return true
@@ -1684,7 +1686,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		user.take_damage(maxi(1, user.max_hp / 2), Vector3.ZERO, 0.0)
 		if is_instance_valid(foe) and foe.active():
 			st(foe).cursed = true  # 1/4 no fim de cada turno até sair de campo (BattleEndTurn)
-			foe.popup("Amaldiçoado!", Dex.type_color("ghost"))
+			foe.popup("Cursed!", Dex.type_color("ghost"))
 		return true
 	var stats = mv.get("stats")
 	if stats is Dictionary and sp in ["", "curse"]:
@@ -1697,7 +1699,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		"", "charge", "defense_curl":
 			if sp == "charge":
 				s.charged = now + FOREVER  # Gen 9: até o próximo golpe Elétrico
-				user.popup("Carregado!", Dex.type_color("electric"))
+				user.popup("Charged!", Dex.type_color("electric"))
 			elif sp == "defense_curl":
 				s.curled = true
 			return false
@@ -1709,16 +1711,16 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				return true
 			set_rounds(s, "protect", 1)
 			s.insight = bool(mv.get("insight", false))  # Detect lê o golpe
-			user.popup("Proteger!", Color(0.6, 0.9, 1.0), 1.1)
+			user.popup("Protect!", Color(0.6, 0.9, 1.0), 1.1)
 			_vfx("protect_shield", [user, round_left()])
 		"quick_guard":
 			set_rounds(sd, "quick_guard", 1)
-			user.popup("Guarda Rápida!", Color(0.6, 0.9, 1.0))
+			user.popup("Quick Guard!", Color(0.6, 0.9, 1.0))
 			_vfx("protect_shield", [user, round_left()])
 		"follow_me":
 			set_rounds(s, "follow", 1)
 			s.follow_powder = bool(mv.get("powder", false))
-			user.popup("Todos olham para %s!" % user.mon.display_name, Color(1, 0.8, 0.5))
+			user.popup("Everyone looks at %s!" % user.mon.display_name, Color(1, 0.8, 0.5))
 			_vfx("spotlight", [user, round_left()])
 		"after_you":
 			var p := partner(user)
@@ -1735,20 +1737,20 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 						best = String(mid)
 				if best != "":
 					p.move_cd[best] = 0.0
-				p.popup("Vai você primeiro!", Color(0.8, 0.9, 1.0))
+				p.popup("After you!", Color(0.8, 0.9, 1.0))
 		"helping_hand":
 			var ally := partner(user)
 			if ally and ally.alive():
 				st(ally).helped = now
-				ally.popup("Ajuda!", Color(1.0, 0.85, 0.4), 0.8)
+				ally.popup("Helping Hand!", Color(1.0, 0.85, 0.4), 0.8)
 			else:
 				_fail(user)
 		"laser_focus":
 			set_rounds(s, "laser", LASER_TURNS)
-			user.popup("Mira perfeita!", Color(1, 0.6, 0.3))
+			user.popup("Perfect aim!", Color(1, 0.6, 0.3))
 		"imprison":
 			s.imprison = true
-			user.popup("Aprisionou os golpes!", Dex.type_color("psychic"))
+			user.popup("Sealed the moves!", Dex.type_color("psychic"))
 		"stockpile":
 			if int(s.stock) >= 3:
 				_fail(user)
@@ -1759,7 +1761,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				arena.moves.change_stage(user, k, 1)
 				var g: Dictionary = s.stock_gain
 				g[k] = int(g.get(k, 0)) + int(user.stages.get(k, 0)) - before
-			user.popup("Guardou %d!" % int(s.stock), Color(0.9, 0.85, 0.6))
+			user.popup("Stockpiled %d!" % int(s.stock), Color(0.9, 0.85, 0.6))
 		"swallow":
 			var n := int(s.stock)
 			if n <= 0:
@@ -1782,19 +1784,19 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				_fail(user)
 				return true
 			set_rounds(s, "magnet", MAGNET_TURNS)
-			user.popup("Levitando!", Dex.type_color("electric"))
+			user.popup("Levitating!", Dex.type_color("electric"))
 		"wonder_room":
 			var wpos := user.position + Vector3(0, 1.6, 0)
 			if active(field, "wonder"):
 				field.erase("wonder")
 				field.erase("wonder#")
-				arena.popup(wpos, "Tudo voltou ao normal!", Dex.type_color("psychic"))
+				arena.popup(wpos, "Everything returned to normal!", Dex.type_color("psychic"))
 			else:
 				set_rounds(field, "wonder", FIELD_TURNS)
-				arena.popup(wpos, "Defesas trocadas!", Dex.type_color("psychic"))
+				arena.popup(wpos, "Defenses swapped!", Dex.type_color("psychic"))
 				_vfx("gravity", [rounds_secs(FIELD_TURNS)])
 		"psychic_terrain":
-			_set_terrain("psychic", user, "Campo psíquico!", "psychic")
+			_set_terrain("psychic", user, "Psychic Terrain!", "psychic")
 		"destiny_bond":
 			s.destiny = true
 			user.popup("Destiny Bond!", Dex.type_color("ghost"))
@@ -1816,7 +1818,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 		"recycle":
 			if user.trainer_item != "" and user.item_used:
 				user.item_used = false
-				user.popup("Reciclou %s!" % _item_name(user), Color(0.7, 1.0, 0.7))
+				user.popup("Recycled %s!" % _item_name(user), Color(0.7, 1.0, 0.7))
 			else:
 				_fail(user)
 		"magnetic_flux":
@@ -1836,7 +1838,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				var at := user.position
 				user.position = mate.position
 				mate.position = at
-				user.popup("Trocou de lugar!", Dex.type_color("psychic"))
+				user.popup("Swapped places!", Dex.type_color("psychic"))
 		"roost":
 			_heal(user, int(ceil(user.max_hp * float(mv.get("heal", 0.5)))))
 			if "flying" in user.types:
@@ -1852,7 +1854,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			_heal(user, user.max_hp)
 			user.apply_status("sleep")
 			user.sleep_turns = BattleFighter.REST_COUNTER  # dorme 2 turnos
-			user.popup("Dormiu e recuperou tudo!", Color(0.75, 0.8, 0.95))
+			user.popup("Slept and became healthy!", Color(0.75, 0.8, 0.95))
 		"life_dew":
 			for f in [user, partner(user)]:
 				if f != null:
@@ -1867,7 +1869,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 					f.evasion_t = 0.0
 			arena.popup(
 				user.position + Vector3(0, 1.6, 0),
-				"Névoa: atributos zerados!",
+				"Haze: stat changes reset!",
 				Color(0.8, 0.9, 1.0)
 			)
 			_vfx("haze", [user])
@@ -1877,18 +1879,20 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				"light_screen": "Light Screen!",
 				"safeguard": "Safeguard!",
 				"reflect": "Reflect!",
-				"mist": "Névoa protetora!"
+				"mist": "Mist!"
 			}
 			user.popup(String(words[sp]), Color(0.9, 0.85, 1.0))
 			_vfx("screen", [user.side, sp, rounds_secs(FIELD_TURNS)])
 		"tailwind":
 			set_rounds(sd, "tailwind", TAILWIND_TURNS)
-			user.popup("Vento a favor!", Dex.type_color("flying"))
+			user.popup("Tailwind!", Dex.type_color("flying"))
 			_vfx("screen", [user.side, sp, rounds_secs(TAILWIND_TURNS)])
 		"gravity":
 			set_rounds(field, "gravity", FIELD_TURNS)
 			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Gravidade intensa!", Dex.type_color("psychic")
+				user.position + Vector3(0, 1.6, 0),
+				"Gravity intensified!",
+				Dex.type_color("psychic")
 			)
 			_vfx("gravity", [rounds_secs(FIELD_TURNS)])
 		"trick_room":
@@ -1898,35 +1902,37 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				var on: bool = t.toggle_trick_room()
 				arena.popup(
 					user.position + Vector3(0, 1.6, 0),
-					"Dimensões distorcidas!" if on else "As dimensões voltaram ao normal!",
+					"Dimensions twisted!" if on else "The dimensions returned to normal!",
 					Dex.type_color("psychic")
 				)
 			else:
 				_fail(user)
 		"grassy_terrain":
-			_set_terrain("grassy", user, "Campo de grama!", "grass")
+			_set_terrain("grassy", user, "Grassy Terrain!", "grass")
 		"electric_terrain":
-			_set_terrain("electric", user, "Campo elétrico!", "electric")
+			_set_terrain("electric", user, "Electric Terrain!", "electric")
 		"misty_terrain":
-			_set_terrain("misty", user, "Campo de névoa!", "fairy")
+			_set_terrain("misty", user, "Misty Terrain!", "fairy")
 		"sunny_day":
 			set_weather("sun", FIELD_TURNS, user)
 			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "O sol ficou forte!", Dex.type_color("fire")
+				user.position + Vector3(0, 1.6, 0),
+				"The sunlight turned harsh!",
+				Dex.type_color("fire")
 			)
 		"endure":
 			set_rounds(s, "endure", 1)
-			user.popup("Aguentar!", Color(1, 0.85, 0.5), 1.1)
+			user.popup("Endure!", Color(1, 0.85, 0.5), 1.1)
 			_vfx("protect_shield", [user, round_left()])
 		"wide_guard":
 			set_rounds(sd, "wide_guard", 1)
-			user.popup("Guarda Ampla!", Color(0.6, 0.9, 1.0))
+			user.popup("Wide Guard!", Color(0.6, 0.9, 1.0))
 			_vfx("protect_shield", [user, round_left()])
 		"counter":
 			s.counter = now + COUNTER_TIME
 			s.counter_cat = String(mv.get("counter_cat", "physical"))
 			user.root_t = maxf(user.root_t, COUNTER_TIME)
-			user.popup("Em guarda!", Color(1, 0.7, 0.4))
+			user.popup("On guard!", Color(1, 0.7, 0.4))
 			_vfx("protect_shield", [user, COUNTER_TIME])
 		"substitute":
 			var cost := maxi(1, user.max_hp / 4)
@@ -1935,7 +1941,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				return true
 			user.take_damage(cost, Vector3.ZERO, 0.0)
 			s.sub = cost
-			user.popup("Criou um substituto!", Color(0.9, 0.9, 0.95))
+			user.popup("Made a substitute!", Color(0.9, 0.9, 0.95))
 			_vfx("substitute", [user, true])
 		"belly_drum":
 			if user.hp <= user.max_hp / 2:
@@ -1943,7 +1949,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				return true
 			user.take_damage(user.max_hp / 2, Vector3.ZERO, 0.0)
 			arena.moves.change_stage(user, "atk", 12)
-			user.popup("Ataque no máximo!", Color(1, 0.6, 0.3))
+			user.popup("Attack maxed out!", Color(1, 0.6, 0.3))
 		"howl":
 			for f in [user, partner(user)]:
 				if f != null:
@@ -1954,7 +1960,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				_fail(user)
 			else:
 				dc.crit_stage = mini(dc.crit_stage + (2 if "dragon" in dc.types else 1), 4)
-				dc.popup("Ânimo de dragão!", Dex.type_color("dragon"))
+				dc.popup("Dragon Cheer!", Dex.type_color("dragon"))
 		"heal_pulse":
 			var hp_to := partner(user)
 			if hp_to == null:
@@ -1968,7 +1974,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				for k in foe2.stages:
 					user.stages[k] = int(foe2.stages[k])
 				user.crit_stage = foe2.crit_stage
-				user.popup("Copiou os atributos!", Color(0.9, 0.9, 1.0))
+				user.popup("Copied the stat changes!", Color(0.9, 0.9, 1.0))
 		"regen":
 			# Ingrain / Aqua Ring: 1/16 no fim de cada turno (BattleEndTurn), até sair de campo
 			var root := bool(mv.get("rooted", false))
@@ -1981,7 +1987,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			if root:
 				s.rooted = true
 				s.trapped = true
-			user.popup("Criou raízes!" if root else "Anel de água!", HEAL_COL)
+			user.popup("Planted its roots!" if root else "Aqua Ring!", HEAL_COL)
 		"defog":
 			var foe3 := user.opponent
 			if is_instance_valid(foe3) and foe3.active():
@@ -1993,7 +1999,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			if arena.field and arena.field.has_method("clear_spikes"):
 				arena.field.clear_spikes(-1)
 			_clear_terrain(user)
-			user.popup("O vento limpou o campo!", Dex.type_color("flying"))
+			user.popup("The wind cleared the field!", Dex.type_color("flying"))
 		"spikes":
 			var foes := _foes(user)
 			if foes.is_empty() or not arena.field:
@@ -2001,11 +2007,11 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				return true
 			for foe in foes:
 				arena.field.add_spikes(user.side, foe.position)
-			user.popup("Espinhos!", Dex.type_color("ground"))
+			user.popup("Spikes!", Dex.type_color("ground"))
 		"stealth_rock":
 			_lay_stealth_rock(user)
 		"baton_pass":
-			user.popup("Passou o bastão!", Color(0.8, 0.9, 1.0))
+			user.popup("Passed the baton!", Color(0.8, 0.9, 1.0))
 			arena.later(0.05, func() -> void: _switch(user, true))
 		"wish":
 			var w: Array = sd.get("wishes", [])
@@ -2018,7 +2024,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				}
 			)
 			sd["wishes"] = w
-			user.popup("Fez um desejo!", Color(1, 0.85, 0.95))
+			user.popup("Made a wish!", Color(1, 0.85, 0.95))
 		"sleep_talk":
 			var pool2: Array = user.moves.filter(
 				func(x):
@@ -2033,18 +2039,16 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				_call(user, String(pool2[rng.randi() % pool2.size()]))
 		"sandstorm":
 			set_weather("sand", FIELD_TURNS, user)
-			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Tempestade de areia!", Dex.type_color("rock")
-			)
+			arena.popup(user.position + Vector3(0, 1.6, 0), "Sandstorm!", Dex.type_color("rock"))
 		"rain_dance":
 			set_weather("rain", FIELD_TURNS, user)
 			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Começou a chover!", Dex.type_color("water")
+				user.position + Vector3(0, 1.6, 0), "It started to rain!", Dex.type_color("water")
 			)
 		"snowscape":
 			set_weather("hail", FIELD_TURNS, user)
 			arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Começou a nevar!", Dex.type_color("ice")
+				user.position + Vector3(0, 1.6, 0), "It started to snow!", Dex.type_color("ice")
 			)
 		"toxic_spikes":
 			_lay_toxic_spikes(user)
@@ -2054,7 +2058,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				if is_instance_valid(f) and f.active():
 					ids.append(f.get_instance_id())
 			sd["wish"] = ids
-			user.popup("Desejo de cura!", Color(1, 0.8, 0.95))
+			user.popup("Healing Wish!", Color(1, 0.8, 0.95))
 			user.take_damage(user.hp, Vector3.ZERO, 0.0)
 		"metronome":
 			var pool: Array = Dex.all_moves().filter(func(x): return _copyable(String(x)) != "")
@@ -2073,7 +2077,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 				_fail(user)
 			else:
 				user.moves[i] = c2
-				user.popup("Copiou %s!" % Dex.move(c2).get("name", c2), Color(0.9, 0.9, 1.0))
+				user.popup("Copied %s!" % Dex.move(c2).get("name", c2), Color(0.9, 0.9, 1.0))
 		_:
 			return BattleKanto.self_move(self, user, mv) or BattleMore.self_move(self, user, mv)
 	return true
@@ -2132,8 +2136,8 @@ func _aromatherapy(user: BattleFighter, bell := false) -> void:
 			if m is Mon and m.hp > 0 and (m.status != "" or m.battle_status != ""):
 				m.cure()
 				cured += 1
-	var said := "Sinos curativos!" if bell else "Aroma calmante!"
-	user.popup(said if cured > 0 else "Ninguém precisava.", Color(0.7, 1.0, 0.7))
+	var said := "Heal Bell!" if bell else "Soothing aroma!"
+	user.popup(said if cured > 0 else "Nobody needed it.", Color(0.7, 1.0, 0.7))
 
 
 func _lay_toxic_spikes(user: BattleFighter) -> void:
@@ -2161,7 +2165,7 @@ func _lay_toxic_spikes(user: BattleFighter) -> void:
 				at, TOXIC_SPIKE_R, Dex.type_color("poison") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE
 			)
 			_vfx("toxic_spikes", [user.side, at, TOXIC_SPIKE_R, TOXIC_SPIKE_LIFE])
-	user.popup("Espinhos venenosos!", Dex.type_color("poison"))
+	user.popup("Toxic Spikes!", Dex.type_color("poison"))
 
 
 ## Stealth Rock: pedras flutuando em volta de cada adversário; pega até quem voa (dano pela eficácia de Pedra).
@@ -2176,7 +2180,7 @@ func _lay_stealth_rock(user: BattleFighter) -> void:
 		spikes.append({"pos": at, "side": user.side, "layers": 1, "t": t, "hit": {}, "rock": true})
 		arena.fx_disc(at, STEALTH_R, Dex.type_color("rock") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE)
 		_vfx("stealth_rock", [user.side, at, STEALTH_R, TOXIC_SPIKE_LIFE])
-	user.popup("Pedras flutuantes!", Dex.type_color("rock"))
+	user.popup("Floating rocks!", Dex.type_color("rock"))
 
 
 func _drop_spike(z: Dictionary) -> void:
@@ -2247,11 +2251,11 @@ func _tick_spikes() -> void:
 				var d: int = f.paced(
 					maxi(1, int(f.max_hp / 8.0 * Dex.effectiveness("rock", f.types)))
 				)
-				f.popup("-%d pedras" % d, Dex.type_color("rock"), 0.8)
+				f.popup("-%d rocks" % d, Dex.type_color("rock"), 0.8)
 				f.take_damage(d, Vector3.ZERO, 0.0)
 				continue
 			if "poison" in f.types:
-				f.popup("Absorveu os espinhos!", Dex.type_color("poison"))
+				f.popup("Absorbed the spikes!", Dex.type_color("poison"))
 				_drop_spike(z)
 				break
 			_status(null, f, "toxic" if int(z.layers) >= 2 else "poison")
@@ -2272,7 +2276,7 @@ func _tick_wish() -> void:
 			):
 				f.clear_status()
 				_heal(f, f.max_hp)
-				f.popup("O desejo se realizou!", Color(1, 0.8, 0.95), 1.1)
+				f.popup("The wish came true!", Color(1, 0.8, 0.95), 1.1)
 				sides[side].erase("wish")
 				break
 
@@ -2295,7 +2299,7 @@ func end_turn_future() -> Array:
 		futures.erase(e)
 		var u = e.user
 		if is_instance_valid(u) and u.alive():
-			u.popup("O futuro chegou!", Dex.type_color("psychic"), 0.9)
+			u.popup("The future attack hit!", Dex.type_color("psychic"), 0.9)
 			arena.moves.land_future(u, e.mv, e.miss)
 			out.append(u)
 	return out
@@ -2326,7 +2330,7 @@ func end_turn_wish() -> Array:
 					best = d
 					to = f
 			if to != null:
-				to.popup("O desejo se realizou!", Color(1, 0.8, 0.95), 1.1)
+				to.popup("The wish came true!", Color(1, 0.8, 0.95), 1.1)
 				to.residual_heal(int(w.amt), "Wish")
 				out.append(to)
 	return out

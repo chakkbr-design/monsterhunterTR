@@ -182,7 +182,7 @@ const REGROW_DELAY := 20.0
 const REGROW_RAIN := 2.0
 const REGROW_SECS := 4.0
 const REGROW_FROM := 0.3
-## Granizo: o aviso "O lago congelou!" (log e telemetria) sai no máximo a cada FREEZE_SAY_CD s por lago.
+## Granizo: o aviso "The lake froze!" (log e telemetria) sai no máximo a cada FREEZE_SAY_CD s por lago.
 const FREEZE_SAY_CD := 12.0
 ## Areia: na tempestade de areia, Pedra/Terra/Aço se camuflam (golpe à distância x 0,85).
 const SAND_TYPES := ["rock", "ground", "steel"]
@@ -719,7 +719,7 @@ func _damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) ->
 	if obstacles.is_empty() or not is_instance_valid(target):
 		return 1.0
 	if String(mv.get("type", "")) == "electric" and wet(target):
-		target.popup("Eletrocutado na água!", Dex.type_color("electric"), 0.9, 0.8)
+		target.popup("Shocked in the water!", Dex.type_color("electric"), 0.9, 0.8)
 		_tele("terrain_shock_water", {"who": _uid(target), "by": _uid(user)})
 		return ELEC_WATER
 	return 1.0
@@ -800,23 +800,23 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 	preload("res://audio/cue.gd").sfx("hit_super")
 	var who := "" if user == null else " (%s)" % user.mon.display_name
 	_tele("terrain_collapse", {"kind": o.kind, "by": _uid(user)})
-	arena.say("O %s desabou!%s" % ["morro" if o.kind == "hill" else "pico", who])
+	arena.say("The %s collapsed!%s" % ["hill" if o.kind == "hill" else "peak", who])
 	for f in arena.fighters:
 		if not is_instance_valid(f) or not f.active():
 			continue
 		if _flat(f.position - o.pos).length() >= o.r or f.ground_y < 0.25:
 			continue
 		if not _grounded(f):
-			f.popup("Saiu voando!", Color(0.8, 0.9, 1.0), 0.9, 0.6)
+			f.popup("Flew off!", Color(0.8, 0.9, 1.0), 0.9, 0.6)
 			continue
 		var n := maxi(1, int(float(f.max_hp) * FALL_FRAC * f.dot_scale()))
 		f.stun_t = maxf(f.stun_t, FALL_STUN + FALL_STUN_H * f.ground_y)
 		f.interrupt_prepare()
-		f.popup("-%d Caiu!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
+		f.popup("-%d Fell!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
 		_tele("terrain_fall", {"who": _uid(f), "dmg": n})
 		f.take_damage(n, Vector3.ZERO, 0.0)
 		if arena.has_method("cut_in"):
-			arena.cut_in("DESABOU!", Color(0.85, 0.65, 0.4))
+			arena.cut_in("COLLAPSED!", Color(0.85, 0.65, 0.4))
 
 
 ## Corrente pela água de `pond` ({pos, r}); `inside` diz quem está nela (padrão: dentro do lago).
@@ -838,7 +838,7 @@ func _conduct(
 		if _flat(f.position - at).length() < 0.6:
 			continue  # o próprio alvo do golpe
 		hit_any = true
-		f.popup("Choque na água!", Dex.type_color("electric"), 0.9, 0.8)
+		f.popup("Shock in the water!", Dex.type_color("electric"), 0.9, 0.8)
 		_tele("terrain_conduct", {"who": _uid(f), "by": _uid(user)})
 		arena.moves.hit(user, f, m, _flat(f.position - at).normalized(), CONDUCT)
 	if hit_any and arena.is_inside_tree():
@@ -857,14 +857,14 @@ func freeze(pond: Dictionary, quiet := false) -> void:
 		return
 	pond.said_t = _water_t
 	_tele("terrain_freeze", {})
-	arena.say("O lago congelou!")
+	arena.say("The lake froze!")
 
 
 func _steam(pond: Dictionary, at: Vector3) -> void:
 	if float(pond.ice_t) > 0.0:
 		pond.ice_t = 0.0  # fogo derrete o gelo
 		_set_water_look(pond)
-		arena.say("O gelo do lago derreteu!")
+		arena.say("The lake ice melted!")
 	if arena.is_inside_tree():
 		PixelFx.pop(arena, "wind", _flat(at) + Vector3(0, 0.5, 0), 1.8, 0.6)
 
@@ -879,7 +879,7 @@ func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
 		if not g.get("wet_said", false):
 			g.wet_said = true
 			_tele("terrain_grass_wet", {"by": _uid(user)})
-			arena.popup(g.pos + Vector3(0, 0.8, 0), "Grama molhada!", Dex.type_color("water"))
+			arena.popup(g.pos + Vector3(0, 0.8, 0), "Wet grass!", Dex.type_color("water"))
 		return
 	grass.erase(g)
 	burnt.append({"pos": g.pos, "r": g.r, "t": 0.0})
@@ -888,7 +888,7 @@ func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
 	var sun := wx == "sun"
 	var frac := GRASS_BURN_FRAC * (SUN_BURN_MULT if sun else 1.0)
 	_tele("terrain_grass_burn", {"by": _uid(user), "sun": sun, "spread": spread})
-	arena.say("A grama alta pegou fogo!")
+	arena.say("The tall grass caught fire!")
 	if arena.field:
 		var side: int = user.side if is_instance_valid(user) else 0
 		arena.field._add_mark("scorch", g.pos, clampf(g.r, 0.8, 2.5), side)
@@ -905,7 +905,7 @@ func ignite(g: Dictionary, user: BattleFighter = null, spread := false) -> void:
 			var ab = arena.get("abilities")
 			if not (ab and ab.blocks_status(f, "burn")):
 				burned = f.apply_status("burn", user)
-		f.popup("-%d Grama em chamas!" % n, Dex.type_color("fire"), 1.0, 0.7)
+		f.popup("-%d Burning grass!" % n, Dex.type_color("fire"), 1.0, 0.7)
 		_tele(
 			"terrain_grass_burn_hit", {"who": _uid(f), "by": _uid(user), "dmg": n, "burned": burned}
 		)
@@ -943,7 +943,7 @@ func after_hit(
 			_shove_at[id] = _water_t
 			_slide(target, pond.pos + away.normalized() * float(pond.r) * 0.5, PULL_SECS)
 			target.interrupt_prepare()
-			target.popup("Puxado para a água!", Dex.type_color("water"), 1.0, 0.7)
+			target.popup("Pulled into the water!", Dex.type_color("water"), 1.0, 0.7)
 			_tele("terrain_pull", {"who": _uid(target), "by": _uid(user), "move": mv.get("id", "")})
 			return
 	if knock < DROP_KNOCK:
@@ -974,7 +974,7 @@ func after_hit(
 	var n := maxi(1, int(float(target.max_hp) * DROP_FRAC * target.dot_scale()))
 	target.stun_t = maxf(target.stun_t, DROP_STUN + DROP_STUN_H * h)
 	target.interrupt_prepare()
-	target.popup("-%d Derrubado!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
+	target.popup("-%d Knocked off!" % n, Color(1.0, 0.75, 0.45), 1.1, 0.7)
 	_tele("terrain_knock_off", {"who": _uid(target), "by": _uid(user), "dmg": n, "kind": o.kind})
 	target.take_damage(n, Vector3.ZERO, 0.0)
 
@@ -1125,7 +1125,7 @@ func _fire_in_water(f: BattleFighter, dt: float) -> void:
 	if t >= 1.0:
 		t -= 1.0
 		var n := maxi(1, int(float(f.max_hp) * FIRE_WATER_DOT * f.dot_scale()))
-		n = f.residual_damage(n, "água", Dex.type_color("water"))
+		n = f.residual_damage(n, "water", Dex.type_color("water"))
 		if n > 0:
 			_tele("terrain_fire_water", {"who": _uid(f), "dmg": n})
 	_fire_t[id] = t

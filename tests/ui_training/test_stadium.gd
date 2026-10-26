@@ -136,7 +136,7 @@ func _run() -> void:
 				"names": ["Azul", "Verde"],
 				"alive": [[true, false, true], [true, true]],
 				"clock": "1:05",
-				"scene": "Lagoa",
+				"scene": "Pond",
 				"series": "2 x 1",
 			}
 		)
@@ -144,7 +144,7 @@ func _run() -> void:
 	var mb: Dictionary = st._boards.main
 	check(mb.name0.text == "AZUL" and mb.name1.text == "VERDE", "placar: nomes")
 	check(mb.count0.text == "2/3" and mb.count1.text == "2/2", "placar: Pokémon de pé")
-	check(mb.clock.text == "1:05" and mb.scene.text == "LAGOA", "placar: tempo e cenário")
+	check(mb.clock.text == "1:05" and mb.scene.text == "POND", "placar: tempo e cenário")
 	var vis := 0
 	for b in mb.balls0:
 		vis += 1 if (b as Sprite3D).visible else 0
@@ -219,7 +219,7 @@ func _run() -> void:
 			for i in 30:
 				await process_frame
 			var b: Dictionary = tb._stadium._boards.main
-			check(b.name0.text == "TIME A", "o placar mostra o Time A")
+			check(b.name0.text == "TEAM A", "o placar mostra o Time A")
 			check(
 				b.scene.text == String(Cfg.SCENARIO_NAMES[tb.scenario()]).to_upper(),
 				"o placar mostra o cenário (%s)" % b.scene.text

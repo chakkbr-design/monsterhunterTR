@@ -37,20 +37,20 @@ const HP_BERRIES := {"oran_berry": [0.5, 10.0], "sitrus_berry": [0.5, 0.25]}
 const CURE_BERRIES := {"pecha_berry": ["poison", "toxic"], "persim_berry": ["confusion"]}
 ## Efeitos de rodada que acabam e o aviso no log (lado, campo, volátil).
 const SIDE_ENDS := {
-	"reflect": "O Reflect acabou.",
-	"light_screen": "O Light Screen acabou.",
-	"safeguard": "O Safeguard acabou.",
-	"mist": "A névoa protetora sumiu.",
-	"tailwind": "O vento a favor parou.",
+	"reflect": "Reflect wore off.",
+	"light_screen": "Light Screen wore off.",
+	"safeguard": "Safeguard wore off.",
+	"mist": "The Mist faded.",
+	"tailwind": "The Tailwind petered out.",
 }
 const FIELD_ENDS := {
-	"gravity": "A gravidade voltou ao normal.",
-	"magic": "Os itens voltaram a funcionar.",
-	"grassy": "O campo de grama sumiu.",
-	"electric": "O campo elétrico sumiu.",
-	"misty": "O campo de névoa sumiu.",
-	"psychic": "O campo psíquico sumiu.",
-	"wonder": "A Wonder Room acabou.",
+	"gravity": "Gravity returned to normal.",
+	"magic": "Items work again.",
+	"grassy": "The grass disappeared.",
+	"electric": "The electricity disappeared.",
+	"misty": "The mist disappeared.",
+	"psychic": "The weirdness disappeared.",
+	"wonder": "Wonder Room wore off.",
 }
 
 var arena: Node
@@ -134,7 +134,7 @@ func run() -> void:
 		if not f.active():
 			continue
 		if fx and fx.active(fx.field, "grassy") and fx.grounded(f):
-			_heal(f, _frac(f, 1.0 / 16.0), "grama", "grassy")
+			_heal(f, _frac(f, 1.0 / 16.0), "grass", "grassy")
 		if ab and ab.shed_skin(f):
 			_note("shed_skin", f)
 		_leftovers(f)
@@ -145,7 +145,7 @@ func run() -> void:
 				_heal(f, _frac(f, 1.0 / 16.0), "Aqua Ring", "aqua_ring")
 		for f in order:
 			if f.active() and bool(fx.st(f).get("ingrain", false)):
-				_heal(f, _frac(f, 1.0 / 16.0), "raízes", "ingrain")
+				_heal(f, _frac(f, 1.0 / 16.0), "roots", "ingrain")
 	# 7. Leech Seed
 	for f in order:
 		if f.active() and f.seeded:
@@ -159,12 +159,12 @@ func run() -> void:
 			var burn := _frac(f, 1.0 / 16.0)
 			if ab:
 				burn = maxi(1, int(float(burn) * ab.burn_mult(f)))  # Heatproof
-			_dmg(f, burn, "queimadura", COL_BURN, "burn")
+			_dmg(f, burn, "burn", COL_BURN, "burn")
 	if fx:
 		# 10. Curse  11. Wrap/Bind
 		for f in order:
 			if f.active() and bool(fx.st(f).get("cursed", false)):
-				_dmg(f, _frac(f, 1.0 / 4.0), "maldição", COL_CURSE, "curse")
+				_dmg(f, _frac(f, 1.0 / 4.0), "curse", COL_CURSE, "curse")
 		for f in order:
 			if f.active() and fx.active(fx.st(f), "bound"):
 				_bind(f)
@@ -176,7 +176,7 @@ func run() -> void:
 		_sides()
 	_field()
 	if fx and fx.count_round(fx.field, "uproar"):
-		_say("O barulho acabou.")
+		_say("The uproar ended.")
 	# 16. Speed Boost e o resto das habilidades de fim de turno
 	if ab:
 		for f in order:
@@ -197,7 +197,7 @@ func run() -> void:
 func _show() -> void:
 	var any := last_log.any(func(e): return e.who != null)
 	if any and arena.get("hud") and arena.hud.has_method("warn"):
-		arena.hud.warn("Fim da rodada", COL_END)
+		arena.hud.warn("End of round", COL_END)
 
 
 # --- Passos ---
@@ -242,13 +242,13 @@ func _leech(f: BattleFighter) -> void:
 			if is_instance_valid(g) and g.active() and g.side == src_side:
 				to = g
 				break
-	var d := _dmg(f, _frac(f, 1.0 / 8.0), "semente", COL_SEED, "leech_seed")
+	var d := _dmg(f, _frac(f, 1.0 / 8.0), "Leech Seed", COL_SEED, "leech_seed")
 	if d > 0 and to != null:
 		var ab := _ab()
 		if ab and ab.drain_backfires(to, f, d):  # Liquid Ooze: a semente faz mal a quem plantou
 			_note("liquid_ooze", to, -d)
 		else:
-			_heal(to, d, "semente", "leech_heal")
+			_heal(to, d, "Leech Seed", "leech_heal")
 
 
 ## Veneno 1/8; Toxic n/16 (n sobe a cada fim de turno). Poison Heal cura 1/8 no lugar.
@@ -264,7 +264,7 @@ func _poison(f: BattleFighter) -> void:
 	if toxic:
 		_dmg(f, _frac(f, 1.0 / 16.0) * f.toxic_n, "Toxic", COL_POISON, "toxic")
 	else:
-		_dmg(f, _frac(f, 1.0 / 8.0), "veneno", COL_POISON, "poison")
+		_dmg(f, _frac(f, 1.0 / 8.0), "poison", COL_POISON, "poison")
 
 
 ## Wrap/Bind (e Fire Spin, Whirlpool, Sand Tomb...): conta o turno; se ainda preso, 1/8.
@@ -272,13 +272,13 @@ func _bind(f: BattleFighter) -> void:
 	var fx := _fx()
 	var s := fx.st(f)
 	var src = s.get("bound_by")
-	var nm := String(s.get("bound_move", "o golpe"))
+	var nm := String(s.get("bound_move", "the move"))
 	if not is_instance_valid(src) or not src.active():
 		fx.free_bind(f)
 		return
 	if fx.count_round(s, "bound"):
 		fx.free_bind(f)
-		f.popup("Livrou-se de %s!" % nm, COL_BIND, 0.85)
+		f.popup("Freed from %s!" % nm, COL_BIND, 0.85)
 		_note("bind_end", f)
 		return
 	_dmg(f, _frac(f, 1.0 / 8.0), nm, COL_BIND, "bind")
@@ -290,20 +290,20 @@ func _volatiles(f: BattleFighter) -> void:
 	var fx := _fx()
 	var s := fx.st(f)
 	if fx.count_round(s, "taunt"):
-		f.popup("A provocação passou.", COL_END, 0.8)
+		f.popup("The taunt wore off.", COL_END, 0.8)
 		_note("taunt_end", f)
 	if fx.count_round(s, "encore"):
 		fx.end_encore(f)
-		f.popup("O bis acabou.", COL_END, 0.8)
+		f.popup("The encore ended.", COL_END, 0.8)
 		_note("encore_end", f)
 	if fx.count_round(s, "disable"):
 		fx.end_disable(f)
-		f.popup("Golpe liberado!", COL_END, 0.8)
+		f.popup("Move re-enabled!", COL_END, 0.8)
 		_note("disable_end", f)
 	if fx.count_round(s, "heal_block"):
 		_note("heal_block_end", f)
 	if fx.count_round(s, "magnet"):
-		f.popup("O levitar acabou.", COL_END, 0.8)
+		f.popup("Magnet Rise wore off.", COL_END, 0.8)
 		_note("magnet_end", f)
 	if fx.count_round(s, "throat"):
 		_note("throat_end", f)
@@ -321,14 +321,14 @@ func _sides() -> void:
 	for side in 2:
 		for k in SIDE_ENDS:
 			if fx.count_round(fx.sides[side], k):
-				_say(("Seu lado: " if side == 0 else "Lado adversário: ") + String(SIDE_ENDS[k]))
+				_say(("Your side: " if side == 0 else "Foe's side: ") + String(SIDE_ENDS[k]))
 
 
 ## Campo: Trick Room (BattleTurns.trick_room_rounds), Gravity e terrenos.
 func _field() -> void:
 	var t = arena.get("turns")
 	if t and t.has_method("count_trick_room") and t.count_trick_room():
-		_say("As dimensões voltaram ao normal.")
+		_say("The twisted dimensions returned to normal.")
 	var fx := _fx()
 	if fx == null:
 		return
@@ -340,14 +340,14 @@ func _field() -> void:
 static func _weather_end_text(w: String) -> String:
 	match w:
 		"sun":
-			return "O sol enfraqueceu."
+			return "The sunlight faded."
 		"rain":
-			return "A chuva parou."
+			return "The rain stopped."
 		"sand":
-			return "A tempestade de areia passou."
+			return "The sandstorm subsided."
 		"hail":
-			return "A neve parou."
-	return "O clima voltou ao normal."
+			return "The snow stopped."
+	return "The weather returned to normal."
 
 
 # --- Itens segurados ---
@@ -390,11 +390,11 @@ func held_check(f: BattleFighter) -> void:
 		if f.status in cures:
 			_eat(f)
 			f.clear_status()
-			f.popup("%s curou!" % _item_name(id), Color(0.6, 1.0, 0.7), 0.85)
+			f.popup("%s cured it!" % _item_name(id), Color(0.6, 1.0, 0.7), 0.85)
 		elif "confusion" in cures and f.confusion_t > 0.0:
 			_eat(f)
 			f.confusion_t = 0.0
-			f.popup("%s curou!" % _item_name(id), Color(0.6, 1.0, 0.7), 0.85)
+			f.popup("%s cured it!" % _item_name(id), Color(0.6, 1.0, 0.7), 0.85)
 
 
 func _eat(f: BattleFighter) -> void:

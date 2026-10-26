@@ -184,7 +184,7 @@ func launch(f: BattleFighter, dir: Vector3, dist: float, forced := false) -> voi
 	var lift := minf(0.2 + dist * 0.12, 0.9)
 	f.launch(dir, dist, secs, lift)
 	if forced:
-		f.popup("Arremessado!", Color(0.85, 0.9, 1.0), 1.0, 0.9)
+		f.popup("Thrown!", Color(0.85, 0.9, 1.0), 1.0, 0.9)
 	if arena.vfx and arena.vfx.has_method("launch"):
 		arena.vfx.launch(f, dir, dist)
 
@@ -225,12 +225,12 @@ func _crash(f: BattleFighter, what: String, obj) -> void:
 	f.stun_t = maxf(f.stun_t, 0.35)
 	var n := maxi(1, int(float(f.max_hp) * CRASH_FRAC * ratio * f.dot_scale()))
 	var words := {
-		"fence": "Bateu na cerca!",
-		"rock": "Bateu na pedra!",
-		"crate": "Bateu na caixa!",
-		"wall": "Bateu na parede!"
+		"fence": "Hit the fence!",
+		"rock": "Hit the rock!",
+		"crate": "Hit the crate!",
+		"wall": "Hit the wall!"
 	}
-	f.popup("-%d %s" % [n, words.get(what, "Bateu!")], Color(1.0, 0.8, 0.55), 0.9, 0.6)
+	f.popup("-%d %s" % [n, words.get(what, "Crashed!")], Color(1.0, 0.8, 0.55), 0.9, 0.6)
 	f.take_damage(n, Vector3.ZERO, 0.0)
 	if obj != null and arena.field:
 		arena.field._hit_objects(obj.pos, 0.05)
@@ -273,7 +273,7 @@ func start_leap(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleF
 		_sky_tick if sky else Callable()
 	)
 	if sky:
-		user.popup("Subiu bem alto!", Color(0.8, 0.9, 1.0), 0.9, 0.9)
+		user.popup("Flew up high!", Color(0.8, 0.9, 1.0), 0.9, 0.9)
 
 
 ## Fly/Bounce: fica fora de alcance no meio do salto.
@@ -310,7 +310,7 @@ func _land_strike(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> v
 			best = t
 	if best == null:
 		if is_instance_valid(miss) and miss.active():
-			miss.popup("Errou!", Color(0.75, 0.85, 1.0))
+			miss.popup("Missed!", Color(0.75, 0.85, 1.0))
 		return
 	var to := _flat(best.position - at)
 	arena.moves.hit(user, best, mv, to.normalized() if to.length() > 0.05 else user.facing)
@@ -387,9 +387,7 @@ func _blink_drop(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 func start_tunnel(user: BattleFighter, mv: Dictionary, _dir: Vector3, miss: BattleFighter) -> void:
 	var kind := tunnel_of(mv)
 	user.hidden = kind
-	user.popup(
-		"Entrou na terra!" if kind == "dig" else "Mergulhou!", Color(0.85, 0.75, 0.55), 0.9, 0.9
-	)
+	user.popup("Burrowed!" if kind == "dig" else "Dove!", Color(0.85, 0.75, 0.55), 0.9, 0.9)
 	if arena.vfx and arena.vfx.has_method("burrow"):
 		arena.vfx.burrow(user)
 	else:

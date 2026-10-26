@@ -22,31 +22,31 @@ const MIN_SHOW := 0.35
 const AUTO_DISMISS := 1.0
 
 const TITLES := {
-	"start": "Batalhas em tempo real",
-	"cooldown": "Recarga",
-	"dodge": "Desvie!",
-	"stat": "Mudanças de atributo",
-	"hp": "Pouco HP",
+	"start": "Real-time battles",
+	"cooldown": "Cooldown",
+	"dodge": "Dodge!",
+	"stat": "Stat changes",
+	"hp": "Low HP",
 }
 ## Textos do original traduzidos, com as teclas deste port (golpes 1-4, bolsa E, Shift corre).
 const BODIES := {
 	"start":
-	"As batalhas acontecem em tempo real! Mova o seu Pokémon com WASD e mantenha distância.\nAperte 1, 2, 3 ou 4 para usar um golpe.",
+	"Battles happen in real time! Move your Pokémon with WASD and keep your distance.\nPress 1, 2, 3 or 4 to use a move.",
 	"cooldown":
-	"Todo golpe gasta PP e depois recarrega: o botão fica escuro até ficar pronto. Depois de qualquer golpe, todos os seus golpes descansam um instante, então não dá para soltar dois de uma vez.",
-	"dodge": "Lá vem! Segure Shift enquanto anda para correr e sair do caminho.",
+	"Every move spends PP and then recharges: the button stays dark until it is ready. After any move, all your moves rest for a moment, so you can't fire two at once.",
+	"dodge": "Here it comes! Hold Shift while moving to run out of the way.",
 	"stat":
-	"Os chips ▼ no cartão mostram os atributos que caíram, e os ▲, os que subiram. Eles voltam ao normal quando a batalha acaba.",
+	"The ▼ chips on the card show stats that fell, and the ▲ ones show stats that rose. They return to normal when the battle ends.",
 	"hp":
-	"Seu Pokémon está ferido! Mais tarde você vai poder curá-lo no meio da batalha com Poções, pela bolsa (E).",
+	"Your Pokémon is hurt! Later you will be able to heal it mid-battle with Potions from the bag (E).",
 }
-const HP_POTION := "Seu Pokémon está ferido! Aperte E para abrir a bolsa e usar uma Poção. Os itens dividem uma recarga curta."
+const HP_POTION := "Your Pokémon is hurt! Press E to open the bag and use a Potion. Items share a short cooldown."
 const STAT_WORDS := {
-	"atk": "o Ataque",
-	"def": "a Defesa",
-	"spa": "o Ataque Especial",
-	"spd": "a Defesa Especial",
-	"spe": "a Velocidade",
+	"atk": "Attack",
+	"def": "Defense",
+	"spa": "Special Attack",
+	"spd": "Special Defense",
+	"spe": "Speed",
 }
 
 var arena: Node
@@ -60,7 +60,7 @@ var _elapsed := 0.0
 var _released := false
 var _active := false
 var _t0 := 0
-var _stat_name := "um golpe"
+var _stat_name := "a move"
 var _dim: ColorRect
 var _panel: PanelContainer
 var _title: Label
@@ -158,7 +158,7 @@ func _build_lesson_ui() -> void:
 	_bubble.add_child(v)
 	var who := Label.new()
 	who.theme_type_variation = "HeaderLabel"
-	who.text = "Prof. Carvalho"
+	who.text = "Prof. Oak"
 	who.add_theme_color_override("font_color", Kit.BLUE)
 	who.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(who)
@@ -287,7 +287,7 @@ func _on_move_used(user: Node, move: Dictionary) -> void:
 		if float(move.get("power", 0)) > 0.0:
 			_trigger("dodge")
 		elif String(move.get("category", "")) == "status" and not _seen("stat"):
-			_stat_name = String(move.get("name", "um golpe"))
+			_stat_name = String(move.get("name", "a move"))
 			_trigger("stat")
 
 
@@ -389,11 +389,11 @@ func _close() -> void:
 func _body_for(id: String) -> String:
 	match id:
 		"stat":
-			var sp := "O adversário"
+			var sp := "The foe"
 			var f = _foe()
 			if f and f.get("mon"):
 				sp = String(f.mon.display_name)
-			return "%s usou %s!" % [sp, _stat_name] + "\n" + String(BODIES.get(id, ""))
+			return "%s used %s!" % [sp, _stat_name] + "\n" + String(BODIES.get(id, ""))
 		"hp":
 			var g: Node = arena._game() if arena and arena.has_method("_game") else null
 			if g and g.get("bag") is Dictionary and int(g.bag.get("potion", 0)) > 0:
@@ -636,31 +636,31 @@ func _process_arrow() -> void:
 func _lesson_line(step: String) -> String:
 	match step:
 		"intro":
-			return "Aqui as batalhas não esperam a vez: elas acontecem em tempo real. Você se move, e o seu Pokémon também."
+			return "Battles here don't wait for turns: they happen in real time. You move, and so does your Pokémon."
 		"your_hp":
-			return "Aqui está a vida do seu Pokémon. Se essa barra esvaziar, ele está fora da luta."
+			return "This is your Pokémon's health. If this bar empties, it is out of the fight."
 		"foe_hp":
-			return "E aqui está a vida do adversário: é ela que você precisa esvaziar."
+			return "And this is the foe's health: that's the one you need to empty."
 		"moves":
 			if _status_slot < 0:
-				return "Estes são os seus quatro golpes, uma tecla para cada."
+				return "These are your four moves, one key for each."
 			return (
-				"Estes são os seus quatro golpes, uma tecla para cada. Comece com %s: %s"
+				"These are your four moves, one key for each. Start with %s: %s"
 				% [_move_name(_status_slot), _stat_line(_status_slot)]
 			)
 		"stat":
 			var w := _stat_word(_status_slot)
 			if w == "":
-				w = "o atributo"
+				w = "stat"
 			return (
-				"Viu o ▼? %s do adversário caiu, e isso vale até o fim da batalha."
+				"See the ▼? The foe's %s fell, and it stays that way until the battle ends."
 				% (w.left(1).to_upper() + w.substr(1))
 			)
 		"attack":
 			if _attack_slot < 0:
-				return "Agora ataque!"
+				return "Now attack!"
 			return (
-				"Agora ataque! Chegue perto e aperte %s para usar %s."
+				"Now attack! Get close and press %s to use %s."
 				% [_move_key(_attack_slot), _move_name(_attack_slot)]
 			)
 	return ""
@@ -674,12 +674,12 @@ func _move_def(slot: int) -> Dictionary:
 
 
 func _move_name(slot: int) -> String:
-	return String(_move_def(slot).get("name", "o seu golpe"))
+	return String(_move_def(slot).get("name", "your move"))
 
 
 func _stat_line(slot: int) -> String:
 	var w := _stat_word(slot)
-	return "ele diminui %s do adversário." % w if w != "" else "ele enfraquece o adversário."
+	return "it lowers the foe's %s." % w if w != "" else "it weakens the foe."
 
 
 func _stat_word(slot: int) -> String:

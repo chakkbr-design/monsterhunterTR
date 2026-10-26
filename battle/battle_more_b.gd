@@ -57,9 +57,9 @@ const DRIVES := {
 	"douse_drive": "water", "shock_drive": "electric", "burn_drive": "fire", "chill_drive": "ice"
 }
 const GUARD_TEXT := {
-	"obstruct": "Obstruir!",
-	"silk_trap": "Armadilha de seda!",
-	"spiky_shield": "Escudo de espinhos!",
+	"obstruct": "Obstruct!",
+	"silk_trap": "Silk Trap!",
+	"spiky_shield": "Spiky Shield!",
 }
 const GUARD_COL := {
 	"obstruct": Color(0.55, 0.4, 0.75),
@@ -125,7 +125,7 @@ static func _eat_held(fx: BattleMoveEffects, f: BattleFighter) -> bool:
 	if not _held_berry(fx, f):
 		return false
 	var id := String(f.trainer_item)
-	f.popup("Comeu %s!" % fx._item_name(f), Color(0.5, 1.0, 0.5), 0.8)
+	f.popup("Ate %s!" % fx._item_name(f), Color(0.5, 1.0, 0.5), 0.8)
 	f.item_used = true
 	f.set_meta("ate_berry", true)
 	if BattleEndTurn.HP_BERRIES.has(id):
@@ -163,38 +163,38 @@ static func _photon_physical(user: BattleFighter) -> bool:
 static func blocked(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -> String:
 	var s := fx.st(user)
 	if bool(s.get("torment", false)) and String(s.last) == String(mv.get("id", "")):
-		return "Atormentado!"
+		return "Tormented!"
 	match _sp(mv):
 		"burn_up":
 			if not "fire" in user.types:
-				return "Não é do tipo Fire!"
+				return "Not a Fire type!"
 		"shed_tail":
 			if not fx.has_reserve(user):
-				return "Ninguém para entrar!"
+				return "No one to switch in!"
 			if user.hp <= user.max_hp / 2:
-				return "HP insuficiente!"
+				return "Not enough HP!"
 		"revival_blessing":
 			if _fainted_ally(fx, user) == null:
-				return "Ninguém para reviver!"
+				return "No one to revive!"
 		"thunderclap":
 			if not _attacking(fx, user.opponent):
-				return "Mas falhou!"
+				return "But it failed!"
 		"no_retreat":
 			if bool(s.get("no_retreat", false)):
-				return "Mas falhou!"
+				return "But it failed!"
 		"sketch":
 			var c := fx._copyable(fx._last_of(user.opponent))
 			if c == "" or c in user.moves:
-				return "Nada para copiar!"
+				return "Nothing to copy!"
 		"stuff_cheeks":
 			if not _has_berry(fx, user):
-				return "Sem frutinha!"
+				return "No Berry!"
 		"refresh":
 			if not user.status in CURABLE:
-				return "Mas falhou!"
+				return "But it failed!"
 		"psycho_shift":
 			if not user.status in BattleMoveEffects.MAJOR:
-				return "Sem status!"
+				return "No status!"
 	return ""
 
 
@@ -209,7 +209,7 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 	if _sp(mv) == "fickle_beam":
 		s["fickle"] = fx.rng.randf() < FICKLE_CHANCE
 		if bool(s.fickle):
-			user.popup("Poder dobrado!", Dex.type_color("dragon"), 0.9)
+			user.popup("Power doubled!", Dex.type_color("dragon"), 0.9)
 
 
 # --- Gancho de blocks_hit() ---
@@ -226,7 +226,7 @@ static func blocks_hit(
 	# Obstruct e Silk Trap só barram golpe de dano (como o King's Shield); o Spiky Shield barra tudo.
 	if guard != "spiky_shield" and String(mv.get("category", "")) == "status":
 		return false
-	target.popup("Protegeu-se!", GUARD_COL.get(guard, Color(0.6, 0.9, 1.0)), 1.1)
+	target.popup("Protected itself!", GUARD_COL.get(guard, Color(0.6, 0.9, 1.0)), 1.1)
 	fx.st(user).fail = true
 	fx.crash_damage(user, mv)
 	if float(mv.get("power", 0)) > 0.0 and _touches(mv):
@@ -255,7 +255,7 @@ static func _guard_react(
 				return
 			var d := maxi(1, int(user.max_hp * SPIKY_FRAC))
 			user.take_damage(d, Vector3.ZERO, 0.0)
-			user.popup("-%d espinhos" % d, Dex.type_color("grass"), 0.9)
+			user.popup("-%d spikes" % d, Dex.type_color("grass"), 0.9)
 
 
 # --- Ganchos de poder, tipo e perfis ---
@@ -348,7 +348,7 @@ static func after_hit(
 			if hit_ok and fx.now - float(ts.get("b_use_t", -99.0)) <= CORE_WINDOW:
 				if fx._ability(target) != "":
 					target.set_meta("ability_override", "")
-					target.popup("Habilidade anulada!", Color(0.7, 0.9, 0.5))
+					target.popup("Ability suppressed!", Color(0.7, 0.9, 0.5))
 		"flame_burst":
 			if dealt > 0:
 				_splash(fx, user, target)
@@ -366,25 +366,25 @@ static func after_hit(
 				fx._fail(user)
 			else:
 				target.types = ["psychic"]
-				target.popup("Virou Psychic!", Dex.type_color("psychic"), 1.0, 0.8)
+				target.popup("Became Psychic type!", Dex.type_color("psychic"), 1.0, 0.8)
 		"octolock":
 			_octolock(fx, user, target)
 		"odor_sleuth":
 			ts["odor"] = true
 			target.evasion_t = 0.0
-			target.popup("Farejado!", Color(0.9, 0.85, 0.7))
+			target.popup("Identified!", Color(0.9, 0.85, 0.7))
 		"psycho_shift":
 			_psycho_shift(fx, user, target)
 		"purify":
 			if target.status in BattleMoveEffects.MAJOR:
 				target.clear_status()
-				target.popup("Status curado!", Color(0.8, 0.6, 0.95))
+				target.popup("Status cured!", Color(0.8, 0.6, 0.95))
 				fx._heal(user, int(ceil(user.max_hp / 2.0)))
 			else:
 				fx._fail(user)
 		"quash":
 			target.gcd_t = maxf(target.gcd_t, QUASH_DELAY)
-			target.popup("Ficou por último!", Color(0.6, 0.45, 0.7))
+			target.popup("Moved to last!", Color(0.6, 0.45, 0.7))
 		"sketch":
 			_sketch(fx, user, target, mv)
 		"spicy_extract":
@@ -393,15 +393,15 @@ static func after_hit(
 		"syrup_bomb":
 			if dealt > 0 and target.alive():
 				fx.set_rounds(ts, "syrup", SYRUP_TURNS)
-				target.popup("Grudado no xarope!", Color(0.75, 0.9, 0.35))
+				target.popup("Stuck in syrup!", Color(0.75, 0.9, 0.35))
 		"tar_shot":
 			ts["tar"] = true
-			target.popup("Coberto de piche!", Color(0.45, 0.35, 0.3))
+			target.popup("Covered in tar!", Color(0.45, 0.35, 0.3))
 		"topsy_turvy":
 			_topsy(fx, user, target)
 		"torment":
 			ts["torment"] = true
-			target.popup("Atormentado!", Color(0.7, 0.45, 0.85))
+			target.popup("Tormented!", Color(0.7, 0.45, 0.85))
 		"toxic_thread":
 			if target.alive():
 				fx.arena.moves.change_stage(target, "spe", -1, user)
@@ -412,7 +412,7 @@ static func after_hit(
 				var ty: Array = target.types.duplicate()
 				ty.append("ghost")
 				target.types = ty
-				target.popup("Ganhou Ghost!", Dex.type_color("ghost"), 1.0, 0.8)
+				target.popup("Gained Ghost type!", Dex.type_color("ghost"), 1.0, 0.8)
 
 
 ## Burn Up: o usuário perde o tipo Fire (sem tipo sobra Normal, como o Roost).
@@ -422,7 +422,7 @@ static func _lose_fire(user: BattleFighter) -> void:
 	var ty: Array = user.types.duplicate()
 	ty.erase("fire")
 	user.types = ty if not ty.is_empty() else ["normal"]
-	user.popup("Perdeu o tipo Fire!", Dex.type_color("fire"), 1.0, 0.8)
+	user.popup("Lost the Fire type!", Dex.type_color("fire"), 1.0, 0.8)
 
 
 ## Flame Burst: faíscas ferem quem está colado no alvo (dupla).
@@ -437,7 +437,7 @@ static func _splash(fx: BattleMoveEffects, user: BattleFighter, target: BattleFi
 			continue
 		var d := maxi(1, int(f.max_hp * SPLASH_FRAC))
 		f.take_damage(d, Vector3.ZERO, 0.0)
-		f.popup("-%d faíscas" % d, Dex.type_color("fire"), 0.8)
+		f.popup("-%d sparks" % d, Dex.type_color("fire"), 0.8)
 
 
 static func _octolock(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter) -> void:
@@ -451,7 +451,7 @@ static func _octolock(fx: BattleMoveEffects, user: BattleFighter, target: Battle
 		ts["trapped"] = true
 		ts["octo_trap"] = true
 	target.trap_t = maxf(target.trap_t, OCTO_GRIP)
-	target.popup("Preso nos tentáculos!", Dex.type_color("fighting"), 1.0, 0.8)
+	target.popup("Caught by tentacles!", Dex.type_color("fighting"), 1.0, 0.8)
 
 
 static func _octo_end(fx: BattleMoveEffects, f: BattleFighter) -> void:
@@ -462,7 +462,7 @@ static func _octo_end(fx: BattleMoveEffects, f: BattleFighter) -> void:
 	if bool(s.get("octo_trap", false)):
 		s["trapped"] = false
 		s.erase("octo_trap")
-	f.popup("Soltou-se dos tentáculos.", BattleEndTurn.COL_END, 0.8)
+	f.popup("Broke free of the tentacles.", BattleEndTurn.COL_END, 0.8)
 
 
 static func _psycho_shift(
@@ -475,7 +475,7 @@ static func _psycho_shift(
 	fx._status(user, target, status)
 	if target.status == status:
 		user.clear_status()
-		user.popup("Passou o status!", Dex.type_color("psychic"), 0.9)
+		user.popup("Passed the status!", Dex.type_color("psychic"), 0.9)
 	else:
 		fx._fail(user)
 
@@ -495,7 +495,7 @@ static func _sketch(
 		var j := user.mon.moves.find(id)
 		if j >= 0:
 			user.mon.moves[j] = c
-	user.popup("Desenhou %s!" % Dex.move(c).get("name", c), Color(0.95, 0.9, 0.8), 1.0, 0.8)
+	user.popup("Sketched %s!" % Dex.move(c).get("name", c), Color(0.95, 0.9, 0.8), 1.0, 0.8)
 
 
 static func _topsy(fx: BattleMoveEffects, user: BattleFighter, target: BattleFighter) -> void:
@@ -506,7 +506,7 @@ static func _topsy(fx: BattleMoveEffects, user: BattleFighter, target: BattleFig
 			any = true
 			target.stages[k] = -v
 	if any:
-		target.popup("Estágios invertidos!", Color(0.6, 0.4, 0.7))
+		target.popup("Stat changes inverted!", Color(0.6, 0.4, 0.7))
 	else:
 		fx._fail(user)
 
@@ -533,22 +533,22 @@ static func self_move(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary
 				return true
 			fx.set_rounds(fx.field, "mud_sport", BattleMoveEffects.FIELD_TURNS)
 			fx.arena.popup(
-				user.position + Vector3(0, 1.6, 0), "Lama na quadra!", Dex.type_color("ground")
+				user.position + Vector3(0, 1.6, 0), "Mud on the court!", Dex.type_color("ground")
 			)
 		"no_retreat":
 			for k in STAT_KEYS:
 				moves.change_stage(user, k, 1)
 			s["no_retreat"] = true
 			s["trapped"] = true
-			user.popup("Sem recuo!", Dex.type_color("fighting"), 1.0, 0.8)
+			user.popup("No retreat!", Dex.type_color("fighting"), 1.0, 0.8)
 		"power_trick":
 			var a = user.stats.get("atk", 10)
 			user.stats["atk"] = user.stats.get("def", 10)
 			user.stats["def"] = a
-			user.popup("Ataque e Defesa trocados!", Dex.type_color("psychic"))
+			user.popup("Attack and Defense swapped!", Dex.type_color("psychic"))
 		"refresh":
 			user.clear_status()
-			user.popup("Renovou-se!", Color(0.8, 1.0, 0.8))
+			user.popup("Refreshed!", Color(0.8, 1.0, 0.8))
 		"revival_blessing":
 			_revive(fx, user)
 		"rototiller":
@@ -605,7 +605,7 @@ static func _revive(fx: BattleMoveEffects, user: BattleFighter) -> void:
 	m.hp = maxi(1, m.max_hp / 2)
 	m.status = ""
 	m.battle_status = ""
-	user.popup("Reanimou %s!" % m.display_name, Color(1.0, 0.95, 0.75), 1.2, 0.9)
+	user.popup("Revived %s!" % m.display_name, Color(1.0, 0.95, 0.75), 1.2, 0.9)
 	# Adversário: o reanimado volta para a fila de quem ainda vai entrar.
 	if user.side == 1:
 		var list = fx.arena.get("enemies")
@@ -623,7 +623,7 @@ static func _shed_tail(fx: BattleMoveEffects, user: BattleFighter) -> void:
 		fx._fail(user)
 		return
 	user.take_damage(cost, Vector3.ZERO, 0.0)
-	user.popup("Soltou a cauda! -%d" % cost, Color(0.9, 0.85, 0.8), 0.9)
+	user.popup("Shed its tail! -%d" % cost, Color(0.9, 0.85, 0.8), 0.9)
 	var amt := maxi(1, user.max_hp / 4)
 	fx.arena.later(
 		BattleMoveEffects.PIVOT_DELAY,
@@ -633,7 +633,7 @@ static func _shed_tail(fx: BattleMoveEffects, user: BattleFighter) -> void:
 			var nf = fx.arena.switch_out(user)
 			if nf != null:
 				fx.st(nf)["sub"] = amt
-				nf.popup("Assumiu o substituto!", Color(0.9, 0.9, 0.95))
+				nf.popup("Took over the substitute!", Color(0.9, 0.9, 0.95))
 				fx._vfx("substitute", [nf, true])
 	)
 
@@ -658,7 +658,7 @@ static func _sticky_web(fx: BattleMoveEffects, user: BattleFighter) -> void:
 		for off in [Vector3.ZERO, side * WEB_SIDE, -side * WEB_SIDE]:
 			ex._add_web(at + off, user, true)
 	fx._sd(user.side)["web_t"] = fx.now
-	user.popup("Teia pegajosa!", Dex.type_color("bug"), 1.0, 0.8)
+	user.popup("Sticky Web!", Dex.type_color("bug"), 1.0, 0.8)
 
 
 ## Teias, cipós e pedrinhas do cenário (BattleGroundExtras), se o chão vivo está ligado.
@@ -686,9 +686,9 @@ static func _tidy_up(fx: BattleMoveEffects, user: BattleFighter) -> void:
 	for f in fx.arena.fighters:
 		if _ok(f) and int(fx.st(f).sub) > 0:
 			fx.st(f)["sub"] = 0
-			f.popup("Substituto desfeito!", Color(0.85, 0.85, 0.85), 0.9)
+			f.popup("Substitute faded!", Color(0.85, 0.85, 0.85), 0.9)
 			fx._vfx("substitute", [f, false])
-	user.popup("Arrumou tudo!", Color(0.9, 0.9, 0.85), 1.0, 0.8)
+	user.popup("Tidied up!", Color(0.9, 0.9, 0.85), 1.0, 0.8)
 
 
 ## Shell Trap: armado por SHELL_WINDOW s (o usuário parado); um golpe físico recebido explode na hora.
@@ -696,7 +696,7 @@ static func _shell_arm(fx: BattleMoveEffects, user: BattleFighter) -> void:
 	var until := fx.now + SHELL_WINDOW
 	fx.st(user)["shell_until"] = until
 	user.root_t = maxf(user.root_t, SHELL_WINDOW)
-	user.popup("Armadilha armada!", Dex.type_color("fire"), 1.0, 0.8)
+	user.popup("Trap set!", Dex.type_color("fire"), 1.0, 0.8)
 	fx._vfx("protect_shield", [user, SHELL_WINDOW])
 	fx.arena.later(
 		SHELL_WINDOW + 0.05,
@@ -707,7 +707,7 @@ static func _shell_arm(fx: BattleMoveEffects, user: BattleFighter) -> void:
 			):
 				fx.st(user)["shell_until"] = -99.0
 				fx.note_fail(user)
-				user.popup("A armadilha falhou!", Color(0.8, 0.8, 0.8))
+				user.popup("The trap failed!", Color(0.8, 0.8, 0.8))
 	)
 
 
@@ -721,7 +721,7 @@ static func _shell_boom(fx: BattleMoveEffects, user: BattleFighter) -> void:
 	m["radius"] = SHELL_RADIUS
 	m["special"] = ""
 	m.erase("priority")
-	user.popup("A armadilha explodiu!", Dex.type_color("fire"), 1.1, 0.9)
+	user.popup("The trap exploded!", Dex.type_color("fire"), 1.1, 0.9)
 	fx.arena.moves._aoe_self(user, fx.arena.moves._cast_copy(user, m))
 
 
@@ -742,7 +742,7 @@ static func debuff_move(
 		var s := fx.st(user)
 		if int(s.get("pivot_cast", -1)) != user.cast_n and fx.has_reserve(user):
 			s["pivot_cast"] = user.cast_n
-			user.popup("Até mais!", Dex.type_color("dark"), 0.9)
+			user.popup("See ya!", Dex.type_color("dark"), 0.9)
 			fx.arena.later(BattleMoveEffects.PIVOT_DELAY, func() -> void: fx._switch(user, false))
 	return true
 
@@ -911,4 +911,4 @@ static func end_turn(fx: BattleMoveEffects, f: BattleFighter) -> void:
 	if fx.active(fx.field, "mud_sport") and int(fx.field.get("mud_sport_r", -1)) != rid:
 		fx.field["mud_sport_r"] = rid
 		if fx.count_round(fx.field, "mud_sport"):
-			f.popup("A lama secou.", BattleEndTurn.COL_END, 0.8)
+			f.popup("The mud dried up.", BattleEndTurn.COL_END, 0.8)
