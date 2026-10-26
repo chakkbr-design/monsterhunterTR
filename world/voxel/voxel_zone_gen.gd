@@ -65,6 +65,8 @@ var _oz := 0
 var _sx := 0
 var _sz := 0
 var _next_part := 1
+var _rings: Array = []
+var _rings_done := false
 
 
 ## Runs the whole generator for a zone; null when it has no design.
@@ -222,10 +224,12 @@ func block(t: Vector2i) -> void:
 	blocks[t] = true
 
 
-func add_decor(model: String, xf: Transform3D) -> void:
-	if not decor.has(model):
-		decor[model] = []
-	decor[model].append(xf)
+## Adds a decor instance; `part` > 0 ties it to a building part (fades with that house).
+func add_decor(model: String, xf: Transform3D, part := 0) -> void:
+	var key := model if part <= 0 else "%s@%d" % [model, part]
+	if not decor.has(key):
+		decor[key] = []
+	decor[key].append(xf)
 
 
 func add_light(
@@ -659,12 +663,14 @@ func _surface(t: Vector2i, vx: int, vz: int, lx: int, lz: int, tp: int) -> Array
 				c = VoxelPal.at(VoxelPal.DIRT_DARK, v, 0.1, 16)
 			return [c, VoxelMat.GRASS, VoxelPal.DIRT_DARK, VoxelMat.DIRT]
 		"meadow":
-			var c := _grass_color(VoxelPal.MEADOW, vx, vz, 0.14)
+			var c := _tile_tint(t, _grass_color(VoxelPal.MEADOW, vx, vz, 0.14))
 			if VoxelGrid.hash01(vx, 4, vz, 17) < 0.06:
 				c = VoxelPal.at(VoxelPal.LAWN_DRY, v, 0.08, 18)
 			return [c, VoxelMat.GRASS, VoxelPal.DIRT_DARK, VoxelMat.DIRT]
-	# lawn, flowers
-	var c := _grass_color(VoxelPal.LAWN, vx, vz, 0.1)
+	# lawn, flowers (beds are a lusher, darker green)
+	var c := _tile_tint(t, _grass_color(VoxelPal.LAWN, vx, vz, 0.1))
+	if kind == "flowers":
+		c = c.lerp(VoxelPal.LEAF_DARK, 0.25)
 	if _edge_mix(t, vx, vz, lx, lz, ["dirt", "sand"], 0.22):
 		c = _dirt(t, vx, vz, lx, lz)
 		return [c, VoxelMat.DIRT, VoxelPal.DIRT_DARK, VoxelMat.DIRT]
@@ -682,38 +688,159 @@ func _grass_color(base: Color, vx: int, vz: int, amt: float) -> Color:
 	return VoxelPal.vary(c, VoxelGrid.hash01(vx, 7, vz, 19), amt)
 
 
-## Cobbles: 2-voxel stones in running bond, a darker curb row where the street meets other ground.
+## Street setts, painted inside each 1 m tile (the RPG-Maker way: the grid reads in the joints):
+## the tile's four rows run across the street and each row splits into stones of 1-2 voxels from a
+## per-tile layout, so no stone crosses a tile edge. Stones take one of several greys, the middle
+## of a wide street is worn lighter, the edge row against another ground is a kerb of long dark
+## stones (one per tile), and the setts next to the kerb hold a little dirt.
 func _cobble(t: Vector2i, vx: int, vz: int, lx: int, lz: int) -> Color:
-	if _edge_of(t, lx, lz, ["cobble", "slab"]):
-		return VoxelPal.at(VoxelPal.CURB, Vector3i(vx, 0, vz), 0.08, 20)
-	var sid := floori((vx + (vz & 1)) / 2.0)
-	var h := VoxelGrid.hash01(sid, 9, vz, 21)
+	var v := Vector3i(vx, 0, vz)
+	var same := ["cobble", "slab", "dock", "bridge"]
+	if _edge_of(t, lx, lz, same):
+		# Kerb: one long stone per tile side, alternating shades, the tile corner a joint.
+		var kc := VoxelPal.CURB if (t.x + t.y) % 2 == 0 else VoxelPal.CURB.lightened(0.08)
+		var along := lz if (lx == 0 or lx == 3) else lx
+		if along == 0 and VoxelGrid.hash01(t.x, 5, t.y, 120) < 0.5:
+			kc = kc.darkened(0.12)
+		return VoxelPal.vary(kc, VoxelGrid.hash01(t.x, lx, t.y, 121), 0.03)
+	# Rows run across the street: along x when the street runs north-south.
+	var ns := (
+		d.ground_kind(t + Vector2i(0, -1)) in same or d.ground_kind(t + Vector2i(0, 1)) in same
+	)
+	var ew := (
+		d.ground_kind(t + Vector2i(-1, 0)) in same or d.ground_kind(t + Vector2i(1, 0)) in same
+	)
+	var rows_x := ns and not ew
+	var row := lz if rows_x else lx
+	var u := lx if rows_x else lz
+	var layouts := [[2, 2], [1, 2, 1], [2, 1, 1], [1, 1, 2], [2, 2], [1, 2, 1]]
+	var lay: Array = layouts[int(VoxelGrid.hash01(t.x, row, t.y, 122) * layouts.size())]
+	var stone_i := 0
+	var acc := 0
+	for k in lay.size():
+		acc += int(lay[k])
+		if u < acc:
+			stone_i = k
+			break
+	var h := VoxelGrid.hash01(t.x * 4 + row, stone_i, t.y, 123)
 	var base := VoxelPal.COBBLE
-	if h < 0.3:
+	if h < 0.16:
 		base = VoxelPal.COBBLE_DARK
-	elif h < 0.5:
+	elif h < 0.32:
 		base = VoxelPal.COBBLE_WARM
-	return VoxelPal.vary(base, VoxelGrid.hash01(sid, 10, vz, 22), 0.07)
+	elif h < 0.42:
+		base = VoxelPal.COBBLE_LIGHT
+	elif h < 0.46:
+		base = VoxelPal.COBBLE_BLUE
+	var c := VoxelPal.vary(base, VoxelGrid.hash01(t.x * 4 + row, stone_i, t.y, 124), 0.035)
+	# Alternate rows a shade apart so the courses read across the street.
+	if row % 2 == 1:
+		c = c.darkened(0.03)
+	# Single-voxel stones read as small setts: a touch darker, like their joints.
+	if int(lay[stone_i]) == 1:
+		c = c.darkened(0.05)
+	# Wear: the middle of the street is polished lighter, the kerb side holds dirt.
+	var wear := noise.get_noise_2d(vx * 0.35 + 300.0, vz * 0.35) * 0.5 + 0.5
+	c = c.lightened(clampf(wear - 0.55, 0.0, 0.3) * 0.25)
+	if _near_edge(t, lx, lz, same, 1):
+		c = c.lerp(VoxelPal.DIRT_DARK, 0.12)
+	if VoxelGrid.hash01(vx, 11, vz, 125) < 0.012:
+		c = VoxelPal.at(VoxelPal.MOSS, v, 0.1, 126)
+	return c
 
 
-## Paving slabs: 2 x 2 voxels, warm stone, a border row against grass.
+## Plaza flags: one 1 m flag per tile in the "octagon and dot" pattern: the tile's corner voxels
+## are a darker inset at every other crossing (four flags meeting make a 0.5 m dot every 2 m), the
+## rim a touch darker. Each flag has its own warm shade. Around a fountain the paving turns into
+## rings (bands of 0.5 m, alternately light and warm, a darker band at the edge, radial joints).
+## A border row frames the plaza.
 func _slab(t: Vector2i, vx: int, vz: int, lx: int, lz: int) -> Color:
+	var v := Vector3i(vx, 0, vz)
 	if _edge_of(t, lx, lz, ["slab", "cobble", "dock", "bridge"]):
-		return VoxelPal.at(VoxelPal.SLAB_BORDER, Vector3i(vx, 0, vz), 0.06, 23)
-	var sx := floori(vx / 2.0)
-	var sz := floori(vz / 2.0)
-	var base := VoxelPal.SLAB if (sx + sz) % 2 == 0 else VoxelPal.SLAB_DARK
-	return VoxelPal.vary(base, VoxelGrid.hash01(sx, 11, sz, 24), 0.06)
+		var bc := (
+			VoxelPal.SLAB_BORDER if (vx + vz) % 2 == 0 else VoxelPal.SLAB_BORDER.lightened(0.06)
+		)
+		return VoxelPal.vary(bc, VoxelGrid.hash01(vx, 0, vz, 23), 0.04)
+	var p := Vector2((vx + 0.5) * VoxelGrid.VS, (vz + 0.5) * VoxelGrid.VS)
+	for f in _fountain_rings():
+		var r := p.distance_to(f[0])
+		if r < f[1]:
+			var band := floori((r - f[2]) / 0.5)
+			var rc := VoxelPal.SLAB_LIGHT if band % 2 == 0 else VoxelPal.SLAB
+			if r > f[1] - 0.5:
+				rc = VoxelPal.SLAB_DARK
+			# Radial joints every ~0.6 m along each band: neighbouring stones a shade apart.
+			var ang := atan2(p.y - f[0].y, p.x - f[0].x)
+			var seg := floori(ang * r / 0.62)
+			if seg % 2 == 0:
+				rc = rc.darkened(0.035)
+			return VoxelPal.vary(rc, VoxelGrid.hash01(band, seg, 0, 127), 0.03)
+	# A darker inset stone where four flags meet, at every other crossing (2 m apart).
+	var cx := t.x + (1 if lx == 3 else 0)
+	var cz := t.y + (1 if lz == 3 else 0)
+	var corner := (lx == 0 or lx == 3) and (lz == 0 or lz == 3)
+	if corner and posmod(cx, 2) == 0 and posmod(cz, 2) == 0:
+		return VoxelPal.at(VoxelPal.SLAB_DOT, v, 0.04, 128)
+	var shades := [VoxelPal.SLAB, VoxelPal.SLAB_DARK, VoxelPal.SLAB_LIGHT, VoxelPal.SLAB]
+	var sc: Color = shades[int(VoxelGrid.hash01(t.x, 12, t.y, 129) * shades.size())]
+	sc = VoxelPal.vary(sc, VoxelGrid.hash01(t.x, 13, t.y, 130), 0.03)
+	# The flag's rim is a touch darker, so each 1 m flag reads without a debug grid.
+	if lx == 0 or lz == 0 or lx == 3 or lz == 3:
+		sc = sc.darkened(0.025)
+	return VoxelPal.vary(sc, VoxelGrid.hash01(vx, 14, vz, 131), 0.025)
 
 
+## [centre (m), outer radius, inner radius] of each fountain's paving rings (cached).
+func _fountain_rings() -> Array:
+	if not _rings_done:
+		_rings_done = true
+		for o in d.objects:
+			if String(o.get("kind", "")) != "fountain":
+				continue
+			var r: Array = o.rect
+			var c := Vector2((float(r[0]) + float(r[2])) * 0.5, (float(r[1]) + float(r[3])) * 0.5)
+			var w := float(r[2]) - float(r[0]) + 1.0
+			_rings.append([c, w * 0.5 + 2.1, w * 0.5 - 0.2])
+	return _rings
+
+
+## True when the voxel is within n voxels of a tile edge whose neighbour is not one of `same`.
+func _near_edge(t: Vector2i, lx: int, lz: int, same: Array, n: int) -> bool:
+	if lx <= n and not d.ground_kind(t + Vector2i(-1, 0)) in same:
+		return true
+	if lx >= 3 - n and not d.ground_kind(t + Vector2i(1, 0)) in same:
+		return true
+	if lz <= n and not d.ground_kind(t + Vector2i(0, -1)) in same:
+		return true
+	if lz >= 3 - n and not d.ground_kind(t + Vector2i(0, 1)) in same:
+		return true
+	return false
+
+
+## Earth path: compacted and lighter along the middle, darker and grassy at the sides, pebbles.
 func _dirt(t: Vector2i, vx: int, vz: int, lx: int, lz: int) -> Color:
 	var v := Vector3i(vx, 0, vz)
 	var h := VoxelGrid.hash01(vx, 12, vz, 25)
 	if h < 0.05:
 		return VoxelPal.at(VoxelPal.ROCK_LIGHT, v, 0.1, 26)
+	if h < 0.07:
+		return VoxelPal.at(VoxelPal.GRAVEL, v, 0.08, 27)
 	var n := noise2.get_noise_2d(vx * 0.6, vz * 0.6)
 	var c := VoxelPal.DIRT.lerp(VoxelPal.DIRT_DARK, clampf(n * 0.8 + 0.2, 0.0, 1.0))
-	return VoxelPal.vary(c, VoxelGrid.hash01(vx, 13, vz, 27), 0.08)
+	var same := ["dirt", "cobble", "slab", "sand", "soil", "dock", "bridge"]
+	if _near_edge(t, lx, lz, same, 0):
+		c = c.darkened(0.08)
+	else:
+		c = c.lerp(VoxelPal.DIRT_LIGHT, 0.35)
+	return VoxelPal.vary(c, VoxelGrid.hash01(vx, 13, vz, 27), 0.07)
+
+
+## Lawn shade of a tile: a per-tile tint and a faint checker, so the 1 m grid reads in the grass
+## without drawing lines.
+func _tile_tint(t: Vector2i, c: Color) -> Color:
+	var k := (VoxelGrid.hash01(t.x, 40, t.y, 132) - 0.5) * 0.05
+	k += 0.014 if (t.x + t.y) % 2 == 0 else -0.014
+	return c.lightened(k) if k > 0.0 else c.darkened(-k)
 
 
 ## Crop rows run along z when the field is taller than wide.
@@ -812,6 +939,7 @@ func meta_json() -> Dictionary:
 		"crowns": meta.crowns,
 		"signs": meta.signs,
 		"smoke": _jsonable(meta.get("smoke", [])),
+		"butterflies": _jsonable(meta.get("butterflies", [])),
 		"beacons": _jsonable(meta.get("beacons", [])),
 	}
 	for b in meta.buildings:

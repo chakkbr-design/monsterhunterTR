@@ -2,12 +2,14 @@ extends SceneTree
 ## Real-renderer screenshots of the voxel Pallet Town (not headless):
 ## xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver vulkan
 ##   --resolution 1600x900 --script res://tests/world/shot_pallet.gd -- --out=/tmp/shots
-##   [--spots=start,plaza,...] [--periods=midday,night] [--weather=rain|snow|clear]
+##   [--spots=start,plaza,...] [--periods=midday,night | --hours=12:30,18:10] [--weather=rain|snow|clear]
 ## Boots res://world/route_world.tscn at Pallet (like shot_original_look.gd), puts the player on each
 ## spot and saves <out>/pallet_<spot>_<period>[_<weather>].png. The period is forced with
 ## WorldTimeOfDay.forced_period (scripts are loaded by path: a SceneTree script compiles before the
 ## autoloads exist); the night / weather shader globals are also set directly, so the
-## shot shows the lamps and wet ground even before the sky work drives them.
+## shot shows the lamps and wet ground even before the sky work drives them. With --hours (needs the
+## continuous TimeOfDay, WorldTimeOfDay.forced_minutes) the hour is pinned instead and the files are
+## named pallet_<spot>_<HHMM>; the TimeOfDay then drives the night globals itself.
 
 const SPOTS := {
 	"start": [Vector3(-13, 0, -3), Vector3(0, 0, 1)],
@@ -41,6 +43,7 @@ var out := "/tmp/claude-0/pallet"
 var spots: PackedStringArray = ["start", "plaza", "house", "rival", "lab", "pond", "gate"]
 var periods: PackedStringArray = ["midday"]
 var weather := "clear"
+var hours: PackedStringArray = []  ## --hours=HH:MM,...: pinned hours (continuous TimeOfDay)
 var far := 0.0  ## --far=<m>: overview distance (debug)
 var pitch := 0.0  ## --pitch=<deg>
 
@@ -53,6 +56,8 @@ func _initialize() -> void:
 			spots = a.substr(8).split(",")
 		elif a.begins_with("--periods="):
 			periods = a.substr(10).split(",")
+		elif a.begins_with("--hours="):
+			hours = a.substr(8).split(",")
 		elif a.begins_with("--weather="):
 			weather = a.substr(10)
 		elif a.begins_with("--far="):
@@ -72,15 +77,19 @@ func _wait(n: int) -> void:
 
 func _globals(period: String) -> void:
 	var nm: Array = NIGHT.get(period, [0.0, 0.0])
-	RenderingServer.global_shader_parameter_set("night_lamps", nm[0])
-	RenderingServer.global_shader_parameter_set("night_windows", nm[1])
+	if not hours.is_empty():
+		nm = []
+	else:
+		RenderingServer.global_shader_parameter_set("night_lamps", nm[0])
+		RenderingServer.global_shader_parameter_set("night_windows", nm[1])
 	var wet := 1.0 if weather == "rain" else 0.0
 	RenderingServer.global_shader_parameter_set("rain_wet", wet)
 	RenderingServer.global_shader_parameter_set("rain_puddle", 0.55 * wet)
 	RenderingServer.global_shader_parameter_set("rain_amount", wet)
 	RenderingServer.global_shader_parameter_set("snow_cover", 1.0 if weather == "snow" else 0.0)
-	for n in root.get_tree().get_nodes_in_group("night_lights"):
-		n.set_period_mult(nm[0], nm[1])
+	if not nm.is_empty():
+		for n in root.get_tree().get_nodes_in_group("night_lights"):
+			n.set_period_mult(nm[0], nm[1])
 
 
 func _shot(name: String) -> void:
@@ -98,7 +107,15 @@ func _run() -> void:
 	if g.party.is_empty():
 		g.add_mon(Mon.create("pikachu", 8))
 	var tod_script = load("res://world/sky/time_of_day.gd")
-	tod_script.forced_period = periods[0]
+	var looks: Array = Array(periods)
+	var probe: Node = tod_script.new()
+	var continuous := probe.has_method("set_minute")
+	probe.free()
+	if not hours.is_empty() and continuous:
+		looks = Array(hours)
+	else:
+		hours = []
+	tod_script.forced_period = periods[0] if hours.is_empty() else ""
 	load("res://world/sky/weather.gd").forced = "rain" if weather == "rain" else "clear"
 	g.spawn_request = {"zone": "pallet_town", "spawn": "start"}
 	w = load("res://world/route_world.tscn").instantiate()
@@ -120,8 +137,13 @@ func _run() -> void:
 		rig.set("_zone_dist", 0.0)
 	if pitch > 0.0:
 		rig.pitch_deg = pitch
-	for period in periods:
-		tod_script.forced_period = period
+	for period in looks:
+		if hours.is_empty():
+			tod_script.forced_period = period
+		else:
+			var hm: PackedStringArray = String(period).split(":")
+			tod_script.forced_minutes = int(hm[0]) * 60.0 + (float(hm[1]) if hm.size() > 1 else 0.0)
+			period = String(period).replace(":", "")
 		var tod := get_first_node_in_group("time_of_day")
 		if tod and tod.has_method("refresh"):
 			tod.refresh()

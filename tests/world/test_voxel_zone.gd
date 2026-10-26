@@ -54,6 +54,7 @@ func _run() -> void:
 	_doors(b, grid)
 	_reach(b, grid)
 	_colliders(b, grid)
+	_art(b)
 	b.get_parent().queue_free()
 	await frames(2)
 	await _stream()
@@ -96,6 +97,43 @@ func _build(per_frame: int):
 	await frames(2)
 	print("  built in %d ms: %s" % [b.load_ms, b.counts])
 	return b
+
+
+## Art contracts: every prop light sits outside its model (a light inside a voxel is shadowed),
+## the street furniture is there, house furniture (gutters, porch lantern, window-box flowers)
+## fades with its house, the greenhouse panes are see-through and left alone by the fader, the
+## chimneys smoke, butterflies fly over the beds, deep snow buries the flowers.
+func _art(b) -> void:
+	var models: GDScript = load("res://world/voxel/voxel_models.gd")
+	var vs: float = models.PROP_VS
+	for m in models.LIGHTS:
+		var g = models.build(m)
+		var off: Vector3 = models.LIGHTS[m][0]
+		var v := Vector3i(roundi(off.x / vs), floori(off.y / vs), roundi(off.z / vs))
+		check(not g.solid(v), "prop %s: its light %s is outside the model" % [m, off])
+	var counts: Dictionary = b.counts
+	check(int(counts.get("props", 0)) > 100, "street furniture: %d props" % counts.get("props", 0))
+	check(int(counts.get("smoke", 0)) >= 2, "chimney smoke: %d plumes" % counts.get("smoke", 0))
+	check(b.butterflies != null, "butterflies over the flower beds")
+	var house: Node3D = b.houses.get("player_house")
+	var furn := 0
+	for gi in house.get_meta("geoms", []):
+		if gi is MultiMeshInstance3D:
+			furn += 1
+	check(furn > 0, "player house furniture fades with the house (%d multimeshes)" % furn)
+	var gh: Node3D = b.houses.get("lab_greenhouse")
+	var glass := false
+	if gh:
+		for ch in gh.get_children():
+			if ch is MeshInstance3D and String(ch.name).begins_with("Glass"):
+				glass = ch.transparency > 0.0 and not gh.get_meta("geoms").has(ch)
+	check(glass, "the greenhouse panes are see-through and outside the fader")
+	b.set_snow(0.9)
+	var buried: Array = b._buried
+	var hidden := not buried.is_empty() and buried.all(func(m) -> bool: return not m.visible)
+	check(hidden, "deep snow buries %d flower / tall grass multimeshes" % buried.size())
+	b.set_snow(0.0)
+	check(buried.all(func(m) -> bool: return m.visible), "they come back when it melts")
 
 
 ## Streamed like route_world._stream_in: the bake loads on a thread, the nodes come a few per frame.

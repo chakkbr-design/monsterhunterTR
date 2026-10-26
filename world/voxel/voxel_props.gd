@@ -6,7 +6,6 @@ extends RefCounted
 ## and the signs / mailboxes of the map JSON (drawn here, so SignPost skips its model). Each piece
 ## is built in the zone grid on the 0.25 m lattice; lamps register their light in the metadata.
 
-const WOOD_FENCE := Color("9a8064")
 const STONE_LOW := Color("9a948c")
 
 
@@ -47,6 +46,8 @@ static func things(gen: VoxelZoneGen) -> void:
 				"forest":
 					_forest_floor(gen, t)
 	_deck(gen)
+	_garden_arches(gen)
+	_design_props(gen)
 
 
 static func objects(gen: VoxelZoneGen) -> void:
@@ -108,6 +109,51 @@ static func _box(
 
 static func light_at(v: Vector3i) -> Vector3:
 	return VoxelGrid.centre(v)
+
+
+## Places a prop model (VoxelModels) standing at metre point p, turned by `rot` quarter turns, and
+## registers its lamp light when it carries one. `part` > 0 ties it to a building part (it fades
+## with that house: gutters, wall lanterns, window boxes).
+static func add_prop(gen: VoxelZoneGen, model: String, p: Vector3, rot := 0, part := 0) -> void:
+	gen.meta.get_or_add("prop_list", []).append(
+		{"model": model, "pos": p, "rot": posmod(rot, 4), "part": part}
+	)
+	if VoxelModels.LIGHTS.has(model):
+		var l: Array = VoxelModels.LIGHTS[model]
+		var off: Vector3 = Basis(Vector3.UP, rot * PI * 0.5) * (l[0] as Vector3)
+		gen.add_light(p + off, "lamp", l[1], float(l[2]), float(l[3]))
+
+
+## The design's free-standing props (VoxelDesign.props): prop models or decor at exact spots.
+static func _design_props(gen: VoxelZoneGen) -> void:
+	for e in gen.d.props:
+		var p: Array = e.get("pos", [0, 0])
+		var t := Vector2i(roundi(float(p[0])), roundi(float(p[1])))
+		var at := Vector3(float(p[0]), floor_y(gen, t), float(p[1]))
+		var m := String(e.get("model", ""))
+		var rot := int(e.get("rot", 0))
+		if VoxelModels.is_prop(m):
+			add_prop(gen, m, at, rot)
+		else:
+			gen.add_decor(m, Transform3D(Basis(Vector3.UP, rot * PI * 0.5), at))
+		if bool(e.get("block", false)):
+			gen.block(t)
+
+
+## Ground height (m) at the centre of tile t.
+static func floor_y(gen: VoxelZoneGen, t: Vector2i) -> float:
+	return base(gen, t) * VoxelGrid.VS
+
+
+## Quarter turns that make a model's front (+z) face direction f.
+static func rot_to(f: Vector2i) -> int:
+	if f == Vector2i(1, 0):
+		return 1
+	if f == Vector2i(0, -1):
+		return 2
+	if f == Vector2i(-1, 0):
+		return 3
+	return 0
 
 
 # --- vegetation in the grid --------------------------------------------------------------------------
@@ -176,21 +222,36 @@ static func _forest_floor(gen: VoxelZoneGen, t: Vector2i) -> void:
 # --- structures --------------------------------------------------------------------------------------
 
 
+## Split-rail fence: a post at the tile centre (prop model) and rails to the east / south
+## neighbours that are fences, and to any pillar or low wall next to it.
 static func _fence(gen: VoxelZoneGen, t: Vector2i) -> void:
-	var y0 := base(gen, t)
-	var px := _v0(t.x) + 1
-	var pz := _v0(t.y) + 1
-	var join := ["fence", "pillar", "wall"]
-	for y in range(y0, y0 + 4):
-		_put(gen, Vector3i(px, y, pz), WOOD_FENCE.darkened(0.12), VoxelMat.WOOD, 0.05)
-	_put(gen, Vector3i(px, y0 + 4, pz), WOOD_FENCE.darkened(0.25), VoxelMat.WOOD, 0.04)
-	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-		if not _connects(gen, t + o, join):
-			continue
-		for s in range(1, 4):
-			for ry in [y0 + 1, y0 + 3]:
-				var v := Vector3i(px + o.x * s, ry, pz + o.y * s)
-				_put(gen, v, WOOD_FENCE, VoxelMat.WOOD, 0.07, 1)
+	var p := Vector3(t.x, floor_y(gen, t), t.y)
+	add_prop(gen, "prop_fence_post", p)
+	for o in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
+		var k := gen.d.thing_kind(t + o)
+		var own: bool = o.x > 0 or o.y > 0
+		if (own and k == "fence") or k in ["pillar", "wall"]:
+			add_prop(gen, "prop_fence_rail", p, rot_to(o) + 3)
+
+
+## Rose arches over the gaps of a fence line: a walkable tile between two fence tiles in a row.
+static func _garden_arches(gen: VoxelZoneGen) -> void:
+	var d := gen.d
+	for z in d.size.y:
+		for x in d.size.x:
+			var t := Vector2i(x, z) + d.origin
+			if not gen.walkable(t):
+				continue
+			var ew := (
+				d.thing_kind(t + Vector2i(-1, 0)) == "fence"
+				and d.thing_kind(t + Vector2i(1, 0)) == "fence"
+			)
+			var ns := (
+				d.thing_kind(t + Vector2i(0, -1)) == "fence"
+				and d.thing_kind(t + Vector2i(0, 1)) == "fence"
+			)
+			if ew or ns:
+				add_prop(gen, "prop_arch", Vector3(t.x, floor_y(gen, t), t.y), 0 if ew else 1)
 
 
 static func _low_wall(gen: VoxelZoneGen, t: Vector2i) -> void:
@@ -220,7 +281,7 @@ static func _low_wall(gen: VoxelZoneGen, t: Vector2i) -> void:
 			gen.g.put(Vector3i(c.x, y, c.y), col, m)
 
 
-## Gate pillar: 1 m square stone shaft, a wider cap and a lantern on top.
+## Gate pillar: 1 m square stone shaft, a wider cap and a lantern (prop model) on top.
 static func _pillar(gen: VoxelZoneGen, t: Vector2i) -> void:
 	var y0 := base(gen, t)
 	var x0 := _v0(t.x)
@@ -240,79 +301,21 @@ static func _pillar(gen: VoxelZoneGen, t: Vector2i) -> void:
 		VoxelMat.STONE,
 		0.05
 	)
-	_box(
-		gen,
-		Vector3i(x0 + 1, y0 + 12, z0 + 1),
-		Vector3i(x0 + 2, y0 + 12, z0 + 2),
-		VoxelPal.METAL,
-		VoxelMat.METAL
-	)
-	_box(
-		gen,
-		Vector3i(x0 + 1, y0 + 13, z0 + 1),
-		Vector3i(x0 + 2, y0 + 14, z0 + 2),
-		VoxelPal.LAMP,
-		VoxelMat.LAMP,
-		0.03
-	)
-	_box(
-		gen,
-		Vector3i(x0 + 1, y0 + 15, z0 + 1),
-		Vector3i(x0 + 2, y0 + 15, z0 + 2),
-		VoxelPal.METAL,
-		VoxelMat.METAL
-	)
-	gen.add_light(
-		Vector3(t.x, (y0 + 14) * VoxelGrid.VS, t.y), "lamp", Color(1.0, 0.8, 0.52), 2.6, 8.0
-	)
+	add_prop(gen, "prop_lantern", Vector3(t.x, (y0 + 12) * VoxelGrid.VS, t.y))
 
 
-## Street lamp: stone foot, slim iron post, a glass lantern with a cap and finial.
+## Street lamp (VoxelModels "prop_lamp"; a double one when it stands in the plaza paving).
 static func _lamp(gen: VoxelZoneGen, t: Vector2i) -> void:
-	var y0 := base(gen, t)
-	var px := _v0(t.x) + 1
-	var pz := _v0(t.y) + 1
-	_box(
-		gen,
-		Vector3i(px, y0, pz),
-		Vector3i(px + 1, y0 + 1, pz + 1),
-		VoxelPal.STONE_WALL_DARK,
-		VoxelMat.STONE
-	)
-	for y in range(y0 + 2, y0 + 9):  # 3.4 m in all: low enough not to hide the player behind it
-		_put(gen, Vector3i(px, y, pz), VoxelPal.METAL, VoxelMat.METAL, 0.04)
-	var hy := y0 + 9
-	for y in range(hy, hy + 3):
-		for z in range(pz - 1, pz + 2):
-			for x in range(px - 1, px + 2):
-				var corner := (x != px) and (z != pz)
-				if y == hy:
-					_put(gen, Vector3i(x, y, z), VoxelPal.METAL, VoxelMat.METAL, 0.03)
-				elif corner:
-					_put(gen, Vector3i(x, y, z), VoxelPal.METAL, VoxelMat.METAL, 0.03)
-				else:
-					gen.g.put(Vector3i(x, y, z), VoxelPal.LAMP, VoxelMat.LAMP)
-	_box(
-		gen,
-		Vector3i(px - 1, hy + 3, pz - 1),
-		Vector3i(px + 1, hy + 3, pz + 1),
-		VoxelPal.METAL,
-		VoxelMat.METAL,
-		0.03
-	)
-	_put(gen, Vector3i(px, hy + 4, pz), VoxelPal.METAL, VoxelMat.METAL)
-	gen.add_light(
-		VoxelGrid.centre(Vector3i(px, hy + 1, pz)) + Vector3(0, 0.1, 0),
-		"lamp",
-		Color(1.0, 0.8, 0.52),
-		3.2,
-		9.0
-	)
+	var p := Vector3(t.x, floor_y(gen, t), t.y)
+	var plaza := 0
+	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if gen.d.ground_kind(t + o) == "slab":
+			plaza += 1
+	add_prop(gen, "prop_lamp_double" if plaza >= 3 else "prop_lamp", p)
 
 
 ## Wooden bench facing the nearest paved / walkable neighbour.
 static func _bench(gen: VoxelZoneGen, t: Vector2i) -> void:
-	var y0 := base(gen, t)
 	var f := Vector2i(0, 1)
 	var best := -1
 	for o in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
@@ -326,31 +329,8 @@ static func _bench(gen: VoxelZoneGen, t: Vector2i) -> void:
 		if score > best:
 			best = score
 			f = o
-	var x0 := _v0(t.x)
-	var z0 := _v0(t.y)
-	for a in 4:  # along the bench
-		for b in 4:  # 0 = back ... 3 = front
-			var x: int = x0 + (a if f.x == 0 else (b if f.x > 0 else 3 - b))
-			var z: int = z0 + (a if f.y == 0 else (b if f.y > 0 else 3 - b))
-			var end := a == 0 or a == 3
-			if b >= 1 and b <= 2:
-				gen.g.put(
-					Vector3i(x, y0 + 1, z),
-					VoxelBuild.planks(a, b, VoxelPal.WOOD_LIGHT, 5),
-					VoxelMat.WOOD
-				)
-				if end:
-					gen.g.put(Vector3i(x, y0, z), VoxelPal.METAL, VoxelMat.METAL)
-			if b == 0:
-				for y in [y0 + 2, y0 + 3]:
-					gen.g.put(
-						Vector3i(x, y, z),
-						VoxelBuild.planks(a, y, VoxelPal.WOOD_LIGHT, 6),
-						VoxelMat.WOOD
-					)
-				if end:
-					gen.g.put(Vector3i(x, y0 + 1, z), VoxelPal.METAL, VoxelMat.METAL)
-					gen.g.put(Vector3i(x, y0, z), VoxelPal.METAL, VoxelMat.METAL)
+	var p := Vector3(t.x - f.x * 0.12, floor_y(gen, t), t.y - f.y * 0.12)
+	add_prop(gen, "prop_bench", p, rot_to(f))
 
 
 ## Stone planter with soil and either a round shrub or flowers.
@@ -391,56 +371,18 @@ static func _planter(gen: VoxelZoneGen, t: Vector2i) -> void:
 			gen.add_decor(pick, Transform3D(Basis(Vector3.UP, k * 1.3), p))
 
 
+## Barrel: a rain barrel or a plain one, a little off the tile centre.
 static func _barrel(gen: VoxelZoneGen, t: Vector2i) -> void:
-	var y0 := base(gen, t)
-	var cx := _v0(t.x) + 2.0
-	var cz := _v0(t.y) + 2.0
-	for y in range(y0, y0 + 4):
-		var band := y == y0 or y == y0 + 3
-		for z in range(_v0(t.y), _v0(t.y) + 4):
-			for x in range(_v0(t.x), _v0(t.x) + 4):
-				var dx := x + 0.5 - cx
-				var dz := z + 0.5 - cz
-				if dx * dx + dz * dz > 3.6:
-					continue
-				var c := VoxelPal.vary(VoxelPal.WOOD, VoxelGrid.hash01(x + z * 5, 0, 0, 80), 0.1)
-				var m := VoxelMat.WOOD
-				if band:
-					c = Color("4a4642")
-					m = VoxelMat.METAL
-				gen.g.put(Vector3i(x, y, z), c, m)
-	_box(
-		gen,
-		Vector3i(_v0(t.x) + 1, y0 + 4, _v0(t.y) + 1),
-		Vector3i(_v0(t.x) + 2, y0 + 4, _v0(t.y) + 2),
-		VoxelPal.WOOD_DARK,
-		VoxelMat.WOOD
-	)
+	var h := VoxelGrid.hash01(t.x, 8, t.y, 80)
+	var p := Vector3(t.x + (h - 0.5) * 0.2, floor_y(gen, t), t.y + 0.1)
+	add_prop(gen, "prop_barrel_water" if h < 0.5 else "prop_barrel", p, int(h * 4.0))
 
 
-## Pixel Lab crate colours: light faces, dark edges; sometimes a second crate on top.
+## Crates: a single one or a stack, turned by the tile hash.
 static func _crate(gen: VoxelZoneGen, t: Vector2i) -> void:
-	var y0 := base(gen, t)
-	var x0 := _v0(t.x)
-	var z0 := _v0(t.y) + 1
-	_crate_box(gen, Vector3i(x0, y0, z0), 3)
-	if VoxelGrid.hash01(t.x, 9, t.y, 81) < 0.6:
-		_crate_box(gen, Vector3i(x0 + 1, y0 + 3, z0), 2)
-
-
-static func _crate_box(gen: VoxelZoneGen, a: Vector3i, n: int) -> void:
-	for y in n:
-		for z in n:
-			for x in n:
-				var edges := (
-					int(x == 0 or x == n - 1)
-					+ int(y == 0 or y == n - 1)
-					+ int(z == 0 or z == n - 1)
-				)
-				var c := Color("a98463") if edges < 2 else Color("7b4a35")
-				if edges == 3:
-					c = Color("593828")
-				_put(gen, a + Vector3i(x, y, z), c, VoxelMat.WOOD, 0.04)
+	var h := VoxelGrid.hash01(t.x, 9, t.y, 81)
+	var p := Vector3(t.x, floor_y(gen, t), t.y)
+	add_prop(gen, "prop_crates" if h < 0.6 else "prop_crate", p, int(h * 7.0) % 4)
 
 
 static func _rock(gen: VoxelZoneGen, t: Vector2i, s: float) -> void:
@@ -669,6 +611,12 @@ static func _fountain(gen: VoxelZoneGen, r: Rect2i) -> void:
 				Transform3D(Basis(Vector3.UP, i * 2.1), p + o * 0.3)
 			)
 	var centre := Vector3(cx * VoxelGrid.VS, 0.0, cz * VoxelGrid.VS)
+	# A carved nozzle on the coping under each jet of the low crown (FountainFx: angle TAU i / 8).
+	for i in 8:
+		var a := TAU * i / 8.0
+		add_prop(
+			gen, "prop_nozzle", centre + Vector3(cos(a), 0.0, sin(a)) * 2.0 * s + Vector3(0, 0.5, 0)
+		)
 	var low := 0.38
 	var lower := (r_in * VoxelGrid.VS) * 2.0 + 0.05
 	(
@@ -696,8 +644,8 @@ static func _fountain(gen: VoxelZoneGen, r: Rect2i) -> void:
 				[
 					{"pos": centre + Vector3(0, 2.26, 0), "height": 0.8, "count": 1},
 					{
-						"pos": centre + Vector3(0, 0.55, 0),
-						"height": 0.42,
+						"pos": centre + Vector3(0, 0.82, 0),
+						"height": 0.3,
 						"count": 8,
 						"radius": 2.0 * s,
 						"reach": -0.75
@@ -867,6 +815,33 @@ static func _deck(gen: VoxelZoneGen) -> void:
 			):
 				_boat(gen, Vector3i(x0 - 3, -2, z0 + 5))
 				boat_done = true
+			_deck_lanterns(gen, t, k, along_x)
+
+
+## Lantern posts on a dock's water tip and at the four corners of a bridge.
+static func _deck_lanterns(gen: VoxelZoneGen, t: Vector2i, k: String, along_x: bool) -> void:
+	var d := gen.d
+	var ax := Vector2i(1, 0) if along_x else Vector2i(0, 1)
+	var side := Vector2i(ax.y, ax.x)
+	for dir in [ax, -ax]:
+		if d.ground_kind(t + dir) == k:
+			continue
+		var wet: bool = d.is_wet(t + dir)
+		if k == "dock" and not wet:
+			continue
+		if k == "bridge" and wet:
+			continue
+		for s in [side, -side]:
+			if d.ground_kind(t + s) == k:
+				continue
+			if k == "dock" and s != -side:
+				continue
+			var e := Vector2(dir) * (0.4 if k == "dock" else 0.64) + Vector2(s) * 0.4
+			var y := 0.0 if k == "dock" else floor_y(gen, t + dir)
+			var at := Vector3(t.x + e.x, y, t.y + e.y)
+			# The bracket (model +x) reaches out over the water (dock) or along the deck (bridge).
+			var reach: Vector2i = dir if k == "dock" else -dir
+			add_prop(gen, "prop_lantern_post", at, rot_to(Vector2i(-reach.y, reach.x)))
 
 
 ## A little rowboat floating by the dock (hull just above the water line).
@@ -896,38 +871,12 @@ static func signs(gen: VoxelZoneGen) -> void:
 		var p: Array = s.get("pos", [0, 0])
 		var t := Vector2i(roundi(float(p[0])), roundi(float(p[1])))
 		var y0 := base(gen, t)
-		var x0 := _v0(t.x)
-		var z0 := _v0(t.y)
 		var mailbox := String(s.get("model", "")).contains("mailbox")
+		var at := Vector3(t.x, y0 * VoxelGrid.VS, t.y)
 		if mailbox:
-			var col := (
-				Color("c8402c") if String(s.get("name", "")).contains("Player") else Color("3c64a8")
-			)
-			for y in range(y0, y0 + 3):
-				_put(gen, Vector3i(x0 + 1, y, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
-			_box(
-				gen,
-				Vector3i(x0, y0 + 3, z0 + 1),
-				Vector3i(x0 + 2, y0 + 4, z0 + 3),
-				col,
-				VoxelMat.PAINT,
-				0.04
-			)
-			_put(gen, Vector3i(x0 + 1, y0 + 4, z0 + 3), col.darkened(0.4), VoxelMat.PAINT)
-			_put(gen, Vector3i(x0 + 3, y0 + 4, z0 + 2), Color("e8d44a"), VoxelMat.PAINT)
-			_put(gen, Vector3i(x0 + 3, y0 + 5, z0 + 2), Color("e8d44a"), VoxelMat.PAINT)
+			var red := String(s.get("name", "")).contains("Player")
+			add_prop(gen, "prop_mailbox_red" if red else "prop_mailbox_blue", at)
 		else:
-			for x in [x0, x0 + 3]:
-				for y in range(y0, y0 + 4):
-					_put(gen, Vector3i(x, y, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
-			for x in range(x0, x0 + 4):
-				for y in [y0 + 2, y0 + 3]:
-					gen.g.put(
-						Vector3i(x, y, z0 + 2),
-						VoxelBuild.planks(x, y, VoxelPal.WOOD_LIGHT, 16),
-						VoxelMat.WOOD
-					)
-				gen.g.put(Vector3i(x, y0 + 4, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
-				gen.g.put(Vector3i(x, y0 + 4, z0 + 1), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
+			add_prop(gen, "prop_signpost", at)
 		gen.block(t)
 		gen.meta.signs.append({"name": String(s.get("name", "")), "tile": [t.x, t.y]})

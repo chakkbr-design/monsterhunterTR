@@ -27,6 +27,8 @@ static func buildings(gen: VoxelZoneGen) -> void:
 				_lab(gen, b, r)
 			"shed":
 				_shed(gen, b, r)
+			"greenhouse":
+				_greenhouse(gen, b, r)
 			_:
 				_house(gen, b, r)
 
@@ -324,7 +326,9 @@ static func _window(
 			var kinds := ["flower_red", "flower_yellow", "flower_white", "flower_pink"]
 			var pick: String = kinds[int(VoxelGrid.hash01(u0 + k, gy0, 3, 44) * kinds.size())]
 			gen.add_decor(
-				pick, Transform3D(Basis(Vector3.UP, VoxelGrid.hash01(u0, k, 1, 45) * TAU), p)
+				pick,
+				Transform3D(Basis(Vector3.UP, VoxelGrid.hash01(u0, k, 1, 45) * TAU), p),
+				c.walls
 			)
 
 
@@ -399,14 +403,52 @@ static func _door(gen: VoxelZoneGen, c: Ctx, canopy := true, lantern := true) ->
 		for x in [dx - 2, dx + 5]:
 			gen.g.put(Vector3i(x, cy - 1, z + 1), VoxelPal.WOOD_DARK, VoxelMat.WOOD, c.walls)
 	if lantern:
-		var lx := dx + 6
-		var ly := DOOR_H - 1
-		gen.g.put(Vector3i(lx, ly + 1, z + 1), VoxelPal.METAL, VoxelMat.METAL, c.walls)
-		gen.g.put(Vector3i(lx, ly, z + 1), VoxelPal.LAMP, VoxelMat.LAMP, c.walls)
-		gen.g.put(Vector3i(lx, ly - 1, z + 1), VoxelPal.METAL, VoxelMat.METAL, c.walls)
-		gen.add_light(
-			VoxelGrid.centre(Vector3i(lx, ly, z + 2)), "wall", Color(1.0, 0.76, 0.48), 2.2, 6.5
+		var at := Vector3(
+			(dx + 6.5) * VoxelGrid.VS, (DOOR_H - 1) * VoxelGrid.VS - 0.5, (z + 1) * VoxelGrid.VS
 		)
+		VoxelProps.add_prop(gen, "prop_wall_lantern", at, 0, c.walls)
+
+
+## Ivy (VoxelFlora "ivy_*" decor) on one or both corners of the south facade, over the quoins.
+static func _ivy(gen: VoxelZoneGen, c: Ctx) -> void:
+	var vs := VoxelGrid.VS
+	var z := (c.z1 + 1) * vs + 0.065
+	for k in 2:
+		if VoxelGrid.hash01(c.x0, k, c.z1, 51) < 0.3:
+			continue
+		var x := c.x0 * vs + 0.3 if k == 0 else (c.x1 + 1) * vs - 0.3
+		gen.add_decor("ivy_%d" % k, Transform3D(Basis(), Vector3(x, 0.0, z)), c.walls)
+
+
+## Eaves gutters (1 m prop segments under both eaves) and a downpipe at each end, down the wall
+## corner to the ground. Tied to the roof part, so they fade with the house.
+static func _gutters(gen: VoxelZoneGen, c: Ctx, along_x: bool) -> void:
+	var vs := VoxelGrid.VS
+	var gy := (c.wall_h - 2) * vs - 2.0 * VoxelModels.PROP_VS
+	var lo := (c.x0 if along_x else c.z0) - OVERHANG
+	var hi := (c.x1 if along_x else c.z1) + OVERHANG
+	var n := floori((hi - lo + 1) * vs)
+	var pipe := "prop_downpipe_%d" % roundi(gy / VoxelModels.PROP_VS)
+	var w0 := (c.x0 if along_x else c.z0) * vs  # wall faces along the eave
+	var w1 := ((c.x1 if along_x else c.z1) + 1) * vs
+	for side: int in [-1, 1]:
+		var a0 := (c.z0 if along_x else c.x0) - OVERHANG
+		var a1 := (c.z1 if along_x else c.x1) + OVERHANG
+		var am: float = a0 * vs + 0.0625 if side < 0 else (a1 + 1) * vs - 0.0625
+		for i in n:
+			var lm := lo * vs + i + 0.5625
+			var p := Vector3(lm, gy, am) if along_x else Vector3(am, gy, lm)
+			VoxelProps.add_prop(gen, "prop_gutter", p, 0 if along_x else 3, c.roof)
+		var face: float = (
+			(c.z0 * vs if side < 0 else (c.z1 + 1) * vs)
+			if along_x
+			else (c.x0 * vs if side < 0 else (c.x1 + 1) * vs)
+		)
+		var wm := face + 0.0625 * side
+		var out := Vector2i(0, side) if along_x else Vector2i(side, 0)
+		for lm: float in [w0 + 0.1875, w1 - 0.1875]:
+			var p := Vector3(lm, 0.0, wm) if along_x else Vector3(wm, 0.0, lm)
+			VoxelProps.add_prop(gen, pipe, p, VoxelProps.rot_to(out), c.roof)
 
 
 ## Gable roof. Ridge along x when `along_x`, rising one voxel every `run` voxels from the eaves.
@@ -520,7 +562,10 @@ static func _house(gen: VoxelZoneGen, b: Dictionary, r: Rect2i) -> void:
 		_facade_windows(gen, c, side)
 	_door(gen, c)
 	var roof_c := VoxelPal.hex(String(b.get("roof_color", "")), VoxelPal.ROOF)
-	var top := _gable(gen, c, c.x1 - c.x0 >= c.z1 - c.z0, 2, roof_c)
+	var along_x := c.x1 - c.x0 >= c.z1 - c.z0
+	var top := _gable(gen, c, along_x, 2, roof_c)
+	_gutters(gen, c, along_x)
+	_ivy(gen, c)
 	if b.has("chimney"):
 		var ch: Array = b.chimney  # [tile dx from the footprint's west edge, "n" | "s"]
 		var cx := c.x0 + int(ch[0]) * 4
@@ -559,22 +604,15 @@ static func _lab(gen: VoxelZoneGen, b: Dictionary, r: Rect2i) -> void:
 				if not edge:
 					gen.g.put(Vector3i(x, y, c.z1 - 1), VoxelPal.WINDOW, VoxelMat.WINDOW, c.walls)
 		for x in [dx - 4, dx + 7]:
-			gen.add_light(
-				VoxelGrid.centre(Vector3i(x, DOOR_H - 1, c.z1 + 2)),
-				"wall",
-				Color(0.9, 0.92, 1.0),
-				2.4,
-				7.0
+			var at := Vector3(
+				(x + 0.5) * VoxelGrid.VS,
+				(DOOR_H - 1) * VoxelGrid.VS - 0.3,
+				(c.z1 + 1) * VoxelGrid.VS
 			)
-			gen.g.put(
-				Vector3i(x, DOOR_H - 1, c.z1 + 1),
-				VoxelPal.LAMP.lightened(0.3),
-				VoxelMat.LAMP,
-				c.walls
-			)
-			gen.g.put(Vector3i(x, DOOR_H, c.z1 + 1), VoxelPal.METAL, VoxelMat.METAL, c.walls)
+			VoxelProps.add_prop(gen, "prop_wall_lamp_lab", at, 0, c.walls)
 	var roof_c := VoxelPal.hex(String(b.get("roof_color", "")), Color("5b6878"))
 	var top := _gable(gen, c, false, 3, roof_c)
+	_gutters(gen, c, false)
 	# Solar panels on the east slope (dark blue glass in metal frames).
 	var px0 := c.x1 - 12
 	var pz0 := c.z0 + 6
@@ -650,3 +688,91 @@ static func _shed(gen: VoxelZoneGen, b: Dictionary, r: Rect2i) -> void:
 			)
 	# A tool rack / water butt by the shed.
 	_finish(gen, e, top + 1)
+
+
+## Greenhouse (the lab's): a brick knee wall, a white frame on a 1 m grid with glass walls and a
+## glass gable roof, a glazed door in the middle of the south side, a gravel aisle between soil
+## beds of seedlings, tomatoes and flowers. The panes are their own "glass" part, which VoxelZone
+## draws see-through, so the plants show inside.
+static func _greenhouse(gen: VoxelZoneGen, b: Dictionary, r: Rect2i) -> void:
+	var e := _entry(gen, b, r)
+	var c := _ctx(gen, b, r, e)
+	var glass := _part(gen, e, "glass")
+	var frame := VoxelPal.hex(String(b.get("trim", "")), Color("eef0ea"))
+	var brick := VoxelPal.hex(String(b.get("stone_color", "")), Color("a5604a"))
+	var pane := Color("cfe6e2")
+	var top := 8  # wall plate
+	var mid := (c.z0 + c.z1 + 1) / 2.0
+	var dx := (c.x0 + c.x1 + 1) / 2 - 2  # door: 4 voxels in the middle of the south side
+	for z in range(c.z0 + 1, c.z1):
+		for x in range(c.x0 + 1, c.x1):
+			var aisle := absf(z + 0.5 - mid) < 1.5 or (x >= dx and x < dx + 4 and z > mid)
+			var col := VoxelPal.at(VoxelPal.GRAVEL, Vector3i(x, -1, z), 0.08, 52)
+			var m := VoxelMat.GRAVEL
+			if not aisle:
+				col = VoxelPal.at(VoxelPal.DIRT_DARK, Vector3i(x, -1, z), 0.08, 53)
+				m = VoxelMat.DIRT
+			gen.g.put(Vector3i(x, -1, z), col, m, c.walls)
+	for z in range(c.z0, c.z1 + 1):
+		for x in range(c.x0, c.x1 + 1):
+			if not c.outer(x, z):
+				continue
+			var ns := z == c.z0 or z == c.z1
+			var u := x - c.x0 if ns else z - c.z0
+			var post := posmod(u, 4) == 0 or (ns and x == c.x1) or (not ns and z == c.z1)
+			var door := z == c.z1 and x >= dx and x < dx + 4
+			for y in range(0, top + 1):
+				if door and y <= 7:
+					var edge := x == dx or x == dx + 3 or y == 7
+					if edge or y == 0 or y == 3:
+						gen.g.put(Vector3i(x, y, z), frame, VoxelMat.PAINT, c.walls)
+					else:
+						gen.g.put(Vector3i(x, y, z), pane, VoxelMat.GLASS, glass)
+					continue
+				if y <= 1:
+					gen.g.put(Vector3i(x, y, z), stone(u, y, brick, _salt), VoxelMat.BRICK, c.walls)
+				elif y == 2 or y == 5 or y == top or post:
+					gen.g.put(Vector3i(x, y, z), frame, VoxelMat.PAINT, c.walls)
+				else:
+					gen.g.put(Vector3i(x, y, z), pane, VoxelMat.GLASS, glass)
+	# Glass gable roof along x: white rafters every metre, ridge and eaves in white.
+	var a0 := c.z0 - 1
+	var a1 := c.z1 + 1
+	var emax := floori((a1 - a0) / 2.0)
+	var ridge_y := top
+	for a in range(a0, a1 + 1):
+		var ed := mini(a - a0, a1 - a)
+		var ys := top + 1 + floori(ed / 2.0)
+		ridge_y = maxi(ridge_y, ys)
+		for x in range(c.x0 - 1, c.x1 + 2):
+			var rafter := posmod(x - c.x0, 4) == 0 or x == c.x0 - 1 or x == c.x1 + 1
+			if ed == 0 or ed >= emax - 1 or rafter:
+				gen.g.put(Vector3i(x, ys, a), frame, VoxelMat.PAINT, c.roof)
+			else:
+				gen.g.put(Vector3i(x, ys, a), pane, VoxelMat.GLASS, glass)
+	# Gable ends: glass triangles with a centre post.
+	for x in [c.x0, c.x1]:
+		for a in range(c.z0, c.z1 + 1):
+			var ed := mini(a - a0, a1 - a)
+			var ys := top + 1 + floori(ed / 2.0)
+			for y in range(top + 1, ys):
+				var centre := absf(a + 0.5 - mid) < 1.0
+				if centre:
+					gen.g.put(Vector3i(x, y, a), frame, VoxelMat.PAINT, c.walls)
+				else:
+					gen.g.put(Vector3i(x, y, a), pane, VoxelMat.GLASS, glass)
+	# Plants in the beds: tomato and seedling rows north, flowers south.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _salt
+	for x in range(c.x0 + 2, c.x1 - 1, 2):
+		for z in [c.z0 + 2, c.z1 - 2]:
+			if z > mid and x >= dx - 1 and x < dx + 5:
+				continue
+			var p := Vector3((x + 0.5) * VoxelGrid.VS, 0.0, (z + 0.5) * VoxelGrid.VS)
+			var m := "tomato" if z < mid else String(VoxelFlora.FLOWERS[rng.randi() % 6])
+			if z < mid and x % 4 == 0:
+				m = "sprout"
+			gen.add_decor(
+				m, Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * 0.8), p)
+			)
+	_finish(gen, e, ridge_y + 1)

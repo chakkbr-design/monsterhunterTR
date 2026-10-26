@@ -18,6 +18,7 @@ const SPECIES := {
 	"sapling": 2,
 	"bush": 3,
 	"shrub": 2,
+	"willow": 2,
 }
 const SWAY := {
 	"oak": 0.012,
@@ -28,8 +29,11 @@ const SWAY := {
 	"sapling": 0.02,
 	"bush": 0.0,
 	"shrub": 0.0,
+	"willow": 0.016,
 }
 const FOREST_STEP := 2.5  ## metres between forest tree candidates
+const FINE_VS := 0.125  ## lattice of the fine models (bushes): half the world voxel
+const FINE := ["bush", "shrub"]
 
 
 ## Every model name of the library ("oak_0", "oak_1", ...).
@@ -43,6 +47,11 @@ static func names() -> PackedStringArray:
 
 static func species_of(model: String) -> String:
 	return model.substr(0, model.rfind("_"))
+
+
+## Voxel edge (m) a model is built at: the world lattice, or FINE_VS for bushes.
+static func model_vs(model: String) -> float:
+	return FINE_VS if species_of(model) in FINE else VoxelGrid.VS
 
 
 ## Builds one model's grid (origin chosen so the base centre is at model (0, 0, 0)).
@@ -69,6 +78,8 @@ static func build(model: String) -> VoxelGrid:
 			return _bush(v, sd, 1.0)
 		"shrub":
 			return _bush(v, sd, 0.7)
+		"willow":
+			return _willow(v, sd)
 	return _broadleaf(v, sd, VoxelPal.LEAF, VoxelPal.LEAF_LIGHT, VoxelPal.LEAF_DARK, 1.0, false)
 
 
@@ -272,14 +283,86 @@ static func _sapling(v: int, sd: int) -> VoxelGrid:
 	return g
 
 
-## Round bush (or a smaller, darker forest shrub); variant 2 flowers.
+## Weeping willow (water side): a stout leaning trunk, a low dome and long strands of pale leaves
+## hanging almost to the ground all around it.
+static func _willow(v: int, sd: int) -> VoxelGrid:
+	var g := _grid(12, 30)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = sd
+	var th := 9 + v * 2
+	for y in th + 4:
+		var lean := y / 6
+		for z in [-1, 0]:
+			for x in [-1, 0]:
+				var c := VoxelPal.vary(VoxelPal.BARK_DARK, VoxelGrid.hash01(x, y >> 1, z, sd), 0.08)
+				g.put(Vector3i(x + lean, y, z), c, VoxelMat.BARK)
+	var top := Vector3(th / 6 + 0.5, th + 4.0, 0.0)
+	var cols := [Color("86ac4c"), Color("a8cc62"), Color("587e36")]
+	_blob(g, top, Vector3(7.5, 4.0, 7.5), cols, sd, 0.2)
+	for i in 4:
+		var a := TAU * i / 4.0 + rng.randf_range(-0.4, 0.4)
+		_blob(
+			g,
+			top + Vector3(cos(a) * 4.5, rng.randf_range(-1.0, 1.5), sin(a) * 4.5),
+			Vector3(4.0, 2.8, 4.0),
+			cols,
+			sd + 11 + i,
+			0.2
+		)
+	# Strands: from the crown's lower rim, columns of leaves hanging 3-10 voxels.
+	var hang: Array[Vector3i] = []
+	for z in g.size.z:
+		for x in g.size.x:
+			var p := g.origin + Vector3i(x, 0, z)
+			var lowest := -1
+			for y in range(th - 2, g.size.y):
+				if g.mat_at(Vector3i(p.x, y, p.z)) == VoxelMat.LEAVES:
+					lowest = y
+					break
+			if lowest < 0:
+				continue
+			var r := Vector2(p.x + 0.5 - top.x, p.z + 0.5 - top.z).length()
+			if r < 3.5 or VoxelGrid.hash01(p.x, 5, p.z, sd + 3) > 0.62:
+				continue
+			hang.append(Vector3i(p.x, lowest, p.z))
+	for h in hang:
+		var n := 3 + int(VoxelGrid.hash01(h.x, 6, h.z, sd + 4) * 8.0)
+		for k in range(1, n + 1):
+			var y := h.y - k
+			if y < 2:
+				break
+			var t := float(k) / n
+			var c := (cols[0] as Color).lerp(cols[1], t * 0.8)
+			g.put(
+				Vector3i(h.x, y, h.z),
+				VoxelPal.vary(c, VoxelGrid.hash01(h.x, y, h.z, sd + 5), 0.06),
+				VoxelMat.LEAVES
+			)
+	return g
+
+
+## Round bush (or a smaller, darker forest shrub); variant 2 flowers. Built on the fine lattice
+## (FINE_VS, model_vs): two voxels per world voxel, so the leaves read as clusters, not cubes.
 static func _bush(v: int, sd: int, s: float) -> VoxelGrid:
-	var g := _grid(4, 7)
+	var k := 2.0
+	var g := _grid(9, 14)
 	var cols := [VoxelPal.HEDGE, VoxelPal.HEDGE_LIGHT, VoxelPal.LEAF_DARK]
 	if s < 1.0:
 		cols = [VoxelPal.LEAF_DARK, VoxelPal.LEAF, VoxelPal.LEAF_BLUE]
-	_blob(g, Vector3(0, 2.0 * s + 0.5, 0), Vector3(3.6, 2.8, 3.6) * s, cols, sd, 0.05)
-	_blob(g, Vector3(1, 3.0 * s + 0.5, -0.5), Vector3(2.4, 2.2, 2.4) * s, cols, sd + 3, 0.05)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = sd
+	_blob(g, Vector3(0, 2.0 * s + 0.5, 0) * k, Vector3(3.4, 2.6, 3.4) * s * k, cols, sd, 0.1)
+	# Three to five smaller lobes around the core make an irregular, clumpy outline.
+	var n := 3 + v % 3
+	for i in n:
+		var a := TAU * i / n + rng.randf_range(-0.5, 0.5)
+		var d := rng.randf_range(1.4, 2.0) * s * k
+		var c := Vector3(cos(a) * d, rng.randf_range(1.8, 3.0) * s * k, sin(a) * d)
+		_blob(g, c, Vector3.ONE * rng.randf_range(1.5, 2.1) * s * k, cols, sd + 3 + i, 0.14)
+	# Twigs at the base.
+	for o in [Vector3i(1, 0, 0), Vector3i(-1, 0, -1), Vector3i(0, 0, 1)]:
+		g.put(o, VoxelPal.BARK, VoxelMat.BARK)
+		g.put(o + Vector3i.UP, VoxelPal.BARK.darkened(0.1), VoxelMat.BARK)
 	if v == 2 and s >= 1.0:
 		for z in g.size.z:
 			for y in g.size.y:
@@ -288,13 +371,26 @@ static func _bush(v: int, sd: int, s: float) -> VoxelGrid:
 					if (
 						g.solid(p)
 						and not g.solid(p + Vector3i.UP)
-						and VoxelGrid.hash01(p.x, p.y, p.z, sd) < 0.18
+						and VoxelGrid.hash01(p.x, p.y, p.z, sd) < 0.16
 					):
 						g.put(
 							p,
-							Color("f6f0f4") if (p.x + p.z) % 2 == 0 else Color("f2a7c3"),
+							Color("f6f0f4") if (p.x + p.z) % 3 == 0 else Color("f2a7c3"),
 							VoxelMat.FLOWER
 						)
+	elif v == 1 and s >= 1.0:
+		# Berries.
+		for z in g.size.z:
+			for y in g.size.y:
+				for x in g.size.x:
+					var p := g.origin + Vector3i(x, y, z)
+					if (
+						g.solid(p)
+						and g.mat_at(p) == VoxelMat.LEAVES
+						and not g.solid(p + Vector3i(0, 0, 1))
+						and VoxelGrid.hash01(p.x, p.y, p.z, sd + 8) < 0.04
+					):
+						g.put(p, Color("b8283a"), VoxelMat.FLOWER)
 	return g
 
 
@@ -345,7 +441,8 @@ static func place(gen: VoxelZoneGen) -> void:
 			var sp := "oak"
 			var n := gen.noise.get_noise_2d(px * 0.7, pz * 0.7)
 			if dwat <= 3:
-				sp = "birch" if VoxelGrid.hash01(cx, 13, cz, 64) < 0.6 else "oak"
+				var hw := VoxelGrid.hash01(cx, 13, cz, 64)
+				sp = "willow" if dwat <= 2 and hw < 0.35 else ("birch" if hw < 0.7 else "oak")
 			elif n > 0.18 or dw > 9:
 				sp = "pine"
 			elif n < -0.3:

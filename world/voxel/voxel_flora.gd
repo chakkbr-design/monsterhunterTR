@@ -64,6 +64,17 @@ const FLOWERS := [
 const WILD := ["daisy", "poppy", "forget_me_not", "bluebell", "flower_white", "flower_yellow"]
 ## Underwater weeds (decor material with weather 0: no rain or snow on them).
 const WEEDS := ["weed_0", "weed_1", "weed_2"]
+## Growth stage per row parity (tile z even / odd) of each crop: 0 seedlings, 1 young, 2 ripe.
+const CROP_STAGES := {
+	"lettuce": [2, 1],
+	"cabbage": [1, 2],
+	"strawberry": [2, 1],
+	"pumpkin": [2, 1],
+	"corn": [2, 2],
+	"wheat": [2, 2],
+	"tomato": [1, 2],
+	"carrot": [0, 2],
+}
 const FLOWER_COLS := {
 	"flower_red": [Color("e0383a"), Color("f6d046")],
 	"flower_yellow": [Color("f6d046"), Color("d08a24")],
@@ -135,6 +146,47 @@ static func build(name: String) -> Dictionary:
 			g = _crow()
 		"doormat":
 			g = _doormat()
+		"tulip_red", "tulip_yellow", "tulip_pink":
+			var tc := {"tulip_red": "e03a3a", "tulip_yellow": "f4d23c", "tulip_pink": "f08cb4"}
+			g = _tulip(Color(tc[name]), hash(name))
+		"lavender":
+			g = _lavender()
+		"sunflower":
+			g = _sunflower()
+		"poppy":
+			g = _poppy()
+		"bluebell":
+			g = _bluebell()
+		"forget_me_not":
+			g = _forget_me_not()
+		"marigold":
+			g = _marigold()
+		"rose":
+			g = _rose()
+		"iris":
+			g = _iris()
+		"weed_0", "weed_1", "weed_2":
+			g = _weed(int(name.right(1)))
+		"flat_stone":
+			g = _flat_stone()
+		"corn":
+			g = _corn()
+		"tomato":
+			g = _tomato()
+		"lettuce":
+			g = _lettuce()
+		"strawberry":
+			g = _strawberry()
+		"grass_clump":
+			g = _tuft(6, VoxelPal.LAWN, VoxelPal.LAWN_LIGHT, 8)
+		"sprout":
+			g = _sprout()
+		"windfall":
+			g = _windfall()
+		"ivy_0", "ivy_1":
+			g = _ivy(int(name.right(1)))
+		"watering_can":
+			g = _watering_can()
 		_:
 			if FLOWER_COLS.has(name):
 				g = _flower(FLOWER_COLS[name][0], FLOWER_COLS[name][1], hash(name))
@@ -335,6 +387,88 @@ static func _wheat() -> VoxelGrid:
 			g.put(Vector3i(x, y, z), _c(Color("b8a040"), x, y, z), VoxelMat.CROP)
 		for y in range(h, h + 3):
 			g.put(Vector3i(x, y, z), _c(Color("e8c860"), x, y, z), VoxelMat.CROP)
+	return g
+
+
+## Ivy climbing a wall corner (0.5 m x 1.6 m panel, two voxels deep, wall side at z 0): woody
+## stems branching up from the foot, leaves of two greens around them, thinning towards the top.
+static func _ivy(v: int) -> VoxelGrid:
+	var g := _grid(9, 26, 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242 + v * 17
+	var tips: Array[Vector2i] = [Vector2i(4, 0)]
+	var stems: Array[Vector2i] = []
+	for i in 3 + v:
+		var p: Vector2i = tips[rng.randi() % tips.size()]
+		var h := rng.randi_range(8, 24)
+		for k in h:
+			if rng.randf() < 0.3:
+				p.x = clampi(p.x + (1 if rng.randf() < 0.5 else -1), 0, 8)
+			p.y += 1
+			if p.y >= 26:
+				break
+			stems.append(p)
+		tips.append(p)
+	for st in stems:
+		g.put(Vector3i(st.x, st.y, 0), Color("5a4630"), VoxelMat.BARK)
+		for o: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+			var q := st + o
+			var thin := float(q.y) / 26.0
+			if rng.randf() < 0.25 + thin * 0.45 or q.x < 0 or q.x > 8:
+				continue
+			var c := Color("3f6a2c") if rng.randf() < 0.55 else Color("5f8f3a")
+			if not g.solid(Vector3i(q.x, q.y, 0)):
+				g.put(Vector3i(q.x, q.y, 0), _c(c, q.x, q.y, 0), VoxelMat.LEAVES)
+			if rng.randf() < 0.5:
+				g.put(Vector3i(q.x, q.y, 1), _c(c.lightened(0.06), q.x, q.y, 1), VoxelMat.LEAVES)
+	return g
+
+
+## Two or three fallen apples in the grass.
+static func _windfall() -> VoxelGrid:
+	var g := _grid(8, 2, 8)
+	for a: Vector2i in [Vector2i(1, 1), Vector2i(5, 2), Vector2i(3, 6)]:
+		for o: Vector2i in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+			var p := a + o
+			g.put(Vector3i(p.x, 0, p.y), _c(VoxelPal.APPLE, p.x, 0, p.y, 0.08), VoxelMat.FLOWER)
+		g.put(
+			Vector3i(a.x, 1, a.y), _c(VoxelPal.APPLE.lightened(0.1), a.x, 1, a.y), VoxelMat.FLOWER
+		)
+	return g
+
+
+## A seedling: a short stem and two seed leaves (young crop rows).
+static func _sprout() -> VoxelGrid:
+	var g := _grid(5, 4, 3)
+	var stem := Color("6aa848")
+	g.put(Vector3i(2, 0, 1), stem, VoxelMat.CROP)
+	g.put(Vector3i(2, 1, 1), stem, VoxelMat.CROP)
+	for x in [0, 1, 3, 4]:
+		var y := 2 if x == 1 or x == 3 else 3
+		g.put(Vector3i(x, y, 1), _c(Color("8cc85a"), x, y, 1), VoxelMat.CROP)
+	return g
+
+
+## A galvanised watering can (0.4 m): round-ish body, a long spout with a rose, a top handle.
+static func _watering_can() -> VoxelGrid:
+	var g := _grid(10, 7, 5)
+	var zinc := Color("9aa4a6")
+	for y in range(0, 4):
+		for z in range(0, 5):
+			for x in range(2, 7):
+				if (x == 2 or x == 6) and (z == 0 or z == 4):
+					continue
+				var zc := zinc.darkened(0.08 if y == 0 else 0.0)
+				g.put(Vector3i(x, y, z), _c(zc, x, y, z, 0.03), VoxelMat.METAL)
+	for i in 3:
+		g.put(Vector3i(7 + i, 2 + i, 2), _c(zinc, 7 + i, 2 + i, 2, 0.03), VoxelMat.METAL)
+	g.put(Vector3i(9, 5, 2), zinc.darkened(0.2), VoxelMat.METAL)
+	for x in range(3, 6):
+		g.put(Vector3i(x, 6, 2), zinc.darkened(0.1), VoxelMat.METAL)
+	g.put(Vector3i(3, 5, 2), zinc.darkened(0.1), VoxelMat.METAL)
+	g.put(Vector3i(5, 5, 2), zinc.darkened(0.1), VoxelMat.METAL)
+	g.put(Vector3i(1, 2, 2), zinc.darkened(0.1), VoxelMat.METAL)
+	g.put(Vector3i(1, 3, 2), zinc.darkened(0.1), VoxelMat.METAL)
 	return g
 
 
@@ -727,16 +861,26 @@ static func scatter(gen: VoxelZoneGen) -> void:
 			for x in range(int(r[0]), int(r[2]) + 1):
 				crop_of[Vector2i(x, z)] = String(c.crop)
 	var cherry := {}
+	var shade := {}  # lawn tiles under a town tree (fallen leaves, mushrooms)
 	for e in gen.meta.get("tree_list", []):
-		if String(e.model).begins_with("cherry"):
-			var p: Vector3 = e.pos
+		var p: Vector3 = e.pos
+		var tt := Vector2i(roundi(p.x), roundi(p.z))
+		var sp := VoxelTrees.species_of(String(e.model))
+		if sp == "cherry":
 			for dz in range(-2, 3):
 				for dx in range(-2, 3):
-					cherry[Vector2i(roundi(p.x) + dx, roundi(p.z) + dz)] = true
+					cherry[tt + Vector2i(dx, dz)] = true
+		elif sp in ["oak", "apple", "birch"] and d.thing_kind(tt) != "forest":
+			for dz in range(-2, 3):
+				for dx in range(-2, 3):
+					if dx * dx + dz * dz <= 5:
+						shade[tt + Vector2i(dx, dz)] = sp
 	for z in d.size.y:
 		for x in d.size.x:
 			var t := Vector2i(x, z) + d.origin
 			_tile(gen, t, crop_of, cherry)
+			if shade.has(t) and d.ground_kind(t) in ["lawn", "meadow"] and not gen.blocks.has(t):
+				_under_tree(gen, t, String(shade[t]))
 	# Door mats and sign lettering.
 	for b in gen.meta.buildings:
 		if b.has("door") and String(b.style) != "shed":
@@ -744,6 +888,19 @@ static func scatter(gen: VoxelZoneGen) -> void:
 			gen.add_decor("doormat", _xf(Vector3(dt.x, 0.0, dt.y + 0.72), 0.0))
 	for tx in gen.meta.get("texts", []):
 		gen.add_decor("text:" + String(tx.text), Transform3D(Basis(), tx.pos))
+
+
+## Litter under a town tree: fallen leaves, now and then a mushroom or a windfall apple.
+static func _under_tree(gen: VoxelZoneGen, t: Vector2i, sp: String) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(t) ^ 0x1eaf
+	var h := rng.randf()
+	if h < 0.55:
+		_put(gen, t, rng, "leaves", rng.randf_range(0.8, 1.2))
+	if h < 0.12:
+		_put(gen, t, rng, "mushroom_brown" if h < 0.09 else "mushroom_red", 0.8)
+	if sp == "apple" and h > 0.7:
+		_put(gen, t, rng, "windfall")
 
 
 static func _tile(gen: VoxelZoneGen, t: Vector2i, crop_of: Dictionary, cherry: Dictionary) -> void:
@@ -800,6 +957,8 @@ static func _tile(gen: VoxelZoneGen, t: Vector2i, crop_of: Dictionary, cherry: D
 			if h0 > 0.95:
 				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 		"flowers":
+			if h0 < 0.4:
+				gen.meta.get_or_add("butterflies", []).append(Vector3(t.x, 0.55, t.y))
 			var main := _patch_flower(gen, t)
 			var n := 6 + int(h0 * 4.0)
 			if main == "rose" or main == "lavender":
@@ -886,17 +1045,31 @@ static func _water_tile(
 			gen.add_decor(m, _xf(p, rng.randf() * TAU, sc))
 
 
-## Crop plants of a 'c' tile: rows of two or four per tile.
+## Crop plants of a 'c' tile: rows of two or four per tile, at the growth stage of the tile's row
+## (CROP_STAGES: 0 seedlings, 1 young, 2 ripe), so each bed shows plants at different ages.
 static func _crops(
 	gen: VoxelZoneGen, t: Vector2i, crop: String, rng: RandomNumberGenerator
 ) -> void:
+	var stages: Array = CROP_STAGES.get(crop, [2, 2])
+	var stage := int(stages[posmod(t.y, stages.size())])
+	if stage == 0:
+		for i in 6:
+			var u := 0.2 + 0.3 * (i % 3) + rng.randf_range(-0.04, 0.04)
+			var v := 0.3 + 0.4 * (i / 3)
+			gen.add_decor(
+				"sprout", _xf(_spot(gen, t, u, v), rng.randf() * TAU, rng.randf_range(0.8, 1.2))
+			)
+		return
 	var n := 2 if crop in ["pumpkin", "cabbage", "tomato"] else 4
+	var sc := rng.randf_range(0.5, 0.62) if stage == 1 else 1.0
 	for i in n:
 		var u := 0.25 + 0.5 * (i % 2)
 		var v := 0.25 + 0.5 * (i / 2) if n == 4 else 0.3 + 0.4 * i
 		if n == 2:
 			u = 0.5
-		gen.add_decor(crop, _xf(_spot(gen, t, u, v), rng.randf() * TAU, rng.randf_range(0.9, 1.15)))
+		gen.add_decor(
+			crop, _xf(_spot(gen, t, u, v), rng.randf() * TAU, sc * rng.randf_range(0.9, 1.15))
+		)
 
 
 ## One instance of model m at a random spot of tile t (random yaw, scale s).

@@ -7,7 +7,8 @@
     {"char": "P", "id": "player_house", "style": "house", "storeys": 2, "footprint": [13, 9], "map": true, "roof_color": "d8622a", "wall_color": "efe6d2", "stone_color": "a59d92", "door_color": "3f6f9a", "shutter": "4f7f4a", "flower_boxes": true, "timber_frame": true, "chimney": [10, "n"]},
     {"char": "R", "id": "rival_house", "style": "house", "storeys": 1, "footprint": [13, 8], "map": true, "roof_color": "b9482c", "wall_color": "eadcc2", "stone_color": "9d958c", "door_color": "7a4a2a", "shutter": "5d7f9e", "flower_boxes": true, "chimney": [2, "n"]},
     {"char": "L", "id": "lab", "style": "lab", "footprint": [14, 17], "map": true, "roof_color": "5b6878", "wall_color": "eceae4", "stone_color": "a8a29a", "trim": "dfe6ea", "door_color": "5a7a9a"},
-    {"char": "S", "id": "garden_shed", "style": "shed", "footprint": [3, 2], "map": false, "wall_color": "8e5c36", "roof_color": "6f4e34", "door_color": "6a8a5a"}
+    {"char": "S", "id": "garden_shed", "style": "shed", "footprint": [3, 2], "map": false, "wall_color": "8e5c36", "roof_color": "6f4e34", "door_color": "6a8a5a"},
+    {"char": "G", "id": "lab_greenhouse", "style": "greenhouse", "footprint": [4, 3], "map": false, "trim": "eef0ea", "stone_color": "a5604a"}
   ],
   "crops": [
     {"rect": [-26, -12, -25, -11], "crop": "cabbage"},
@@ -26,6 +27,13 @@
     {"kind": "water", "type": "stream", "rect": [-19, 20, -12, 36], "level": -0.37, "depth": 0.45, "flow": [0.0, 0.5]}
   ],
   "trees": [],
+  "props": [
+    {"model": "prop_hay", "pos": [-26.05, -13.0], "rot": 1, "block": true},
+    {"model": "prop_wheelbarrow", "pos": [-25.0, -4.05], "rot": 1, "block": true},
+    {"model": "prop_tool_rack", "pos": [-23.31, -14.0], "rot": 1, "block": true},
+    {"model": "watering_can", "pos": [-22.25, -13.32], "rot": 0},
+    {"model": "prop_firewood", "pos": [-26.1, -4.0], "rot": 1, "block": true}
+  ],
   "ground": [
     ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;....+===+....;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
     ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;.++++===++++.;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
@@ -105,15 +113,15 @@
     "FFFFFFFFFFFFFFFFF                                                        FFFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF                                                       FFFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF      l                                       l   ff  ffFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFFF            B      l               l               f     FFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFFFF B                                       n  n     f     FFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFFFF                  v  n         n  v               f     FFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFFF            B      l               l          GGGG f     FFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFFFF B                                       n  nGGGG f     FFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFFFF                  v  n l     l n  v          GGGG f     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF              o         OOOOO       B            Bf  T  FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF                  v     OOOOO     v   B   vv   B  f     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFF                         OOOOO       LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFF                   v     OOOOO     v LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFF                             OOOOO       LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
-    "   FFFFFF                           K  n         n  K LLLLLLLLLLLLLLf o   FFFFFFFFFFFFFF",
+    "   FFFFFF                           K  n l     l n  K LLLLLLLLLLLLLLf o   FFFFFFFFFFFFFF",
     "             FFFF                                     LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFF      FFFFFFF                    l               l LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFF                                      LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
@@ -127,7 +135,7 @@
     "FFFFFFFFFFFFFFFFF                                     LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF                                    LLLLLLLLLLLLLLf     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF     T      B                       LLLLLLdLLLLLLLf     FFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFFFF                     B  l   l  B       lv   vl    f     FFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFFFF                 l   B  l   l  B       lv   vl    f     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF                                                  f     FFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFF                                                   ffffffFFFFFFFFFFFFFF",
     "FFFFFFFFFFFFFFFFFF   FF  FF      FF   F FF  F  FF F F FFFFF  FFF  FF   F FFFFFFFFFFFFFFF",

@@ -27,6 +27,9 @@ extends RefCounted
 ##   rects never overlap. "level" is the surface height (-0.12 = 12 cm under the bank), "depth"
 ##   caps the stepped bed. Where a lower body touches a higher one the generator builds a stone
 ##   weir and a cascade sheet between them.
+## - `props`: free-standing prop models at exact spots: [{"model": "prop_hay" | any VoxelModels
+##   prop or VoxelFlora decor name, "pos": [x, z] (metres), "rot": quarter turns (front +z faces
+##   south at 0), "block": true when it blocks its tile}] (farm tools, hay, a watering can...).
 ## The generator (VoxelZoneGen) turns it into a VoxelGrid, a TileGrid and metadata, and
 ## tools/voxel/bake_zone.gd bakes them into world/voxel/baked/<zone>.res + .json. The .json holds
 ## the hash of the design + map (VoxelZoneGen.input_hash) and of the generator sources.
@@ -91,6 +94,7 @@ var buildings: Array = []  ## {"char", "id", "style", ...} (data/voxel JSON)
 var trees: Dictionary = {}  ## Vector2i -> {"species", "size"} overrides of tree tiles
 var crops: Array = []  ## {"rect": [x0, z0, x1, z1], "crop": "wheat"}
 var objects: Array = []  ## big objects: fountain, gate arch, waterfall...
+var props: Array = []  ## {"model", "pos": [x, z] m, "rot", "block"} placed props
 var raw: Dictionary = {}
 var text := ""  ## the JSON text (hashed into the bake)
 
@@ -133,6 +137,7 @@ func _parse(j: Dictionary) -> void:
 		trees[Vector2i(int(p[0]), int(p[1]))] = t
 	crops = j.get("crops", [])
 	objects = j.get("objects", [])
+	props = j.get("props", [])
 
 
 ## Tile range covered by the layers (world tiles).

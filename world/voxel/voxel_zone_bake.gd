@@ -17,6 +17,7 @@ const SOURCES := [
 	"res://world/voxel/voxel_build.gd",
 	"res://world/voxel/voxel_props.gd",
 	"res://world/voxel/voxel_trees.gd",
+	"res://world/voxel/voxel_models.gd",
 	"res://world/voxel/voxel_flora.gd",
 	"res://world/voxel/voxel_pal.gd",
 	"res://world/voxel/voxel_design.gd",
@@ -34,9 +35,11 @@ const SOURCES := [
 @export var tops_data := PackedByteArray()  ## R8 column tops (VoxelGrid.tops_image)
 @export var meshes: Array[ArrayMesh] = []  ## greedy chunks
 @export var mesh_parts := PackedInt32Array()  ## part id of each mesh
-## Tree models: name -> {"mesh", "origin", "size", "data" (zstd), "len", "tops", "sway"}.
+## Tree and prop models: name -> {"mesh", "origin", "size", "data" (zstd), "len", "tops", "sway",
+## "vs" (voxel edge: 0.25 trees, VoxelModels.PROP_VS props)}.
 @export var tree_models := {}
-## Instanced chunks: [{"model", "kind" ("tree" | "decor"), "town", "xf", "phase"}], with "xf" 12
+## Instanced chunks: [{"model", "kind" ("tree" | "prop" | "decor"), "town" (one instance, faded by
+## the camera), "xf", "phase"}], with "xf" 12
 ## floats per instance (basis columns x, y, z, then origin) and "phase" one float per instance
 ## (decor sway). Kept as plain arrays: a MultiMesh made under the headless (dummy) renderer saves
 ## without its instances; multimesh() rebuilds it at load.
@@ -172,12 +175,15 @@ static func _chunk_key(p: Vector3, ext: Rect2) -> Vector2i:
 
 
 static func _trees(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
+	var items: Array = gen.meta.get("tree_list", []) + gen.meta.get("prop_list", [])
 	var used := {}
-	for e in gen.meta.get("tree_list", []):
+	for e in items:
 		used[String(e.model)] = true
 	for m in used:
-		var tg := VoxelTrees.build(m)
-		var meshes := VoxelMesher.greedy(tg)
+		var prop := VoxelModels.is_prop(m)
+		var tg := VoxelModels.build(m) if prop else VoxelTrees.build(m)
+		var vs := VoxelModels.PROP_VS if prop else VoxelTrees.model_vs(m)
+		var meshes := VoxelMesher.greedy(tg, Vector3i.ZERO, Vector3i(-1, -1, -1), vs)
 		if not meshes.has(0):
 			continue
 		b.tree_models[m] = {
@@ -187,24 +193,39 @@ static func _trees(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
 			"data": tg.data.compress(FileAccess.COMPRESSION_ZSTD),
 			"len": tg.data.size(),
 			"tops": tg.tops_image().get_data(),
-			"sway": float(VoxelTrees.SWAY.get(VoxelTrees.species_of(m), 0.0)),
+			"sway": 0.0 if prop else float(VoxelTrees.SWAY.get(VoxelTrees.species_of(m), 0.0)),
+			"vs": vs,
 		}
 	var ext := gen.d.extent_m()
-	var groups := {}  # [model, chunk, town] -> Array[Transform3D]
-	for e in gen.meta.get("tree_list", []):
+	var groups := {}  # [model, chunk or tile, single] -> Array[Transform3D]
+	for e in items:
 		var p: Vector3 = e.pos
+		var m := String(e.model)
 		var t := Vector2i(roundi(p.x), roundi(p.z))
-		var town := gen.d.in_rect(t) and gen.d.thing_kind(t) != "forest"
-		var key := [String(e.model), _chunk_key(p, ext) if not town else t, town]
+		var prop := VoxelModels.is_prop(m)
+		# Town trees and tall props are drawn one by one (the camera fader sees through them).
+		var part := int(e.get("part", 0))
+		var single := (
+			m in VoxelModels.TALL and part == 0
+			if prop
+			else gen.d.in_rect(t) and gen.d.thing_kind(t) != "forest"
+		)
+		var key := [m, _chunk_key(p, ext) if not single else Vector2(p.x, p.z), single, part]
 		if not groups.has(key):
 			groups[key] = []
-		groups[key].append(Transform3D(Basis(Vector3.UP, int(e.rot) * PI * 0.5), p))
+		var xf := (
+			VoxelModels.xform(p, int(e.rot))
+			if prop
+			else Transform3D(Basis(Vector3.UP, int(e.rot) * PI * 0.5), p)
+		)
+		groups[key].append(xf)
 	for key in groups:
 		b.multimeshes.append(
 			{
 				"model": key[0],
-				"kind": "tree",
+				"kind": "prop" if VoxelModels.is_prop(key[0]) else "tree",
 				"town": key[2],
+				"part": key[3],
 				"xf": _pack(groups[key]),
 				"phase": PackedFloat32Array()
 			}
@@ -213,19 +234,24 @@ static func _trees(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
 
 static func _decor(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
 	var ext := gen.d.extent_m()
-	for m in gen.decor:
-		var info := VoxelFlora.build(m)
-		var mesh := VoxelMesher.colored(info.grid, VoxelMat.DETAIL, info.pivot)
-		if mesh.get_surface_count() == 0:
-			continue
-		b.decor_models[m] = {
-			"mesh": mesh,
-			"sway": info.sway,
-			"weather": float(info.get("weather", 1.0)),
-			"backlight": float(info.get("backlight", 0.0)),
-		}
+	for key in gen.decor:
+		# "model@part": instances tied to a building part (they fade with the house).
+		var split := String(key).split("@")
+		var m := split[0]
+		var part := int(split[1]) if split.size() > 1 else 0
+		if not b.decor_models.has(m):
+			var info := VoxelFlora.build(m)
+			var mesh := VoxelMesher.colored(info.grid, VoxelMat.DETAIL, info.pivot)
+			if mesh.get_surface_count() == 0:
+				continue
+			b.decor_models[m] = {
+				"mesh": mesh,
+				"sway": info.sway,
+				"weather": float(info.get("weather", 1.0)),
+				"backlight": float(info.get("backlight", 0.0)),
+			}
 		var groups := {}
-		for xf in gen.decor[m]:
+		for xf in gen.decor[key]:
 			var k := _chunk_key(xf.origin, ext)
 			if not groups.has(k):
 				groups[k] = []
@@ -237,7 +263,14 @@ static func _decor(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
 					VoxelGrid.hash01(roundi(xf.origin.x * 16.0), 0, roundi(xf.origin.z * 16.0), 95)
 				)
 			b.multimeshes.append(
-				{"model": m, "kind": "decor", "town": false, "xf": _pack(groups[k]), "phase": ph}
+				{
+					"model": m,
+					"kind": "decor",
+					"town": false,
+					"part": part,
+					"xf": _pack(groups[k]),
+					"phase": ph
+				}
 			)
 
 
@@ -264,7 +297,7 @@ func multimesh(e: Dictionary) -> MultiMesh:
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_custom_data = not ph.is_empty()
 	var model := String(e.model)
-	mm.mesh = tree_models[model].mesh if String(e.kind) == "tree" else decor_models[model].mesh
+	mm.mesh = decor_models[model].mesh if String(e.kind) == "decor" else tree_models[model].mesh
 	mm.instance_count = n
 	for i in n:
 		var k := i * 12
@@ -361,4 +394,5 @@ func tree_material(m: String) -> ShaderMaterial:
 	mat.set_shader_parameter("grid_origin", e.origin)
 	mat.set_shader_parameter("grid_size", e.size)
 	mat.set_shader_parameter("sway", float(e.sway))
+	mat.set_shader_parameter("voxel", float(e.get("vs", VoxelGrid.VS)))
 	return mat
