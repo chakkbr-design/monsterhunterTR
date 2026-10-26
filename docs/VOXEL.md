@@ -247,6 +247,10 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
   - Os Pokémon entram a 6 m do centro (`opts.entry_x` = `Cfg.ENTRY_X`), como na quadra antiga; cada
     treinador fica 0,8 m fora da linha de fundo (±24,8 m).
   - A câmera de ação vai até 47 m (`BattleDirector.MAX_DIST`) para caber a quadra inteira.
+  - Ela enquadra na faixa livre entre o HUD (abaixo dos cartões, `BattleHUD.top_band`, e acima do
+    log): a distância sai dessa faixa e a câmera sobe (`v_offset`) para centrar o quadro nela.
+    Morros, picos, árvores e pedras entre ela e um lutador, ou grandes bem na frente da lente,
+    ficam translúcidos enquanto estão no caminho.
 - **Obstáculos:** são sorteados como hoje (dicionários analíticos de `BattleTerrain` etc. = jogabilidade).
   - As quantidades crescem na proporção da área: `BattleTerrain.count(n)` / `scale_count(n, k)`, com
     `k = área / 336` (`BASE_AREA`, a quadra de 24 × 14) e `COUNT_CURVE` 1,0. Zero continua zero.

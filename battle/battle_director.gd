@@ -61,6 +61,21 @@ const OPEN_HOLD := 0.5
 ## 48 m ele fica a 24,8 m do centro e a bola cai a ENTRY_X = 6 m (ou onde o anterior estava).
 const SWITCH_TRAINER := 20.0
 const HOLD_MAX := 6.0
+## Obstacles in the way fade (GeometryInstance3D.transparency, like the overworld camera's
+## buildings) to FADE_ALPHA at FADE_RATE per real second: what stands between the eye and a
+## fighter, what the eye is inside of or within FADE_EYE m of, and anything within FADE_NEAR m of
+## the eye, in front of every fighter, that fills over FADE_COVER of the screen (a boulder right at
+## the lens). Flat things (under FADE_MIN_H m tall) never fade.
+const FADE_ALPHA := 0.6
+const FADE_RATE := 4.0
+const FADE_EYE := 1.5
+const FADE_NEAR := 6.0
+const FADE_COVER := 0.15
+const FADE_MIN_H := 0.5
+## A sight line this close (m) above a hill or peak's profile already counts as hidden.
+const RELIEF_PAD := 0.1
+## The fade tests run at most this often (real seconds): the fade itself takes 1 / FADE_RATE.
+const FADE_STEP := 1.0 / 30.0
 
 var arena: Node
 ## Cena atual: "" (enquadrar todos), "finish", "ko", "big", "switch".
@@ -79,6 +94,9 @@ var _focus := Vector3.ZERO
 var _dist := MAX_DIST
 var _snap := true
 var _pitch := PITCH
+## Obstacle node -> [child count, its GeometryInstance3D] (found once, again if its children change).
+var _geoms := {}
+var _fade_t := 0.0
 
 
 func _init(a: Node) -> void:
@@ -250,6 +268,168 @@ func camera(cam: Camera3D, raw: float) -> void:
 	cam.v_offset = _dist * band[2]
 	if cam.is_inside_tree():
 		cam.look_at(cam.get_parent().to_global(_focus), Vector3.UP)
+		_fade_t += raw
+		if _fade_t >= FADE_STEP:
+			_fade_obstacles(cam, _fade_t)
+			_fade_t = 0.0
+
+
+## Obstacles that can stand in the camera's way, as [node, relief]: relief (hills and peaks, with
+## their BattleTerrain dictionary; not the ponds), props (trees, boulders, crystals...), biome
+## solids and field objects (relief {}). Null nodes (fast_sim) are skipped.
+func _obstacle_nodes() -> Array:
+	var all: Array = []
+	var ter = arena.get("terrain")
+	if ter:
+		for o in ter.obstacles:
+			if String(o.get("kind", "")) != "pond":
+				all.append([o.get("node"), o])
+		if ter.props:
+			for it in ter.props.items:
+				all.append([it.get("node"), {}])
+		if ter.biomes:
+			for so in ter.biomes.solids:
+				all.append([so.get("node"), {}])
+	var fld = arena.get("field")
+	if fld:
+		for ob in fld.objects:
+			all.append([ob.get("node"), {}])
+	return all.filter(
+		func(e: Array) -> bool:
+			return e[0] is Node3D and is_instance_valid(e[0]) and e[0].is_inside_tree()
+	)
+
+
+## Every obstacle mesh the camera may fade.
+func obstacles() -> Array:
+	var out: Array = []
+	for e in _obstacle_nodes():
+		out.append_array(_geoms_of(e[0]))
+	return out
+
+
+func _geoms_of(n: Node3D) -> Array:
+	var c: Array = _geoms.get(n, [])
+	if c.is_empty() or int(c[0]) != n.get_child_count():
+		c = [n.get_child_count(), n.find_children("*", "GeometryInstance3D", true, false)]
+		_geoms[n] = c
+	return c[1]
+
+
+## Fades each obstacle (all its meshes together) that is in the way, and brings it back after.
+func _fade_obstacles(cam: Camera3D, raw: float) -> void:
+	var eye := cam.get_camera_transform().origin
+	var fwd := -cam.global_transform.basis.z
+	var aims: Array = []
+	var near := INF
+	for f in arena.get("fighters"):
+		if is_instance_valid(f) and f.on_field and f.visible:
+			var h: float = f.visual_height()
+			var g: Vector3 = f.global_position
+			aims.append(g + Vector3(0, h * 0.5, 0))
+			aims.append(g + Vector3(0, h * 0.9, 0))
+			near = minf(near, (g - eye).dot(fwd))
+	var vp := cam.get_viewport().get_visible_rect().size
+	var nodes := _obstacle_nodes()
+	if _geoms.size() > nodes.size() * 2:
+		_geoms.clear()  # nodes gone (a hill collapsed, a tree burnt): find them again
+	for e in nodes:
+		var geoms: Array = _geoms_of(e[0])
+		var relief: Dictionary = e[1]
+		var hit := not relief.is_empty() and _relief_hides(relief, eye, aims)
+		for gi in geoms:
+			if hit:
+				break
+			if is_instance_valid(gi) and gi.is_visible_in_tree():
+				hit = _in_the_way(gi, cam, eye, fwd, aims if relief.is_empty() else [], near, vp)
+		for gi in geoms:
+			if is_instance_valid(gi):
+				_fade(gi, FADE_ALPHA if hit else 0.0, raw)
+
+
+func _fade(gi: GeometryInstance3D, want: float, raw: float) -> void:
+	if is_equal_approx(gi.transparency, want):
+		return
+	gi.transparency = move_toward(gi.transparency, want, raw * FADE_RATE)
+	# A ghost casts no shadow (as in the overworld); the old setting comes back with it.
+	if gi.transparency > 0.0:
+		if not gi.has_meta("fade_shadow"):
+			gi.set_meta("fade_shadow", gi.cast_shadow)
+		gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	elif gi.has_meta("fade_shadow"):
+		gi.cast_shadow = gi.get_meta("fade_shadow")
+		gi.remove_meta("fade_shadow")
+
+
+## A hill or peak hides a fighter: the sight line dips under its profile somewhere over its
+## footprint. The profile is the gameplay one (BattleTerrain._height_of: flat top of radius `top`
+## at height `h`, straight slope out to `r`), which the voxel relief follows.
+func _relief_hides(o: Dictionary, eye: Vector3, aims: Array) -> bool:
+	var c: Vector3 = o.pos
+	var r: float = o.r
+	var top: float = o.top
+	var h: float = o.h
+	var a: Vector3 = arena.to_local(eye)
+	for p in aims:
+		var b: Vector3 = arena.to_local(p)
+		# Part of the sight line over the footprint: |flat(a + t (b - a) - c)| < r.
+		var dv := Vector2(b.x - a.x, b.z - a.z)
+		var fv := Vector2(a.x - c.x, a.z - c.z)
+		var qa := dv.dot(dv)
+		var qb := 2.0 * fv.dot(dv)
+		var disc := qb * qb - 4.0 * qa * (fv.dot(fv) - r * r)
+		if qa < 0.0001 or disc <= 0.0:
+			continue
+		var t0 := clampf((-qb - sqrt(disc)) / (2.0 * qa), 0.0, 1.0)
+		var t1 := clampf((-qb + sqrt(disc)) / (2.0 * qa), 0.0, 1.0)
+		for i in 9:
+			var q := a.lerp(b, lerpf(t0, t1, i / 8.0))
+			var d := Vector2(q.x - c.x, q.z - c.z).length()
+			var y := h if d <= top else h * (1.0 - (d - top) / maxf(r - top, 0.01))
+			if d < r and q.y < y + RELIEF_PAD:
+				return true
+	return false
+
+
+## A mesh in the way: the eye inside or close to it, its box across a sight line (`aims`; none
+## for relief, which _relief_hides tests on its real shape), or close to the lens and filling over
+## FADE_COVER of the screen in front of every fighter.
+func _in_the_way(
+	gi: GeometryInstance3D,
+	cam: Camera3D,
+	eye: Vector3,
+	fwd: Vector3,
+	aims: Array,
+	near: float,
+	vp: Vector2
+) -> bool:
+	var box := gi.get_aabb()
+	if box.size.y < FADE_MIN_H:
+		return false
+	var xf := gi.global_transform
+	var inv := xf.affine_inverse()
+	var le := inv * eye
+	if box.grow(FADE_EYE).has_point(le):
+		return true
+	for p in aims:
+		if box.intersects_segment(le, inv * p) != null:
+			return true
+	var depth := (xf * box.get_center() - eye).dot(fwd)
+	if depth <= 0.0 or depth > near - 1.0:
+		return false
+	if (xf * le.clamp(box.position, box.end) - eye).length() > FADE_NEAR:
+		return false
+	var rect := Rect2()
+	var seen := 0
+	for i in 8:
+		var w := xf * box.get_endpoint(i)
+		if cam.is_position_behind(w):
+			continue
+		var sp := cam.unproject_position(w)
+		rect = Rect2(sp, Vector2.ZERO) if seen == 0 else rect.expand(sp)
+		seen += 1
+	var cover := rect.intersection(Rect2(Vector2.ZERO, vp)).get_area() / maxf(vp.x * vp.y, 1.0)
+	return seen > 1 and cover > FADE_COVER
 
 
 func _shot_pitch() -> float:

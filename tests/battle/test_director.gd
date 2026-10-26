@@ -4,7 +4,8 @@ extends SceneTree
 ## câmera antiga, câmera lenta 0,5x antes do golpe que nocauteia e no desmaio, todo mundo parado
 ## na troca (a energia de ninguém muda) e nada disso no VGC nem no fast_sim.
 ## The camera never leaves a fighter it frames under the top HUD cards (BattleHUD.top_band): from
-## the intro to the knockout, in doubles (campo) and singles (praia), on a 16:9 screen.
+## the intro to the knockout, in doubles (campo) and singles (praia), on a 16:9 screen; and no hill,
+## tree or boulder stays solid between it and a fighter (they fade, BattleDirector.FADE_ALPHA).
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -80,6 +81,61 @@ func _watch_band(ar: Node, d: BattleDirector, st: Dictionary) -> void:
 		st.ko = int(st.get("ko", 0)) + 1
 
 
+## Watches the obstacle fade on one frame: a solid obstacle between the eye and a fighter's middle
+## (`st.hidden_run` frames in a row: a hill or peak on its real profile, anything else on its
+## mesh boxes) and how many frames had something faded.
+func _watch_fade(ar: Node, d: BattleDirector, st: Dictionary) -> void:
+	var cam: Camera3D = ar._cam
+	if cam == null or not cam.is_inside_tree():
+		return
+	var eye := cam.get_camera_transform().origin
+	var mids: Array = []
+	for f in ar.fighters:
+		if is_instance_valid(f) and f.on_field and f.visible:
+			mids.append(f.global_position + Vector3(0, f.visual_height() * 0.5, 0))
+	var hidden := false
+	var faded := false
+	for e in d._obstacle_nodes():
+		var geoms: Array = d._geoms_of(e[0])
+		if geoms.any(func(g): return is_instance_valid(g) and g.transparency > 0.3):
+			faded = true
+			continue
+		if not e[1].is_empty():
+			hidden = hidden or d._relief_hides(e[1], eye, mids)
+			continue
+		for gi in geoms:
+			if not (is_instance_valid(gi) and gi.is_visible_in_tree()):
+				continue
+			var box: AABB = gi.get_aabb()
+			if box.size.y < BattleDirector.FADE_MIN_H:
+				continue
+			var inv: Transform3D = gi.global_transform.affine_inverse()
+			for m in mids:
+				if box.intersects_segment(inv * eye, inv * m) != null:
+					hidden = true
+	st.hidden_run = int(st.get("hidden_run", 0)) + 1 if hidden else 0
+	st.hidden_longest = maxi(int(st.get("hidden_longest", 0)), int(st.hidden_run))
+	st.faded = int(st.get("faded", 0)) + (1 if faded else 0)
+	st.n_obst = maxi(int(st.get("n_obst", 0)), d.obstacles().size())
+
+
+func _check_fade(st: Dictionary, what: String) -> void:
+	check(
+		int(st.get("hidden_longest", 0)) <= CATCH_UP,
+		(
+			"%s: nenhum obstáculo fica sólido entre a câmera e um lutador (mais longo %d quadros)"
+			% [what, int(st.get("hidden_longest", 0))]
+		)
+	)
+	check(
+		int(st.get("faded", 0)) > 0,
+		(
+			"%s: obstáculos no caminho somem (%d quadros com algum apagado, %d malhas)"
+			% [what, int(st.get("faded", 0)), int(st.get("n_obst", 0))]
+		)
+	)
+
+
 func _check_band(st: Dictionary, what: String) -> void:
 	check(
 		int(st.get("settled", 0)) == 0,
@@ -114,12 +170,14 @@ func _run() -> void:
 	var hold_moved := 0
 	var prev := {}
 	var band := {}
+	var fade := {}
 	var raised := true
 	for i in LIMIT:
 		await physics_frame
 		if not is_instance_valid(ar) or tb._result_box.visible:
 			break
 		_watch_band(ar, d, band)
+		_watch_fade(ar, d, fade)
 		raised = raised and ar._cam.v_offset > 0.0
 		if String(ar.state) != "fight":
 			continue
@@ -155,6 +213,7 @@ func _run() -> void:
 	check(hold_moved == 0, "ninguém gasta nem ganha energia na troca (%d)" % hold_moved)
 	print("cenas: ", shots)
 	_check_band(band, "dupla, campo")
+	_check_fade(fade, "dupla, campo")
 	check(raised, "a câmera sobe (v_offset) para a faixa livre entre o HUD")
 	tb.queue_free()
 	await process_frame
@@ -167,13 +226,16 @@ func _run() -> void:
 	ar = tb.arena
 	d = ar.director
 	band = {}
+	fade = {}
 	for i in LIMIT:
 		await physics_frame
 		if not is_instance_valid(ar) or tb._result_box.visible:
 			break
 		_watch_band(ar, d, band)
+		_watch_fade(ar, d, fade)
 	check(tb._result_box.visible, "simples, praia: a luta terminou")
 	_check_band(band, "simples, praia")
+	_check_fade(fade, "simples, praia")
 	tb.queue_free()
 	await process_frame
 
