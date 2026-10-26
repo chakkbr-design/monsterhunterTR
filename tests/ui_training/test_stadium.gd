@@ -64,8 +64,8 @@ func _run() -> void:
 			print("  dentro: ", mi.get_path())
 	check(count > 50 and inside == 0, "nada acima do piso na quadra (%d malhas)" % count)
 
-	# Lado da câmera (+z): o perfil da arquibancada (com a torcida em pé) fica abaixo da linha de 30 graus
-	# que sai da borda da quadra (os Pokémon param a 13,5 m do centro).
+	# Lado da câmera (+z): o perfil da arquibancada (com a torcida em pé) fica abaixo da linha de
+	# 30 graus que sai da borda da quadra (os Pokémon param a 13,5 m do centro).
 	var worst := 99.0
 	for k in StadiumParts.DEPTH_V:
 		var p := StadiumParts.prof(k)

@@ -31,7 +31,8 @@ const GROUND := Color(0.36, 0.55, 0.3)
 const DIRT := Color(0.62, 0.52, 0.38)
 const WOOD := Color(0.5, 0.34, 0.2)
 const FENCE_GAP := 1.6
-## Primeira ola da torcida (segundos de luta) e o intervalo entre as outras (WAVE_GAP .. +WAVE_JITTER).
+## Primeira ola da torcida (segundos de luta) e o intervalo entre as outras
+## (WAVE_GAP .. +WAVE_JITTER).
 const WAVE_FIRST := 12.0
 const WAVE_GAP := 45.0
 const WAVE_JITTER := 30.0
@@ -116,7 +117,8 @@ func _build_stage() -> void:
 	var extra = cfg.get("extra_opts", {})
 	var fast: bool = extra is Dictionary and bool(extra.get("fast_sim", false))
 	if _voxel and not fast:
-		# Estádio com céu, sol, ambiente (AgX, SSAO, brilho) e luzes próprios; vento para bandeiras e grama.
+		# Estádio com céu, sol, ambiente (AgX, SSAO, brilho) e luzes próprios; vento para bandeiras
+		# e grama.
 		_stadium = (
 			ArenaStadium
 			. build(
