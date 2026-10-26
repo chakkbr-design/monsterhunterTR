@@ -7,7 +7,8 @@ extends RefCounted
 ##    rodadas pela Speed com posições fixas), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
 ##    só na luta única: a série roda com IA), scenario ("" = aleatório, padrão; ou campo, lagoa,
 ##    pedreira, misto, praia; só no modo de energia ruinas, montanha, vulcao, caverna, pantano: o relevo
-##    da quadra, opts.scenario do BattleTerrain)}
+##    da quadra, opts.scenario do BattleTerrain), time_of_day ("dia", padrão; "tarde" = pôr do sol;
+##    "noite": a hora no estádio voxel do modo de energia)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
@@ -57,6 +58,9 @@ const SCENARIO_NAMES := {
 	"caverna": "Caverna escura",
 	"pantano": "Pântano",
 }
+## Hora do dia no estádio do modo de energia (ArenaStadium.MOODS): de noite os refletores acendem.
+const TIMES := ["dia", "tarde", "noite"]
+const TIME_NAMES := {"dia": "Dia", "tarde": "Pôr do sol", "noite": "Noite"}
 const SPEEDS := [0.6, 1.0, 2.0, 4.0]
 ## Turbo: passos da arena por quadro (cada passo no máximo 1x, para não pular colisões).
 const TURBO_STEPS := 12
@@ -97,6 +101,7 @@ static func default_config() -> Dictionary:
 		"battle_size": 2,
 		"battle_mode": "energy",
 		"scenario": "",
+		"time_of_day": "dia",
 		"p1_control": "ai",
 	}
 
@@ -219,6 +224,12 @@ static func battle_mode(cfg: Dictionary) -> String:
 static func scenario(cfg: Dictionary) -> String:
 	var id := String(cfg.get("scenario", ""))
 	return id if SCENARIOS.has(id) else ""
+
+
+## Hora do dia do estádio (TIMES; "dia" se faltar ou for inválida).
+static func time_of_day(cfg: Dictionary) -> String:
+	var id := String(cfg.get("time_of_day", "dia"))
+	return id if TIMES.has(id) else "dia"
 
 
 static func load_config() -> Dictionary:

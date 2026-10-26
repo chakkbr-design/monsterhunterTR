@@ -28,6 +28,10 @@ const GROUND := Color(0.36, 0.55, 0.3)
 const DIRT := Color(0.62, 0.52, 0.38)
 const WOOD := Color(0.5, 0.34, 0.2)
 const FENCE_GAP := 1.6
+## Primeira ola da torcida (segundos de luta) e o intervalo entre as outras (WAVE_GAP .. +WAVE_JITTER).
+const WAVE_FIRST := 12.0
+const WAVE_GAP := 45.0
+const WAVE_JITTER := 30.0
 const POST_STEP := 2.0
 ## Cor do chão de fora e do piso da quadra por cenário ([fora, quadra]): cada cenário tem cara própria.
 const STAGE_COLORS := {
@@ -77,6 +81,13 @@ var _court_mat: StandardMaterial3D
 ## só o chão de fora e a câmera do cenário. O piso liso e a cerca de madeira (VGC) ficam escondidos.
 var _voxel := false
 var _court_root: Node3D
+## Estádio voxel em volta da quadra de energia (ArenaStadium: arquibancadas, torcida, refletores,
+## placar, céu e luz). Nunca no VGC nem no fast_sim.
+var _stadium: ArenaStadium
+## Pokémon desmaiados de cada time (a torcida do outro lado comemora quando sobe) e segundos de luta
+## até a próxima ola.
+var _down := [0, 0]
+var _wave_in := WAVE_FIRST
 
 
 func _ready() -> void:
@@ -98,20 +109,39 @@ func _exit_tree() -> void:
 
 
 func _build_stage() -> void:
-	var env := WorldEnvironment.new()
-	env.environment = Environment.new()
-	env.environment.background_mode = Environment.BG_COLOR
-	env.environment.background_color = Color(0.55, 0.72, 0.92)
-	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.environment.ambient_light_color = Color(0.62, 0.62, 0.68)
-	add_child(env)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, 30, 0)
-	sun.shadow_enabled = true
-	add_child(sun)
 	_voxel = Cfg.battle_mode(cfg) == "energy"
+	var extra = cfg.get("extra_opts", {})
+	var fast: bool = extra is Dictionary and bool(extra.get("fast_sim", false))
+	if _voxel and not fast:
+		# Estádio com céu, sol, ambiente (AgX, SSAO, brilho) e luzes próprios; vento para bandeiras e grama.
+		_stadium = (
+			ArenaStadium
+			. build(
+				{
+					"mood": Cfg.time_of_day(cfg),
+					"names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)],
+				}
+			)
+		)
+		add_child(_stadium)
+		var wind := WorldWind.new()
+		wind.name = "Wind"
+		add_child(wind)
+	else:
+		var env := WorldEnvironment.new()
+		env.environment = Environment.new()
+		env.environment.background_mode = Environment.BG_COLOR
+		env.environment.background_color = Color(0.55, 0.72, 0.92)
+		env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.environment.ambient_light_color = Color(0.62, 0.62, 0.68)
+		add_child(env)
+		var sun := DirectionalLight3D.new()
+		sun.rotation_degrees = Vector3(-55, 30, 0)
+		sun.shadow_enabled = true
+		add_child(sun)
 	if _voxel:
-		_ground_mat = _ground_ring()
+		if _stadium == null:
+			_ground_mat = _ground_ring()
 	else:
 		_ground_mat = _plane(Vector2(90, 70), GROUND, -0.01)
 	_court_root = Node3D.new()
@@ -188,9 +218,12 @@ func scenario() -> String:
 ## Pinta o chão de fora e o piso da quadra com as cores do cenário sorteado ou escolhido.
 func _paint_stage() -> void:
 	var cols: Array = STAGE_COLORS.get(scenario(), [GROUND, DIRT])
-	_ground_mat.albedo_color = cols[0]
+	if _ground_mat:
+		_ground_mat.albedo_color = cols[0]
 	_court_mat.albedo_color = cols[1]
-	if _voxel:
+	if _stadium:
+		_stadium.theme(scenario())
+	elif _voxel:
 		# Em volta do piso voxel: a calçada do cenário, um pouco mais escura longe da quadra.
 		var sc := scenario() if scenario() != "" else "campo"
 		var p := ArenaPalette.of(sc)
@@ -251,6 +284,8 @@ func start_fight() -> void:
 		o = Cfg.arena_opts(cfg, global_position)
 	team_a = Cfg.build_side(cfg, 0)
 	team_b = Cfg.build_side(cfg, 1)
+	_down = [0, 0]
+	_wave_in = WAVE_FIRST
 	if _series:
 		o.merge({"autoplay": true, "auto_battle": true, "keyboard": false}, true)
 	o.seed = last_seed
@@ -280,6 +315,9 @@ func _drop_arena() -> void:
 	if is_instance_valid(arena):
 		if arena.finished.is_connected(_on_finished):
 			arena.finished.disconnect(_on_finished)
+		# Sai da árvore já: o que a arena mudou na luz da cena (BattleBiomes) volta antes da próxima.
+		if arena.get_parent() == self:
+			remove_child(arena)
 		arena.queue_free()
 	arena = null
 	# A próxima arena guarda a câmera atual para devolver no fim: tem que ser a do cenário.
@@ -322,14 +360,51 @@ func _check_time_limit() -> void:
 		arena.call("_end", "timeout", 0.0)
 
 
-func _process(_dt: float) -> void:
+func _process(dt: float) -> void:
 	_refresh_info()
+	_stadium_tick(dt)
+
+
+## Placar do estádio e a torcida: comemora quando um Pokémon do outro time desmaia, faz a ola de
+## tempos em tempos (segundos de luta) e festeja o vencedor.
+func _stadium_tick(dt: float) -> void:
+	if _stadium == null:
+		return
+	var alive := [_alive_list(team_a), _alive_list(team_b)]
+	(
+		_stadium
+		. score(
+			{
+				"names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)],
+				"alive": alive,
+				"clock": "%d:%02d" % [int(fight_time) / 60, int(fight_time) % 60],
+				"scene": String(Cfg.SCENARIO_NAMES.get(scenario(), "")),
+				"series": "%d x %d" % [series.a, series.b],
+			}
+		)
+	)
+	for side in 2:
+		var down: int = (alive[side] as Array).count(false)
+		if down > int(_down[side]):
+			_stadium.cheer(1 - side, 1.0)
+		_down[side] = down
+	if is_instance_valid(arena) and String(arena.get("state")) == "fight":
+		_wave_in -= dt * float(arena.get("fight_speed"))
+		if _wave_in <= 0.0:
+			_stadium.wave()
+			_wave_in = WAVE_GAP + WAVE_JITTER * fposmod(fight_time * 0.618, 1.0)
+
+
+static func _alive_list(team: Array) -> Array:
+	return team.map(func(m): return not m.is_fainted())
 
 
 func _on_finished(r: Dictionary) -> void:
 	result = r
 	_keep_log()
 	var outcome := String(r.get("outcome", ""))
+	if _stadium and outcome in ["win", "lose"]:
+		_stadium.cheer(0 if outcome == "win" else 1, 1.0)
 	series.n = int(series.n) + 1
 	match outcome:
 		"win":

@@ -22,8 +22,12 @@ const WALL_H_FRONT := 0.5
 const GATE := 1.5
 ## Centre circle radius.
 const CIRCLE_R := 4.5
-## Trainer box (beyond the barrier, around the trainer spot).
+## Trainer box (beyond the barrier, around the trainer spot) and the half-width of the carpet
+## from it to the players' tunnel.
 const BOX := Vector2(1.75, 1.5)
+const CARPET := 1.0
+## Ring of the Poke Ball "button" painted on the centre spot.
+const BUTTON_R := 0.95
 const FLOOR_PART := 1
 const CTX_FOOT := 2
 
@@ -211,9 +215,14 @@ static func _make_base(sc: String, rc: Rect2, back: bool) -> Dictionary:
 				lined = x == lx0 or x == lx1 or z == lz0 or z == lz1
 				lined = lined or absf(c.x - mid.x) < 0.13
 				var d := Vector2(c.x - mid.x, c.z - mid.y).length()
-				lined = lined or absf(d - CIRCLE_R) < 0.17 or d < 0.2
+				# Centre circle and a Poke Ball "button" (ring and dot) on the centre line.
+				lined = lined or absf(d - CIRCLE_R) < 0.17 or d < 0.3
+				lined = lined or absf(d - BUTTON_R) < 0.13
 			elif not inside:
 				lined = _box_line(rc, c)
+				var lane := _trainer_lane(rc, c)
+				if lane >= 0:
+					out = _lane_voxel(lane, rc, c, v, out)
 			if lined:
 				out = [ArenaPalette.jit(line, v, 0.02), VoxelMat.PAINT]
 			g.put(v, out[0], out[1], FLOOR_PART)
@@ -355,6 +364,35 @@ static func _surround(p: Dictionary, x: int, z: int) -> Array:
 	if mt == VoxelMat.SLAB and (x - (tx * 4 - 2) == 0 or z - (tz * 4 - 2) == 0):
 		c = c.darkened(0.22)
 	return [_tone(c, (ht - 0.5) * 0.08, v, 0.03), mt]
+
+
+## Side (0 at -x, 1 at +x) whose trainer box or carpet holds `c`, or -1.
+static func _trainer_lane(rc: Rect2, c: Vector3) -> int:
+	var mid := rc.get_center()
+	var az := absf(c.z - mid.y)
+	if az > BOX.y:
+		return -1
+	var t := absf(c.x - mid.x) - (rc.size.x * 0.5 + WALL)
+	if t < 0.0 or (t > BOX.x and az > CARPET):
+		return -1
+	return 0 if c.x < mid.x else 1
+
+
+## Trainer box (painted in the side's colour over the surround) and the carpet from the box to the
+## players' tunnel (ArenaStadium continues it on the concourse), white edges.
+static func _lane_voxel(side: int, rc: Rect2, c: Vector3, v: Vector3i, under: Array) -> Array:
+	var team: Color = StadiumParts.TEAM[side]
+	var t := absf(c.x - rc.get_center().x) - (rc.size.x * 0.5 + WALL)
+	if t <= BOX.x:
+		return [ArenaPalette.jit(Color(under[0]).lerp(team, 0.42), v, 0.03), VoxelMat.PAINT]
+	var az := absf(c.z - rc.get_center().y)
+	var col := Color("f4f2ec") if az > CARPET - VS else team
+	return [ArenaPalette.jit(col, v, 0.03), VoxelMat.CLOTH]
+
+
+## Concourse voxel for (x, z) outside the court (the stadium ring uses the same look).
+static func surround_voxel(p: Dictionary, x: int, z: int) -> Array:
+	return _surround(p, x, z)
 
 
 ## Trainer box outline on the concourse (around each trainer spot, beyond the barrier gate): the

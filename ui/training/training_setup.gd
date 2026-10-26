@@ -49,6 +49,7 @@ var _battle: OptionButton
 var _p1: OptionButton
 var _mode: OptionButton
 var _scenario: OptionButton
+var _time: OptionButton
 var _limit: SpinBox
 var _empty_note: Label
 var _editor: Control
@@ -311,6 +312,12 @@ func set_battle_mode(mode: String) -> void:
 ## Cenário do relevo (só energia/treino): "" = aleatório (sorteado a cada luta) ou um de Cfg.SCENARIOS.
 func set_scenario(id: String) -> void:
 	cfg["scenario"] = id if Cfg.SCENARIOS.has(id) else ""
+	_refresh_all()
+
+
+## Hora do dia no estádio (só no modo de energia): "dia" (padrão), "tarde" ou "noite".
+func set_time_of_day(id: String) -> void:
+	cfg["time_of_day"] = id if Cfg.TIMES.has(id) else "dia"
 	_refresh_all()
 
 
@@ -940,6 +947,14 @@ func _build_top() -> Control:
 	_scenario.tooltip_text = "Relevo da quadra (morros, lagos, grama alta...). Aleatório sorteia a cada luta"
 	_scenario.item_selected.connect(_on_scenario)
 	r2.add_child(_scenario)
+	r2.add_child(_small("Hora"))
+	_time = OptionButton.new()
+	for id in Cfg.TIMES:
+		_time.add_item(String(Cfg.TIME_NAMES[id]))
+		_time.set_item_metadata(_time.item_count - 1, id)
+	_time.tooltip_text = "Hora do dia no estádio (modo de energia). De noite os refletores acendem"
+	_time.item_selected.connect(_on_time)
+	r2.add_child(_time)
 	r2.add_child(_small("Jogador 1"))
 	_p1 = OptionButton.new()
 	_p1.add_item("IA")
@@ -1274,6 +1289,8 @@ func _refresh_all() -> void:
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
 	_mode.select(1 if Cfg.battle_mode(cfg) == "vgc" else 0)
 	_scenario.select(maxi(Cfg.SCENARIOS.find(Cfg.scenario(cfg)) + 1, 0))
+	_time.select(maxi(Cfg.TIMES.find(Cfg.time_of_day(cfg)), 0))
+	_time.disabled = Cfg.battle_mode(cfg) == "vgc"
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1478,6 +1495,11 @@ func _on_mode(i: int) -> void:
 func _on_scenario(i: int) -> void:
 	if not _syncing:
 		set_scenario(String(_scenario.get_item_metadata(i)))
+
+
+func _on_time(i: int) -> void:
+	if not _syncing:
+		set_time_of_day(String(_time.get_item_metadata(i)))
 
 
 func _on_p1(i: int) -> void:
