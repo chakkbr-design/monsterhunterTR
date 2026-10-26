@@ -173,9 +173,9 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 
   | Casa | Contorno em tiles | Interior | Observação |
   |---|---|---|---|
-  | `player_house` | 13 × 9 | 12 × 8 | 2 andares (2,8 m cada) |
+  | `player_house` | 13 × 9 | 12 × 8 | 2 andares (2,75 m cada) |
   | `rival_house` | 13 × 8 | 12 × 7 | |
-  | `lab` | 14 × 17 | 13 × 16 | paredes de 3,4 m |
+  | `lab` | 14 × 17 | 13 × 16 | paredes de 3,5 m |
 
   - Porta na fachada sul (+Z), com um tile de porta.
   - Por dentro, a casa fica oca e com piso.
@@ -384,10 +384,14 @@ contornos de construção.
   árvore e enfeite, MultiMesh) e `<id>.json` (metadados, grade, `hash`, `source_hash`, `version`).
   - Metadados: `lights`, `water`, `cascades`, `fountains`, partes das casas, `signs`, `smoke` (pontos
     de chaminé), `butterflies` (pontos sobre os canteiros), `flags` e `laundry`.
-  - `hash` = desenho + mapa da zona.
-  - `source_hash` = scripts do gerador. Por isso, **depois de qualquer mudança em
-    `data/voxel/<id>.json`, `data/maps/<id>.json` ou em `world/voxel/*.gd` (até só `gdformat`), asse
-    de novo.**
+  - `hash` = desenho + mapa da zona + `VoxelZoneGen.VERSION`. É o único que o jogo confere: com ele
+    diferente, a zona gera na hora (`stale`).
+  - `source_hash` = md5 dos scripts de `VoxelZoneBake.SOURCES` (hoje `world/voxel/*.gd` menos
+    `voxel_zone.gd`, mais `gfx/voxel/voxel_grid.gd` e `gfx/voxel/voxel_mesher.gd`). Quem confere é o
+    `tests/world/test_voxel_zone.gd`.
+  - Por isso, **depois de qualquer mudança em `data/voxel/<id>.json`, `data/maps/<id>.json` ou num
+    script de `VoxelZoneBake.SOURCES` (até só `gdformat`), asse de novo.** Mudar só o
+    `voxel_zone.gd` não pede assar.
   - A ferramenta sai com erro se algum script do gerador não compilar.
 - **Em jogo:** `VoxelZone` (`world/voxel/voxel_zone.gd`, estende `MapBuilder`) é escolhida por
   `RouteWorld._make_builder` quando o mapa tem `"voxel"`.
