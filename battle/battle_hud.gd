@@ -179,6 +179,14 @@ static func arena_script() -> GDScript:
 	return load("res://battle/battle_arena.gd")
 
 
+## Bottom edge (px of the HUD's own canvas) of the top HUD band: `rows` rows of fighter cards (1 in
+## singles, 2 in doubles) with the command/mark chips hanging under each card and the mode pills
+## beside them. The action camera (BattleDirector) keeps the fighters below it.
+static func top_band(rows: int) -> float:
+	var strip := (CARD_DESIGN_H - 1.0 + VivaTags.H) * CARD_K  # VivaTags.draw_strip under the card
+	return CARD_TOP + (CARD_H + ROW_GAP) * float(maxi(rows, 1) - 1) + strip
+
+
 func _make_mode_buttons(slot: String, top: float) -> void:
 	for i in BattleHUD.arena_script().ALLY_MODE_NAMES.size():
 		var b := ModeButton.new()

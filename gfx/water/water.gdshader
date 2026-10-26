@@ -748,6 +748,11 @@ void light() {
 		float db = nh * nh * (b2 - 1.0) + 1.0;
 		s += b2 / (PI * db * db) * 0.25 * fr * nl * ATTENUATION * LIGHT_COLOR * v_spec;
 		s += (0.08 + pow(nh, 16.0)) * lamp_pool * ATTENUATION * LIGHT_COLOR * v_spec;
+		// A custom light() replaces Godot's, so the light's own specular amount is applied here:
+		// lamps and floodlights follow their light_specular (omni / spot lights get 2 x
+		// light_specular, so a default lamp stays at 1). Directional lights (sun, moon, fill,
+		// lightning) keep the glint the water was tuned with.
+		s *= SPECULAR_AMOUNT;
 	}
 	SPECULAR_LIGHT += min(s, vec3(80.0));
 }

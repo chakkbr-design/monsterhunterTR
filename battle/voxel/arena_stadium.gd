@@ -64,6 +64,9 @@ const STORM_LIGHTS := Vector2(0.45, 0.85)
 const STORM_SPOTS := 2.2
 const STORM_LAMPS := 0.55
 const WEATHER_PAD := 1.0
+## Floodlight falloff and colour unless the mood sets its own (MOODS spot_att, spot_color).
+const SPOT_ATT := 0.35
+const SPOT_COLOR := Color(1.0, 0.95, 0.86)
 ## Perimeter board: one panel (m) and its texture (px).
 ## Fan banners on the parapets: size (m), texture size (1/16 m texels) and their cheers.
 const BANNER := Vector2(4.0, 1.0)
@@ -92,7 +95,8 @@ const PANEL_COLORS := [
 	[Color("e47a2e"), Color("1f2a44")],
 ]
 ## Moods: sun (elevation, azimuth in degrees; azimuth 0 = from +z, the camera side), colours and
-## energies, sky, fog, lamps (night_lamps), windows (night_windows), spots (floodlight energy).
+## energies, sky, fog, lamps (night_lamps), windows (night_windows), spots (floodlight energy) and,
+## optionally, spot_att (floodlight distance falloff, SPOT_ATT) and spot_color (SPOT_COLOR).
 const MOODS := {
 	"dia":
 	{
@@ -166,8 +170,12 @@ const MOODS := {
 		"fog_end": 260.0,
 		"lamps": 1.0,
 		"windows": 1.0,
-		"spots": 3.4,
-		"exposure": 1.05,
+		# Floodlit night, darker than day: cooler lamps with a steeper falloff leave pools of light
+		# on the court and dimmer gaps (field about 0.65x of "dia" in the action camera).
+		"spots": 3.0,
+		"spot_att": 0.6,
+		"spot_color": Color(0.85, 0.9, 1.0),
+		"exposure": 1.0,
 	},
 }
 ## Scenario looks of the surroundings: lawn and tree theme, and sky / light overrides of the mood.
@@ -461,15 +469,17 @@ func _build_towers() -> void:
 			h.basis = Basis.looking_at(to.normalized(), Vector3.UP)
 			var l := SpotLight3D.new()
 			l.name = "Spot%d" % i
-			l.light_color = Color(1.0, 0.95, 0.86)
+			l.light_color = SPOT_COLOR
 			l.spot_range = 130.0
 			l.spot_angle = 36.0
 			l.spot_angle_attenuation = 0.6
-			l.spot_attenuation = 0.35
+			l.spot_attenuation = SPOT_ATT
 			l.light_energy = 0.0
 			l.shadow_enabled = sz < 0.0  # the two back towers only
 			l.shadow_bias = 0.04
-			l.light_specular = 0.4
+			# Low glint: on the ponds (water.gdshader, SPECULAR_AMOUNT = 2 x this) a floodlight
+			# leaves a highlight, not a clipped white blob.
+			l.light_specular = 0.12
 			var lp := h.position + to.normalized() * 1.5 + Vector3(0, 2.0, 0)
 			l.transform = Transform3D(Basis.looking_at((aim - lp).normalized(), Vector3.UP), lp)
 			root.add_child(l)
@@ -1287,6 +1297,8 @@ func _light() -> void:
 	for l in spots:
 		l.light_energy = se
 		l.visible = se > 0.01
+		l.spot_attenuation = float(md.get("spot_att", SPOT_ATT))
+		l.light_color = md.get("spot_color", SPOT_COLOR)
 	_global("night_lamps", maxf(float(md.lamps), STORM_LAMPS * storm))
 	var elev := deg_to_rad(float(md.elev))
 	_global("sun_amount", clampf(float(md.sun_e) * sin(elev) * 1.2, 0.0, 1.0) * _k_sun)
