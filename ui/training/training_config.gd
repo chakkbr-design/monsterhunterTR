@@ -24,8 +24,13 @@ const SIDES := 2
 const PARTY_MAX := 6
 ## Nível de todo Pokémon do treino (build_mon força este nível).
 const LEVEL := 50
-## Quadra fixa do treino: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
+## Quadra fixa do treino no VGC: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
 const ARENA := Vector2(24, 14)
+## Quadra do modo de energia (Caio, 2026-10-26): comprimento e largura dobrados (48 x 28, 4x a área),
+## estádio voxel em volta (docs/VOXEL.md). Os Pokémon entram no mesmo ponto de antes (ENTRY_X do
+## centro): a distância da abertura não muda; os treinadores ficam nas linhas de fundo novas.
+const ARENA_ENERGY := Vector2(48, 28)
+const ENTRY_X := 6.0
 ## Cenários do relevo para escolher na tela (os ids são os de BattleTerrain.SCENARIOS).
 ## Os biomas (ruínas em diante) são só do modo de energia (BattleTerrain.ENERGY_ONLY).
 const SCENARIOS := [
@@ -167,7 +172,7 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"can_run": false,
 		"floor": false,
 		"center": center,
-		"arena": ARENA,
+		"arena": arena_size(cfg),
 		"speed": float(cfg.get("speed", 1.0)),
 		"trainer_name": side_name(cfg, 1),
 		"trainer_item": String(cfg.sides[1].get("item", "")),
@@ -180,6 +185,11 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"terrain": bool(cfg.get("terrain", true)),
 		"mirror_court": true,
 	}
+	if battle_mode(cfg) == "energy":
+		# Quadra grande em voxel (BattleTerrain.lattice): obstáculos na grade de 0,25 m, piso, linhas e
+		# cerca voxel; entradas a ENTRY_X m do centro como na quadra de 24 m.
+		o["voxel"] = true
+		o["entry_x"] = ENTRY_X
 	if scenario(cfg) != "":
 		o["scenario"] = scenario(cfg)
 	if int(cfg.get("seed", -1)) >= 0:
@@ -193,6 +203,11 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 	if cfg.get("extra_opts") is Dictionary:
 		o.merge(cfg.extra_opts, true)
 	return o
+
+
+## Tamanho da quadra do treino: ARENA_ENERGY no modo de energia, ARENA no VGC.
+static func arena_size(cfg: Dictionary) -> Vector2:
+	return ARENA_ENERGY if battle_mode(cfg) == "energy" else ARENA
 
 
 ## Modo da batalha do treino: "energy" (padrão) ou "vgc".

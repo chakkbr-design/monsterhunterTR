@@ -64,8 +64,16 @@ func _run() -> void:
 		"opts: autoplay, sem recompensa, treinador"
 	)
 	check(
-		o.arena == Vector2(24, 14) and o.terrain and o.mirror_court,
-		"quadra fixa de 24 x 14 com relevo"
+		o.arena == Vector2(48, 28) and o.terrain and o.mirror_court and o.voxel,
+		"modo de energia: quadra fixa de 48 x 28 com relevo, em voxel"
+	)
+	check(o.entry_x == Cfg.ENTRY_X, "entradas a %.0f m do centro" % Cfg.ENTRY_X)
+	var vgc_cfg := _cfg([e], [e])
+	vgc_cfg.battle_mode = "vgc"
+	var ov := Cfg.arena_opts(vgc_cfg, Vector3.ZERO)
+	check(
+		ov.arena == Vector2(24, 14) and not ov.has("voxel") and not ov.has("entry_x"),
+		"VGC: quadra fixa de 24 x 14 de antes"
 	)
 	check(o.battle_size == 2, "opts: 2x2 por padrão")
 	check(
@@ -98,7 +106,7 @@ func _run() -> void:
 	check(pm == null or not pm.is_processing_unhandled_input(), "menu de pausa bloqueado no treino")
 	check(is_instance_valid(tb.arena) and tb.arena.get("fixed") == true, "arena na quadra fixa")
 	check(
-		tb.arena.get("rect").size == Cfg.ARENA,
+		tb.arena.get("rect").size == Cfg.arena_size(Cfg.current),
 		"quadra da arena %s" % str(tb.arena.get("rect").size)
 	)
 	var done := await _wait_result(tb)

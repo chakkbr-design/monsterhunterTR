@@ -121,7 +121,7 @@ func setup() -> void:
 		return
 	visual = not bool(arena.opts.get("fast_sim", false))
 	var rng: RandomNumberGenerator = arena.rng
-	var n := int(MUD_COUNT.get(terrain.scenario, 0))
+	var n: int = terrain.count(int(MUD_COUNT.get(terrain.scenario, 0)))
 	for i in n:
 		var r := rng.randf_range(MUD_R[0], MUD_R[1])
 		var at := _place_mud(rng, r, 1 if i % 2 == 0 else -1)
@@ -146,6 +146,8 @@ func _place_mud(rng: RandomNumberGenerator, r: float, side: int) -> Vector3:
 		)
 		if signf(at.dot(ax)) != float(side):
 			at -= ax * 2.0 * at.dot(ax)
+		if terrain.lattice:
+			at = BattleTerrain.snap_pos(at)  # na grade dos voxels (visual = jogo)
 		if _mud_free(at, r):
 			return at
 	return Vector3.INF
@@ -604,7 +606,11 @@ func _add_mud(at: Vector3, r: float, life: float) -> Dictionary:
 		"pos": _flat(at), "r": r, "r0": r, "t": life, "dry": 0.0, "cracked": false, "node": null
 	}
 	if visual and arena.is_inside_tree():
-		m.node = _disc_node(at, r, tex("mud"), 0.016)
+		if terrain.lattice:
+			m.node = ArenaVoxels.flat("mud", r, at)
+			arena.add_child(m.node)
+		else:
+			m.node = _disc_node(at, r, tex("mud"), 0.016)
 	mud.append(m)
 	return m
 
@@ -638,7 +644,10 @@ func _set_cracked(m: Dictionary, v: bool) -> void:
 		return
 	m.cracked = v
 	if is_instance_valid(m.get("node")):
-		m.node.material_override = BattleTerrain._mat(tex("mud_dry" if v else "mud"), 1.2)
+		if terrain.lattice:
+			ArenaVoxels.flat_look(m.node, "mud_dry" if v else "mud", float(m.r0))
+		else:
+			m.node.material_override = BattleTerrain._mat(tex("mud_dry" if v else "mud"), 1.2)
 
 
 func _add_mark(kind: String, at: Vector3, r: float, life: float, user: BattleFighter) -> void:
@@ -656,8 +665,13 @@ func _add_mark(kind: String, at: Vector3, r: float, life: float, user: BattleFig
 			if is_instance_valid(f) and f.active() and _in_area(f, m):
 				m.hit[f.get_instance_id()] = true
 	if visual and arena.is_inside_tree():
-		var look := {"ice": "ice_slick", "ember": "ember", "puddle": "puddle"}
-		m.node = _disc_node(at, r, tex(String(look[kind])), 0.024 + 0.002 * marks.size())
+		if terrain.lattice:
+			m.node = ArenaVoxels.flat(kind, r, at, "", ArenaVoxels.FINE)
+			m.node.position.y = 0.002 * marks.size()
+			arena.add_child(m.node)
+		else:
+			var look := {"ice": "ice_slick", "ember": "ember", "puddle": "puddle"}
+			m.node = _disc_node(at, r, tex(String(look[kind])), 0.024 + 0.002 * marks.size())
 	marks.append(m)
 	_tele("mark_" + kind, {"by": terrain._uid(user)})
 
@@ -693,7 +707,12 @@ func _add_fissure(user: BattleFighter, at: Vector3) -> void:
 		"node": null,
 		"hit": {},
 	}
-	if visual and arena.is_inside_tree():
+	if visual and arena.is_inside_tree() and terrain.lattice:
+		var vn := ArenaVoxels.flat("fissure", (b - a).length() * 0.5, m.pos, "", ArenaVoxels.FINE)
+		vn.rotation.y = -atan2((b - a).z, (b - a).x)
+		arena.add_child(vn)
+		m.node = vn
+	elif visual and arena.is_inside_tree():
 		var mi := BattleTerrain._box(Vector3((b - a).length(), 0.03, FISSURE_W), tex("fissure"))
 		mi.position = m.pos + Vector3(0, 0.02, 0)
 		mi.rotation.y = -atan2((b - a).z, (b - a).x)
@@ -828,6 +847,9 @@ func _disc_node(at: Vector3, r: float, t: Texture2D, y: float) -> MeshInstance3D
 func _build_beach() -> void:
 	if not visual or not arena.is_inside_tree():
 		return
+	if terrain.lattice:
+		_build_tide_voxel()
+		return
 	var rc: Rect2 = arena.rect
 	var sand := BattleTerrain._box(Vector3(rc.size.x, 0.01, rc.size.y), BattleTerrain.tex("sand"))
 	sand.material_override.uv1_scale = Vector3.ONE * 0.6
@@ -850,6 +872,23 @@ func _build_beach() -> void:
 	tide.wide = wide
 
 
+## Quadra voxel: a areia é o próprio piso (ArenaFloor); a maré é uma WaterSurface do tamanho da
+## meia quadra que sobe do piso na cheia (_tide_look).
+func _build_tide_voxel() -> void:
+	var rc: Rect2 = arena.rect
+	var perp := _perp()
+	var long := rc.size.x if absf(perp.z) > 0.5 else rc.size.y
+	var wide := rc.size.y if absf(perp.z) > 0.5 else rc.size.x
+	var water := WaterSurface.make(Vector2(long, wide * 0.5), {"kind": "sea", "depth": 0.3})
+	if absf(perp.x) > 0.5:
+		water.rotation.y = PI * 0.5
+	water.visible = false
+	water.set_meta("voxel", true)
+	arena.add_child(water)
+	tide.node = water
+	tide.wide = wide
+
+
 func _tide_look() -> void:
 	var node = tide.get("node")
 	if not is_instance_valid(node):
@@ -857,6 +896,9 @@ func _tide_look() -> void:
 	var rc: Rect2 = arena.rect
 	var c := Vector3(rc.get_center().x, 0.0, rc.get_center().y)
 	node.position = c + _perp() * float(tide.side) * float(tide.wide) * 0.25 + Vector3(0, 0.03, 0)
+	if node.has_meta("voxel"):
+		_tide_level(node)
+		return
 	var mat: StandardMaterial3D = node.material_override
 	match String(tide.phase):
 		"warn":
@@ -868,6 +910,21 @@ func _tide_look() -> void:
 			k = minf(k, clampf(float(tide.t) / 0.8, 0.0, 1.0))
 			mat.albedo_color.a = 0.75 * k
 			mat.uv1_offset = Vector3(_t * 0.04, _t * 0.025, 0.0)
+		_:
+			node.visible = false
+
+
+## Maré voxel: aviso = lâmina d'água no piso; cheia = sobe até 5 cm (e desce no fim).
+func _tide_level(node: Node3D) -> void:
+	match String(tide.phase):
+		"warn":
+			node.visible = true
+			node.position.y = 0.006 + 0.004 * sin(_t * 12.0)
+		"in":
+			node.visible = true
+			var k := clampf((TIDE_IN - float(tide.t)) / 0.8, 0.0, 1.0)
+			k = minf(k, clampf(float(tide.t) / 0.8, 0.0, 1.0))
+			node.position.y = lerpf(-0.04, 0.05, k)
 		_:
 			node.visible = false
 

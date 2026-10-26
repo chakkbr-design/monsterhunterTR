@@ -1,6 +1,6 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_terrain.gd [-- N]
-## Relevo da quadra do treino (BattleTerrain): quadra 24 x 14 (entradas espelhadas; o cenário é
+## Relevo da quadra do treino (BattleTerrain): quadra 48 x 28 (energia; entradas espelhadas; o cenário é
 ## aleatório, ver test_terrain2.gd), treinadores no meio de cada fundo, morro/pico/lago, altura do
 ## lutador, pico só para escaladores, lago, precisão do alto, desabamento com queda e atordoamento,
 ## cobertura contra tiro e raio, corrente na água, gelo e lutas inteiras no modo de energia com a IA
@@ -71,7 +71,8 @@ func _layout() -> void:
 	for s in [1, 2, 3, 4, 5]:
 		var a := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s)
 		var t: BattleTerrain = a.terrain
-		check(a.rect.size == Cfg.ARENA, "quadra 24 x 14")
+		# Config padrão = modo de energia: quadra voxel de 48 x 28 (Cfg.arena_size; o VGC fica em 24 x 14).
+		check(a.rect.size == Cfg.arena_size(Cfg.default_config()), "quadra 48 x 28 (energia)")
 		# A praia (fora do sorteio do VGC, VGC_SKIP) é menor e não tem lago: a maré faz o papel dele.
 		var vgc_draw := not t.scenario in BattleTerrain.VGC_SKIP
 		var n_scene: int = t.obstacles.size() + t.grass.size()

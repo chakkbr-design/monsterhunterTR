@@ -128,6 +128,14 @@ func _layout() -> void:
 			check(t.scenario == sc and bi.on and bi.kind == sc, "%s montado" % sc)
 			check(String(a.telemetry.meta.get("scenario", "")) == sc, "%s na telemetria" % sc)
 			var floor_ok := false
+			if t.lattice:
+				# Quadra voxel: o piso é o ArenaFloor, pintado com o chão do bioma.
+				var fl = t.floor_node
+				floor_ok = (
+					fl is ArenaFloor
+					and fl.get_parent() == a
+					and String(ArenaPalette.of(sc).floor) != String(ArenaPalette.of("campo").floor)
+				)
 			for c in a.get_children():
 				if c is MeshInstance3D and c.material_override is StandardMaterial3D:
 					if c.material_override.albedo_texture == B.tex(String(B.FLOOR[sc])):

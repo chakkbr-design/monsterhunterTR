@@ -149,6 +149,20 @@ const SIZES := {
 	"grass": [1.0, 1.4, 0.0, 0.0],
 	"crate": [0.55, 0.55, 0.0, 0.0],
 }
+## Quadra voxel (modo de energia): morros de três tamanhos, para o relevo variar. Cada classe:
+## [fração dos morros do cenário, raio mín., raio máx., altura mín., altura máx., topo (fração do raio)].
+## Os grandes vêm primeiro (cabem melhor); o ímpar do fim (faixa do meio) é um montinho baixo.
+const HILL_CLASSES := [
+	[0.3, 2.5, 3.25, 1.25, 1.5, 0.5],
+	[0.4, 1.7, 2.2, 0.9, 1.15, 0.55],
+	[0.3, 1.0, 1.5, 0.5, 0.5, 0.5],
+]
+## Quantidades pela área (modo de energia): a quadra de 24 x 14 (BASE_AREA m²) é a base, com
+## k = 1 + (área / BASE_AREA - 1) x COUNT_CURVE. O VGC fica sempre com k = 1 (as mesmas quantidades).
+const BASE_AREA := 336.0
+const COUNT_CURVE := 1.0
+## Grade dos voxels (docs/VOXEL.md): na quadra voxel, centro, raio e altura caem nela.
+const LATTICE := 0.25
 const MID_BAND := 2.5  ## o ímpar de cada tipo fica a até MID_BAND m da linha do meio; os outros além
 const TIGHT_GAP := 0.5  ## sem lugar com GAP, tenta de novo com GAP x TIGHT_GAP
 const PLACE_TRIES := 150
@@ -230,6 +244,14 @@ var ground: BattleGround
 var props: BattleProps
 ## Biomas do modo de energia (ruínas, montanha, vulcão, caverna, pântano): BattleBiomes.
 var biomes: BattleBiomes
+## Quadra voxel (arena.voxel_court): posições e tamanhos na grade de LATTICE m e visual em voxel.
+var lattice := false
+## Multiplicador das quantidades do cenário pela área (_count_k).
+var count_k := 1.0
+## Piso voxel da quadra (ArenaFloor) desta luta; null sem visual.
+var floor_node: Node3D = null
+## Quadra voxel montada (relevo, lagos e grama já em voxel): a grama que rebrota já nasce em voxel.
+var _vox_ready := false
 
 static var _tex := {}
 
@@ -256,11 +278,62 @@ static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
 
+## Multiplicador das quantidades pela área da quadra: 1 fora do modo de energia (o VGC não muda).
+func _count_k() -> float:
+	if not arena.has_method("energy_on") or not arena.energy_on():
+		return 1.0
+	var area: float = arena.rect.get_area()
+	return maxf(1.0, 1.0 + (area / BASE_AREA - 1.0) * COUNT_CURVE)
+
+
+## `n` coisas da quadra-base na quadra desta luta (pelo count_k). 0 fica 0.
+func count(n: int) -> int:
+	return scale_count(n, count_k)
+
+
+static func scale_count(n: int, k: float) -> int:
+	return 0 if n <= 0 else maxi(1, roundi(float(n) * k))
+
+
+## Plano do cenário com as quantidades desta quadra (SCENARIOS x count_k).
+func plan_for(sc: String) -> Dictionary:
+	var out := {}
+	var base: Dictionary = SCENARIOS.get(sc, {})
+	for k in base:
+		out[k] = count(int(base[k]))
+	return out
+
+
+static func snap(v: float) -> float:
+	return snappedf(v, LATTICE)
+
+
+static func snap_pos(p: Vector3) -> Vector3:
+	return Vector3(snappedf(p.x, LATTICE), 0.0, snappedf(p.z, LATTICE))
+
+
+## Classe de tamanho do morro `i` de `n` (HILL_CLASSES), na quadra voxel.
+static func hill_class(i: int, n: int) -> Array:
+	var acc := 0.0
+	for c in HILL_CLASSES:
+		acc += float(c[0])
+		if float(i) < acc * float(n) - 0.001:
+			return c
+	return HILL_CLASSES[-1]
+
+
+## Visual em voxel nesta luta: quadra voxel, na árvore e sem fast_sim.
+func voxel_vis() -> bool:
+	return lattice and arena.is_inside_tree() and not bool(arena.opts.get("fast_sim", false))
+
+
 ## Monta o cenário: tipo sorteado (ou opts.scenario) e obstáculos em posições aleatórias, espalhados e
 ## divididos entre as duas metades da quadra.
 func setup() -> void:
 	if not bool(arena.opts.get("terrain", false)):
 		return
+	lattice = arena.has_method("voxel_court") and arena.voxel_court()
+	count_k = _count_k()
 	var rng: RandomNumberGenerator = arena.rng
 	scenario = String(arena.opts.get("scenario", ""))
 	var energy: bool = not arena.has_method("energy_on") or arena.energy_on()
@@ -274,7 +347,7 @@ func setup() -> void:
 	var tel = arena.get("telemetry")
 	if tel:
 		tel.meta["scenario"] = scenario
-	var plan: Dictionary = SCENARIOS[scenario]
+	var plan := plan_for(scenario)
 	biomes.pre_setup()  # círculo de runas e rios de lava antes do relevo
 	# Cada obstáculo vai para a metade com menos coisa; o ímpar de cada tipo tenta a faixa do meio.
 	var count := {1: 0, -1: 0}
@@ -284,8 +357,18 @@ func setup() -> void:
 			continue  # objetos vivos só no modo de energia
 		var sz: Array = SIZES[kind] if SIZES.has(kind) else BattleProps.SIZES[kind]
 		for i in n:
+			var top_k := 0.55
+			if lattice and kind == "hill":
+				var c := hill_class(i, n)
+				sz = [c[1], c[2], c[3], c[4]]
+				top_k = float(c[5])
 			var r := rng.randf_range(sz[0], sz[1])
 			var h := rng.randf_range(sz[2], sz[3])
+			if lattice and SIZES.has(kind) and kind != "crate":
+				# Na grade dos voxels (os sorteios são os mesmos): o visual é o próprio jogo. Caixas e
+				# objetos vivos guardam o raio de colisão deles (só a posição vai para a grade).
+				r = maxf(snap(r), LATTICE * 2.0)
+				h = snap(h)
 			var light := 1 if count[1] < count[-1] else -1
 			if count[1] == count[-1]:
 				light = 1 if rng.randf() < 0.5 else -1
@@ -312,9 +395,10 @@ func setup() -> void:
 				"tree", "bush", "voltorb", "crystal", "geyser", "hive", "mushroom", "boulder":
 					props.add(String(kind), at)
 				_:
-					_add(String(kind), at, r, h)
+					_add(String(kind), at, r, h, snap(r * top_k) if lattice else -1.0)
 	ground.setup()  # lama e maré (só no modo de energia)
 	biomes.setup()  # colunas, montes, paredão, lama do pântano, chão e luz do bioma
+	_build_voxels()
 
 
 ## Ponto livre para um obstáculo de raio `r` na metade `side` (1 = lado de arena.axis, -1 = o outro,
@@ -335,6 +419,11 @@ func _place(rng: RandomNumberGenerator, r: float, side: int, gap: float) -> Vect
 			at += ax * (rng.randf_range(-MID_BAND, MID_BAND) - along)
 		elif signf(along) != float(side):
 			at -= ax * 2.0 * along  # reflete para a metade pedida
+		if lattice:
+			at = snap_pos(at)  # na grade dos voxels antes de olhar o espaço (visual = jogo)
+			along = at.dot(ax)
+			if side == 0 and absf(along) > MID_BAND:
+				continue
 		if side != 0 and absf(along) <= MID_BAND:
 			continue
 		if not rc.has_point(Vector2(at.x, at.z)):
@@ -371,12 +460,12 @@ func _in_vgc_lane(at: Vector3, r: float) -> bool:
 	return _flat(at - (a + ab * t)).length() < VGC_LANE + r
 
 
-func _add(kind: String, at: Vector3, r: float, h: float) -> void:
+func _add(kind: String, at: Vector3, r: float, h: float, top := -1.0) -> void:
 	var o := {
 		"kind": kind,
 		"pos": _flat(at),
 		"r": r,
-		"top": r * 0.55 if kind == "hill" else 0.42,
+		"top": top if top >= 0.0 else (r * 0.55 if kind == "hill" else 0.42),
 		"h": h,
 		"hp": HILL_HP if kind == "hill" else PEAK_HP,
 		"cd": 0.0,
@@ -388,13 +477,21 @@ func _add(kind: String, at: Vector3, r: float, h: float) -> void:
 	if kind == "pond":
 		o.hp = 0
 		o.top = r
-	_build_node(o)
+	if not lattice:
+		_build_node(o)
+	else:
+		o.node = null  # quadra voxel: no fim do setup (_build_voxels), com tudo no lugar
 	obstacles.append(o)
 
 
 func _add_grass(at: Vector3, r: float) -> void:
 	var g := {"kind": "grass", "pos": _flat(at), "r": r}
-	_build_grass(g)
+	if not lattice:
+		_build_grass(g)
+	else:
+		g.node = null
+		if _vox_ready:
+			_voxel_grass(g)  # rebrota depois da montagem
 	grass.append(g)
 
 
@@ -693,6 +790,8 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 	_crumbs(o, 10)
 	if is_instance_valid(o.node):
 		o.node.queue_free()
+	if is_instance_valid(floor_node):
+		floor_node.forget(o.pos)
 	if arena.is_inside_tree():
 		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.6, 0), o.r * 1.6, 0.6)
 		PixelFx.pop(arena, "stone", o.pos + Vector3(0, 0.3, 0), o.r * 1.4, 0.5)
@@ -1052,8 +1151,11 @@ func _pond_weather(o: Dictionary, wx: String, dt: float) -> void:
 	o.r = move_toward(float(o.r), want, POND_GROW * dt)
 	o.top = o.r
 	if is_instance_valid(o.get("node")):
-		var k: float = float(o.r) / float(o.r0)
-		o.node.scale = Vector3(k, 1.0, k)
+		if o.node.has_meta("water"):
+			ArenaVoxels.pond_level(o, o.node)  # lago voxel: a água sobe e desce no buraco
+		else:
+			var k: float = float(o.r) / float(o.r0)
+			o.node.scale = Vector3(k, 1.0, k)
 
 
 # --- IA ---
@@ -1269,6 +1371,9 @@ static func blades_tex() -> Texture2D:
 
 
 func _set_water_look(pond: Dictionary) -> void:
+	if is_instance_valid(pond.get("node")) and pond.node.has_meta("water"):
+		ArenaVoxels.pond_ice(pond, pond.node, float(pond.ice_t) > 0.0)
+		return
 	if not (pond.get("mat") is StandardMaterial3D):
 		return
 	pond.mat.albedo_texture = tex("ice" if float(pond.ice_t) > 0.0 else "water")
@@ -1341,6 +1446,9 @@ static func _rock_mesh(r: float, t: Texture2D) -> MeshInstance3D:
 func _crumbs(o: Dictionary, n: int) -> void:
 	if not arena.field or not arena.is_inside_tree():
 		return
+	if lattice:
+		_voxel_crumbs(o, n)
+		return
 	var t := tex("stone" if o.kind == "peak" else "earth")
 	for i in n:
 		var mi := _box(Vector3.ONE * arena.rng.randf_range(0.12, 0.22), t)
@@ -1352,6 +1460,59 @@ func _crumbs(o: Dictionary, n: int) -> void:
 			arena.rng.randf_range(-2.5, 2.5)
 		)
 		arena.field.shards.append({"node": mi, "vel": v, "t": 0.8})
+
+
+## Quadra voxel: cacos em cubos de voxel com as cores do relevo, sorteio pela posição (a RNG da
+## batalha fica igual com e sem visual).
+func _voxel_crumbs(o: Dictionary, n: int) -> void:
+	if not voxel_vis():
+		return
+	var pal := ArenaPalette.of(scenario)
+	var cols: Array = (
+		[pal.peak, pal.peak_top] if o.kind == "peak" else [pal.hill_side, pal.hill_top]
+	)
+	var rng := ArenaPalette.rng_at(o.pos, "crumbs_%d_%d" % [int(o.hp), n])
+	for i in n:
+		var mi := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = Vector3.ONE * (VoxelGrid.VS if rng.randf() < 0.5 else ArenaVoxels.FINE)
+		var m := StandardMaterial3D.new()
+		m.albedo_color = cols[i % 2]
+		m.roughness = 0.9
+		b.material = m
+		mi.mesh = b
+		mi.position = o.pos + Vector3(0, float(o.h) * 0.7, 0)
+		arena.add_child(mi)
+		var v := Vector3(
+			rng.randf_range(-2.5, 2.5), rng.randf_range(2, 4.5), rng.randf_range(-2.5, 2.5)
+		)
+		arena.field.shards.append({"node": mi, "vel": v, "t": 0.8})
+
+
+# --- Quadra voxel (modo de energia, docs/VOXEL.md §7) ---
+
+
+## Piso (com os buracos dos lagos), relevo, lagos e grama alta em voxel, no fim do setup: o piso
+## precisa de tudo no lugar. Nada com fast_sim.
+func _build_voxels() -> void:
+	if not voxel_vis():
+		return
+	floor_node = ArenaFloor.build(self)
+	for o in obstacles:
+		o.node = (
+			ArenaVoxels.pond(o, scenario) if o.kind == "pond" else ArenaVoxels.relief(o, scenario)
+		)
+		arena.add_child(o.node)
+	for g in grass:
+		_voxel_grass(g)
+	_vox_ready = true
+
+
+func _voxel_grass(g: Dictionary) -> void:
+	if not voxel_vis():
+		return
+	g.node = ArenaVoxels.grass(g, scenario)
+	arena.add_child(g.node)
 
 
 # --- Texturas de pixel art (32 x 32, geradas uma vez; caixa e pedra com a paleta da arte delas) ---

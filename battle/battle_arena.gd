@@ -435,6 +435,8 @@ func _build_court() -> void:
 		pm.material = fm
 		floor_mi.mesh = pm
 		add_child(floor_mi)
+	if voxel_court():
+		return  # piso, linhas e cerca em voxel (BattleTerrain / ArenaFloor)
 	var quad := MeshInstance3D.new()
 	quad.name = "ArenaQuad"
 	var qm := PlaneMesh.new()
@@ -494,7 +496,9 @@ func _setup_court(o: Dictionary) -> void:
 		# (TRAINER_OUT m depois da linha); os Pokémon entram a um quarto da quadra de cada lado.
 		me = -axis * (sz.x * 0.5 + TRAINER_OUT)
 		them = -me
-		player_spot = -axis * sz.x * 0.25
+		# opts.entry_x: entrada a essa distância do centro (o modo de energia, quadra de 48 m, mantém
+		# a da quadra de 24 m); sem ele, a um quarto da quadra.
+		player_spot = -axis * float(o.get("entry_x", sz.x * 0.25))
 		enemy_spot = -player_spot
 		_cam_focus = Vector3.ZERO
 	_stand_at = {0: me, 1: them}
@@ -920,6 +924,12 @@ func _nearest(f: BattleFighter, cands: Array) -> BattleFighter:
 ## opts.battle_mode "energy": barra de energia no lugar do PP, sem rodadas (BattleEnergy). Padrão "vgc".
 func energy_on() -> bool:
 	return String(opts.get("battle_mode", "vgc")) == "energy"
+
+
+## Quadra voxel (opts.voxel, o treino no modo de energia): obstáculos na grade de 0,25 m e piso, linhas
+## e cerca em voxel no lugar da quadra dourada. Nunca no VGC.
+func voxel_court() -> bool:
+	return bool(opts.get("voxel", false)) and energy_on()
 
 
 ## Posição fixa do lutador na quadra (como no VGC): no 1x1 um ponto por lado; com dois do mesmo lado,

@@ -107,7 +107,7 @@ func _layout() -> void:
 				{"scenario": sc, "telemetry": "user://test_props_%d.json" % s}
 			)
 			var pr: BattleProps = a.terrain.props
-			var plan: Dictionary = BattleTerrain.SCENARIOS[sc]
+			var plan: Dictionary = a.terrain.plan_for(sc)  # SCENARIOS na área da quadra
 			for k in P.ORDER:
 				var n := pr.of_kind(k).size()
 				counts[k] = int(counts.get(k, 0)) + n

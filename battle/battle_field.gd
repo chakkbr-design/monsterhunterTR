@@ -87,10 +87,18 @@ func _spot_ok(p: Vector3) -> bool:
 
 func _add_object(p: Vector3) -> void:
 	var rock: bool = arena.rng.randf() < 0.5
-	# Objeto 3D com textura de pixel art (BattleTerrain) no lugar do sprite.
-	var mi: Node3D = BattleTerrain.rock_node() if rock else BattleTerrain.crate_node()
-	mi.position = p
-	arena.add_child(mi)
+	var ter = arena.get("terrain")
+	var mi: Node3D = null
+	if ter and ter.lattice:
+		# Quadra voxel: caixa e pedra em voxel (nada com fast_sim).
+		if ter.voxel_vis():
+			mi = ArenaPropsVox.rock(p) if rock else ArenaPropsVox.crate(p)
+			arena.add_child(mi)
+	else:
+		# Objeto 3D com textura de pixel art (BattleTerrain) no lugar do sprite.
+		mi = BattleTerrain.rock_node() if rock else BattleTerrain.crate_node()
+		mi.position = p
+		arena.add_child(mi)
 	(
 		objects
 		. append(
@@ -305,6 +313,19 @@ func _break(o: Dictionary) -> void:
 	objects.erase(o)
 	if is_instance_valid(o.node):
 		o.node.queue_free()
+	var ter = arena.get("terrain")
+	if ter and ter.lattice:
+		_voxel_shards(o, ter)
+	else:
+		_shards(o)
+	if arena.vfx and arena.is_inside_tree():
+		arena.vfx.puff(arena.to_global(o.pos + Vector3(0, 0.4, 0)), 1.0)
+		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.5, 0), 1.3, 0.4)
+	if o.berry:
+		_add_berry(o.pos)
+
+
+func _shards(o: Dictionary) -> void:
 	for i in 6:
 		# Cacos 3D com a textura do objeto.
 		var mi: Node3D = BattleTerrain._box(
@@ -317,14 +338,40 @@ func _break(o: Dictionary) -> void:
 			arena.rng.randf_range(-2, 2), arena.rng.randf_range(2, 4), arena.rng.randf_range(-2, 2)
 		)
 		shards.append({"node": mi, "vel": v, "t": 0.7})
-	if arena.vfx and arena.is_inside_tree():
-		arena.vfx.puff(arena.to_global(o.pos + Vector3(0, 0.4, 0)), 1.0)
-		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.5, 0), 1.3, 0.4)
-	if o.berry:
-		_add_berry(o.pos)
+
+
+## Quadra voxel: cacos são cubos de voxel nas cores do objeto, com sorteio pela posição (nunca
+## arena.rng, para a luta ser a mesma com e sem visual); nada com fast_sim.
+func _voxel_shards(o: Dictionary, ter) -> void:
+	if ter.floor_node:
+		ter.floor_node.forget(o.pos)
+	if not ter.voxel_vis():
+		return
+	var cols: Array = BattleTerrain._palette("stone" if o.rock else "crate")
+	var r := ArenaPalette.rng_at(o.pos, "shard")
+	for i in 6:
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3.ONE * ArenaVoxels.FINE * float(r.randi_range(1, 2))
+		mi.mesh = bm
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = cols[r.randi() % cols.size()]
+		mi.material_override = mat
+		mi.position = o.pos + Vector3(0, 0.4, 0)
+		arena.add_child(mi)
+		var v := Vector3(r.randf_range(-2, 2), r.randf_range(2, 4), r.randf_range(-2, 2))
+		shards.append({"node": mi, "vel": v, "t": 0.7})
 
 
 func _add_berry(p: Vector3) -> void:
+	var ter = arena.get("terrain")
+	if ter and ter.lattice:
+		var vn: Node3D = ArenaPropsVox.berry() if ter.voxel_vis() else null
+		if vn:
+			vn.position = p
+			arena.add_child(vn)
+		berries.append({"node": vn, "pos": p, "t": 15.0})
+		return
 	var mi: Node3D = PixelFx.prop("objects/berry.png", 0.5, 32)
 	if mi != null:
 		mi.position = p

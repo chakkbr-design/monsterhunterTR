@@ -192,7 +192,9 @@ func setup() -> void:
 	_off = String(arena.opts.get("ground_off", "")).split(",", false)
 	visual = ground.visual
 	_rng.seed = hash("ground3_%d" % int(arena.rng.seed))
-	var plan: Dictionary = GROUND_EXTRAS.get(terrain.scenario, {})
+	var plan := {}  # GROUND_EXTRAS na área desta quadra (BattleTerrain.count)
+	for k in GROUND_EXTRAS.get(terrain.scenario, {}):
+		plan[k] = terrain.count(int(GROUND_EXTRAS[terrain.scenario][k]))
 	var ponds: Array = terrain.obstacles.filter(func(o): return o.kind == "pond")
 	ponds.sort_custom(func(x, y): return float(x.r) > float(y.r))
 	for i in mini(int(plan.get("log_bridge", 0)) * int(not "bridge" in _off), ponds.size()):
@@ -238,7 +240,11 @@ func _place_bridge(pond: Dictionary) -> void:
 func _add_pylon(at: Vector3) -> void:
 	var p := {"pos": _flat(at), "cd": 0.0, "node": null, "r": PYLON_SPACE}
 	pylons.append(p)
-	if _vis():
+	if _vis() and terrain.lattice:
+		p.node = ArenaVoxels.pylon()
+		p.node.position = p.pos
+		arena.add_child(p.node)
+	elif _vis():
 		var root := Node3D.new()
 		root.name = "Ground_pylon"
 		root.position = p.pos
@@ -424,7 +430,11 @@ func _add_web(at: Vector3, user: BattleFighter, sticky := false) -> void:
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active() and _flat(f.position - at).length() < WEB_R:
 			w.hit[f.get_instance_id()] = true  # quem já está em cima não "entra"
-	if _vis():
+	if _vis() and terrain.lattice:
+		w.node = ArenaVoxels.flat("web", WEB_R, at, "", ArenaVoxels.FINE)
+		w.node.position.y = 0.006
+		arena.add_child(w.node)
+	elif _vis():
 		w.node = ground._disc_node(at, WEB_R, tex("web"), 0.03)
 	webs.append(w)
 	_tele("web", {"by": _uid(user)})
@@ -455,7 +465,11 @@ func _vine(user: BattleFighter, at: Vector3, radius: float) -> void:
 	best.root_t = maxf(best.root_t, VINE_ROOT)
 	best.popup("Preso no cipó!", Dex.type_color("grass"), 0.9, 0.6)
 	var v := {"who": best, "t": VINE_ROOT, "node": null}
-	if _vis():
+	if _vis() and terrain.lattice:
+		v.node = ArenaVoxels.flat("vine", 0.55, best.position, "", ArenaVoxels.FINE)
+		v.node.position.y = 0.01
+		arena.add_child(v.node)
+	elif _vis():
 		v.node = ground._disc_node(best.position, 0.55, tex("vine"), 0.035)
 	vines.append(v)
 	_tele("vine", {"who": _uid(best), "by": _uid(user)})
@@ -472,7 +486,10 @@ func _add_rocks(center: Vector3, spread: float, n: int, user: BattleFighter) -> 
 			if rocks.size() >= ROCK_MAX:
 				_drop(rocks, rocks[0])
 			var r := {"pos": _flat(p), "t": ROCK_SECS, "node": null}
-			if _vis():
+			if _vis() and terrain.lattice:
+				r.node = ArenaVoxels.rock(ROCK_R, r.pos)
+				arena.add_child(r.node)
+			elif _vis():
 				var mi := BattleTerrain._rock_mesh(ROCK_R, BattleTerrain.tex("stone"))
 				mi.position = r.pos + Vector3(0, ROCK_R * 0.55, 0)
 				mi.rotation.y = a
@@ -834,7 +851,9 @@ func _weather_tick(dt: float, wx: String) -> void:
 				m.kind = "ice"
 				m.t = BattleGround.ICE_SECS
 				m.hit = {}
-				if is_instance_valid(m.get("node")):
+				if is_instance_valid(m.get("node")) and terrain.lattice:
+					ArenaVoxels.flat_look(m.node, "ice", float(m.r), "", ArenaVoxels.FINE)
+				elif is_instance_valid(m.get("node")):
 					m.node.material_override = BattleTerrain._mat(
 						BattleGround.tex("ice_slick"), 1.2
 					)
@@ -867,7 +886,10 @@ func _add_snow() -> void:
 		if not _free(p, SNOW_R, 1.5):
 			continue
 		var s := {"pos": p, "t": SNOW_LIFE, "node": null}
-		if _vis():
+		if _vis() and terrain.lattice:
+			s.node = ArenaVoxels.snow_heap(SNOW_R * 1.2, SNOW_H, p, terrain.scenario)
+			arena.add_child(s.node)
+		elif _vis():
 			var mi := BattleTerrain._rock_mesh(SNOW_R * 1.2, tex("snow"))
 			mi.position = p + Vector3(0, SNOW_H * 0.35, 0)
 			arena.add_child(mi)
@@ -1108,6 +1130,13 @@ func _bridge_route(f: BattleFighter, want: Vector3) -> Vector3:
 
 func _build_bridge(br: Dictionary) -> void:
 	if not _vis():
+		return
+	if terrain.lattice:
+		var vn := ArenaVoxels.log_bridge(_flat(br.b - br.a).length())
+		vn.position = (br.a + br.b) * 0.5 + Vector3(0, -0.15, 0)
+		vn.rotation.y = -atan2(br.dir.z, br.dir.x)
+		arena.add_child(vn)
+		br.node = vn
 		return
 	var len := _flat(br.b - br.a).length()
 	var mi := BattleTerrain._box(Vector3(len, 0.2, BRIDGE_HALF * 1.6), tex("log"))

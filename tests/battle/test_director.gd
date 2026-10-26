@@ -47,7 +47,7 @@ func _run() -> void:
 	var ar: Node = tb.arena
 	check(ar.get("director") != null, "modo de energia no treino: câmera de ação ligada")
 	var d: BattleDirector = ar.director
-	var old_dist := float(tb.CAM_DIST)
+	var old_dist := float(tb.cam_dist())  # câmera fixa da quadra de energia (48 x 28)
 	var dists: Array = []
 	var shots := {}
 	var slow := 0

@@ -111,7 +111,7 @@ func _mud() -> void:
 	var t: BattleTerrain = a.terrain
 	var g: BattleGround = t.ground
 	check(g.on, "chão ligado no modo de energia")
-	check(g.mud.size() == int(G.MUD_COUNT.misto), "misto com %d lamas" % g.mud.size())
+	check(g.mud.size() == t.count(int(G.MUD_COUNT.misto)), "misto com %d lamas" % g.mud.size())
 	var m: Dictionary = g.mud[0]
 	var r: BattleFighter = a.enemy
 	var p: BattleFighter = a.player

@@ -1,6 +1,7 @@
 extends Node3D
 ## Modo de treinamento: a luta automática entre os dois times montados em training_setup.
-## Arena fixa de Cfg.ARENA (24 x 14, com relevo), as duas IAs lutando sozinhas
+## Arena fixa de Cfg.arena_size (24 x 14 no VGC, 48 x 28 em voxel no modo de energia, com relevo), as
+## duas IAs lutando sozinhas
 ## (opts.autoplay), sem mexer no save nem na equipe do jogo. Com p1_control "manual" o Time A é
 ## do teclado (só na luta única; a série sempre roda com IA). No fim mostra o vencedor e o
 ## placar da série.
@@ -17,6 +18,11 @@ const TITLE_SCENE := "res://ui/front/title.tscn"
 const CAM_FOV := 60.0
 const CAM_FOCUS := Vector3(0, 0, Cfg.ARENA.y * 0.2)
 const CAM_DIST := 14.0 * Cfg.ARENA.x / 16.0
+## O mesmo para a quadra do modo de energia (48 x 28, em voxel).
+const CAM_FOCUS_ENERGY := Vector3(0, 0, Cfg.ARENA_ENERGY.y * 0.2)
+const CAM_DIST_ENERGY := 14.0 * Cfg.ARENA_ENERGY.x / 16.0
+## Chão de fora da quadra voxel (até o horizonte da câmera de ação).
+const GROUND_ENERGY := Vector2(420, 300)
 const CAM_PITCH := deg_to_rad(30.0)
 const GROUND := Color(0.36, 0.55, 0.3)
 const DIRT := Color(0.62, 0.52, 0.38)
@@ -67,6 +73,10 @@ var _last_log: Array = []
 var _stage_cam: Camera3D
 var _ground_mat: StandardMaterial3D
 var _court_mat: StandardMaterial3D
+## Quadra voxel (modo de energia): o piso, as linhas e a cerca vêm de ArenaFloor (BattleTerrain); aqui
+## só o chão de fora e a câmera do cenário. O piso liso e a cerca de madeira (VGC) ficam escondidos.
+var _voxel := false
+var _court_root: Node3D
 
 
 func _ready() -> void:
@@ -99,19 +109,62 @@ func _build_stage() -> void:
 	sun.rotation_degrees = Vector3(-55, 30, 0)
 	sun.shadow_enabled = true
 	add_child(sun)
-	_ground_mat = _plane(Vector2(90, 70), GROUND, -0.01)
-	_court_mat = _plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0)
+	_voxel = Cfg.battle_mode(cfg) == "energy"
+	if _voxel:
+		_ground_mat = _ground_ring()
+	else:
+		_ground_mat = _plane(Vector2(90, 70), GROUND, -0.01)
+	_court_root = Node3D.new()
+	_court_root.name = "Court"
+	_court_root.visible = not _voxel
+	add_child(_court_root)
+	_court_mat = _plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0, _court_root)
 	_build_fence(Cfg.ARENA * 0.5 + Vector2(FENCE_GAP, FENCE_GAP))
 	# Câmera do cenário no mesmo ponto da câmera fixa da arena: a arena a devolve no fim da luta.
 	_stage_cam = Camera3D.new()
 	_stage_cam.fov = CAM_FOV
-	_stage_cam.position = CAM_FOCUS + Vector3(0, sin(CAM_PITCH), cos(CAM_PITCH)) * CAM_DIST
+	_stage_cam.position = cam_focus() + Vector3(0, sin(CAM_PITCH), cos(CAM_PITCH)) * cam_dist()
 	add_child(_stage_cam)
-	_stage_cam.look_at(CAM_FOCUS, Vector3.UP)
+	_stage_cam.look_at(cam_focus(), Vector3.UP)
 	_stage_cam.make_current()
 
 
-func _plane(sz: Vector2, col: Color, y: float) -> StandardMaterial3D:
+## Distância e foco da câmera fixa (a do cenário e a da arena quando não há câmera de ação).
+func cam_dist() -> float:
+	return CAM_DIST_ENERGY if _voxel else CAM_DIST
+
+
+func cam_focus() -> Vector3:
+	return CAM_FOCUS_ENERGY if _voxel else CAM_FOCUS
+
+
+## Chão de fora da quadra voxel: GROUND_ENERGY menos o piso voxel (a quadra e ArenaFloor.MARGIN m
+## em volta). Por baixo do piso não fica nada: os lagos e canais abertos nele mostram o fundo voxel.
+func _ground_ring() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = GROUND
+	mat.roughness = 1.0
+	var inner := Cfg.ARENA_ENERGY * 0.5 + Vector2.ONE * (ArenaFloor.MARGIN - 0.25)
+	var outer := GROUND_ENERGY * 0.5
+	# Faixas de trás e da frente (largura toda) e dos lados (entre elas).
+	var strips := [
+		[Vector2(0, -(outer.y + inner.y) * 0.5), Vector2(outer.x * 2.0, outer.y - inner.y)],
+		[Vector2(0, (outer.y + inner.y) * 0.5), Vector2(outer.x * 2.0, outer.y - inner.y)],
+		[Vector2(-(outer.x + inner.x) * 0.5, 0), Vector2(outer.x - inner.x, inner.y * 2.0)],
+		[Vector2((outer.x + inner.x) * 0.5, 0), Vector2(outer.x - inner.x, inner.y * 2.0)],
+	]
+	for st in strips:
+		var mi := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = st[1]
+		pm.material = mat
+		mi.mesh = pm
+		mi.position = Vector3(st[0].x, -0.01, st[0].y)
+		add_child(mi)
+	return mat
+
+
+func _plane(sz: Vector2, col: Color, y: float, parent: Node = self) -> StandardMaterial3D:
 	var mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = sz
@@ -121,7 +174,7 @@ func _plane(sz: Vector2, col: Color, y: float) -> StandardMaterial3D:
 	pm.material = mat
 	mi.mesh = pm
 	mi.position.y = y
-	add_child(mi)
+	parent.add_child(mi)
 	return mat
 
 
@@ -137,6 +190,11 @@ func _paint_stage() -> void:
 	var cols: Array = STAGE_COLORS.get(scenario(), [GROUND, DIRT])
 	_ground_mat.albedo_color = cols[0]
 	_court_mat.albedo_color = cols[1]
+	if _voxel:
+		# Em volta do piso voxel: a calçada do cenário, um pouco mais escura longe da quadra.
+		var sc := scenario() if scenario() != "" else "campo"
+		var p := ArenaPalette.of(sc)
+		_ground_mat.albedo_color = Color(p.surround).darkened(0.12)
 
 
 ## Cerca de madeira em volta da quadra (só visual: a arena já prende os Pokémon na quadra).
@@ -162,7 +220,7 @@ func _build_fence(half: Vector2) -> void:
 			var p := MeshInstance3D.new()
 			p.mesh = post
 			p.position = a.lerp(b, float(k) / steps) + Vector3(0, 0.45, 0)
-			add_child(p)
+			_court_root.add_child(p)
 		for h in [0.35, 0.7]:
 			var rail := MeshInstance3D.new()
 			var rm := BoxMesh.new()
@@ -171,7 +229,7 @@ func _build_fence(half: Vector2) -> void:
 			rail.mesh = rm
 			rail.position = (a + b) * 0.5 + Vector3(0, h, 0)
 			rail.rotation.y = -atan2(b.z - a.z, b.x - a.x)
-			add_child(rail)
+			_court_root.add_child(rail)
 
 
 # --- Luta ---
@@ -249,9 +307,9 @@ func _fit_camera() -> void:
 	if cam is Camera3D:
 		cam.fov = CAM_FOV
 	if arena.get("_cam_focus") != null:
-		arena.set("_cam_focus", CAM_FOCUS)
+		arena.set("_cam_focus", cam_focus())
 	if arena.get("cam_dist") != null:
-		arena.set("cam_dist", CAM_DIST)
+		arena.set("cam_dist", cam_dist())
 
 
 ## Limite de tempo (cfg.time_limit, segundos de jogo): a luta termina sem vencedor ("timeout").

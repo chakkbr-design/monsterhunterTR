@@ -234,7 +234,9 @@ func setup() -> void:
 	if not on:
 		return
 	var rng: RandomNumberGenerator = arena.rng
-	var plan: Dictionary = EXTRAS.get(kind, {})
+	var plan := {}  # EXTRAS na área desta quadra (BattleTerrain.count)
+	for k in EXTRAS.get(kind, {}):
+		plan[k] = terrain.count(int(EXTRAS[kind][k]))
 	for k in ["pillar", "mound"]:
 		for i in int(plan.get(k, 0)):
 			var r: float = float(SOLIDS[k][0]) + 0.25
@@ -266,6 +268,8 @@ func setup() -> void:
 			for o in terrain.obstacles:
 				if o.kind == "pond":
 					o.r = float(o.r) * POND_SHALLOW
+					if terrain.lattice:
+						o.r = maxf(BattleTerrain.snap(o.r), BattleTerrain.LATTICE * 2.0)  # na grade
 					o.r0 = o.r
 					o.top = o.r
 					if is_instance_valid(o.get("node")):
@@ -299,7 +303,7 @@ func _place_lava() -> void:
 	var ax := _ax()
 	var pp := _perp()
 	var c0 := _centre()
-	var n := int(EXTRAS.vulcao.lava)
+	var n: int = terrain.count(int(EXTRAS.vulcao.lava))
 	for i in n:
 		var side := 0 if i == n - 1 and n % 2 == 1 else (1 if i % 2 == 0 else -1)
 		for _try in BattleTerrain.PLACE_TRIES:
@@ -313,6 +317,8 @@ func _place_lava() -> void:
 			elif signf(along) != float(side) or absf(along) < 2.5:
 				continue
 			var mid := c0 + ax * along + pp * rng.randf_range(-lim_p, lim_p)
+			if terrain.lattice:
+				mid = BattleTerrain.snap_pos(mid)  # células de 1 m na grade dos voxels
 			var cells: Array = []
 			for k in LAVA_LEN:
 				cells.append(mid + dir * (float(k) - half + 0.5))
@@ -631,7 +637,11 @@ func _tick_rune(dt: float) -> void:
 	if holder >= 0:
 		rune.held = float(rune.held) + dt
 	if is_instance_valid(rune.get("mat")) and holder >= 0:
-		rune.mat.emission_energy_multiplier = 0.9 + 0.5 * absf(sin(_t * 3.0))
+		var glow := 0.9 + 0.5 * absf(sin(_t * 3.0))
+		if rune.mat is ShaderMaterial:
+			rune.mat.set_shader_parameter("emit_always", glow * 1.6)
+		else:
+			rune.mat.emission_energy_multiplier = glow
 
 
 func _tick_snow(dt: float) -> void:
@@ -681,8 +691,12 @@ func _tick_lava(dt: float) -> void:
 			r.node.material_override.albedo_color.a = 0.2 + 0.25 * absf(sin(_t * 12.0))
 	if visual and fmod(_t, 0.25) < dt:
 		for c in lava:
-			if is_instance_valid(c.get("mat")) and float(c.cool) <= 0.0:
+			if float(c.cool) > 0.0:
+				continue
+			if is_instance_valid(c.get("mat")):
 				c.mat.uv1_offset = Vector3(_t * 0.05, _t * 0.03, 0.0)
+			elif is_instance_valid(c.get("node")):
+				ArenaVoxels.lava_look(c.node, false, _t)  # brilho tremendo
 
 
 ## Relógios da IA (círculo, neve, lava): conta enquanto a tag está ativa; passou do limite, espera.
@@ -1058,6 +1072,9 @@ func _vision_steer(ai, d: float) -> Vector3:
 
 
 func _build() -> void:
+	if terrain.lattice:
+		_build_voxel()
+		return
 	var rc: Rect2 = arena.rect
 	var fl := BattleTerrain._box(Vector3(rc.size.x, 0.01, rc.size.y), tex(String(FLOOR[kind])))
 	fl.material_override.uv1_scale = Vector3.ONE * 0.6
@@ -1091,6 +1108,49 @@ func _build() -> void:
 		"vulcao":
 			for c in lava:
 				_lava_node(c)
+			_env({"ambient": Color(0.75, 0.5, 0.42), "sun": 0.85})
+		"caverna":
+			_env({"ambient": Color(0.2, 0.2, 0.3), "bg": Color(0.04, 0.04, 0.07), "sun": 0.18})
+			for o in terrain.props.of_kind("crystal"):
+				if is_instance_valid(o.get("node")):
+					var l := OmniLight3D.new()
+					l.light_color = Color(0.55, 0.9, 1.0)
+					l.light_energy = 1.6
+					l.omni_range = CRYSTAL_LIGHT + 0.8
+					l.position = Vector3(0, 1.0, 0)
+					o.node.add_child(l)
+		"pantano":
+			_env({"ambient": Color(0.5, 0.56, 0.48), "bg": Color(0.5, 0.56, 0.5), "sun": 0.6})
+
+
+## Quadra voxel (BattleTerrain.lattice): colunas, montes, círculo de runas, paredão e lava em voxel
+## (ArenaVoxels); o chão do bioma é pintado no piso voxel (ArenaFloor). A luz da cena é a mesma.
+func _build_voxel() -> void:
+	for s in solids:
+		s.node = ArenaVoxels.solid(s, kind)
+		arena.add_child(s.node)
+	match kind:
+		"ruinas":
+			var mi := ArenaVoxels.rune(RUNE_R)
+			mi.position = rune.pos + Vector3(0, 0.0, 0)
+			arena.add_child(mi)
+			rune.node = mi
+			rune.mat = ArenaVoxels.mat_of(mi)
+			_rune_look()
+		"montanha":
+			var ax := _ax()
+			var pp := _perp() * float(cliff.side)
+			var long := _half(ax) * 2.0 + 4.0
+			var wall := ArenaVoxels.cliff(long, 3.0, 3.0, kind)
+			wall.position = _centre() + pp * _half(_perp())
+			wall.basis = Basis.looking_at(pp, Vector3.UP)  # corpo (z < 0 local) para fora, face para a quadra
+			arena.add_child(wall)
+			cliff.node = wall
+		"vulcao":
+			for c in lava:
+				c.node = ArenaVoxels.lava_cell(c)
+				arena.add_child(c.node)
+				ArenaVoxels.lava_look(c.node, false)
 			_env({"ambient": Color(0.75, 0.5, 0.42), "sun": 0.85})
 		"caverna":
 			_env({"ambient": Color(0.2, 0.2, 0.3), "bg": Color(0.04, 0.04, 0.07), "sun": 0.18})
@@ -1194,7 +1254,11 @@ func _build_cliff() -> void:
 	cliff.node = wall
 
 
-func _snow_cell(p: Vector3) -> MeshInstance3D:
+func _snow_cell(p: Vector3) -> Node3D:
+	if terrain.lattice:
+		var vn := ArenaVoxels.snow_cell(kind, p)
+		arena.add_child(vn)
+		return vn
 	var mi := BattleTerrain._box(Vector3(CELL, 0.25, CELL), tex("snow_deep"))
 	mi.position = p + Vector3(0, 0.12, 0)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1218,6 +1282,9 @@ func _lava_node(c: Dictionary) -> void:
 
 
 func _lava_look(c: Dictionary) -> void:
+	if is_instance_valid(c.get("node")) and c.node.has_meta("mats"):
+		ArenaVoxels.lava_look(c.node, float(c.cool) > 0.0, _t)
+		return
 	if not is_instance_valid(c.get("mat")):
 		return
 	var cool := float(c.cool) > 0.0
@@ -1234,6 +1301,9 @@ func _rune_look() -> void:
 		col = Color(0.4, 0.75, 1.0)
 	elif h == 1:
 		col = Color(1.0, 0.45, 0.4)
+	if rune.mat is ShaderMaterial:
+		ArenaVoxels.rune_look(rune.node, col, 1.0 if h < 0 else 2.0)
+		return
 	rune.mat.albedo_color = Color(col.r, col.g, col.b, 1.0)
 	rune.mat.emission = col
 	rune.mat.emission_energy_multiplier = 0.6 if h < 0 else 1.2

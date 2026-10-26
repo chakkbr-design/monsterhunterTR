@@ -2,8 +2,9 @@ extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_terrain2.gd
 ## Cenários do treino (BattleTerrain + BattleTerrainAI): cenário sorteado e espalhado sem nada nas
 ## entradas, metades equilibradas, grama alta (esconde, energia de Grama, queima, chuva e sol), Elétrico
-## na água, energia na água por tipo, Fogo na água, clima no lago, puxar para a água, derrubar do morro
-## e a IA do cenário.
+## na água, energia na água por tipo, Fogo na água, clima no lago, puxar para a água, derrubar do morro,
+## a IA do cenário e a quadra voxel do modo de energia (quantidades pela área, grade de 0,25 m, visual
+## voxel só fora do fast_sim, mesma luta com e sem visual, VGC intocado).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -28,6 +29,7 @@ func _process(_d: float) -> bool:
 	_pull()
 	_drop()
 	_ai()
+	_voxel()
 	print("terrain2: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 	return true
@@ -103,7 +105,12 @@ func _layout() -> void:
 		seen[t.scenario] = true
 		check(T.SCENARIOS.has(t.scenario), "cenário válido (%s)" % t.scenario)
 		check(String(a.telemetry.meta.get("scenario", "")) == t.scenario, "cenário na telemetria")
-		var plan: Dictionary = T.SCENARIOS[t.scenario]
+		# Quantidades na área da quadra (BattleTerrain.plan_for: SCENARIOS x count_k; 4x no modo de energia).
+		var plan: Dictionary = t.plan_for(t.scenario)
+		check(
+			t.count_k == 4.0 * T.COUNT_CURVE + 1.0 - T.COUNT_CURVE,
+			"quantidades pela área (k %.2f)" % t.count_k
+		)
 		var all: Array = []
 		for o in t.obstacles + t.grass:
 			all.append({"pos": o.pos, "r": float(o.r0 if o.has("r0") else o.r), "kind": o.kind})
@@ -142,7 +149,7 @@ func _layout() -> void:
 	)
 	check(b.terrain.scenario == "lagoa", "opts.scenario")
 	var ponds: int = b.terrain.obstacles.filter(func(o): return o.kind == "pond").size()
-	check(ponds == int(T.SCENARIOS.lagoa.pond), "lagoa com %d lagos" % ponds)
+	check(ponds == int(b.terrain.plan_for("lagoa").pond), "lagoa com %d lagos" % ponds)
 	b.free()
 	# Sem opts.terrain (VGC fora do treino): nada de cenário.
 	var c := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], 3, {"terrain": false})
@@ -282,7 +289,10 @@ func _flat_eq(p: Vector3, q: Vector3) -> bool:
 
 func _hail_spam() -> void:
 	var a := _arena(
-		[Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], 9, {"scenario": "lagoa"}
+		[Mon.create("pikachu", 50)],
+		[Mon.create("rattata", 50)],
+		9,
+		{"scenario": "lagoa", "telemetry": "user://test_terrain2_hail.json"}
 	)
 	a.step(DT)
 	var t: BattleTerrain = a.terrain
@@ -291,7 +301,7 @@ func _hail_spam() -> void:
 	var n_freeze := func() -> int:
 		var c := 0
 		for e in tel.events:
-			if String(e.get("t", e.get("type", ""))) == "terrain_freeze":
+			if str(e.get("ev", "")) == "terrain_freeze":  # BattleTelemetry.ev: tipo em "ev"
 				c += 1
 		return c
 	a.abilities.weather = "hail"
@@ -299,7 +309,12 @@ func _hail_spam() -> void:
 	for i in 90:  # 90 s de granizo: o gelo derrete e congela várias vezes
 		t.tick(1.0)
 	check(float(pond.ice_t) > 0.0 or true, "granizo mantém o lago congelado")
-	check(int(n_freeze.call()) - base <= 1, "granizo: um aviso de congelamento só")
+	# Um aviso por lago (FREEZE_SAY_CD é por lago), não um a cada vez que o gelo volta.
+	var n_ponds: int = t.obstacles.filter(func(o): return o.kind == "pond").size()
+	check(
+		int(n_freeze.call()) - base <= n_ponds,
+		"granizo: um aviso de congelamento por lago (%d lagos)" % n_ponds
+	)
 	a.abilities.weather = ""
 	t.tick(1.0)
 	a.abilities.weather = "hail"
@@ -503,3 +518,100 @@ func _ai() -> void:
 	)
 	check(pk.opponent == rt, "alvo é quem está na água")
 	d.free()
+
+
+## Arena montada com a config do treino no modo `mode` (fora da árvore com `tree` false).
+func _mode_arena(mode: String, seed: int, extra := {}, tree := true) -> Node:
+	var a: Node = load(ARENA).instantiate()
+	a.manual = true
+	if tree:
+		root.add_child(a)
+	var cfg := Cfg.default_config()
+	cfg.battle_mode = mode
+	var o := Cfg.arena_opts(cfg, Vector3.ZERO)
+	o.merge({"speed": 1.0, "seed": seed, "battle_size": 1}, true)
+	o.merge(extra, true)
+	a.start([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], o)
+	return a
+
+
+## Tudo o que tem visual no cenário (relevo, grama, objetos vivos, biomas, lama, caixas).
+func _things(a: Node) -> Array:
+	var t: BattleTerrain = a.terrain
+	var out: Array = t.obstacles + t.grass + t.props.items + t.biomes.solids + t.ground.mud
+	out += t.biomes.lava + a.field.objects
+	return out
+
+
+## Layout do cenário (para comparar duas lutas).
+func _layout_key(a: Node) -> String:
+	var t: BattleTerrain = a.terrain
+	var rows: Array = [t.scenario]
+	for o in _things(a):
+		rows.append(
+			(
+				"%s %.3f %.3f %.3f %.3f"
+				% [
+					o.get("kind", "?"),
+					o.pos.x,
+					o.pos.z,
+					float(o.get("r", 0.0)),
+					float(o.get("h", 0.0))
+				]
+			)
+		)
+	return "\n".join(rows)
+
+
+func _voxel() -> void:
+	# Quantidades pela área: uma função só, 0 fica 0, VGC fica no plano.
+	check(T.scale_count(0, 4.0) == 0 and T.scale_count(1, 4.0) == 4, "scale_count 0 e 1")
+	check(T.scale_count(3, 1.0) == 3 and T.scale_count(2, 2.5) == 5, "scale_count arredonda")
+	for sc in ["campo", "lagoa", "pedreira", "misto"]:
+		var v := _mode_arena("vgc", 4, {"scenario": sc})
+		var vt: BattleTerrain = v.terrain
+		check(not vt.lattice and vt.count_k == 1.0, "VGC: sem grade, k = 1 (%s)" % sc)
+		check(v.rect.size == Cfg.ARENA, "VGC: quadra 24 x 14")
+		check(vt.plan_for(sc) == T.SCENARIOS[sc], "VGC: plano de %s sem escala" % sc)
+		check(vt.floor_node == null, "VGC: sem piso voxel")
+		check(v.get_node_or_null("ArenaQuad") != null, "VGC: quadra antiga")
+		v.free()
+	for sc in T.SCENARIOS.keys():
+		# Com visual (na árvore, sem fast_sim): cada coisa tem nó voxel e o piso é o ArenaFloor.
+		var a := _mode_arena("energy", 6, {"scenario": sc})
+		var t: BattleTerrain = a.terrain
+		check(t.lattice and t.count_k == 1.0 + 3.0 * T.COUNT_CURVE, "%s: grade, k pela área" % sc)
+		check(t.floor_node is ArenaFloor and t.floor_node.get_parent() == a, "%s: piso voxel" % sc)
+		check(a.get_node_or_null("ArenaQuad") == null, "%s: sem a quadra antiga" % sc)
+		var no_node := 0
+		for o in _things(a):
+			if not o.get("node") is Node3D:
+				no_node += 1
+		check(no_node == 0, "%s: tudo com nó voxel (%d sem)" % [sc, no_node])
+		for o in t.obstacles:
+			if o.kind == "pond":
+				check(o.node.has_meta("water"), "%s: lago com WaterSurface" % sc)
+		var off := 0
+		for o in t.obstacles + t.grass:
+			for v in [o.pos.x, o.pos.z, float(o.r), float(o.get("h", 0.0))]:
+				if absf(v - T.snap(v)) > 0.0001:
+					off += 1
+		check(off == 0, "%s: relevo e grama na grade de 0,25 m (%d fora)" % [sc, off])
+		var key := _layout_key(a)
+		var st: int = a.rng.state
+		a.free()
+		# fast_sim (bateria): o mesmo cenário, o mesmo RNG da luta e nenhum nó.
+		var b := _mode_arena("energy", 6, {"scenario": sc, "fast_sim": true})
+		var bt: BattleTerrain = b.terrain
+		check(_layout_key(b) == key, "%s: mesmo layout com e sem visual" % sc)
+		check(int(b.rng.state) == st, "%s: o visual não gasta o RNG da luta" % sc)
+		var made := 0
+		for o in _things(b):
+			if o.get("node") != null:
+				made += 1
+		check(made == 0 and bt.floor_node == null, "%s: fast_sim sem visual (%d nós)" % [sc, made])
+		b.free()
+		# A mesma semente monta o mesmo cenário.
+		var c := _mode_arena("energy", 6, {"scenario": sc, "fast_sim": true})
+		check(_layout_key(c) == key, "%s: layout determinístico pela semente" % sc)
+		c.free()

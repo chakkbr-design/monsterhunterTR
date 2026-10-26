@@ -20,7 +20,9 @@ const BODY_H := 1.6
 ## Folga para o HUD (cartões em cima, log embaixo): a altura útil da tela é FRAME_V dela.
 const FRAME_V := 0.82
 const MIN_DIST := 6.0
-const MAX_DIST := 22.0
+## Teto da distância: com a quadra de energia (48 x 28, Pokémon presos em +-23,5 x +-13,5) cabem até os
+## dois cantos opostos na tela 16:9 (_fit dá 46,3 m para o retângulo todo com a margem).
+const MAX_DIST := 47.0
 ## Suavidade (por segundo real) do enquadramento normal e das cenas.
 const EASE := 2.6
 const EASE_SHOT := 5.0
@@ -44,8 +46,9 @@ const BIG_MARGIN := 1.2
 ## Troca: tempo mínimo parado depois do raio e depois da bola abrir; teto de segurança.
 const RECALL_HOLD := 0.6
 const OPEN_HOLD := 0.5
-## O treinador entra no quadro da troca se estiver a menos disto (m) do ponto da bola.
-const SWITCH_TRAINER := 10.0
+## O treinador entra no quadro da troca se estiver a menos disto (m) do ponto da bola: na quadra de
+## 48 m ele fica a 24,8 m do centro e a bola cai a ENTRY_X = 6 m (ou onde o anterior estava).
+const SWITCH_TRAINER := 20.0
 const HOLD_MAX := 6.0
 
 var arena: Node

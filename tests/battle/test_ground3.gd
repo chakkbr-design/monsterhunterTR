@@ -39,6 +39,14 @@ func check(ok: bool, what: String) -> void:
 		print("FALHOU: ", what)
 
 
+## Deixa só o primeiro pilar (a quadra de energia tem BattleTerrain.count vezes o plano).
+func _one_pylon(ex: BattleGroundExtras) -> void:
+	while ex.pylons.size() > 1:
+		var q: Dictionary = ex.pylons.pop_back()
+		if is_instance_valid(q.node):
+			q.node.queue_free()
+
+
 func _arena(party: Array, enemies: Array, seed: int, extra := {}) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
@@ -122,7 +130,8 @@ func _bridge() -> void:
 	)
 	var t: BattleTerrain = a.terrain
 	var ex: BattleGroundExtras = t.ground.extras
-	check(ex.bridges.size() == int(X.GROUND_EXTRAS.lagoa.log_bridge), "lagoa com 2 troncos")
+	var want_br: int = t.count(int(X.GROUND_EXTRAS.lagoa.log_bridge))  # na área da quadra
+	check(ex.bridges.size() == want_br, "lagoa com %d troncos" % want_br)
 	var br: Dictionary = ex.bridges[0]
 	var mid: Vector3 = br.mid
 	var r: BattleFighter = a.enemy
@@ -214,7 +223,8 @@ func _pylon() -> void:
 	)
 	var t: BattleTerrain = a.terrain
 	var ex: BattleGroundExtras = t.ground.extras
-	check(ex.pylons.size() == 1, "pedreira com pilar")
+	check(ex.pylons.size() == t.count(int(X.GROUND_EXTRAS.pedreira.pylon)), "pedreira com pilar")
+	_one_pylon(ex)  # as regras de um pilar, sem os outros da quadra grande por perto
 	var py: Dictionary = ex.pylons[0]
 	var p: BattleFighter = a.player
 	var r: BattleFighter = a.enemy
@@ -278,6 +288,7 @@ func _pylon() -> void:
 		[Mon.create("magnemite", 50)], [Mon.create("rattata", 50)], 9, {"scenario": "pedreira"}
 	)
 	var sx: BattleGroundExtras = s.terrain.ground.extras
+	_one_pylon(sx)
 	_put(s.player, sx.pylons[0].pos + away * 1.5)
 	check(absf(s.terrain.ground.regen_mult(s.player) - X.STEEL_REGEN) < 0.001, "Aço perto: 1,2x")
 	_put(s.enemy, sx.pylons[0].pos + away * 1.5)
@@ -295,6 +306,7 @@ func _pylon_ai() -> void:
 	)
 	var t: BattleTerrain = a.terrain
 	var ex: BattleGroundExtras = t.ground.extras
+	_one_pylon(ex)
 	var py: Dictionary = ex.pylons[0]
 	var p: BattleFighter = a.player
 	var r: BattleFighter = a.enemy

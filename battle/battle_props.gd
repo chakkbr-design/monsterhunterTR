@@ -248,16 +248,22 @@ func add(kind: String, at: Vector3) -> void:
 
 
 ## Pedregulho: vai para o topo do morro mais perto que ainda não tem um (sem morro, fica onde caiu).
+## Prefere morro alto (h >= BattleTerrain.HIGH): na quadra voxel há montinhos baixos.
 func _on_hill(o: Dictionary) -> void:
 	var best := {}
-	var best_d := INF
-	for h in terrain.obstacles:
-		if h.kind != "hill" or of_kind("boulder").any(func(b): return b.get("hill") == h):
-			continue
-		var d := _flat(h.pos - o.pos).length()
-		if d < best_d:
-			best_d = d
-			best = h
+	for low_ok in [false, true]:
+		var best_d := INF
+		for h in terrain.obstacles:
+			if h.kind != "hill" or of_kind("boulder").any(func(b): return b.get("hill") == h):
+				continue
+			if not low_ok and float(h.h) < BattleTerrain.HIGH:
+				continue
+			var d := _flat(h.pos - o.pos).length()
+			if d < best_d:
+				best_d = d
+				best = h
+		if not best.is_empty():
+			break
 	if best.is_empty():
 		return
 	o.hill = best
@@ -533,7 +539,7 @@ func _ignite_tree(o: Dictionary, user: BattleFighter) -> void:
 	_tele("tree_ignite", {"by": _uid(user)})
 	arena.popup(o.pos + Vector3(0, 2.2, 0), "A árvore pegou fogo!", Dex.type_color("fire"))
 	if is_instance_valid(o.get("canopy_mat")):
-		o.canopy_mat.albedo_color = Color(1.0, 0.55, 0.3)
+		ArenaVoxels.tint_mat(o.canopy_mat, Color(1.0, 0.55, 0.3))
 
 
 func _tip_tree(o: Dictionary, user: BattleFighter, secs: float, cause: String) -> void:
@@ -636,9 +642,12 @@ func _fell(o: Dictionary) -> void:
 			o.node.basis = Basis(Vector3.UP.cross(d).normalized(), PI * 0.5)
 			o.node.position.y = 0.22
 		if is_instance_valid(o.get("canopy_mat")):
-			o.canopy_mat.albedo_color = (
+			ArenaVoxels.tint_mat(
+				o.canopy_mat,
 				Color(0.45, 0.35, 0.25) if o.get("cause", "fire") == "fire" else Color.WHITE
 			)
+		if is_instance_valid(terrain.floor_node):
+			terrain.floor_node.forget(o.pos)
 
 
 func _tick_tree(o: Dictionary, dt: float) -> void:
@@ -779,7 +788,7 @@ func _burn_bush(o: Dictionary, user: BattleFighter) -> void:
 		if is_instance_valid(o.get("node")):
 			o.node.scale = Vector3(0.7, 0.5, 0.7)
 		if is_instance_valid(o.get("canopy_mat")):
-			o.canopy_mat.albedo_color = Color(0.35, 0.28, 0.22)
+			ArenaVoxels.tint_mat(o.canopy_mat, Color(0.35, 0.28, 0.22))
 
 
 func _tick_bush(o: Dictionary, dt: float) -> void:
@@ -791,7 +800,7 @@ func _tick_bush(o: Dictionary, dt: float) -> void:
 			if is_instance_valid(o.get("node")):
 				o.node.scale = Vector3.ONE
 			if is_instance_valid(o.get("canopy_mat")):
-				o.canopy_mat.albedo_color = Color.WHITE
+				ArenaVoxels.tint_mat(o.canopy_mat, Color.WHITE)
 		return
 	for b in berries:
 		if b.owner == o:
@@ -813,7 +822,11 @@ func _drop_berry(o: Dictionary, src: String, life: float) -> void:
 		if inner.has_point(Vector2(at.x, at.z)):
 			break
 	var b := {"pos": at, "src": src, "owner": o, "t": life}
-	if _vis():
+	if _vis() and terrain.lattice:
+		b.node = ArenaPropsVox.berry()
+		b.node.position = at + Vector3(0, 0.2, 0)
+		arena.add_child(b.node)
+	elif _vis():
 		var mi := MeshInstance3D.new()
 		var s := SphereMesh.new()
 		s.radius = 0.14
@@ -899,6 +912,9 @@ func _crystal_glow(o: Dictionary, on: bool) -> void:
 		mat.emission_enabled = on
 		mat.emission = Dex.type_color("electric")
 		mat.emission_energy_multiplier = 1.4
+	elif mat is ShaderMaterial:
+		var c := Dex.type_color("electric")
+		mat.set_shader_parameter("flash", Vector3(c.r, c.g, c.b) * 1.2 if on else Vector3.ZERO)
 
 
 func _tick_crystal(o: Dictionary, dt: float) -> void:
@@ -946,6 +962,8 @@ func _remove(o: Dictionary) -> void:
 	for k in ["node", "ring", "steam"]:
 		if is_instance_valid(o.get(k)):
 			o[k].queue_free()
+	if is_instance_valid(terrain.floor_node):
+		terrain.floor_node.forget(o.pos)
 
 
 # --- Pedregulho ---
@@ -1872,6 +1890,9 @@ func _safe_path(f: BattleFighter, a: Vector3, b: Vector3) -> bool:
 
 
 func _build(o: Dictionary) -> void:
+	if terrain.lattice:
+		_build_voxel(o)
+		return
 	var root := Node3D.new()
 	root.name = "Prop_%s" % o.kind
 	root.position = o.pos
@@ -1939,24 +1960,7 @@ func _build(o: Dictionary) -> void:
 			root.position.y = float(o.get("y", 0.0)) + BOULDER_R  # gira em volta do centro
 		"geyser":
 			root.add_child(terrain._disc(float(o.r), ptex("vent"), 1.0))
-			var steam := MeshInstance3D.new()
-			var cm := CylinderMesh.new()
-			cm.top_radius = STEAM_R * 1.1
-			cm.bottom_radius = STEAM_R * 0.6
-			cm.height = STEAM_H
-			cm.radial_segments = 10
-			cm.rings = 1
-			steam.mesh = cm
-			var mat := StandardMaterial3D.new()
-			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			mat.albedo_color = Color(0.92, 0.96, 1.0, 0.45)
-			steam.material_override = mat
-			steam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			steam.position = o.pos + Vector3(0, STEAM_H * 0.5, 0)
-			steam.visible = false
-			arena.add_child(steam)
-			o.steam = steam
+			_build_steam(o)
 		"hive":
 			root.add_child(terrain._frustum(0.32, 0.36, 0.45, ptex("bark"), 7, 1.0))
 			var h := _ball(0.32, Vector3(0, 0.72, 0), BattleTerrain._mat(ptex("hive"), 1.0, false))
@@ -1976,6 +1980,44 @@ func _build(o: Dictionary) -> void:
 				root.add_child(_ball(0.17 * k, at + Vector3(0, 0.22 * k, 0), mat))
 	o.node = root
 	arena.add_child(root)
+
+
+## Quadra voxel (BattleTerrain.lattice): o objeto em voxel (ArenaPropsVox); copa e cristal com
+## material próprio (tint e flash) nos mesmos campos de antes.
+func _build_voxel(o: Dictionary) -> void:
+	var root := ArenaPropsVox.prop(o, terrain.scenario)
+	if root == null:
+		return
+	if root.has_meta("canopy"):
+		o.canopy_mat = root.get_meta("canopy")
+	if root.has_meta("crystal"):
+		o.crystal_mat = root.get_meta("crystal")
+	if o.kind == "geyser":
+		_build_steam(o)
+	o.node = root
+	arena.add_child(root)
+
+
+## Vapor do gêiser: coluna translúcida que aparece no aviso e na erupção.
+func _build_steam(o: Dictionary) -> void:
+	var steam := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = STEAM_R * 1.1
+	cm.bottom_radius = STEAM_R * 0.6
+	cm.height = STEAM_H
+	cm.radial_segments = 10
+	cm.rings = 1
+	steam.mesh = cm
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.92, 0.96, 1.0, 0.45)
+	steam.material_override = mat
+	steam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	steam.position = o.pos + Vector3(0, STEAM_H * 0.5, 0)
+	steam.visible = false
+	arena.add_child(steam)
+	o.steam = steam
 
 
 ## Enxame: bolinhas amarelas e pretas girando.
