@@ -266,6 +266,7 @@ func _make_lights_and_env() -> void:
 	env.sky = _sky
 	_env_node.environment = env
 	_env_node.camera_attributes = null
+	GfxQuality.attach_aa(_env_node)  # edge anti-aliasing that leaves the sprites crisp
 
 
 ## Game clock "HH:MM".

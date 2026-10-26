@@ -133,6 +133,7 @@ func _build_stage() -> void:
 		wind.name = "Wind"
 		add_child(wind)
 	else:
+		GfxQuality.classic_stage(self)  # VGC: o visual de antes dos níveis gráficos (MSAA 2x)
 		var env := WorldEnvironment.new()
 		env.environment = Environment.new()
 		env.environment.background_mode = Environment.BG_COLOR
