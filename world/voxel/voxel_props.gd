@@ -279,9 +279,9 @@ static func _lamp(gen: VoxelZoneGen, t: Vector2i) -> void:
 		VoxelPal.STONE_WALL_DARK,
 		VoxelMat.STONE
 	)
-	for y in range(y0 + 2, y0 + 11):
+	for y in range(y0 + 2, y0 + 9):  # 3.4 m in all: low enough not to hide the player behind it
 		_put(gen, Vector3i(px, y, pz), VoxelPal.METAL, VoxelMat.METAL, 0.04)
-	var hy := y0 + 11
+	var hy := y0 + 9
 	for y in range(hy, hy + 3):
 		for z in range(pz - 1, pz + 2):
 			for x in range(px - 1, px + 2):

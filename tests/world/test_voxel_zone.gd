@@ -4,7 +4,9 @@ extends SceneTree
 ## design, the map and the generator sources. The gameplay of data/maps/pallet_town.json sits on
 ## the baked tile grid: free tile centres, water for swim zones, doors with a free doorstep. Every
 ## place the story needs can be reached on foot from "start". The colliders are exactly the blocked
-## and water tiles. The zone loads fast, both blocking and streamed.
+## and water tiles. The zone loads fast, both blocking and streamed. In the real RouteWorld the
+## player walks it with the move keys, tile by tile: from "start" to every mailbox and sign, into
+## every house and back out, to every NPC, the pond shore and the north gate.
 ## The scripts are loaded by path: a SceneTree script compiles before the autoloads exist.
 
 const ZONE := "pallet_town"
@@ -16,6 +18,12 @@ const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), 
 var _fails := 0
 var bake_s: GDScript
 var gen_s: GDScript
+var Motion: GDScript
+var Player: GDScript
+var w: Node  ## the RouteWorld of the walk
+var p: Node3D  ## its player
+var _held := ""  ## the move key held by the walk
+var _steps := 0  ## tiles walked
 
 
 func _initialize() -> void:
@@ -49,6 +57,7 @@ func _run() -> void:
 	b.get_parent().queue_free()
 	await frames(2)
 	await _stream()
+	await _walk()
 	print("[voxel zone] %d failed" % _fails)
 	quit(1 if _fails > 0 else 0)
 
@@ -233,11 +242,7 @@ func _reach(b, grid: TileGrid) -> void:
 			ok = ok or seen.has(c + dv)
 		check(ok, "reachable from start: a tile next to sign %s" % e.name)
 	# The pond shore: a reachable tile next to the pond's water.
-	var pond := Rect2()
-	for w in b.bake.meta.get("water", []):
-		if String(w.get("type", "")) == "pond":
-			var r: Array = w.rect
-			pond = Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3]))
+	var pond := _pond(b)
 	check(pond.has_area(), "the pond is in the bake metadata")
 	var shore := 0
 	for c in seen:
@@ -289,3 +294,229 @@ func _colliders(b, grid: TileGrid) -> void:
 			% [tiles, bad.size(), bad.slice(0, 6)]
 		)
 	)
+
+
+# --- walking -------------------------------------------------------------------------------------
+
+
+func _walk() -> void:
+	Motion = load("res://world/grid/grid_motion.gd")
+	Player = load("res://world/player.gd")
+	var game = root.get_node("/root/Game")
+	game.save_path = OS.get_user_data_dir().path_join("test_voxel_zone_save.json")
+	game.save_enabled = false
+	game.flags["got_starter"] = true  # no Oak at the north edge
+	game.last_save = {}
+	Player.force_zones = {}
+	var story = root.get_node_or_null("Story")
+	if story:
+		story.auto_advance = true
+		story.auto_answer = true
+	game.spawn_request = {"zone": ZONE, "spawn": "start"}
+	w = load("res://world/route_world.tscn").instantiate()
+	w.fade_time = 0.0
+	root.add_child(w)
+	await frames(8)
+	p = get_first_node_in_group("ow_player")
+	for i in 900:
+		if w.builders.has(ZONE) and w.builders[ZONE].is_built and p.grid_active():
+			break
+		await physics_frame
+	await frames(10)
+	check(p.grid_active(), "walk: the player starts on Pallet's grid (map movement: grid)")
+	var b = w.builders[ZONE]
+	var g: TileGrid = b.grid
+	var t0 := Time.get_ticks_msec()
+	var steps0: int = _steps
+	await _visit(b, g, "PlayerMailbox")
+	await _enter(b, g, "player_house")
+	await _visit(b, g, "RivalMailbox")
+	await _enter(b, g, "rival_house")
+	await _visit(b, g, "PalletSign")
+	await _visit(b, g, "NPC_OldMan")
+	var gate := Vector2i(0, -19)
+	check(
+		await _walk_to(g, func(c: Vector2i) -> bool: return c == gate, "the north gate"),
+		"walk: reached the north gate %s" % gate
+	)
+	await _visit(b, g, "NPC_Girl")
+	var pond := _pond(b)
+	var shore := func(c: Vector2i) -> bool:
+		for dv in DIRS:
+			if g.has_flag(c + dv, TileGrid.WATER) and pond.has_point(Vector2(c + dv)):
+				return true
+		return false
+	check(await _walk_to(g, shore, "the pond shore"), "walk: reached the pond shore")
+	await _visit(b, g, "NPC_Scientist")
+	await _visit(b, g, "LabSign")
+	await _enter(b, g, "lab")
+	print(
+		(
+			"  walked %d tiles in %.1f s (real), %d failed"
+			% [_steps - steps0, (Time.get_ticks_msec() - t0) / 1000.0, _fails]
+		)
+	)
+	_release()
+	w.queue_free()
+	await frames(4)
+
+
+func _release() -> void:
+	for a in Player.MOVES:
+		Input.action_release(a)
+	_held = ""
+
+
+## The move key that walks toward grid direction `d` under the current camera.
+func _key(d: Vector2i) -> String:
+	for a in Player.MOVES:
+		var s: Vector2i = Player.MOVES[a]
+		if Motion.card(Motion.vec(s).rotated(Vector3.UP, p._camera_yaw())) == d:
+			return a
+	return ""
+
+
+func _hold(a: String) -> void:
+	if a == _held:
+		return
+	if _held != "":
+		Input.action_release(_held)
+	if a != "":
+		Input.action_press(a)
+	_held = a
+
+
+## First step from `from` toward the nearest tile where goal holds, over tiles the player may step
+## into right now (NPC claims and bodies included). ZERO when already there, MAX when cut off.
+func _next_step(g: TileGrid, from: Vector2i, goal: Callable) -> Vector2i:
+	if goal.call(from):
+		return Vector2i.ZERO
+	var prev := {from: from}
+	var queue: Array[Vector2i] = [from]
+	var i := 0
+	while i < queue.size():
+		var c := queue[i]
+		i += 1
+		for dv in DIRS:
+			var n := c + dv
+			if prev.has(n) or not Motion.spot_free(g, n, p):
+				continue
+			prev[n] = c
+			if goal.call(n):
+				var s := n
+				while prev[s] != from:
+					s = prev[s]
+				return s - from
+			queue.append(n)
+	return Vector2i.MAX
+
+
+## Walks with the move keys to a tile where goal holds, planning again at every tile (wandering
+## NPCs step into the way) and stopping on its centre. False after `limit` seconds of game time.
+func _walk_to(g: TileGrid, goal: Callable, what: String, limit := 45.0) -> bool:
+	var cell: Vector2i = p._cell
+	var dir := _next_step(g, cell, goal)
+	var n := 0
+	while n < int(limit * Engine.physics_ticks_per_second):
+		if p._cell != cell or n % 20 == 0:
+			if p._cell != cell:
+				_steps += 1
+			cell = p._cell
+			dir = _next_step(g, cell, goal)
+		if dir == Vector2i.ZERO:
+			_hold("")
+			if not p._stepping:
+				await frames(4)
+				return Motion.card(p.global_position - Vector3(cell.x, 0, cell.y)) == Vector2i.ZERO
+		else:
+			_hold("" if dir == Vector2i.MAX else _key(dir))
+		await physics_frame
+		n += 1
+	_release()
+	print("  walk to %s stopped at %s (next %s)" % [what, p._cell, dir])
+	return false
+
+
+## Taps the key toward `d` (shorter than the turn delay): the player only turns. Nothing when `d`
+## is not one tile along an axis (a wandering NPC stepped away).
+func _face(d: Vector2i) -> void:
+	_release()
+	await frames(2)
+	var a := _key(d)
+	if a == "":
+		return
+	Input.action_press(a)
+	await frames(2)
+	Input.action_release(a)
+	await frames(12)
+
+
+func _cell_of(n: Node3D) -> Vector2i:
+	return Vector2i(roundi(n.global_position.x), roundi(n.global_position.z))
+
+
+## Walks next to the node `node_name` (an NPC, a sign, a mailbox), faces it and checks that it is
+## the focus (the talk / read prompt). Tries again when a wandering NPC stepped away meanwhile.
+func _visit(b, g: TileGrid, node_name: String) -> void:
+	var n: Node3D = b.find_child(node_name, true, false)
+	check(n != null, "walk: %s in the zone" % node_name)
+	if n == null:
+		return
+	var ok := false
+	for attempt in 3:
+		var at := _cell_of(n)
+		var next_to := func(c: Vector2i) -> bool: return (c - at).length_squared() == 1
+		if not await _walk_to(g, next_to, node_name):
+			break
+		await _face(_cell_of(n) - p._cell)
+		if p.focus == n:
+			ok = true
+			break
+	check(ok, "walk: reached and faced %s at %s (focus %s)" % [node_name, _cell_of(n), p.focus])
+
+
+## Walks to the doorstep of building `id`, pushes north into the door, checks the interior is
+## entered, then comes back out through the door's arrival point onto the grid.
+func _enter(b, g: TileGrid, id: String) -> void:
+	var dr: Dictionary = {}
+	for e in b.data.get("buildings", []):
+		if e.id == id:
+			dr = e.door
+	var front := _tile(dr.tile) + Vector2i(0, 1)
+	var there := await _walk_to(g, func(c: Vector2i) -> bool: return c == front, "%s door" % id)
+	check(there, "walk: reached the %s doorstep %s" % [id, front])
+	if not there:
+		return
+	_hold(_key(Vector2i(0, -1)))
+	var entered := false
+	for i in 120:
+		await physics_frame
+		if w.location_id != ZONE:
+			entered = true
+			break
+	_release()
+	check(
+		entered, "walk: pushing north on the doorstep enters %s (now in %s)" % [id, w.location_id]
+	)
+	if not entered:
+		return
+	await frames(30)
+	var game = root.get_node("/root/Game")
+	for i in 1200:  # a story scene inside (auto-advanced) ends first
+		if not game.is_busy() and not p.locked and not w.traveling:
+			break
+		await physics_frame
+	await w.go_to_zone(ZONE, String(dr.spawn))
+	await frames(30)
+	check(
+		w.location_id == ZONE and p.grid_active() and p._cell == front,
+		"walk: back out of %s on the doorstep %s on the grid (%s)" % [id, front, p.global_position]
+	)
+
+
+static func _pond(b) -> Rect2:
+	for e in b.bake.meta.get("water", []):
+		if String(e.get("type", "")) == "pond":
+			var r: Array = e.rect
+			return Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3]))
+	return Rect2()
