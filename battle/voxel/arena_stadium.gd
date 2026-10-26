@@ -477,7 +477,9 @@ func _build_towers() -> void:
 			l.light_energy = 0.0
 			l.shadow_enabled = sz < 0.0  # the two back towers only
 			l.shadow_bias = 0.04
-			l.light_specular = 0.4
+			# Low glint: on the ponds (water.gdshader, SPECULAR_AMOUNT = 2 x this) a floodlight
+			# leaves a highlight, not a clipped white blob.
+			l.light_specular = 0.12
 			var lp := h.position + to.normalized() * 1.5 + Vector3(0, 2.0, 0)
 			l.transform = Transform3D(Basis.looking_at((aim - lp).normalized(), Vector3.UP), lp)
 			root.add_child(l)
