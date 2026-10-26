@@ -44,6 +44,8 @@ const TRAIL_EVERY := 0.12
 
 var arena: Node
 var rng: RandomNumberGenerator
+## id do lutador -> {power, by} do último arremesso (o impacto no obstáculo: BattleDestruction).
+var _throws := {}
 
 
 func _init(a: Node, r: RandomNumberGenerator) -> void:
@@ -173,13 +175,23 @@ func after_hit(
 		d = _flat(target.position - user.position)
 	if d.length() < 0.01:
 		d = Vector3.BACK
-	launch(target, d.normalized(), dist, push_dist(mv) > 0.0)
+	var by: BattleFighter = user if is_instance_valid(user) else null
+	launch(target, d.normalized(), dist, push_dist(mv) > 0.0, float(mv.get("power", 0)), by)
 
 
 ## Arremessa o alvo `dist` metros na direção `dir` (desacelera até parar; sobe um pouco no meio).
-func launch(f: BattleFighter, dir: Vector3, dist: float, forced := false) -> void:
+## `power` (poder do golpe) e `by` (quem arremessou) contam no impacto contra obstáculos.
+func launch(
+	f: BattleFighter,
+	dir: Vector3,
+	dist: float,
+	forced := false,
+	power := 0.0,
+	by: BattleFighter = null
+) -> void:
 	if arena.get("moves") and arena.moves.effects.rooted(f):
 		return  # Ingrain: enraizado não sai do lugar
+	_throws[f.get_instance_id()] = {"power": power, "by": by}
 	var secs := clampf(0.25 + dist * 0.07, 0.3, 0.7)
 	var lift := minf(0.2 + dist * 0.12, 0.9)
 	f.launch(dir, dist, secs, lift)
@@ -198,10 +210,18 @@ func crash_check(f: BattleFighter, next: Vector3) -> bool:
 		what = "fence"
 	elif arena.field:
 		for o in arena.field.objects:
+			if float(o.get("y", 0.0)) > 0.5:
+				continue  # empilhado em cima de outra coisa (BattleDestruction)
 			if _flat(next - o.pos).length() < BattleField.OBJ_R + BattleField.BODY_R:
 				what = "rock" if o.rock else "crate"
 				obj = o
 				break
+	if what == "" and arena.get("terrain") and arena.terrain.destruction:
+		# Modo de energia: árvore, coluna, pico, encosta do morro, objetos do cenário.
+		var hit: Dictionary = arena.terrain.destruction.crash_target(f, next)
+		if not hit.is_empty():
+			what = String(hit.what)
+			obj = hit.o
 	if (
 		what == ""
 		and arena.get("fixed")
@@ -218,6 +238,7 @@ func crash_check(f: BattleFighter, next: Vector3) -> bool:
 func _crash(f: BattleFighter, what: String, obj) -> void:
 	var ratio := f.launch_t / maxf(f.launch_total, 0.001)
 	var dir := f.launch_v.normalized()
+	var speed := f.launch_v.length() * ratio
 	f.launch_t = 0.0
 	if ratio < CRASH_MIN_SPEED:
 		return
@@ -230,9 +251,14 @@ func _crash(f: BattleFighter, what: String, obj) -> void:
 		"crate": "Bateu na caixa!",
 		"wall": "Bateu na parede!"
 	}
-	f.popup("-%d %s" % [n, words.get(what, "Bateu!")], Color(1.0, 0.8, 0.55), 0.9, 0.6)
+	var word: String = words.get(what, BattleDestruction.crash_word(what))
+	f.popup("-%d %s" % [n, word], Color(1.0, 0.8, 0.55), 0.9, 0.6)
 	f.take_damage(n, Vector3.ZERO, 0.0)
-	if obj != null and arena.field:
+	var ter = arena.get("terrain")
+	if obj != null and ter and ter.destruction and ter.destruction.on():
+		# Modo de energia: impacto pelo poder do golpe, velocidade e peso (BattleDestruction).
+		ter.destruction.impact(f, what, obj, speed, dir, _throws.get(f.get_instance_id(), {}))
+	elif obj != null and arena.field:
 		arena.field._hit_objects(obj.pos, 0.05)
 	var at: Vector3 = f.position + dir * 0.4
 	at.y = 0.4

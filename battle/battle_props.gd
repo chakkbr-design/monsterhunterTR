@@ -636,6 +636,7 @@ func _fell(o: Dictionary) -> void:
 	o.len = TREE_H * 0.9
 	o.life = LOG_LIFE
 	o.r = 0.3
+	terrain.notify_obstacles("tree", o.pos)
 	if _vis():
 		PixelFx.pop(arena, "dust", o.pos + d * TREE_H * 0.5 + Vector3(0, 0.3, 0), 2.0, 0.5)
 		if is_instance_valid(o.get("node")):
@@ -964,6 +965,7 @@ func _remove(o: Dictionary) -> void:
 			o[k].queue_free()
 	if is_instance_valid(terrain.floor_node):
 		terrain.floor_node.forget(o.pos)
+	terrain.notify_obstacles(String(o.kind), o.pos)
 
 
 # --- Pedregulho ---
@@ -1133,6 +1135,7 @@ func _boulder_stop(o: Dictionary) -> void:
 	o.state = ""
 	o.r = STONE_R
 	o.erase("hill")
+	terrain.notify_obstacles("boulder", o.pos)  # mudou de lugar
 	if _vis() and is_instance_valid(o.get("node")):
 		o.node.scale = Vector3.ONE * (STONE_R / BOULDER_R)
 		o.node.position = o.pos + Vector3(0, float(o.y) + STONE_R * 0.8, 0)

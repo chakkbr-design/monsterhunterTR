@@ -309,7 +309,7 @@ func _hit_objects(at: Vector3, radius: float) -> void:
 				o.node.scale = Vector3.ONE * 0.85
 
 
-func _break(o: Dictionary) -> void:
+func _break(o: Dictionary, dir := Vector3.ZERO) -> void:
 	objects.erase(o)
 	if is_instance_valid(o.node):
 		o.node.queue_free()
@@ -323,6 +323,8 @@ func _break(o: Dictionary) -> void:
 		PixelFx.pop(arena, "dust", o.pos + Vector3(0, 0.5, 0), 1.3, 0.4)
 	if o.berry:
 		_add_berry(o.pos)
+	if ter and ter.destruction:
+		ter.destruction.broken(o, "rock" if o.rock else "crate", null, dir, "break")
 
 
 func _shards(o: Dictionary) -> void:

@@ -496,6 +496,7 @@ func _add_rocks(center: Vector3, spread: float, n: int, user: BattleFighter) -> 
 				arena.add_child(mi)
 				r.node = mi
 			rocks.append(r)
+			terrain.notify_obstacles("pebble", r.pos)
 			_tele("rock_cover", {"by": _uid(user)})
 			break
 
@@ -747,6 +748,8 @@ func _drop(list: Array, o: Dictionary) -> void:
 	list.erase(o)
 	if is_instance_valid(o.get("node")):
 		o.node.queue_free()
+	if is_same(list, rocks) or is_same(list, snow):
+		terrain.notify_obstacles("pebble" if is_same(list, rocks) else "snow", o.pos)
 
 
 ## Teia: quem entra (no chão, não Inseto) fica preso WEB_ROOT s, uma vez por teia.
