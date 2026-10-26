@@ -127,6 +127,29 @@ static func _blob(
 				g.put(v, _leaf(v, c, r, cols[0], cols[1], cols[2], salt), VoxelMat.LEAVES)
 
 
+## Crown shading over the whole tree (on top of each blob's own gradient): leaves open to the sky
+## catch the sun a touch lighter and warmer, leaves with air under them (the underside) go darker
+## and cooler, and some clusters a shade lighter or darker so the crown reads as clumps.
+static func _shade_crown(g: VoxelGrid, salt: int) -> void:
+	for z in g.size.z:
+		for y in g.size.y:
+			for x in g.size.x:
+				var v := g.origin + Vector3i(x, y, z)
+				if g.mat_at(v) != VoxelMat.LEAVES:
+					continue
+				var c := g.color_at(v)
+				if not g.solid(v + Vector3i.UP):
+					c = c.lightened(0.07).lerp(Color("e8f080"), 0.05)
+				elif not g.solid(v + Vector3i.DOWN):
+					c = c.darkened(0.16).lerp(Color("20402a"), 0.08)
+				var k := VoxelGrid.hash01(v.x >> 2, v.y >> 2, v.z >> 2, salt + 40)
+				if k < 0.18:
+					c = c.lightened(0.06)
+				elif k > 0.85:
+					c = c.darkened(0.09)
+				g.put(v, c, VoxelMat.LEAVES)
+
+
 static func _trunk(g: VoxelGrid, h: int, col: Color, salt: int, roots := true) -> void:
 	for y in h:
 		for z in [-1, 0]:
@@ -178,6 +201,7 @@ static func _broadleaf(
 		cols,
 		sd + 99
 	)
+	_shade_crown(g, sd)
 	if fruit:
 		for z in g.size.z:
 			for y in g.size.y:
@@ -230,6 +254,7 @@ static func _birch(v: int, sd: int) -> VoxelGrid:
 			sd + i * 5,
 			0.2
 		)
+	_shade_crown(g, sd)
 	return g
 
 
@@ -309,6 +334,7 @@ static func _willow(v: int, sd: int) -> VoxelGrid:
 			sd + 11 + i,
 			0.2
 		)
+	_shade_crown(g, sd)
 	# Strands: from the crown's lower rim, columns of leaves hanging 3-10 voxels.
 	var hang: Array[Vector3i] = []
 	for z in g.size.z:
@@ -359,6 +385,7 @@ static func _bush(v: int, sd: int, s: float) -> VoxelGrid:
 		var d := rng.randf_range(1.4, 2.0) * s * k
 		var c := Vector3(cos(a) * d, rng.randf_range(1.8, 3.0) * s * k, sin(a) * d)
 		_blob(g, c, Vector3.ONE * rng.randf_range(1.5, 2.1) * s * k, cols, sd + 3 + i, 0.14)
+	_shade_crown(g, sd)
 	# Twigs at the base.
 	for o in [Vector3i(1, 0, 0), Vector3i(-1, 0, -1), Vector3i(0, 0, 1)]:
 		g.put(o, VoxelPal.BARK, VoxelMat.BARK)

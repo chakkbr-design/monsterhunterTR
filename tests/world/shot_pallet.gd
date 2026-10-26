@@ -16,6 +16,7 @@ const SPOTS := {
 	"plaza": [Vector3(-1, 0, 12), Vector3(0, 0, -1)],
 	"fountain": [Vector3(0, 0, 10), Vector3(0, 0, -1)],
 	"house": [Vector3(-16, 0, -1), Vector3(0, 0, -1)],
+	"laundry": [Vector3(-21, 0, 20), Vector3(0, 0, -1)],
 	"plantation": [Vector3(-23, 0, -1), Vector3(0, 0, -1)],
 	"rival": [Vector3(11, 0, -2), Vector3(0, 0, -1)],
 	"lab": [Vector3(16, 0, 24), Vector3(0, 0, -1)],
@@ -87,6 +88,9 @@ func _globals(period: String) -> void:
 	RenderingServer.global_shader_parameter_set("rain_puddle", 0.55 * wet)
 	RenderingServer.global_shader_parameter_set("rain_amount", wet)
 	RenderingServer.global_shader_parameter_set("snow_cover", 1.0 if weather == "snow" else 0.0)
+	if weather == "snow":  # the voxel zone reads the cover from the weather node
+		for n in root.get_tree().get_nodes_in_group("weather"):
+			n.set("battle_cover", Color(0, 1, 0, 0))
 	if not nm.is_empty():
 		for n in root.get_tree().get_nodes_in_group("night_lights"):
 			n.set_period_mult(nm[0], nm[1])
@@ -142,12 +146,18 @@ func _run() -> void:
 			tod_script.forced_period = period
 		else:
 			var hm: PackedStringArray = String(period).split(":")
-			tod_script.forced_minutes = int(hm[0]) * 60.0 + (float(hm[1]) if hm.size() > 1 else 0.0)
+			var m := int(hm[0]) * 60.0 + (float(hm[1]) if hm.size() > 1 else 0.0)
+			tod_script.forced_minutes = m
+			var clock := get_first_node_in_group("time_of_day")
+			if clock and clock.has_method("set_minute"):
+				clock.set_minute(m)
 			period = String(period).replace(":", "")
 		var tod := get_first_node_in_group("time_of_day")
 		if tod and tod.has_method("refresh"):
 			tod.refresh()
 		await _wait(30)
+		if tod and "state" in tod:
+			print("look %s: %s" % [period, tod.state])
 		for s in spots:
 			if not SPOTS.has(s):
 				continue

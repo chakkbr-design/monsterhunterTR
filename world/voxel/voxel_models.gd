@@ -37,6 +37,7 @@ const TALL := [
 	"prop_flagpole",
 ]
 const FLAG_TOP := 39  ## voxel row of the flagpole's top halyard ring (the flag hangs below it)
+const LAUNDRY_TOP := 15  ## prop voxels from the ground to the laundry post crossbar
 
 
 static func names() -> PackedStringArray:

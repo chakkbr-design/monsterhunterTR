@@ -115,6 +115,24 @@ func _art(b) -> void:
 	check(int(counts.get("props", 0)) > 100, "street furniture: %d props" % counts.get("props", 0))
 	check(int(counts.get("smoke", 0)) >= 2, "chimney smoke: %d plumes" % counts.get("smoke", 0))
 	check(b.butterflies != null, "butterflies over the flower beds")
+	check(int(counts.get("laundry", 0)) >= 1, "a washing line with clothes")
+	check(int(counts.get("flags", 0)) >= 1, "a flag in the breeze")
+	var grid: TileGrid = b.grid
+	check(grid != null and grid.blocked(Vector2i(-22, 17)), "the washing line blocks its tiles")
+	# A lone town tree fades for a player right behind it (north, under the crown): its fader rect
+	# starts south of the player, so the rig counts it as between the player and the eye.
+	var oak: Rect2 = Rect2()
+	for n in b.find_children("*", "MultiMeshInstance3D", true, false):
+		if not n.has_meta("rect"):
+			continue
+		var r: Rect2 = n.get_meta("rect")
+		if r.has_point(Vector2(-21, 23)) and float(n.get_meta("height", 0.0)) > 3.0:
+			oak = r
+	check(oak.has_area(), "the oak at (-21, 22) has its own fader")
+	check(
+		oak.position.y > 20.0 and oak.position.y < 22.5,
+		"oak fader rect starts south of a player at (-21, 20): %s" % oak
+	)
 	var house: Node3D = b.houses.get("player_house")
 	var furn := 0
 	for gi in house.get_meta("geoms", []):

@@ -30,6 +30,8 @@ extends RefCounted
 ## - `props`: free-standing prop models at exact spots: [{"model": "prop_hay" | any VoxelModels
 ##   prop or VoxelFlora decor name, "pos": [x, z] (metres), "rot": quarter turns (front +z faces
 ##   south at 0), "block": true when it blocks its tile}] (farm tools, hay, a watering can...).
+##   A "prop_laundry_post" with "line_to": [x, z] strings two washing lines from its crossbar to
+##   the post standing there and hangs clothes on them (blocking the tiles under the lines).
 ## The generator (VoxelZoneGen) turns it into a VoxelGrid, a TileGrid and metadata, and
 ## tools/voxel/bake_zone.gd bakes them into world/voxel/baked/<zone>.res + .json. The .json holds
 ## the hash of the design + map (VoxelZoneGen.input_hash) and of the generator sources.

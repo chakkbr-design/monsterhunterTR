@@ -138,10 +138,26 @@ static func _design_props(gen: VoxelZoneGen) -> void:
 				var top := at + Vector3(0, VoxelModels.FLAG_TOP * VoxelModels.PROP_VS, 0)
 				var flag := {"pos": top, "rot": rot, "cloth": String(e.get("cloth", "pallet"))}
 				gen.meta.get_or_add("flags", []).append(flag)
+			if m == "prop_laundry_post" and e.has("line_to"):
+				_laundry(gen, at, e.line_to)
 		else:
 			gen.add_decor(m, Transform3D(Basis(Vector3.UP, rot * PI * 0.5), at))
 		if bool(e.get("block", false)):
 			gen.block(t)
+
+
+## A washing line from the post at `at` to the post at `to` ([x, z] m): metadata for the runtime
+## (VoxelZone._laundry: the lines and the clothes), and the tiles under it blocked.
+static func _laundry(gen: VoxelZoneGen, at: Vector3, to: Array) -> void:
+	var t2 := Vector2i(roundi(float(to[0])), roundi(float(to[1])))
+	var top := VoxelModels.LAUNDRY_TOP * VoxelModels.PROP_VS
+	var b := Vector3(float(to[0]), floor_y(gen, t2) + top, float(to[1]))
+	var a := at + Vector3(0, top, 0)
+	gen.meta.get_or_add("laundry", []).append({"a": a, "b": b})
+	var t1 := Vector2i(roundi(at.x), roundi(at.z))
+	var n := maxi(absi(t2.x - t1.x), absi(t2.y - t1.y))
+	for i in n + 1:
+		gen.block(t1 + (t2 - t1) * i / maxi(n, 1))
 
 
 ## Ground height (m) at the centre of tile t.

@@ -288,6 +288,19 @@ static func _pack(xfs: Array) -> PackedFloat32Array:
 	return out
 
 
+## Transform of instance i of an instanced chunk entry, read from its packed "xf" (MultiMesh
+## transforms live in the RenderingServer, which keeps none headless).
+static func entry_xf(e: Dictionary, i := 0) -> Transform3D:
+	var xf: PackedFloat32Array = e.xf
+	var k := i * 12
+	return Transform3D(
+		Vector3(xf[k], xf[k + 1], xf[k + 2]),
+		Vector3(xf[k + 3], xf[k + 4], xf[k + 5]),
+		Vector3(xf[k + 6], xf[k + 7], xf[k + 8]),
+		Vector3(xf[k + 9], xf[k + 10], xf[k + 11])
+	)
+
+
 ## The MultiMesh of one instanced chunk entry (mesh from the tree / decor model).
 func multimesh(e: Dictionary) -> MultiMesh:
 	var xf: PackedFloat32Array = e.xf
