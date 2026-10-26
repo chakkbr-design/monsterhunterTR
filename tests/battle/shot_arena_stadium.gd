@@ -5,7 +5,8 @@ extends SceneTree
 ##   --out=/tmp/estadio/campo [--scenario=campo] [--mood=dia|tarde|noite] [--seed=11] [--size=2]
 ##   [--views=inicio,meio,ko,aberta,placar,tunel,torcida,lago,gelo,mare] [--wait=420] [--speed=2]
 ##   [--weather=rain|storm|hail|sand|sun] [--pile=0..1]
-## Abre res://ui/training/training_battle.tscn no modo de energia e grava <out>_<vista>.png:
+## Abre res://ui/training/training_battle.tscn no modo de energia e grava <out>_<vista>.png (sem
+## --out: user://shots/arena/estadio_<vista>.png):
 ## inicio = câmera de ação logo no começo da luta, meio = depois de `wait` quadros de luta,
 ## ko = uns quadros depois do primeiro desmaio (a torcida comemora), aberta = o estádio inteiro de
 ## fora (foto de apresentação), placar / tunel / torcida = de perto, sem a interface; lago = o lago
@@ -29,7 +30,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var out := String(_args.get("out", "/tmp/claude-0/arena/estadio"))
+	var out := String(
+		_args.get("out", ProjectSettings.globalize_path("user://shots/arena/estadio"))
+	)
 	DirAccess.make_dir_recursive_absolute(out.get_base_dir())
 	var views: PackedStringArray = String(_args.get("views", ",".join(VIEWS))).split(",")
 	var t0 := Time.get_ticks_msec()

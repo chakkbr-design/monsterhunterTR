@@ -24,7 +24,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var out := String(_args.get("out", "/tmp/claude-0/arena/arena.png"))
+	var out := String(
+		_args.get("out", ProjectSettings.globalize_path("user://shots/arena/arena.png"))
+	)
 	var which := String(_args.get("scenario", "campo"))
 	var list: Array = BattleTerrain.SCENARIOS.keys() if which == "all" else [which]
 	list.sort()

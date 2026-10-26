@@ -267,7 +267,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
   devolve tudo no fim (§3). O VGC fica com o visual antigo.
 - O piso continua com o topo em y = 0; o tapete do time e o botão da Poké Bola no centro são pintura do `ArenaFloor`.
 - **Água das arenas:** lagos com `WaterSurface` redonda (`shape: "ellipse"`), o nível sobe e desce no buraco pelo raio; congelar usa o gelo do shader (`set_freeze`). A maré da praia é uma lâmina `sea` rasa (5 cm) com absorção forte e espuma só na beira.
-- **Fotos:** `tests/battle/shot_arena_stadium.gd -- --scenario=<id> --mood=dia|tarde|noite --views=inicio,meio,ko,aberta,placar,tunel,torcida,lago,gelo,mare` (com `--fixed-fps 60`).
+- **Fotos:** `tests/battle/shot_arena_stadium.gd -- --scenario=<id> --mood=dia|tarde|noite --views=inicio,meio,ko,aberta,placar,tunel,torcida,lago,gelo,mare` (com `--fixed-fps 60`; sem `--out=<prefixo>` grava em `user://shots/arena/estadio_<vista>.png`).
 
 ## 8. Ferramentas
 
@@ -279,6 +279,8 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
   ```
 
   Precisa de `apt install mesa-vulkan-drivers xvfb libvulkan1`. Leva de 30 s a 4 min por imagem.
+  Sem `--out`, os prints abaixo gravam dentro de `user://` (no Windows,
+  `%APPDATA%\Godot\app_userdata\PokmemonLike`).
   Use `--fixed-fps 60`: sem ele os quadros lentos perdem os respingos da chuva e as lutas correm.
 - **Prints prontos:** `tests/world/shot_pallet.gd` (§9), `tests/world/shot_sky_voxel.gd` (diorama:
   `--hours=`, `--weathers=`), `tests/world/shot_sky_world.gd` (zonas HGSS: `--places=`, `--hours=`,
@@ -413,9 +415,13 @@ contornos de construção.
   - tempo de carga;
   - caminhada com as teclas até cada porta, NPC, placa, margem do lago e portão.
 
-  `tests/world/shot_pallet.gd` tira os prints: `--spots=start,plaza,fountain,house,laundry,plantation,
-  rival,lab,pond,dock,bridge,gate,orchard,south,paddock,west,east,centre`, `--hours=HH:MM` (uma hora
-  por execução), `--weather=rain|snow|clear`, `--no-lamps`, `--far=<m>`, `--pitch=<graus>`.
+  `tests/world/shot_pallet.gd` tira os prints: `--out=<pasta>` (padrão `user://shots/pallet`),
+  `--spots=start,plaza,fountain,house,laundry,plantation,rival,lab,pond,dock,bridge,gate,orchard,
+  south,paddock,west,east,centre,backyard,meadow,north,flag`,
+  `--periods=morning,midday,afternoon,sunset,night` (só `--weather=rain|snow`) ou `--hours=HH:MM,...`
+  (com qualquer tipo do `WorldWeather`: `--weather=clear|cloudy|overcast|rain|storm|snow|mist`; na
+  nuvem, uma hora por execução), `--melt=<cobertura>` (com neve), `--no-lamps`, `--far=<m>`,
+  `--pitch=<graus>`, `--settle=<quadros>`, `--env-off=ssao,ssil,sdfgi`.
 
 ## 10. Clima do mundo (world/sky/weather.gd)
 
