@@ -82,8 +82,9 @@ const PRESETS := {
 	},
 	"puddle":
 	{
-		"deep_color": Color(0.16, 0.15, 0.13),
-		"absorb": Vector3(0.6, 0.5, 0.45),
+		"deep_color": Color(0.1, 0.09, 0.08),
+		"absorb": Vector3(1.2, 1.0, 0.9),
+		"fresnel_min": 0.2,
 		"body_light": 0.25,
 		"wave_amp": 0.25,
 		"chop": 0.6,

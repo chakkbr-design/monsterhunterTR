@@ -578,7 +578,10 @@ void fragment() {
 	float foam = 0.0;
 	if (foam_amount > 0.0) {
 		float shore = smoothstep(0.15, 0.55, near);
-		shore = max(shore, 1.0 - smoothstep(foam_width * 0.15, foam_width * 0.35, fd));
+		// Very thin water (a voxel step just under the surface, the ellipse rim): a band whose
+		// width wanders with the noise, so it reads as lapping foam rather than an outline.
+		float wv = foam_width * (0.1 + 0.4 * fn);
+		shore = max(shore, 1.0 - smoothstep(wv * 0.5, wv, fd));
 		if (kind == 2) {
 			// Stream wakes: foam streaks downstream of rocks, found by looking upstream in the depth.
 			vec2 fdir = length(flow) > 1e-3 ? normalize(flow) : vec2(0.0, 1.0);

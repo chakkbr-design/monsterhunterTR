@@ -3,13 +3,15 @@ extends SceneTree
 ##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver vulkan \
 ##     --resolution 1600x900 --script res://tests/gfx/shot_water.gd -- --out=/tmp/water.png \
 ##     [--hour=noon|morning|golden|dusk|night] [--weather=clear|rain|storm|snow|windy]
-##     [--view=pond,fountain,stream,near,far,wide,low] [--wait=frames] [--freeze=0..1]
+##     [--view=pond,fountain,stream,near,far,wide,low,arena,jets,puddle] [--wait=frames]
+##     [--freeze=0..1] [--debug=1..6] [--arena-kind=sea|puddle|fountain|stream]
 ## Builds the voxel diorama of tests/gfx/shot_water_scene.gd (pond, stream + cascade, three-tier
 ## fountain, dock, sprites) under a simple sun + sky that reads the same globals as the water
 ## (the sky lane owns the real environment), sets the time-of-day and weather globals directly and
 ## saves one PNG per view (<out>_<view>.png when several views are asked for).
 ## Views: pond / fountain / stream = game camera (12 m, pitch 32, fov 35); near / far = battle
-## action camera at 6 m and 22 m; wide = overview; low = grazing view for reflections.
+## action camera at 6 m and 22 m; wide = overview; low = grazing view for reflections; arena = the
+## battle-style ellipse pond scaled to 80 %; jets = the fountain at 6 m; puddle = the path puddle.
 
 const Scene := preload("res://tests/gfx/shot_water_scene.gd")
 
@@ -92,6 +94,7 @@ const VIEWS := {
 	"low": ["pond", Vector3(0.5, 0.2, -0.5), 9.0, 13.0, 12.0, 40.0],
 	"arena": ["arena", Vector3(0, 0, 0), 7.0, 30.0, 0.0, 45.0],
 	"jets": ["fountain", Vector3(0, 0.9, 0), 6.0, 18.0, 25.0, 45.0],
+	"puddle": ["puddle", Vector3(0, 0, -0.4), 5.0, 32.0, 0.0, 45.0],
 }
 
 var out := "user://shot_water.png"
@@ -101,6 +104,7 @@ var views: PackedStringArray = ["pond"]
 var wait := 14
 var freeze := -1.0
 var debug := 0
+var arena_kind := ""
 var cam: Camera3D
 var sun: DirectionalLight3D
 var env: Environment
@@ -123,6 +127,8 @@ func _initialize() -> void:
 			freeze = float(a.substr(9))
 		elif a.begins_with("--debug="):
 			debug = int(a.substr(8))
+		elif a.begins_with("--arena-kind="):
+			arena_kind = a.substr(13)
 	_run.call_deferred()
 
 
@@ -140,6 +146,11 @@ func _run() -> void:
 	_light(root)
 	if freeze >= 0.0:
 		WaterSurface.set_freeze(scene.pond, freeze)
+	if arena_kind != "":
+		# Try another kind on the battle pond (sea, puddle, fountain...).
+		var m := WaterSurface.material({"kind": arena_kind, "shape": "ellipse", "depth": 0.6})
+		m.set_shader_parameter("size", Vector2(2, 2) * Scene.ARENA_R0)
+		scene.arena_pond.material_override = m
 	if debug:
 		for w in [scene.pond, scene.stream] + scene.fountain.basins:
 			WaterSurface.set_param(w, "debug_view", debug)

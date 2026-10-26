@@ -20,6 +20,7 @@ var root: Node3D
 var pond: MeshInstance3D
 var stream: MeshInstance3D
 var arena_pond: MeshInstance3D
+var puddle: MeshInstance3D
 var fountain: FountainFx
 var cascade: FountainFx
 var lamps: Array[OmniLight3D] = []
@@ -127,6 +128,14 @@ func _ground() -> void:
 					else Color(0.66, 0.64, 0.6).darkened(0.15 * VoxelGrid.hash01(x, 0, z))
 				)
 				g.put(Vector3i(x, -1, z), col, VoxelMat.STONE)
+	# A shallow dip in the path that holds a puddle (one voxel deep, muddy bed).
+	for x in range(8, 14):
+		for z in range(17, 20):
+			if (x == 8 or x == 13) and z != 18:
+				continue
+			g.clear(Vector3i(x, -1, z))
+			var mud := Color(0.36, 0.3, 0.24).darkened(0.2 * VoxelGrid.hash01(x, -2, z, 4))
+			g.put(Vector3i(x, -2, z), mud, VoxelMat.BED)
 
 
 func _grass_paint() -> Callable:
@@ -490,6 +499,12 @@ func _water() -> void:
 	root.add_child(arena_pond)
 	spots["arena"] = Vector3(ARENA.x, 0.0, ARENA.y)
 	spots["stream"] = Vector3(-2.0, 0.4, -7.0)
+	# Puddle in the path dip: 5 cm of water over the mud (surface 0.2 m under the path top).
+	puddle = WaterSurface.make(Vector2(1.5, 0.75), {"kind": "puddle"})
+	puddle.name = "Puddle"
+	puddle.position = Vector3(2.75, -0.2, 4.625)
+	root.add_child(puddle)
+	spots["puddle"] = Vector3(2.75, 0.0, 4.6)
 	# Cascade: the stream spills over the terrace sill into the pond.
 	cascade = FountainFx.new()
 	cascade.name = "Cascade"
