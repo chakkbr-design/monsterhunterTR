@@ -10,12 +10,17 @@ uniform float edge_light = 0.08;
 uniform float weather = 1.0;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform float backlight = 0.0;
+// > 0: a floor of sky light (x the horizon colour) on every face. In the shade only the indirect
+// light reaches, and SDFGI gives the sides of thin blades next to nothing (black tufts).
+// 0 (default): the arenas' look.
+uniform float shade_lift = 0.0;
 
 global uniform float rain_wet;
 global uniform float snow_cover;
 global uniform float wind_time;
 global uniform vec2 wind_dir;
 global uniform float wind_gust;
+global uniform vec4 sky_horizon_color;
 
 varying vec3 lpos;
 varying vec3 lnrm;
@@ -55,5 +60,8 @@ void fragment() {
 	SPECULAR = 0.3;
 	if (backlight > 0.0) {
 		BACKLIGHT = col * backlight;
+	}
+	if (shade_lift > 0.0) {
+		EMISSION = to_linear(sky_horizon_color.rgb) * col * shade_lift;
 	}
 }

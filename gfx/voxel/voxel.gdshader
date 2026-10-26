@@ -27,6 +27,12 @@ uniform float emit_flood = 9.0;
 uniform float weather = 1.0;  // 0 = ignore rain / snow (indoors)
 uniform vec4 tint : source_color = vec4(1.0);
 uniform vec3 flash = vec3(0.0);  // additive emission (hit flash)
+// a > 0: lit windows glow in this colour instead of their own (a zone's warm lamplight; bright
+// cream emission turns white under AgX). Default off: the arenas keep their look.
+uniform vec4 window_glow : source_color = vec4(0.0);
+// > 0: a floor of sky light (x the horizon colour) under the indirect light: the shaded
+// undersides of a zone's bushes and crowns stay dark green. Default off: the arenas' look.
+uniform float shade_lift = 0.0;
 
 global uniform float night_lamps;
 global uniform float night_windows;
@@ -37,6 +43,7 @@ global uniform float snow_cover;
 global uniform float wind_time;
 global uniform vec2 wind_dir;
 global uniform float wind_gust;
+global uniform vec4 sky_horizon_color;
 
 varying vec3 mpos;
 varying vec3 mnrm;
@@ -185,7 +192,9 @@ void fragment() {
 
 	vec3 col = to_linear(src.rgb) * tint.rgb;
 	col *= 1.0 + (h31(vec3(c)) - 0.5) * 2.0 * jitter;
-	col *= (1.0 + edge_light * conv * (ni.y > 0 ? 1.0 : 0.55)) * (1.0 - seam_dark * seam * (1.0 - conv));
+	float bevel = (1.0 + edge_light * conv * (ni.y > 0 ? 1.0 : 0.55))
+			* (1.0 - seam_dark * seam * (1.0 - conv));
+	col *= bevel;
 
 	// Weather on surfaces the sky reaches.
 	float expo = sky(a) * weather;
@@ -208,14 +217,20 @@ void fragment() {
 		nw = normalize(vec3(rp.x, 1.0, rp.y));
 	}
 	if ((flags & 1) != 0 && snow_cover > 0.001) {
-		float sn = up * expo * step(h31(vec3(float(c.x), 0.0, float(c.z)) + 3.1), snow_cover * 1.15);
+		// Settles (and thaws) in drifts rather than voxel by voxel: low noise plus a ragged edge.
+		vec2 cc = vec2(float(c.x), float(c.z));
+		float drift = vnoise(cc * 0.21) * 0.55 + h31(vec3(cc.x, 0.0, cc.y) + 3.1) * 0.45;
+		float sn = up * expo * step(drift, snow_cover * 1.15);
 		// The top voxel of a column also gets a snow band on its sides.
 		if (up < 0.5 && ni.y == 0) {
 			float above = 1.0 - occ(c + ivec3(0, 1, 0));
 			float cap = above * sky(c + ivec3(0, 1, 0)) * weather;
 			sn = max(sn, cap * step(1.0 - snow_cover * 0.45, fract(g.y)));
 		}
-		col = mix(col, vec3(0.86, 0.9, 0.96), sn);
+		// Not one flat white: a per-voxel grain, larger soft drifts and the voxel bevels and seams
+		// keep the ground legible under it.
+		float grain = 0.93 + 0.07 * h31(vec3(c) + 9.1) + 0.05 * (vnoise(cc * 0.07) - 0.5);
+		col = mix(col, vec3(0.86, 0.9, 0.96) * grain * bevel, sn);
 		rough = mix(rough, 0.75, sn);
 		wet *= 1.0 - sn;
 	}
@@ -225,13 +240,17 @@ void fragment() {
 
 	vec3 em = vec3(0.0);
 	if (emit_class == 1) {
-		em = col * emit_window * night_windows;
+		em = mix(col, window_glow.rgb, window_glow.a) * emit_window * night_windows;
+		col *= 1.0 - window_glow.a * night_windows;  // the lit pane, not moonlit cream glass
 	} else if (emit_class == 2) {
 		em = col * emit_lamp * night_lamps;
 	} else if (emit_class == 3) {
 		em = col * emit_always;
 	} else if (emit_class == 4) {
 		em = col * emit_flood * night_lamps;
+	}
+	if (shade_lift > 0.0) {
+		em += col * to_linear(sky_horizon_color.rgb) * shade_lift;
 	}
 	ALBEDO = col * mix(1.0, ao, 0.35);
 	AO = ao;
