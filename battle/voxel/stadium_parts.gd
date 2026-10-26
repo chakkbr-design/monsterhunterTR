@@ -17,6 +17,7 @@ extends RefCounted
 const VS := VoxelGrid.VS
 const CTX := ArenaVoxels.CTX
 const BODY := ArenaVoxels.BODY
+const TOP := ArenaVoxels.TOP
 
 ## Stand profile (voxels): podium (front wall), ROWS rows of ROW_V deep rising RISE_V each, top
 ## walkway, parapet. The row 0 tread is T0_V; the podium stands 0.5 m above it.
@@ -589,3 +590,55 @@ static func ball_image(px: int, alive: bool) -> Image:
 				c = Color(l, l, l * 1.1)
 			img.set_pixel(x, y, c)
 	return img
+
+
+# --- Plaza ---
+
+const C_PALM_BARK := [Color("8c6c48"), Color("6f5337")]
+const C_FRONDS := [Color("3e8a34"), Color("2f6e2a"), Color("5aa83f")]
+const C_COCONUT := Color("5b3d22")
+
+
+## Palm tree for the beach plaza (VS voxels, scaled up by ArenaStadium like the other trees): a thin
+## ringed trunk bending to one side, a crown of drooping fronds (part TOP, it sways) and coconuts.
+static func palm(variant: int) -> VoxelGrid:
+	var g := VoxelGrid.new(Vector3i(-8, -1, -8), Vector3i(20, 20, 16))
+	var salt := 131 + variant
+	g.fill(Vector3i(-1, -1, -1), Vector3i(0, -1, 0), Color.BLACK, VoxelMat.DIRT, CTX)
+	var h := 12 + variant % 3
+	var bend := 2.2 + float(variant) * 0.6
+	var top := Vector3i.ZERO
+	for y in h + 1:
+		var f := float(y) / h
+		var x := roundi(bend * f * f)
+		var v := Vector3i(x, y, 0)
+		g.put(v, _jit(C_PALM_BARK[(y / 2) % 2], v, 0.05, salt), VoxelMat.BARK, BODY)
+		if y < 2:
+			for d in [Vector3i(-1, 0, 0), Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1)]:
+				g.put(v + d, _jit(C_PALM_BARK[1], v + d, 0.05, salt), VoxelMat.BARK, BODY)
+		top = v
+	# Crown: fronds out and down from the top.
+	var n := 7
+	for k in n:
+		var a := TAU * (float(k) + _h(k, 1, 0, salt) * 0.4) / n
+		var dir := Vector2(cos(a), sin(a))
+		var length := 5 + int(_h(k, 2, 0, salt) * 2.0)
+		for i in range(1, length + 1):
+			var fx := top.x + roundi(dir.x * i)
+			var fz := top.z + roundi(dir.y * i)
+			var fy := top.y + 1 - (i * i) / 7
+			var c: Color = C_FRONDS[0] if i < length - 1 else C_FRONDS[2]
+			var v := Vector3i(fx, fy, fz)
+			g.put(v, _jit(c, v, 0.06, salt), VoxelMat.LEAVES, TOP)
+			if i >= 2 and i < length:
+				# Leaflets on both sides, a step lower.
+				var side := Vector2(-dir.y, dir.x)
+				for sgn in [-1, 1]:
+					var w := Vector3i(fx + roundi(side.x * sgn), fy - 1, fz + roundi(side.y * sgn))
+					if not g.solid(w):
+						g.put(w, _jit(C_FRONDS[1], w, 0.06, salt), VoxelMat.LEAVES, TOP)
+	g.put(top + Vector3i(0, 1, 0), _jit(C_FRONDS[2], top, 0.05, salt), VoxelMat.LEAVES, TOP)
+	for d in [Vector3i(1, -1, 0), Vector3i(-1, -1, 0), Vector3i(0, -1, 1)]:
+		if _h(d.x, d.y, d.z, salt) < 0.75:
+			g.put(top + d, C_COCONUT, VoxelMat.BARK, BODY)
+	return g

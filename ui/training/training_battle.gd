@@ -5,6 +5,9 @@ extends Node3D
 ## (opts.autoplay), sem mexer no save nem na equipe do jogo. Com p1_control "manual" o Time A é
 ## do teclado (só na luta única; a série sempre roda com IA). No fim mostra o vencedor e o
 ## placar da série.
+## No modo de energia (fora do fast_sim) a quadra fica dentro de um estádio voxel (ArenaStadium:
+## arquibancadas com torcida, refletores, placares ao vivo, céu e luz pela hora "time_of_day"),
+## montado uma vez por cena e repintado pelo cenário de cada luta.
 ## Esc para a luta e volta para a tela de montar.
 
 const Cfg := preload("res://ui/training/training_config.gd")

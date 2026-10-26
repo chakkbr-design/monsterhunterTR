@@ -576,6 +576,20 @@ func _voxel() -> void:
 		check(vt.floor_node == null, "VGC: sem piso voxel")
 		check(v.get_node_or_null("ArenaQuad") != null, "VGC: quadra antiga")
 		v.free()
+	# Lago voxel: água redonda (elipse do WaterSurface) e o gelo é o do shader da água.
+	var po := {"pos": Vector3.ZERO, "r": 1.5, "r0": 1.5}
+	var pn := ArenaVoxels.pond(po, "lagoa")
+	var pw: MeshInstance3D = pn.get_meta("water")
+	var pm := WaterSurface.material_of(pw)
+	check(int(pm.get_shader_parameter("shape")) == 1, "lago: água redonda")
+	ArenaVoxels.pond_ice(po, pn, true)
+	check(
+		float(pm.get_shader_parameter("freeze")) == 1.0 and pw.visible,
+		"lago congelado: gelo do shader"
+	)
+	ArenaVoxels.pond_ice(po, pn, false)
+	check(float(pm.get_shader_parameter("freeze")) == 0.0, "lago derretido")
+	pn.free()
 	for sc in T.SCENARIOS.keys():
 		# Com visual (na árvore, sem fast_sim): cada coisa tem nó voxel e o piso é o ArenaFloor.
 		var a := _mode_arena("energy", 6, {"scenario": sc})

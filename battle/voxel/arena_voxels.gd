@@ -32,6 +32,8 @@ const POND_STEPS := [[1.0, -0.25], [0.8, -0.5], [0.45, -0.75], [0.0, -1.0]]
 ## Water level by pond radius / base radius (sun 0.8, normal 1.0, rain 1.25): the water crosses a
 ## terrace top halfway between two steps, so its edge is the step nearest to the gameplay radius.
 const POND_LEVELS := [[0.8, -0.62], [0.9, -0.5], [1.0, -0.36], [1.125, -0.25], [1.25, -0.08]]
+## Seconds for a pond to freeze over (or melt) on the water shader.
+const ICE_SECS := 0.35
 
 
 class Model:
@@ -281,8 +283,9 @@ static func pond_hole(r0: float) -> float:
 	return r0 * BattleTerrain.RAIN_POND
 
 
-## Pond of BattleTerrain (`o`: pos, r, r0): voxel bowl below the floor + WaterSurface at a level
-## set by the radius (pond_level), ice slab when frozen (pond_ice).
+## Pond of BattleTerrain (`o`: pos, r, r0): voxel bowl below the floor + WaterSurface (a disc, the
+## ellipse inscribed in its square) at a level set by the radius (pond_level), frozen by the water
+## shader's own ice (pond_ice).
 static func pond(o: Dictionary, sc: String) -> Node3D:
 	var r0 := float(o.r0)
 	var p := ArenaPalette.of(sc)
@@ -294,7 +297,9 @@ static func pond(o: Dictionary, sc: String) -> Node3D:
 	root.position = o.pos
 	root.add_child(instance(m, "Bowl", {}, false))
 	var size := (pond_hole(r0) + 0.4) * 2.0
-	var w := WaterSurface.make(Vector2(size, size), {"kind": "pond", "depth": 0.9, "tint": p.water})
+	var w := WaterSurface.make(
+		Vector2(size, size), {"kind": "pond", "shape": "ellipse", "depth": 0.9, "tint": p.water}
+	)
 	root.add_child(w)
 	root.set_meta("water", w)
 	root.set_meta("r0", r0)
@@ -316,28 +321,34 @@ static func pond_level(o: Dictionary, node) -> void:
 	var w = node.get_meta("water")
 	if is_instance_valid(w):
 		w.position.y = y
-	var ice = node.get_meta("ice") if node.has_meta("ice") else null
-	if is_instance_valid(ice):
-		ice.position.y = y - DECAL_H * 0.5
 
 
-## Ice slab on the water (made the first time the pond freezes).
+## Frozen pond: the water shader's ice (frost and cracks over the whole surface) grows in quickly
+## and melts back the same way.
 static func pond_ice(o: Dictionary, node, on: bool) -> void:
 	if not is_instance_valid(node) or not node.has_meta("water"):
 		return
-	var ice = node.get_meta("ice") if node.has_meta("ice") else null
-	if not is_instance_valid(ice):
-		if not on:
-			return
-		var r := pond_hole(float(node.get_meta("r0")))
-		ice = decal("ice", r, "", FINE)
-		ice.name = "Ice"
-		node.add_child(ice)
-		node.set_meta("ice", ice)
-	ice.visible = on
 	var w = node.get_meta("water")
-	if is_instance_valid(w):
-		w.visible = not on
+	if not is_instance_valid(w):
+		return
+	var to := 1.0 if on else 0.0
+	var m := WaterSurface.material_of(w)
+	if m == null:
+		return
+	var cur: Variant = m.get_shader_parameter("freeze")  # null until first set
+	var now := float(cur) if cur != null else 0.0
+	if is_equal_approx(now, to):
+		return
+	if node.has_meta("freeze_tw"):
+		var old: Tween = node.get_meta("freeze_tw")
+		if old and old.is_valid():
+			old.kill()
+	if not (node as Node).is_inside_tree():
+		WaterSurface.set_freeze(w, to)
+		return
+	var tw := (node as Node).create_tween()
+	tw.tween_method(func(v: float) -> void: WaterSurface.set_freeze(w, v), now, to, ICE_SECS)
+	node.set_meta("freeze_tw", tw)
 	pond_level(o, node)
 
 

@@ -879,7 +879,16 @@ func _build_tide_voxel() -> void:
 	var perp := _perp()
 	var long := rc.size.x if absf(perp.z) > 0.5 else rc.size.y
 	var wide := rc.size.y if absf(perp.z) > 0.5 else rc.size.x
-	var water := WaterSurface.make(Vector2(long, wide * 0.5), {"kind": "sea", "depth": 0.3})
+	# Água rasa de verdade: a lâmina tem 5 cm, então a absorção forte e a espuma só na beira deixam
+	# a faixa turquesa (sem isso a espuma da praia cobria tudo de branco).
+	var opts := {
+		"kind": "sea",
+		"depth": 0.15,
+		"tint": Color(0.05, 0.46, 0.55),
+		"params":
+		{"foam_width": 0.05, "absorb": Vector3(2.6, 0.8, 0.55), "body_light": 1.6, "swell": 0.3},
+	}
+	var water := WaterSurface.make(Vector2(long, wide * 0.5), opts)
 	if absf(perp.x) > 0.5:
 		water.rotation.y = PI * 0.5
 	water.visible = false

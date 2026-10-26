@@ -140,8 +140,14 @@ const MOODS := {
 }
 ## Scenario looks of the surroundings: lawn and tree theme, and sky / light overrides of the mood.
 const THEMES := {
-	"praia": {"lawn": "sand", "trees": "campo"},
-	"montanha": {"lawn": "snow", "trees": "montanha"},
+	# Areia e neve claras: um pouco menos de exposição para o piso não estourar no branco.
+	"praia": {"lawn": "sand", "trees": "palm", "sky": {"exposure": 0.93}},
+	"montanha":
+	{
+		"lawn": "snow",
+		"trees": "montanha",
+		"sky": {"exposure": 0.86, "sun": Color(0.94, 0.96, 1.0), "horizon": Color(0.7, 0.8, 0.92)},
+	},
 	"vulcao":
 	{
 		"lawn": "ash",
@@ -905,15 +911,17 @@ static func _lamp_grid() -> VoxelGrid:
 
 
 ## Trees on the lawns (MultiMesh per model part, a few sectors so they cull): denser further out.
+static func _tree_grid(kind: String, v: int) -> VoxelGrid:
+	return StadiumParts.palm(v) if kind == "palm" else ArenaPropsVox._tree_grid(kind, v)
+
+
 func _plant_trees(kind: String, tint: Color) -> void:
 	for c in _trees.get_children():
 		c.queue_free()
 	var vars: Array = []
 	for v in 3:
 		var key := "%s_%s_%d" % ["tree", kind, v]
-		vars.append(
-			ArenaVoxels.cached(key, func() -> VoxelGrid: return ArenaPropsVox._tree_grid(kind, v))
-		)
+		vars.append(ArenaVoxels.cached(key, func() -> VoxelGrid: return _tree_grid(kind, v)))
 	# Placement on a jittered 6 m grid, by position hash only.
 	var by := {}  # "variant_sector" -> Array[Transform3D]
 	var cell := 6.0
