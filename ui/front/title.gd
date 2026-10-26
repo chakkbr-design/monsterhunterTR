@@ -15,7 +15,7 @@ const WORLD_SCENE := "res://world/route_world.tscn"
 ## Modo de treinamento: monta dois times e eles lutam sozinhos (ui/training/).
 const TRAINING_SCENE := "res://ui/training/training_setup.tscn"
 const START_SPAWN := {"interior": "player_room", "spawn": "bed"}
-const PROF_NAME := "PROF. CARVALHO"
+const PROF_NAME := "PROF. OAK"
 const SPLASH_TIME := 2.6
 ## Segundos parado na tela "Pressione Enter" até voltar à abertura (front_end.IDLE_TO_SPLASH).
 const IDLE_TO_SPLASH := 60.0
