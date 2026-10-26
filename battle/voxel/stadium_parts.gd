@@ -642,3 +642,33 @@ static func palm(variant: int) -> VoxelGrid:
 		if _h(d.x, d.y, d.z, salt) < 0.75:
 			g.put(top + d, C_COCONUT, VoxelMat.BARK, BODY)
 	return g
+
+
+const C_CHAR := [Color("3b322d"), Color("2b2421"), Color("4a3f38")]
+
+
+## Charred dead tree for the volcano plaza: a bare trunk with a few branches reaching up, an ember
+## glowing in a crack now and then.
+static func dead_tree(variant: int) -> VoxelGrid:
+	var g := VoxelGrid.new(Vector3i(-6, -1, -6), Vector3i(12, 16, 12))
+	var salt := 151 + variant
+	g.fill(Vector3i(-1, -1, -1), Vector3i(0, -1, 0), Color.BLACK, VoxelMat.DIRT, CTX)
+	var h := 9 + variant % 3
+	for y in h:
+		for d in [Vector3i.ZERO, Vector3i(-1, 0, 0), Vector3i(0, 0, -1), Vector3i(-1, 0, -1)]:
+			if y > 5 and d != Vector3i.ZERO:
+				continue
+			var v: Vector3i = Vector3i(0, y, 0) + d
+			var c: Color = C_CHAR[int(_h(v.x, v.y, v.z, salt) * 3.0) % 3]
+			if _h(v.x, v.y, v.z, salt + 7) < 0.05:
+				g.put(v, Color("e2622a"), VoxelMat.LAMP, BODY)
+			else:
+				g.put(v, _jit(c, v, 0.04, salt), VoxelMat.BARK, BODY)
+	for k in 4:
+		var a := TAU * (float(k) + _h(k, 3, 0, salt)) / 4.0
+		var dir := Vector2(cos(a), sin(a))
+		var y0 := 4 + k + int(_h(k, 4, 0, salt) * 2.0)
+		for i in range(1, 5):
+			var v := Vector3i(roundi(dir.x * i), mini(y0 + i, h + 3), roundi(dir.y * i))
+			g.put(v, _jit(C_CHAR[1], v, 0.04, salt), VoxelMat.BARK, BODY)
+	return g

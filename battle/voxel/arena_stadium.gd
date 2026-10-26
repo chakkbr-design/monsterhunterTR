@@ -155,8 +155,7 @@ const THEMES := {
 	"vulcao":
 	{
 		"lawn": "ash",
-		"trees": "campo",
-		"tree_tint": Color(0.55, 0.45, 0.38),
+		"trees": "dead",
 		"sky":
 		{
 			"horizon": Color(0.78, 0.5, 0.4),
@@ -995,11 +994,17 @@ static func _lamp_grid() -> VoxelGrid:
 
 ## Trees on the lawns (MultiMesh per model part, a few sectors so they cull): denser further out.
 static func _tree_grid(kind: String, v: int) -> VoxelGrid:
-	return StadiumParts.palm(v) if kind == "palm" else ArenaPropsVox._tree_grid(kind, v)
+	match kind:
+		"palm":
+			return StadiumParts.palm(v)
+		"dead":
+			return StadiumParts.dead_tree(v)
+	return ArenaPropsVox._tree_grid(kind, v)
 
 
 func _plant_trees(kind: String, tint: Color) -> void:
 	for c in _trees.get_children():
+		_trees.remove_child(c)  # out now, so the new ones keep their names
 		c.queue_free()
 	var vars: Array = []
 	for v in 3:

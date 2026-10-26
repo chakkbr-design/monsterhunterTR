@@ -144,6 +144,13 @@ func _run() -> void:
 	st.theme("montanha")
 	var snow := st._ground_grid.color_at(Vector3i(-140, -1, -130))
 	check(snow.get_luminance() > 0.8, "montanha: gramado nevado em volta")
+	for sc in ["vulcao", "praia"]:
+		st.theme(sc)
+		await process_frame
+		var n := st.find_children("Trees_*", "MultiMeshInstance3D", true, false).size()
+		check(n > 0, "%s: árvores do tema em volta (%d)" % [sc, n])
+		var lit: bool = st.spots.all(func(l): return l.visible)
+		check(lit == (sc == "vulcao"), "%s: refletores %s" % [sc, "acesos" if lit else "apagados"])
 	st.theme("campo")
 	check(not st.spots.any(func(l): return l.visible), "de volta ao campo de dia: apagados")
 	st.queue_free()
