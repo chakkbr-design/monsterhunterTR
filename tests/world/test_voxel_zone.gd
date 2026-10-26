@@ -12,7 +12,9 @@ extends SceneTree
 const ZONE := "pallet_town"
 const MAX_BAKE_MB := 10.0
 const MAX_LOAD_MS := 3000  ## blocking build from a fresh bake (headless)
-const MAX_STREAM_FRAME_MS := 400  ## longest frame while streaming the zone in (headless)
+## Longest frame while streaming the zone in (headless, blocking bake load included; about 30 ms
+## alone, 60-90 ms when the tail of the scenery and the colliders came in one frame each).
+const MAX_STREAM_FRAME_MS := 75
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 var _fails := 0
@@ -133,6 +135,7 @@ func _art(b) -> void:
 		oak.position.y > 20.0 and oak.position.y < 22.5,
 		"oak fader rect starts south of a player at (-21, 20): %s" % oak
 	)
+	_faders(b)
 	var house: Node3D = b.houses.get("player_house")
 	var furn := 0
 	for gi in house.get_meta("geoms", []):
@@ -154,7 +157,59 @@ func _art(b) -> void:
 	check(buried.all(func(m) -> bool: return m.visible), "they come back when it melts")
 
 
-## Streamed like route_world._stream_in: the bake loads on a thread, the nodes come a few per frame.
+## Camera faders: only lone geometry fades. A forest chunk never fades as a whole (it turned shrubs
+## metres from the player into a murky ghost at the lab door): its tall trees that can hide a
+## walkable tile fade one by one, low shrubs and bushes never. The town gate's arch (beam, board
+## and lettering) fades like a house: right north of it the board hid the player.
+func _faders(b) -> void:
+	var chunk_faders: Array[String] = []
+	var low: Array[String] = []
+	var lone := 0
+	for n in b.get_node("Trees").get_children():
+		if not n is MultiMeshInstance3D or not n.has_meta("rect"):
+			continue
+		var mm: MultiMesh = n.multimesh
+		if mm.instance_count != 1:
+			chunk_faders.append(n.name)
+		if not String(n.name).begins_with("prop_") and mm.mesh and mm.mesh.get_aabb().size.y <= 2.0:
+			low.append(n.name)
+		lone += 1
+	check(
+		chunk_faders.is_empty(), "no multi-tree chunk is a fader (%s)" % [chunk_faders.slice(0, 4)]
+	)
+	check(low.is_empty(), "no shrub or bush 2 m or lower is a fader (%s)" % [low.slice(0, 4)])
+	var split := int(b.counts.get("lone_trees", 0))
+	check(split > 20, "forest trees near the walkable tiles fade one by one (%d)" % split)
+	print("  %d tree / prop faders, %d forest trees split out" % [lone, split])
+	var gate: Node3D = null
+	for id in b.houses:
+		if String(id).begins_with("gate_"):
+			gate = b.houses[id]
+	check(gate != null, "the town gate's arch has its own fader")
+	if gate == null:
+		return
+	var r: Rect2 = gate.get_meta("rect")
+	var names: Array[String] = []
+	for gi in gate.get_meta("geoms", []):
+		names.append(String(gi.name))
+	check(
+		r.has_point(Vector2(0, -19)) and float(gate.get_meta("height")) > 2.0,
+		"the gate fader covers the gateway (0, -19): %s, %.2f m" % [r, gate.get_meta("height")]
+	)
+	check(
+		(
+			names.any(func(nm: String) -> bool: return nm.begins_with("Arch"))
+			and names.any(func(nm: String) -> bool: return nm.begins_with("text_"))
+		),
+		"the arch and its lettering fade together (%s)" % [names]
+	)
+	check(b.houses.size() == 6, "5 houses + the gate (%s)" % [b.houses.keys()])
+
+
+## Streamed like route_world._stream_in: the bake loads on a thread (not headless), the nodes come
+## within a time budget per frame. The frames are timed from the call, so the synchronous start
+## (map, bake load headless) counts too. Old faders of the freed blocking build are gone from the
+## registry once the zone registers again.
 func _stream() -> void:
 	var holder := Node3D.new()
 	root.add_child(holder)
@@ -162,10 +217,14 @@ func _stream() -> void:
 	b.zone_id = ZONE
 	b.items_per_frame = 60
 	holder.add_child(b)
+	check(
+		not load("res://world/voxel/voxel_zone.gd").threaded_load(),
+		"headless: the bake loads blocking (dummy renderer)"
+	)
 	var t0 := Time.get_ticks_usec()
 	b.build()
 	var worst := 0
-	var last := Time.get_ticks_usec()
+	var last := t0
 	var n := 0
 	while not b.is_built and Time.get_ticks_usec() - t0 < 30000000:
 		await process_frame
@@ -180,8 +239,62 @@ func _stream() -> void:
 		worst / 1000 < MAX_STREAM_FRAME_MS,
 		"no long stall while streaming (%d ms < %d)" % [worst / 1000, MAX_STREAM_FRAME_MS]
 	)
+	var dead := 0
+	var live := 0
+	var cells: Dictionary = load("res://world/props.gd")._cells
+	for k in cells:
+		for o in cells[k]:
+			if is_instance_valid(o):
+				live += 1
+			else:
+				dead += 1
+	check(
+		dead == 0,
+		"fader registry: no faders of the freed build left (%d dead, %d live)" % [dead, live]
+	)
 	holder.queue_free()
 	await frames(2)
+	await _cut_short()
+
+
+## A streamed build cut short: the zone leaves the tree while its worker task unpacks the colour
+## volume (the scene changed: it resumes off the tree and stops quietly) or is freed (the zone
+## unloaded or the game closed: _exit_tree waits for the task). An unwaited task aborted the
+## engine at exit ("double free or corruption"), so this run would end with a crash, not exit 0.
+func _cut_short() -> void:
+	for freed in [false, true]:
+		var holder := Node3D.new()
+		root.add_child(holder)
+		var b = load("res://world/voxel/voxel_zone.gd").new()
+		b.zone_id = ZONE
+		b.items_per_frame = 60
+		holder.add_child(b)
+		b.build()
+		var running := false
+		for i in 300:
+			if b._vol_task >= 0:
+				running = true
+				break
+			await process_frame
+		check(running, "cut short: caught the build while its volume task runs")
+		var kids: int = b.get_child_count()
+		if freed:
+			holder.queue_free()
+			await frames(30)
+			check(not is_instance_valid(b), "cut short: the zone freed mid-build")
+		else:
+			holder.remove_child(b)
+			await frames(30)
+			check(
+				not b.is_built and b._vol_task == -1 and b.get_child_count() == kids,
+				(
+					"cut short: off the tree the build stops (built %s, task %d)"
+					% [b.is_built, b._vol_task]
+				)
+			)
+			b.free()
+			holder.queue_free()
+			await frames(2)
 
 
 # --- placement -----------------------------------------------------------------------------------
@@ -278,6 +391,17 @@ func _reach(b, grid: TileGrid) -> void:
 				seen[n] = true
 				queue.append(n)
 	print("  %d tiles reachable from start" % seen.size())
+	# No sealed pocket: a nearest-free-tile snap (an old save) never lands where nothing leads out.
+	var lost: Array[Vector2i] = []
+	for z in grid.size.y:
+		for x in grid.size.x:
+			var c := Vector2i(x, z) + grid.origin
+			if _free(grid, c) and not seen.has(c):
+				lost.append(c)
+	check(
+		lost.is_empty(),
+		"every free tile is reachable from start (%d are not: %s)" % [lost.size(), lost.slice(0, 8)]
+	)
 	var goals := {"north gate": Vector2i(0, -19)}
 	for e in d.get("buildings", []):
 		var t := _tile(e.door.tile)

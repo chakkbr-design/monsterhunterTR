@@ -83,15 +83,22 @@ static func bounds(n: Node3D, local := false) -> AABB:
 # --- faders (camera_rig fades buildings / terraces that hide the player) -------------------------
 
 
+## Registers a fader in the cells its rect touches. Faders freed with an unloaded zone are dropped
+## from those cells here: a zone streamed in again registers in the same cells, so they hold only the
+## live ones (faders_near only cleaned the cells around the camera, and every reload of a zone left
+## its old faders behind).
 static func register_fader(n: Node3D, rect: Rect2) -> void:
 	var a := Vector2i(floori(rect.position.x / CELL), floori(rect.position.y / CELL))
 	var b := Vector2i(floori(rect.end.x / CELL), floori(rect.end.y / CELL))
 	for cx in range(a.x, b.x + 1):
 		for cz in range(a.y, b.y + 1):
 			var k := Vector2i(cx, cz)
-			if not _cells.has(k):
-				_cells[k] = []
-			_cells[k].append(n)
+			var arr: Array = _cells.get(k, [])
+			for i in range(arr.size() - 1, -1, -1):
+				if not is_instance_valid(arr[i]):
+					arr.remove_at(i)
+			arr.append(n)
+			_cells[k] = arr
 
 
 static func faders_near(p: Vector3, radius: float) -> Array:

@@ -8,12 +8,20 @@ extends MapBuilder
 ## trees and decor, water surfaces, the fountain's FountainFx and the lamps' night lights. A stale
 ## or missing bake is regenerated in-process (slow, with a warning). Collision follows the baked
 ## TileGrid: merged boxes over blocked tiles (layer 1) and water tiles (the Water body), so walking
-## matches the grid. When streaming (items_per_frame > 0) the bake loads on a thread and the nodes
-## are added a few per frame, so walking back from Route 1 never stalls.
+## matches the grid. When streaming (items_per_frame > 0, in the tree) the bake loads on a thread
+## (not headless: the dummy renderer's mesh store is not thread-safe), the colour volume is unpacked
+## on a worker and the rest is added within FRAME_BUDGET_US per frame; the shared particle and FX
+## materials stay referenced across unloads (_keep_warm), so walking back from Route 1 never stalls.
+## A build cut short (the zone or the world freed mid-stream) stops at its next frame, and the
+## worker task and threaded load are always waited for (_exit_tree).
 
 const FADE_GROW := 0.6  ## house fader rect past the footprint (eaves)
 const TOWN_TREE_FADE := 2.6  ## half size of a town tree's fader rect
 const PROP_FADE := 0.7  ## half size of a tall prop's fader rect (lamps)
+const TALL_FADE := 2.0  ## trees taller than this (m, each tree's own height) fade with the camera
+## Metres north of a crown, per metre of crown height over the player's head, that the camera's
+## line of sight to the player can pass under it (1 / tan 32° = 1.6 at 12 m; generous).
+const HIDE_SLOPE := 2.2
 const LAMP_ENERGY := 1.2  ## OmniLight energy per metadata energy unit
 const GLASS_ALPHA := 0.55  ## transparency of a "glass" building part (greenhouse panes)
 ## Lamplight in the windows at night (voxel.gdshader window_glow): a deep orange, since AgX
@@ -23,7 +31,7 @@ const WINDOW_EMIT := 2.0  ## voxel.gdshader emit_window for the zone (brighter g
 ## Sky-light floor of the decor, trees and props (voxel_detail / voxel.gdshader shade_lift): in the
 ## shade SDFGI left the sides of grass tufts and the undersides of the bushes black.
 const SHADE_LIFT := 0.1
-const BUILD_STEP := 6  ## nodes added per frame while streaming
+const FRAME_BUDGET_US := 4000  ## build work per frame while streaming (µs)
 const WEATHER_GROUP := "weather"  ## WorldWeather.GROUP (by name: no compile-time dependency)
 const SNOW_BURY := 0.45  ## snow cover (global snow_cover) that buries flowers and tall grass
 ## Decor buried by deep snow besides VoxelFlora.FLOWERS / WILD: green tufts, fallen leaves,
@@ -74,7 +82,9 @@ var voxel_material: ShaderMaterial
 var stale := false  ## the bake did not match (regenerated in-process)
 var load_ms := 0  ## time spent loading / building the scenery (tests)
 var lights: Array[OmniLight3D] = []
-var houses: Dictionary = {}  ## building id -> Node3D (fader, metas rect / height / geoms / parts)
+## Building id (or "gate_<part>" for a town gate's arch) -> its fader Node3D (metas rect / height /
+## geoms / parts).
+var houses: Dictionary = {}
 var water_surfaces: Array[MeshInstance3D] = []  ## one per water body (gfx/water WaterSurface)
 var fountain: FountainFx
 var butterflies: GPUParticles3D  ## day-only life over the flower beds
@@ -85,10 +95,27 @@ var _part_of := {}  ## building part id -> building entry (bake metadata)
 var _buried: Array[MultiMeshInstance3D] = []  ## decor hidden under deep snow
 var _snow_on := false
 var _snow_poll := 0.0
+var _streaming := false  ## this build is frame-sliced (started in the tree with items_per_frame > 0)
+var _slice_t0 := 0  ## start (µs) of this frame's slice of the build
+var _vol_task := -1  ## WorkerThreadPool task unpacking the colour volume (-1: none running)
+var _bake_req := ""  ## path of a threaded bake load not yet collected
+var _walk_sum := PackedInt32Array()  ## summed-area table of the free tiles (may_hide)
+var _walk_out: Array[Rect2] = []  ## neighbouring zones' rects (may_hide)
+
+## Render resources shared by every build of a zone (particle and FX materials, their meshes and
+## shaders) from the last build, by group: kept referenced across unloads (_keep_warm).
+static var _warm := {}
+static var _flag_shader: Shader
+static var _cloth := {}  ## "kind|tint" -> ImageTexture of a flag or a piece of laundry
+static var _smoke_kit: Array = []  ## [ParticleProcessMaterial, QuadMesh]
+static var _butterfly_kit: Array = []  ## [ParticleProcessMaterial template, QuadMesh]
+static var _rope: StandardMaterial3D
 
 
 func build() -> void:
 	var t0 := Time.get_ticks_msec()
+	_streaming = items_per_frame > 0 and is_inside_tree()
+	_slice_t0 = Time.get_ticks_usec()
 	data = load_map(zone_id)
 	if data.is_empty():
 		push_error("VoxelZone: no map data for '%s'" % zone_id)
@@ -104,15 +131,21 @@ func build() -> void:
 	_solids = _body("Solids", Overworld.WALL_LAYER)
 	_water_body = _body("Water", WATER_LAYER)
 	await _load_bake()
+	if _cancelled():
+		return
 	grid = bake.tiles
 	_ground_collider()
-	_tile_colliders()
+	await _tile_colliders()
 	await _scenery()
+	if _cancelled():
+		return
 	_doors()
 	_walls()
 	_bounds()
 	await _spawn_zones()
 	await _people()
+	if _cancelled():
+		return
 	for a in data.get("arrivals", []):
 		arrivals[String(a.name)] = _at(a)
 	load_ms = Time.get_ticks_msec() - t0
@@ -128,6 +161,29 @@ func _design_id() -> String:
 	return String(voxel_info(zone_id).get("design", zone_id))
 
 
+## A streamed build whose zone left the tree (unloaded, scene changed, game closed): it stops.
+func _cancelled() -> bool:
+	return _streaming and not is_inside_tree()
+
+
+## Waits for whatever a build cut short left running: a worker task or threaded load never waited
+## for corrupts the heap when the engine shuts down (Godot requires every task to be waited).
+func _exit_tree() -> void:
+	if _vol_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_vol_task)
+		_vol_task = -1
+	if _bake_req != "":
+		ResourceLoader.load_threaded_get(_bake_req)
+		_bake_req = ""
+
+
+## True when the bake may load on a loader thread: not headless, where the dummy renderer's mesh
+## store (RID_Owner without thread safety) races the main thread's meshes (stray RID errors and
+## leaks in the tests). The real renderers (Forward+, Compatibility) are thread-safe there.
+static func threaded_load() -> bool:
+	return DisplayServer.get_name() != "headless"
+
+
 ## The baked scenery: threaded load while streaming, blocking otherwise; regenerated when stale.
 func _load_bake() -> void:
 	var id := _design_id()
@@ -136,16 +192,23 @@ func _load_bake() -> void:
 	var fresh := not j.is_empty() and String(j.get("hash", "")) == VoxelZoneGen.input_hash(id)
 	if fresh and ResourceLoader.exists(path):
 		var res: Resource = null
-		if items_per_frame > 0 and is_inside_tree():
-			if ResourceLoader.load_threaded_request(path) == OK:
-				while (
+		if _streaming and threaded_load() and ResourceLoader.load_threaded_request(path) == OK:
+			_bake_req = path
+			while (
+				is_inside_tree()
+				and (
 					ResourceLoader.load_threaded_get_status(path)
 					== ResourceLoader.THREAD_LOAD_IN_PROGRESS
-				):
-					await get_tree().process_frame
+				)
+			):
+				await _next_frame()
+			if _bake_req == path:  # else _exit_tree collected it
 				res = ResourceLoader.load_threaded_get(path)
+				_bake_req = ""
 		else:
 			res = ResourceLoader.load(path)
+		if _cancelled():
+			return
 		bake = res as VoxelZoneBake
 		if bake:
 			bake.attach_json(j)
@@ -179,45 +242,49 @@ func _ground_collider() -> void:
 	_bump("ground")
 
 
-## Greedy rectangles over the tile grid: blocked tiles -> wall boxes, water tiles -> Water body.
+## Greedy rectangles over the tile grid: blocked tiles -> wall boxes, water tiles -> Water body
+## (spread over frames while streaming).
 func _tile_colliders() -> void:
-	var tg := grid
-	var n := tg.size.x * tg.size.y
 	for pass_i in 2:
-		var want := TileGrid.BLOCKED if pass_i == 0 else TileGrid.WATER
-		var used := PackedByteArray()
-		used.resize(n)
-		for z in tg.size.y:
-			for x in tg.size.x:
-				if used[x + z * tg.size.x] or not _is(tg, x, z, want):
-					continue
-				var w := 1
-				while (
-					x + w < tg.size.x
-					and not used[x + w + z * tg.size.x]
-					and _is(tg, x + w, z, want)
-				):
-					w += 1
-				var h := 1
-				var grow := true
-				while z + h < tg.size.y and grow:
-					for q in w:
-						if used[x + q + (z + h) * tg.size.x] or not _is(tg, x + q, z + h, want):
-							grow = false
-							break
-					if grow:
-						h += 1
-				for hz in h:
-					for q in w:
-						used[x + q + (z + hz) * tg.size.x] = 1
-				var c := Vector2(tg.origin.x + x - 0.5 + w / 2.0, tg.origin.y + z - 0.5 + h / 2.0)
-				var tall := VoxelZoneGen.SOLID_H if pass_i == 0 else WALL_H
-				_solid_box(
-					Vector3(c.x, tall / 2.0, c.y),
-					Vector3(w, tall, h),
-					_solids if pass_i == 0 else _water_body
-				)
-				_bump("tile_boxes" if pass_i == 0 else "water_boxes")
+		var tall := VoxelZoneGen.SOLID_H if pass_i == 0 else WALL_H
+		for r in merged_rects(grid, TileGrid.BLOCKED if pass_i == 0 else TileGrid.WATER):
+			var c := Vector2(r.position) - Vector2(0.5, 0.5) + Vector2(r.size) / 2.0
+			_solid_box(
+				Vector3(c.x, tall / 2.0, c.y),
+				Vector3(r.size.x, tall, r.size.y),
+				_solids if pass_i == 0 else _water_body
+			)
+			_bump("tile_boxes" if pass_i == 0 else "water_boxes")
+			await _step()
+
+
+## Greedy merge of the tiles of `tg` carrying `want` (BLOCKED: blocked dry tiles; WATER: water
+## tiles) into rectangles of whole tiles, in tile coordinates (row by row, each grown downwards).
+static func merged_rects(tg: TileGrid, want: int) -> Array[Rect2i]:
+	var out: Array[Rect2i] = []
+	var used := PackedByteArray()
+	used.resize(tg.size.x * tg.size.y)
+	for z in tg.size.y:
+		for x in tg.size.x:
+			if used[x + z * tg.size.x] or not _is(tg, x, z, want):
+				continue
+			var w := 1
+			while x + w < tg.size.x and not used[x + w + z * tg.size.x] and _is(tg, x + w, z, want):
+				w += 1
+			var h := 1
+			var grow := true
+			while z + h < tg.size.y and grow:
+				for q in w:
+					if used[x + q + (z + h) * tg.size.x] or not _is(tg, x + q, z + h, want):
+						grow = false
+						break
+				if grow:
+					h += 1
+			for hz in h:
+				for q in w:
+					used[x + q + (z + hz) * tg.size.x] = 1
+			out.append(Rect2i(tg.origin.x + x, tg.origin.y + z, w, h))
+	return out
 
 
 static func _is(tg: TileGrid, x: int, z: int, want: int) -> bool:
@@ -230,11 +297,16 @@ static func _is(tg: TileGrid, x: int, z: int, want: int) -> bool:
 # --- scenery -------------------------------------------------------------------------------------
 
 
+## While streaming: on to the next frame once this frame's slice of the build is used up.
 func _step() -> void:
-	if items_per_frame > 0 and is_inside_tree():
-		_count += 1
-		if _count % BUILD_STEP == 0:
-			await get_tree().process_frame
+	_count += 1
+	if _streaming and is_inside_tree() and Time.get_ticks_usec() - _slice_t0 > FRAME_BUDGET_US:
+		await _next_frame()
+
+
+func _next_frame() -> void:
+	await get_tree().process_frame
+	_slice_t0 = Time.get_ticks_usec()
 
 
 func _scenery() -> void:
@@ -243,15 +315,25 @@ func _scenery() -> void:
 	if bake.meshes.is_empty():
 		return
 	# The 3D colour texture: decompressed on a worker thread while streaming, uploaded here.
-	var box: Array = []
-	if items_per_frame > 0 and is_inside_tree():
-		var task := WorkerThreadPool.add_task(func() -> void: box.append(bake.volume_layers()))
-		while not WorkerThreadPool.is_task_completed(task):
-			await get_tree().process_frame
-		WorkerThreadPool.wait_for_task_completion(task)
+	var layers: Array[Image] = []
+	if _streaming and is_inside_tree():
+		var box: Array = []
+		var b := bake  # the task captures locals only (never this node)
+		var task := WorkerThreadPool.add_task(func() -> void: box.append(b.volume_layers()))
+		_vol_task = task
+		while (
+			_vol_task == task and is_inside_tree() and not WorkerThreadPool.is_task_completed(task)
+		):
+			await _next_frame()
+		if _vol_task == task:  # else _exit_tree waited for it
+			WorkerThreadPool.wait_for_task_completion(task)
+			_vol_task = -1
+		if _cancelled():
+			return
+		layers = box[0]
 	else:
-		box.append(bake.volume_layers())
-	var vol := bake.volume_from(box[0])
+		layers = bake.volume_layers()
+	var vol := bake.volume_from(layers)
 	voxel_material = _grid_material(vol[0], vol[1], bake.grid_origin, bake.grid_size)
 	await _step()
 	var part_of := _part_of
@@ -259,6 +341,18 @@ func _scenery() -> void:
 		var parts: Dictionary = b.get("parts", {})
 		for k in parts:
 			part_of[int(parts[k])] = b
+	# A town gate's arch fades like a house (a fader node of its own, never a building).
+	var all_parts: Dictionary = meta.get("parts", {})
+	for k in all_parts:
+		var info: Dictionary = all_parts[k]
+		if String(info.get("kind", "")) == "gate":
+			part_of[int(k)] = {
+				"id": "gate_%s" % k,
+				"fader": "Gate",
+				"rect": info.rect,
+				"height": float(info.height),
+				"parts": {"arch": int(k)},
+			}
 	for i in bake.meshes.size():
 		var prt := bake.mesh_parts[i]
 		var mi := MeshInstance3D.new()
@@ -283,13 +377,13 @@ func _scenery() -> void:
 	for h in houses.values():
 		WorldProps.register_fader(h, h.get_meta("rect"))
 	await _instances(root)
-	_water_surfaces(meta)
-	_fountains(meta)
-	_lights(meta)
-	_smoke(meta)
-	_butterflies(meta)
-	_flags(meta)
-	_laundry(meta)
+	for f: Callable in [
+		_water_surfaces, _fountains, _lights, _smoke, _butterflies, _flags, _laundry
+	]:
+		if _cancelled():
+			return
+		f.call(meta)
+		await _step()
 	_bump("voxel")
 
 
@@ -314,13 +408,13 @@ static func _part_name(b: Dictionary, prt: int) -> String:
 	return "Part"
 
 
-## The fader node of a building (made on first use).
+## The fader node of a building, or of a gate's arch (b.fader "Gate"), made on first use.
 func _house(b: Dictionary) -> Node3D:
 	var id := String(b.id)
 	if houses.has(id):
 		return houses[id]
 	var n := Node3D.new()
-	n.name = "House_%s" % id
+	n.name = "%s_%s" % [String(b.get("fader", "House")), id]
 	var r: Array = b.rect
 	var rr := Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(FADE_GROW)
 	n.set_meta("rect", rr)
@@ -330,16 +424,20 @@ func _house(b: Dictionary) -> Node3D:
 	n.add_to_group("fade_building")
 	_group("Voxel").add_child(n)
 	houses[id] = n
-	_bump("houses")
+	_bump("houses" if not b.has("fader") else "gates")
 	return n
 
 
 ## Trees and props (MultiMesh per model and chunk; town trees and tall props one by one so they
-## fade alone) and decor.
+## fade alone; the forest trees that can come between the camera and a walkable tile are taken out
+## of their chunk to fade alone too) and decor.
 func _instances(root: Node3D) -> void:
 	var trees := _group("Trees")
 	var decor := _group("Decor")
+	_index_walkable()
 	for e in bake.multimeshes:
+		if _cancelled():
+			return
 		var mm := bake.multimesh(e)
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
@@ -348,7 +446,7 @@ func _instances(root: Node3D) -> void:
 		if part > 0 and _part_of.has(part):
 			# Building furniture (gutters, wall lanterns, window-box flowers): fades with its house.
 			var house := _house(_part_of[part])
-			mmi.name = "%s_%d" % [model, house.get_child_count()]
+			mmi.name = "%s_%d" % [model.replace(":", "_"), house.get_child_count()]
 			if String(e.kind) == "decor":
 				mmi.material_override = _decor_mat(model)
 				mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -358,34 +456,51 @@ func _instances(root: Node3D) -> void:
 				_bump("props", mm.instance_count)
 			house.add_child(mmi)
 			house.get_meta("geoms").append(mmi)
-		elif String(e.kind) == "tree":
+		elif String(e.kind) == "tree" and bool(e.get("town", false)) and mm.instance_count == 1:
 			mmi.name = "%s_%d" % [model, trees.get_child_count()]
 			mmi.material_override = _tree_mat(model)
 			trees.add_child(mmi)
 			var bb := mm_aabb(mm, e)
-			var r := Rect2(bb.position.x, bb.position.z, bb.size.x, bb.size.z)
-			if bool(e.get("town", false)) and mm.instance_count == 1:
-				var p := VoxelZoneBake.entry_xf(e).origin
-				r = fade_rect(bb, TOWN_TREE_FADE, TOWN_TREE_FADE)
-				if not model.begins_with("bush") and not model.begins_with("shrub"):
-					leaf_points.append(p + Vector3(0, 4.0, 0))
-			if bb.size.y > 2.0:
-				mmi.set_meta("rect", r)
-				mmi.set_meta("height", bb.end.y)
-				mmi.set_meta("geoms", [mmi])
-				WorldProps.register_fader(mmi, r)
+			if not model.begins_with("bush") and not model.begins_with("shrub"):
+				leaf_points.append(VoxelZoneBake.entry_xf(e).origin + Vector3(0, 4.0, 0))
+			if bb.size.y > TALL_FADE:
+				_fader(mmi, fade_rect(bb, TOWN_TREE_FADE, TOWN_TREE_FADE), bb.end.y)
 			_bump("trees", mm.instance_count)
+		elif String(e.kind) == "tree":
+			# A forest chunk: each tall tree that may hide the player fades alone (fading the
+			# whole chunk turned bushes metres away into a murky ghost), low shrubs never fade.
+			var lone: Array[int] = []
+			var mb := mm.mesh.get_aabb() if mm.mesh else AABB()
+			for i in mm.instance_count:
+				var b1 := VoxelZoneBake.entry_xf(e, i) * mb
+				if b1.size.y > TALL_FADE and may_hide(b1):
+					lone.append(i)
+			if lone.size() < mm.instance_count:
+				if not lone.is_empty():
+					mmi.multimesh = sub_multimesh(e, mm, lone, true)
+				mmi.name = "%s_%d" % [model, trees.get_child_count()]
+				mmi.material_override = _tree_mat(model)
+				trees.add_child(mmi)
+			else:
+				mmi.free()  # every tree of the chunk fades alone
+			for i in lone:
+				var one := MultiMeshInstance3D.new()
+				one.multimesh = sub_multimesh(e, mm, [i], false)
+				one.name = "%s_%d" % [model, trees.get_child_count()]
+				one.material_override = _tree_mat(model)
+				trees.add_child(one)
+				var b1 := VoxelZoneBake.entry_xf(e, i) * mb
+				var half := maxf(b1.size.x, b1.size.z) * 0.5 + 0.3
+				_fader(one, fade_rect(b1, half, TOWN_TREE_FADE), b1.end.y)
+			_bump("trees", mm.instance_count)
+			_bump("lone_trees", lone.size())
 		elif String(e.kind) == "prop":
 			mmi.name = "%s_%d" % [model, trees.get_child_count()]
 			mmi.material_override = _tree_mat(model)
 			trees.add_child(mmi)
 			if bool(e.get("town", false)) and mm.instance_count == 1:
 				var pb := mm_aabb(mm, e)
-				var r := fade_rect(pb, PROP_FADE, PROP_FADE)
-				mmi.set_meta("rect", r)
-				mmi.set_meta("height", pb.end.y)
-				mmi.set_meta("geoms", [mmi])
-				WorldProps.register_fader(mmi, r)
+				_fader(mmi, fade_rect(pb, PROP_FADE, PROP_FADE), pb.end.y)
 			_bump("props", mm.instance_count)
 		else:
 			mmi.name = "%s_%d" % [model.replace(":", "_"), decor.get_child_count()]
@@ -399,6 +514,83 @@ func _instances(root: Node3D) -> void:
 				_buried.append(mmi)
 			_bump("decor", mm.instance_count)
 		await _step()
+
+
+## Registers `n` (its own only geometry) with the camera fader: footprint `r`, top `top` (m).
+func _fader(n: GeometryInstance3D, r: Rect2, top: float) -> void:
+	n.set_meta("rect", r)
+	n.set_meta("height", top)
+	n.set_meta("geoms", [n])
+	WorldProps.register_fader(n, r)
+
+
+## The MultiMesh of instances `idx` of a chunk entry (`others` true: of all the other instances).
+static func sub_multimesh(e: Dictionary, mm: MultiMesh, idx: Array, others: bool) -> MultiMesh:
+	var pick: Array[int] = []
+	for i in mm.instance_count:
+		if (i in idx) != others:
+			pick.append(i)
+	var ph: PackedFloat32Array = e.get("phase", PackedFloat32Array())
+	var out := MultiMesh.new()
+	out.transform_format = MultiMesh.TRANSFORM_3D
+	out.use_custom_data = mm.use_custom_data
+	out.mesh = mm.mesh
+	out.instance_count = pick.size()
+	for k in pick.size():
+		out.set_instance_transform(k, VoxelZoneBake.entry_xf(e, pick[k]))
+		if mm.use_custom_data and pick[k] < ph.size():
+			out.set_instance_custom_data(k, Color(ph[pick[k]], 0, 0, 0))
+	return out
+
+
+## Where a player can stand, for may_hide(): a summed-area table of the zone's free tiles and the
+## rects of the neighbouring zones (players walk there too, e.g. Route 1 north of the edge forest).
+func _index_walkable() -> void:
+	_walk_sum = PackedInt32Array()
+	_walk_out.clear()
+	for n in data.get("neighbors", []):
+		var nd := load_map(String(n))
+		if not nd.is_empty() and not nd.has("voxel"):
+			_walk_out.append(rect_of(nd.get("rect", [0, 0, 0, 0])))
+	if grid == null:
+		return
+	var w := grid.size.x + 1
+	_walk_sum.resize(w * (grid.size.y + 1))
+	for z in grid.size.y:
+		var row := 0
+		for x in grid.size.x:
+			row += 0 if grid.blocked(Vector2i(x, z) + grid.origin) else 1
+			_walk_sum[(x + 1) + (z + 1) * w] = _walk_sum[(x + 1) + z * w] + row
+
+
+## True when a tree (world AABB `b`) can come between the zone's camera (looking north, pitch about
+## 32°: a crown `h` m tall hides a player up to about 1.9 (h - 1) m north of it) and a place a player
+## can stand (_index_walkable); generous, since a tree left out never fades.
+func may_hide(b: AABB) -> bool:
+	var reach := HIDE_SLOPE * maxf(b.end.y - 1.0, 0.0) + 1.0
+	var area := Rect2(
+		b.position.x - 1.0, b.position.z - reach, b.size.x + 2.0, b.size.z + reach + 1.0
+	)
+	for r in _walk_out:
+		if r.intersects(area):
+			return true
+	if _walk_sum.is_empty():
+		return false
+	# Free tiles whose centre lies in the area (tile c covers c +- 0.5).
+	var a := Vector2i(ceili(area.position.x), ceili(area.position.y)) - grid.origin
+	var e := Vector2i(floori(area.end.x), floori(area.end.y)) - grid.origin + Vector2i.ONE
+	a = a.clamp(Vector2i.ZERO, grid.size)
+	e = e.clamp(Vector2i.ZERO, grid.size)
+	if e.x <= a.x or e.y <= a.y:
+		return false
+	var w := grid.size.x + 1
+	var n := (
+		_walk_sum[e.x + e.y * w]
+		- _walk_sum[a.x + e.y * w]
+		- _walk_sum[e.x + a.y * w]
+		+ _walk_sum[a.x + a.y * w]
+	)
+	return n > 0
 
 
 ## World AABB of an instanced chunk entry's MultiMesh: a lone instance from its baked transform
@@ -529,11 +721,14 @@ func _water_surfaces(meta: Dictionary) -> void:
 			)
 		)
 		_bump("cascades")
+	_keep_warm("water", g)
 
 
 ## The fountains: FountainFx water (basins, jets, sheets, curtains, light) over the voxel stone.
 func _fountains(meta: Dictionary) -> void:
-	for f in meta.get("fountains", []):
+	var list: Array = meta.get("fountains", [])
+	for fi in list.size():
+		var f: Dictionary = list[fi]
 		var spec := {"jets": [], "basins": [], "sheets": [], "curtains": []}
 		for j in f.get("jets", []):
 			var e := {"pos": _v3(j.pos), "height": float(j.height), "count": int(j.count)}
@@ -580,6 +775,7 @@ func _fountains(meta: Dictionary) -> void:
 			var bs: Vector2 = b.size * (0.82 if b.shape == "ellipse" else 1.0)
 			_rain_stop(fx, b.pos, Vector3(bs.x, b.depth, bs.y))
 		fountain = fx
+		_keep_warm("fountain%d" % fi, fx)
 		_bump("fountains")
 
 
@@ -620,6 +816,25 @@ func _smoke(meta: Dictionary) -> void:
 	if pts.is_empty():
 		return
 	var g := _group("Smoke")
+	if _smoke_kit.is_empty():
+		_smoke_kit = _make_smoke_kit()
+	for p in pts:
+		var ps := GPUParticles3D.new()
+		ps.name = "Chimney"
+		ps.amount = 14
+		ps.lifetime = 4.5
+		ps.preprocess = 4.5
+		ps.process_material = _smoke_kit[0]
+		ps.draw_pass_1 = _smoke_kit[1]
+		ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ps.visibility_aabb = AABB(Vector3(-2, -0.5, -2), Vector3(6, 5, 6))
+		ps.position = _v3(p)
+		g.add_child(ps)
+		_bump("smoke")
+
+
+## [process material, puff quad] of the chimney smoke (made once, shared by every build).
+static func _make_smoke_kit() -> Array:
 	var pm := ParticleProcessMaterial.new()
 	pm.direction = Vector3(0.25, 1.0, 0.1)
 	pm.spread = 12.0
@@ -668,19 +883,7 @@ func _smoke(meta: Dictionary) -> void:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.55, 0.55)
 	quad.material = mat
-	for p in pts:
-		var ps := GPUParticles3D.new()
-		ps.name = "Chimney"
-		ps.amount = 14
-		ps.lifetime = 4.5
-		ps.preprocess = 4.5
-		ps.process_material = pm
-		ps.draw_pass_1 = quad
-		ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		ps.visibility_aabb = AABB(Vector3(-2, -0.5, -2), Vector3(6, 5, 6))
-		ps.position = _v3(p)
-		g.add_child(ps)
-		_bump("smoke")
+	return [pm, quad]
 
 
 ## Butterflies over the flower beds by day: one particle system fed by the beds' points (bake
@@ -693,10 +896,33 @@ func _butterflies(meta: Dictionary) -> void:
 	for i in pts.size():
 		var p := _v3(pts[i])
 		img.set_pixel(i, 0, Color(p.x, p.y, p.z))
-	var pm := ParticleProcessMaterial.new()
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINTS
+	if _butterfly_kit.is_empty():
+		_butterfly_kit = _make_butterfly_kit()
+	var pm: ParticleProcessMaterial = _butterfly_kit[0].duplicate()
 	pm.emission_point_texture = ImageTexture.create_from_image(img)
 	pm.emission_point_count = pts.size()
+	var bf := Butterflies.new()
+	bf.name = "Butterflies"
+	bf.amount = 28
+	bf.lifetime = 9.0
+	bf.preprocess = 9.0
+	bf.process_material = pm
+	bf.draw_pass_1 = _butterfly_kit[1]
+	bf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	bf.visibility_aabb = AABB(
+		Vector3(rect.position.x - 4.0, -1.0, rect.position.y - 4.0),
+		Vector3(rect.size.x + 8.0, 6.0, rect.size.y + 8.0)
+	)
+	_group("Life").add_child(bf)
+	butterflies = bf
+	_bump("butterflies", pts.size())
+
+
+## [process material template (no emission points yet), flapping sprite quad] of the butterflies
+## (made once: every build duplicates the template and adds the flower beds' points).
+static func _make_butterfly_kit() -> Array:
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINTS
 	pm.direction = Vector3(0, 0.4, 0)
 	pm.spread = 180.0
 	pm.initial_velocity_min = 0.15
@@ -752,21 +978,7 @@ func _butterflies(meta: Dictionary) -> void:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.18, 0.09)
 	quad.material = mat
-	var bf := Butterflies.new()
-	bf.name = "Butterflies"
-	bf.amount = 28
-	bf.lifetime = 9.0
-	bf.preprocess = 9.0
-	bf.process_material = pm
-	bf.draw_pass_1 = quad
-	bf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	bf.visibility_aabb = AABB(
-		Vector3(rect.position.x - 4.0, -1.0, rect.position.y - 4.0),
-		Vector3(rect.size.x + 8.0, 6.0, rect.size.y + 8.0)
-	)
-	_group("Life").add_child(bf)
-	butterflies = bf
-	_bump("butterflies", pts.size())
+	return [pm, quad]
 
 
 ## Flags on the flagpoles: a subdivided quad hung from the pole top, flying downwind and rippling
@@ -778,8 +990,11 @@ func _flags(meta: Dictionary) -> void:
 		quad.subdivide_width = 12
 		quad.subdivide_depth = 2
 		var m := ShaderMaterial.new()
-		m.shader = load("res://world/voxel/voxel_flag.gdshader")
-		m.set_shader_parameter("cloth", ImageTexture.create_from_image(flag_cloth(String(f.cloth))))
+		m.shader = _flag()
+		var kind := String(f.cloth)
+		if not _cloth.has(kind):
+			_cloth[kind] = ImageTexture.create_from_image(flag_cloth(kind))
+		m.set_shader_parameter("cloth", _cloth[kind])
 		m.set_shader_parameter("phase", _v3(f.pos).x)
 		var mi := MeshInstance3D.new()
 		mi.name = "Flag"
@@ -797,9 +1012,10 @@ func _flags(meta: Dictionary) -> void:
 ## and clothes pegged along them, each a hanging quad that sways in the breeze (voxel_flag.gdshader
 ## in hang mode, pixel cloth from laundry_cloth()).
 func _laundry(meta: Dictionary) -> void:
-	var rope := StandardMaterial3D.new()
-	rope.albedo_color = Color("d8cdb4")
-	rope.roughness = 1.0
+	if _rope == null:
+		_rope = StandardMaterial3D.new()
+		_rope.albedo_color = Color("d8cdb4")
+		_rope.roughness = 1.0
 	var n := 0
 	for l in meta.get("laundry", []):
 		var a := _v3(l.a) + Vector3(0, -0.04, 0)
@@ -818,7 +1034,7 @@ func _laundry(meta: Dictionary) -> void:
 			var bm := BoxMesh.new()
 			bm.size = Vector3(span, 0.025, 0.025)
 			line.mesh = bm
-			line.material_override = rope
+			line.material_override = _rope
 			line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			line.transform = Transform3D(bs, a + d * 0.5 + off)
 			_group("Life").add_child(line)
@@ -835,10 +1051,12 @@ func _laundry(meta: Dictionary) -> void:
 				quad.subdivide_width = 2
 				quad.subdivide_depth = 6
 				var m := ShaderMaterial.new()
-				m.shader = load("res://world/voxel/voxel_flag.gdshader")
+				m.shader = _flag()
 				var tint: Color = LAUNDRY_TINTS[(n * 7 + i * 3 + k * 2) % LAUNDRY_TINTS.size()]
-				var img := laundry_cloth(kind, tint)
-				m.set_shader_parameter("cloth", ImageTexture.create_from_image(img))
+				var key := "%s|%s" % [kind, tint.to_html()]
+				if not _cloth.has(key):
+					_cloth[key] = ImageTexture.create_from_image(laundry_cloth(kind, tint))
+				m.set_shader_parameter("cloth", _cloth[key])
 				m.set_shader_parameter("hang", 1.0)
 				m.set_shader_parameter("wave", 0.06 if kind != "sheet" else 0.1)
 				m.set_shader_parameter("speed", 2.2)
@@ -854,6 +1072,39 @@ func _laundry(meta: Dictionary) -> void:
 				i += 1
 		n += 1
 		_bump("laundry")
+
+
+static func _flag() -> Shader:
+	if _flag_shader == null:
+		_flag_shader = load("res://world/voxel/voxel_flag.gdshader")
+	return _flag_shader
+
+
+## Keeps the render resources under `n` (particle process materials, draw-pass and mesh materials,
+## material overrides: their shaders with them) referenced under `key` until the next build
+## replaces them. They are the same for every build, and once freed with an unloaded zone the next
+## stream-in rebuilt every shader and particle material in one frame (FountainFx, water, cascades).
+static func _keep_warm(key: String, n: Node) -> void:
+	var keep: Array = []
+	_collect_render(n, keep)
+	_warm[key] = keep
+
+
+static func _collect_render(n: Node, out: Array) -> void:
+	if n is GPUParticles3D:
+		var ps := n as GPUParticles3D
+		out.append(ps.process_material)
+		for i in ps.draw_passes:
+			out.append(ps.get_draw_pass_mesh(i))
+	if n is GeometryInstance3D:
+		out.append((n as GeometryInstance3D).material_override)
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh:
+		var m := (n as MeshInstance3D).mesh
+		out.append(m)
+		for i in m.get_surface_count():
+			out.append(m.surface_get_material(i))
+	for c in n.get_children():
+		_collect_render(c, out)
 
 
 ## The pixel cloth of a piece of laundry (alpha cut-out shape, hem and stripes), 16 px per metre.

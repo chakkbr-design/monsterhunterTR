@@ -40,6 +40,9 @@ const SPOTS := {
 	"meadow": [Vector3(-19, 0, 4), Vector3(0, 0, -1)],
 	"north": [Vector3(12, 0, -11), Vector3(0, 0, -1)],
 	"flag": [Vector3(20, 0, 26), Vector3(0, 0, -1)],
+	"lab_step": [Vector3(16, 0, 25), Vector3(0, 0, -1)],  # a sapling right in front (fades alone)
+	"seam": [Vector3(0, 0, -22), Vector3(0, 0, -1)],  # Route 1 just north of the gate arch
+	"seam_near": [Vector3(0, 0, -21), Vector3(0, 0, -1)],
 }
 const NIGHT := {
 	"morning": [0.0, 0.0],
