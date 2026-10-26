@@ -97,8 +97,15 @@ func _run() -> void:
 		"gym_leader",
 		"cave"
 	]
-	for n in ["heal", "item_get", "badge", "caught", "spotted"]:
+	# "bump": o jogador (world/player.gd) usa Audio.sfx("bump") quando has_sfx("bump").
+	for n in ["heal", "item_get", "badge", "caught", "spotted", "bump"]:
 		check(Synth.SFX_NAMES.has(n), "efeito do contrato %s existe" % n)
+	var bump := Synth.make_sfx("bump")
+	var bump_secs := _frames(bump) / float(Synth.RATE) if bump else 0.0
+	check(
+		bump != null and bump_secs <= 0.2 and _peak(bump) < 0.6,
+		"bump curto e macio (%.2fs, pico %.2f)" % [bump_secs, _peak(bump) if bump else 0.0]
+	)
 	for n in need:
 		check(Synth.TRACKS.has(n), "faixa %s existe" % n)
 	var t0 := Time.get_ticks_msec()
@@ -159,6 +166,7 @@ func _run() -> void:
 	root.add_child(au)
 	await process_frame
 	check(au.has_sfx("hit") and au.sfx_stream("crit") != null, "Audio monta os efeitos no _ready")
+	check(au.has_sfx("bump") and au.sfx_stream("bump") != null, "Audio tem o esbarrão da grade")
 	au.sfx("hit")
 	au.sfx("nao_existe")
 	Cue.sfx("crit")
