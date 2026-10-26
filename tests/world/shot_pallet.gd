@@ -16,10 +16,10 @@ const SPOTS := {
 	"house": [Vector3(-16, 0, -1), Vector3(0, 0, -1)],
 	"plantation": [Vector3(-23, 0, -1), Vector3(0, 0, -1)],
 	"rival": [Vector3(11, 0, -2), Vector3(0, 0, -1)],
-	"lab": [Vector3(16, 0, 21), Vector3(0, 0, -1)],
+	"lab": [Vector3(16, 0, 24), Vector3(0, 0, -1)],
 	"pond": [Vector3(-10, 0, 14), Vector3(-1, 0, 0)],
 	"dock": [Vector3(-11, 0, 11), Vector3(-1, 0, 0)],
-	"bridge": [Vector3(-15, 0, 21), Vector3(0, 0, -1)],
+	"bridge": [Vector3(-13, 0, 25), Vector3(0, 0, -1)],
 	"gate": [Vector3(0, 0, -13), Vector3(0, 0, -1)],
 	"orchard": [Vector3(24, 0, -2), Vector3(0, 0, -1)],
 	"south": [Vector3(6, 0, 25), Vector3(0, 0, -1)],
@@ -136,6 +136,7 @@ func _run() -> void:
 			_globals(period)
 			await _wait(45)
 			_globals(period)
+			print("spot %s: player at %s" % [s, p.global_position])
 			var suffix := "" if weather == "clear" else "_" + weather
 			if far > 0.0:
 				suffix += "_far"

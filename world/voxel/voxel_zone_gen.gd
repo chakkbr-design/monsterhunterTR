@@ -1,11 +1,11 @@
 class_name VoxelZoneGen
 extends RefCounted
-## Voxel zone generator (docs/VOXEL.md §5): design (data/voxel/<zone>.json) + map
-## (data/maps/<zone>.json) -> a VoxelGrid (terrain, water beds, buildings, trees, props), the
-## zone's TileGrid (BLOCKED / WATER / DOOR / NO_NPC / COVER, heights) and the metadata the runtime
-## needs: lamp lights, each building's parts (walls / roof / upper slab) with rect and height for
-## the camera fader, water surfaces, fountain anchors and the decor instances (flowers, tufts,
-## pebbles, crops, small props) built at the 1/16 m detail scale.
+## Voxel zone generator (docs/VOXEL.md §5; the design format is in VoxelDesign). Design
+## (data/voxel/<zone>.json) + map (data/maps/<zone>.json) -> a VoxelGrid (terrain, water beds,
+## buildings, trees, props), the zone's TileGrid (BLOCKED / WATER / DOOR / NO_NPC / COVER, heights)
+## and the metadata the runtime needs: lamp lights, each building's parts (walls / roof / upper
+## slab) with rect and height for the camera fader, water surfaces, fountain anchors and the decor
+## instances (flowers, tufts, pebbles, crops, small props) built at the 1/16 m detail scale.
 ## Deterministic: every random choice hashes the voxel / tile (VoxelGrid.hash01) or uses
 ## FastNoiseLite with a fixed seed. Bump VERSION whenever the output changes for the same inputs
 ## (the bake hash includes it, tests/world/test_voxel_zone.gd fails on a stale bake).

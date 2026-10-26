@@ -1,13 +1,31 @@
 class_name VoxelDesign
 extends RefCounted
-## A voxel zone's design file (data/voxel/<zone>.json, format in docs/VOXEL.md §9): two ASCII layers
-## on the 1 m grid, one character per tile, rows north to south:
-## - `ground`: what is painted in each square (lawn, cobbles, water...), see GROUND;
-## - `things`: what stands on it (buildings, trees, hedges, lamps...), see THINGS (' ' = nothing);
-## plus the building styles (by footprint letter), tree overrides, crop fields and the big objects
-## (fountain, gate arch, waterfall). Signs and mailboxes come from the map JSON (data/maps/), which
-## stays the source of the gameplay. `origin` is the world tile of the first character of the first
-## row; `rect` is the gameplay rect in tiles [x0, z0, x1, z1] (inclusive), the rest is scenery.
+## A voxel zone's design file (data/voxel/<zone>.json; docs/VOXEL.md §5). It holds two ASCII
+## layers on the 1 m grid, one character per tile, rows north to south:
+## - `ground`: what is painted in each square (lawn, cobbles, water...); see GROUND;
+## - `things`: what stands on it (buildings, trees, hedges, lamps...); see THINGS (' ' = nothing).
+## Signs and mailboxes come from the map JSON (data/maps/), which stays the source of the gameplay.
+##
+## Format (every key but the layers is optional):
+## - `id`, `comment`;
+## - `origin` [x, z]: the world tile of the first character of the first row;
+## - `rect` [x0, z0, x1, z1]: the gameplay tiles (inclusive); the rest is scenery (forest...);
+## - `buildings`: one entry per footprint letter of `things`:
+##   {"char", "id", "style": house|lab|shed, "footprint": [w, d], "map": true when the map JSON has
+##   a door for it, "storeys", "roof_color", "wall_color", "stone_color", "door_color", "shutter",
+##   "trim", "flower_boxes", "timber_frame", "chimney": [x offset, "n"|"s"]}. Colours are hex.
+##   The 'd' touching the footprint's south side is the door tile (DOOR flag; the tile in front is
+##   the arrival). A house is hollow with a floor, walls / roof / slab are separate parts;
+## - `trees`: [{"pos": [x, z], "species", "size"}] overrides of tree tiles;
+## - `crops`: [{"rect": [x0, z0, x1, z1], "crop": wheat|cabbage|carrot|pumpkin}] over 'c' tiles;
+## - `objects`: the big things:
+##   {"kind": "fountain", "rect": [x0, z0, x1, z1]} over 'O' tiles;
+##   {"kind": "gate", "from": [x, z], "to": [x, z], "sign": "TEXT"} (arch between two pillars);
+##   {"kind": "water", "type": pond|stream, "rect": [x0, z0, x1, z1], "level": y, "depth": m,
+##   "flow": [x, z]}: the surface over the '~' / 'w' tiles inside the rect.
+## The generator (VoxelZoneGen) turns it into a VoxelGrid, a TileGrid and metadata, and
+## tools/voxel/bake_zone.gd bakes them into world/voxel/baked/<zone>.res + .json. The .json holds
+## the hash of the design + map (VoxelZoneGen.input_hash) and of the generator sources.
 
 ## Ground legend: character -> kind.
 const GROUND := {

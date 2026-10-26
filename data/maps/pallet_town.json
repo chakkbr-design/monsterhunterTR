@@ -56,7 +56,7 @@
     "spawn": "lab_door",
     "tile": [
      16,
-     18
+     22
     ]
    }
   }
@@ -217,7 +217,7 @@
    "name": "LabSign",
    "pos": [
     12,
-    19
+    23
    ],
    "title": "Placa",
    "model": "hgss/common/sign_a",

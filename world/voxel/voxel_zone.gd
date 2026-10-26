@@ -1,15 +1,15 @@
 class_name VoxelZone
 extends MapBuilder
-## A zone drawn in voxels (docs/VOXEL.md §5, §9): the map JSON (data/maps/<id>.json) stays the
-## source of the gameplay (NPCs, signs, items, spawn zones, triggers, arrivals, doors) and its
-## "voxel" entry names the design (data/voxel/<id>.json). The scenery comes from the bake
-## (world/voxel/baked/<id>.res + .json, tools/voxel/bake_zone.gd): chunk meshes sharing one voxel
-## material, each house's parts registered with the camera fader, instanced trees and decor, water
-## surfaces, the fountain's FountainFx and the lamps' night lights. A stale or missing bake is
-## regenerated in-process (slow, with a warning). Collision follows the baked TileGrid: merged
-## boxes over blocked tiles (layer 1) and water tiles (the Water body), so walking matches the grid.
-## When streaming (items_per_frame > 0) the bake loads on a thread and the nodes are added a few
-## per frame, so walking back from Route 1 never stalls.
+## A zone drawn in voxels (docs/VOXEL.md §5; design format in VoxelDesign): the map JSON
+## (data/maps/<id>.json) stays the source of the gameplay (NPCs, signs, items, spawn zones,
+## triggers, arrivals, doors) and its "voxel" entry names the design (data/voxel/<id>.json). The
+## scenery comes from the bake (world/voxel/baked/<id>.res + .json, tools/voxel/bake_zone.gd): chunk
+## meshes sharing one voxel material, each house's parts registered with the camera fader, instanced
+## trees and decor, water surfaces, the fountain's FountainFx and the lamps' night lights. A stale
+## or missing bake is regenerated in-process (slow, with a warning). Collision follows the baked
+## TileGrid: merged boxes over blocked tiles (layer 1) and water tiles (the Water body), so walking
+## matches the grid. When streaming (items_per_frame > 0) the bake loads on a thread and the nodes
+## are added a few per frame, so walking back from Route 1 never stalls.
 
 const FADE_GROW := 0.6  ## house fader rect past the footprint (eaves)
 const TOWN_TREE_FADE := 2.6  ## half size of a town tree's fader rect
@@ -249,7 +249,7 @@ func _house(b: Dictionary) -> Node3D:
 	n.add_to_group("fade_building")
 	_group("Voxel").add_child(n)
 	houses[id] = n
-	_bump("buildings")
+	_bump("houses")
 	return n
 
 
@@ -412,3 +412,4 @@ func _doors() -> void:
 		if dr.has("spawn"):
 			arrivals[String(dr.spawn)] = Vector3(t.x, 0.0, t.y + 1.0)
 		_bump("doors")
+		_bump("buildings")  # the map's buildings (the voxel houses are counted as "houses")

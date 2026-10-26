@@ -1,5 +1,5 @@
 extends SceneTree
-## Bakes a voxel zone (docs/VOXEL.md §9): runs VoxelZoneGen on data/voxel/<zone>.json + the map and
+## Bakes a voxel zone (docs/VOXEL.md §5): runs VoxelZoneGen on data/voxel/<zone>.json + the map and
 ## writes world/voxel/baked/<zone>.res (meshes, volumes, MultiMesh chunks; compressed) and
 ## <zone>.json (metadata, TileGrid, hashes). Usage:
 ##   godot --headless --path . --script res://tools/voxel/bake_zone.gd -- zone=pallet_town
