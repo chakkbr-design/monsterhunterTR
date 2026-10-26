@@ -28,6 +28,10 @@ var _count := 0
 
 
 func _initialize() -> void:
+	# Mon.create sorteia IVs/natureza/habilidade no RNG global, que o Godot randomiza a cada
+	# execução: sem semente fixa as lutas de 3 s de autoplay mudam de uma execução para outra (quem
+	# desmaia antes da troca, quem a IA tira de campo) e as checagens viram sorteio.
+	seed(5)
 	_switch_at_round_start()
 	_one_per_side()
 	_retarget()
