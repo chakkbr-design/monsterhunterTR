@@ -11,6 +11,11 @@ extends Node3D
 
 const GROUP := "ow_camera"
 const FADE_RADIUS := 18.0
+const EAVES_REACH := 1.0  ## m the player may stand inside a fader's rect and still be hidden by it
+const EYE_CLEAR := 1.0  ## m around a fading part's box within which the eye counts as inside it
+## Transparency of a building around the eye: it vanishes (its stacked faces at building_alpha hid
+## the player, and even at 5 % its lit windows floated in the night).
+const EYE_ALPHA := 1.0
 const ATTRS := "res://world/look/camera_attrs.tres"
 
 @export_range(15.0, 75.0) var pitch_deg := 32.0
@@ -165,7 +170,16 @@ func _fade_target(n: Node3D, f: Vector3) -> float:
 	var height: float = n.get_meta("height", 5.0)
 	var tan_p := tan(deg_to_rad(pitch_deg + _pitch_off))
 	var sp := _cam_span(r, f, ax[0], ax[1])
-	var hidden: bool = sp[0] > 0.0 and sp[0] < height / tan_p and sp[2] < 0.0 and sp[3] > 0.0
+	# Hidden: the rect lies between the player and the eye (its centre on the camera side) and is
+	# tall enough to cover them. The player may stand up to EAVES_REACH inside its far edge: right
+	# behind a house the grown rect (eaves) already reaches under their feet.
+	var hidden: bool = (
+		sp[0] > -EAVES_REACH
+		and sp[0] + sp[1] > 0.0
+		and sp[0] < height / tan_p
+		and sp[2] < 0.0
+		and sp[3] > 0.0
+	)
 	return 1.0 - building_alpha if hidden else 0.0
 
 
@@ -191,15 +205,29 @@ func _fade_buildings(delta: float, target: Node3D) -> void:
 
 
 func _set_fade(n: Node3D, nv: float, eye: Vector3, at: Vector3) -> void:
-	for g in n.get_meta("geoms", []):
+	var geoms: Array = n.get_meta("geoms", [])
+	# The eye sits in (or right by) the building, e.g. a two-storey roof right in front of the lens:
+	# its stacked faces at building_alpha read as an opaque wall, so its parts vanish instead.
+	var inside := false
+	if nv > 0.0:
+		for g in geoms:
+			if is_instance_valid(g) and _eye_in(g as GeometryInstance3D, eye):
+				inside = true
+				break
+	var deep := minf(nv / maxf(1.0 - building_alpha, 0.01), 1.0) * EYE_ALPHA
+	for g in geoms:
 		if not is_instance_valid(g):
 			continue
 		var gi := g as GeometryInstance3D
 		var a := nv
-		if nv > 0.0:  # only the parts actually between the eye and the player
+		if nv > 0.0:  # only the parts actually between the eye and the player (or around the eye)
 			var inv := gi.global_transform.affine_inverse()
-			if gi.get_aabb().intersects_segment(inv * eye, inv * (at + Vector3.UP)) == null:
+			if _eye_in(gi, eye):
+				a = deep
+			elif gi.get_aabb().intersects_segment(inv * eye, inv * (at + Vector3.UP)) == null:
 				a = 0.0
+			elif inside:
+				a = deep
 		gi.transparency = a
 		if a > 0.0:
 			if not gi.has_meta("fade_shadow"):
@@ -208,3 +236,11 @@ func _set_fade(n: Node3D, nv: float, eye: Vector3, at: Vector3) -> void:
 		elif gi.has_meta("fade_shadow"):
 			gi.cast_shadow = gi.get_meta("fade_shadow")
 			gi.remove_meta("fade_shadow")
+
+
+## True when the eye is inside the part's box grown by EYE_CLEAR (empty boxes never count).
+static func _eye_in(gi: GeometryInstance3D, eye: Vector3) -> bool:
+	var bb := gi.get_aabb()
+	if bb.size.length_squared() < 0.0001:
+		return false
+	return bb.grow(EYE_CLEAR).has_point(gi.global_transform.affine_inverse() * eye)
