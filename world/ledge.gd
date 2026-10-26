@@ -34,8 +34,8 @@ func _ready() -> void:
 
 func _physics_process(_d: float) -> void:
 	var p := Overworld.player_of(self)
-	if p == null or not p.is_on_floor():
-		return  # keep the last state while airborne, so a jump from below can't switch it off
+	if p == null or not p.is_on_floor() or p.grid_active():
+		return  # airborne: keep the last state (a jump from below can't switch it off); grid: TileGrid
 	var below := p.global_position.y < global_position.y - drop * 0.5
 	if below != _below:
 		_below = below
@@ -70,12 +70,29 @@ func hop(p: OverworldPlayer, out: Vector3) -> void:
 	if mb and mb.has_method("height_at"):
 		low = mb.height_at(to.x, to.z)
 	to.y = low
+	await hop_to(p, to)
+
+
+## The hop arc from where the player stands to `to` (grid zones: two tiles out, onto a tile centre).
+func hop_to(p: OverworldPlayer, to: Vector3, secs := HOP_TIME) -> void:
+	await jump(p, to, secs)
+
+
+## True when `at` (world) lies in this ledge's band: along its length, within a tile of the edge.
+func covers(at: Vector3) -> bool:
+	var lp := to_local(at)
+	return absf(lp.x) <= length * 0.5 + 0.5 and lp.z >= -1.0 and lp.z <= 1.0
+
+
+## Locks the player and moves it to `to` in an arc HOP_HEIGHT high over `secs`, physics off (the
+## original player.hop), with the hop / land cues.
+static func jump(p: OverworldPlayer, to: Vector3, secs := HOP_TIME) -> void:
 	p.set_meta(HOP_META, true)
 	var was_locked := p.locked
 	p.locked = true
 	p.velocity = Vector3.ZERO
 	p.set_physics_process(false)
-	_cue("ledge_hop")
+	_cue_on(p, "ledge_hop")
 	var from := p.global_position
 	var tw := p.create_tween()
 	tw.tween_method(
@@ -83,7 +100,7 @@ func hop(p: OverworldPlayer, out: Vector3) -> void:
 			p.global_position = from.lerp(to, t) + Vector3(0, sin(t * PI) * HOP_HEIGHT, 0),
 		0.0,
 		1.0,
-		HOP_TIME
+		secs
 	)
 	await tw.finished
 	if not is_instance_valid(p):
@@ -92,10 +109,10 @@ func hop(p: OverworldPlayer, out: Vector3) -> void:
 	p.set_physics_process(true)
 	p.locked = was_locked
 	p.remove_meta(HOP_META)
-	_cue("ledge_land")
+	_cue_on(p, "ledge_land")
 
 
-func _cue(n: String) -> void:
-	var au := get_node_or_null("/root/Audio")
-	if au and au.has_method("has_sfx") and au.has_sfx(n):
-		au.sfx(n)
+static func _cue_on(n: Node, cue: String) -> void:
+	var au := n.get_node_or_null("/root/Audio") if n.is_inside_tree() else null
+	if au and au.has_method("has_sfx") and au.has_sfx(cue):
+		au.sfx(cue)

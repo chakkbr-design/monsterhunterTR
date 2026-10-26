@@ -126,7 +126,7 @@ func _pet() -> void:
 	check(pet.npc_name == "Pidgey de Lily", "pet name '%s'" % pet.npc_name)
 	check(pet.is_in_group("ow_interact") and pet.prompt() == "E: Falar", "pet talks with E")
 	check(pet.lines.size() == 2 and pet.lines[0] == "Pidgey: Pidge! Pidge!", "pet lines")
-	check(pet.global_position.distance_to(Vector3(-2, 0, 6.5)) < 4.5, "pet stays near home")
+	check(pet.global_position.distance_to(Vector3(-3, 0, 7)) < 4.5, "pet stays near home")
 
 
 func _walk_in_door() -> void:

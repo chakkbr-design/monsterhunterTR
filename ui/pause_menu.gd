@@ -671,7 +671,7 @@ func _save() -> void:
 	if world and world.has_method("save_extra"):
 		extra = world.save_extra()  # {"pos": [x, y, z], "zone" | "interior": id}
 	elif p:
-		var v := p.global_position
+		var v: Vector3 = p.save_position() if p.has_method("save_position") else p.global_position
 		extra = {"pos": [v.x, v.y, v.z]}
 	_msg("Jogo salvo." if game.save_game(extra) else "Não foi possível salvar.", "main")
 

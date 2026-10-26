@@ -17,6 +17,9 @@ var origin := Vector2i.ZERO  ## tile coordinates of local tile (0, 0)
 var size := Vector2i.ONE
 var flags := PackedByteArray()
 var heights := PackedFloat32Array()  ## ground height (m) at each tile centre
+## Runtime only (never baked): tile -> instance id of the NPC standing on it or stepping into it, so
+## two walkers never pick the same tile (WorldNpc grid wander and the player's step checks).
+var claims: Dictionary = {}
 
 
 func _init(o := Vector2i.ZERO, s := Vector2i.ONE) -> void:
@@ -70,6 +73,31 @@ func set_height(c: Vector2i, h: float) -> void:
 
 func center(c: Vector2i) -> Vector3:
 	return Vector3(c.x, height(c), c.y)
+
+
+## Takes tile `c` for `who` (an NPC). False when another live walker holds it.
+func claim(c: Vector2i, who: Object) -> bool:
+	if claimed(c, who):
+		return false
+	claims[c] = who.get_instance_id()
+	return true
+
+
+## Gives tile `c` back, if `who` holds it.
+func release(c: Vector2i, who: Object) -> void:
+	if int(claims.get(c, 0)) == who.get_instance_id():
+		claims.erase(c)
+
+
+## True when a live walker other than `other_than` holds tile `c` (any walker when null).
+func claimed(c: Vector2i, other_than: Object = null) -> bool:
+	var id := int(claims.get(c, 0))
+	if id == 0:
+		return false
+	if not is_instance_id_valid(id):
+		claims.erase(c)
+		return false
+	return other_than == null or id != other_than.get_instance_id()
 
 
 ## Serialisation for baked zones: {"origin":[x,z],"size":[w,h],"flags":base64,"heights":base64}.

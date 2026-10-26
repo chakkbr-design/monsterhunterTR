@@ -1,7 +1,7 @@
 extends SceneTree
 ## Headless: godot --headless --fixed-fps 60 --path . --script res://tests/world/test_map_builder.gd
-## Builds each zone of route_world with MapBuilder and checks it; then runs route_world.tscn
-## (streaming, zone walk, LearnMove freeze).
+## Builds each zone of route_world with its builder (MapBuilder, or VoxelZone for voxel zones) and
+## checks it; then runs route_world.tscn (streaming, zone walk, LearnMove freeze).
 
 const ZONES := [
 	"pallet_town",
@@ -50,7 +50,10 @@ func _run() -> void:
 func _zone(id: String) -> void:
 	var holder := Node3D.new()
 	root.add_child(holder)
-	var b = load("res://world/map_builder.gd").new()
+	# Zones with a "voxel" entry are drawn by VoxelZone (as route_world._make_builder does).
+	var mb: GDScript = load("res://world/map_builder.gd")
+	var voxel: bool = not mb.voxel_info(id).is_empty()
+	var b = (load("res://world/voxel/voxel_zone.gd") if voxel else mb).new()
 	b.zone_id = id
 	b.items_per_frame = 40  # exercise the frame-sliced path
 	holder.add_child(b)
@@ -63,8 +66,9 @@ func _zone(id: String) -> void:
 	print("  %s built in %d ms: %s" % [id, Time.get_ticks_msec() - t0, c])
 	check(b.is_built and not b.data.is_empty(), "%s: built from JSON" % id)
 	check(int(c.get("ground", 0)) == 1, "%s: has ground" % id)
+	# A voxel zone's walls are the merged boxes over its blocked tiles.
 	check(
-		int(c.get("walls", 0)) > 0 and int(c.get("bounds", 0)) > 0,
+		int(c.get("walls", 0)) + int(c.get("tile_boxes", 0)) > 0 and int(c.get("bounds", 0)) > 0,
 		"%s: has walls and boundary" % id
 	)
 	check(
@@ -119,7 +123,7 @@ func _world() -> void:
 		"world: pallet built at start"
 	)
 	check(
-		p.global_position.distance_to(Vector3(-8.3, 0.2, -4.2)) < 0.5,
+		p.global_position.distance_to(Vector3(-13, 0.2, -3)) < 0.5,
 		"world: player at Pallet start (%s)" % p.global_position
 	)
 	check(p.is_on_floor(), "world: player standing on ground")

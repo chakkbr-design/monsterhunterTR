@@ -2,7 +2,8 @@ class_name WorldDoor
 extends WorldNpc
 ## Building door. If the map's target_spawn leads to a known interior (InteriorDefs.DOOR_TARGETS) and the
 ## map root can travel (RouteWorld), walking into it enters, like the original door.gd (Area3D
-## body_entered); "E: Entrar" still works. Otherwise it shows its lines ("Fechado.") with E.
+## body_entered); in grid zones pushing into it from the tile in front does (walk_in). "E: Entrar"
+## still works. Otherwise it shows its lines ("Fechado.") with E.
 
 var target_scene := ""
 var target_spawn := ""
@@ -30,13 +31,25 @@ func _ready() -> void:
 	_walk_in.body_entered.connect(_on_walk_in)
 
 
+## Free zones: the walk-in area. Grid zones leave it alone (it is 1.2 m wide and would fire while
+## walking past along the facade): the player enters by pushing into the door (walk_in).
 func _on_walk_in(b: Node) -> void:
-	if not b is OverworldPlayer or not (b as OverworldPlayer).can_act() or not leads_inside():
-		return
+	if b is OverworldPlayer and not (b as OverworldPlayer).grid_active():
+		walk_in(b)
+
+
+## Enters the room behind the door when it leads inside and the player may act. True when the trip
+## started (RouteWorld.travel ignores it during a fade and right after arriving).
+func walk_in(p: OverworldPlayer) -> bool:
+	if not p.can_act() or not leads_inside():
+		return false
 	var t: Array = InteriorDefs.DOOR_TARGETS.get(target_spawn, [])
 	var w := Overworld.of(self)
-	if t.size() == 2 and w.has_method("travel"):
-		w.travel({"interior": t[0], "spawn": t[1]}, self)
+	if t.size() != 2 or not w.has_method("travel"):
+		return false
+	var was := String(w.get("location_kind"))
+	w.travel({"interior": t[0], "spawn": t[1]}, self)
+	return bool(w.get("traveling")) or String(w.get("location_kind")) != was
 
 
 func _build_body() -> void:

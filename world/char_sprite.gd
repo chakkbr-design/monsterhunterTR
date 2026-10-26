@@ -19,6 +19,9 @@ var follow_parent := true
 var facing := Vector3(0, 0, 1)
 var moving := false
 var speed := 4.0
+## Column shown instead of the walk cycle (grid steps: 1 / 2 = a foot forward, 0 = standing); -1 = the
+## cycle. Tile walkers set it per step, so each tile shows one foot and the feet alternate.
+var step_col := -1
 
 var _row := 0
 var _anim := 0.0
@@ -91,6 +94,8 @@ func _process(delta: float) -> void:
 	else:
 		_anim = 0.0
 	var col: int = WALK_CYCLE[int(_anim) % 4] if moving else 0
+	if step_col >= 0:
+		col = clampi(step_col, 0, 2)
 	frame = _row * 3 + col
 
 

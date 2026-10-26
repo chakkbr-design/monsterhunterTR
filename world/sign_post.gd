@@ -9,9 +9,13 @@ var model_rot := 180.0  ## world yaw of the model (deg), the map's "rot"
 var model_billboard := false  ## camera-facing foliage (cut trees)
 var model_tint := Color.WHITE
 var verb := "E: Ler"
+var drawn := true  ## false when the zone draws the sign itself (voxel zones): prompt only
 
 
 func _build_body() -> void:
+	if not drawn:
+		show_tag = false
+		return
 	var inst := WorldProps.place(
 		self,
 		model if model != "" else "hgss/common/sign_a",

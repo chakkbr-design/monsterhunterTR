@@ -123,10 +123,13 @@ func _spot(p: OverworldPlayer) -> void:
 		au.sfx("spotted")
 	await get_tree().create_timer(0.7).timeout
 	_alert.visible = false
-	var to := p.global_position - global_position
-	to.y = 0.0
-	if to.length() > STOP_SHORT:
-		await _walk_to(global_position + to.normalized() * (to.length() - STOP_SHORT))
+	if GridMotion.grid_for(self):
+		await _grid_approach(p)
+	else:
+		var to := p.global_position - global_position
+		to.y = 0.0
+		if to.length() > STOP_SHORT:
+			await _walk_to(global_position + to.normalized() * (to.length() - STOP_SHORT))
 	face(p.global_position)
 	await _battle_sequence(true)
 	if is_instance_valid(self) and not is_queued_for_deletion():
@@ -137,7 +140,25 @@ func _spot(p: OverworldPlayer) -> void:
 	_sight_cd = SIGHT_COOLDOWN
 
 
+## Grid zones: up to the tile next to the player on this side, along the sight line.
+func _grid_approach(p: OverworldPlayer) -> void:
+	await p.settle()
+	var pc := TileGrid.cell_of(p.save_position())
+	var d := GridMotion.card(global_position - p.global_position)
+	if d == Vector2i.ZERO:
+		return
+	var dest := pc + d
+	if TileGrid.cell_of(global_position) != dest:
+		await GridMotion.walk_node(
+			self, Vector3(dest.x, global_position.y, dest.y), WALK_SPEED, 0 if d.x != 0 else 1
+		)
+
+
+## Grid zones walk tile by tile (GridMotion.walk_node); elsewhere a straight tween.
 func _walk_to(pos: Vector3) -> void:
+	if GridMotion.grid_for(self):
+		await GridMotion.walk_node(self, pos, WALK_SPEED)
+		return
 	var d := global_position.distance_to(pos)
 	if d < 0.05:
 		return
