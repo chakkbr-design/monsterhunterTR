@@ -64,7 +64,7 @@ static func source_hash() -> String:
 	var s := ""
 	for p in SOURCES:
 		s += FileAccess.get_file_as_string(p) if FileAccess.file_exists(p) else ""
-	return s.md5_text()
+	return s.replace("\r", "").md5_text()  # CRLF checkouts (Windows) hash like LF ones
 
 
 ## The stored JSON (metadata + tiles + hashes), {} when missing.

@@ -886,8 +886,10 @@ static func scatter(gen: VoxelZoneGen) -> void:
 		if b.has("door") and String(b.style) != "shed":
 			var dt: Vector2i = b.door
 			gen.add_decor("doormat", _xf(Vector3(dt.x, 0.0, dt.y + 0.72), 0.0))
-	for tx in gen.meta.get("texts", []):
-		gen.add_decor("text:" + String(tx.text), Transform3D(Basis(), tx.pos))
+	for tx in gen.meta.get("texts", []):  # on a part (the gate's board): fades with it
+		gen.add_decor(
+			"text:" + String(tx.text), Transform3D(Basis(), tx.pos), int(tx.get("part", 0))
+		)
 
 
 ## Litter under a town tree: fallen leaves, now and then a mushroom or a windfall apple.

@@ -714,7 +714,9 @@ static func _paint(c: Color, amt: float, salt: int) -> Callable:
 	return func(v: Vector3i) -> Color: return VoxelPal.at(c, v, amt, salt)
 
 
-## Town gate: an arch beam between the two pillars with a hanging name board.
+## Town gate: an arch beam between the two pillars with a hanging name board. The arch (beam,
+## brackets, board and its lettering) is its own part ("gate": footprint rect + top height), which
+## VoxelZone gives to the camera fader: walking north out of town the board hid the player.
 static func _gate(gen: VoxelZoneGen, o: Dictionary) -> void:
 	var a: Array = o.from
 	var b: Array = o.to
@@ -724,28 +726,43 @@ static func _gate(gen: VoxelZoneGen, o: Dictionary) -> void:
 	var z0 := _v0(t0.y)
 	var xa := _v0(t0.x) + 4
 	var xb := _v0(t1.x) - 1
+	var vs := VoxelGrid.VS
+	var prt := (
+		gen
+		. new_part(
+			{
+				"kind": "gate",
+				"rect": Rect2((xa - 4) * vs, z0 * vs, (xb - xa + 9) * vs, 4 * vs),
+				"height": (y0 + 11) * vs,
+			}
+		)
+	)
 	for x in range(xa - 4, xb + 5):
 		for y in [y0 + 9, y0 + 10]:
 			for z in [z0 + 1, z0 + 2]:
 				gen.g.put(
 					Vector3i(x, y, z),
 					VoxelBuild.planks(x, y, VoxelPal.WOOD_DARK, 14),
-					VoxelMat.WOOD
+					VoxelMat.WOOD,
+					prt
 				)
 	# Brackets.
 	for x in [xa, xb]:
-		gen.g.put(Vector3i(x, y0 + 8, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
+		gen.g.put(Vector3i(x, y0 + 8, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD, prt)
 	# Name board hanging under the beam (lettering is decor).
 	var bw := 12
 	var bx := floori((xa + xb) / 2.0) - bw / 2 + 1
 	for x in range(bx, bx + bw):
 		for y in [y0 + 7, y0 + 8]:
 			gen.g.put(
-				Vector3i(x, y, z0 + 2), VoxelBuild.planks(x, y, Color("6b4a30"), 15), VoxelMat.WOOD
+				Vector3i(x, y, z0 + 2),
+				VoxelBuild.planks(x, y, Color("6b4a30"), 15),
+				VoxelMat.WOOD,
+				prt
 			)
 	for x in [bx - 1, bx + bw]:
 		for y in [y0 + 7, y0 + 8]:
-			gen.g.put(Vector3i(x, y, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD)
+			gen.g.put(Vector3i(x, y, z0 + 2), VoxelPal.WOOD_DARK, VoxelMat.WOOD, prt)
 	var text := String(o.get("sign", ""))
 	if text != "":
 		var p := Vector3(
@@ -753,7 +770,9 @@ static func _gate(gen: VoxelZoneGen, o: Dictionary) -> void:
 			(y0 + 7) * VoxelGrid.VS + 0.1,
 			(z0 + 3) * VoxelGrid.VS + 0.005
 		)
-		gen.meta.get_or_add("texts", []).append({"text": text, "pos": p, "color": "f3e3b0"})
+		gen.meta.get_or_add("texts", []).append(
+			{"text": text, "pos": p, "color": "f3e3b0", "part": prt}
+		)
 	for x in range(xa, xb + 1):
 		gen.covers[Vector2i(VoxelZoneGen.tile_of(x), t0.y)] = true
 	# Wandering NPCs never stand in the gateway (the way into Route 1 stays open).

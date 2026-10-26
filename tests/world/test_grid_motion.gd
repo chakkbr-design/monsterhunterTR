@@ -131,7 +131,10 @@ func _open(req: Dictionary) -> void:
 
 
 ## A save from an older layout inside what is now the player's house: lands on a free tile centre.
+## One on the old north lawn (open ground before the voxel town) used to snap into a free tile boxed
+## in by the forest, a hedge, a lamp and a birch: it lands where the player can walk away.
 func _old_save_in_wall() -> void:
+	await _old_save_north_lawn()
 	game.spawn_request = {}
 	game.last_save = {"pos": [-8.0, 0.0, -8.4], "zone": "pallet_town"}
 	w = load("res://world/route_world.tscn").instantiate()
@@ -151,6 +154,43 @@ func _old_save_in_wall() -> void:
 	)
 	w.queue_free()
 	w = null
+	await frames(2)
+
+
+func _old_save_north_lawn() -> void:
+	game.spawn_request = {}
+	game.flags["got_starter"] = true  # no Oak stop on the north lawn
+	game.last_save = {"pos": [-6.3, 0.0, -15.8], "zone": "pallet_town"}
+	w = load("res://world/route_world.tscn").instantiate()
+	w.fade_time = 0.0
+	root.add_child(w)
+	await frames(30)
+	p = get_first_node_in_group("ow_player")
+	var g = w.builders.pallet_town.grid
+	var c0: Vector2i = Grid.cell_of(p.global_position)
+	var free_dirs := 0
+	for dv in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if not g.blocked(c0 + dv):
+			free_dirs += 1
+	check(
+		on_centre(p.global_position) and not g.blocked(c0) and free_dirs > 0,
+		(
+			"old save on the old north lawn: lands on %s with a way out (%d free sides)"
+			% [c0, free_dirs]
+		)
+	)
+	var seen := {c0: true}
+	for key in ["move_left", "move_back", "move_right", "move_forward"]:
+		Input.action_press(key)
+		for i in secs(1.2):
+			await physics_frame
+			seen[Grid.cell_of(p.global_position)] = true
+		Input.action_release(key)
+		await frames(20)
+	check(seen.size() > 2, "and walks away from it (%d tiles visited)" % seen.size())
+	w.queue_free()
+	w = null
+	game.flags.erase("got_starter")
 	await frames(2)
 
 

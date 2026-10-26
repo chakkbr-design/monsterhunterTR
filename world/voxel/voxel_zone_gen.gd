@@ -10,7 +10,7 @@ extends RefCounted
 ## FastNoiseLite with a fixed seed. Bump VERSION whenever the output changes for the same inputs
 ## (the bake hash includes it, tests/world/test_voxel_zone.gd fails on a stale bake).
 
-const VERSION := 2
+const VERSION := 3
 const Y_MIN := -10  ## lowest voxel layer (-2.5 m): water beds and banks go down to here
 const Y_LAYERS := 60  ## up to voxel 49 (12.5 m): roofs, chimneys, tall trees
 ## Default water surface (m): 12 cm under the bank top (y 0), 13 cm over the first bed step, as
@@ -41,6 +41,7 @@ var tile_h := PackedFloat32Array()  ## decorative relief (m) per tile
 var blocks := {}
 var covers := {}
 var no_npc := {}
+var sealed: Array[Vector2i] = []  ## free tiles blocked because nothing reaches them (_seal_pockets)
 var meta := {
 	"buildings": [],
 	"lights": [],
@@ -78,7 +79,8 @@ static func run(id: String) -> VoxelZoneGen:
 	return gen
 
 
-## Inputs hash: design JSON + map JSON + VERSION (the bake stores it).
+## Inputs hash: design JSON + map JSON + VERSION (the bake stores it). Line endings do not count:
+## a checkout or an editor that writes CRLF (Windows) must not make the bake stale.
 static func input_hash(id: String) -> String:
 	var dp := VoxelDesign.path_of(id)
 	var mp := "res://data/maps/%s.json" % id
@@ -86,7 +88,7 @@ static func input_hash(id: String) -> String:
 	s += FileAccess.get_file_as_string(dp) if FileAccess.file_exists(dp) else ""
 	s += "|"
 	s += FileAccess.get_file_as_string(mp) if FileAccess.file_exists(mp) else ""
-	return s.md5_text()
+	return s.replace("\r", "").md5_text()
 
 
 func setup(id: String) -> bool:
@@ -908,6 +910,55 @@ func _tile_grid() -> void:
 				f |= TileGrid.COVER
 			tiles.flags[(x - r.position.x) + (z - r.position.y) * r.size.x] = f
 			tiles.set_height(t, maxf(ground_y(t), 0.0) if f & TileGrid.BLOCKED else 0.0)
+	_seal_pockets()
+
+
+## Blocks every free tile that cannot be walked to from the map's arrivals and doorsteps: a pocket
+## boxed in by trees, hedges and props (the north lawn behind the lamp, the shed's garden corner)
+## held a player put there by a nearest-free-tile snap (an old save) with no way out. Steps are the
+## player's (four neighbours, both free); free tiles all sit at height 0, so no rise blocks a step.
+func _seal_pockets() -> void:
+	var q: Array[Vector2i] = []
+	for a in map.get("arrivals", []):
+		var p: Array = a.get("pos", [])
+		if p.size() >= 2:
+			q.append(Vector2i(roundi(float(p[0])), roundi(float(p[p.size() - 1]))))
+	for b in meta.buildings:
+		if b.has("door") and b.get("map", false):
+			q.append(b.door + Vector2i(0, 1))
+	var seen := {}
+	q = q.filter(func(c: Vector2i) -> bool: return _walk_free(c))
+	for c in q:
+		seen[c] = true
+	var head := 0
+	while head < q.size():
+		var c: Vector2i = q[head]
+		head += 1
+		for dv in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + dv
+			if not seen.has(n) and _walk_free(n):
+				seen[n] = true
+				q.append(n)
+	if seen.is_empty():
+		return  # no arrival on the grid: nothing to measure from
+	var r := d.rect
+	for z in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			var t := Vector2i(x, z)
+			if _walk_free(t) and not seen.has(t):
+				tiles.set_flag(t, TileGrid.BLOCKED)
+				tiles.set_height(t, maxf(ground_y(t), 0.0))
+				sealed.append(t)
+
+
+## A tile the player may stand on by the static grid (OverworldPlayer._tile_free without people).
+func _walk_free(t: Vector2i) -> bool:
+	return (
+		tiles.has(t)
+		and not tiles.has_flag(
+			t, TileGrid.BLOCKED | TileGrid.WATER | TileGrid.DOOR | TileGrid.LEDGE
+		)
+	)
 
 
 ## A 'd' tile that belongs to a map building with a door (not the shed's painted door).
