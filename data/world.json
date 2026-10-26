@@ -8,11 +8,19 @@
    "id": "pallet_town",
    "name": "PALLET TOWN",
    "rect": [
-    -22,
+    -32.5,
     -19.5,
-    44,
-    40
+    65,
+    50
    ],
+   "voxel": {
+    "extent": [
+     -44.5,
+     -19.5,
+     88,
+     56
+    ]
+   },
    "neighbors": [
     "route_1"
    ],

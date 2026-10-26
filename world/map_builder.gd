@@ -80,6 +80,9 @@ const SKIRT := 40.0  ## the ground runs on under neighbouring zones / past the e
 @export var open_rects: Array = []  ## [x,z,w,h] of neighbour zones: no boundary wall where they touch
 @export var extras: Dictionary = {}  ## extra entries appended to the map arrays (trainers, heal_spots...)
 @export var decorate := true  ## false: skip scatter grass / flowers / shafts (bare tests)
+## [x,z,w,h] of neighbouring voxel zones' extents (map "voxel".extent): this zone's ground skirt,
+## path overlays and scatter stay out of them (the voxel terrain has its own ground and water beds).
+@export var voxel_rects: Array = []
 
 var data: Dictionary = {}
 var is_built := false
@@ -89,6 +92,7 @@ var counts: Dictionary = {}  ## what was built, for tests/debug
 var ground_material: ShaderMaterial  ## shared by the ground and terrace tops (time of day tints it)
 var leaf_points: Array[Vector3] = []  ## tree crowns, for falling leaves
 var grid: TileGrid = null  ## tile map when the zone walks on the 1 m grid ("movement": "grid")
+var signs_drawn := true  ## false: the zone draws its signs / mailboxes itself (VoxelZone)
 
 var _solids: StaticBody3D
 var _water_body: StaticBody3D
@@ -132,6 +136,51 @@ static func load_map(id: String) -> Dictionary:
 
 static func rect_of(a: Array) -> Rect2:
 	return Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3]))
+
+
+## The map's "voxel" entry ({} for zones drawn the HGSS way), read from the parse cache.
+static func voxel_info(id: String) -> Dictionary:
+	if not _maps.has(id):
+		load_map(id)
+	var v = (_maps[id] as Dictionary).get("voxel", {})
+	return v if v is Dictionary else {}
+
+
+## Rect r minus every rect of cuts, as a list of disjoint rects.
+static func subtract_rects(r: Rect2, cuts: Array) -> Array[Rect2]:
+	var out: Array[Rect2] = [r]
+	for c in cuts:
+		var cut: Rect2 = c
+		var nxt: Array[Rect2] = []
+		for a in out:
+			if not a.intersects(cut):
+				nxt.append(a)
+				continue
+			var i := a.intersection(cut)
+			if i.position.y > a.position.y:
+				nxt.append(Rect2(a.position.x, a.position.y, a.size.x, i.position.y - a.position.y))
+			if i.end.y < a.end.y:
+				nxt.append(Rect2(a.position.x, i.end.y, a.size.x, a.end.y - i.end.y))
+			if i.position.x > a.position.x:
+				nxt.append(Rect2(a.position.x, i.position.y, i.position.x - a.position.x, i.size.y))
+			if i.end.x < a.end.x:
+				nxt.append(Rect2(i.end.x, i.position.y, a.end.x - i.end.x, i.size.y))
+		out = nxt
+	return out
+
+
+func _voxel_cuts() -> Array:
+	var out: Array = []
+	for v in voxel_rects:
+		out.append(rect_of(v))
+	return out
+
+
+func _in_voxel(p: Vector3) -> bool:
+	for v in voxel_rects:
+		if rect_of(v).has_point(Vector2(p.x, p.z)):
+			return true
+	return false
 
 
 ## Map asset path of the original ("res://assets/x") -> the extracted copy.
@@ -444,13 +493,16 @@ func _ground() -> void:
 		"Ground"
 	)
 	var sk := rect.grow(SKIRT)
-	_plane_mat(
-		t,
-		Vector3(sk.get_center().x, -0.06, sk.get_center().y),
-		sk.size,
-		_ground_mat(),
-		"GroundSkirt"
-	)
+	var parts := subtract_rects(sk, _voxel_cuts())
+	for i in parts.size():
+		var r: Rect2 = parts[i]
+		_plane_mat(
+			t,
+			Vector3(r.get_center().x, -0.06, r.get_center().y),
+			r.size,
+			_ground_mat(),
+			"GroundSkirt" if i == 0 else "GroundSkirt%d" % i
+		)
 	_solid_box(c, Vector3(g.size.x, 1.0, g.size.y))
 	_bump("ground")
 
@@ -671,6 +723,15 @@ func _paths() -> void:
 		)
 		if img == null or absi(img.get_width() - want.x) > 1 or absi(img.get_height() - want.y) > 1:
 			img = TerrainPathMask.generate(rects, area, hash(zone_id) + i)  # paths changed since the bake
+		for c in _voxel_cuts():  # no road painted over a voxel neighbour's ground
+			var cr: Rect2 = c
+			var px := Rect2i(
+				Vector2i((cr.position - area.position) * TerrainPathMask.PX_PER_M),
+				Vector2i((cr.size * TerrainPathMask.PX_PER_M).ceil())
+			)
+			px = px.intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+			if px.has_area():
+				img.fill_rect(px, Color.BLACK)
 		g.add_child(TerrainPathMask.overlay(rects, float(level), img, tint, mix))
 		i += 1
 		await _tick()
@@ -1504,7 +1565,7 @@ func _scatter() -> void:
 				)
 				if clump > 0.0 and noise.get_noise_2d(p.x, p.z) * 0.5 + 0.5 < clump:
 					continue
-				if _blocked(p):
+				if _blocked(p) or _in_voxel(p):
 					continue
 				p.y = height_at(p.x, p.z)
 				var b := Basis(Vector3.UP, _rng.randf() * TAU).scaled(
@@ -1700,6 +1761,7 @@ func _people() -> void:
 		sp.model_rot = float(s.get("rot", 180.0))
 		sp.position = _at(s)
 		sp.rotation.y = facing_yaw(s.get("facing", 0))
+		sp.drawn = signs_drawn
 		add_child(sp)
 		_bump("signs")
 		await _tick()

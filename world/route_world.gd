@@ -473,16 +473,24 @@ func blocks_player() -> bool:
 
 
 func _make_builder(id: String, per_frame: int) -> MapBuilder:
-	var b := MapBuilder.new()
+	# A map with a "voxel" entry is drawn by its baked voxel scenery (docs/VOXEL.md §5).
+	var b: MapBuilder = (
+		VoxelZone.new() if not MapBuilder.voxel_info(id).is_empty() else MapBuilder.new()
+	)
 	b.name = "Zone_%s" % id
 	b.zone_id = id
 	b.items_per_frame = per_frame
 	b.extras = EXTRAS.get(id, {})
 	var open: Array = []
+	var voxel: Array = []
 	for other in zones:
 		if other != id:
 			open.append(zones[other].rect)
+			var ov: Dictionary = zones[other].get("voxel", {})
+			if ov.has("extent"):
+				voxel.append(ov.extent)
 	b.open_rects = open
+	b.voxel_rects = voxel
 	add_child(b)
 	builders[id] = b
 	return b
