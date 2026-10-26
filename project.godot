@@ -101,6 +101,10 @@ sky_horizon_color={
 "type": "color",
 "value": Color(0.7, 0.8, 0.9, 1)
 }
+gi_sky_floor={
+"type": "float",
+"value": 0.0
+}
 rain_amount={
 "type": "float",
 "value": 0.0

@@ -101,6 +101,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 | `sun_dir_world` | vec3 (para o sol) | TimeOfDay | estádio | água (brilho, cáusticas) |
 | `sun_color_world`, `sun_amount` | color, float | TimeOfDay (`sun_amount` = sol visível × (1 - nuvens)) | estádio | água |
 | `sky_top_color`, `sky_horizon_color` | color | TimeOfDay | estádio | água (reflexo quando o SSR erra) |
+| `gi_sky_floor` | float | TimeOfDay (0,2 × energia do SDFGI; 0 sem SDFGI e ao sair do mundo) | — (0) | voxel, detalhe (piso de luz do céu: com SDFGI a GI troca todo o ambiente e fachadas sob copas e beirais ficavam pretas) |
 | `rain_amount` | float 0..1 | clima (`WorldWeather`) | `BattleWeatherFx` | anéis de chuva na água e nas poças |
 | `rain_wet`, `rain_puddle` | float 0..1 | clima | `BattleWeatherFx` | voxel (molhado, poças), detalhe |
 | `snow_cover` | float 0..1 | clima | `BattleWeatherFx` | voxel, detalhe, água (geada) |

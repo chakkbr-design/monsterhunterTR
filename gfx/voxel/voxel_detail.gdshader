@@ -21,6 +21,7 @@ global uniform float wind_time;
 global uniform vec2 wind_dir;
 global uniform float wind_gust;
 global uniform vec4 sky_horizon_color;
+global uniform float gi_sky_floor;  // the world's floor while SDFGI runs (voxel.gdshader)
 
 varying vec3 lpos;
 varying vec3 lnrm;
@@ -64,7 +65,8 @@ void fragment() {
 	if (backlight > 0.0) {
 		BACKLIGHT = col * backlight;
 	}
-	if (shade_lift > 0.0) {
-		EMISSION = to_linear(sky_horizon_color.rgb) * col * shade_lift;
+	float lift = max(shade_lift, gi_sky_floor);
+	if (lift > 0.0) {
+		EMISSION = to_linear(sky_horizon_color.rgb) * col * lift;
 	}
 }

@@ -32,6 +32,8 @@ uniform vec3 flash = vec3(0.0);  // additive emission (hit flash)
 uniform vec4 window_glow : source_color = vec4(0.0);
 // > 0: a floor of sky light (x the horizon colour) under the indirect light: the shaded
 // undersides of a zone's bushes and crowns stay dark green. Default off: the arenas' look.
+// The world raises it to gi_sky_floor while SDFGI runs (its GI replaces the ambient and leaves
+// facades under crowns and eaves black); 0 elsewhere.
 uniform float shade_lift = 0.0;
 
 global uniform float night_lamps;
@@ -44,6 +46,7 @@ global uniform float wind_time;
 global uniform vec2 wind_dir;
 global uniform float wind_gust;
 global uniform vec4 sky_horizon_color;
+global uniform float gi_sky_floor;
 
 varying vec3 mpos;
 varying vec3 mnrm;
@@ -263,8 +266,9 @@ void fragment() {
 	} else if (emit_class == 4) {
 		em = col * emit_flood * night_lamps;
 	}
-	if (shade_lift > 0.0) {
-		em += col * to_linear(sky_horizon_color.rgb) * shade_lift;
+	float lift = max(shade_lift, gi_sky_floor);
+	if (lift > 0.0) {
+		em += col * to_linear(sky_horizon_color.rgb) * lift;
 	}
 	ALBEDO = col * mix(1.0, ao, 0.35);
 	AO = ao;
