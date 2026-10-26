@@ -270,7 +270,10 @@ func _blocking() -> void:
 	await frames(5)
 	check(p.global_position.is_equal_approx(Vector3(-10, 0, -4)), "a wall blocks")
 	check(bumped and (p.sprite == null or anim), "pushing into it bumps (walk in place)")
-	check(p.get_node_or_null("Bump") != null, "bump sound played")
+	# The Audio "bump" sfx when the synth has it (Audio._sfx_last), else the player's own thud.
+	var au := root.get_node_or_null("Audio")
+	var sfx_played: bool = au != null and au.has_sfx("bump") and au._sfx_last.has("bump")
+	check(sfx_played or p.get_node_or_null("Bump") != null, "bump sound played")
 	# The lab assistant stands on tile (8, 15).
 	await put(8, 14, Vector3(0, 0, 1))
 	Input.action_press("move_back")
