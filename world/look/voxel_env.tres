@@ -77,4 +77,4 @@ adjustment_saturation = 1.08
 metadata/sun_energy = 2.5
 metadata/moon_energy = 1.0
 metadata/lamp_halos = true
-metadata/sky_neutral = 0.45
+metadata/sky_neutral = 0.55

@@ -2,7 +2,9 @@ class_name GfxQuality
 extends RefCounted
 ## Graphics tiers (Opções > GRÁFICOS: Baixo / Médio / Alto / Ultra; Alto is the default, tuned for
 ## an RTX 5070-class GPU). One table drives everything quality-dependent:
-##   - the viewport: 3D render scale and upscaler, MSAA / FXAA (Ultra: FSR 2.2 as native AA);
+##   - the viewport: 3D render scale and upscaler, FXAA / SMAA (Ultra: FSR 2.2 as native AA).
+##     Never MSAA: with it the water's depth / screen reads come back empty and the transparent
+##     water turns opaque (gfx/water), and SMAA keeps the voxel and sprite edges just as clean;
 ##   - the renderer's global settings: directional and lamp shadow atlases, soft-shadow filter,
 ##     SSAO / SSIL / SSR quality, SDFGI rays and light-update rate, GI half resolution,
 ##     volumetric fog volume;
@@ -53,8 +55,8 @@ const TIERS := [
 	{  # Médio: no GI, screen-space bounce instead.
 		"scale": 1.0,
 		"scale_mode": Viewport.SCALING_3D_MODE_BILINEAR,
-		"msaa": Viewport.MSAA_2X,
-		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"msaa": Viewport.MSAA_DISABLED,
+		"screen_aa": Viewport.SCREEN_SPACE_AA_SMAA,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_MEDIUM,
 		"ssao_half": true,
@@ -79,8 +81,8 @@ const TIERS := [
 	{  # Alto (default): SDFGI at half resolution, SSR for wet streets, lamp halos.
 		"scale": 1.0,
 		"scale_mode": Viewport.SCALING_3D_MODE_BILINEAR,
-		"msaa": Viewport.MSAA_2X,
-		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"msaa": Viewport.MSAA_DISABLED,
+		"screen_aa": Viewport.SCREEN_SPACE_AA_SMAA,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_HIGH,
 		"ssao_half": false,
@@ -191,6 +193,7 @@ static func apply_viewport(vp: Viewport, t := -1) -> void:
 	vp.msaa_3d = int(s.msaa)
 	vp.screen_space_aa = int(s.screen_aa)
 	vp.use_taa = false
+	vp.use_debanding = true  # night skies and lamp falloffs are long dark gradients
 	vp.positional_shadow_atlas_size = int(s.pos_atlas)
 
 
@@ -245,6 +248,18 @@ static func apply_env(env: Environment, t := -1, want := {}) -> void:
 	env.volumetric_fog_enabled = bool(s.volumetric) and bool(w.volumetric)
 
 
+## Keeps a scene's Environment (a battle or training stage outside the overworld) in line with
+## the tier: applies it now and again whenever the tier changes (a small child node in the
+## "gfx_quality" group). The look still decides what it wants; the tier only forbids.
+static func track(we: WorldEnvironment) -> void:
+	if we == null or we.get_node_or_null("GfxQualityEnv"):
+		return
+	var n := _EnvTracker.new()
+	n.name = "GfxQualityEnv"
+	we.add_child(n)
+	apply_env(we.environment)
+
+
 ## Shadow distance, splits and PCSS size of a sun / moon. far_mult > 1 for zones whose camera
 ## looks far (low pitch, camera_far > 220).
 static func apply_sun(light: DirectionalLight3D, t := -1, far_mult := 1.0) -> void:
@@ -274,3 +289,16 @@ static func radiance_size(t := -1) -> int:
 		256:
 			return Sky.RADIANCE_SIZE_256
 	return Sky.RADIANCE_SIZE_128
+
+
+## Child of a tracked WorldEnvironment (track()): re-applies the tier when it changes.
+class _EnvTracker:
+	extends Node
+
+	func _ready() -> void:
+		add_to_group(GfxQuality.GROUP)
+
+	func apply_quality() -> void:
+		var we := get_parent() as WorldEnvironment
+		if we:
+			GfxQuality.apply_env(we.environment)

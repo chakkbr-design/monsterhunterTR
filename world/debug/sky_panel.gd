@@ -214,7 +214,7 @@ func _process(delta: float) -> void:
 		return
 	_info.text = (
 		(
-			"Sol %.0f° az %.0f° · energia %.2f\nLua %.0f° · energia %.2f\n"
+			"Sol %.0f° az %.0f° · energia %.2f\nLua %.0f° · energia %.2f · preenchimento %.2f\n"
 			+ "Exposição %.2f · ambiente %.2f · nuvens %.2f\n"
 			+ "Postes %.2f · janelas %.2f · sombras de poste %d"
 		)
@@ -224,6 +224,7 @@ func _process(delta: float) -> void:
 			s.sun_energy,
 			s.moon_elevation,
 			s.moon_energy,
+			s.get("fill_energy", 0.0),
 			s.exposure,
 			s.ambient_energy,
 			s.cloud,

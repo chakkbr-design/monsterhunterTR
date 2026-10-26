@@ -2,7 +2,8 @@ extends SceneTree
 ## Screenshots of the continuous sky on a small voxel village (needs a GPU or lavapipe):
 ##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver vulkan \
 ##     --resolution 1600x900 --script res://tests/world/shot_sky_voxel.gd -- \
-##     --out=/tmp/sky/vox [--hours=05:30,12:00] [--weather=rain] [--quality=alto] [--wide]
+##     --out=/tmp/sky/vox [--hours=05:30,12:00] [--weather=rain] [--quality=alto] [--wide] \
+##     [--focus=x,z (camera focus in m)] [--water-debug=1..6 (gfx/water debug_view)]
 ## Saves <out>_<HHMM>.png for 05:30, 06:30, 08:00, 12:00, 16:00, 17:45, 18:30, 19:15, 21:00 and 00:30
 ## by default. The scene is built like a voxel zone: stone and plaster houses with WINDOW voxels,
 ## lamp posts (LAMP voxels + OmniLights in NightLights), trees with swaying crowns, a cobble
@@ -28,10 +29,14 @@ const WINDOW := Color(1.0, 0.8, 0.5)
 const GRASS := Color(0.36, 0.58, 0.22)
 const LEAF := Color(0.24, 0.48, 0.2)
 const METAL := Color(0.16, 0.16, 0.18)
+const WATER_Y := -0.12  ## pond surface 12 cm under the bank (gfx/water, shot_water_scene)
+const FOUNTAIN_V := Vector3i(-20, 0, 13)  ## voxel at the fountain's centre column
 
 var out := "user://shot_sky_voxel"
 var hours: Array = HOURS.duplicate()
 var wide := false
+var focus := Vector3(-0.5, 0.4, 1.0)
+var water_debug := 0
 var world: Node3D
 var tod: WorldTimeOfDay
 
@@ -46,6 +51,11 @@ func _initialize() -> void:
 			WorldWeather.forced = a.substr(10)
 		elif a == "--wide":
 			wide = true
+		elif a.begins_with("--focus="):
+			var f := a.substr(8).split(",")
+			focus = Vector3(float(f[0]), 0.4, float(f[1]))
+		elif a.begins_with("--water-debug="):
+			water_debug = int(a.substr(14))
 	if WorldWeather.forced == "":
 		WorldWeather.forced = "clear"
 	_run.call_deferred()
@@ -108,7 +118,7 @@ func _run() -> void:
 	rs.reload()
 	rig.set_script(rs)
 	rig.add_to_group("ow_camera")
-	rig.position = Vector3(0, 0.4, 0.0)
+	rig.position = focus
 	world.add_child(rig)
 	var cam := Camera3D.new()
 	cam.fov = 35.0
@@ -215,8 +225,9 @@ func _build_village() -> void:
 	_plaster_house(g, Vector3i(10, 0, -40), Vector3i(42, 0, -15), 3)
 	_veg_patch(g, Vector3i(-70, 0, -32), Vector3i(-52, 0, -16))
 	_pond(g, Vector3(24.0, 0.0, 16.0), Vector2(14.0, 8.0))
+	_fountain(g, FOUNTAIN_V)
 	for p in [
-		Vector3i(-58, 0, -54), Vector3i(54, 0, -54), Vector3i(-30, 0, 24), Vector3i(66, 0, -14)
+		Vector3i(-58, 0, -54), Vector3i(54, 0, -54), Vector3i(-38, 0, 28), Vector3i(66, 0, -14)
 	]:
 		_tree(g, p, 4)
 	for p in [
@@ -256,8 +267,11 @@ func _build_village() -> void:
 		nl.light = l
 		world.add_child(nl)
 	var w := WaterSurface.make(Vector2(7.5, 4.5), {"kind": "pond", "depth": 0.6})
-	w.position = Vector3(6.0, -0.08, 4.0)
+	w.position = Vector3(6.0, WATER_Y, 4.0)
 	world.add_child(w)
+	if water_debug > 0:
+		WaterSurface.set_param(w, "debug_view", water_debug)
+	_fountain_fx()
 	_flowers()
 
 
@@ -483,6 +497,57 @@ func _pond(g: VoxelGrid, c: Vector3, s: Vector2) -> void:
 					g.put(Vector3i(x, 0, z), Color(0.5, 0.5, 0.5), VoxelMat.STONE)
 
 
+## Small stone fountain: a round basin (rim 0.5 m, bed carved 0.25 m below the ground) and a
+## pedestal with a little bowl; FountainFx adds the water, a jet, spouts and the night light.
+func _fountain(g: VoxelGrid, c: Vector3i) -> void:
+	for x in range(c.x - 6, c.x + 6):
+		for z in range(c.z - 6, c.z + 6):
+			var r := Vector2(x + 0.5 - c.x, z + 0.5 - c.z).length()
+			var stone := Color(0.7, 0.69, 0.66).lerp(
+				Color(0.58, 0.57, 0.56), VoxelGrid.hash01(x, 0, z, 80)
+			)
+			if r < 4.1:
+				for y in range(-1, 2):
+					g.clear(Vector3i(x, y, z))
+				g.put(Vector3i(x, -2, z), Color(0.5, 0.56, 0.55), VoxelMat.BED)
+			elif r < 5.3:
+				for y in range(-1, 2):
+					g.put(Vector3i(x, y, z), stone.darkened(0.08 * (1 - y)), VoxelMat.STONE)
+			elif r < 6.0:
+				g.put(Vector3i(x, -1, z), stone.darkened(0.12), VoxelMat.SLAB)
+	g.cylinder(c.x, c.z, 1.1, -1, 5, Color(0.66, 0.65, 0.62), VoxelMat.STONE)
+	for x in range(c.x - 2, c.x + 2):
+		for z in range(c.z - 2, c.z + 2):
+			g.put(Vector3i(x, 6, z), Color(0.72, 0.71, 0.68), VoxelMat.STONE)
+
+
+func _fountain_fx() -> void:
+	var f := FountainFx.new()
+	f.name = "Fountain"
+	f.position = Vector3(FOUNTAIN_V.x, 0, FOUNTAIN_V.z) * 0.25
+	world.add_child(f)
+	(
+		f
+		. setup(
+			{
+				"basins": [{"pos": Vector3(0, 0.36, 0), "size": Vector2(2.2, 2.2), "depth": 0.6}],
+				"jets":
+				[
+					{"pos": Vector3(0, 1.78, 0), "height": 0.7, "count": 1},
+					{
+						"pos": Vector3(0, 0.42, 0),
+						"height": 0.3,
+						"count": 5,
+						"radius": 0.95,
+						"reach": -0.5
+					},
+				],
+				"light": Color(0.62, 0.9, 1.0),
+			}
+		)
+	)
+
+
 func _tree(g: VoxelGrid, p: Vector3i, r: int) -> void:
 	g.cylinder(p.x + 0.5, p.z + 0.5, 1.3, 0, 9, Color(0.38, 0.25, 0.15), VoxelMat.BARK)
 	var leaf := _paint(LEAF, 0.22, 50 + p.x)
@@ -570,6 +635,8 @@ func _flowers() -> void:
 			var z := -12.0 + VoxelGrid.hash01(i, ci, 0, 71) * 20.0
 			if absf(z) < 2.0 or absf(x) < 1.6 or (x > 2.0 and x < 10.0 and z > 1.5 and z < 6.5):
 				continue
+			if Vector2(x, z).distance_to(Vector2(FOUNTAIN_V.x, FOUNTAIN_V.z) * 0.25) < 1.7:
+				continue
 			if z < -3.0 and ((x > -12.0 and x < -2.5) or (x > 2.2 and x < 11.0)):
 				continue
 			pts.append(Vector3(x, 0, z))
@@ -585,7 +652,7 @@ func _flowers() -> void:
 func _people() -> void:
 	var who := [
 		["trainer", Vector3(0, 0, 0.5)],
-		["npc_kid", Vector3(-3.5, 0, 2.5)],
+		["npc_kid", Vector3(-2.4, 0, 2.6)],
 		["npc_lass", Vector3(3.0, 0, -2.5)]
 	]
 	for e in who:

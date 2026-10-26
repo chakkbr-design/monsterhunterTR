@@ -19,6 +19,7 @@ static var _shared: SkyCycle
 
 var sun := {}
 var moon := {}
+var fill := {}  ## night fill from behind the camera: energy (at no moon), elevation, color
 var periods := {}  ## period id -> minute
 var times := PackedFloat32Array()  ## key minutes, sorted
 var fields: Array = []  ## field names present in every key
@@ -60,6 +61,12 @@ func setup(d: Dictionary) -> void:
 	moon.fade_high = float(md.get("fade_high", 14.0))
 	moon.energy = float(md.get("energy", 0.34))
 	moon.color = Color(String(md.get("color", "#c4cee6")))
+	var fd: Dictionary = d.get("fill", {})
+	fill = {
+		"energy": float(fd.get("energy", 0.0)),
+		"elevation": float(fd.get("elevation", 40.0)),
+		"color": Color(String(fd.get("color", "#b8c2dc"))),
+	}
 	periods = {}
 	var pd: Dictionary = d.get("periods", {})
 	for k in pd:

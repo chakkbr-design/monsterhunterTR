@@ -27,7 +27,7 @@ func _run() -> void:
 	_cycle()
 	_continuity()
 	await _world()
-	_tiers()
+	await _tiers()
 	_settings()
 	print("[sky] %d failed" % _fails)
 	quit(1 if _fails > 0 else 0)
@@ -126,6 +126,7 @@ func _continuity() -> void:
 
 
 func _world() -> void:
+	GfxQuality.forced = GfxQuality.HIGH  # the checks below expect Alto's GI, whatever the saved tier
 	var w := Node3D.new()
 	w.name = "World"
 	var we := WorldEnvironment.new()
@@ -171,6 +172,21 @@ func _world() -> void:
 	check(tod._look_t < 1.0, "two outdoor looks blend")
 	await frames(120)
 	check(tod._look_t >= 1.0, "blend done")
+	check(env.sdfgi_enabled and env.sdfgi_energy > 0.9, "voxel look: GI on (Alto)")
+	# Crossing into an HGSS zone and back: the bounce light fades instead of popping.
+	tod.apply_location({}, false)
+	check(env.sdfgi_enabled, "GI keeps running while it fades out")
+	await frames(45)
+	check(
+		env.sdfgi_energy > 0.05 and env.sdfgi_energy < 0.95,
+		"GI half way out (%.2f)" % env.sdfgi_energy
+	)
+	await frames(90)
+	check(not env.sdfgi_enabled and env.ssil_enabled, "HGSS zone: no GI, SSIL back")
+	tod.apply_location({"env": "voxel_env.tres"}, false)
+	check(env.sdfgi_enabled and env.sdfgi_energy < 0.05, "GI fades in from zero")
+	await frames(120)
+	check(env.sdfgi_energy > 0.9, "GI fully back")
 	var sky := env.sky
 	tod.apply_location({}, true)
 	check(we.environment == env and env.sky == sky, "same Environment and Sky indoors")
@@ -185,6 +201,8 @@ func _world() -> void:
 	check(tod.state.sun_elevation > 50.0 and sun.light_energy > 1.0, "noon sun up and bright")
 	check(sun.shadow_enabled and not moon.shadow_enabled, "only the sun casts shadows by day")
 	check(moon.light_energy == 0.0, "no moonlight at noon")
+	var fill := tod.get_node("NightFill") as DirectionalLight3D
+	check(fill.light_energy == 0.0 and not fill.visible, "no night fill by day")
 	check(tod.global_value("night_lamps") == 0.0, "night_lamps 0 at noon")
 	var sd: Vector3 = tod.global_value("sun_dir_world")
 	check(
@@ -209,6 +227,22 @@ func _world() -> void:
 	check(tod.state.exposure > 1.05, "night exposure lifted so the town stays readable")
 	check((tod.global_value("sun_dir_world") as Vector3).y > 0.0, "key light is the moon at night")
 	check(tod.night_mult().lamps == 1.0, "night_mult()")
+	tod.set_minute(_m("18:50"))
+	check(
+		fill.visible and fill.light_energy > 0.15 and not fill.shadow_enabled,
+		(
+			"twilight without the moon: the night fill keeps sprites readable (%.2f)"
+			% fill.light_energy
+		)
+	)
+	check(
+		fill.global_transform.basis.z.z > 0.3, "the fill shines from behind the north-facing camera"
+	)
+	tod.set_minute(_m("00:30"))
+	check(
+		fill.light_energy < 0.12 and moon.light_energy > 0.25,
+		"a bright moon takes over from the fill (%.2f)" % fill.light_energy
+	)
 	# Old API.
 	for e in [
 		["08:00", "morning"], ["16:00", "afternoon"], ["18:00", "sunset"], ["03:00", "night"]
@@ -238,11 +272,22 @@ func _world() -> void:
 		pe = e
 		pexp = float(tod.state.exposure)
 	check(worst < 0.4, "sun + moon energy step < 0.4 per 2 min (%.3f)" % worst)
+	# The key light colour the water reads slides from the sun's to the moon's (no jump at dusk).
+	tod.set_minute(_m("17:00"))
+	var pc: Color = tod.global_value("sun_color_world")
+	var worst_c := 0.0
+	for m in range(_m("17:00"), _m("21:00"), 1):
+		tod.set_minute(float(m))
+		var c: Color = tod.global_value("sun_color_world")
+		worst_c = maxf(worst_c, maxf(absf(c.r - pc.r), maxf(absf(c.g - pc.g), absf(c.b - pc.b))))
+		pc = c
+	check(worst_c < 0.08, "sun_color_world step < 0.08 per minute at dusk (%.3f)" % worst_c)
 	check(worst_x < 0.05, "exposure step < 0.05 per 2 min (%.3f)" % worst_x)
 	await _lamps(tod, w)
 	await _panel(tod)
 	w.queue_free()
 	await frames(2)
+	GfxQuality.forced = -1
 
 
 func _lamps(tod: WorldTimeOfDay, w: Node3D) -> void:
@@ -376,10 +421,31 @@ func _tiers() -> void:
 		GfxQuality.spec(GfxQuality.ULTRA).scale_mode == Viewport.SCALING_3D_MODE_FSR2,
 		"Ultra uses FSR 2.2"
 	)
+	var msaa := 0
+	for t in GfxQuality.NAMES.size():
+		msaa += int(GfxQuality.spec(t).msaa != Viewport.MSAA_DISABLED)
+	check(msaa == 0, "no tier uses MSAA (it empties the water's depth and screen reads)")
+	check(GfxQuality.spec(GfxQuality.HIGH).screen_aa == Viewport.SCREEN_SPACE_AA_SMAA, "Alto: SMAA")
 	var sun := DirectionalLight3D.new()
 	GfxQuality.apply_sun(sun, GfxQuality.HIGH)
 	check(sun.directional_shadow_max_distance <= 60.0, "sun shadows only as far as the camera sees")
 	sun.free()
+	# A stage outside the overworld (training) follows the tier through GfxQuality.track.
+	var we := WorldEnvironment.new()
+	we.environment = Environment.new()
+	we.environment.ssr_enabled = true
+	we.environment.ssao_enabled = true
+	root.add_child(we)
+	GfxQuality.forced = GfxQuality.LOW
+	GfxQuality.track(we)
+	await frames(1)
+	check(not we.environment.ssr_enabled and we.environment.ssao_enabled, "tracked stage: Baixo")
+	GfxQuality.forced = GfxQuality.HIGH
+	call_group(GfxQuality.GROUP, "apply_quality")
+	check(we.environment.ssr_enabled, "tracked stage: back to Alto when the tier changes")
+	GfxQuality.forced = -1
+	we.queue_free()
+	await frames(1)
 
 
 func _settings() -> void:

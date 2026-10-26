@@ -152,6 +152,7 @@ var _scale := 20.0
 var _periods: Array = []  ## [[start_min, id], ...] sorted
 var _sun: DirectionalLight3D
 var _moon: DirectionalLight3D
+var _fill: DirectionalLight3D
 var _env_node: WorldEnvironment
 var _sky: Sky
 var _sky_mat: ShaderMaterial
@@ -161,6 +162,8 @@ var _base_from := {}
 var _look_t := 1.0
 var _env_from := {}  ## look property -> value before the blend
 var _env_to := {}  ## look property -> value of the new look
+var _gi_off_at_end := false  ## SDFGI fading out with the look blend
+var _gi_end_energy := 1.0
 var _lamps := 0.0
 var _windows := 0.0
 var _fireflies := 0.0
@@ -231,6 +234,15 @@ func _make_lights_and_env() -> void:
 		_moon.shadow_enabled = false
 		_moon.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
 		add_child(_moon)
+		_fill = DirectionalLight3D.new()
+		_fill.name = "NightFill"
+		_fill.light_volumetric_fog_energy = 0.0
+		_fill.light_energy = 0.0
+		_fill.light_specular = 0.25
+		_fill.shadow_enabled = false
+		_fill.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
+		_fill.visible = false
+		add_child(_fill)
 	if _env_node == null:
 		return
 	env = Environment.new()
@@ -379,8 +391,11 @@ func _apply_look_env(src: Environment, blend: bool) -> void:
 	if src == null:
 		src = load(DEFAULT_ENV) as Environment
 	var old := _base.duplicate()
+	var gi_was := env != null and env.sdfgi_enabled
+	var gi_energy := env.sdfgi_energy if env else 1.0
 	_env_from = {}
 	_env_to = {}
+	_gi_off_at_end = false
 	if env:
 		for p in COPY:
 			var v = env.get(p)
@@ -401,6 +416,25 @@ func _apply_look_env(src: Environment, blend: bool) -> void:
 	else:
 		_look_t = 1.0
 	apply_quality()
+	if env and _look_t < 1.0 and gi_was != env.sdfgi_enabled:
+		_fade_gi(gi_was, gi_energy, src.sdfgi_energy)
+
+
+## Walking from a GI look into one without it (Pallet into Route 1) or back: the bounce light fades
+## over the look blend instead of popping. Fading out keeps SDFGI running until the blend ends;
+## fading in starts it at zero energy, which also hides the cascades converging.
+func _fade_gi(was_on: bool, from_energy: float, to_energy: float) -> void:
+	if was_on:
+		env.sdfgi_enabled = true
+		env.ssil_enabled = false
+		_env_from["sdfgi_energy"] = from_energy
+		_env_to["sdfgi_energy"] = 0.0
+		_gi_off_at_end = true
+		_gi_end_energy = to_energy
+	else:
+		env.sdfgi_energy = 0.0
+		_env_from["sdfgi_energy"] = 0.0
+		_env_to["sdfgi_energy"] = to_energy
 
 
 ## RouteWorld passes {"cave": true} for CaveBuilder rooms (room meta "cave_dark").
@@ -558,6 +592,10 @@ func _blend_env() -> void:
 		env.set(p, (a as Color).lerp(b, t) if a is Color else lerpf(a, b, t))
 	if _look_t >= 1.0:
 		_env_to = {}
+		if _gi_off_at_end:
+			_gi_off_at_end = false
+			env.sdfgi_energy = _gi_end_energy
+			apply_quality()
 
 
 static func sun_color(el: float) -> Color:
@@ -631,6 +669,7 @@ func _write(force: bool) -> void:
 	var sun_col: Color = k.sun_color
 	_set_light(_sun, sun_dir, sun_col, sun_e, float(k.shadow_blur) + cloud * 1.8)
 	_set_light(_moon, moon_dir, cycle.moon.color, moon_e, 1.4 + cloud)
+	var fill_e := _write_fill(sv, moon_e, b, cloud)
 	# Environment.
 	var top := (b.sky_top as Color).lerp(k.sky_top, float(k.sky_weight))
 	var hor := (b.sky_horizon as Color).lerp(k.sky_horizon, float(k.sky_weight))
@@ -677,14 +716,16 @@ func _write(force: bool) -> void:
 			n.set_period_mult(0.0 if indoor else _fireflies)
 		for n in get_tree().get_nodes_in_group("day_ambient"):
 			n.set_period_mult(0.0 if indoor else (1.0 - _fireflies) * sv)
-	# Globals: the key light is the sun by day and the moon by night (never both).
+	# Globals: the key light is the sun by day and the moon by night (never both); around sunset
+	# and sunrise the colour slides from the sun's to the moon's while sun_amount is low.
 	var key_dir := sun_dir * sv + moon_dir * mv * 0.25
 	if key_dir.length() < 0.01:
 		key_dir = Vector3(sun_dir.x, maxf(sun_dir.y, 0.05), sun_dir.z)
+	var moon_w := 1.0 - smoothstep(-6.0, 4.0, sa.x)  # by the sun's height: ~45 game min at dusk
 	_global("night_lamps", lamps)
 	_global("night_windows", windows)
 	_global("sun_dir_world", key_dir.normalized())
-	_global("sun_color_world", sun_col if sv >= mv * 0.25 else cycle.moon.color)
+	_global("sun_color_world", sun_col.lerp(cycle.moon.color, moon_w))
 	_global("sun_amount", (sv + mv * 0.25) * (1.0 - cloud) * (0.0 if indoor else 1.0))
 	_global("sky_top_color", top)
 	_global("sky_horizon_color", hor)
@@ -698,6 +739,7 @@ func _write(force: bool) -> void:
 		"moon_azimuth": ma.y,
 		"moon_energy": moon_e,
 		"moon_visible": mv,
+		"fill_energy": fill_e,
 		"exposure": expo,
 		"ambient": amb,
 		"ambient_energy": amb_e,
@@ -721,6 +763,32 @@ func _set_light(l: DirectionalLight3D, to_body: Vector3, col: Color, e: float, b
 	l.shadow_blur = blur
 	l.visible = e > 0.0005
 	l.shadow_enabled = e > 0.0005
+
+
+## Night fill: a soft shadowless light from behind the camera that tops up the moon while the sun
+## is down, so the sprites (upright cards facing the camera) and the facades the camera sees never
+## fall to black in the twilight gaps (sun set, moon not up yet) or on a new moon. It fades out as
+## the moon brightens and never shines by day.
+func _write_fill(sv: float, moon_e: float, b: Dictionary, cloud: float) -> float:
+	if _fill == null:
+		return 0.0
+	var f: Dictionary = cycle.fill
+	var full := float(f.energy) * float(b.moon_energy)
+	var e := 0.0
+	if not indoor and full > 0.0:
+		var moon_full := float(cycle.moon.energy) * float(b.moon_energy)
+		var topped := clampf(1.0 - moon_e / maxf(moon_full, 0.001), 0.0, 1.0)
+		e = full * (1.0 - sv) * topped * (1.0 - 0.4 * cloud)
+	var yaw := 0.0
+	var rig := get_tree().get_first_node_in_group("ow_camera") if is_inside_tree() else null
+	if rig and rig.has_method("yaw"):
+		yaw = rad_to_deg(float(rig.yaw()))
+	var to_fill := SkyCycle.to_dir(float(f.elevation), 180.0 - yaw)
+	_fill.global_transform.basis = Basis.looking_at(-to_fill, Vector3.UP)
+	_fill.light_color = f.color
+	_fill.light_energy = e
+	_fill.visible = e > 0.0005
+	return e
 
 
 func _moon_phase() -> float:

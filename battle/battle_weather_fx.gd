@@ -85,6 +85,17 @@ func _build() -> void:
 	_bolt_t = _rng.randf_range(LIGHTNING_GAP.x, LIGHTNING_GAP.y)
 
 
+## Modo de energia fora do mundo (treino): o ambiente do estádio segue o nível de gráficos
+## (GfxQuality.track). No mundo quem cuida é o TimeOfDay; o VGC fica como está.
+func _ready() -> void:
+	if arena == null or not arena.has_method("energy_on") or not arena.energy_on():
+		return
+	if get_tree().get_first_node_in_group("weather"):
+		return
+	for we in get_tree().root.find_children("*", "WorldEnvironment", true, false):
+		GfxQuality.track(we as WorldEnvironment)
+
+
 func _exit_tree() -> void:
 	if _built:
 		_set_world_cover(Color(0, 0, 0, 0))
