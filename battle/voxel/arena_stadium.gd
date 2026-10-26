@@ -37,6 +37,10 @@ const TOWER_OUT := 2.25
 const GROUND_HALF := Vector2(150, 140)
 const PLAZA := 10
 ## Perimeter board: one panel (m) and its texture (px).
+## Fan banners on the parapets: size (m), texture size (1/16 m texels) and their cheers.
+const BANNER := Vector2(4.0, 1.0)
+const BANNER_PX := Vector2i(64, 16)
+const BANNER_CHEERS := ["VAI!", "FORCA", "GO GO", "OLE!", "UHUL!", "VAMOS"]
 const PANEL := Vector2(2.5, 1.0)
 const PANEL_PX := Vector2i(40, 16)
 const SPONSORS := [
@@ -252,6 +256,7 @@ func _build() -> void:
 	_build_boards()
 	_build_scoreboards()
 	_build_flags()
+	_build_banners()
 	_build_ground()
 	_build_ring()
 	_trees = Node3D.new()
@@ -682,6 +687,84 @@ func _build_flags() -> void:
 		f.position = at + Vector3(0, 3.35, 0)
 		f.rotation.y = yaw
 		root.add_child(f)
+
+
+## Fan banners hanging on the inner face of the back and end parapets (over the top walkway, facing
+## the field): cloth quads waving gently with the wind (flag.gdshader, hang mode), in the colours of
+## the side whose fans sit there. None on the camera side and none behind the main scoreboard.
+func _build_banners() -> void:
+	var root := Node3D.new()
+	root.name = "Banners"
+	add_child(root)
+	var mat_base := ShaderMaterial.new()
+	mat_base.shader = load("res://battle/voxel/flag.gdshader")
+	mat_base.set_shader_parameter("hang", 1.0)
+	mat_base.set_shader_parameter("span", BANNER.y)
+	mat_base.set_shader_parameter("amp", 0.05)
+	var quad := QuadMesh.new()
+	quad.size = BANNER
+	quad.center_offset = Vector3(0, -BANNER.y * 0.5, 0)
+	quad.subdivide_width = 16
+	quad.subdivide_depth = 4
+	var inner := (StadiumParts.DEPTH_V - StadiumParts.PARA_V) * VoxelGrid.VS - 0.09
+	var top := StadiumParts.HEIGHT - 0.12
+	var spots_at: Array = []  # [position, yaw, team]
+	for x in [-25.0, -15.0, 15.0, 25.0]:
+		spots_at.append([Vector3(x, top, -IN_Z - inner), 0.0, 0 if x < 0.0 else 1])
+	for z in [-16.0, -8.0, 0.0, 8.0, 16.0]:
+		spots_at.append([Vector3(-IN_X - inner, top, z), PI * 0.5, 0])
+		spots_at.append([Vector3(IN_X + inner, top, z), -PI * 0.5, 1])
+	var designs := [_banner_textures(0), _banner_textures(1)]
+	for i in spots_at.size():
+		var s: Array = spots_at[i]
+		var b := MeshInstance3D.new()
+		b.name = "Banner%d" % i
+		b.mesh = quad
+		var m := mat_base.duplicate() as ShaderMaterial
+		var texs: Array = designs[int(s[2])]
+		m.set_shader_parameter("tex", texs[i % texs.size()])
+		m.set_shader_parameter("phase", float(i) * 2.11)
+		b.material_override = m
+		b.position = s[0]
+		b.rotation.y = float(s[1])
+		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(b)
+
+
+## Banner designs of a side (BANNER_PX images): team colour with a cheer and Poke Balls, white with
+## the cheer in the team colour, and team stripes with a big ball.
+static func _banner_textures(team: int) -> Array:
+	var c: Color = StadiumParts.TEAM[team]
+	var dk: Color = StadiumParts.TEAM_DARK[team]
+	var white := Color("f4f2ec")
+	var w := BANNER_PX.x
+	var h := BANNER_PX.y
+	var out: Array = []
+	for d in 3:
+		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		var cheer: String = BANNER_CHEERS[(team * 3 + d) % BANNER_CHEERS.size()]
+		match d:
+			0:
+				img.fill(c)
+				img.fill_rect(Rect2i(0, 0, w, 2), white)
+				img.fill_rect(Rect2i(0, h - 2, w, 2), white)
+				PixelText.draw_centred(img, cheer, 10, w - 10, 3, white, 2)
+				_flag_ball(img, Vector2(5.5, h * 0.5), 4.0)
+				_flag_ball(img, Vector2(w - 5.5, h * 0.5), 4.0)
+			1:
+				img.fill(white)
+				img.fill_rect(Rect2i(0, 0, w, 1), dk)
+				img.fill_rect(Rect2i(0, h - 1, w, 1), dk)
+				PixelText.draw_centred(img, cheer, 0, w, 3, c, 2)
+			_:
+				for x in w:
+					img.fill_rect(Rect2i(x, 0, 1, h), c if ((x + 8) / 8) % 2 == 0 else dk)
+				_flag_ball(img, Vector2(w * 0.5, h * 0.5), 6.5)
+		# Ragged bottom edge (a few transparent texels) so the cloth reads as cloth.
+		for x in range(0, w, 5):
+			img.set_pixel(x, h - 1, Color(0, 0, 0, 0))
+		out.append(ImageTexture.create_from_image(img))
+	return out
 
 
 static func _pole_grid() -> VoxelGrid:

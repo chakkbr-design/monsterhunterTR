@@ -88,6 +88,12 @@ func _run() -> void:
 		if (f as Node3D).global_position.z > ArenaStadium.IN_Z:
 			high += 1
 	check(high == 0, "sem mastros de bandeira no lado da câmera")
+	var banners := st.find_children("Banner*", "MeshInstance3D", true, false)
+	var front := banners.filter(func(b): return (b as Node3D).global_position.z > ArenaStadium.IN_Z)
+	check(
+		banners.size() >= 10 and front.is_empty(),
+		"faixas da torcida (%d), nenhuma na frente" % banners.size()
+	)
 
 	# Corredores dos treinadores: o túnel de cada lado fica atrás do treinador (|z| < 1,5).
 	check(

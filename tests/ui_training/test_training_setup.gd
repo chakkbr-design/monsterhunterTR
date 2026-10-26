@@ -338,6 +338,18 @@ func _run() -> void:
 	Cfg.save_config({"sides": scr.cfg.sides, "scenario": "misto"})
 	check(String(Cfg.load_config().scenario) == "misto", "cenário salvo no arquivo")
 
+	# Hora do estádio: padrão Dia, escolhida vai para a config; desligada no VGC.
+	check(Cfg.time_of_day(scr.cfg) == "dia" and scr._time.selected == 0, "hora padrão: Dia")
+	scr.set_time_of_day("noite")
+	check(scr.cfg.time_of_day == "noite", "hora Noite na config")
+	check(scr._time.get_item_text(scr._time.selected) == "Noite", "e no seletor")
+	scr.set_time_of_day("meio-dia")
+	check(Cfg.time_of_day(scr.cfg) == "dia", "hora inválida volta a Dia")
+	scr.set_battle_mode("vgc")
+	check(scr._time.disabled, "VGC: sem hora (não tem estádio)")
+	scr.set_battle_mode("energy")
+	check(not scr._time.disabled, "energia: hora liberada")
+
 	scr.queue_free()
 	await frames(2)
 	if pm:
