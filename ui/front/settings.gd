@@ -3,7 +3,10 @@ extends RefCounted
 ## velocidade do texto e da batalha, música, som, janela, gráficos e dicas de batalha.
 ## Uso: const Settings := preload("res://ui/front/settings.gd")
 ## load_cfg() devolve {text_speed 0..3, battle_speed 0..1, music 0..100, sfx 0..100, fullscreen,
-## quality 0..1, battle_tips} (e "volume", o volume geral antigo, só para compatibilidade).
+## quality 0..3, battle_tips} (e "volume", o volume geral antigo, só para compatibilidade).
+## Gráficos: Baixo / Médio / Alto / Ultra (GfxQuality, world/look/gfx_quality.gd), gravados em
+## [video] graphics. Saves antigos só têm [options] quality 0..1 (Baixo/Alto): 0 vira Baixo e 1 vira
+## Alto; o save novo continua gravando esse quality antigo (Alto e Ultra = 1) para versões velhas.
 
 const PATH := "user://settings.cfg"
 const TEXT_SPEEDS := ["Lento", "Médio", "Rápido", "Instantâneo"]
@@ -11,15 +14,15 @@ const TEXT_CPS := [25.0, 45.0, 90.0, 0.0]
 const BATTLE_SPEED_NAMES := ["Lento", "Rápido"]
 const BATTLE_SPEED_MULT := [0.6, 1.0]
 const WINDOW_MODES := ["Janela", "Tela cheia"]
-const QUALITY_NAMES := ["Baixo", "Alto"]
-const LOW_RENDER_SCALE := 0.75
+const QUALITY_NAMES := ["Baixo", "Médio", "Alto", "Ultra"]  ## = GfxQuality.NAMES
+const QUALITY_DEFAULT := 2  ## Alto
 const DEFAULTS := {
 	"text_speed": 1,
 	"battle_speed": 0,
 	"music": 80,
 	"sfx": 100,
 	"fullscreen": false,
-	"quality": 1,
+	"quality": QUALITY_DEFAULT,
 	"battle_tips": true,
 	"volume": 80,
 }
@@ -50,9 +53,12 @@ static func load_cfg(path := PATH) -> Dictionary:
 			0,
 			BATTLE_SPEED_MULT.size() - 1
 		)
-		d.quality = clampi(
-			int(cf.get_value("options", "quality", d.quality)), 0, QUALITY_NAMES.size() - 1
-		)
+		if cf.has_section_key("video", "graphics"):
+			d.quality = clampi(
+				int(cf.get_value("video", "graphics", d.quality)), 0, QUALITY_NAMES.size() - 1
+			)
+		elif cf.has_section_key("options", "quality"):
+			d.quality = 0 if int(cf.get_value("options", "quality", 1)) <= 0 else QUALITY_DEFAULT
 		d.battle_tips = bool(cf.get_value("options", "battle_tips", d.battle_tips))
 		d.volume = clampi(int(cf.get_value("audio", "volume", d.volume)), 0, 100)
 		d.music = clampi(int(cf.get_value("audio", "music", d.music)), 0, 100)
@@ -63,8 +69,11 @@ static func load_cfg(path := PATH) -> Dictionary:
 
 static func save_cfg(d: Dictionary, path := PATH) -> bool:
 	var cf := ConfigFile.new()
-	for k in ["text_speed", "battle_speed", "quality"]:
+	for k in ["text_speed", "battle_speed"]:
 		cf.set_value("options", k, int(d.get(k, DEFAULTS[k])))
+	var q := clampi(int(d.get("quality", DEFAULTS.quality)), 0, QUALITY_NAMES.size() - 1)
+	cf.set_value("options", "quality", 1 if q >= QUALITY_DEFAULT else 0)  # saves antigos (Baixo/Alto)
+	cf.set_value("video", "graphics", q)
 	cf.set_value("options", "battle_tips", bool(d.get("battle_tips", DEFAULTS.battle_tips)))
 	for k in ["volume", "music", "sfx"]:
 		cf.set_value("audio", k, int(d.get(k, DEFAULTS[k])))
@@ -143,12 +152,12 @@ static func apply(d: Dictionary) -> void:
 			if au.has_method(m):
 				au.call(m)
 				break
+	GfxQuality.set_tier(int(d.get("quality", QUALITY_DEFAULT)))
 	if DisplayServer.get_name() == "headless":
 		return
-	var high := int(d.get("quality", 1)) >= 1
 	if ml:
-		ml.root.scaling_3d_scale = 1.0 if high else LOW_RENDER_SCALE
-		ml.root.msaa_3d = Viewport.MSAA_2X if high else Viewport.MSAA_DISABLED
+		GfxQuality.apply_all(ml.root)
+		ml.call_group(GfxQuality.GROUP, "apply_quality")
 	var mode := DisplayServer.window_get_mode()
 	var full := (
 		mode == DisplayServer.WINDOW_MODE_FULLSCREEN

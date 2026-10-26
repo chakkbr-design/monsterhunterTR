@@ -19,6 +19,13 @@ func _initialize() -> void:
 	_status_and_heal()
 	_snowscape()
 	_fx()
+	_late.call_deferred()
+
+
+## Partes que precisam da árvore rodando (o modo de energia acha o ambiente e o sol do estádio).
+func _late() -> void:
+	await process_frame
+	_fx_energy()
 	print("weather: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -36,15 +43,13 @@ func _run(a: Node, secs: float) -> void:
 
 
 ## Arena parada: ninguém age.
-func _still(mine := "pidgey", foe := "rattata") -> Node:
+func _still(mine := "pidgey", foe := "rattata", extra := {}) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
-	a.start(
-		[Mon.create(mine, 30)],
-		[Mon.create(foe, 30)],
-		{"speed": 1.0, "auto_battle": false, "seed": 7}
-	)
+	var o := {"speed": 1.0, "auto_battle": false, "seed": 7}
+	o.merge(extra)
+	a.start([Mon.create(mine, 30)], [Mon.create(foe, 30)], o)
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.player.controller = "none"
@@ -241,3 +246,58 @@ func _fx() -> void:
 		fx._process(0.1)
 	check(fx.level.rain == 0.0 and fx.snow_pile == 0.0, "clima some quando acaba")
 	a.free()
+
+
+## Modo de energia: chuva e neve do WeatherRig cobrindo quadra e arquibancada, raio de verdade e,
+## sem mundo (treino), os globais do clima e o sol do estádio, que voltam ao fim da luta.
+func _fx_energy() -> void:
+	var we := WorldEnvironment.new()
+	we.environment = Environment.new()
+	we.environment.ambient_light_energy = 0.5
+	root.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.light_energy = 1.0
+	root.add_child(sun)
+	var a := _still("pidgey", "rattata", {"battle_mode": "energy"})
+	var fx := a.get_node_or_null("WeatherFx") as BattleWeatherFx
+	var ab: BattleAbilities = a.abilities
+	_clear(ab)
+	fx._process(0.1)
+	check(fx.get_child_count() == 0, "energia: sem clima não monta nada")
+	ab.set_weather_rounds("hail")
+	for i in 30:
+		fx._process(0.1)
+	check(fx.energy and fx.rig != null, "energia usa o WeatherRig compartilhado")
+	var r: Rect2 = a.rect
+	var want := r.size * 0.5 + Vector2(BattleWeatherFx.STANDS_MARGIN, BattleWeatherFx.STANDS_MARGIN)
+	check(fx.rig.area.is_equal_approx(want), "cobre a quadra e a arquibancada (%s)" % fx.rig.area)
+	check(not fx.rig.follow and fx.rig.field != null, "rig parado sobre a quadra, com heightfield")
+	check(fx.rig.snow > 0.9 and fx.rig.snow_p.emitting, "neve caindo no modo energia")
+	check(float(fx.published.get("snow_cover", 0.0)) > 0.1, "treino: snow_cover sobe")
+	check(sun.light_energy < 0.95, "treino: o sol do estádio escurece na neve")
+	_clear(ab)
+	ab.set_weather_rounds("rain")
+	for i in 30:
+		fx._process(0.1)
+	check(fx.rig.rain > 0.8 and fx.rig.rain_p.emitting, "chuva do rig no modo energia")
+	check(fx.rig.splash_p != null and fx.rig.rain_p.sub_emitter != NodePath(), "respingos ligados")
+	check(float(fx.published.get("rain_wet", 0.0)) > 0.4, "treino: chão molhado pelo global")
+	check(fx.bolts.storm > 0.9, "chuva forte traz relâmpagos")
+	fx.bolts.strike()
+	fx._process(1.0 / 60.0)
+	check(fx.flash > 0.1, "relâmpago acende (%f)" % fx.flash)
+	check(
+		float(fx.published.get("lightning_flash", 0.0)) > 0.1, "treino: lightning_flash publicado"
+	)
+	check(we.environment.ambient_light_energy > 0.55, "clarão no ambiente do estádio")
+	var base_sun := 1.0
+	a.remove_child(fx)
+	check(fx.published.is_empty(), "fim da luta: globais de volta")
+	check(is_equal_approx(sun.light_energy, base_sun), "fim da luta: sol de volta")
+	check(
+		is_equal_approx(we.environment.ambient_light_energy, 0.5), "fim da luta: ambiente de volta"
+	)
+	fx.free()
+	a.free()
+	we.free()
+	sun.free()

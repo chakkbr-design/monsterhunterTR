@@ -318,7 +318,8 @@ func _camera_mode(indoor: bool) -> void:
 		rig._yaw_target = 0.0
 
 
-## Original look: post fx, wind, time of day, weather, ambience, the following partner (world/sky/).
+## Original look: post fx, wind, time of day, weather, ambience, the following partner (world/sky/),
+## the F9 sky panel (world/debug/, hidden until F9) and the graphics tier (GfxQuality).
 func _make_sky() -> void:
 	for n: Node in [
 		WorldPostFx.new(),
@@ -326,7 +327,8 @@ func _make_sky() -> void:
 		WorldTimeOfDay.new(),
 		WorldWeather.new(),
 		WorldAmbient.new(),
-		WorldFollower.new()
+		WorldFollower.new(),
+		SkyDebugPanel.new()
 	]:
 		n.name = {
 			WorldPostFx: "PostFX",
@@ -334,9 +336,11 @@ func _make_sky() -> void:
 			WorldTimeOfDay: "TimeOfDay",
 			WorldWeather: "Weather",
 			WorldAmbient: "Ambient",
-			WorldFollower: "Follower"
+			WorldFollower: "Follower",
+			SkyDebugPanel: "SkyPanel"
 		}[n.get_script()]
 		add_child(n)
+	GfxQuality.apply_all(get_viewport())
 
 
 ## Environment, sun, fog, ground tints and camera of the zone (its map look) or of an interior.
