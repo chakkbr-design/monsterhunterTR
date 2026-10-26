@@ -88,6 +88,7 @@ var arrivals: Dictionary = {}  ## spawn name -> Vector3
 var counts: Dictionary = {}  ## what was built, for tests/debug
 var ground_material: ShaderMaterial  ## shared by the ground and terrace tops (time of day tints it)
 var leaf_points: Array[Vector3] = []  ## tree crowns, for falling leaves
+var grid: TileGrid = null  ## tile map when the zone walks on the 1 m grid ("movement": "grid")
 
 var _solids: StaticBody3D
 var _water_body: StaticBody3D

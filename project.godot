@@ -39,6 +39,93 @@ project/assembly_name="PokmemonLike"
 
 3d/physics_engine="Jolt Physics"
 
+[shader_globals]
+
+wind_dir={
+"type": "vec2",
+"value": Vector2(1, 0.35)
+}
+wind_strength={
+"type": "float",
+"value": 1.0
+}
+wind_gust={
+"type": "float",
+"value": 0.0
+}
+wind_time={
+"type": "float",
+"value": 0.0
+}
+main_cam_pos={
+"type": "vec3",
+"value": Vector3(0, 0, 0)
+}
+weather_origin={
+"type": "vec2",
+"value": Vector2(-100000, -100000)
+}
+weather_px={
+"type": "float",
+"value": 200000.0
+}
+weather_time={
+"type": "float",
+"value": 0.0
+}
+night_lamps={
+"type": "float",
+"value": 0.0
+}
+night_windows={
+"type": "float",
+"value": 0.0
+}
+sun_dir_world={
+"type": "vec3",
+"value": Vector3(0.3, 0.8, 0.5)
+}
+sun_color_world={
+"type": "color",
+"value": Color(1, 0.96, 0.9, 1)
+}
+sun_amount={
+"type": "float",
+"value": 1.0
+}
+sky_top_color={
+"type": "color",
+"value": Color(0.35, 0.55, 0.85, 1)
+}
+sky_horizon_color={
+"type": "color",
+"value": Color(0.7, 0.8, 0.9, 1)
+}
+rain_amount={
+"type": "float",
+"value": 0.0
+}
+rain_wet={
+"type": "float",
+"value": 0.0
+}
+rain_puddle={
+"type": "float",
+"value": 0.0
+}
+snow_cover={
+"type": "float",
+"value": 0.0
+}
+cloud_cover={
+"type": "float",
+"value": 0.0
+}
+lightning_flash={
+"type": "float",
+"value": 0.0
+}
+
 [rendering]
 
 rendering_device/driver.windows="d3d12"
