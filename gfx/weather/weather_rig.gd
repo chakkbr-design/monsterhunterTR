@@ -12,7 +12,9 @@ extends Node3D
 ##   something falls (characters walking under the rain), never capturing the weather layer itself.
 ## Owners set rain / snow / mist (0..1), wind (m/s) and call update(focus, camera) every frame.
 ## Amounts come from the covered area, the density and the graphics budget
-## (GfxQuality.particles()); set_budget() rebuilds them when the tier changes.
+## (GfxQuality.particles()), up to amount_max; set_budget() rebuilds them when the tier changes.
+## Other colliders (GPUParticlesCollision3D with cull_mask WeatherKit.LAYER, like the boxes under
+## the training ponds' water) stop drops and flakes the same way.
 
 const RAIN_H := 13.0  ## m above the ground where drops are born
 const RAIN_SPEED := Vector2(11.0, 14.0)
@@ -34,6 +36,9 @@ var snow_density := SNOW_DENSITY
 var collide := true
 var mist_enabled := true
 var field_resolution := GPUParticlesCollisionHeightField3D.RESOLUTION_512
+var amount_max := AMOUNT_MAX  ## drops / flakes cap (the stadium's bowl is bigger than a street)
+var snow_h := SNOW_H  ## m above the ground where flakes are born (over the stands in the stadium)
+var refresh := REFRESH  ## s between heightfield refreshes while something falls
 
 var rain := 0.0
 var snow := 0.0
@@ -55,7 +60,7 @@ var _built := false
 
 
 ## A rig with `opts` (area, follow, center, budget, rain_density, snow_density, collide, mist,
-## resolution), ready to add to the tree.
+## resolution, amount_max, snow_h, refresh), ready to add to the tree.
 static func make(opts := {}) -> WeatherRig:
 	var r := WeatherRig.new()
 	r.name = String(opts.get("name", "WeatherRig"))
@@ -69,6 +74,9 @@ static func make(opts := {}) -> WeatherRig:
 	r.collide = bool(opts.get("collide", true))
 	r.mist_enabled = bool(opts.get("mist", true))
 	r.field_resolution = int(opts.get("resolution", r.field_resolution))
+	r.amount_max = int(opts.get("amount_max", AMOUNT_MAX))
+	r.snow_h = float(opts.get("snow_h", SNOW_H))
+	r.refresh = float(opts.get("refresh", REFRESH))
 	return r
 
 
@@ -92,11 +100,11 @@ func _build() -> void:
 
 ## Rain drops at full rain on this tier.
 func rain_amount() -> int:
-	return clampi(int(area.x * area.y * 4.0 * rain_density * budget), 200, AMOUNT_MAX)
+	return clampi(int(area.x * area.y * 4.0 * rain_density * budget), 200, amount_max)
 
 
 func snow_amount() -> int:
-	return clampi(int(area.x * area.y * 4.0 * snow_density * budget), 150, AMOUNT_MAX)
+	return clampi(int(area.x * area.y * 4.0 * snow_density * budget), 150, amount_max)
 
 
 ## New particle budget (graphics tier): the emitters restart with the new amounts.
@@ -205,9 +213,9 @@ static func _splash_mat(tex: Texture2D, crown: bool) -> StandardMaterial3D:
 
 
 func _build_snow() -> void:
-	snow_p = _particles("Snow", snow_amount(), 11.0, SNOW_H)
+	snow_p = _particles("Snow", snow_amount(), 11.0 * snow_h / SNOW_H, snow_h)
 	snow_p.fixed_fps = 30
-	snow_p.preprocess = 6.0  # snow that starts (or a forced snap) fills the whole column at once
+	snow_p.preprocess = 6.0 * snow_h / SNOW_H  # snow that starts fills the whole column at once
 	_snow_mat = ShaderMaterial.new()
 	_snow_mat.shader = load("res://gfx/weather/snow_particles.gdshader")
 	_snow_mat.set_shader_parameter("extents", Vector3(area.x, 0.8, area.y))
@@ -285,9 +293,9 @@ func update(focus: Vector3, cam: Camera3D, delta: float) -> void:
 		if splash_p:
 			splash_p.global_position = rp
 	if snow_p:
-		var sp := Vector3(at.x, gy + SNOW_H, at.z) + back - w3 * 0.7 * SNOW_H
+		var sp := Vector3(at.x, gy + snow_h, at.z) + back - w3 * 0.7 * snow_h
 		if not follow:
-			sp = Vector3(center.x, ground_y + SNOW_H, center.z) - w3 * 0.7 * SNOW_H
+			sp = Vector3(center.x, ground_y + snow_h, center.z) - w3 * 0.7 * snow_h
 		snow_p.global_position = sp
 		_snow_mat.set_shader_parameter("wind", w3)
 		_emit(snow_p, snow)
@@ -298,10 +306,10 @@ func update(focus: Vector3, cam: Camera3D, delta: float) -> void:
 		)
 		if not s.is_equal_approx(field.global_position):
 			field.global_position = s
-			_refresh_t = REFRESH
+			_refresh_t = refresh
 		_refresh_t -= delta
 		if any and _refresh_t <= 0.0 and field.is_inside_tree():
-			_refresh_t = REFRESH
+			_refresh_t = refresh
 			RenderingServer.particles_collision_height_field_update(field.get_base())
 	var m := clampf(mist, 0.0, 1.0)
 	for mi in mist_sheets:

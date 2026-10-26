@@ -153,6 +153,9 @@ func _run() -> void:
 		check(lit == (sc == "vulcao"), "%s: refletores %s" % [sc, "acesos" if lit else "apagados"])
 	st.theme("campo")
 	check(not st.spots.any(func(l): return l.visible), "de volta ao campo de dia: apagados")
+	_weather_light(st)
+	root.remove_child(st)
+	check(st.global_value("sun_amount") == null, "saiu: globais do estádio de volta ao padrão")
 	st.queue_free()
 	await process_frame
 
@@ -187,8 +190,89 @@ func _run() -> void:
 				b.scene.text == String(Cfg.SCENARIO_NAMES[tb.scenario()]).to_upper(),
 				"o placar mostra o cenário (%s)" % b.scene.text
 			)
+			await _weather_chain(tb)
 		tb.queue_free()
 		await process_frame
 		await process_frame
 	print("FALHAS: %d" % fails)
 	quit(1 if fails > 0 else 0)
+
+
+## Treino de verdade: a chuva da luta cobre a tigela inteira do estádio, pede a luz ao estádio (e
+## ninguém mais mexe no sol dele) e, quando a luta sai, tudo volta.
+func _weather_chain(tb: Node) -> void:
+	var st: ArenaStadium = tb._stadium
+	var a: Node = tb.arena
+	var sun_before := st.sun.light_energy
+	a.abilities.set_weather_rounds("rain", 99)
+	for i in 150:
+		await process_frame
+	var fx := a.get_node_or_null("WeatherFx") as BattleWeatherFx
+	check(fx != null and fx.energy and fx.light_owner == st, "chuva do treino acha o estádio")
+	if fx == null or fx.rig == null:
+		return
+	var want := st.weather_area().size * 0.5
+	check(fx.rig.area.is_equal_approx(want), "chuva cobre a tigela do estádio (%s)" % fx.rig.area)
+	check(fx._ground == null, "quadra voxel sem a placa lisa de chão molhado")
+	check(st.cloud > 0.5, "estádio recebe a nuvem da chuva (%.2f)" % st.cloud)
+	check(st.sun.light_energy < sun_before, "sol do estádio escurece na chuva")
+	var ponds: Array = a.terrain.obstacles.filter(
+		func(o): return o.kind == "pond" and is_instance_valid(o.get("node"))
+	)
+	for o in ponds:
+		check(o.node.find_child("RainStop", true, false) != null, "gota para na água da lagoa")
+	tb._drop_arena()
+	await process_frame
+	check(st.cloud == 0.0 and st.flash == 0.0, "fim da luta: estádio sem nuvem")
+	# A nuvem sai primeiro (o clima é filho da arena) e o BattleBiomes desfaz o dele depois.
+	var mood_sun := float(ArenaStadium.MOODS[st.mood].sun_e)
+	check(
+		is_equal_approx(st.sun.light_energy, mood_sun),
+		"fim da luta: sol do humor de volta (%.2f)" % st.sun.light_energy
+	)
+
+
+## Clima da luta na luz do estádio (BattleWeatherFx -> weather_light): nuvem escurece e amacia o sol,
+## sobe o ambiente, acinzenta o céu da água e acende os refletores na tempestade; o clarão sobe o
+## ambiente; quem muda o sol por fora (BattleBiomes) vira a nova base; (0, 0) devolve tudo.
+func _weather_light(st: ArenaStadium) -> void:
+	check(st.is_in_group(BattleWeatherFx.LIGHT_GROUP), "estádio é o dono da luz do clima")
+	var area := st.weather_area()
+	var bowl := (ArenaStadium.IN_X + StadiumParts.DEPTH) * 2.0
+	check(
+		area.size.x >= bowl and area.has_point(Vector2.ZERO),
+		"o clima cobre a quadra e as arquibancadas até o parapeito (%s)" % area
+	)
+	var sun0 := st.sun.light_energy
+	var amb0 := st.env.ambient_light_energy
+	var top0: Color = st.global_value("sky_top_color")
+	var glint0 := float(st.global_value("sun_amount"))
+	st.weather_light(0.9, 0.0)
+	check(st.sun.light_energy < sun0 * 0.6, "nuvem escurece o sol (%.2f)" % st.sun.light_energy)
+	check(st.sun.shadow_opacity < 0.7, "nuvem amacia a sombra")
+	check(st.env.ambient_light_energy > amb0, "nuvem sobe o ambiente")
+	check(float(st.global_value("sun_amount")) < glint0, "menos brilho de sol na água")
+	var top: Color = st.global_value("sky_top_color")
+	check(top.s < top0.s, "céu da água acinzenta com a nuvem")
+	check(st.spots.all(func(l): return l.visible), "tempestade de dia: refletores acesos")
+	var amb_cloud := st.env.ambient_light_energy
+	st.weather_light(0.9, 1.0)
+	check(st.env.ambient_light_energy > amb_cloud * 2.0, "relâmpago: clarão no ambiente")
+	st.weather_light(0.9, 0.0)
+	# BattleBiomes escurece o sol no começo da luta: vira a base, sem somar com a nuvem.
+	st.sun.light_energy *= 0.5
+	st.weather_light(0.9, 0.0)
+	st.weather_light(0.0, 0.0)
+	check(is_equal_approx(st.sun.light_energy, sun0 * 0.5), "sol do bioma mantido ao limpar")
+	st.sun.light_energy = sun0
+	st.weather_light(0.0, 0.0)
+	check(is_equal_approx(st.sun.light_energy, sun0), "sem clima: sol do humor de volta")
+	check(is_equal_approx(st.env.ambient_light_energy, amb0), "sem clima: ambiente de volta")
+	check(is_equal_approx(st.sun.shadow_opacity, 1.0), "sem clima: sombra cheia")
+	check(st.global_value("sky_top_color") == top0, "sem clima: céu da água de volta")
+	check(not st.spots.any(func(l): return l.visible), "sem clima de dia: refletores apagados")
+	check(
+		st.world_env.get_node_or_null("GfxQualityEnv") != null,
+		"ambiente do estádio segue o nível gráfico"
+	)
+	check(root.get_viewport().msaa_3d == Viewport.MSAA_DISABLED, "nunca MSAA")

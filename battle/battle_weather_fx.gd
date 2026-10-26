@@ -12,15 +12,21 @@ extends Node3D
 ## Também mostra o nome do clima e as rodadas que faltam no alto da tela.
 ##
 ## Energy mode (arena.energy_on(): training and energy fights) uses the shared gfx/weather pieces
-## instead of the VGC particles, sized from arena.rect plus STANDS_MARGIN so they cover the stands:
-## - WeatherRig fixed over the court: velocity-aligned rain that stops on roofs and stands (collision
-##   heightfield) and splashes where it lands, snowflakes that settle; amounts follow GfxQuality;
-## - WeatherLightning in heavy rain: a real light flash (plus an ambient spike on the stadium's
-##   WorldEnvironment), voxel bolts outside the stands, thunder delayed by distance;
+## instead of the VGC particles:
+## - WeatherRig fixed over the court and the stands: the training stadium's weather_area() (the
+##   whole bowl out to the parapet), else arena.rect plus STANDS_MARGIN. Velocity-aligned rain that
+##   stops on the stands, roofs and pond water (collision heightfield, pond collision boxes) and
+##   splashes where it lands, snowflakes that settle; amounts follow GfxQuality;
+## - WeatherLightning in heavy rain: a real light flash, voxel bolts outside the stands, thunder
+##   delayed by distance;
 ## - WeatherAudio: rain loop by intensity, wind, thunder;
-## - with no world (training) it also drives the weather globals (rain_amount, rain_wet,
-##   rain_puddle, snow_cover, cloud_cover, lightning_flash) and dims the stadium sun, and puts
-##   everything back when the fight ends (_exit_tree).
+## - with no world (training) it owns the weather globals (rain_amount, rain_wet, rain_puddle,
+##   snow_cover, cloud_cover, lightning_flash) and asks the light owner (a node in LIGHT_GROUP,
+##   the ArenaStadium) for the rest through weather_light(cloud, flash): the stadium dims its own
+##   sun and lifts its ambient, so nobody else writes them. When the fight ends (_exit_tree) the
+##   globals go back to the project defaults and the stadium gets weather_light(0, 0);
+## - the voxel court (arena.voxel_court()) reads rain_wet, rain_puddle and snow_cover in its own
+##   shader, so it gets no flat ground overlay.
 ## The VGC path (and its look) is unchanged.
 
 const KINDS := ["rain", "hail", "sun", "sand"]
@@ -38,16 +44,24 @@ const SHAFTS := 6
 ## Neve no chão do mundo: não chega ao branco puro, para os flocos aparecerem por cima.
 const WORLD_SNOW_MAX := 0.82
 const NAMES := {"rain": "Chuva", "hail": "Neve", "sun": "Sol forte", "sand": "Areia"}
-## Energy mode: metres of cover around arena.rect (the stands), and its rain heightfield.
+## Energy mode: metres of cover around arena.rect when there is no stadium to ask, and the rain
+## heightfield.
 const STANDS_MARGIN := 12.0
 const ENERGY_FIELD_RES := GPUParticlesCollisionHeightField3D.RESOLUTION_1024
-## Energy mode: keep the wet / snowy / sandy overlay plane on the court (the stands read the
-## weather globals instead). Turn off once the court floor itself reads rain_wet / snow_cover.
-const ENERGY_GROUND_OVERLAY := true
-## Energy mode in training (no world): the globals this node drives and restores.
+## Energy mode over the training stadium's bowl: rain drops per square metre in the air (the bowl is
+## big, so a little sparser than the overworld), the most drops and flakes on the best tier, a
+## higher snow cloud (over the 8 m stands) and a slower heightfield refresh (nothing moves there but
+## the fighters).
+const BOWL_RAIN_DENSITY := 5.2
+const BOWL_AMOUNT_MAX := 32000
+const BOWL_SNOW_H := 11.0
+const BOWL_REFRESH := 0.6
+## Energy mode in training (no world): the globals this node owns, and the group of the node that
+## owns the light (the stadium: weather_light(cloud, flash), weather_area()).
 const GLOBALS := [
 	"rain_amount", "rain_wet", "rain_puddle", "snow_cover", "cloud_cover", "lightning_flash"
 ]
+const LIGHT_GROUP := "battle_weather_light"
 const LABEL_COLORS := {
 	"rain": Color(0.7, 0.85, 1.0),
 	"hail": Color(0.9, 0.97, 1.0),
@@ -87,9 +101,7 @@ var rig: WeatherRig
 var bolts: WeatherLightning
 var audio: WeatherAudio
 var published := {}  ## training: last value written to each weather global
-var _globals_base := {}
-var _env: Environment
-var _suns := {}  ## DirectionalLight3D -> [base energy, energy we set]
+var light_owner: Node  ## training: the stadium (LIGHT_GROUP), null without one
 var _t := 0.0
 
 
@@ -115,21 +127,25 @@ func _build() -> void:
 		_build_snow()
 	_build_sand()
 	_build_sun()
-	if _world == null and (not energy or ENERGY_GROUND_OVERLAY):
+	if _world == null and not _voxel_court():
 		_build_ground()
 	_build_screen()
 	_bolt_t = _rng.randf_range(LIGHTNING_GAP.x, LIGHTNING_GAP.y)
 
 
-## Modo de energia fora do mundo (treino): o ambiente do estádio segue o nível de gráficos
-## (GfxQuality.track). No mundo quem cuida é o TimeOfDay; o VGC fica como está.
-func _ready() -> void:
-	if arena == null or not arena.has_method("energy_on") or not arena.energy_on():
-		return
-	if get_tree().get_first_node_in_group("weather"):
-		return
-	for we in get_tree().root.find_children("*", "WorldEnvironment", true, false):
-		GfxQuality.track(we as WorldEnvironment)
+## Voxel court (training in energy mode): its floor shader shows the wet, the puddles and the snow
+## from the globals, so the flat overlay plane would only cut through its relief.
+func _voxel_court() -> bool:
+	return (
+		energy and arena != null and arena.has_method("voxel_court") and bool(arena.voxel_court())
+	)
+
+
+## A shader global's default from the project ([shader_globals]); null if it has none. (Reading the
+## live value back, RenderingServer.global_shader_parameter_get, only works in the editor.)
+static func global_default(n: String) -> Variant:
+	var s = ProjectSettings.get_setting("shader_globals/" + n)
+	return s.get("value") if s is Dictionary else null
 
 
 func _exit_tree() -> void:
@@ -479,19 +495,33 @@ func _full_rect(shader: String) -> ColorRect:
 func _build_energy() -> void:
 	var c := global_transform * _center if is_inside_tree() else _center
 	var area := _half + Vector2(STANDS_MARGIN, STANDS_MARGIN)
-	rig = (
-		WeatherRig
-		. make(
-			{
-				"name": "WeatherRig",
-				"area": area,
-				"follow": false,
-				"center": c,
-				"mist": false,
-				"resolution": ENERGY_FIELD_RES,
-			}
+	var opts := {
+		"name": "WeatherRig",
+		"follow": false,
+		"mist": false,
+		"resolution": ENERGY_FIELD_RES,
+	}
+	if _world == null and is_inside_tree():
+		light_owner = get_tree().get_first_node_in_group(LIGHT_GROUP)
+	if light_owner and light_owner.has_method("weather_area"):
+		# The stadium's whole bowl: rain and snow over the field and every stand, to the parapet.
+		var bowl: Rect2 = light_owner.weather_area()
+		area = bowl.size * 0.5
+		c = Vector3(bowl.get_center().x, c.y, bowl.get_center().y)
+		(
+			opts
+			. merge(
+				{
+					"rain_density": BOWL_RAIN_DENSITY,
+					"amount_max": BOWL_AMOUNT_MAX,
+					"snow_h": BOWL_SNOW_H,
+					"refresh": BOWL_REFRESH,
+				}
+			)
 		)
-	)
+	opts.area = area
+	opts.center = c
+	rig = WeatherRig.make(opts)
 	add_child(rig)
 	bolts = WeatherLightning.new()
 	bolts.name = "Lightning"
@@ -509,9 +539,6 @@ func _build_energy() -> void:
 	audio.name = "WeatherAudio"
 	add_child(audio)
 	add_to_group(GfxQuality.GROUP)
-	if _world == null:
-		_capture_training()
-		bolts.drive_env = _env
 
 
 ## Graphics tier changed: the rig follows the new particle budget.
@@ -547,42 +574,19 @@ func _on_thunder(distance: float, power: float) -> void:
 		audio.thunder(distance, power)
 
 
-## Training: the values of the weather globals and the stadium lights before the fight.
-func _capture_training() -> void:
-	for g in GLOBALS:
-		var v = RenderingServer.global_shader_parameter_get(g)
-		_globals_base[g] = float(v) if v is float or v is int else 0.0
-	if not is_inside_tree():
-		return
-	for we in get_tree().root.find_children("*", "WorldEnvironment", true, false):
-		if (we as WorldEnvironment).environment:
-			_env = (we as WorldEnvironment).environment
-			break
-	for l in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
-		if not is_ancestor_of(l) and (l as DirectionalLight3D).visible:
-			_suns[l] = [(l as DirectionalLight3D).light_energy, -1.0]
-
-
-## Training: the court and stands get wet or white through the globals; clouds dim the sun.
+## Training: the court and stands get wet or white through the globals; the light owner (the
+## stadium) dims its sun and lifts its ambient for the clouds and the lightning.
 func _drive_training(rain: float, snow: float) -> void:
 	var dry := 1.0 - 0.85 * snow_pile
+	var cloud := maxf(rain * 0.9, snow * 0.75)
 	_set_global("rain_amount", rain)
 	_set_global("rain_wet", wet_ground * dry)
 	_set_global("rain_puddle", smoothstep(0.5, 1.0, wet_ground) * 0.6 * (1.0 - snow_pile))
 	_set_global("snow_cover", snow_pile * WORLD_SNOW_MAX)
-	_set_global("cloud_cover", maxf(rain, snow) * 0.8)
+	_set_global("cloud_cover", cloud)
 	_set_global("lightning_flash", flash)
-	var k := 1.0 - 0.45 * rain - 0.3 * snow
-	for l in _suns.keys():
-		if not is_instance_valid(l):
-			_suns.erase(l)
-			continue
-		var d: Array = _suns[l]
-		var sun := l as DirectionalLight3D
-		if float(d[1]) >= 0.0 and not is_equal_approx(sun.light_energy, float(d[1])):
-			d[0] = sun.light_energy  # someone else changed it (biome light): new base
-		d[1] = float(d[0]) * k
-		sun.light_energy = float(d[1])
+	if is_instance_valid(light_owner):
+		light_owner.weather_light(cloud, flash)
 
 
 func _set_global(n: String, v: float) -> void:
@@ -592,20 +596,15 @@ func _set_global(n: String, v: float) -> void:
 	RenderingServer.global_shader_parameter_set(n, v)
 
 
-## The fight is over: globals and lights as they were.
+## The fight is over: the weather globals back to the project defaults, the stadium's light clear.
 func _restore_training() -> void:
-	for g in _globals_base:
-		if published.has(g):
-			RenderingServer.global_shader_parameter_set(g, float(_globals_base[g]))
+	for g in published:
+		var v = global_default(g)
+		RenderingServer.global_shader_parameter_set(g, v if v != null else 0.0)
 	published.clear()
-	_globals_base.clear()
-	for l in _suns:
-		if is_instance_valid(l):
-			var d: Array = _suns[l]
-			var sun := l as DirectionalLight3D
-			if float(d[1]) < 0.0 or is_equal_approx(sun.light_energy, float(d[1])):
-				sun.light_energy = float(d[0])
-	_suns.clear()
+	if is_instance_valid(light_owner):
+		light_owner.weather_light(0.0, 0.0)
+	light_owner = null
 
 
 # --- Texturas procedurais ---

@@ -11,6 +11,26 @@ var _fails := 0
 var _count := 0
 
 
+## Dono da luz no treino (o papel do ArenaStadium): guarda o que o clima pede a ele.
+class FakeLight:
+	extends Node
+	var calls := 0
+	var cloud := -1.0
+	var flash := 0.0
+	var max_flash := 0.0
+	var max_cloud := 0.0
+
+	func _init() -> void:
+		add_to_group(BattleWeatherFx.LIGHT_GROUP)
+
+	func weather_light(c: float, f := 0.0) -> void:
+		calls += 1
+		cloud = c
+		flash = f
+		max_flash = maxf(max_flash, f)
+		max_cloud = maxf(max_cloud, c)
+
+
 func _initialize() -> void:
 	_setters()
 	_rocks()
@@ -249,7 +269,9 @@ func _fx() -> void:
 
 
 ## Modo de energia: chuva e neve do WeatherRig cobrindo quadra e arquibancada, raio de verdade e,
-## sem mundo (treino), os globais do clima e o sol do estádio, que voltam ao fim da luta.
+## sem mundo (treino), os globais do clima; a luz é do dono dela (o estádio), a quem o clima só pede
+## nuvem e clarão (weather_light), e tudo volta ao fim da luta. O clima nunca mexe num sol ou num
+## ambiente direto (nada brigando quadro a quadro com o estádio).
 func _fx_energy() -> void:
 	var we := WorldEnvironment.new()
 	we.environment = Environment.new()
@@ -258,6 +280,8 @@ func _fx_energy() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.light_energy = 1.0
 	root.add_child(sun)
+	var lt := FakeLight.new()
+	root.add_child(lt)
 	var a := _still("pidgey", "rattata", {"battle_mode": "energy"})
 	var fx := a.get_node_or_null("WeatherFx") as BattleWeatherFx
 	var ab: BattleAbilities = a.abilities
@@ -274,7 +298,13 @@ func _fx_energy() -> void:
 	check(not fx.rig.follow and fx.rig.field != null, "rig parado sobre a quadra, com heightfield")
 	check(fx.rig.snow > 0.9 and fx.rig.snow_p.emitting, "neve caindo no modo energia")
 	check(float(fx.published.get("snow_cover", 0.0)) > 0.1, "treino: snow_cover sobe")
-	check(sun.light_energy < 0.95, "treino: o sol do estádio escurece na neve")
+	check(fx.light_owner == lt, "treino: acha o dono da luz pelo grupo")
+	check(lt.cloud > 0.5, "treino: a neve pede nuvem ao dono da luz (%.2f)" % lt.cloud)
+	check(
+		is_equal_approx(float(fx.published.get("cloud_cover", 0.0)), lt.cloud),
+		"cloud_cover publicado = a nuvem pedida ao estádio"
+	)
+	check(fx._ground != null, "quadra sem voxel: o piso por cima continua")
 	_clear(ab)
 	ab.set_weather_rounds("rain")
 	for i in 30:
@@ -289,15 +319,28 @@ func _fx_energy() -> void:
 	check(
 		float(fx.published.get("lightning_flash", 0.0)) > 0.1, "treino: lightning_flash publicado"
 	)
-	check(we.environment.ambient_light_energy > 0.55, "clarão no ambiente do estádio")
-	var base_sun := 1.0
+	check(lt.max_flash > 0.1, "o clarão chega ao dono da luz (%.2f)" % lt.max_flash)
+	check(is_equal_approx(sun.light_energy, 1.0), "o clima não mexe no sol (é do estádio)")
+	check(
+		is_equal_approx(we.environment.ambient_light_energy, 0.5),
+		"o clima não mexe no ambiente (é do estádio)"
+	)
 	a.remove_child(fx)
 	check(fx.published.is_empty(), "fim da luta: globais de volta")
-	check(is_equal_approx(sun.light_energy, base_sun), "fim da luta: sol de volta")
-	check(
-		is_equal_approx(we.environment.ambient_light_energy, 0.5), "fim da luta: ambiente de volta"
-	)
+	check(lt.cloud == 0.0 and lt.flash == 0.0, "fim da luta: a luz do estádio fica limpa")
+	check(BattleWeatherFx.global_default("rain_wet") == 0.0, "padrão do global vem do projeto")
 	fx.free()
 	a.free()
+	# Quadra voxel (treino de energia): o próprio piso mostra chão molhado e neve, sem a placa lisa.
+	var v := _still("pidgey", "rattata", {"battle_mode": "energy", "voxel": true})
+	var vfx := v.get_node_or_null("WeatherFx") as BattleWeatherFx
+	_clear(v.abilities)
+	v.abilities.set_weather_rounds("rain")
+	for i in 20:
+		vfx._process(0.1)
+	check(vfx.energy and vfx._ground == null, "quadra voxel: sem a placa lisa por cima do piso")
+	check(float(vfx.published.get("rain_wet", 0.0)) > 0.4, "quadra voxel: piso molhado pelo global")
+	v.free()
 	we.free()
 	sun.free()
+	lt.free()

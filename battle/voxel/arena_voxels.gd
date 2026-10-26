@@ -34,6 +34,8 @@ const POND_STEPS := [[1.0, -0.25], [0.8, -0.5], [0.45, -0.75], [0.0, -1.0]]
 const POND_LEVELS := [[0.8, -0.62], [0.9, -0.5], [1.0, -0.36], [1.125, -0.25], [1.25, -0.08]]
 ## Seconds for a pond to freeze over (or melt) on the water shader.
 const ICE_SECS := 0.35
+## Depth (m) of the box under a pond's water that stops the battle rain and snow at the surface.
+const POND_STOP_DEPTH := 1.2
 
 
 class Model:
@@ -301,10 +303,24 @@ static func pond(o: Dictionary, sc: String) -> Node3D:
 		Vector2(size, size), {"kind": "pond", "shape": "ellipse", "depth": 0.9, "tint": p.water}
 	)
 	root.add_child(w)
+	w.add_child(_rain_stop(Vector3(size, POND_STOP_DEPTH, size)))
 	root.set_meta("water", w)
 	root.set_meta("r0", r0)
 	pond_level(o, root)
 	return root
+
+
+## Battle rain and snow (WeatherRig) stop on the water: the transparent surface is not in the rain's
+## collision heightfield, so a box under it (moving with the level) kills drops and settles flakes
+## right at the surface instead of letting them fall to the bowl under the water. Only the weather
+## layer's particles see it.
+static func _rain_stop(size: Vector3) -> GPUParticlesCollisionBox3D:
+	var b := GPUParticlesCollisionBox3D.new()
+	b.name = "RainStop"
+	b.size = size
+	b.position.y = -size.y * 0.5
+	b.cull_mask = WeatherKit.LAYER
+	return b
 
 
 ## Water (and ice) at the level of the pond's current radius.

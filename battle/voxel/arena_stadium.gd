@@ -19,7 +19,16 @@ extends Node3D
 ## Moods (time of day, MOODS): "dia", "tarde" (sunset) and "noite"; theme(scenario) retints the
 ## surroundings and darkens the sky for caverna (night) and pantano (overcast). BattleBiomes still
 ## dims the sun and sets the ambient colour per scenario on top of the mood.
-## Live API: score(info), cheer(side, amount), wave(), set_mood(mood), theme(scenario).
+## Light ownership during a training fight: the stadium owns its sun, ambient, fog and floodlights
+## and the night_lamps, night_windows, sun_dir_world, sun_color_world, sun_amount, sky_top_color
+## and sky_horizon_color globals (written only when they change, back to the project defaults when
+## it leaves). The battle weather (BattleWeatherFx) owns rain_amount, rain_wet, rain_puddle,
+## snow_cover, cloud_cover and lightning_flash, and asks for the rest through
+## weather_light(cloud, flash): clouds dim and soften the sun, lift the ambient, grey the fog and
+## the sky globals (the sky shader greys itself from cloud_cover) and switch the floodlights on in a
+## dark storm; a lightning flash spikes the ambient (and the sky flashes from lightning_flash).
+## Live API: score(info), cheer(side, amount), wave(), set_mood(mood), theme(scenario),
+## weather_light(cloud, flash), weather_area().
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const Kit := preload("res://ui/ui_kit.gd")
@@ -37,6 +46,18 @@ const TOWER_OUT := 2.25
 ## Ground out to here (m) and the plaza ring around the stands (m).
 const GROUND_HALF := Vector2(150, 140)
 const PLAZA := 10
+## Battle weather (weather_light): cloud 1 takes this much of the sun and of its shadow, adds this
+## much ambient, pulls the depth fog this much closer and greys it; a storm this cloudy turns the
+## floodlights on (spots energy, lamp glow) even by day. Rain and snow cover the bowl out to the
+## parapet plus WEATHER_PAD (m).
+const CLOUD_SUN_DIM := 0.62
+const CLOUD_SHADOW := 0.55
+const CLOUD_AMBIENT := 0.45
+const CLOUD_FOG := 0.55
+const STORM_LIGHTS := Vector2(0.45, 0.85)
+const STORM_SPOTS := 2.2
+const STORM_LAMPS := 0.55
+const WEATHER_PAD := 1.0
 ## Perimeter board: one panel (m) and its texture (px).
 ## Fan banners on the parapets: size (m), texture size (1/16 m texels) and their cheers.
 const BANNER := Vector2(4.0, 1.0)
@@ -223,6 +244,9 @@ var spots: Array[SpotLight3D] = []
 var tunnel_lights: Array[OmniLight3D] = []
 var cheer_a := 0.0
 var cheer_b := 0.0
+## What the battle weather asks of the light now (weather_light): cloud cover and lightning flash.
+var cloud := 0.0
+var flash := 0.0
 var _mood_now := {}
 var _ground_mi: MeshInstance3D
 var _ground_grid: VoxelGrid
@@ -233,6 +257,16 @@ var _boards := {}  ## "main" / "a" / "b" -> {labels..., balls: [Sprite3D]}
 var _ball_tex := []
 var _score_key := ""
 var _wave_t := -1.0
+## Battle weather on the light (weather_light): the sun and ambient energies without it (the mood
+## times BattleBiomes), what we last set and the factors we applied, and the globals this stadium
+## wrote (restored to the project defaults when it leaves).
+var _sun_base := -1.0
+var _sun_set := -1.0
+var _amb_base := -1.0
+var _amb_set := -1.0
+var _k_sun := 1.0
+var _k_amb := 1.0
+var _globals := {}
 
 
 ## Builds the stadium (opts: mood, names [side 0, side 1]).
@@ -250,6 +284,7 @@ static func build(opts := {}) -> ArenaStadium:
 
 
 func _build() -> void:
+	add_to_group(BattleWeatherFx.LIGHT_GROUP)
 	_build_env()
 	_build_stands()
 	_build_towers()
@@ -265,9 +300,27 @@ func _build() -> void:
 	theme("")
 
 
+## Leaving (back to the setup or the title): every global it wrote goes back to the project's
+## default, so the next scene (the overworld's TimeOfDay writes its own on start) begins clean.
 func _exit_tree() -> void:
-	RenderingServer.global_shader_parameter_set("night_lamps", 0.0)
-	RenderingServer.global_shader_parameter_set("night_windows", 0.0)
+	for n in _globals:
+		var v = BattleWeatherFx.global_default(n)
+		if v != null:
+			RenderingServer.global_shader_parameter_set(n, v)
+	_globals.clear()
+
+
+## A shader global, written only when it changes.
+func _global(n: String, v) -> void:
+	if _globals.has(n) and _globals[n] == v:
+		return
+	_globals[n] = v
+	RenderingServer.global_shader_parameter_set(n, v)
+
+
+## Last value this stadium wrote to a shader global (null if never; tests).
+func global_value(n: String):
+	return _globals.get(n)
 
 
 # --- Model cache ---
@@ -1109,6 +1162,8 @@ func _build_env() -> void:
 	world_env.name = "StadiumEnv"
 	world_env.environment = env
 	add_child(world_env)
+	# Follows Opções > Gráficos (SSAO quality; never MSAA, which empties the water's depth reads).
+	GfxQuality.track(world_env)
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.shadow_enabled = true
@@ -1138,9 +1193,11 @@ func _apply(md: Dictionary, light: bool) -> void:
 	sun.basis = Basis.looking_at(-to_sun, Vector3.UP if absf(to_sun.y) < 0.99 else Vector3.BACK)
 	sun.light_color = md.sun
 	if light:
-		sun.light_energy = float(md.sun_e)
+		_sun_base = float(md.sun_e)
+		_amb_base = float(md.amb_e)
+		_sun_set = -1.0  # a fresh base: not someone else's change
+		_amb_set = -1.0
 		env.ambient_light_color = md.ambient
-		env.ambient_light_energy = float(md.amb_e)
 	env.tonemap_exposure = float(md.get("exposure", 1.0))
 	sky_mat.set_shader_parameter("top_color", md.top)
 	sky_mat.set_shader_parameter("horizon_color", md.horizon)
@@ -1154,28 +1211,87 @@ func _apply(md: Dictionary, light: bool) -> void:
 	sky_mat.set_shader_parameter("sun_dir", to_sun)
 	sky_mat.set_shader_parameter("disc_energy", 1.4 if float(md.stars) > 0.0 else 6.0)
 	sky_mat.set_shader_parameter("disc_size", 0.03 if float(md.stars) > 0.0 else 0.04)
-	env.fog_light_color = md.fog
-	env.fog_depth_begin = float(md.fog_begin)
-	env.fog_depth_end = float(md.fog_end)
-	var lamps := float(md.lamps)
 	var windows := float(md.windows)
-	RenderingServer.global_shader_parameter_set("night_lamps", lamps)
-	RenderingServer.global_shader_parameter_set("night_windows", windows)
-	var se := float(md.spots)
-	for l in spots:
-		l.light_energy = se
-		l.visible = se > 0.01
+	_global("night_windows", windows)
 	for l in tunnel_lights:
 		l.light_energy = 1.4 * windows
 		l.visible = windows > 0.05
 	# The water reads the sun and the sky from the globals (TimeOfDay does it in the world).
-	RenderingServer.global_shader_parameter_set("sun_dir_world", to_sun)
-	RenderingServer.global_shader_parameter_set("sun_color_world", md.sun)
-	RenderingServer.global_shader_parameter_set(
-		"sun_amount", clampf(float(md.sun_e) * sin(elev) * 1.2, 0.0, 1.0)
-	)
-	RenderingServer.global_shader_parameter_set("sky_top_color", md.top)
-	RenderingServer.global_shader_parameter_set("sky_horizon_color", md.horizon)
+	_global("sun_dir_world", to_sun)
+	_global("sun_color_world", md.sun)
+	_light()
+
+
+## The battle weather asks for its light (BattleWeatherFx in training, every frame while there is
+## weather; 0, 0 when the fight ends): `c` 0..1 how overcast, `f` 0..1 the lightning flash. The
+## sky shader reads cloud_cover and lightning_flash itself; this does the light the stadium owns.
+func weather_light(c: float, f := 0.0) -> void:
+	c = clampf(c, 0.0, 1.0)
+	f = clampf(f, 0.0, 1.0)
+	var same := is_equal_approx(c, cloud) and is_equal_approx(f, flash)
+	if (
+		same
+		and is_equal_approx(sun.light_energy, _sun_set)
+		and is_equal_approx(env.ambient_light_energy, _amb_set)
+	):
+		return
+	cloud = c
+	flash = f
+	_light()
+
+
+## Ground the battle weather covers (BattleWeatherFx sizes its rain and snow from it): the field
+## and the whole bowl of stands out to the parapet, centred on the field.
+func weather_area() -> Rect2:
+	var hx := IN_X + StadiumParts.DEPTH + WEATHER_PAD
+	var hz := IN_Z + StadiumParts.DEPTH + WEATHER_PAD
+	return Rect2(global_position.x - hx, global_position.z - hz, hx * 2.0, hz * 2.0)
+
+
+## Sun, ambient, fog, floodlights and the light globals from the mood (_mood_now) and the weather.
+## A sun or ambient energy someone else changed since we last set it (BattleBiomes scales them at
+## the start of a fight and puts them back at its end) becomes the new base, minus our factor.
+func _light() -> void:
+	var md := _mood_now
+	if md.is_empty() or sun == null or env == null:
+		return
+	if _sun_base < 0.0 or (_sun_set >= 0.0 and not is_equal_approx(sun.light_energy, _sun_set)):
+		_sun_base = sun.light_energy / maxf(_k_sun, 0.05)
+	if (
+		_amb_base < 0.0
+		or (_amb_set >= 0.0 and not is_equal_approx(env.ambient_light_energy, _amb_set))
+	):
+		_amb_base = env.ambient_light_energy / maxf(_k_amb, 0.05)
+	var c := cloud
+	_k_sun = 1.0 - CLOUD_SUN_DIM * c
+	_k_amb = (1.0 + CLOUD_AMBIENT * c) * (1.0 + WeatherLightning.AMBIENT_SPIKE * flash)
+	_sun_set = _sun_base * _k_sun
+	_amb_set = _amb_base * _k_amb
+	sun.light_energy = _sun_set
+	sun.shadow_opacity = 1.0 - CLOUD_SHADOW * c
+	env.ambient_light_energy = _amb_set
+	env.fog_light_color = overcast(md.fog, c)
+	env.fog_depth_begin = float(md.fog_begin) * (1.0 - CLOUD_FOG * c)
+	env.fog_depth_end = float(md.fog_end) * (1.0 - CLOUD_FOG * 0.8 * c)
+	# A dark storm switches the floodlights on, even by day.
+	var storm := smoothstep(STORM_LIGHTS.x, STORM_LIGHTS.y, c)
+	var se := maxf(float(md.spots), STORM_SPOTS * storm)
+	for l in spots:
+		l.light_energy = se
+		l.visible = se > 0.01
+	_global("night_lamps", maxf(float(md.lamps), STORM_LAMPS * storm))
+	var elev := deg_to_rad(float(md.elev))
+	_global("sun_amount", clampf(float(md.sun_e) * sin(elev) * 1.2, 0.0, 1.0) * _k_sun)
+	_global("sky_top_color", overcast(md.top, c))
+	_global("sky_horizon_color", overcast(md.horizon, c))
+
+
+## A sky / fog colour under cloud `c`: towards a dim blue-grey of its own brightness, the same
+## blend stadium_sky.gdshader applies to the dome (so the water's sky globals match the sky).
+static func overcast(col: Color, c: float) -> Color:
+	var l := col.get_luminance()
+	var grey := Color(l * 0.9 * 0.82, l * 0.93 * 0.82, l * 0.82)
+	return col.lerp(grey, 0.75 * clampf(c, 0.0, 1.0))
 
 
 ## Retints the surroundings for the scenario and applies its sky (caverna: night; pantano:
