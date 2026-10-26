@@ -223,6 +223,12 @@ const DROP_STUN := 0.6
 const DROP_STUN_H := 0.3
 const SHOVE_CD := 3.0  ## o mesmo lutador só é puxado/derrubado de novo depois de SHOVE_CD s
 
+## Um obstáculo saiu, mudou de forma ou de lugar (morro rebaixado/desabado, caixa quebrada, objeto
+## destruído, árvore virou tronco, pedregulho parou, pedrinha nova/sumiu). `kind` = tipo, `pos` = onde
+## (local, plano). Pode vir mais de uma vez para a mesma mudança. Para quem guarda uma grade de
+## caminho/cobertura: refazer quando obstacles_rev mudar.
+signal obstacles_changed(kind: String, pos: Vector3)
+
 var arena: Node
 ## {kind: "hill"/"peak"/"pond", pos, r, top, h, hp, max_hp, node, cd, ice_t, top_node, mat}
 var obstacles: Array = []
@@ -244,6 +250,10 @@ var ground: BattleGround
 var props: BattleProps
 ## Biomas do modo de energia (ruínas, montanha, vulcão, caverna, pântano): BattleBiomes.
 var biomes: BattleBiomes
+## Obstáculos destrutíveis (impacto do arremesso, apoio, efeitos): BattleDestruction.
+var destruction: BattleDestruction
+## Contador de mudanças nos obstáculos (sobe a cada obstacles_changed).
+var obstacles_rev := 0
 ## Quadra voxel (arena.voxel_court): posições e tamanhos na grade de LATTICE m e visual em voxel.
 var lattice := false
 ## Multiplicador das quantidades do cenário pela área (_count_k).
@@ -261,6 +271,7 @@ func _init(a: Node) -> void:
 	ground = BattleGround.new(self)
 	props = BattleProps.new(self)
 	biomes = BattleBiomes.new(self)
+	destruction = BattleDestruction.new(self)
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -766,6 +777,18 @@ func on_move_landed(user: BattleFighter, mv: Dictionary, at: Vector3, radius: fl
 		_steam(pond, at)
 
 
+## Avisa que os obstáculos mudaram (sinal obstacles_changed e obstacles_rev).
+func notify_obstacles(kind: String, pos: Vector3) -> void:
+	obstacles_rev += 1
+	obstacles_changed.emit(kind, _flat(pos))
+
+
+## Destrói qualquer obstáculo (morro/pico, caixa/pedra, objeto vivo, coluna/monte, pilar, pedrinha,
+## montinho de neve) com o efeito de quebra; o que está em cima cai. false se não é obstáculo.
+func remove_obstacle(o: Dictionary, by: BattleFighter = null, cause := "") -> bool:
+	return destruction.destroy(o, by, Vector3.ZERO, cause)
+
+
 ## Tira `n` de vida do morro/pico; em 0 ele desaba.
 func damage(o: Dictionary, n: int, user: BattleFighter = null) -> void:
 	if not obstacles.has(o):
@@ -777,6 +800,7 @@ func damage(o: Dictionary, n: int, user: BattleFighter = null) -> void:
 	# Cada golpe rebaixa um pouco (até 70% da altura no último ponto de vida).
 	var k := 0.7 + 0.3 * float(o.hp) / float(o.max_hp)
 	o.h = float(o.h0) * k
+	notify_obstacles(String(o.kind), o.pos)  # mais baixo
 	if is_instance_valid(o.node):
 		o.node.scale = Vector3(1.0, k, 1.0)
 	_crumbs(o, 4)
@@ -798,6 +822,7 @@ func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 	if arena.field:
 		arena.field._add_mark("crater", o.pos, clampf(o.r, 0.8, 2.5), 0)
 	preload("res://audio/cue.gd").sfx("hit_super")
+	destruction.broken(o, String(o.kind), user, Vector3.ZERO, "collapse")  # entulho, o que está em cima
 	var who := "" if user == null else " (%s)" % user.mon.display_name
 	_tele("terrain_collapse", {"kind": o.kind, "by": _uid(user)})
 	arena.say("The %s collapsed!%s" % ["hill" if o.kind == "hill" else "peak", who])

@@ -270,6 +270,11 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
     picos, lagos, moitas e marcas, `ArenaPropsVox` objetos vivos, caixas e pedras).
   - Nunca use `arena.rng` para o visual.
   - Com `fast_sim` não se gera nada visual.
+  - **Destruição** (`ArenaDebris`, battle/voxel/arena_debris.gd; regras em `BattleDestruction`): obstáculo quebrado
+    solta pedaços de voxel (caixas de `FINE`, material padrão cacheado por cor) que voam com gravidade, quicam no
+    chão (`BattleTerrain.height_at`), giram e encolhem; árvore solta lascas e folhas que caem flutuando; poeira do
+    `PixelFx`; tremida curta da câmera pelo `h_offset` (o `BattleDirector` só mexe em posição e `v_offset`); no
+    lugar fica um monte baixo de entulho em voxel (1–3 voxels `FINE`, `meta rubble`). RNG própria (`randomize`).
 - **Estádio voxel em volta, fora dos limites** (`ArenaStadium`, battle/voxel/arena_stadium.gd):
   - montado uma vez por cena de treino (`TrainingBattle._build_stage`), só no modo de energia; nunca no VGC nem com `fast_sim`; sem corpo físico (a arena consulta paredes na camada 1);
   - arquibancada em anel de 12 fileiras (`StadiumParts`: cadeiras, escadas, vomitórios, parapeito, fachada, túneis dos treinadores no meio das cabeceiras); a da frente (+z) fica abaixo da linha de 30° da câmera de ação;
