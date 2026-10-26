@@ -4,11 +4,15 @@ extends SceneTree
 ##   --resolution 1600x900 --script res://tests/battle/shot_arena_stadium.gd --
 ##   --out=/tmp/estadio/campo [--scenario=campo] [--mood=dia|tarde|noite] [--seed=11] [--size=2]
 ##   [--views=inicio,meio,ko,aberta,placar,tunel,torcida,lago,gelo,mare] [--wait=420] [--speed=2]
+##   [--weather=rain|storm|hail|sand|sun] [--pile=0..1]
 ## Abre res://ui/training/training_battle.tscn no modo de energia e grava <out>_<vista>.png:
 ## inicio = câmera de ação logo no começo da luta, meio = depois de `wait` quadros de luta,
 ## ko = uns quadros depois do primeiro desmaio (a torcida comemora), aberta = o estádio inteiro de
 ## fora (foto de apresentação), placar / tunel / torcida = de perto, sem a interface; lago = o lago
 ## mais perto da câmera, gelo = o mesmo lago congelado, mare = a maré cheia da praia.
+## Com --weather a luta toda tem esse clima (storm = chuva com um raio forçado): raio = câmera de
+## ação no clarão de um raio além da arquibancada do fundo, aberta_raio = o mesmo na vista aberta.
+## --pile põe a neve acumulada (e o chão molhado) direto nesse nível, sem esperar os 9 s da luta.
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -44,6 +48,12 @@ func _run() -> void:
 		if String(tb.arena.state) != "fight":
 			continue
 		fought += 1
+		if _args.has("pile"):
+			var fx = tb.arena.get_node_or_null("WeatherFx")
+			if fx and fx.get("level") != null:
+				var p := float(_args.pile)
+				fx.snow_pile = maxf(fx.snow_pile, p * float(fx.level.hail))
+				fx.wet_ground = maxf(fx.wet_ground, p * float(fx.level.rain))
 		if fought == 45 and "inicio" in views:
 			_save(out, "inicio")
 		if fought == wait and "meio" in views:
@@ -57,6 +67,8 @@ func _run() -> void:
 		var need_ko := "ko" in views and not shot.has("ko")
 		if fought >= wait and not need_ko:
 			break
+	if "raio" in views:
+		await _bolt(tb, out, "raio")
 	# Vistas paradas, sem a interface.
 	var hud = tb.arena.get("hud") if is_instance_valid(tb.arena) else null
 	for l in [hud, tb.get("_ui")]:
@@ -83,12 +95,31 @@ func _run() -> void:
 		for k in 3:
 			await process_frame
 		_save(out, v)
+		if v == "aberta" and "aberta_raio" in views:
+			await _bolt(tb, out, "aberta_raio")
 	await _water(tb, cam, out, views)
 	cam.queue_free()
 	tb.queue_free()
 	await process_frame
 	await process_frame
 	quit()
+
+
+## Um raio além da arquibancada, na direção em que a câmera atual olha, e a foto no clarão.
+func _bolt(tb: Node, out: String, view: String) -> void:
+	var fx = tb.arena.get_node_or_null("WeatherFx") if is_instance_valid(tb.arena) else null
+	if fx == null or fx.get("bolts") == null:
+		print("sem raio: o clima não é de chuva no modo de energia")
+		return
+	var cam := root.get_viewport().get_camera_3d()
+	var fwd := -cam.global_transform.basis.z
+	fwd = Vector3(fwd.x, 0.0, fwd.z).normalized()
+	fx.bolts.strike(Vector3(-8.0, 0.0, 0.0) + fwd * 60.0)
+	for k in 2:
+		await process_frame
+	_save(out, view)
+	for k in 12:
+		await process_frame
 
 
 ## Lago mais perto do centro (de cima, de lado) e congelado; maré cheia da praia.
@@ -146,6 +177,9 @@ func _cfg(sc: String) -> Dictionary:
 	c.speed = float(_args.get("speed", "2"))
 	c["scenario"] = sc
 	c["time_of_day"] = String(_args.get("mood", "dia"))
+	var w := String(_args.get("weather", ""))
+	if w != "":
+		c["weather"] = "rain" if w == "storm" else w
 	return c
 
 
