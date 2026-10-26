@@ -196,7 +196,7 @@ func _draws() -> void:
 	for s in range(1, 31):
 		var a := _two(100 + s, "")
 		seen[a.terrain.scenario] = true
-		check(not a.terrain.scenario in BattleTerrain.PICK_ONLY, "sorteio sem a praia")
+		check(not a.terrain.scenario in BattleTerrain.PICK_ONLY, "sorteio respeita PICK_ONLY")
 		a.free()
 	var bio := seen.keys().filter(func(k): return k in B.LIST)
 	check(bio.size() >= 2, "energia sorteia biomas (%s)" % [seen.keys()])

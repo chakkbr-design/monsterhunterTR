@@ -6,7 +6,8 @@ extends SceneTree
 ##   [--weather=clear|cloudy|overcast|rain|storm|snow|mist] [--melt=0.3] [--settle=45]
 ##   [--env-off=ssao,ssil,sdfgi]
 ## Boots res://world/route_world.tscn at Pallet (like shot_original_look.gd), puts the player on each
-## spot and saves <out>/pallet_<spot>_<period>[_<weather>].png. The period is forced with
+## spot and saves <out>/pallet_<spot>_<period>[_<weather>].png (without --out, <out> is
+## user://shots/pallet). The period is forced with
 ## WorldTimeOfDay.forced_period (scripts are loaded by path: a SceneTree script compiles before the
 ## autoloads exist); the night / weather shader globals are also set directly, so the
 ## shot shows the lamps and wet ground even before the sky work drives them. With --hours (needs the
@@ -53,7 +54,7 @@ const NIGHT := {
 }
 
 var w: Node3D
-var out := "/tmp/claude-0/pallet"
+var out := ProjectSettings.globalize_path("user://shots/pallet")
 var spots: PackedStringArray = ["start", "plaza", "house", "rival", "lab", "pond", "gate"]
 var periods: PackedStringArray = ["midday"]
 var weather := "clear"
