@@ -22,6 +22,8 @@ var stale := false  ## the bake did not match (regenerated in-process)
 var load_ms := 0  ## time spent loading / building the scenery (tests)
 var lights: Array[OmniLight3D] = []
 var houses: Dictionary = {}  ## building id -> Node3D (fader, metas rect / height / geoms / parts)
+var water_surfaces: Array[MeshInstance3D] = []  ## one per water body (gfx/water WaterSurface)
+var fountain: FountainFx
 
 var _tree_mats := {}
 var _decor_mats := {}
@@ -182,7 +184,16 @@ func _scenery() -> void:
 	var meta: Dictionary = bake.meta
 	if bake.meshes.is_empty():
 		return
-	var vol := bake.volume()
+	# The 3D colour texture: decompressed on a worker thread while streaming, uploaded here.
+	var box: Array = []
+	if items_per_frame > 0 and is_inside_tree():
+		var task := WorkerThreadPool.add_task(func() -> void: box.append(bake.volume_layers()))
+		while not WorkerThreadPool.is_task_completed(task):
+			await get_tree().process_frame
+		WorkerThreadPool.wait_for_task_completion(task)
+	else:
+		box.append(bake.volume_layers())
+	var vol := bake.volume_from(box[0])
 	voxel_material = _grid_material(vol[0], vol[1], bake.grid_origin, bake.grid_size)
 	await _step()
 	var part_of := {}  # part id -> building entry
@@ -305,9 +316,12 @@ func _tree_mat(model: String) -> ShaderMaterial:
 func _decor_mat(model: String) -> ShaderMaterial:
 	if not _decor_mats.has(model):
 		var e: Dictionary = bake.decor_models.get(model, {})
-		var params := {"sway": float(e.get("sway", 0.0)) * 0.02}
-		if model.begins_with("flower") or model.begins_with("lily") or model == "petals":
-			params["backlight"] = 0.35
+		var params := {
+			"sway": float(e.get("sway", 0.0)) * 0.02,
+			"weather": float(e.get("weather", 1.0)),
+		}
+		if float(e.get("backlight", 0.0)) > 0.0:
+			params["backlight"] = float(e.backlight)
 		_decor_mats[model] = VoxelMat.detail_material(params)
 	return _decor_mats[model]
 
@@ -324,41 +338,96 @@ static func _v2(a) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 
 
+## One WaterSurface per water body (never overlapping), 12 cm under its banks over the carved bed;
+## each cascade between two bodies is a FountainFx sheet that ripples the lower surface.
 func _water_surfaces(meta: Dictionary) -> void:
 	var g := _group("WaterSurface")
+	var bodies: Array[MeshInstance3D] = []
 	for w in meta.get("water", []):
 		var r: Array = w.rect
 		var rr := Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3]))
 		var kind := String(w.get("type", "pond"))
-		var mi := WaterSurface.make(
-			rr.size,
-			{"kind": kind, "flow": _v2(w.get("flow", [0, 0])), "depth": float(w.get("depth", 1.0))}
-		)
-		mi.name = "Water_%s_%d" % [kind, g.get_child_count()]
+		var opts := {
+			"kind": kind,
+			"flow": _v2(w.get("flow", [0, 0])),
+			"depth": float(w.get("depth", 1.0)),
+			"seed": float(bodies.size()) * 3.7 + 1.3,
+		}
+		if kind == "stream":
+			opts["fish"] = 1
+		var mi := WaterSurface.make(rr.size, opts)
+		mi.name = "Water_%s_%d" % [kind, bodies.size()]
 		mi.position = Vector3(
 			rr.get_center().x, float(w.get("level", VoxelZoneGen.WATER_Y)), rr.get_center().y
 		)
 		g.add_child(mi)
+		bodies.append(mi)
+		water_surfaces.append(mi)
 		_bump("water")
+	for c in meta.get("cascades", []):
+		var low := int(c.get("low", -1))
+		var fx := FountainFx.new()
+		fx.name = "Cascade%d" % g.get_child_count()
+		g.add_child(fx)
+		(
+			fx
+			. setup(
+				{
+					"sheets":
+					[{"from": _v3(c.from), "to": _v3(c.to), "width": float(c.get("width", 1.0))}],
+					"surfaces": [bodies[low]] if low >= 0 and low < bodies.size() else [],
+				}
+			)
+		)
+		_bump("cascades")
 
 
+## The fountains: FountainFx water (basins, jets, sheets, curtains, light) over the voxel stone.
 func _fountains(meta: Dictionary) -> void:
 	for f in meta.get("fountains", []):
-		var spec := {"jets": [], "basins": [], "sheets": []}
+		var spec := {"jets": [], "basins": [], "sheets": [], "curtains": []}
 		for j in f.get("jets", []):
-			spec.jets.append({"pos": _v3(j.pos), "height": float(j.height), "count": int(j.count)})
+			var e := {"pos": _v3(j.pos), "height": float(j.height), "count": int(j.count)}
+			for k in ["radius", "reach", "spread"]:
+				if j.has(k):
+					e[k] = float(j[k])
+			spec.jets.append(e)
 		for b in f.get("basins", []):
-			spec.basins.append(
-				{"pos": _v3(b.pos), "size": _v2(b.size), "kind": String(b.get("kind", "fountain"))}
+			(
+				spec
+				. basins
+				. append(
+					{
+						"pos": _v3(b.pos),
+						"size": _v2(b.size),
+						"kind": String(b.get("kind", "fountain")),
+						"shape": String(b.get("shape", "ellipse")),
+						"depth": float(b.get("depth", 0.4)),
+					}
+				)
 			)
 		for s in f.get("sheets", []):
 			spec.sheets.append({"from": _v3(s.from), "to": _v3(s.to), "width": float(s.width)})
+		for c in f.get("curtains", []):
+			(
+				spec
+				. curtains
+				. append(
+					{
+						"centre": _v3(c.centre),
+						"radius": float(c.radius),
+						"drop": float(c.drop),
+						"flare": float(c.get("flare", 0.0)),
+					}
+				)
+			)
 		if f.has("light"):
 			spec["light"] = Color(String(f.light))
 		var fx := FountainFx.new()
 		fx.name = "Fountain"
 		add_child(fx)
 		fx.setup(spec)
+		fountain = fx
 		_bump("fountains")
 
 

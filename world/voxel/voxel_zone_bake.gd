@@ -41,7 +41,7 @@ const SOURCES := [
 ## (decor sway). Kept as plain arrays: a MultiMesh made under the headless (dummy) renderer saves
 ## without its instances; multimesh() rebuilds it at load.
 @export var multimeshes: Array = []
-## Decor models: name -> {"mesh", "sway"}.
+## Decor models: name -> {"mesh", "sway", "weather", "backlight"} (voxel_detail.gdshader uniforms).
 @export var decor_models := {}
 
 var meta := {}  ## from the JSON (not serialized in the .res)
@@ -218,7 +218,12 @@ static func _decor(b: VoxelZoneBake, gen: VoxelZoneGen) -> void:
 		var mesh := VoxelMesher.colored(info.grid, VoxelMat.DETAIL, info.pivot)
 		if mesh.get_surface_count() == 0:
 			continue
-		b.decor_models[m] = {"mesh": mesh, "sway": info.sway}
+		b.decor_models[m] = {
+			"mesh": mesh,
+			"sway": info.sway,
+			"weather": float(info.get("weather", 1.0)),
+			"backlight": float(info.get("backlight", 0.0)),
+		}
 		var groups := {}
 		for xf in gen.decor[m]:
 			var k := _chunk_key(xf.origin, ext)
@@ -308,10 +313,23 @@ func attach_json(j: Dictionary) -> void:
 
 ## The zone volume as a 3D texture (+ its column tops) for VoxelMat.material.
 func volume() -> Array:
-	return _volume(vox_data, vox_len, grid_size, tops_data)
+	return volume_from(volume_layers())
 
 
-static func _volume(data: PackedByteArray, n: int, size: Vector3i, tops: PackedByteArray) -> Array:
+## The zone volume's layers (one RGBA8 image per voxel y), decompressed: safe on a worker thread.
+func volume_layers() -> Array[Image]:
+	return _layers(vox_data, vox_len, grid_size)
+
+
+## [3D texture, column tops texture] from volume_layers() (main thread: it uploads the texture).
+func volume_from(layers: Array[Image]) -> Array:
+	var t := ImageTexture3D.new()
+	t.create(Image.FORMAT_RGBA8, grid_size.x, grid_size.z, grid_size.y, false, layers)
+	var ti := Image.create_from_data(grid_size.x, grid_size.z, false, Image.FORMAT_R8, tops_data)
+	return [t, ImageTexture.create_from_image(ti)]
+
+
+static func _layers(data: PackedByteArray, n: int, size: Vector3i) -> Array[Image]:
 	var raw := data.decompress(n, FileAccess.COMPRESSION_ZSTD)
 	var layers: Array[Image] = []
 	var per := size.x * size.z * 4
@@ -321,8 +339,12 @@ static func _volume(data: PackedByteArray, n: int, size: Vector3i, tops: PackedB
 				size.x, size.z, false, Image.FORMAT_RGBA8, raw.slice(y * per, (y + 1) * per)
 			)
 		)
+	return layers
+
+
+static func _volume(data: PackedByteArray, n: int, size: Vector3i, tops: PackedByteArray) -> Array:
 	var t := ImageTexture3D.new()
-	t.create(Image.FORMAT_RGBA8, size.x, size.z, size.y, false, layers)
+	t.create(Image.FORMAT_RGBA8, size.x, size.z, size.y, false, _layers(data, n, size))
 	var ti := Image.create_from_data(size.x, size.z, false, Image.FORMAT_R8, tops)
 	return [t, ImageTexture.create_from_image(ti)]
 

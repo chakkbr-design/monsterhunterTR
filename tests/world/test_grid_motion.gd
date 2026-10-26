@@ -1,8 +1,7 @@
 extends SceneTree
 ## Headless: godot --headless --fixed-fps 60 --path . --script res://tests/world/test_grid_motion.gd
 ## (also passes at --fixed-fps 144). Grid movement of humans (docs/VOXEL.md §6) on the real
-## RouteWorld with Pallet forced onto the grid (a probe of its colliders, until the voxel Pallet brings
-## its baked TileGrid): tap turns, hold walks whole tiles, chained steps at constant speed (the
+## RouteWorld with the voxel Pallet on the grid (its baked TileGrid; forced on as well): tap turns, hold walks whole tiles, chained steps at constant speed (the
 ## follower never sees the player stop), run, walls and NPCs bump, a lock mid-step finishes the step,
 ## teleports re-snap, save_position on tile centres, an old save inside a wall lands on a free tile,
 ## the front tile wins the focus, the door enters by pushing (not by walking past or standing in its
@@ -87,7 +86,13 @@ func _run() -> void:
 	check(p.grid_active(), "Pallet forced onto the grid: the player walks on it")
 	check(on_centre(p.global_position), "start spawn on a tile centre (%s)" % p.global_position)
 	var g = w.builders.pallet_town.grid
-	check(g != null and g.has_meta("probed"), "grid probed from the zone colliders and cached")
+	check(
+		g != null and not g.has_meta("probed") and g == w.grid_at(Vector3(0, 0, 0)),
+		"the zone's baked tile grid is used (no probe)"
+	)
+	Player.force_zones = {}
+	check(w.grid_at(Vector3(0, 0, 0)) == g, "Pallet walks on the grid by itself (map: grid)")
+	Player.force_zones = {"pallet_town": "grid"}
 	check(w.grid_at(Vector3(0, 0, -30)) == null, "Route 1 stays free")
 	check(w.grid_at(w.interior("player_house").global_position) == null, "interiors stay free")
 	await _tap_and_hold()
@@ -252,8 +257,8 @@ func _run_speed() -> void:
 
 
 func _blocking() -> void:
-	# The player house wall north of (-6, -5).
-	await put(-6, -5, Vector3(0, 0, -1))
+	# The player house's south wall north of (-10, -4).
+	await put(-10, -4, Vector3(0, 0, -1))
 	Input.action_press("move_forward")
 	var bumped := false
 	var anim := false
@@ -263,16 +268,16 @@ func _blocking() -> void:
 		anim = anim or (p.sprite != null and p.sprite.moving)
 	Input.action_release("move_forward")
 	await frames(5)
-	check(p.global_position.is_equal_approx(Vector3(-6, 0, -5)), "a wall blocks")
+	check(p.global_position.is_equal_approx(Vector3(-10, 0, -4)), "a wall blocks")
 	check(bumped and (p.sprite == null or anim), "pushing into it bumps (walk in place)")
 	check(p.get_node_or_null("Bump") != null, "bump sound played")
-	# The lab assistant stands at (3.2, 4.4): tile (3, 4).
-	await put(3, 3, Vector3(0, 0, 1))
+	# The lab assistant stands on tile (8, 15).
+	await put(8, 14, Vector3(0, 0, 1))
 	Input.action_press("move_back")
 	await frames(30)
 	Input.action_release("move_back")
 	await frames(5)
-	check(p.global_position.is_equal_approx(Vector3(3, 0, 3)), "an NPC blocks its tile")
+	check(p.global_position.is_equal_approx(Vector3(8, 0, 14)), "an NPC blocks its tile")
 
 
 func _mid_step_lock() -> void:
@@ -324,16 +329,17 @@ func _teleports() -> void:
 
 
 func _focus() -> void:
-	await put(3, 3, Vector3(0, 0, 1))
+	await put(8, 14, Vector3(0, 0, 1))
 	await frames(2)
 	check(
 		p.focus != null and String(p.focus.npc_name).begins_with("Assistente"),
 		"front tile: the lab assistant (%s)" % [p.focus]
 	)
-	await put(3, 3, Vector3(1, 0, 0))
+	await put(8, 14, Vector3(1, 0, 0))
 	await frames(2)
 	check(p.focus == null, "facing away: nothing (%s)" % [p.focus])
-	await put(-4, 2, Vector3(0, 0, -1))
+	# The town sign stands on tile (-3, -13).
+	await put(-3, -12, Vector3(0, 0, -1))
 	await frames(2)
 	check(p.focus != null and p.focus.name == "PalletSign", "front tile: the town sign")
 

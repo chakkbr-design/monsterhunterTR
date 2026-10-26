@@ -17,12 +17,16 @@ extends RefCounted
 ##   The 'd' touching the footprint's south side is the door tile (DOOR flag; the tile in front is
 ##   the arrival). A house is hollow with a floor, walls / roof / slab are separate parts;
 ## - `trees`: [{"pos": [x, z], "species", "size"}] overrides of tree tiles;
-## - `crops`: [{"rect": [x0, z0, x1, z1], "crop": wheat|cabbage|carrot|pumpkin}] over 'c' tiles;
+## - `crops`: [{"rect": [x0, z0, x1, z1], "crop": wheat|corn|cabbage|lettuce|carrot|pumpkin|tomato|
+##   strawberry}] over 'c' tiles;
 ## - `objects`: the big things:
 ##   {"kind": "fountain", "rect": [x0, z0, x1, z1]} over 'O' tiles;
 ##   {"kind": "gate", "from": [x, z], "to": [x, z], "sign": "TEXT"} (arch between two pillars);
 ##   {"kind": "water", "type": pond|stream, "rect": [x0, z0, x1, z1], "level": y, "depth": m,
-##   "flow": [x, z]}: the surface over the '~' / 'w' tiles inside the rect.
+##   "flow": [x, z]}: one water body (one WaterSurface) over the '~' / 'w' tiles inside the rect;
+##   rects never overlap. "level" is the surface height (-0.12 = 12 cm under the bank), "depth"
+##   caps the stepped bed. Where a lower body touches a higher one the generator builds a stone
+##   weir and a cascade sheet between them.
 ## The generator (VoxelZoneGen) turns it into a VoxelGrid, a TileGrid and metadata, and
 ## tools/voxel/bake_zone.gd bakes them into world/voxel/baked/<zone>.res + .json. The .json holds
 ## the hash of the design + map (VoxelZoneGen.input_hash) and of the generator sources.
@@ -265,6 +269,16 @@ func validate() -> PackedStringArray:
 		var fp: Array = b.get("footprint", [])
 		if fp.size() == 2 and (r.size.x != int(fp[0]) or r.size.y != int(fp[1])):
 			errs.append("building %s is %s tiles, design says %s" % [b.id, r.size, fp])
+	var wr: Array[Rect2i] = []
+	for o in objects:
+		if String(o.get("kind", "")) != "water":
+			continue
+		var r: Array = o.get("rect", [0, 0, 0, 0])
+		var rr := Rect2i(int(r[0]), int(r[1]), int(r[2]) - int(r[0]) + 1, int(r[3]) - int(r[1]) + 1)
+		for other in wr:
+			if other.intersects(rr):
+				errs.append("water rects %s and %s overlap (one surface per body)" % [other, rr])
+		wr.append(rr)
 	if not extent().encloses(rect):
 		errs.append("rect %s is outside the layers %s" % [rect, extent()])
 	return errs

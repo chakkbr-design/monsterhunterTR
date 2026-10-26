@@ -28,10 +28,42 @@ const SWAY := {
 	"flower_purple": 3.0,
 	"daisy": 2.5,
 	"carrot": 2.0,
+	"tulip_red": 2.6,
+	"tulip_yellow": 2.6,
+	"tulip_pink": 2.6,
+	"lavender": 2.4,
+	"sunflower": 0.9,
+	"poppy": 3.0,
+	"bluebell": 2.6,
+	"forget_me_not": 2.0,
+	"marigold": 2.0,
+	"iris": 1.6,
+	"weed_0": 1.4,
+	"weed_1": 1.4,
+	"weed_2": 1.2,
+	"corn": 0.9,
+	"tomato": 0.8,
+	"grass_clump": 1.8,
 }
+## Garden flowers (beds, planters, window boxes): the noise patches of a bed pick one of these.
 const FLOWERS := [
-	"flower_red", "flower_yellow", "flower_white", "flower_pink", "flower_blue", "flower_purple"
+	"flower_red",
+	"flower_yellow",
+	"flower_white",
+	"flower_pink",
+	"flower_blue",
+	"flower_purple",
+	"tulip_red",
+	"tulip_yellow",
+	"tulip_pink",
+	"lavender",
+	"marigold",
+	"rose",
 ]
+## Wild flowers of the lawns, meadows and forest edges.
+const WILD := ["daisy", "poppy", "forget_me_not", "bluebell", "flower_white", "flower_yellow"]
+## Underwater weeds (decor material with weather 0: no rain or snow on them).
+const WEEDS := ["weed_0", "weed_1", "weed_2"]
 const FLOWER_COLS := {
 	"flower_red": [Color("e0383a"), Color("f6d046")],
 	"flower_yellow": [Color("f6d046"), Color("d08a24")],
@@ -55,7 +87,8 @@ const FONT := {
 }
 
 
-## Model name -> {"grid": VoxelGrid, "pivot": Vector3 (detail voxels), "sway": float}.
+## Model name -> {"grid": VoxelGrid, "pivot": Vector3 (detail voxels), "sway": float, "weather":
+## 0 (under water: no rain / snow) or 1, "backlight": float (petals glow against the sun)}.
 static func build(name: String) -> Dictionary:
 	var g: VoxelGrid
 	if name.begins_with("text:"):
@@ -107,10 +140,13 @@ static func build(name: String) -> Dictionary:
 				g = _flower(FLOWER_COLS[name][0], FLOWER_COLS[name][1], hash(name))
 			else:
 				g = _pebble(0)
+	var lit := name in FLOWERS or name in WILD or name in ["sunflower", "iris", "petals"]
 	return {
 		"grid": g,
 		"pivot": Vector3(g.size.x / 2.0, 0, g.size.z / 2.0),
-		"sway": float(SWAY.get(name, 0.0))
+		"sway": float(SWAY.get(name, 0.0)),
+		"weather": 0.0 if name in WEEDS else 1.0,
+		"backlight": 0.35 if lit or name.begins_with("lily") else 0.0,
 	}
 
 
@@ -180,7 +216,17 @@ static func _daisy() -> VoxelGrid:
 
 static func _pebble(v: int) -> VoxelGrid:
 	var g := _grid(4, 2, 4)
-	var col: Color = [VoxelPal.ROCK_LIGHT, VoxelPal.ROCK, Color("b8aa98")][v % 3]
+	var col: Color = [
+		VoxelPal.ROCK_LIGHT, VoxelPal.ROCK, Color("b8aa98"), Color("c9b9a0"), Color("7d7f86")
+	][v % 5]
+	if v >= 3:
+		var cells2: Array = [
+			[Vector3i(0, 0, 0), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(3, 0, 2)],
+			[Vector3i(1, 0, 1), Vector3i(2, 0, 1), Vector3i(2, 0, 2), Vector3i(1, 1, 1)],
+		][v - 3]
+		for c in cells2:
+			g.put(c, _c(col, c.x, c.y, c.z + v, 0.1), VoxelMat.STONE)
+		return g
 	var cells: Array = [
 		[Vector3i(1, 0, 1), Vector3i(2, 0, 1), Vector3i(1, 0, 2), Vector3i(1, 1, 1)],
 		[Vector3i(1, 0, 1), Vector3i(2, 0, 2)],
@@ -364,6 +410,285 @@ static func _doormat() -> VoxelGrid:
 	return g
 
 
+## Tulip: straight stem, two blade leaves, a cup of petals open at the top.
+static func _tulip(c: Color, sd: int) -> VoxelGrid:
+	var g := _grid(5, 10, 5)
+	var h := 6 + sd % 2
+	for y in h:
+		g.put(Vector3i(2, y, 2), _c(Color("4a8a34"), 2, y, sd), VoxelMat.GRASS)
+	for k in 4:
+		var leaf := Color("5f9a42").lerp(Color("7ab050"), k / 4.0)
+		g.put(Vector3i(1 if k < 2 else 0, k, 2), leaf, VoxelMat.GRASS)
+		g.put(Vector3i(3, k, 2 if k < 3 else 3), leaf.darkened(0.08), VoxelMat.GRASS)
+	for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		g.put(Vector3i(2 + o.x, h, 2 + o.y), c.darkened(0.15), VoxelMat.FLOWER)
+	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		g.put(Vector3i(2 + o.x, h + 1, 2 + o.y), _c(c, o.x, h + 1, o.y, 0.05), VoxelMat.FLOWER)
+		g.put(Vector3i(2 + o.x, h + 2, 2 + o.y), c.lightened(0.12), VoxelMat.FLOWER)
+	g.put(Vector3i(2, h + 1, 2), Color("f2d060"), VoxelMat.FLOWER)
+	return g
+
+
+## Lavender: a tuft of grey-green stems ending in purple spikes.
+static func _lavender() -> VoxelGrid:
+	var g := _grid(7, 12, 7)
+	var spots := [Vector2i(3, 3), Vector2i(1, 2), Vector2i(5, 2), Vector2i(2, 5), Vector2i(4, 5)]
+	for i in spots.size():
+		var s: Vector2i = spots[i]
+		var h := 6 + (i * 3) % 3
+		for y in h:
+			g.put(Vector3i(s.x, y, s.y), _c(Color("7a9a6a"), s.x, y, s.y), VoxelMat.GRASS)
+		for y in range(h, h + 4):
+			var pc := Color("8a6ad0") if (y + i) % 2 == 0 else Color("a88ae0")
+			g.put(Vector3i(s.x, y, s.y), _c(pc, s.x, y, s.y, 0.05), VoxelMat.FLOWER)
+	return g
+
+
+## Sunflower: a tall stem with two leaves and a big head facing south (+z).
+static func _sunflower() -> VoxelGrid:
+	var g := _grid(7, 19, 5)
+	for y in 14:
+		g.put(Vector3i(3, y, 2), _c(Color("4a8a34"), 3, y, 2), VoxelMat.GRASS)
+	for p in [
+		Vector3i(2, 5, 2),
+		Vector3i(1, 5, 2),
+		Vector3i(1, 6, 2),
+		Vector3i(4, 9, 2),
+		Vector3i(5, 9, 2)
+	]:
+		g.put(p, Color("5f9a42"), VoxelMat.GRASS)
+	g.put(Vector3i(5, 10, 2), Color("5f9a42"), VoxelMat.GRASS)
+	for dy in range(-2, 3):
+		for dx in range(-2, 3):
+			if absi(dx) == 2 and absi(dy) == 2:
+				continue
+			var ring := absi(dx) == 2 or absi(dy) == 2
+			var c := Color("f6c82a") if ring else Color("6a4022")
+			if not ring and dx == 0 and dy == 0:
+				c = Color("4a2a16")
+			g.put(Vector3i(3 + dx, 15 + dy, 3), _c(c, dx, dy, 3, 0.05), VoxelMat.FLOWER)
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			g.put(Vector3i(3 + dx, 15 + dy, 2), Color("4f8a30"), VoxelMat.GRASS)
+	return g
+
+
+## Poppy: a thin stem with a red cup and a dark eye.
+static func _poppy() -> VoxelGrid:
+	var g := _grid(5, 8, 5)
+	for y in 5:
+		g.put(Vector3i(2, y, 2), _c(Color("6a9a4a"), 2, y, 0), VoxelMat.GRASS)
+	g.put(Vector3i(1, 1, 2), Color("6a9a4a"), VoxelMat.GRASS)
+	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		g.put(
+			Vector3i(2 + o.x, 5, 2 + o.y), _c(Color("e03028"), o.x, 5, o.y, 0.06), VoxelMat.FLOWER
+		)
+	g.put(Vector3i(2, 5, 2), Color("2a2020"), VoxelMat.FLOWER)
+	return g
+
+
+## Bluebell: an arching stem with three hanging blue bells.
+static func _bluebell() -> VoxelGrid:
+	var g := _grid(5, 8, 5)
+	for y in 6:
+		g.put(Vector3i(2, y, 2), _c(Color("4f8a3a"), 2, y, 0), VoxelMat.GRASS)
+	g.put(Vector3i(3, 6, 2), Color("4f8a3a"), VoxelMat.GRASS)
+	for p in [Vector3i(3, 5, 2), Vector3i(1, 4, 2), Vector3i(2, 3, 3), Vector3i(4, 5, 2)]:
+		g.put(p, _c(Color("5a6ad8"), p.x, p.y, p.z, 0.08), VoxelMat.FLOWER)
+	g.put(Vector3i(1, 5, 2), Color("4f8a3a"), VoxelMat.GRASS)
+	for p in [Vector3i(1, 0, 1), Vector3i(3, 0, 3), Vector3i(1, 1, 1)]:
+		g.put(p, Color("5f9a42"), VoxelMat.GRASS)
+	return g
+
+
+## Forget-me-not: a low clump strewn with tiny blue flowers.
+static func _forget_me_not() -> VoxelGrid:
+	var g := _grid(6, 3, 6)
+	for z in 6:
+		for x in 6:
+			if Vector2(x - 2.5, z - 2.5).length() > 2.6:
+				continue
+			g.put(Vector3i(x, 0, z), _c(Color("4a8a3a"), x, 0, z, 0.1), VoxelMat.GRASS)
+			var h := VoxelGrid.hash01(x, 1, z, 96)
+			if h < 0.35:
+				var fc := Color("6a9ae8") if h > 0.05 else Color("f8f4ee")
+				g.put(Vector3i(x, 1, z), fc, VoxelMat.FLOWER)
+			elif h < 0.6:
+				g.put(Vector3i(x, 1, z), Color("5a9a42"), VoxelMat.GRASS)
+	return g
+
+
+## Marigold: a bushy orange pompom.
+static func _marigold() -> VoxelGrid:
+	var g := _grid(5, 6, 5)
+	for y in 2:
+		g.put(Vector3i(2, y, 2), Color("4a8a34"), VoxelMat.GRASS)
+	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		g.put(Vector3i(2 + o.x * 2, 1, 2 + o.y * 2), Color("5f9a42"), VoxelMat.GRASS)
+	for y in [2, 3]:
+		for z in range(1, 4):
+			for x in range(1, 4):
+				if y == 3 and (x != 2 and z != 2):
+					continue
+				var c := Color("f08a1a") if (x + z + y) % 2 == 0 else Color("f6a830")
+				g.put(Vector3i(x, y, z), c, VoxelMat.FLOWER)
+	g.put(Vector3i(2, 4, 2), Color("d86a10"), VoxelMat.FLOWER)
+	return g
+
+
+## Rose: a small dark-green bush with red and pink blooms on top.
+static func _rose() -> VoxelGrid:
+	var g := _grid(6, 6, 6)
+	for y in 5:
+		for z in 6:
+			for x in 6:
+				var dd := Vector3(x - 2.5, (y - 2.0) * 1.2, z - 2.5).length()
+				if dd > 2.7 + (VoxelGrid.hash01(x, y, z, 97) - 0.5) * 0.6:
+					continue
+				var c := Color("2f6a2c") if dd < 1.8 else Color("3d7a30")
+				g.put(Vector3i(x, y, z), _c(c, x, y, z, 0.08), VoxelMat.LEAVES)
+	for z in 6:
+		for x in 6:
+			for y in range(4, -1, -1):
+				if g.solid(Vector3i(x, y, z)):
+					if VoxelGrid.hash01(x, y, z, 98) < 0.3:
+						var rc := Color("d8283a") if (x + z) % 3 != 0 else Color("f0607a")
+						g.put(Vector3i(x, y + 1 if y < 4 else y, z), rc, VoxelMat.FLOWER)
+					break
+	return g
+
+
+## Iris: sword leaves and a violet flower (pond banks).
+static func _iris() -> VoxelGrid:
+	var g := _grid(5, 12, 5)
+	for k in 3:
+		var p: Vector2i = [Vector2i(2, 2), Vector2i(1, 2), Vector2i(3, 3)][k]
+		var h := 8 - k * 2
+		for y in h:
+			var dx := 1 if (k == 1 and y > h - 3) else 0
+			g.put(
+				Vector3i(p.x - dx, y, p.y),
+				_c(Color("4a8a4a").lerp(Color("6aa25a"), float(y) / h), p.x, y, p.y),
+				VoxelMat.GRASS
+			)
+	for p in [Vector3i(2, 8, 2), Vector3i(1, 9, 2), Vector3i(3, 9, 2), Vector3i(2, 9, 1)]:
+		g.put(p, Color("6a4ac8"), VoxelMat.FLOWER)
+	g.put(Vector3i(2, 10, 2), Color("8a6ae0"), VoxelMat.FLOWER)
+	g.put(Vector3i(2, 9, 3), Color("f2c83a"), VoxelMat.FLOWER)
+	return g
+
+
+## Underwater weed: wavy strands (variants 0 / 1) or a broad-leaved clump (2).
+static func _weed(v: int) -> VoxelGrid:
+	var h := 12 + v * 4
+	var g := _grid(6, h + 1, 6)
+	var base := Color("2e5a2a") if v != 1 else Color("3a5a24")
+	var tip := Color("5a8a3a") if v != 1 else Color("8a9a3a")
+	if v == 2:
+		for k in 5:
+			var a := k * 1.3
+			for y in h - 4 - k:
+				var x := 3 + roundi(cos(a) * minf(y * 0.3, 2.0))
+				var z := 3 + roundi(sin(a) * minf(y * 0.3, 2.0))
+				g.put(
+					Vector3i(clampi(x, 0, 5), y, clampi(z, 0, 5)),
+					_c(base.lerp(tip, float(y) / h), x, y, z),
+					VoxelMat.LEAVES
+				)
+		return g
+	for i in 3:
+		var s: Vector2i = [Vector2i(2, 2), Vector2i(4, 3), Vector2i(2, 4)][i]
+		var hh := h - i * 3
+		for y in hh:
+			var x := s.x + roundi(sin(y * 0.55 + i * 2.0) * 0.8)
+			g.put(
+				Vector3i(clampi(x, 0, 5), y, s.y),
+				_c(base.lerp(tip, float(y) / hh), x, y, i),
+				VoxelMat.LEAVES
+			)
+	return g
+
+
+## A flat stepping stone set into the lawn.
+static func _flat_stone() -> VoxelGrid:
+	var g := _grid(8, 1, 6)
+	for z in 6:
+		for x in 8:
+			if Vector2((x - 3.5) / 4.0, (z - 2.5) / 3.0).length() > 1.0:
+				continue
+			g.put(Vector3i(x, 0, z), _c(Color("a8a29a"), x >> 1, 0, z >> 1, 0.08), VoxelMat.STONE)
+	return g
+
+
+## Corn: a tall stalk with long leaves, a cob and a tassel.
+static func _corn() -> VoxelGrid:
+	var g := _grid(7, 27, 7)
+	for y in 22:
+		g.put(Vector3i(3, y, 3), _c(Color("6a9a3a"), 3, y, 3), VoxelMat.CROP)
+	for k in 4:
+		var y0 := 6 + k * 4
+		var o: Vector2i = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)][k]
+		for s in range(1, 4):
+			g.put(
+				Vector3i(3 + o.x * s, y0 - (s >> 1), 3 + o.y * s),
+				Color("7aaa44").darkened(0.05 * s),
+				VoxelMat.CROP
+			)
+	for y in range(12, 16):
+		g.put(Vector3i(4, y, 3), Color("e8c040") if y < 15 else Color("7a9a44"), VoxelMat.CROP)
+	for y in range(22, 25):
+		g.put(Vector3i(3, y, 3), Color("d8c070"), VoxelMat.CROP)
+	g.put(Vector3i(2, 24, 3), Color("d8c070"), VoxelMat.CROP)
+	return g
+
+
+## Tomato: a cane with the vine climbing it and red fruit.
+static func _tomato() -> VoxelGrid:
+	var g := _grid(6, 16, 6)
+	for y in 15:
+		g.put(Vector3i(3, y, 3), Color("a07a4a"), VoxelMat.WOOD)
+	for y in range(1, 13):
+		for o in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+			var p := Vector3i(3 + o.x, y, 3 + o.y)
+			var h := VoxelGrid.hash01(p.x, y, p.z, 99)
+			if h < 0.5:
+				g.put(p, _c(Color("4f8a34"), p.x, y, p.z), VoxelMat.CROP)
+			elif h < 0.58 and y < 10:
+				g.put(p, Color("d82a1a"), VoxelMat.CROP)
+	return g
+
+
+## Lettuce: a pale-green rosette.
+static func _lettuce() -> VoxelGrid:
+	var g := _grid(6, 3, 6)
+	for y in 3:
+		var r := 2.8 - y * 0.9
+		for z in 6:
+			for x in 6:
+				if Vector2(x - 2.5, z - 2.5).length() > r:
+					continue
+				var c: Color = [Color("6ab04a"), Color("8ac860"), Color("b0e080")][y]
+				g.put(Vector3i(x, y, z), _c(c, x, y, z, 0.06), VoxelMat.CROP)
+	return g
+
+
+## Strawberry: a low clump of leaves with red berries and a white flower.
+static func _strawberry() -> VoxelGrid:
+	var g := _grid(6, 3, 6)
+	for z in 6:
+		for x in 6:
+			var dd := Vector2(x - 2.5, z - 2.5).length()
+			if dd > 2.7:
+				continue
+			var h := VoxelGrid.hash01(x, 0, z, 100)
+			if dd > 1.8 and h < 0.3:
+				g.put(Vector3i(x, 0, z), Color("e02a3a"), VoxelMat.CROP)
+			elif h < 0.85:
+				g.put(Vector3i(x, int(dd < 1.5), z), _c(Color("3f8a34"), x, 0, z), VoxelMat.CROP)
+	g.put(Vector3i(2, 2, 3), Color("f8f4ee"), VoxelMat.FLOWER)
+	return g
+
+
 ## Lettering: 3 x 5 glyphs, one detail voxel deep, standing in the x/y plane.
 static func _text(s: String) -> VoxelGrid:
 	var w := s.length() * 4 - 1
@@ -429,42 +754,35 @@ static func _tile(gen: VoxelZoneGen, t: Vector2i, crop_of: Dictionary, cherry: D
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(t) ^ 0x5eed
 	if th == "crop":
-		var crop := String(crop_of.get(t, "cabbage"))
-		var n := 2 if crop in ["pumpkin", "cabbage"] else 4
-		for i in n:
-			var u := 0.25 + 0.5 * (i % 2)
-			var v := 0.25 + 0.5 * (i / 2) if n == 4 else 0.3 + 0.4 * i
-			if n == 2:
-				u = 0.5
-			gen.add_decor(
-				crop, _xf(_spot(gen, t, u, v), rng.randf() * TAU, rng.randf_range(0.9, 1.15))
-			)
+		_crops(gen, t, String(crop_of.get(t, "cabbage")), rng)
 		return
 	if th != "" and th != "forest":
-		if th in ["fence", "hedge", "lamp", "bench"] and kind in ["lawn", "meadow"]:
+		if th in ["fence", "hedge", "lamp", "bench", "pillar"] and kind in ["lawn", "meadow"]:
 			_tufts(gen, t, rng, 1, "tuft_0")
+			if th == "fence" and h0 < 0.3:
+				_put(gen, t, rng, "sunflower" if h0 < 0.12 else "grass_clump")
 		return
 	if gen.blocks.has(t) and th != "forest":
 		return
 	match kind:
 		"lawn":
 			var n := 1 + int(h0 * 3.0)
-			if gen.dist_walk(t) == 0 and _next_to(gen, t, ["cobble", "slab", "dirt"]):
+			var by_path := gen.dist_walk(t) == 0 and _next_to(gen, t, ["cobble", "slab", "dirt"])
+			if by_path:
 				n += 2
+				if h0 < 0.35:
+					_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 			_tufts(gen, t, rng, n, "")
 			if h0 < 0.12:
-				gen.add_decor(
-					"clover", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, "clover")
 			elif h0 > 0.9:
-				gen.add_decor(
-					"daisy", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
-			elif h0 > 0.86:
-				gen.add_decor(
-					_patch_flower(gen, t),
-					_xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, "daisy")
+			elif h0 > 0.8:
+				_put(gen, t, rng, WILD[rng.randi() % WILD.size()])
+			elif h0 > 0.76:
+				_put(gen, t, rng, _patch_flower(gen, t))
+			if h0 > 0.45 and h0 < 0.5:
+				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 		"meadow":
 			for i in 4 + int(h0 * 3.0):
 				var m: String = (
@@ -472,112 +790,127 @@ static func _tile(gen: VoxelZoneGen, t: Vector2i, crop_of: Dictionary, cherry: D
 					if rng.randf() < 0.55
 					else ("tuft_dry" if rng.randf() < 0.3 else "tuft_1")
 				)
-				gen.add_decor(
-					m,
-					_xf(
-						_spot(gen, t, rng.randf(), rng.randf()),
-						rng.randf() * TAU,
-						rng.randf_range(0.8, 1.25)
-					)
-				)
-			if h0 < 0.5:
-				gen.add_decor(
-					_patch_flower(gen, t),
-					_xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
-			if h0 > 0.8:
-				gen.add_decor(
-					"daisy", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, m, rng.randf_range(0.8, 1.25))
+			if h0 < 0.55:
+				_put(gen, t, rng, WILD[int(h0 * 97.0) % WILD.size()])
+			if h0 < 0.2:
+				_put(gen, t, rng, WILD[int(h0 * 53.0) % WILD.size()])
+			if h0 > 0.85:
+				_put(gen, t, rng, "grass_clump")
+			if h0 > 0.95:
+				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 		"flowers":
 			var main := _patch_flower(gen, t)
-			for i in 7 + int(h0 * 4.0):
+			var n := 6 + int(h0 * 4.0)
+			if main == "rose" or main == "lavender":
+				n = 3 + int(h0 * 2.0)
+			for i in n:
 				var m := (
-					main if rng.randf() < 0.7 else String(FLOWERS[rng.randi() % FLOWERS.size()])
+					main if rng.randf() < 0.75 else String(FLOWERS[rng.randi() % FLOWERS.size()])
 				)
-				gen.add_decor(
-					m,
-					_xf(
-						_spot(gen, t, rng.randf_range(0.05, 0.95), rng.randf_range(0.05, 0.95)),
-						rng.randf() * TAU,
-						rng.randf_range(0.85, 1.2)
-					)
-				)
+				var p := _spot(gen, t, rng.randf_range(0.08, 0.92), rng.randf_range(0.08, 0.92))
+				gen.add_decor(m, _xf(p, rng.randf() * TAU, rng.randf_range(0.85, 1.2)))
 			_tufts(gen, t, rng, 2, "tuft_2")
+			if _next_to_thing(gen, t, ["fence", "hedge"]) and h0 < 0.25:
+				_put(gen, t, rng, "sunflower")
 		"forest_floor":
 			var near := gen.dist_walk(t) <= 6
 			if not near and h0 > 0.45:
 				return
 			if h0 < 0.35:
-				gen.add_decor(
-					"fern_%d" % (rng.randi() % 2),
-					_xf(
-						_spot(gen, t, rng.randf(), rng.randf()),
-						rng.randf() * TAU,
-						rng.randf_range(0.8, 1.3)
-					)
-				)
+				_put(gen, t, rng, "fern_%d" % (rng.randi() % 2), rng.randf_range(0.8, 1.3))
 			if h0 > 0.92:
-				gen.add_decor(
-					"mushroom_red" if h0 > 0.97 else "mushroom_brown",
-					_xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, "mushroom_red" if h0 > 0.97 else "mushroom_brown")
 			if h0 > 0.4 and h0 < 0.7:
-				gen.add_decor(
-					"leaves", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, "leaves")
+			if near and h0 > 0.35 and h0 < 0.42:
+				_put(gen, t, rng, "bluebell")
+				_put(gen, t, rng, "bluebell")
 			_tufts(gen, t, rng, 1, "tuft_dark")
 		"sand":
-			if h0 < 0.35:
-				gen.add_decor(
-					"pebble_%d" % (rng.randi() % 3),
-					_xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+			if h0 < 0.45:
+				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
+			if h0 < 0.15:
+				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 			if h0 > 0.93:
-				gen.add_decor(
-					"shell", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+				_put(gen, t, rng, "shell")
 			if _next_to(gen, t, ["lawn", "meadow"]):
 				_tufts(gen, t, rng, 1, "tuft_dry")
+			if _next_to(gen, t, ["shallow"]) and h0 > 0.6 and h0 < 0.75:
+				_put(gen, t, rng, "iris")
 		"dirt", "soil":
-			if h0 < 0.2:
-				gen.add_decor(
-					"pebble_%d" % (rng.randi() % 3),
-					_xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU)
-				)
+			if h0 < 0.3:
+				_put(gen, t, rng, "pebble_%d" % (rng.randi() % 5))
 			if _next_to(gen, t, ["lawn", "meadow"]) and h0 > 0.5:
 				_tufts(gen, t, rng, 1, "tuft_0")
 		"cobble", "slab":
 			if h0 < 0.05 and _next_to(gen, t, ["lawn", "meadow", "flowers"]):
 				_tufts(gen, t, rng, 1, "tuft_0")
 		"shallow", "deep":
-			var shore := _next_to(gen, t, ["lawn", "meadow", "sand", "forest_floor", "flowers"])
-			if shore and kind == "shallow" and h0 < 0.55:
-				for i in 2 + int(h0 * 4.0):
-					gen.add_decor(
-						"reed_%d" % (rng.randi() % 2),
-						_xf(
-							(
-								_spot(gen, t, rng.randf(), rng.randf()) * Vector3(1, 0, 1)
-								+ Vector3(0, -0.5, 0)
-							),
-							rng.randf() * TAU,
-							rng.randf_range(0.85, 1.2)
-						)
-					)
-			elif not shore and h0 > 0.84:
-				var w := gen.water_at(t.x, t.y)
-				var lvl := float(w.get("level", VoxelZoneGen.WATER_Y))
-				var lp := Vector3(
-					t.x + rng.randf_range(-0.3, 0.3), lvl + 0.005, t.y + rng.randf_range(-0.3, 0.3)
-				)
-				gen.add_decor(
-					"lily_%d" % (1 if h0 > 0.95 else 0),
-					_xf(lp, rng.randf() * TAU, rng.randf_range(0.9, 1.3))
-				)
+			_water_tile(gen, t, kind, h0, rng)
 	if cherry.has(t) and kind in ["lawn", "slab", "cobble", "meadow", "flowers"]:
 		for i in 2:
-			gen.add_decor("petals", _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU))
+			_put(gen, t, rng, "petals")
+
+
+## Reeds and irises along the shallow shore, lily pads on open water, weeds on the deeper bed.
+static func _water_tile(
+	gen: VoxelZoneGen, t: Vector2i, kind: String, h0: float, rng: RandomNumberGenerator
+) -> void:
+	var shore := _next_to(gen, t, ["lawn", "meadow", "sand", "forest_floor", "flowers"])
+	var w := gen.water_at(t.x, t.y)
+	var lvl := float(w.get("level", VoxelZoneGen.WATER_Y))
+	var stream := String(w.get("type", "pond")) == "stream"
+	if shore and kind == "shallow" and h0 < 0.55:
+		for i in 2 + int(h0 * 4.0):
+			_put(gen, t, rng, "reed_%d" % (rng.randi() % 2), rng.randf_range(0.85, 1.2))
+		if h0 < 0.12:
+			_put(gen, t, rng, "iris")
+		return
+	if not shore and not stream and h0 > 0.8:
+		var lp := Vector3(
+			t.x + rng.randf_range(-0.3, 0.3), lvl + 0.005, t.y + rng.randf_range(-0.3, 0.3)
+		)
+		gen.add_decor(
+			"lily_%d" % (1 if h0 > 0.93 else 0),
+			_xf(lp, rng.randf() * TAU, rng.randf_range(0.9, 1.3))
+		)
+	if h0 > 0.15 and h0 < 0.6:
+		for i in 1 + int(h0 * 3.0):
+			var p := _spot(gen, t, rng.randf(), rng.randf())
+			var depth := lvl - p.y
+			if depth < 0.3:
+				continue
+			var m: String = WEEDS[rng.randi() % WEEDS.size()]
+			var sc := clampf(depth / 1.3, 0.35, 1.0) * rng.randf_range(0.8, 1.05)
+			gen.add_decor(m, _xf(p, rng.randf() * TAU, sc))
+
+
+## Crop plants of a 'c' tile: rows of two or four per tile.
+static func _crops(
+	gen: VoxelZoneGen, t: Vector2i, crop: String, rng: RandomNumberGenerator
+) -> void:
+	var n := 2 if crop in ["pumpkin", "cabbage", "tomato"] else 4
+	for i in n:
+		var u := 0.25 + 0.5 * (i % 2)
+		var v := 0.25 + 0.5 * (i / 2) if n == 4 else 0.3 + 0.4 * i
+		if n == 2:
+			u = 0.5
+		gen.add_decor(crop, _xf(_spot(gen, t, u, v), rng.randf() * TAU, rng.randf_range(0.9, 1.15)))
+
+
+## One instance of model m at a random spot of tile t (random yaw, scale s).
+static func _put(
+	gen: VoxelZoneGen, t: Vector2i, rng: RandomNumberGenerator, m: String, s := 1.0
+) -> void:
+	gen.add_decor(m, _xf(_spot(gen, t, rng.randf(), rng.randf()), rng.randf() * TAU, s))
+
+
+static func _next_to_thing(gen: VoxelZoneGen, t: Vector2i, kinds: Array) -> bool:
+	for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if gen.d.thing_kind(t + o) in kinds:
+			return true
+	return false
 
 
 static func _tufts(

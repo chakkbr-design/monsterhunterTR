@@ -10,10 +10,13 @@ extends RefCounted
 ## FastNoiseLite with a fixed seed. Bump VERSION whenever the output changes for the same inputs
 ## (the bake hash includes it, tests/world/test_voxel_zone.gd fails on a stale bake).
 
-const VERSION := 1
+const VERSION := 2
 const Y_MIN := -10  ## lowest voxel layer (-2.5 m): water beds and banks go down to here
 const Y_LAYERS := 60  ## up to voxel 49 (12.5 m): roofs, chimneys, tall trees
-const WATER_Y := -0.19  ## default water surface (m): a small bank under the ground top
+## Default water surface (m): 12 cm under the bank top (y 0), 13 cm over the first bed step, as
+## gfx/water expects (the shore foam follows the voxel steps of the bed).
+const WATER_Y := -0.12
+const BED_STEP := 2.5  ## columns (0.25 m) per bed terrace: the bed drops one voxel every ~0.6 m
 const SOLID_H := 4.0  ## height of the tile colliders (m)
 const CROWN_CELL := 8  ## metres per crown part cell (sway + see-through fading per cell)
 const PART_CROWN0 := 32  ## first crown part id (buildings use 1..31)
@@ -26,7 +29,10 @@ var g: VoxelGrid
 var tiles: TileGrid
 ## Per voxel column (index (x - ox) + sx * (z - oz)): top solid voxel y of the terrain.
 var top := PackedInt32Array()
-var wet := PackedByteArray()  ## 1 = water column (carved)
+var wet := PackedByteArray()  ## 1 = water column (carved), 2 = weir (stone sill between bodies)
+## Per column: index in `waters` of the water body it belongs to (-1 = dry).
+var body := PackedInt32Array()
+var waters: Array = []  ## the design's water objects (a body each; index = body id)
 ## Tile analysis (index over the design extent).
 var walk_dist := PackedInt32Array()  ## Chebyshev distance to the nearest walkable tile
 var water_dist := PackedInt32Array()
@@ -39,6 +45,7 @@ var meta := {
 	"buildings": [],
 	"lights": [],
 	"water": [],
+	"cascades": [],
 	"fountains": [],
 	"parts": {},
 	"crowns": [],
@@ -109,6 +116,11 @@ func setup(id: String) -> bool:
 	top.resize(_sx * _sz)
 	top.fill(-1)
 	wet.resize(_sx * _sz)
+	body.resize(_sx * _sz)
+	body.fill(-1)
+	for o in d.objects:
+		if String(o.get("kind", "")) == "water":
+			waters.append(o)
 	return true
 
 
@@ -169,7 +181,7 @@ func ground_y(t: Vector2i) -> float:
 
 
 func is_wet_col(vx: int, vz: int) -> bool:
-	return has_col(vx, vz) and wet[col(vx, vz)] == 1
+	return has_col(vx, vz) and wet[col(vx, vz)] != 0
 
 
 func _ti(t: Vector2i) -> int:
@@ -360,8 +372,13 @@ func _depth_of(t: Vector2i) -> float:
 	return 0.0
 
 
-## Smooth water outline at voxel resolution (bilinear between tile centres + noise), then a bed that
-## slopes down from the shore (distance transform over the columns).
+## Smooth water outline at voxel resolution (bilinear between tile centres + noise), then a stepped
+## bed: terraces one voxel deeper every BED_STEP columns from the shore (distance transform over the
+## columns, the edges wobbled by noise), down to the tile's depth ('~' shallow, 'w' deep) capped by
+## the body's "depth". The first step is one voxel under the body's level voxel, so with the level
+## 12 cm under the bank the shallows hold 13 cm of water. Every wet column belongs to the water body
+## (design water object) whose rect holds it; where a lower body meets a higher one a stone weir
+## steps down between them and a cascade sheet joins the two surfaces (meta.cascades).
 func _carve_water() -> void:
 	var dist := PackedInt32Array()
 	dist.resize(_sx * _sz)
@@ -382,8 +399,11 @@ func _carve_water() -> void:
 			)
 			v += noise2.get_noise_2d(mx * 3.0, mz * 3.0) * 0.22
 			var i := col(vx, vz)
-			if v > 0.5 and top[i] == -1:
+			# Water under every deck voxel (no dry ground under a dock plank or a bridge).
+			var deck := d.ground_kind(Vector2i(roundi(mx), roundi(mz))) in VoxelDesign.OVER_WATER
+			if (v > 0.5 or deck) and top[i] == -1:
 				wet[i] = 1
+				body[i] = body_at(mx, mz)
 			else:
 				dist[i] = 0
 				q.append(Vector2i(vx, vz))
@@ -417,30 +437,111 @@ func _carve_water() -> void:
 				lerpf(_depth_of(Vector2i(x0, z0 + 1)), _depth_of(Vector2i(x0 + 1, z0 + 1)), fx),
 				fz
 			)
-			var w := water_at(mx, mz)
-			want = maxf(want, float(w.get("depth", 0.0)) * clampf(want / 1.45, 0.3, 1.0))
-			var dm := minf(maxf(want, 0.3), 0.2 + dist[i] * 0.22)
-			dm += noise2.get_noise_2d(mx * 1.7, mz * 1.7) * 0.12
-			var dv := clampi(roundi(dm / VoxelGrid.VS), 1, 7)
-			top[i] = maxi(floori(float(w.get("level", WATER_Y)) / VoxelGrid.VS) - dv, Y_MIN + 1)
+			var w := body_info(body[i])
+			want = minf(want, float(w.get("depth", 1.5)))
+			var maxdv := clampi(roundi(want / VoxelGrid.VS), 1, 7)
+			var n := noise2.get_noise_2d(mx * 1.3 + 7.0, mz * 1.3)
+			var dv := clampi(1 + floori((dist[i] - 1 + n * 2.2) / BED_STEP), 1, maxdv)
+			top[i] = maxi(level_vox(body[i]) - dv, Y_MIN + 1)
+	_weirs()
+
+
+## Voxel layer holding a body's water level (its bank top is one layer up: y = 0 for -0.12).
+func level_vox(b: int) -> int:
+	return floori(float(body_info(b).get("level", WATER_Y)) / VoxelGrid.VS)
+
+
+## Water level (m) of a body (-1 = the default level).
+func level_of(b: int) -> float:
+	return float(body_info(b).get("level", WATER_Y))
+
+
+func body_info(b: int) -> Dictionary:
+	return waters[b] if b >= 0 and b < waters.size() else {}
+
+
+## Index of the water body whose rect holds metre point (x, z) (-1 = none).
+func body_at(x: float, z: float) -> int:
+	for k in waters.size():
+		var r: Array = waters[k].rect
+		if x >= r[0] - 0.5 and x < r[2] + 0.5 and z >= r[1] - 0.5 and z < r[3] + 0.5:
+			return k
+	return -1
 
 
 ## The design's water object (pond / stream) whose rect holds metre point (x, z), else {}.
 func water_at(x: float, z: float) -> Dictionary:
-	for o in d.objects:
-		if String(o.get("kind", "")) != "water":
-			continue
-		var r: Array = o.rect
-		if x >= r[0] - 0.5 and x < r[2] + 0.5 and z >= r[1] - 0.5 and z < r[3] + 0.5:
-			return o
-	return {}
+	return body_info(body_at(x, z))
 
 
-## Water surfaces (metadata): one per design water object.
+## Body of the wet column under metre point (x, z) (-1 = dry).
+func body_of_col(vx: int, vz: int) -> int:
+	return body[col(vx, vz)] if has_col(vx, vz) else -1
+
+
+## Weirs: the wet columns of a lower body that touch a higher body become a two-step stone sill
+## (the first a voxel under the higher level, the second one lower), and each meeting line becomes
+## a cascade: a sheet from the higher surface down to the lower one (meta.cascades).
+func _weirs() -> void:
+	var lines := {}  # [high, low] -> {"cols": [Vector2i], "dir": Vector2}
+	for vz in range(_oz, _oz + _sz):
+		for vx in range(_ox, _ox + _sx):
+			var i := col(vx, vz)
+			var b := body[i]
+			if wet[i] == 0 or b < 0:
+				continue
+			for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var u: Vector2i = Vector2i(vx, vz) + o
+				var b2 := body_of_col(u.x, u.y)
+				if b2 < 0 or b2 == b or level_of(b2) <= level_of(b) + 0.05:
+					continue
+				var key := [b2, b]
+				if not lines.has(key):
+					lines[key] = {"cols": [], "dir": Vector2.ZERO}
+				lines[key].cols.append(Vector2i(vx, vz))
+				lines[key].dir += Vector2(-o.x, -o.y)
+				wet[i] = 2
+				top[i] = maxi(top[i], level_vox(b2) - 1)
+				# The second step, one column further into the lower body.
+				var s: Vector2i = Vector2i(vx, vz) - o
+				if has_col(s.x, s.y) and wet[col(s.x, s.y)] == 1 and body[col(s.x, s.y)] == b:
+					wet[col(s.x, s.y)] = 2
+					top[col(s.x, s.y)] = maxi(top[col(s.x, s.y)], level_vox(b2) - 2)
+				break
+	for key in lines:
+		var cols: Array = lines[key].cols
+		var dir: Vector2 = (lines[key].dir as Vector2).normalized()
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		for c in cols:
+			lo = Vector2(minf(lo.x, c.x), minf(lo.y, c.y))
+			hi = Vector2(maxf(hi.x, c.x + 1), maxf(hi.y, c.y + 1))
+		lo *= VoxelGrid.VS
+		hi *= VoxelGrid.VS
+		var mid := (lo + hi) * 0.5
+		var along := (hi - lo).x if absf(dir.x) < absf(dir.y) else (hi - lo).y
+		# The lip sits on the meeting line (the high side of the weir columns).
+		var lip := mid - dir * (absf(dir.x) * (hi - lo).x + absf(dir.y) * (hi - lo).y) * 0.5
+		var hl := level_of(key[0])
+		var ll := level_of(key[1])
+		(
+			meta
+			. cascades
+			. append(
+				{
+					"from": Vector3(lip.x, hl, lip.y),
+					"to": Vector3(lip.x + dir.x * 0.55, ll, lip.y + dir.y * 0.55),
+					"width": maxf(along - 0.3, 0.5),
+					"high": key[0],
+					"low": key[1],
+				}
+			)
+		)
+
+
+## Water surfaces (metadata): one per body (design water object), never overlapping.
 func _water_meta() -> void:
-	for o in d.objects:
-		if String(o.get("kind", "")) != "water":
-			continue
+	for o in waters:
 		var r: Array = o.rect
 		var f: Array = o.get("flow", [0, 0])
 		var e := {
@@ -484,7 +585,7 @@ func _paint_terrain() -> void:
 					else:
 						c = VoxelPal.at(VoxelPal.ROCK_DARK, Vector3i(vx, y, vz), 0.1, 3)
 						m = VoxelMat.STONE
-					if wet[i] == 1 and depth <= 2:
+					if wet[i] != 0 and depth <= 2:
 						c = VoxelPal.at(VoxelPal.BED_MUD, Vector3i(vx, y, vz), 0.1, 4)
 						m = VoxelMat.BED
 				var k := (base + sxz * (y - Y_MIN)) * 4
@@ -501,12 +602,27 @@ func _paint_terrain() -> void:
 func _surface(t: Vector2i, vx: int, vz: int, lx: int, lz: int, tp: int) -> Array:
 	var v := Vector3i(vx, tp, vz)
 	var i := col(vx, vz)
-	if wet[i] == 1:
-		var deep := clampf((-1.0 - tp) / 6.0, 0.0, 1.0)
+	if wet[i] != 0:
+		var steps := level_vox(body[i]) - tp  # 1 = the first terrace under the shore
+		if wet[i] == 2:  # weir stones: dry above the lower water, the bed under it
+			var rc := VoxelPal.ROCK_LIGHT if (vx + vz + tp) % 3 != 0 else VoxelPal.ROCK
+			if VoxelGrid.hash01(vx, 2, vz, 5) < 0.25:
+				rc = VoxelPal.MOSS
+			var rm := VoxelMat.STONE if steps <= 0 else VoxelMat.BED
+			return [VoxelPal.at(rc, v, 0.08, 6), rm, VoxelPal.ROCK, VoxelMat.STONE]
+		var deep := clampf((steps - 1) / 4.0, 0.0, 1.0)
 		var bc := VoxelPal.BED_SAND.lerp(VoxelPal.BED_MUD, deep)
-		bc = VoxelPal.vary(bc, VoxelGrid.hash01(vx, 0, vz, 5), 0.12)
-		if VoxelGrid.hash01(vx, 1, vz, 6) < 0.08:
+		var hp := noise.get_noise_2d(vx * 0.9, vz * 0.9)
+		if steps <= 2 and hp > 0.25:
+			bc = VoxelPal.BED_SAND.lightened(0.08)  # pale sand bars in the shallows
+		elif hp < -0.35:
+			bc = bc.lerp(VoxelPal.BED_GRAVEL, 0.7)  # gravel patches
+		bc = VoxelPal.vary(bc, VoxelGrid.hash01(vx, 0, vz, 5), 0.1)
+		var hr := VoxelGrid.hash01(vx, 1, vz, 6)
+		if hr < 0.06:
 			bc = VoxelPal.at(VoxelPal.ROCK, v, 0.15, 7)
+		elif hr < 0.09:
+			bc = VoxelPal.at(VoxelPal.ROCK_LIGHT, v, 0.1, 7)
 		return [bc, VoxelMat.BED, VoxelPal.BED_MUD, VoxelMat.BED]
 	var kind := d.ground_kind(t)
 	if tp > -1:  # relief: forest floor on top, earth under
@@ -690,6 +806,7 @@ func meta_json() -> Dictionary:
 		"buildings": [],
 		"lights": [],
 		"water": [],
+		"cascades": _jsonable(meta.cascades),
 		"fountains": [],
 		"parts": {},
 		"crowns": meta.crowns,

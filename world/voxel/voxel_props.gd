@@ -573,76 +573,104 @@ static func _well(gen: VoxelZoneGen, r: Rect2i) -> void:
 # --- big objects -----------------------------------------------------------------------------------
 
 
-## Two-tier fountain in the tiles of rect r: a sunken round basin with a raised rim, a pedestal
-## carrying a square upper bowl that overflows on four sides, and a finial with the jet.
+## Three-tier stone fountain in the tiles of rect r (FountainFx adds the water): a round lower basin
+## (coping 0.5 m high over a plinth step, mosaic floor a voxel under the plaza), a pedestal carrying
+## a round middle bowl with four overflow notches, a slim column and a small top bowl with the
+## nozzle. The water levels sit 12 cm under each rim; meta.fountains holds the FountainFx spec:
+## basins, the top jet, a crown of arcs from the coping, spout sheets from the notches and the top
+## bowl's overflow curtain.
 static func _fountain(gen: VoxelZoneGen, r: Rect2i) -> void:
 	var cx := _v0(r.position.x) + r.size.x * 2.0  # voxel coordinates of the centre
 	var cz := _v0(r.position.y) + r.size.y * 2.0
-	var rr := r.size.x * 2.0 - 0.4  # outer rim radius (voxels)
-	var inner := rr - 1.7
-	var floor_y := -4
+	var s := r.size.x / 5.0  # 1 for the 5 x 5 tile fountain
+	var r_plinth := 9.8 * s
+	var r_out := 8.8 * s  # basin wall
+	var r_in := 7.4 * s
+	var stone := VoxelPal.STONE_WALL_LIGHT
+	var cope := VoxelPal.SLAB.lightened(0.1)
 	var mosaic := [Color("4f8f96"), Color("5ea3a6"), Color("e8e2d2"), Color("3d7480")]
-	for z in range(floori(cz - rr) - 1, ceili(cz + rr) + 1):
-		for x in range(floori(cx - rr) - 1, ceili(cx + rr) + 1):
+	var x0 := floori(cx - r_plinth) - 1
+	var x1 := ceili(cx + r_plinth) + 1
+	var z0 := floori(cz - r_plinth) - 1
+	var z1 := ceili(cz + r_plinth) + 1
+	for z in range(z0, z1):
+		for x in range(x0, x1):
 			var dd := Vector2(x + 0.5 - cx, z + 0.5 - cz).length()
-			if dd > rr:
+			var ang := atan2(z + 0.5 - cz, x + 0.5 - cx)
+			if dd >= r_plinth:
 				continue
-			if dd > inner:  # rim: down to the basin floor, two voxels above the plaza
-				for y in range(floor_y, 2):
-					var c := VoxelBuild.stone(
-						int(atan2(z + 0.5 - cz, x + 0.5 - cx) * 8.0), y, VoxelPal.SLAB, 11
-					)
+			if dd >= r_out + 0.6:  # plinth step around the basin
+				var pc := VoxelBuild.stone(int(ang * 9.0), 0, VoxelPal.STONE_WALL_DARK, 10)
+				gen.g.put(Vector3i(x, 0, z), pc, VoxelMat.STONE)
+				continue
+			if dd >= r_in:  # basin wall, the coping overhangs it by a voxel
+				for y in range(-2, 2):
+					var c := VoxelBuild.stone(int(ang * 10.0), y, stone, 11)
+					var m := VoxelMat.STONE
 					if y == 1:
-						c = VoxelPal.SLAB.lightened(0.08) if dd < rr - 0.6 else VoxelPal.SLAB_BORDER
-					gen.g.put(Vector3i(x, y, z), c, VoxelMat.SLAB if y == 1 else VoxelMat.STONE)
+						c = VoxelPal.vary(cope, VoxelGrid.hash01(x, 1, z, 83), 0.04)
+						m = VoxelMat.SLAB
+					elif dd >= r_out:
+						if y < 0:
+							continue
+						c = VoxelBuild.stone(int(ang * 9.0), 0, VoxelPal.STONE_WALL_DARK, 10)
+					gen.g.put(Vector3i(x, y, z), c, m)
 				continue
-			for y in range(floor_y + 1, 0):
-				gen.g.put(Vector3i(x, y, z), Color.BLACK, 0)
-			var ring := int(dd / 1.5)
+			# Basin: plaza layer cleared, mosaic floor one voxel down.
+			gen.g.put(Vector3i(x, -1, z), Color.BLACK, 0)
+			var ring := int(dd / 1.6)
 			var mc: Color = mosaic[(ring + (1 if (x + z) % 5 == 0 else 0)) % mosaic.size()]
 			gen.g.put(
-				Vector3i(x, floor_y, z),
-				VoxelPal.vary(mc, VoxelGrid.hash01(x, 0, z, 83), 0.05),
+				Vector3i(x, -2, z),
+				VoxelPal.vary(mc, VoxelGrid.hash01(x, 0, z, 84), 0.05),
 				VoxelMat.BED
 			)
-	# Pedestal.
-	var ix := floori(cx)
-	var iz := floori(cz)
-	for y in range(floor_y + 1, 6):
-		for z in range(iz - 2, iz + 2):
-			for x in range(ix - 2, ix + 2):
-				var corner := (x == ix - 2 or x == ix + 1) and (z == iz - 2 or z == iz + 1)
-				if corner and y > floor_y + 2 and y < 5:
+	var dark := VoxelPal.STONE_WALL
+	# Pedestal (r 0.4 m) up to the middle bowl, its floor, rim and notches (N, E, S, W).
+	gen.g.cylinder(cx, cz, 1.6, -2, 2, dark, VoxelMat.STONE, 0, _paint(dark, 0.06, 85))
+	gen.g.cylinder(cx, cz, 4.0, 3, 3, stone, VoxelMat.STONE, 0, _paint(stone, 0.06, 86))
+	for y in [4, 5]:
+		for z in range(floori(cz) - 5, floori(cz) + 6):
+			for x in range(floori(cx) - 5, floori(cx) + 6):
+				var c := Vector2(x + 0.5 - cx, z + 0.5 - cz)
+				if c.length() < 3.0 or c.length() >= 4.0:
 					continue
-				gen.g.put(
-					Vector3i(x, y, z),
-					VoxelBuild.stone(x + z, y, VoxelPal.STONE_WALL_LIGHT, 12),
-					VoxelMat.STONE
-				)
-	# Upper bowl: square, rim one voxel high, overflowing.
-	for z in range(iz - 4, iz + 4):
-		for x in range(ix - 4, ix + 4):
-			var rim := x == ix - 4 or x == ix + 3 or z == iz - 4 or z == iz + 3
-			gen.g.put(Vector3i(x, 6, z), VoxelBuild.stone(x, z, VoxelPal.SLAB, 13), VoxelMat.SLAB)
-			if rim:
-				gen.g.put(Vector3i(x, 7, z), VoxelPal.SLAB.lightened(0.06), VoxelMat.SLAB)
-	# Finial: a small column and a ball.
-	for y in range(7, 10):
-		gen.g.put(Vector3i(ix - 1, y, iz - 1), VoxelPal.STONE_WALL_LIGHT, VoxelMat.STONE)
-		gen.g.put(Vector3i(ix, y, iz), VoxelPal.STONE_WALL_LIGHT, VoxelMat.STONE)
-		gen.g.put(Vector3i(ix - 1, y, iz), VoxelPal.STONE_WALL_LIGHT, VoxelMat.STONE)
-		gen.g.put(Vector3i(ix, y, iz - 1), VoxelPal.STONE_WALL_LIGHT, VoxelMat.STONE)
-	_box(
-		gen,
-		Vector3i(ix - 1, 10, iz - 1),
-		Vector3i(ix, 10, iz),
-		VoxelPal.SLAB.lightened(0.1),
-		VoxelMat.SLAB
-	)
+				if y == 5 and (absf(c.x) < 1.0 or absf(c.y) < 1.0):
+					continue  # overflow notch
+				gen.g.put(Vector3i(x, y, z), stone if y == 4 else cope, VoxelMat.SLAB)
+	# Column and the top bowl (r 0.55 m, rim top 2.25 m).
+	gen.g.cylinder(cx, cz, 1.0, 4, 6, dark, VoxelMat.STONE, 0, _paint(dark, 0.06, 87))
+	gen.g.cylinder(cx, cz, 2.2, 7, 7, stone, VoxelMat.STONE, 0, _paint(stone, 0.06, 88))
+	for z in range(floori(cz) - 3, floori(cz) + 4):
+		for x in range(floori(cx) - 3, floori(cx) + 4):
+			var dd := Vector2(x + 0.5 - cx, z + 0.5 - cz).length()
+			if dd >= 1.4 and dd < 2.2:
+				gen.g.put(Vector3i(x, 8, z), cope, VoxelMat.SLAB)
+	# Bowl floors read as the bed (caustics, never wet), the nozzle is brass.
+	for z in range(floori(cz) - 4, floori(cz) + 5):
+		for x in range(floori(cx) - 4, floori(cx) + 5):
+			var dd := Vector2(x + 0.5 - cx, z + 0.5 - cz).length()
+			if dd < 3.0 and dd > 1.0:
+				gen.g.put(Vector3i(x, 3, z), Color(0.44, 0.58, 0.62), VoxelMat.BED)
+			if dd < 1.4 and dd > 0.6:
+				gen.g.put(Vector3i(x, 7, z), Color(0.44, 0.58, 0.62), VoxelMat.BED)
+	gen.g.put(Vector3i(floori(cx), 8, floori(cz)), Color(0.62, 0.52, 0.3), VoxelMat.METAL)
+	# Flowers in the corners of the fountain's square (outside the plinth).
+	for k in 4:
+		var sx := -1.0 if k % 2 == 0 else 1.0
+		var sz := -1.0 if k < 2 else 1.0
+		var p := Vector3(cx * VoxelGrid.VS, 0.0, cz * VoxelGrid.VS) + Vector3(sx, 0, sz) * 2.2 * s
+		for i in 3:
+			var o := Vector3(
+				VoxelGrid.hash01(k, i, 1, 89) - 0.5, 0, VoxelGrid.hash01(k, i, 2, 89) - 0.5
+			)
+			gen.add_decor(
+				VoxelFlora.FLOWERS[(k * 2 + i) % VoxelFlora.FLOWERS.size()],
+				Transform3D(Basis(Vector3.UP, i * 2.1), p + o * 0.3)
+			)
 	var centre := Vector3(cx * VoxelGrid.VS, 0.0, cz * VoxelGrid.VS)
-	var low := -0.06
-	var up := 1.92
-	var half := 0.85
+	var low := 0.38
+	var lower := (r_in * VoxelGrid.VS) * 2.0 + 0.05
 	(
 		gen
 		. meta
@@ -650,50 +678,72 @@ static func _fountain(gen: VoxelZoneGen, r: Rect2i) -> void:
 		. append(
 			{
 				"centre": centre,
-				"jets":
-				[
-					{"pos": centre + Vector3(0, 2.75, 0), "height": 1.1, "count": 1},
-				],
 				"basins":
 				[
 					{
 						"pos": centre + Vector3(0, low, 0),
-						"size": Vector2.ONE * (inner * 2.0 * VoxelGrid.VS + 0.1),
-						"kind": "fountain"
+						"size": Vector2(lower, lower),
+						"depth": 0.6
 					},
+					{"pos": centre + Vector3(0, 1.4, 0), "size": Vector2(1.55, 1.55), "depth": 0.4},
 					{
-						"pos": centre + Vector3(0, up, 0),
-						"size": Vector2.ONE * 1.5,
-						"kind": "fountain"
+						"pos": centre + Vector3(0, 2.17, 0),
+						"size": Vector2(0.75, 0.75),
+						"depth": 0.17
+					},
+				],
+				"jets":
+				[
+					{"pos": centre + Vector3(0, 2.26, 0), "height": 0.8, "count": 1},
+					{
+						"pos": centre + Vector3(0, 0.55, 0),
+						"height": 0.42,
+						"count": 8,
+						"radius": 2.0 * s,
+						"reach": -0.75
 					},
 				],
 				"sheets":
 				[
 					{
-						"from": centre + Vector3(0, 2.0, half + 0.15),
-						"to": centre + Vector3(0, low, half + 0.5),
-						"width": 1.4
+						"from": centre + Vector3(0, 1.3, -1.0),
+						"to": centre + Vector3(0, low, -1.4),
+						"width": 0.42
 					},
 					{
-						"from": centre + Vector3(0, 2.0, -half - 0.15),
-						"to": centre + Vector3(0, low, -half - 0.5),
-						"width": 1.4
+						"from": centre + Vector3(1.0, 1.3, 0),
+						"to": centre + Vector3(1.4, low, 0),
+						"width": 0.42
 					},
 					{
-						"from": centre + Vector3(half + 0.15, 2.0, 0),
-						"to": centre + Vector3(half + 0.5, low, 0),
-						"width": 1.4
+						"from": centre + Vector3(0, 1.3, 1.0),
+						"to": centre + Vector3(0, low, 1.4),
+						"width": 0.42
 					},
 					{
-						"from": centre + Vector3(-half - 0.15, 2.0, 0),
-						"to": centre + Vector3(-half - 0.5, low, 0),
-						"width": 1.4
+						"from": centre + Vector3(-1.0, 1.3, 0),
+						"to": centre + Vector3(-1.4, low, 0),
+						"width": 0.42
 					},
 				],
-				"light": Color(0.55, 0.85, 1.0),
+				"curtains":
+				[
+					{
+						"centre": centre + Vector3(0, 2.24, 0),
+						"radius": 0.55,
+						"drop": 0.84,
+						"flare": 0.08
+					}
+				],
+				"light": Color(0.62, 0.9, 1.0),
 			}
 		)
 	)
+
+
+## Paint callable: c varied per voxel (VoxelGrid.fill / cylinder).
+static func _paint(c: Color, amt: float, salt: int) -> Callable:
+	return func(v: Vector3i) -> Color: return VoxelPal.at(c, v, amt, salt)
 
 
 ## Town gate: an arch beam between the two pillars with a hanging name board.
@@ -738,6 +788,10 @@ static func _gate(gen: VoxelZoneGen, o: Dictionary) -> void:
 		gen.meta.get_or_add("texts", []).append({"text": text, "pos": p, "color": "f3e3b0"})
 	for x in range(xa, xb + 1):
 		gen.covers[Vector2i(VoxelZoneGen.tile_of(x), t0.y)] = true
+	# Wandering NPCs never stand in the gateway (the way into Route 1 stays open).
+	for z in range(t0.y, t0.y + 3):
+		for x in range(t0.x + 1, t1.x):
+			gen.no_npc[Vector2i(x, z)] = true
 
 
 ## Docks and bridges: plank decks over the carved water, posts, railings, a moored boat.

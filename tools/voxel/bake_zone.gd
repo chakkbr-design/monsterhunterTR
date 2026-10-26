@@ -3,7 +3,8 @@ extends SceneTree
 ## writes world/voxel/baked/<zone>.res (meshes, volumes, MultiMesh chunks; compressed) and
 ## <zone>.json (metadata, TileGrid, hashes). Usage:
 ##   godot --headless --path . --script res://tools/voxel/bake_zone.gd -- zone=pallet_town
-## Exit code 1 when the zone has no design or a file cannot be written.
+## Exit code 1 when a generator script does not compile, the zone has no design or a file cannot be
+## written.
 
 
 func _init() -> void:
@@ -11,6 +12,13 @@ func _init() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("zone="):
 			zone = a.substr(5)
+	# A generator script that fails to compile would still "bake" (its calls just fail): refuse.
+	for src in VoxelZoneBake.SOURCES:
+		var sc := load(src) as GDScript
+		if sc == null or not sc.can_instantiate():
+			printerr("bake_zone: %s does not compile; nothing written" % src)
+			quit(1)
+			return
 	var t0 := Time.get_ticks_msec()
 	var gen := VoxelZoneGen.run(zone)
 	if gen == null:
