@@ -96,6 +96,8 @@ func _zone(id: String) -> void:
 			absf(gy - at.y) < 0.35,
 			"%s: spawn '%s' on ground (y %.2f, ground %.2f)" % [id, name, at.y, gy]
 		)
+	if not voxel:
+		_masks(b)
 	if id == "route_1":
 		check(
 			int(c.get("ramps", 0)) == 6 and int(c.get("ledges", 0)) == 6,
@@ -110,6 +112,34 @@ func _zone(id: String) -> void:
 		check(absf(hy - 6.0) < 0.05, "route_1: west hill top at 6 (%.2f)" % hy)
 	holder.queue_free()
 	await frames(2)
+
+
+## Every road level of a MapBuilder zone has its baked mask (world/masks) at the size its rects
+## want: a mask more than 1 px off is regenerated at runtime with a different outline (Route 1's
+## first path was shortened once, and its road next to Pallet silently lost the baked shape).
+func _masks(b) -> void:
+	var list: Array = b.data.get("paths", [])
+	if list.is_empty():
+		return
+	var lv: Dictionary = TerrainPathMask.levels(list, b.height_at)
+	var i := 0
+	for level in lv:
+		var area := TerrainPathMask.bounds(lv[level])
+		var want := Vector2i(
+			maxi(int(ceil(area.size.x * TerrainPathMask.PX_PER_M)), 1),
+			maxi(int(ceil(area.size.y * TerrainPathMask.PX_PER_M)), 1)
+		)
+		var file := TerrainPathMask.mask_file(b.zone_id, i)
+		var img := TerrainPathMask.load_mask(file)
+		var got := img.get_size() if img else Vector2i.ZERO
+		check(
+			img != null and absi(got.x - want.x) <= 1 and absi(got.y - want.y) <= 1,
+			(
+				"%s: road level %d uses its baked mask (%s %s, wanted %s)"
+				% [b.zone_id, i, file.get_file(), got, want]
+			)
+		)
+		i += 1
 
 
 func _world() -> void:
