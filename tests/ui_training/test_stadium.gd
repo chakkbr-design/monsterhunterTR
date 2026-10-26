@@ -106,6 +106,27 @@ func _run() -> void:
 	for mm in st.find_children("Crowd", "MultiMeshInstance3D", true, false):
 		fans += (mm as MultiMeshInstance3D).multimesh.instance_count
 	check(fans > 2500, "torcida: %d torcedores" % fans)
+	# Pixel-art fans (overworld NPC sheets) without the main cast; voxel figures without the sheets.
+	var cast := ArenaCrowd.CROWD_SHEETS.filter(
+		func(n): return n in ["npc_oak", "npc_rival"] or String(n).begins_with("trainer")
+	)
+	check(cast.is_empty() and ArenaCrowd.CROWD_SHEETS.size() >= 10, "torcida sem os protagonistas")
+	var crowd0 := (
+		st.find_children("Crowd", "MultiMeshInstance3D", true, false)[0] as MultiMeshInstance3D
+	)
+	var sh := (crowd0.material_override as ShaderMaterial).shader.resource_path
+	var want := ArenaCrowd.SPRITE_SHADER if ArenaCrowd.uses_sprites() else ArenaCrowd.SHADER
+	check(
+		sh == want, "torcida: %s (%s)" % ["sprites" if ArenaCrowd.uses_sprites() else "voxel", sh]
+	)
+	ArenaCrowd.set_param("cheer_a", 0.7)
+	check(
+		is_equal_approx(
+			float((crowd0.material_override as ShaderMaterial).get_shader_parameter("cheer_a")), 0.7
+		),
+		"torcida: set_param chega ao material"
+	)
+	ArenaCrowd.set_param("cheer_a", 0.0)
 
 	# Placar.
 	(

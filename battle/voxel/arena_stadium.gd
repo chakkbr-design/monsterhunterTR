@@ -1358,7 +1358,7 @@ func cheer(side: int, amount := 1.0) -> void:
 ## A Mexican wave around the bowl (starting on the camera's left).
 func wave() -> void:
 	_wave_t = 0.0
-	ArenaCrowd.material().set_shader_parameter("wave_a0", PI * 0.75)
+	ArenaCrowd.set_param("wave_a0", PI * 0.75)
 
 
 func waving() -> bool:
@@ -1372,7 +1372,6 @@ func _process(dt: float) -> void:
 		_wave_t += dt
 		if _wave_t > ArenaCrowd.WAVE_SECS:
 			_wave_t = -1.0
-	var m := ArenaCrowd.material()
-	m.set_shader_parameter("cheer_a", cheer_a)
-	m.set_shader_parameter("cheer_b", cheer_b)
-	m.set_shader_parameter("wave_tw", _wave_t)
+	ArenaCrowd.set_param("cheer_a", cheer_a)
+	ArenaCrowd.set_param("cheer_b", cheer_b)
+	ArenaCrowd.set_param("wave_tw", _wave_t)

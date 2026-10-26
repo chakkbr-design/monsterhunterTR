@@ -273,7 +273,11 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 - **Estádio voxel em volta, fora dos limites** (`ArenaStadium`, battle/voxel/arena_stadium.gd):
   - montado uma vez por cena de treino (`TrainingBattle._build_stage`), só no modo de energia; nunca no VGC nem com `fast_sim`; sem corpo físico (a arena consulta paredes na camada 1);
   - arquibancada em anel de 12 fileiras (`StadiumParts`: cadeiras, escadas, vomitórios, parapeito, fachada, túneis dos treinadores no meio das cabeceiras); a da frente (+z) fica abaixo da linha de 30° da câmera de ação;
-  - torcida (`ArenaCrowd` + crowd.gdshader): um MultiMesh por setor; `cheer(lado, força)` e `wave()` (ola);
+  - torcida (`ArenaCrowd`): um MultiMesh por setor; `cheer(lado, força)` e `wave()` (ola), uniforms via `ArenaCrowd.set_param`;
+    - os torcedores são os NPCs pixel-art do mundo (`ArenaCrowd.CROWD_SHEETS`: todas as folhas `npc_*` que mapas, treinadores e interiores usam, menos o protagonista, a protagonista, o rival e o Prof. Carvalho), sorteados por hash da cadeira (nunca `arena.rng`) e espelhados metade das vezes;
+    - cada um é um quad billboard em Y (crowd_sprite.gdshader, como o `CharSprite`: iluminado, alpha cut, filtro nearest) com o quadro parado de frente, afundado 0,42 m na cadeira para só aparecer o tronco; um atlas montado em tempo de execução (uma linha por folha, os 3 quadros "de frente") e o custom data da instância escolhe a célula;
+    - torcer: os do lado se levantam, pulam e alternam os quadros de passo; a ola levanta a faixa que corre pelo anel;
+    - sem as folhas (original/ fora do repositório, nuvem) volta aos bonecos voxel antigos (crowd.gdshader, camisa com a cor do lado);
   - torres de refletor (SpotLight3D, sombra só nas duas do fundo), placar principal com a Poké Bola e dois placares nas cabeceiras (`score({names, alive, clock, scene, series})`), bandeiras e faixas ao vento (flag.gdshader), praça, árvores;
   - céu, sol e ambiente próprios (stadium_sky.gdshader, AgX, SSAO, brilho); `set_mood("dia" | "tarde" | "noite")` pela opção Hora do treino (`time_of_day`); `theme(cenário)` repinta o gramado de fora e muda o céu (caverna de noite, pântano nublado, vulcão) sem mexer no sol e no ambiente que o `BattleBiomes` ajustou para a luta.
 - **Clima da luta no modo de energia:** `BattleWeatherFx` usa as peças do clima do mundo (§10) sobre a
