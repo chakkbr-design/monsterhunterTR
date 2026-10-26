@@ -4,8 +4,9 @@ extends SceneTree
 ## RouteWorld with the voxel Pallet on the grid (its baked TileGrid; forced on as well): tap turns, hold walks whole tiles, chained steps at constant speed (the
 ## follower never sees the player stop), run, walls and NPCs bump, a lock mid-step finishes the step,
 ## teleports re-snap, save_position on tile centres, an old save inside a wall lands on a free tile,
-## the front tile wins the focus, the door enters by pushing (not by walking past or standing in its
-## old walk-in area), the post-warp input hold, the seam with free Route 1 both ways, NPC wander on
+## the front tile wins the focus, a dialogue closed with E stays closed (the E buffer never keeps a
+## press the HUD ignored; the realistic case needs the 144 run), the door enters by pushing (not by
+## walking past or standing in its old walk-in area), the post-warp input hold, the seam with free Route 1 both ways, NPC wander on
 ## tiles (never on the player or each other) and the Oak scene walking on tile lines. A small
 ## synthetic grid world checks the two-tile ledge hop, one grass roll per tile, Repel per tile and a
 ## trainer's approach along tile lines. The sheet steps (alternating feet) on every moving frame.
@@ -345,6 +346,93 @@ func _focus() -> void:
 	await put(-3, -12, Vector3(0, 0, -1))
 	await frames(2)
 	check(p.focus != null and p.focus.name == "PalletSign", "front tile: the town sign")
+	await _no_retalk()
+
+
+## One tap of `action` on process frames (a real key: down for two frames, then up).
+func tap_frames(action: String) -> void:
+	Input.action_press(action)
+	await process_frame
+	await process_frame
+	Input.action_release(action)
+	await process_frame
+
+
+## A dialogue closed with E stays closed. The HUD ignores E for 0.25 s after a dialogue closes; a
+## press it ignores must not come back later from the grid's E buffer. Above 60 Hz the E that
+## closed the box reached the next physics tick with the player already free, was buffered, and
+## opened the same dialogue again once the HUD re-armed (about 1 close in 4 at 144 Hz).
+func _no_retalk() -> void:
+	var hud := get_first_node_in_group("ow_hud")
+	var story = root.get_node_or_null("Story")
+	var auto: bool = story != null and story.auto_advance
+	if story:
+		story.auto_advance = false  # the test closes the dialogue itself
+	await put(8, 14, Vector3(0, 0, 1))
+	await frames(2)
+	# Deterministic at any rate: close the box without input, then press E inside the re-arm.
+	Input.action_press("interact")
+	await frames(1)
+	Input.action_release("interact")
+	await frames(2)
+	var opened: bool = hud.is_dialog_open()
+	var guard := 0
+	while hud.is_dialog_open() and guard < 10:
+		hud.advanced.emit()
+		await process_frame
+		guard += 1
+	await frames(2)
+	Input.action_press("interact")  # the HUD rejects it (just closed)
+	await frames(1)
+	Input.action_release("interact")
+	var again := false
+	for i in secs(1.0):
+		await physics_frame
+		again = again or hud.is_dialog_open()
+	check(opened and not again, "an E the HUD ignored right after a dialogue does not talk later")
+	while hud.is_dialog_open():
+		hud.advanced.emit()
+		await process_frame
+	# The real flow, closed with E on varying frames (fails about 1 in 4 at 144 Hz without the fix).
+	var hz := roundi(1.0 / maxf(root.get_process_delta_time(), 0.001))  # process frames per second
+	var reopened := 0
+	var tries := 0
+	for trial in 6:
+		await frames(20)
+		for i in trial:
+			await process_frame
+		await tap_frames("interact")
+		for i in 30:
+			if hud.is_dialog_open():
+				break
+			await process_frame
+		if not hud.is_dialog_open():
+			continue
+		tries += 1
+		guard = 0
+		while hud.is_dialog_open() and guard < 20:
+			for i in roundi(0.35 * hz) + trial:
+				await process_frame
+			await tap_frames("interact")
+			guard += 1
+		var back := false
+		for i in secs(1.2):
+			await physics_frame
+			back = back or hud.is_dialog_open()
+		if back:
+			reopened += 1
+			while hud.is_dialog_open():
+				hud.advanced.emit()
+				await process_frame
+	check(
+		tries == 6 and reopened == 0,
+		(
+			"a dialogue closed with E stays closed (%d of %d re-opened at %d fps)"
+			% [reopened, tries, hz]
+		)
+	)
+	if story:
+		story.auto_advance = auto
 
 
 func _doors() -> void:

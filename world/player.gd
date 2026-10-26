@@ -358,7 +358,10 @@ func _update_focus(active: bool) -> void:
 	if hud == null:
 		return
 	var idle := active and not (grid and (_stepping or _settle))
-	if grid and active and Input.is_action_just_pressed("interact"):
+	# Only a press the HUD would take is kept: above 60 Hz the E that closed a dialogue can reach
+	# the next physics tick with the player already free, and a buffered copy of it outlived the
+	# HUD's re-arm and opened the same dialogue again.
+	if grid and active and Input.is_action_just_pressed("interact") and hud.can_interact():
 		_interact_buf = INTERACT_BUFFER
 	hud.set_prompt(_prompt_for(focus) if idle and focus else "")
 	var pressed := Input.is_action_just_pressed("interact") or (grid and _interact_buf > 0.0)
@@ -547,6 +550,8 @@ func _grid_tick(delta: float) -> void:
 	_arrive_hold = maxf(_arrive_hold - delta, 0.0)
 	_bump_cd = maxf(_bump_cd - delta, 0.0)
 	_interact_buf = maxf(_interact_buf - delta, 0.0)
+	if _interact_buf < 0.0001:  # 0.25 - 15 / 60 leaves 5e-17: it ends on the tick it should
+		_interact_buf = 0.0
 	var want := _want_dir()
 	if not active or _arrive_hold > 0.0:
 		want = Vector2i.ZERO
