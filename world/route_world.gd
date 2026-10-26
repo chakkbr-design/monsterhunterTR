@@ -226,11 +226,12 @@ func travel(target: Dictionary, _from: Node = null) -> void:
 
 ## What the pause menu should pass to Game.save_game(extra):
 ## {"pos": [x, y, z], "zone": id} outdoors, {"pos": [x, y, z], "interior": id} indoors.
+## In grid zones the position is the centre of the player's tile (the target tile mid-step).
 func save_extra() -> Dictionary:
 	var p := player_of(self)
 	var d := {}
 	if p:
-		var v := p.global_position
+		var v := p.save_position()
 		d["pos"] = [v.x, v.y, v.z]
 	d["interior" if location_kind == "interior" else "zone"] = location_id
 	return d
@@ -260,15 +261,23 @@ func _place_in_interior(id: String, spawn: String) -> void:
 	_camera_mode(true)  # the HUD location pill names the room (location_changed)
 
 
+## In grid zones the player lands on the centre of the nearest free tile (an old save inside what is
+## now a wall, an arrival off the grid) and holds still a moment (OverworldPlayer.on_placed).
 func _put_player(at: Vector3, facing: Vector3) -> void:
 	var p := player_of(self)
 	if p == null:
 		return
-	p.global_position = at + Vector3(0, 0.2, 0)
+	var g := grid_at(at)
+	if g:
+		var free := func(c: Vector2i) -> bool: return GridMotion.spot_free(g, c, p)
+		p.global_position = g.center(GridMotion.nearest(TileGrid.cell_of(at), free, at))
+	else:
+		p.global_position = at + Vector3(0, 0.2, 0)
 	p.velocity = Vector3.ZERO
 	if facing != Vector3.ZERO:
 		p.facing = facing
 	p._grass.clear()
+	p.on_placed()
 	var rig := _rig()
 	if rig:
 		rig.global_position = p.global_position
@@ -445,6 +454,28 @@ func zone_at(pos: Vector3) -> String:
 		if zone_rect(id).has_point(Vector2(pos.x, pos.z)):
 			return id
 	return ""
+
+
+## Tile grid of the outdoor zone under `pos` when humans walk on the grid there (docs/VOXEL.md §6):
+## the builder's baked grid, or for a grid zone without one a probe of its colliders, made once
+## the zone is built and its bodies are in the physics space, then cached on the builder. Null in
+## interiors, in free zones and while the zone is unbuilt. OverworldPlayer.force_mode / force_zones
+## override the map's "movement" (tests).
+func grid_at(pos: Vector3) -> TileGrid:
+	if OverworldPlayer.force_mode == "free" or interior_at(pos) != "":
+		return null
+	var id := zone_at(pos)
+	var b: MapBuilder = builders.get(id)
+	if b == null or not is_instance_valid(b) or not b.is_built:
+		return null
+	var mode := String(OverworldPlayer.force_zones.get(id, OverworldPlayer.force_mode))
+	if mode == "":
+		mode = "grid" if b.grid != null else String(b.data.get("movement", "free"))
+	if mode != "grid":
+		return null
+	if b.grid == null:
+		b.grid = GridMotion.probe_zone(b, zone_rect(id))
+	return b.grid
 
 
 ## Puts the player on a spawn point of a built zone (falls back to the zone centre).

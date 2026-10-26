@@ -49,6 +49,12 @@ func blocks_player() -> bool:
 	return false
 
 
+## Tile grid at `pos` when humans walk on the 1 m grid there (docs/VOXEL.md §6); null = free
+## movement. RouteWorld returns its grid zones' grids; this legacy test map (overworld.tscn) is free.
+func grid_at(_pos: Vector3) -> TileGrid:
+	return null
+
+
 ## Runs one battle through Game and returns its result ({} if a battle could not start).
 func battle(enemies: Array, opts: Dictionary) -> Dictionary:
 	var p := player_of(self)

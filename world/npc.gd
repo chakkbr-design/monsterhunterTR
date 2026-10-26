@@ -93,6 +93,24 @@ var _col: CollisionShape3D
 
 const WANDER_SPEED := 1.4
 const WANDER_MASK := 1 | 2 | 4 | 16  # walls, player, wild mons, water
+## Grid zones (docs/VOXEL.md §6): wanderers stroll one tile at a time (1-3 tiles the same way), stop,
+## look around; each tile is claimed on the TileGrid before stepping, never the player's tiles, never
+## a NO_NPC tile (doorsteps), never past wander_radius tiles from home.
+const GRID_WANDER_SPEED := 2.2
+
+var _grid: TileGrid  ## grid under a wanderer (null = free wander)
+var _grid_check := 0.0
+var _grid_checks := 0
+var _gcell := Vector2i.ZERO  ## tile stood on (the target while stepping)
+var _gprev := Vector2i.ZERO
+var _gdir := Vector2i.ZERO
+var _gstep := false
+var _gfrom := Vector3.ZERO
+var _gto := Vector3.ZERO
+var _gseg := 1.0
+var _gk := 0.0
+var _gfoot := 0
+var _gchain := 0
 
 
 static func make_alert(height: float) -> Label3D:
@@ -121,6 +139,10 @@ static func make_alert(height: float) -> Label3D:
 
 func _enter_tree() -> void:
 	add_to_group(GROUP)
+
+
+func _exit_tree() -> void:
+	_set_grid(null)
 
 
 func _ready() -> void:
@@ -188,8 +210,15 @@ func _lie_down() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if wander_radius <= 0.0 or talking or Game.is_busy():
+	if wander_radius <= 0.0:
 		return
+	_grid_check -= delta
+	if _grid_check <= 0.0:  # every tick at first (the zone's grid may still be probing), then 1 s
+		_grid_checks += 1
+		_grid_check = 1.0 if _grid_checks > 10 else 0.0
+		_set_grid(GridMotion.grid_for(self))
+	if _grid or talking or Game.is_busy():
+		return  # grid wander runs in _process: smooth tile steps at any frame rate
 	_wander_t -= delta
 	if _wander_t <= 0.0:
 		_wander_t = randf_range(2.0, 5.0)
@@ -220,8 +249,144 @@ func _physics_process(delta: float) -> void:
 	if hit.is_empty():
 		_goal = position
 		return
-	face(to)
+	_turn_to(to - global_position)
 	global_position = Vector3(to.x, hit.position.y, to.z)
+
+
+func _process(delta: float) -> void:
+	if _grid:
+		_grid_wander(delta)
+
+
+## Starts / stops grid wander (claims the tile stood on, glides onto its centre when off it).
+func _set_grid(g: TileGrid) -> void:
+	if g == _grid:
+		return
+	if _grid:
+		_grid.release(_gcell, self)
+		_grid.release(_gprev, self)
+		if char_sprite:
+			char_sprite.step_col = -1
+	_grid = g
+	_gstep = false
+	if g == null:
+		return
+	_gcell = TileGrid.cell_of(global_position)
+	if not g.claim(_gcell, self):  # put onto a wanderer's tile: step aside to the nearest free one
+		var p := Overworld.player_of(self)
+		var mine := _gcell
+		_gcell = GridMotion.nearest(
+			mine,
+			func(c: Vector2i) -> bool:
+				return (
+					GridMotion.spot_free(g, c, self)
+					and not g.has_flag(c, TileGrid.NO_NPC)
+					and not (p and c in p.occupied_cells())
+				),
+			global_position,
+			3
+		)
+		g.claim(_gcell, self)
+	_gprev = _gcell
+	_wander_t = randf_range(0.5, 2.0)
+	var c := g.center(_gcell)
+	if Vector2(c.x - global_position.x, c.z - global_position.z).length() > 0.02:
+		_begin_gstep(_gcell, c)
+
+
+func _grid_wander(delta: float) -> void:
+	if Game.is_busy():
+		return
+	if _gstep:
+		_gk = minf(_gk + GRID_WANDER_SPEED * delta / _gseg, 1.0)
+		global_position = _gfrom.lerp(_gto, _gk)
+		if char_sprite:
+			char_sprite.step_col = (1 + _gfoot) if _gk < 0.5 else 0
+		if _gk < 1.0:
+			return
+		_gstep = false
+		if _gprev != _gcell:
+			_grid.release(_gprev, self)
+		_gprev = _gcell
+		if char_sprite:
+			char_sprite.step_col = -1
+		if _gchain > 0 and not talking:
+			_gchain -= 1
+			_try_gstep(_gdir)
+		return
+	if talking:
+		return
+	_wander_t -= delta
+	if _wander_t > 0.0:
+		return
+	_wander_t = randf_range(1.0, 3.5)
+	var r := randf()
+	if r < 0.3:  # look around
+		face(global_position + GridMotion.vec(GridMotion.DIRS[randi() % 4]))
+		return
+	if r < 0.45:
+		return
+	var d: Vector2i = GridMotion.DIRS[randi() % 4]
+	if not _in_range(_gcell + d):
+		d = GridMotion.card(GridMotion.vec(_home_cell() - _gcell))  # back toward home
+	if d == Vector2i.ZERO:
+		return
+	_gchain = randi() % 3
+	if not _try_gstep(d):
+		face(global_position + GridMotion.vec(d))  # blocked: just look that way
+
+
+func _try_gstep(d: Vector2i) -> bool:
+	var to := _gcell + d
+	if not _grid_can(to) or not _grid.claim(to, self):
+		return false
+	face(global_position + GridMotion.vec(d))
+	_gdir = d
+	_gprev = _gcell
+	_gcell = to
+	_begin_gstep(to, _grid.center(to))
+	return true
+
+
+func _begin_gstep(to: Vector2i, at: Vector3) -> void:
+	_gcell = to
+	_gfrom = global_position
+	_gto = at
+	_gseg = maxf(Vector2(at.x - _gfrom.x, at.z - _gfrom.z).length(), 0.001)
+	_gk = 0.0
+	_gstep = true
+	_gfoot = 1 - _gfoot
+
+
+func _home_cell() -> Vector2i:
+	var p := get_parent() as Node3D
+	return TileGrid.cell_of(p.to_global(_wander_home) if p else _wander_home)
+
+
+func _in_range(c: Vector2i) -> bool:
+	var h := _home_cell()
+	var r := ceili(wander_radius)
+	return absi(c.x - h.x) <= r and absi(c.y - h.y) <= r
+
+
+## A tile this wanderer may step into: in range, free (GridMotion.spot_free), not a NO_NPC tile, no
+## height jump, not a tile the player stands on or is stepping between.
+func _grid_can(c: Vector2i) -> bool:
+	if not _in_range(c) or _grid.has_flag(c, TileGrid.NO_NPC):
+		return false
+	if not GridMotion.spot_free(_grid, c, self):
+		return false
+	if absf(_grid.height(c) - _grid.height(_gcell)) > GridMotion.MAX_RISE:
+		return false
+	var p := Overworld.player_of(self)
+	if p and c in p.occupied_cells():
+		return false
+	if (
+		_grid.has_meta("probed")
+		and GridMotion.live_blocked(get_world_3d().direct_space_state, _grid, c)
+	):
+		return false
+	return true
 
 
 ## Sheet for this NPC: explicit sprite_sheet, story role ("oak", "mom"...), interior role, name keyword.
@@ -273,8 +438,15 @@ func prompt() -> String:
 	return "E: Falar"
 
 
+## Turns toward `pos` (onto the nearest of the four axes in grid zones).
 func face(pos: Vector3) -> void:
 	var to := pos - global_position
+	if Vector2(to.x, to.z).length() > 0.01 and (_grid or GridMotion.grid_for(self)):
+		to = GridMotion.vec(GridMotion.card(to))
+	_turn_to(to)
+
+
+func _turn_to(to: Vector3) -> void:
 	if Vector2(to.x, to.z).length() > 0.01:
 		rotation.y = atan2(-to.x, -to.z)
 
