@@ -2,9 +2,12 @@ class_name GfxQuality
 extends RefCounted
 ## Graphics tiers (Opções > GRÁFICOS: Baixo / Médio / Alto / Ultra; Alto is the default, tuned for
 ## an RTX 5070-class GPU). One table drives everything quality-dependent:
-##   - the viewport: 3D render scale and upscaler, FXAA / SMAA (Ultra: FSR 2.2 as native AA).
-##     Never MSAA: with it the water's depth / screen reads come back empty and the transparent
-##     water turns opaque (gfx/water), and SMAA keeps the voxel and sprite edges just as clean;
+##   - the viewport: 3D render scale and upscaler. Anti-aliasing is EdgeAA (world/look/edge_aa.gd,
+##     a compositor effect on the 3D geometry's edges only, attached with attach_aa()): never
+##     MSAA (the water's depth / screen reads come back empty and the transparent water turns
+##     opaque, gfx/water) and never SMAA / FXAA / FSR 2 / TAA, which smear the pixel-art sprites
+##     (every texel staircase gets blended). The VGC stage keeps its old look instead
+##     (classic_stage(): MSAA 2x, no water there);
 ##   - the renderer's global settings: directional and lamp shadow atlases, soft-shadow filter,
 ##     SSAO / SSIL / SSR quality, SDFGI rays and light-update rate, GI half resolution,
 ##     volumetric fog volume;
@@ -25,13 +28,15 @@ const MEDIUM := 1
 const HIGH := 2
 const ULTRA := 3
 const DEFAULT := HIGH
+const EDGE_AA := preload("res://world/look/edge_aa.gd")
 
 const TIERS := [
 	{  # Baixo: integrated GPUs / laptops.
 		"scale": 0.75,
 		"scale_mode": Viewport.SCALING_3D_MODE_FSR,
 		"msaa": Viewport.MSAA_DISABLED,
-		"screen_aa": Viewport.SCREEN_SPACE_AA_FXAA,
+		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"edge_aa": true,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_VERY_LOW,
 		"ssao_half": true,
@@ -58,7 +63,8 @@ const TIERS := [
 		"scale": 1.0,
 		"scale_mode": Viewport.SCALING_3D_MODE_BILINEAR,
 		"msaa": Viewport.MSAA_DISABLED,
-		"screen_aa": Viewport.SCREEN_SPACE_AA_SMAA,
+		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"edge_aa": true,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_MEDIUM,
 		"ssao_half": true,
@@ -85,7 +91,8 @@ const TIERS := [
 		"scale": 1.0,
 		"scale_mode": Viewport.SCALING_3D_MODE_BILINEAR,
 		"msaa": Viewport.MSAA_DISABLED,
-		"screen_aa": Viewport.SCREEN_SPACE_AA_SMAA,
+		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"edge_aa": true,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_HIGH,
 		"ssao_half": false,
@@ -108,11 +115,13 @@ const TIERS := [
 		"particles": 1.0,
 		"radiance": 128,
 	},
-	{  # Ultra: full-resolution GI and reflections, FSR 2.2 native AA, contact-hardening sun.
+	{  # Ultra: full-resolution GI and reflections, contact-hardening sun (no FSR 2: temporal AA
+		# blurs the sprites).
 		"scale": 1.0,
-		"scale_mode": Viewport.SCALING_3D_MODE_FSR2,
+		"scale_mode": Viewport.SCALING_3D_MODE_BILINEAR,
 		"msaa": Viewport.MSAA_DISABLED,
 		"screen_aa": Viewport.SCREEN_SPACE_AA_DISABLED,
+		"edge_aa": true,
 		"ssao": true,
 		"ssao_quality": RenderingServer.ENV_SSAO_QUALITY_ULTRA,
 		"ssao_half": false,
@@ -140,6 +149,7 @@ const TIERS := [
 static var forced := -1  ## --quality= (screenshots), wins over the settings file
 static var _tier := -1
 static var _cli_read := false
+static var _aa: Compositor  ## shared by every 3D stage that attach_aa()s (one EdgeAA effect)
 
 
 ## Current tier: --quality=, else the one Settings.apply() set, else the settings file, else Alto.
@@ -200,6 +210,70 @@ static func apply_viewport(vp: Viewport, t := -1) -> void:
 	vp.use_taa = false
 	vp.use_debanding = true  # night skies and lamp falloffs are long dark gradients
 	vp.positional_shadow_atlas_size = int(s.pos_atlas)
+	aa_compositor().compositor_effects[0].enabled = bool(s.get("edge_aa", false))
+
+
+## The shared Compositor with the EdgeAA effect (enabled by the tier, apply_viewport()).
+static func aa_compositor() -> Compositor:
+	if _aa == null:
+		var fx: CompositorEffect = EDGE_AA.new()
+		fx.enabled = bool(spec().get("edge_aa", false))
+		_aa = Compositor.new()
+		_aa.compositor_effects = [fx]
+	return _aa
+
+
+## Puts the edge anti-aliasing on a 3D stage (the overworld's TimeOfDay, the training stadium
+## through track()). A WorldEnvironment's compositor applies to every camera that renders it.
+static func attach_aa(we: WorldEnvironment) -> void:
+	if we:
+		we.compositor = aa_compositor()
+
+
+## The VGC stage keeps its look from before the graphics tiers (aa14e13): MSAA 2x at full scale
+## from Médio up, 0.75 bilinear without MSAA on Baixo; no screen-space AA, no debanding, the
+## project's sun shadow filter. It has no water to break and no EdgeAA. Applied now and on every
+## tier change while `stage` lives; the tier's viewport and renderer come back when it leaves.
+static func classic_stage(stage: Node) -> void:
+	if stage == null or stage.get_node_or_null("GfxClassicAA"):
+		return
+	var n := _ClassicAA.new()
+	n.name = "GfxClassicAA"
+	stage.add_child(n)
+
+
+static func apply_classic_viewport(vp: Viewport, t := -1) -> void:
+	if vp == null:
+		return
+	var low := (t if t >= 0 else tier()) == LOW
+	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+	vp.scaling_3d_scale = 0.75 if low else 1.0
+	vp.msaa_3d = Viewport.MSAA_DISABLED if low else Viewport.MSAA_2X
+	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
+	vp.use_taa = false
+	vp.use_debanding = false
+	# The shadows of before too: the project's atlas and soft-shadow filter, not the tier's.
+	RenderingServer.directional_shadow_atlas_set_size(
+		int(
+			ProjectSettings.get_setting(
+				"rendering/lights_and_shadows/directional_shadow/size", 4096
+			)
+		),
+		true
+	)
+	var q := int(
+		ProjectSettings.get_setting(
+			"rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", 2
+		)
+	)
+	RenderingServer.directional_soft_shadow_filter_set_quality(q)
+	RenderingServer.positional_soft_shadow_filter_set_quality(
+		int(
+			ProjectSettings.get_setting(
+				"rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality", 2
+			)
+		)
+	)
 
 
 static func apply_server(t := -1) -> void:
@@ -263,6 +337,7 @@ static func track(we: WorldEnvironment) -> void:
 	n.name = "GfxQualityEnv"
 	we.add_child(n)
 	apply_env(we.environment)
+	attach_aa(we)
 
 
 ## Shadow distance, splits and PCSS size of a sun / moon. far_mult > 1 for zones whose camera
@@ -312,3 +387,20 @@ class _EnvTracker:
 		var we := get_parent() as WorldEnvironment
 		if we:
 			GfxQuality.apply_env(we.environment)
+
+
+## Child of a classic_stage() (the VGC training stage): its viewport look, kept over tier changes.
+class _ClassicAA:
+	extends Node
+
+	func _ready() -> void:
+		add_to_group(GfxQuality.GROUP)
+		apply_quality()
+
+	func apply_quality() -> void:
+		if DisplayServer.get_name() != "headless":
+			GfxQuality.apply_classic_viewport(get_viewport())
+
+	func _exit_tree() -> void:
+		if DisplayServer.get_name() != "headless":
+			GfxQuality.apply_all(get_viewport())

@@ -32,6 +32,8 @@ uniform vec3 flash = vec3(0.0);  // additive emission (hit flash)
 uniform vec4 window_glow : source_color = vec4(0.0);
 // > 0: a floor of sky light (x the horizon colour) under the indirect light: the shaded
 // undersides of a zone's bushes and crowns stay dark green. Default off: the arenas' look.
+// The world raises it to gi_sky_floor while SDFGI runs (its GI replaces the ambient and leaves
+// facades under crowns and eaves black); 0 elsewhere.
 uniform float shade_lift = 0.0;
 
 global uniform float night_lamps;
@@ -44,6 +46,7 @@ global uniform float wind_time;
 global uniform vec2 wind_dir;
 global uniform float wind_gust;
 global uniform vec4 sky_horizon_color;
+global uniform float gi_sky_floor;
 
 varying vec3 mpos;
 varying vec3 mnrm;
@@ -227,10 +230,24 @@ void fragment() {
 			float cap = above * sky(c + ivec3(0, 1, 0)) * weather;
 			sn = max(sn, cap * step(1.0 - snow_cover * 0.45, fract(g.y)));
 		}
-		// Not one flat white: a per-voxel grain, larger soft drifts and the voxel bevels and seams
-		// keep the ground legible under it.
-		float grain = 0.93 + 0.07 * h31(vec3(c) + 9.1) + 0.05 * (vnoise(cc * 0.07) - 0.5);
-		col = mix(col, vec3(0.86, 0.9, 0.96) * grain * bevel, sn);
+		// Not one flat white sheet, so paths, beds, pond banks and court lines still read:
+		// - trodden ground (the F_PUDDLE materials: stone, dirt, sand, slab, gravel) keeps a thinner,
+		//   greyer, patchy layer (the ground shows through here and there) against the smooth white
+		//   lawns and roofs;
+		// - painted lines and emblems (VoxelMat.PAINT, id 24) are swept: wet paint under a dusting,
+		//   darker than the snow around it (white lines on a white field still read);
+		// - a per-voxel grain (+-7 %) and slow drift shading (+-8 %);
+		// - the voxel seams three times darker than bare ground, so the grid stays visible.
+		float trod = (flags & 2) != 0 ? up : 0.0;
+		float grain = 0.86 + 0.14 * h31(vec3(c) + 9.1) + 0.16 * (vnoise(cc * 0.05) - 0.5);
+		vec3 snow = mix(vec3(0.86, 0.9, 0.96), vec3(0.6, 0.62, 0.66), trod);
+		float seam_s = 1.0 - 2.0 * seam_dark * seam * (1.0 - conv);
+		float patchy = 1.0 - 0.45 * step(0.7, h31(vec3(c) + 4.7));
+		float swept = id == 24 ? sn : 0.0;
+		col *= mix(1.0, 0.72, swept);
+		rough = mix(rough, 0.3, swept);
+		sn *= mix(1.0, 0.75 * patchy, trod) * (1.0 - 0.7 * swept);
+		col = mix(col, snow * grain * bevel * seam_s, sn);
 		rough = mix(rough, 0.75, sn);
 		wet *= 1.0 - sn;
 	}
@@ -249,8 +266,9 @@ void fragment() {
 	} else if (emit_class == 4) {
 		em = col * emit_flood * night_lamps;
 	}
-	if (shade_lift > 0.0) {
-		em += col * to_linear(sky_horizon_color.rgb) * shade_lift;
+	float lift = max(shade_lift, gi_sky_floor);
+	if (lift > 0.0) {
+		em += col * to_linear(sky_horizon_color.rgb) * lift;
 	}
 	ALBEDO = col * mix(1.0, ao, 0.35);
 	AO = ao;

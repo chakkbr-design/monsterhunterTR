@@ -417,15 +417,17 @@ func _tiers() -> void:
 		),
 		"lamp shadow budget per tier"
 	)
-	check(
-		GfxQuality.spec(GfxQuality.ULTRA).scale_mode == Viewport.SCALING_3D_MODE_FSR2,
-		"Ultra uses FSR 2.2"
-	)
 	var msaa := 0
 	for t in GfxQuality.NAMES.size():
 		msaa += int(GfxQuality.spec(t).msaa != Viewport.MSAA_DISABLED)
 	check(msaa == 0, "no tier uses MSAA (it empties the water's depth and screen reads)")
-	check(GfxQuality.spec(GfxQuality.HIGH).screen_aa == Viewport.SCREEN_SPACE_AA_SMAA, "Alto: SMAA")
+	var smear := 0
+	for t in GfxQuality.NAMES.size():
+		var s: Dictionary = GfxQuality.spec(t)
+		smear += int(s.screen_aa != Viewport.SCREEN_SPACE_AA_DISABLED or not s.edge_aa)
+		smear += int(s.scale_mode == Viewport.SCALING_3D_MODE_FSR2)
+	check(smear == 0, "every tier: EdgeAA, no SMAA / FXAA / FSR 2 (they smear the sprites)")
+	check(GfxQuality.aa_compositor().compositor_effects[0] is EdgeAA, "shared EdgeAA compositor")
 	var sun := DirectionalLight3D.new()
 	GfxQuality.apply_sun(sun, GfxQuality.HIGH)
 	check(sun.directional_shadow_max_distance <= 60.0, "sun shadows only as far as the camera sees")
@@ -443,6 +445,7 @@ func _tiers() -> void:
 	GfxQuality.forced = GfxQuality.HIGH
 	call_group(GfxQuality.GROUP, "apply_quality")
 	check(we.environment.ssr_enabled, "tracked stage: back to Alto when the tier changes")
+	check(we.compositor == GfxQuality.aa_compositor(), "tracked stage: EdgeAA attached")
 	GfxQuality.forced = -1
 	we.queue_free()
 	await frames(1)

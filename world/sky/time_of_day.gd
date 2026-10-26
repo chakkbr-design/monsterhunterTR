@@ -43,6 +43,12 @@ const NIGHT_GRADE := 0.7  ## post-fx night grade at full night (dim areas lose c
 ## Share of the night fill kept under a full moon: a sprite in a moon shadow (a lamp post's, a
 ## tree's) is lit by nothing else.
 const FILL_FLOOR := 0.35
+## Sky-light floor under SDFGI (the gi_sky_floor global, read by the voxel shaders): with SDFGI on,
+## its GI replaces the environment's ambient completely, and under the solid voxel crowns and eaves
+## it gives next to nothing (a cream facade at noon reads lum ~5). Scaled by the SDFGI energy (0
+## without SDFGI: Baixo / Médio, interiors, the HGSS looks), x the horizon colour in the shader,
+## so it fades out at night.
+const GI_SKY_FLOOR := 0.2
 const INDOOR_MINUTE := 750.0  ## interiors keep the 12:30 look (the keys' identity)
 const LOOK_BLEND := 1.5  ## s to blend two outdoor looks (walking across a zone edge)
 const WRITE_STEP := 0.04  ## game minutes between environment writes
@@ -214,6 +220,13 @@ func _ready() -> void:
 	_write(true)
 
 
+## The training stadium (no SDFGI) must not inherit the world's floor.
+func _exit_tree() -> void:
+	if _globals.has("gi_sky_floor"):
+		RenderingServer.global_shader_parameter_set("gi_sky_floor", 0.0)
+		_globals.erase("gi_sky_floor")
+
+
 func _read_cli() -> void:
 	var hour := -1.0
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
@@ -266,6 +279,7 @@ func _make_lights_and_env() -> void:
 	env.sky = _sky
 	_env_node.environment = env
 	_env_node.camera_attributes = null
+	GfxQuality.attach_aa(_env_node)  # edge anti-aliasing that leaves the sprites crisp
 
 
 ## Game clock "HH:MM".
@@ -772,6 +786,8 @@ func _write(force: bool) -> void:
 	_global("sun_amount", (sv + mv * 0.25) * (1.0 - cloud) * (0.0 if indoor else 1.0))
 	_global("sky_top_color", top)
 	_global("sky_horizon_color", hor)
+	var gi := clampf(env.sdfgi_energy, 0.0, 1.0) if env and env.sdfgi_enabled else 0.0
+	_global("gi_sky_floor", GI_SKY_FLOOR * gi)
 	state = {
 		"minute": lm,
 		"sun_elevation": sa.x,

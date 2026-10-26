@@ -1,7 +1,8 @@
 class_name WeatherLightning
 extends Node3D
 ## Storm lightning shared by the overworld (WorldWeather) and the training stadium (BattleWeatherFx):
-## - a real light flash: its own bluish DirectionalLight3D coming from the strike's side, pulsing
+## - a real light flash: its own bluish DirectionalLight3D coming from the strike's side (mirrored
+##   into the camera's half, so camera-facing sprites light up with the ground), pulsing
 ##   2-4 times in half a second (a return stroke and its restrikes), with `flash` (0..1) for the
 ##   owner to publish as the lightning_flash global (sky, water, rain streaks); whoever owns the
 ##   scene's light spikes its ambient from it (WorldTimeOfDay reading the weather's flash, the
@@ -174,12 +175,28 @@ func strike(at := Vector3.INF) -> void:
 		_pulses.append([t, peak * _rng.randf_range(0.5, 0.95)])
 	var to_light := Vector3(at.x - focus.x, 0.0, at.z - focus.z)
 	to_light = to_light.normalized() if to_light.length() > 0.1 else Vector3(0, 0, -1)
+	to_light = _toward_camera(to_light)
 	to_light = (to_light + Vector3.UP * 1.6).normalized()
 	light.global_transform.basis = Basis.looking_at(-to_light, Vector3.UP)
 	if seen or dist < 160.0:
 		_make_bolt(at)
 	glow.global_position = at + Vector3(0, 1.5, 0)
 	_pending.append([dist / SPEED_OF_SOUND, dist, clampf(1.0 - dist / 200.0, 0.15, 1.0)])
+
+
+## The flash's horizontal direction mirrored into the camera's half: the whole cloud deck lights
+## up, and a strike ahead of the camera (every in-view one, half the far ones) would otherwise
+## light the sprites (shaded cards facing the camera) from behind and leave them black against a
+## bright ground. Keeps the strike's left / right side; the ground (lit from above) is unchanged.
+func _toward_camera(to_light: Vector3) -> Vector3:
+	var back := Vector3(-view_dir.x, 0.0, -view_dir.z)
+	if back.length() < 0.01:
+		return to_light
+	back = back.normalized()
+	var d := to_light.dot(back)
+	if d < 0.0:
+		to_light -= 2.0 * d * back
+	return to_light
 
 
 ## Jagged voxel bolt from the cloud base down to `at`.

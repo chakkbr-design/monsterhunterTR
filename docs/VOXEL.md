@@ -74,12 +74,21 @@ Céu contínuo, clima do mundo e níveis gráficos valem para todas as zonas.
 - Pallet usa `world/look/voxel_env.tres` (AgX, SDFGI de 0,25 m com 4 cascatas, SSR, SSAO, brilho,
   névoa volumétrica com densidade 0, usada só nos halos). Não há névoa global.
 
-### Antisserrilhado: SMAA, nunca MSAA
+### Antisserrilhado: EdgeAA, nunca MSAA nem SMAA
 
 - **MSAA quebra a água:** as leituras de profundidade e de tela do `water.gdshader` voltam vazias e a
   água transparente fica opaca. Nenhum nível usa MSAA, e o `tests/world/test_sky.gd` confere.
-- Baixo usa FXAA (com FSR a 0,75), Médio e Alto usam SMAA, Ultra usa FSR 2.2 como AA
-  (`project.godot`: `screen_space_aa = 2` (SMAA) e `use_debanding`). Detalhes no §11.
+- **SMAA, FXAA, FSR 2 e TAA borram os sprites:** cada degrau de pixel da arte vira meio-tom. Nenhum
+  nível usa.
+- **EdgeAA** (`world/look/edge_aa.gd`, efeito de compositor): FXAA só nos pixels de borda da
+  geometria (salto na profundidade ou dobra na normal), na imagem opaca, antes da água e das
+  partículas. Sprites (rugosidade 1,0 no buffer de normal) ficam de fora com a vizinhança 3×3, então
+  saem exatamente como desenhados. `GfxQuality.attach_aa` liga no mundo (TimeOfDay) e no estádio
+  (`track`). `--edge-aa=debug` pinta a máscara (vermelho = sprite, verde = borda), `--edge-aa=off`
+  desliga.
+- **VGC:** `GfxQuality.classic_stage` devolve o visual de antes (MSAA 2x, sem debanding, sombra do
+  projeto); lá não há água.
+- Detalhes no §11.
 
 ### Globais (project.godot `[shader_globals]`)
 
@@ -92,6 +101,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 | `sun_dir_world` | vec3 (para o sol) | TimeOfDay | estádio | água (brilho, cáusticas) |
 | `sun_color_world`, `sun_amount` | color, float | TimeOfDay (`sun_amount` = sol visível × (1 - nuvens)) | estádio | água |
 | `sky_top_color`, `sky_horizon_color` | color | TimeOfDay | estádio | água (reflexo quando o SSR erra) |
+| `gi_sky_floor` | float | TimeOfDay (0,2 × energia do SDFGI; 0 sem SDFGI e ao sair do mundo) | — (0) | voxel, detalhe (piso de luz do céu: com SDFGI a GI troca todo o ambiente e fachadas sob copas e beirais ficavam pretas) |
 | `rain_amount` | float 0..1 | clima (`WorldWeather`) | `BattleWeatherFx` | anéis de chuva na água e nas poças |
 | `rain_wet`, `rain_puddle` | float 0..1 | clima | `BattleWeatherFx` | voxel (molhado, poças), detalhe |
 | `snow_cover` | float 0..1 | clima | `BattleWeatherFx` | voxel, detalhe, água (geada) |
@@ -459,8 +469,8 @@ O `[options] quality` antigo continua gravado (Alto e Ultra = 1); save antigo co
 
 | | Baixo | Médio | Alto | Ultra |
 |---|---|---|---|---|
-| Resolução 3D | 0,75 (FSR) | 1,0 | 1,0 | 1,0 (FSR 2.2) |
-| Antisserrilhado | FXAA | SMAA | SMAA | FSR 2.2 |
+| Resolução 3D | 0,75 (FSR) | 1,0 | 1,0 | 1,0 |
+| Antisserrilhado | EdgeAA | EdgeAA | EdgeAA | EdgeAA |
 | Luz rebatida | só SSAO | SSIL | SDFGI (meia resolução) | SDFGI cheio |
 | Reflexo SSR | não | não | meia resolução | cheio |
 | Névoa volumétrica (halos dos postes) | não | não | sim | sim |
@@ -468,7 +478,7 @@ O `[options] quality` antigo continua gravado (Alto e Ultra = 1); save antigo co
 | Postes com sombra | 0 | 2 | 4 | 6 |
 | Partículas de clima | 0,5× | 0,75× | 1× | 1× |
 
-- Nenhum nível usa MSAA (§3).
+- Nenhum nível usa MSAA nem SMAA / FXAA / FSR 2 (§3).
 - O look da zona ainda escolhe o que quer; o nível só deixa ou proíbe. Com SDFGI ligado o SSIL sai.
 - `Settings.apply` chama `GfxQuality.set_tier` e `apply_all`; os nós do grupo `gfx_quality` (céu,
   clima, a luta de energia) recebem `apply_quality()`. `GfxQuality.track(world_env)` faz outro
