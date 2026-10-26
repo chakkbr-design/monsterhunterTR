@@ -62,6 +62,8 @@ func _kind(a: Node, k: String) -> Dictionary:
 
 ## Põe o lutador em `at` e deixa o chão assentar.
 func _put(a: Node, f: BattleFighter, at: Vector3) -> void:
+	# Teleporte: já no chão de lá (como se tivesse saltado; o degrau não empurra para fora).
+	f.ground_y = a.terrain.height_at(at)
 	f.position = Vector3(at.x, f.ground_y, at.z)
 	for i in 90:
 		a.terrain.settle(f, DT)

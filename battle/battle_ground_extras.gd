@@ -797,8 +797,8 @@ func _push_out(f: BattleFighter) -> void:
 		for r in rocks:
 			solid.append([r.pos, ROCK_R, ROCK_H])
 	for s in solid:
-		if f.height() > float(s[2]):
-			continue
+		if BattleClimb.pass_h(f) > float(s[2]):
+			continue  # só o salto/voo passa por cima (BattleClimb)
 		var d := _flat(f.position - s[0])
 		var lim: float = float(s[1]) + BattleProps.BODY_R
 		if d.length() >= lim:

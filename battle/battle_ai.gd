@@ -207,6 +207,9 @@ var _tactics_checked := false
 var _likes_high := -1
 ## O que a IA está fazendo neste quadro (telemetria): "dodge", "retreat", "rest_hide", "go_high"...
 var tag := ""
+## Ponto aonde a IA quer chegar neste quadro (alto, esconderijo; INF = o alvo): BattleClimb.steer
+## faz o caminho até ele (contorna, salta ou voa) quando a reta está tapada.
+var nav_goal := Vector3.INF
 ## Segundos com o golpe pretendido sem linha de tiro.
 var los_t := 0.0
 ## Por que o último golpe foi escolhido (telemetria): "ko", "best", "soft", "plan_<plano>", "tactics",
@@ -327,6 +330,7 @@ func move_ready(d: float) -> bool:
 ## Com a fila de rodadas (BattleTurns) só solta golpe na vez dele; fora dela escolhe um ponto no campo.
 func step(dt: float) -> Vector3:
 	f.sprinting = false
+	nav_goal = Vector3.INF
 	status_lock_t = maxf(status_lock_t - dt, 0.0)
 	pick_target(dt)
 	_auto_command(dt)
@@ -1022,6 +1026,7 @@ func _energy_steer(d: float, dir: Vector3, side_v: Vector3) -> Vector3:
 		)
 		f.sprinting = d < keep and f.can_sprint(true)
 		tag = "rest_pond" if ter_swim(hide) else "rest_cover"
+		nav_goal = hide
 		want += _ally_spread() * 0.5
 		_fly(d)
 		return want.normalized() if want.length() > 1.0 else want
@@ -1070,6 +1075,7 @@ func _terrain_steer(d: float) -> Vector3:
 		f.sprinting = f.can_sprint(true)
 	_fly(d)
 	tag = "go_high"
+	nav_goal = spot
 	return (to.normalized() + f.arena.edge_push(f) * 0.5).limit_length(1.0)
 
 

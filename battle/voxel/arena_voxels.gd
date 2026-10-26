@@ -151,7 +151,10 @@ static func _h(v: Vector3i, salt := 0) -> float:
 
 ## Hill or peak of BattleTerrain (`o`: kind, pos, r, top, h), on the 0,25 m lattice.
 static func relief(o: Dictionary, sc: String) -> Node3D:
-	var key := "%s_%s_%.2f_%.2f_%.2f" % [o.kind, sc, float(o.r), float(o.top), float(o.h)]
+	var key := (
+		"%s_%s_%.2f_%.2f_%.2f_%d"
+		% [o.kind, sc, float(o.r), float(o.top), float(o.h), BattleClimb.tiers(o)]
+	)
 	var m := cached(key, func() -> VoxelGrid: return _relief_grid(o, sc))
 	var root := Node3D.new()
 	root.name = "Terrain_%s" % o.kind
@@ -194,9 +197,10 @@ static func _relief_grid(o: Dictionary, sc: String) -> VoxelGrid:
 			if d >= r + VS:
 				continue
 			g.put(Vector3i(x, -1, z), Color.BLACK, VoxelMat.STONE, CTX)
-			var n := roundi(_profile(d, r, top, h) / VS)
+			var stepped := BattleClimb.tiers(o) > 0  # modo de energia: degraus (BattleClimb)
+			var n := roundi((BattleClimb.profile(o, d) if stepped else _profile(d, r, top, h)) / VS)
 			var hv := VoxelGrid.hash01(x, 0, z, salt)
-			if d > top + VS:
+			if d > top + VS and not stepped:
 				# Slopes: a voxel more or less here and there (the plateau stays flat).
 				if hv < (0.28 if peak else 0.16):
 					n -= 1
