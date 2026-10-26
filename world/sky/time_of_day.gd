@@ -37,6 +37,7 @@ const CAVE_SUN := 0.12  ## roofless cave rooms: the sun must not light them like
 const GROUND_TINTS := {
 	"tint_a": Color(1, 1, 0.92), "tint_b": Color(0.78, 0.9, 0.78), "tint_c": Color(1.06, 1.02, 0.8)
 }
+const STORM_SHADOW_TINT := Color(0.3, 0.36, 0.52)  ## post-fx shadow toning in a storm
 const INDOOR_MINUTE := 750.0  ## interiors keep the 12:30 look (the keys' identity)
 const LOOK_BLEND := 1.5  ## s to blend two outdoor looks (walking across a zone edge)
 const WRITE_STEP := 0.04  ## game minutes between environment writes
@@ -175,6 +176,8 @@ var _check := 0.0
 var _last_m := -1e9
 var _last_sky_m := -1e9
 var _last_cloud := -1.0
+var _last_gloom := -1.0
+var _last_flash := 0.0
 var _globals := {}
 var _start_hour := -1.0
 
@@ -630,10 +633,15 @@ func _blended_base() -> Dictionary:
 
 
 func _cloud() -> float:
+	return _weather_value("cloud")
+
+
+## A WorldWeather value (cloud, gloom, flash), 0 indoors or without weather.
+func _weather_value(key: String) -> float:
 	if indoor or not is_inside_tree():
 		return 0.0
 	var w := get_tree().get_first_node_in_group("weather")
-	return clampf(float(w.get("cloud")), 0.0, 1.0) if w and w.get("cloud") != null else 0.0
+	return clampf(float(w.get(key)), 0.0, 1.0) if w and w.get(key) != null else 0.0
 
 
 ## Applies the look of the current minute. Without `force`, only when the minute moved WRITE_STEP
@@ -643,10 +651,23 @@ func _write(force: bool) -> void:
 		return
 	var lm := INDOOR_MINUTE if indoor else look_minute()
 	var cloud := _cloud()
-	if not force and absf(lm - _last_m) < WRITE_STEP and absf(cloud - _last_cloud) < 0.004:
+	var gloom := _weather_value("gloom")
+	var flash := _weather_value("flash")
+	if (
+		not force
+		and absf(lm - _last_m) < WRITE_STEP
+		and absf(cloud - _last_cloud) < 0.004
+		and absf(gloom - _last_gloom) < 0.004
+		and flash == 0.0
+		and _last_flash == 0.0
+	):
 		return
+	if absf(gloom - _last_gloom) >= 0.004:
+		_last_sky_m = -1e9  # the dome darkens with the storm
 	_last_m = lm
 	_last_cloud = cloud
+	_last_gloom = gloom
+	_last_flash = flash
 	var k := cycle.sample(lm)
 	if k.is_empty():
 		return
@@ -659,7 +680,9 @@ func _write(force: bool) -> void:
 	var sun_dir := SkyCycle.to_dir(sa.x, sa.y)
 	var moon_dir := SkyCycle.to_dir(ma.x, ma.y)
 	var full := 1.0 - absf(_moon_phase() - 0.5) * 2.0
-	var sun_e := float(b.sun_energy) * float(k.sun_energy) * sv * (1.0 - 0.72 * cloud)
+	var sun_e := (
+		float(b.sun_energy) * float(k.sun_energy) * sv * (1.0 - 0.72 * cloud) * (1.0 - 0.35 * gloom)
+	)
 	if indoor:
 		sun_e = float(b.sun_energy) * float(k.sun_energy)
 	var moon_e := (
@@ -679,8 +702,15 @@ func _write(force: bool) -> void:
 	var amb := (b.ambient as Color).lerp(k.ambient_color, float(k.ambient_weight))
 	var lum := amb.get_luminance()
 	amb = amb.lerp(Color(lum * 0.96, lum * 0.98, lum), cloud * 0.55)
-	var amb_e := float(b.ambient_energy) * float(k.ambient_energy) * (1.0 + 0.12 * cloud)
-	var expo := float(b.exposure) * float(k.exposure) * (1.0 + 0.1 * cloud)
+	# Overcast: softer, greyer, a little more ambient; a storm darkens it all; lightning spikes it.
+	var amb_e := (
+		float(b.ambient_energy)
+		* float(k.ambient_energy)
+		* (1.0 + 0.12 * cloud)
+		* (1.0 - 0.25 * gloom)
+		* (1.0 + 2.6 * flash)
+	)
+	var expo := float(b.exposure) * float(k.exposure) * (1.0 + 0.1 * cloud) * (1.0 - 0.06 * gloom)
 	if env:
 		env.ambient_light_color = amb
 		env.ambient_light_energy = amb_e
@@ -694,6 +724,9 @@ func _write(force: bool) -> void:
 		var pw := float(k.post_weight)
 		_post.shadow_tint = (b.shadow_tint as Color).lerp(k.shadow_tint, pw)
 		_post.highlight_tint = (b.highlight_tint as Color).lerp(k.highlight_tint, pw)
+		_post.shadow_tint = _post.shadow_tint.lerp(STORM_SHADOW_TINT, gloom * 0.5)
+		_post.weather_desat = 0.2 * cloud + 0.14 * gloom
+		_post.weather_dim = 0.16 * gloom * (1.0 - flash)
 	_write_ground(k)
 	var bs := get_tree().get_nodes_in_group("map_builder") if is_inside_tree() else []
 	if not bs.is_empty():  # (not MapBuilder by name: it would pull the Game autoload into --script tests)
@@ -751,6 +784,8 @@ func _write(force: bool) -> void:
 		"lamps": lamps,
 		"windows": windows,
 		"cloud": cloud,
+		"gloom": gloom,
+		"flash": flash,
 	}
 
 
@@ -825,6 +860,7 @@ func _write_sky(
 	_sky_mat.set_shader_parameter("moon_phase", _moon_phase())
 	_sky_mat.set_shader_parameter("stars", float(k.stars))
 	_sky_mat.set_shader_parameter("haze", float(k.haze) * (1.0 - cloud))
+	_sky_mat.set_shader_parameter("energy", 1.0 - 0.4 * _last_gloom if _last_gloom > 0.0 else 1.0)
 	_sky_mat.set_shader_parameter("haze_color", k.sun_color)
 	_sky_mat.set_shader_parameter(
 		"cloud_offset", Vector2(fposmod(lm * 0.004, 64.0), 0.0).rotated(wd.angle())

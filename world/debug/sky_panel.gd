@@ -4,7 +4,8 @@ extends CanvasLayer
 ##   - hour slider (moves the game clock, or the pinned hour of --hour=);
 ##   - clock speed from 0,5 to 120 game minutes per real second, "Normal" (data/time.json) and
 ##     pause;
-##   - weather (WorldWeather.forced; the weather lists its own choices with debug_choices());
+##   - weather (WorldWeather.forced; the weather lists its own choices with debug_choices(): every
+##     type of data/weather.json), a lightning strike button and the ground-mist switch (saved);
 ##   - graphics tier for this session only (the saved option stays in Opções);
 ##   - a readout of the sun, moon, exposure, lamps, windows and lamp shadows.
 ## It never takes keyboard focus (every control is FOCUS_NONE, mouse only) and only F9 is
@@ -23,6 +24,8 @@ var _speed_label: Label
 var _pause: CheckBox
 var _weather: OptionButton
 var _weather_ids: Array = []
+var _mist: CheckBox
+var _weather_info: Label
 var _tier: OptionButton
 var _info: Label
 var _info_t := 0.0
@@ -95,6 +98,21 @@ func _build() -> void:
 	_weather.focus_mode = Control.FOCUS_NONE
 	_weather.item_selected.connect(_on_weather)
 	box.add_child(_weather)
+	var wrow := HBoxContainer.new()
+	box.add_child(wrow)
+	_mist = CheckBox.new()
+	_mist.text = "Névoa no chão"
+	_mist.focus_mode = Control.FOCUS_NONE
+	_mist.toggled.connect(func(on: bool): WorldWeather.set_mist_option(on))
+	wrow.add_child(_mist)
+	var bolt := Button.new()
+	bolt.text = "Raio"
+	bolt.focus_mode = Control.FOCUS_NONE
+	bolt.pressed.connect(_on_strike)
+	wrow.add_child(bolt)
+	_weather_info = _label(box)
+	_weather_info.add_theme_font_size_override("font_size", 13)
+	_weather_info.add_theme_color_override("font_color", Color(0.78, 0.86, 0.95))
 	var tl := _label(box)
 	tl.text = "Gráficos (só nesta sessão)"
 	_tier = OptionButton.new()
@@ -143,6 +161,8 @@ func _sync_all() -> void:
 	var i := _weather_ids.find(WorldWeather.forced)
 	_weather.select(maxi(i, 0))
 	_tier.select(GfxQuality.tier())
+	WorldWeather.load_mist_option()
+	_mist.set_pressed_no_signal(WorldWeather.mist_enabled)
 	_pause.set_pressed_no_signal(WorldTimeOfDay.paused)
 	_sync_speed()
 	_process(0.0)
@@ -191,6 +211,16 @@ func _on_weather(i: int) -> void:
 		WorldWeather.forced = _weather_ids[i]
 
 
+## A lightning strike now, in view of the camera (tests the flash, the bolt and the thunder).
+func _on_strike() -> void:
+	var w := get_tree().get_first_node_in_group("weather")
+	var l = w.get("lightning") if w else null
+	if l is WeatherLightning:
+		var f: Vector3 = l.focus
+		var d: Vector3 = l.view_dir
+		l.strike(f + Vector3(d.x, 0.0, d.z).normalized() * 11.0)
+
+
 func _on_tier(i: int) -> void:
 	GfxQuality.set_tier(i)
 	GfxQuality.apply_all(get_viewport())
@@ -232,4 +262,36 @@ func _process(delta: float) -> void:
 			s.windows,
 			NightLights.shadowed_count(),
 		]
+	)
+	_weather_info.text = _weather_text()
+
+
+## "Chuva · chuva 0,62 · chão 0,95 · poças 0,40 · neve 0,00 · nuvens 0,92 · névoa 0,00".
+func _weather_text() -> String:
+	var w := get_tree().get_first_node_in_group("weather") as WorldWeather
+	if w == null or w.state.is_empty():
+		return ""
+	var names := {}
+	for c in w.debug_choices():
+		names[c[0]] = c[1]
+	var st := w.state
+	return (
+		(
+			(
+				"%s · chuva %.2f · chão %.2f · poças %.2f\nneve %.2f (no chão %.2f) · nuvens %.2f"
+				+ " · névoa %.2f · vento %.2f"
+			)
+			% [
+				String(names.get(w.type, w.type)),
+				st.rain,
+				st.wet,
+				st.puddle_level,
+				st.snow,
+				st.snow_cover,
+				w.cloud,
+				w.mist,
+				st.wind,
+			]
+		)
+		. replace(".", ",")
 	)

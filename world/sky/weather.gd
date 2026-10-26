@@ -1,196 +1,312 @@
 class_name WorldWeather
 extends Node3D
-## Simplified port of the original weather.gd + rain.gd. The original drifts weather cells over a
-## coverage map; here the whole outdoor world shares one coverage value (wet, snow, fog, cloud),
-## published through the same weather_map shader global, so every ported shader (ground, paths,
-## foliage, props) gets the original's wet look and puddles. data/weather.json "demo" mode: one
-## rain shower per game day, starting between demo_rain.start_min and start_max and lasting
-## demo_rain.life_hours. Force with --weather=rain|clear or `WorldWeather.forced`.
+## World weather. Replaces the old single daily shower with a real schedule (WeatherSchedule,
+## data/weather.json): clear, cloudy, overcast, rain, storm, snow and light morning mist, picked
+## by weight for spells of each game day (seeded by the day, so a day always has the same
+## weather), at any hour, blending between spells. The ground follows in game time: it gets wet
+## and dries after the rain, puddles linger longer, snow settles and melts.
+## What it drives:
+## - shader globals (docs/VOXEL.md §3): rain_amount, rain_wet, rain_puddle, snow_cover,
+##   cloud_cover, lightning_flash; and the old weather_map texel for the HGSS shaders
+##   (R wet, G snow, B mist, A cloud). Only written when they change;
+## - WorldTimeOfDay reads `cloud` (dims the sun and moon, softens shadows, greys and lifts the
+##   ambient), `gloom` (storm darkness) and `flash` (lightning) on every write;
+## - WorldWind gets the storm wind (`storm`): stronger and gustier; the rain slants with it;
+## - a WeatherRig following the camera focus (rain with splashes stopping on roofs, snow that
+##   settles, ground mist), WeatherLightning in storms and WeatherAudio (rain, roof, wind, thunder).
+## Indoors (teleported rooms) nothing falls and the globals read dry, but the outside keeps
+## evolving, and the rain is heard muffled through the roof. A battle's weather (BattleWeatherFx)
+## is merged in through battle_cover.
+## Force a type with --weather=<id> (clear, cloudy, overcast, rain, storm, snow, mist; "off" =
+## clear), `WorldWeather.forced` or the F9 sky panel; snap() jumps straight to its settled look.
+## Ground mist can be switched off (Caio's no-veil rule): `mist_enabled`, saved in settings.cfg.
 
 const GROUP := "weather"
-const DATA := "res://data/weather.json"
-const FADE_MIN := 6.0  ## game minutes to fade in/out
+const FORCE_FADE := 3.0  ## real seconds to fade into a type picked in the F9 panel
+const JUMP_MIN := 30.0  ## game minutes: a bigger clock jump re-settles the weather
+const RAIN_NORM := 0.62  ## the "rain" type's intensity: `wet` = 1 at ordinary rain
+const MIST_MAX := 0.85
+const STORM_WIND := 3.0  ## m/s of extra rain slant per unit of storm wind
+const SETTINGS := "user://settings.cfg"
 
 static var forced := ""
+static var mist_enabled := true
+static var _mist_loaded := false
 
-## Clima da batalha (BattleWeatherFx): (wet, snow, fog, cloud) por cima do clima do mundo enquanto dura.
+## Battle weather (BattleWeatherFx): (wet, snow, fog, cloud) on top of the world's while it lasts.
 var battle_cover := Color(0, 0, 0, 0)
-var wet := 0.0
+var schedule: WeatherSchedule
+var state := {}  ## WeatherSchedule.empty_state() keys
+var type := "clear"  ## the spell now (or the forced type)
+var wet := 0.0  ## how hard it rains (1 = ordinary rain); old API (follower, halos)
 var cloud := 0.0
+var gloom := 0.0
+var flash := 0.0
+var mist := 0.0
 var indoor := false
+var rig: WeatherRig
+var lightning: WeatherLightning
+var audio: WeatherAudio
 
-var _start := 690.0
-var _len := 120.0
-var _day := -1
-var _rain: GPUParticles3D
-var _splash: GPUParticles3D
-var _cfg: Dictionary = {}
+var _forced_was := "<unset>"
+var _fade_t := 1.0
+var _fade_from := {}
+var _fade_to := {}
+var _last_now := -1.0
+var _published := {}
 var _cov := Color(-1, 0, 0, 0)
+var _lightning_gap := Vector2(6.0, 16.0)
 
 
 func _ready() -> void:
 	add_to_group(GROUP)
-	var d = JSON.parse_string(FileAccess.get_file_as_string(DATA))
-	_cfg = d if d is Dictionary else {}
+	add_to_group(GfxQuality.GROUP)
+	process_priority = -1  # before WorldTimeOfDay, so its write sees this frame's cloud and flash
+	schedule = WeatherSchedule.shared()
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
 		if a.begins_with("--weather="):
 			forced = a.substr(10)
-	_build_rain()
-	_build_splash()
+	if forced == "off":
+		forced = "clear"
+	load_mist_option()
+	rig = WeatherRig.make({"name": "Rig", "area": Vector2(18.0, 18.0), "follow": true})
+	add_child(rig)
+	lightning = WeatherLightning.new()
+	lightning.name = "Lightning"
+	lightning.driven = true
+	add_child(lightning)
+	audio = WeatherAudio.new()
+	audio.name = "Audio"
+	add_child(audio)
+	lightning.thunder.connect(_on_thunder)
+	state = WeatherSchedule.empty_state()
+	snap()
 
 
-## (wet, snow) where the camera is: ambient particles hide in the rain.
+## Reads the ground-mist option (settings.cfg [video] weather_mist, default on).
+static func load_mist_option() -> void:
+	if _mist_loaded:
+		return
+	_mist_loaded = true
+	var cf := ConfigFile.new()
+	if cf.load(SETTINGS) == OK:
+		mist_enabled = bool(cf.get_value("video", "weather_mist", true))
+
+
+## Switches the ground mist and saves the choice next to the other video options.
+static func set_mist_option(on: bool, path := SETTINGS) -> void:
+	mist_enabled = on
+	_mist_loaded = true
+	var cf := ConfigFile.new()
+	cf.load(path)
+	cf.set_value("video", "weather_mist", on)
+	cf.save(path)
+
+
+## [[id, label], ...] for the F9 sky panel: automatic, then every type.
+func debug_choices() -> Array:
+	var out: Array = [["", "Automático"]]
+	out.append_array(schedule.names())
+	return out
+
+
+## Jumps to the settled weather of now (no fade): start of a session, screenshots, tests.
+func snap() -> void:
+	_forced_was = forced
+	_fade_t = 1.0
+	var now := _now()
+	_last_now = now
+	state = schedule.settled(now, _forced_id(), _sun())
+	_derive()
+	_publish(true)
+
+
+func _forced_id() -> String:
+	return forced if schedule.has_type(forced) else ""
+
+
+func _tod() -> WorldTimeOfDay:
+	if not is_inside_tree():
+		return null
+	return get_tree().get_first_node_in_group(WorldTimeOfDay.GROUP) as WorldTimeOfDay
+
+
+## Game minute now (minutes since the week began; the pinned hour when the clock is forced).
+func _now() -> float:
+	var tod := _tod()
+	if tod == null:
+		return WorldTimeOfDay.START_MIN
+	return floorf(tod.total / 1440.0) * 1440.0 + tod.minutes
+
+
+func _sun() -> float:
+	var tod := _tod()
+	if tod == null or tod.state.is_empty():
+		return 0.5
+	return clampf(float(tod.state.get("sun_visible", 0.0)), 0.0, 1.0)
+
+
+## (wet, snow) where the camera is: ambient particles (pollen, fireflies) hide in rain and snow.
 func camera_cover() -> Dictionary:
-	return {"wet": 0.0 if indoor else wet, "snow": 0.0}
-
-
-static func _min(s: String) -> float:
-	var hm := s.split(":")
-	return int(hm[0]) * 60.0 + (int(hm[1]) if hm.size() > 1 else 0)
-
-
-func _target(minutes: float, day: int) -> float:
-	if forced == "rain":
-		return 1.0
-	if forced == "clear" or String(_cfg.get("mode", "demo")) != "demo":
-		return 0.0
-	if day != _day:
-		_day = day
-		var dr: Dictionary = _cfg.get("demo_rain", {})
-		var rng := RandomNumberGenerator.new()
-		rng.seed = day * 7919 + 13
-		_start = rng.randf_range(
-			_min(String(dr.get("start_min", "11:30"))), _min(String(dr.get("start_max", "14:00")))
-		)
-		_len = float(dr.get("life_hours", 2.0)) * 60.0
-	var t := minutes - _start
-	if t < 0.0 or t > _len:
-		return 0.0
-	return clampf(minf(t, _len - t) / FADE_MIN, 0.0, 1.0)
+	if indoor:
+		return {"wet": 0.0, "snow": 0.0}
+	return {"wet": wet, "snow": clampf(float(state.get("snow", 0.0)) / 0.85, 0.0, 1.0)}
 
 
 func _process(delta: float) -> void:
-	var tod := get_tree().get_first_node_in_group(WorldTimeOfDay.GROUP) as WorldTimeOfDay
-	var minutes := tod.minutes if tod else WorldTimeOfDay.START_MIN
-	var day := tod.day() if tod else 0
-	var target := _target(minutes, day)
-	wet = move_toward(wet, target, delta * 0.25)
-	cloud = wet * 0.7
+	var tod := _tod()
 	indoor = tod.indoor if tod else false
-	var rains := wet * 0.8 if not indoor else 0.0
-	var cov := Color(rains, 0.0, 0.0, cloud if not indoor else 0.0)
-	if not indoor:
-		var b := battle_cover
-		cov = Color(maxf(cov.r, b.r), b.g, b.b, maxf(cov.a, b.a))
-	if cov != _cov:  # texture upload only when the coverage changes, not every frame
-		_cov = cov
-		WorldFx.set_weather(cov)
-		# Voxel / water globals (docs/VOXEL.md §3): the same coverage as named floats.
-		var w := clampf(cov.r / 0.8, 0.0, 1.0)
-		RenderingServer.global_shader_parameter_set("rain_amount", clampf(rains, 0.0, 1.0))
-		RenderingServer.global_shader_parameter_set("rain_wet", w)
-		RenderingServer.global_shader_parameter_set("rain_puddle", smoothstep(0.35, 1.0, w) * 0.75)
-		RenderingServer.global_shader_parameter_set("snow_cover", clampf(cov.g, 0.0, 1.0))
-		RenderingServer.global_shader_parameter_set("cloud_cover", clampf(cov.a, 0.0, 1.0))
+	var now := _now()
+	if forced != _forced_was:
+		_start_fade()
+	if _fade_t < 1.0:
+		_fade_t = minf(1.0, _fade_t + delta / FORCE_FADE)
+		var t := smoothstep(0.0, 1.0, _fade_t)
+		for k in _fade_to:
+			state[k] = lerpf(float(_fade_from[k]), float(_fade_to[k]), t)
+		_last_now = now
+	else:
+		var dtm := now - _last_now
+		if dtm < 0.0 or dtm > JUMP_MIN:
+			state = schedule.settled(now, _forced_id(), _sun())
+		elif dtm > 0.0:
+			schedule.step(state, schedule.target(now, _forced_id()), dtm, _sun() * (1.0 - cloud))
+		_last_now = now
+	_derive()
+	_update_lightning(delta)
+	_update_rig(delta)
+	_update_wind()
+	_update_audio()
+	_publish(false)
+
+
+## A type picked in the F9 panel (or back to automatic): fade over FORCE_FADE s into its settled
+## state (snow already lying, ground already wet).
+func _start_fade() -> void:
+	_forced_was = forced
+	_fade_from = state.duplicate()
+	_fade_to = schedule.settled(_now(), _forced_id(), _sun())
+	_fade_t = 0.0
+
+
+func _derive() -> void:
+	var t := schedule.target(_now(), _forced_id())
+	type = String(t.get("type", "clear"))
+	var l = t.get("lightning", [])
+	if l is Array and l.size() >= 2:
+		_lightning_gap = Vector2(float(l[0]), float(l[1]))
+	cloud = clampf(float(state.cloud), 0.0, 1.0)
+	gloom = clampf(float(state.gloom), 0.0, 1.0)
+	wet = clampf(float(state.rain) / RAIN_NORM, 0.0, 1.0)
+	mist = minf(schedule.mist_of(state), MIST_MAX) if mist_enabled else 0.0
+
+
+func _focus() -> Vector3:
+	var rigf := get_tree().get_first_node_in_group("ow_camera") as Node3D
+	if rigf:
+		return rigf.global_position
+	var cam := get_viewport().get_camera_3d()
+	return cam.global_position if cam else Vector3.ZERO
+
+
+func _update_lightning(delta: float) -> void:
+	lightning.gap = _lightning_gap
+	lightning.storm = clampf(float(state.storm), 0.0, 1.0) * smoothstep(0.5, 0.9, float(state.rain))
+	var f := _focus()
+	lightning.focus = f
+	lightning.ground_y = f.y
 	var cam := get_viewport().get_camera_3d()
 	if cam:
-		_rain.global_position = cam.global_position + Vector3(0, 6.0, 0)
-		var rig := get_tree().get_first_node_in_group("ow_camera") as Node3D
-		var focus := rig.global_position if rig else cam.global_position
-		_splash.global_position = focus + Vector3(0, 0.05, 0)
-	_rain.amount_ratio = clampf(rains, 0.0, 1.0)
-	_rain.emitting = rains > 0.02
-	_splash.amount_ratio = clampf(rains, 0.0, 1.0)
-	_splash.emitting = rains > 0.15
+		lightning.view_dir = -cam.global_transform.basis.z
+	lightning.in_view_chance = 0.0 if indoor else 0.22
+	lightning.visible = not indoor
+	lightning.tick(delta)
+	flash = 0.0 if indoor else lightning.flash
 
 
-func _build_rain() -> void:
-	_rain = GPUParticles3D.new()
-	_rain.name = "Rain"
-	_rain.local_coords = false
-	_rain.emitting = false
-	_rain.amount = 1200
-	_rain.amount_ratio = 0.0
-	_rain.lifetime = 1.0
-	_rain.preprocess = 1.0
-	_rain.visibility_aabb = AABB(Vector3(-18, -14, -18), Vector3(36, 24, 36))
-	_rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var pm := ParticleProcessMaterial.new()
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	pm.emission_box_extents = Vector3(15.0, 0.5, 15.0)
-	pm.direction = Vector3(0.0, -1.0, 0.0)
-	pm.spread = 2.0
-	pm.initial_velocity_min = 13.0
-	pm.initial_velocity_max = 18.0
-	pm.gravity = Vector3(0.0, -8.0, 0.0)
-	_rain.process_material = pm
-	var q := QuadMesh.new()
-	q.size = Vector2(0.02, 0.4)
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	m.billboard_keep_scale = true
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.albedo_color = Color(0.78, 0.84, 0.92, 0.5)
-	q.material = m
-	_rain.draw_pass_1 = q
-	add_child(_rain)
+func _update_rig(delta: float) -> void:
+	var on := not indoor
+	rig.visible = on
+	rig.rain = float(state.rain) if on else 0.0
+	rig.snow = float(state.snow) if on else 0.0
+	rig.mist = mist if on else 0.0
+	rig.wind = wind_vector()
+	rig.update(_focus(), get_viewport().get_camera_3d(), delta)
 
 
-func _build_splash() -> void:
-	_splash = GPUParticles3D.new()
-	_splash.name = "Splashes"
-	_splash.local_coords = false
-	_splash.emitting = false
-	_splash.amount = 240
-	_splash.amount_ratio = 0.0
-	_splash.lifetime = 0.45
-	_splash.visibility_aabb = AABB(Vector3(-12, -1, -12), Vector3(24, 3, 24))
-	_splash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var pm := ParticleProcessMaterial.new()
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	pm.emission_box_extents = Vector3(10.0, 0.05, 10.0)
-	pm.direction = Vector3(0.0, 1.0, 0.0)
-	pm.spread = 10.0
-	pm.initial_velocity_min = 0.2
-	pm.initial_velocity_max = 0.6
-	pm.gravity = Vector3(0.0, -1.5, 0.0)
-	var sc := Curve.new()
-	sc.add_point(Vector2(0.0, 0.4))
-	sc.add_point(Vector2(1.0, 1.0))
-	var sct := CurveTexture.new()
-	sct.curve = sc
-	pm.scale_curve = sct
-	pm.scale_min = 1.0
-	pm.scale_max = 1.7
-	var ac := Curve.new()
-	ac.add_point(Vector2(0.0, 0.0))
-	ac.add_point(Vector2(0.15, 1.0))
-	ac.add_point(Vector2(1.0, 0.0))
-	var act := CurveTexture.new()
-	act.curve = ac
-	pm.alpha_curve = act
-	_splash.process_material = pm
-	var q := PlaneMesh.new()
-	q.size = Vector2(0.13, 0.13)
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.vertex_color_use_as_albedo = true
-	m.albedo_texture = _ring_texture()
-	m.albedo_color = Color(0.75, 0.82, 0.92, 0.55)
-	q.material = m
-	_splash.draw_pass_1 = q
-	add_child(_splash)
+## Horizontal wind for the rain and snow (m/s): the shared wind direction, stronger in storms and
+## in gusts.
+func wind_vector() -> Vector2:
+	var w := get_tree().get_first_node_in_group(WorldWind.GROUP) as WorldWind
+	var d := w.dir if w else Vector2(1.0, -0.35).normalized()
+	var g := w.gust() if w else 0.0
+	return d * (0.6 + STORM_WIND * float(state.wind) + (1.2 + 2.5 * float(state.wind)) * g)
 
 
-static func _ring_texture() -> ImageTexture:
-	var n := 16
-	var c := (n - 1) * 0.5
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x - c, y - c).length() / c
-			var a := smoothstep(0.45, 0.7, d) * (1.0 - smoothstep(0.85, 1.05, d))
-			img.set_pixel(x, y, Color(0.86, 0.93, 1.0, a))
-	return ImageTexture.create_from_image(img)
+func _update_wind() -> void:
+	var w := get_tree().get_first_node_in_group(WorldWind.GROUP) as WorldWind
+	if w:
+		w.storm = clampf(float(state.wind), 0.0, 2.0)
+
+
+func _update_audio() -> void:
+	audio.indoor = indoor
+	audio.rain = clampf(float(state.rain), 0.0, 1.0)
+	audio.wind = float(state.wind)
+	var w := get_tree().get_first_node_in_group(WorldWind.GROUP) as WorldWind
+	audio.gust = w.gust() if w else 0.0
+
+
+func _on_thunder(distance: float, power: float) -> void:
+	audio.thunder(distance, power)
+
+
+## Graphics tier changed: particle amounts follow the new budget.
+func apply_quality() -> void:
+	if rig:
+		rig.set_budget(GfxQuality.particles())
+
+
+## Writes the globals and the HGSS coverage texel when they changed.
+func _publish(force: bool) -> void:
+	var out := indoor
+	var rain := 0.0 if out else clampf(float(state.rain), 0.0, 1.0)
+	var gw := 0.0 if out else float(state.wet)
+	var pud := 0.0 if out else float(state.puddle_level)
+	var snow := 0.0 if out else float(state.snow_cover)
+	var cl := 0.0 if out else cloud
+	var fog := 0.0 if out else mist
+	if not out:
+		var b := battle_cover
+		gw = maxf(gw, b.r)
+		pud = maxf(pud, smoothstep(0.5, 1.0, b.r) * 0.6)
+		snow = maxf(snow, b.g)
+		cl = maxf(cl, b.a)
+	var dry := 1.0 - 0.85 * clampf(snow, 0.0, 1.0)  # snow lying on the ground hides the wet
+	_global("rain_amount", rain, force)
+	_global("rain_wet", clampf(gw * dry, 0.0, 1.0), force)
+	_global("rain_puddle", clampf(pud * (1.0 - snow), 0.0, 1.0), force)
+	_global("snow_cover", clampf(snow, 0.0, 1.0), force)
+	_global("cloud_cover", clampf(cl, 0.0, 1.0), force)
+	_global("lightning_flash", clampf(flash, 0.0, 1.0), force)
+	var cov := Color(
+		clampf(gw * dry, 0.0, 1.0) * 0.8,
+		clampf(snow, 0.0, 1.0),
+		clampf(fog, 0.0, 1.0),
+		clampf(cl, 0.0, 1.0)
+	)
+	if force or not cov.is_equal_approx(_cov):  # texture upload only when the coverage changes
+		_cov = cov
+		WorldFx.set_weather(cov)
+
+
+func _global(n: String, v: float, force: bool) -> void:
+	if not force and _published.has(n) and absf(float(_published[n]) - v) < 0.0005:
+		return
+	_published[n] = v
+	RenderingServer.global_shader_parameter_set(n, v)
+
+
+## Last value written to a global by this node (tests; -1 if never written).
+func published(n: String) -> float:
+	return float(_published.get(n, -1.0))

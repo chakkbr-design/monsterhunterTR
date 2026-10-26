@@ -21,6 +21,7 @@ var _live: Array = []
 var _leaf_t := 0.0
 var _night := 0.0
 var _day := 1.0
+var _last_cover := 0.0
 var _rng := RandomNumberGenerator.new()
 
 
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_clouds.mesh = pm
 	_clouds.material_override = WorldFx.shader_mat("cloud_shadow")
 	_clouds.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_clouds.layers = WeatherKit.LAYER  # never a ceiling in the rain's collision heightfield
 	add_child(_clouds)
 	_leaves = Node3D.new()
 	_leaves.name = "Leaves"
@@ -72,6 +74,10 @@ func _process(delta: float) -> void:
 	var tod := get_tree().get_first_node_in_group(WorldTimeOfDay.GROUP) as WorldTimeOfDay
 	var indoor := tod != null and tod.indoor
 	var cover := _cover()
+	if cover > 0.6 and _last_cover < 0.3:  # weather snapped (F9, --weather): no pollen in the rain
+		_pollen.restart()
+		_fireflies.restart()
+	_last_cover = cover
 	_fireflies.global_position = f + Vector3(0, 1.0, 0)
 	_fireflies.amount_ratio = 0.0 if indoor else clampf(_night * (1.0 - cover), 0.0, 1.0)
 	_fireflies.emitting = _fireflies.amount_ratio > 0.01

@@ -2,10 +2,13 @@ extends SceneTree
 ## Screenshots of the continuous sky on a small voxel village (needs a GPU or lavapipe):
 ##   xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver vulkan \
 ##     --resolution 1600x900 --script res://tests/world/shot_sky_voxel.gd -- \
-##     --out=/tmp/sky/vox [--hours=05:30,12:00] [--weather=rain] [--quality=alto] [--wide] \
-##     [--focus=x,z (camera focus in m)] [--water-debug=1..6 (gfx/water debug_view)]
+##     --out=/tmp/sky/vox [--hours=05:30,12:00] [--weather=rain] [--weathers=clear,rain,storm]
+##     [--quality=alto] [--wide] [--focus=x,z (camera focus in m)] [--water-debug=1..6]
+##     [--settle=N (frames before each picture, default 50)]
 ## Saves <out>_<HHMM>.png for 05:30, 06:30, 08:00, 12:00, 16:00, 17:45, 18:30, 19:15, 21:00 and 00:30
-## by default. The scene is built like a voxel zone: stone and plaster houses with WINDOW voxels,
+## by default; with --weathers, <out>_<weather>_<HHMM>.png for each weather and hour (the weather
+## snaps to its settled look: wet ground, lying snow), and for "storm" also <..>_bolt.png, a frame
+## right after a lightning strike in view. The scene is built like a voxel zone: stone and plaster houses with WINDOW voxels,
 ## lamp posts (LAMP voxels + OmniLights in NightLights), trees with swaying crowns, a cobble
 ## crossroads, a pond (carved BED + WaterSurface), a vegetable patch, flowers and three people,
 ## seen through the overworld camera (pitch 32°, 12 m, FOV 35°) and lit by the real
@@ -37,8 +40,11 @@ var hours: Array = HOURS.duplicate()
 var wide := false
 var focus := Vector3(-0.5, 0.4, 1.0)
 var water_debug := 0
+var weathers: Array = []
+var settle := 50
 var world: Node3D
 var tod: WorldTimeOfDay
+var wx: WorldWeather
 
 
 func _initialize() -> void:
@@ -56,6 +62,10 @@ func _initialize() -> void:
 			focus = Vector3(float(f[0]), 0.4, float(f[1]))
 		elif a.begins_with("--water-debug="):
 			water_debug = int(a.substr(14))
+		elif a.begins_with("--weathers="):
+			weathers = Array(a.substr(11).split(","))
+		elif a.begins_with("--settle="):
+			settle = int(a.substr(9))
 	if WorldWeather.forced == "":
 		WorldWeather.forced = "clear"
 	_run.call_deferred()
@@ -135,7 +145,7 @@ func _run() -> void:
 	tod = WorldTimeOfDay.new()
 	tod.name = "TimeOfDay"
 	world.add_child(tod)
-	var wx := WorldWeather.new()
+	wx = WorldWeather.new()
 	wx.name = "Weather"
 	world.add_child(wx)
 	var amb := WorldAmbient.new()
@@ -148,29 +158,53 @@ func _run() -> void:
 	print("tier ", GfxQuality.NAMES[GfxQuality.tier()])
 	for i in 30:
 		await process_frame
-	for h in hours:
-		tod.set_minute(SkyCycle.parse_hm(h))
-		for i in 50:
-			await process_frame
-		await RenderingServer.frame_post_draw
-		var img := root.get_texture().get_image()
-		var path := "%s_%s.png" % [out, String(h).replace(":", "")]
-		img.save_png(path)
-		var st := tod.state
-		print(
-			(
-				"saved %s exposure %.2f sun %.2f moon %.2f ambient %.2f sdfgi %s"
-				% [
-					path,
-					st.exposure,
-					st.sun_energy,
-					st.moon_energy,
-					st.ambient_energy,
-					tod.env.sdfgi_enabled
-				]
-			)
-		)
+	if weathers.is_empty():
+		weathers = [""]
+	for wname in weathers:
+		if wname != "":
+			WorldWeather.forced = wname
+		for h in hours:
+			tod.set_minute(SkyCycle.parse_hm(h))
+			wx.snap()
+			for i in settle:
+				await process_frame
+			var tag := String(h).replace(":", "")
+			if wname != "":
+				tag = "%s_%s" % [wname, tag]
+			await _save("%s_%s.png" % [out, tag])
+			if wname == "mist":  # the same frame with the ground mist switched off, to compare
+				WorldWeather.mist_enabled = false
+				for i in 2:
+					await process_frame
+				await _save("%s_%s_off.png" % [out, tag])
+				WorldWeather.mist_enabled = true
+			if wname == "storm":
+				var l := wx.lightning
+				l.strike(l.focus + Vector3(5.5, 0.0, -1.5))  # beside the player, in view
+				for i in 2:
+					await process_frame
+				await _save("%s_%s_bolt.png" % [out, tag])
 	quit(0)
+
+
+func _save(path: String) -> void:
+	await RenderingServer.frame_post_draw
+	var img := root.get_texture().get_image()
+	img.save_png(path)
+	var st := tod.state
+	print(
+		(
+			"saved %s exposure %.2f sun %.2f moon %.2f ambient %.2f sdfgi %s"
+			% [
+				path,
+				st.exposure,
+				st.sun_energy,
+				st.moon_energy,
+				st.ambient_energy,
+				tod.env.sdfgi_enabled
+			]
+		)
+	)
 
 
 func _build_village() -> void:
