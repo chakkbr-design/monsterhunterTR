@@ -503,3 +503,7 @@ O `[options] quality` antigo continua gravado (Alto e Ultra = 1); save antigo co
   nesta sessão.
 - O custo só foi medido em renderização por software (lavapipe). Num GPU de verdade, o Alto foi pensado
   para uma placa da classe RTX 5070.
+
+### Carregamento (tela e pré-carga)
+
+A saída da casa para Pallet travava em preto: `RouteWorld._ensure_zone` montava a zona **de uma vez** (`items_per_frame` 0) quando ela ainda não existia (quem começa/continua no quarto nunca tinha carregado Pallet, pois o streaming mede a distância da posição do quarto, em x 10000+). Agora (1) dentro de um quarto o `_process` do `RouteWorld` já carrega a zona de fora (`active_zone`) em fatias de quadro; (2) se ainda faltar, `go_to_zone` mostra a tela `Loading` (autoload `ui/loading/loading_screen.gd`: Poké Ball de pixel, "Loading...", barra que corre; aparece depois de 0,2 s, fade de 0,15 s, mínimo 0,35 s na tela) e monta a zona em fatias, então ela nunca congela; (3) título -> mundo e Treino (montar -> luta, e entre lutas da série/Repetir) usam `Loading.begin_now("scene"/"battle")`. API: `begin(key)`, `begin_now(key)`, `end(key)`, `end_later(key, frames)`, `is_showing()`. Teste: `tests/ui_front/test_loading.gd`. O estádio do treino já é reaproveitado entre lutas (só a arena é refeita).

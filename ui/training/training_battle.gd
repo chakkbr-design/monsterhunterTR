@@ -103,6 +103,7 @@ func _ready() -> void:
 	_build_stage()
 	_build_ui()
 	start_fight()
+	Loading.end_later("scene", 3)  # the setup screen's loading screen (see Loading)
 
 
 func _exit_tree() -> void:
@@ -421,7 +422,7 @@ func _on_finished(r: Dictionary) -> void:
 			series.draw = int(series.draw) + 1
 	if auto_left > 0:
 		auto_left -= 1
-		start_fight.call_deferred()
+		_next_with_loading.call_deferred()
 		return
 	_show_result()
 
@@ -589,14 +590,14 @@ func _show_result() -> void:
 	var rep := HBoxContainer.new()
 	rep.add_theme_constant_override("separation", 8)
 	col.add_child(rep)
-	rep.add_child(_button("Repetir", _repeat.bind(0)))
+	rep.add_child(_button("Repetir", _repeat.bind(0, true)))
 	var count := SpinBox.new()
 	count.min_value = 2
 	count.max_value = 200
 	count.value = 10
 	count.suffix = "lutas"
 	rep.add_child(count)
-	rep.add_child(_button("Rodar série", func() -> void: _repeat(int(count.value) - 1)))
+	rep.add_child(_button("Rodar série", func() -> void: _repeat(int(count.value) - 1, true)))
 	var rnd := CheckBox.new()
 	rnd.text = "Sortear times a cada luta"
 	rnd.focus_mode = Control.FOCUS_NONE
@@ -622,11 +623,32 @@ func _mon_line(m: Mon) -> String:
 
 
 ## extra > 0 é uma série (Rodar série): as lutas dela são todas de IA.
-func _repeat(extra: int) -> void:
+## Next battle of a series behind the loading screen: the old arena goes away and the new one is
+## built while the ball keeps spinning (the stadium stays up). Not for the headless battery.
+func _next_with_loading() -> void:
+	var fast: bool = (
+		cfg.get("extra_opts", {}) is Dictionary and bool(cfg.extra_opts.get("fast_sim", false))
+	)
+	if fast or not is_inside_tree():
+		start_fight()
+		return
+	Loading.begin_now("battle")
+	_drop_arena()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_inside_tree():
+		start_fight()
+	Loading.end_later("battle", 2)
+
+
+func _repeat(extra: int, loading := false) -> void:
 	auto_left = extra
 	_series = extra > 0
 	_random = _series and random_series
-	start_fight()
+	if loading:
+		_next_with_loading()
+	else:
+		start_fight()
 
 
 func _reset_series() -> void:

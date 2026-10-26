@@ -93,6 +93,8 @@ func _ready() -> void:
 		_start_zone(zone_at(saved), sp, saved)
 	else:
 		_start_zone(sz, sp, Vector3.INF)
+	# Continue / New game began a "scene" loading screen (title.gd): let go once the world is up.
+	Loading.end_later("scene", 3)
 
 
 func _start_zone(zone: String, spawn: String, exact: Vector3) -> void:
@@ -145,10 +147,12 @@ func go_to_zone(zone: String, spawn: String) -> void:
 		return
 	traveling = true
 	await _fade_to(1.0)
+	Loading.begin("zone")  # only shows when the zone is not already preloaded (0.2 s)
 	await _ensure_zone(zone)
 	place_player(zone, spawn)
 	_camera_mode(false)
 	_set_location("zone", zone)
+	Loading.end("zone")
 	await _fade_to(0.0)
 	traveling = false
 	_autosave()
@@ -286,7 +290,8 @@ func _put_player(at: Vector3, facing: Vector3) -> void:
 func _ensure_zone(zone: String) -> void:
 	var b: MapBuilder = builders.get(zone)
 	if b == null:
-		_make_builder(zone, 0).build()
+		# Sliced over frames (the loading screen keeps animating); instant fades (tests) build at once.
+		await _make_builder(zone, 60 if stream and fade_time > 0.0 else 0).build()
 	elif not b.is_built:
 		await b.built
 
@@ -549,6 +554,9 @@ func _process(delta: float) -> void:
 		return
 	var here := zone_at(p.global_position)
 	var pp := Vector2(p.global_position.x, p.global_position.z)
+	# Inside a room: preload the outdoor zone behind its door while the player is still indoors.
+	if here == "" and _loading == "" and active_zone != "" and not builders.has(active_zone):
+		_stream_in(active_zone)
 	for id in zones:
 		var d := _rect_distance(zone_rect(id), pp)
 		if not builders.has(id):

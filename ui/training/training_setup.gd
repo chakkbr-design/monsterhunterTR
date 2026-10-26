@@ -378,6 +378,8 @@ func start() -> void:
 		return
 	Cfg.current = cfg
 	Cfg.save_config(cfg)
+	if has_node("/root/Loading"):
+		get_node("/root/Loading").begin_now("scene")  # the battle scene lets go once the stage is built
 	change_scene.call(BATTLE_SCENE)
 
 

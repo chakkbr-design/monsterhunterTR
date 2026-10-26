@@ -748,7 +748,12 @@ func _leave(scene := WORLD_SCENE) -> void:
 	state = "leaving"
 	var tw := create_tween()
 	tw.tween_property(_fade, "color:a", 1.0, fade_time)
-	tw.tween_callback(func(): change_scene.call(scene))
+	tw.tween_callback(
+		func():
+			if scene == WORLD_SCENE and has_node("/root/Loading"):
+				get_node("/root/Loading").begin_now("scene")  # RouteWorld lets go once built
+			change_scene.call(scene)
+	)
 
 
 # --- Entrada ---

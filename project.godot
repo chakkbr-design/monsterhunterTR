@@ -25,6 +25,7 @@ Story="*res://story/story.gd"
 PCStorage="*res://ui/pc/pc_storage.gd"
 Evolution="*res://ui/evolution/evolution_ui.gd"
 Audio="*res://audio/audio.gd"
+Loading="*res://ui/loading/loading_screen.gd"
 
 [display]
 
