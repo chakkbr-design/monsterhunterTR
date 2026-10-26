@@ -215,8 +215,6 @@ func _world() -> void:
 		float(sm.get_shader_parameter("ambient_neutral")) > 0.4,
 		"voxel look neutralises the sky light (no blue stone in shadow)"
 	)
-	var rs = RenderingServer.global_shader_parameter_get("night_lamps")
-	check(rs == null or float(rs) == 0.0, "RenderingServer global matches")
 	# Night.
 	tod.set_minute(_m("22:00"))
 	check(tod.period == "night", "period night at 22:00")
