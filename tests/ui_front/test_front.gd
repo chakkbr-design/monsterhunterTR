@@ -74,6 +74,92 @@ func wait_scene(limit := 120) -> void:
 		await process_frame
 
 
+## O valor desenhado na linha `key` da tela de Opções do título (Kit.OptionValue: text e value).
+func shown(t: Node, key: String) -> Control:
+	var i := -1
+	for r in Settings.ROWS.size():
+		if Settings.ROWS[r][0] == key:
+			i = r
+	var box: Node = t._menu_box
+	if i < 0 or box.get_child_count() < i + 2:
+		return null
+	return box.get_child(i + 1).get_child(0).get_child(1)  # 0 é o cabeçalho OPÇÕES
+
+
+func saved(section: String, key: String):
+	var cf := ConfigFile.new()
+	cf.load(CFG)
+	return cf.get_value(section, key)
+
+
+## GRÁFICOS (Baixo/Médio/Alto/Ultra) e NÉVOA DO CLIMA (Sim/Não), a partir da linha JANELA:
+## o que a linha mostra, o que vai para o settings.cfg e o clima do mundo trocando na hora.
+func _options_video(t: Node) -> void:
+	check(Settings.ROWS[t.cursor][0] == "fullscreen", "cursor na linha JANELA")
+	await key(KEY_DOWN)
+	check(Settings.ROWS[t.cursor][0] == "quality", "GRÁFICOS logo depois de JANELA")
+	var q := shown(t, "quality")
+	check(
+		q != null and q.text == "Alto",
+		"GRÁFICOS mostra Alto, o padrão (%s)" % (q.text if q else "?")
+	)
+	await key(KEY_RIGHT)
+	q = shown(t, "quality")
+	check(
+		(
+			q.text == "Ultra"
+			and int(saved("video", "graphics")) == 3
+			and int(saved("options", "quality")) == 1
+		),
+		"→ Ultra: mostra e grava [video] graphics 3 (quality antigo 1)"
+	)
+	await key(KEY_LEFT)
+	await key(KEY_LEFT)
+	q = shown(t, "quality")
+	check(
+		(
+			q.text == "Médio"
+			and int(saved("video", "graphics")) == 1
+			and int(saved("options", "quality")) == 0
+			and Settings.load_cfg(CFG).quality == 1
+		),
+		"← ← Médio: mostra, grava 1 (quality antigo 0) e relê"
+	)
+	await key(KEY_LEFT)
+	await key(KEY_LEFT)
+	check(shown(t, "quality").text == "Ultra", "← passa de Baixo para Ultra (dá a volta)")
+	await key(KEY_LEFT)
+	check(Settings.load_cfg(CFG).quality == Settings.QUALITY_DEFAULT, "volta para Alto")
+	# Névoa do clima: a mesma chave do painel F9. Com o script do clima carregado (mundo no ar),
+	# muda o WorldWeather na hora; o script vai por caminho (citar a classe puxa o mundo).
+	var ww = load(Settings.WEATHER_SCRIPT)
+	await key(KEY_DOWN)
+	var row: Array = Settings.ROWS[t.cursor]
+	check(
+		row[0] == "weather_mist" and row[1] == "NÉVOA DO CLIMA" and row[2] == "toggle",
+		"NÉVOA DO CLIMA (Sim/Não) logo depois de GRÁFICOS"
+	)
+	var m := shown(t, "weather_mist")
+	check(m != null and m.kind == "toggle" and m.value == true, "névoa ligada por padrão")
+	await key(KEY_ENTER)
+	check(
+		(
+			shown(t, "weather_mist").value == false
+			and saved("video", "weather_mist") == false
+			and Settings.load_cfg(CFG).weather_mist == false
+		),
+		"E desliga a névoa: mostra NÃO e grava [video] weather_mist"
+	)
+	check(ww.mist_enabled == false, "o clima do mundo desliga a névoa na hora")
+	await key(KEY_RIGHT)
+	check(
+		shown(t, "weather_mist").value == true and saved("video", "weather_mist") == true,
+		"→ liga de novo"
+	)
+	check(ww.mist_enabled == true, "o clima do mundo religa a névoa")
+	ww.set("_mist_loaded", false)
+
+
 func _run() -> void:
 	_rm(SAVE)
 	_rm(CFG)
@@ -176,6 +262,7 @@ func _run() -> void:
 		await key(KEY_S)
 	await key(KEY_ENTER)
 	check(t.state == "options", "abre Opções")
+	check(not t._logo.visible, "Opções sem o logo (as 10 linhas cabem na tela)")
 	await key(KEY_A)  # velocidade do texto: Médio -> Lento
 	for i in 3:
 		await key(KEY_DOWN)
@@ -189,15 +276,17 @@ func _run() -> void:
 	)
 	check(Settings.text_cps(cfg) == 25.0, "texto Lento = 25 letras/s")
 	check(Settings.battle_speed_value(cfg) == 0.6, "batalha Lento = 0,6x")
-	for i in 3:
-		await key(KEY_DOWN)
+	await _options_video(t)
+	await key(KEY_DOWN)
+	check(Settings.ROWS[t.cursor][0] == "battle_tips", "linha DICAS DE BATALHA")
+	await key(KEY_DOWN)
 	check(Settings.ROWS[t.cursor][0] == "controls", "linha CONTROLES")
 	await key(KEY_ENTER)
 	check(t.state == "controls" and t._controls.visible, "abre os controles")
 	await key(KEY_ESCAPE)
 	check(t.state == "options", "Esc volta às opções")
 	await key(KEY_ESCAPE)
-	check(t.state == "menu", "Esc volta ao menu")
+	check(t.state == "menu" and t._logo.visible, "Esc volta ao menu, com o logo")
 	# Créditos.
 	check(t.menu_items[-2] == "credits", "CRÉDITOS antes de SAIR")
 	t.cursor = t.menu_items.find("credits")

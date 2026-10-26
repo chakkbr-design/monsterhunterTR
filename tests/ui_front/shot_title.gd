@@ -2,6 +2,7 @@ extends SceneTree
 ## Captura com renderização real (sem --headless):
 ## godot --path . --resolution 1280x720 --script res://tests/ui_front/shot_title.gd
 ## Salva docs/screens/title.png (menu com Continuar), title_intro.png e title_name.png. Usa save de teste.
+## Com `-- --options=<png>` só tira a tela de Opções (cursor em NÉVOA DO CLIMA) nesse arquivo.
 
 const SAVE := "user://test_save_front_shot.json"
 
@@ -39,6 +40,10 @@ func _run() -> void:
 	t.press("ok")
 	t.press("ok")
 	await _wait(90)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--options="):
+			await _options(t, a.substr(10))
+			return
 	await _shot("res://docs/screens/title.png")
 	await _shot("res://docs/screens/ui_title.png")
 	t.press("down")
@@ -58,6 +63,23 @@ func _run() -> void:
 		t._entry.type_char(ch)
 	await _wait(20)
 	await _shot("res://docs/screens/title_name.png")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_settings_front_shot.cfg"))
+	quit(0)
+
+
+## Tela de Opções com GRÁFICOS em Ultra e a NÉVOA DO CLIMA desligada, marcada.
+func _options(t: Node, out: String) -> void:
+	var rows: Array = preload("res://ui/front/settings.gd").ROWS
+	t.cursor = t.menu_items.find("options")
+	t.press("ok")
+	while rows[t.cursor][0] != "quality":
+		t.press("down")
+	t.press("right")
+	t.press("down")
+	t.press("ok")
+	await _wait(20)
+	await _shot(out)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_settings_front_shot.cfg"))
 	quit(0)
