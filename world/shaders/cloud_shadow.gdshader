@@ -2,10 +2,14 @@ shader_type spatial;
 // Cloud shadows: a large multiply-blended plane a little above the ground, drawn over everything
 // (depth test off) so the same soft shade slides across grass, paths, buildings and characters
 // together. Low-frequency noise scrolls along the shared wind (~1.5 m/s); ~30% coverage, ~18% darken.
+// Only sunlight casts them: they fade with sun_amount (dusk, night, overcast) and the patches
+// grow as cloud_cover rises, until the sky closes and there is no direct sun left to shade.
 render_mode unshaded, blend_mul, depth_draw_never, depth_test_disabled, cull_disabled;
 
 global uniform vec2 wind_dir;
 global uniform float wind_time;
+global uniform float sun_amount;
+global uniform float cloud_cover;
 
 uniform float cloud_scale = 0.018;
 uniform float cloud_speed = 1.5;      // metres per second the clouds travel
@@ -30,6 +34,8 @@ void fragment() {
 	vec2 p = world_pos.xz * cloud_scale - wd * (wind_time * cloud_speed * cloud_scale);
 	float n = noise(p) * 0.6 + noise(p * 2.3 + 11.0) * 0.3 + noise(p * 5.1 + 3.0) * 0.1;
 	// Smoothstep centred so roughly `coverage` of the area is shaded, with soft edges.
-	float cloud = smoothstep(0.5 - coverage * 0.5, 0.5 + coverage * 0.5, n);
-	ALBEDO = vec3(1.0 - darken * cloud);
+	float cov = mix(coverage, 0.85, clamp(cloud_cover, 0.0, 1.0));
+	float cloud = smoothstep(0.5 - cov * 0.5, 0.5 + cov * 0.5, n);
+	float sun = clamp(sun_amount, 0.0, 1.0);
+	ALBEDO = vec3(1.0 - darken * cloud * sun);
 }

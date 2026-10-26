@@ -85,6 +85,13 @@ func _process(delta: float) -> void:
 	if cov != _cov:  # texture upload only when the coverage changes, not every frame
 		_cov = cov
 		WorldFx.set_weather(cov)
+		# Voxel / water globals (docs/VOXEL.md §3): the same coverage as named floats.
+		var w := clampf(cov.r / 0.8, 0.0, 1.0)
+		RenderingServer.global_shader_parameter_set("rain_amount", clampf(rains, 0.0, 1.0))
+		RenderingServer.global_shader_parameter_set("rain_wet", w)
+		RenderingServer.global_shader_parameter_set("rain_puddle", smoothstep(0.35, 1.0, w) * 0.75)
+		RenderingServer.global_shader_parameter_set("snow_cover", clampf(cov.g, 0.0, 1.0))
+		RenderingServer.global_shader_parameter_set("cloud_cover", clampf(cov.a, 0.0, 1.0))
 	var cam := get_viewport().get_camera_3d()
 	if cam:
 		_rain.global_position = cam.global_position + Vector3(0, 6.0, 0)

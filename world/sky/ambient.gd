@@ -247,7 +247,7 @@ func _make_pollen() -> GPUParticles3D:
 	m.albedo_color = Color(1.0, 0.9, 0.6)
 	m.emission_enabled = true
 	m.emission = Color(1.0, 0.85, 0.5)
-	m.emission_energy_multiplier = 3.0
+	m.emission_energy_multiplier = 1.8
 	q.material = m
 	p.draw_pass_1 = q
 	return p
