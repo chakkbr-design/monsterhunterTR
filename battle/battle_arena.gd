@@ -1835,7 +1835,10 @@ func _player_input(f: BattleFighter) -> Vector3:
 		return _locked_input(f)
 	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if Input.is_action_just_pressed("jump"):
-		f.start_jump()
+		# Modo de energia: com degrau/objeto na frente salta (ou voa) por cima (BattleClimb).
+		var jd := Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
+		if not terrain.climb.player_jump(f, jd if jd.length() > 0.1 else f.facing):
+			f.start_jump()
 	f.sprinting = Input.is_action_pressed("sprint") and f.can_sprint(i.length() > 0.1)
 	for k in mini(f.moves.size(), 4):
 		if Input.is_action_just_pressed("move_%d" % (k + 1)) and f.can_act():

@@ -254,6 +254,8 @@ var biomes: BattleBiomes
 var destruction: BattleDestruction
 ## Contador de mudanças nos obstáculos (sobe a cada obstacles_changed).
 var obstacles_rev := 0
+## Degraus, salto, voo e caminho da IA no modo de energia (battle_climb.gd)
+var climb: BattleClimb
 ## Quadra voxel (arena.voxel_court): posições e tamanhos na grade de LATTICE m e visual em voxel.
 var lattice := false
 ## Multiplicador das quantidades do cenário pela área (_count_k).
@@ -272,6 +274,7 @@ func _init(a: Node) -> void:
 	props = BattleProps.new(self)
 	biomes = BattleBiomes.new(self)
 	destruction = BattleDestruction.new(self)
+	climb = BattleClimb.new(self)
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -345,6 +348,7 @@ func setup() -> void:
 		return
 	lattice = arena.has_method("voxel_court") and arena.voxel_court()
 	count_k = _count_k()
+	climb.prepare()  # modo de energia: morro e pico em degraus (antes de criar os obstáculos)
 	var rng: RandomNumberGenerator = arena.rng
 	scenario = String(arena.opts.get("scenario", ""))
 	var energy: bool = not arena.has_method("energy_on") or arena.energy_on()
@@ -488,6 +492,7 @@ func _add(kind: String, at: Vector3, r: float, h: float, top := -1.0) -> void:
 	if kind == "pond":
 		o.hp = 0
 		o.top = r
+	climb.tag(o)
 	if not lattice:
 		_build_node(o)
 	else:
@@ -520,6 +525,8 @@ func height_at(p: Vector3) -> float:
 
 
 func _height_of(o: Dictionary, p: Vector3) -> float:
+	if BattleClimb.tiers(o) > 0:
+		return BattleClimb.step_height(o, p)  # modo de energia: degraus
 	var d := _flat(p - o.pos).length()
 	if d >= o.r:
 		return 0.0
@@ -594,6 +601,8 @@ func swimmer(f: BattleFighter) -> bool:
 
 ## Para o pico não escalável: o lutador vale como sólido nele.
 func blocks(f: BattleFighter, o: Dictionary) -> bool:
+	if climb.on:
+		return false  # modo de energia: degraus para todos (BattleClimb.push_out)
 	return o.kind == "peak" and not climber(f) and f.height() < o.h
 
 
@@ -615,6 +624,8 @@ func _move_mult(f: BattleFighter) -> float:
 		if float(pond.ice_t) > 0.0:
 			return ICE_MULT
 		return SWIM_MULT if swimmer(f) else WADE_MULT
+	if climb.on:
+		return 1.0  # degraus: sem encosta
 	for o in obstacles:
 		if o.kind == "pond":
 			continue
@@ -660,6 +671,18 @@ func push_out(f: BattleFighter) -> Vector3:
 	return out
 
 
+## Um obstáculo (morro, pico, caixa, objeto) foi criado, destruído ou mudou: a grade de caminho da IA
+## (BattleClimb) é refeita no próximo uso. Quem destrói/cria obstáculo chama isto.
+func on_obstacles_changed() -> void:
+	climb.dirty()
+
+
+## Pouso de salto/voo: o chão passa a ser o de lá na hora.
+func land(f: BattleFighter) -> void:
+	f.ground_y = height_at(f.position)
+	_fall_v.erase(f.get_instance_id())
+
+
 ## Por quadro, depois de cada lutador andar: puxão/derrubada em curso, chão sob ele, queda e o pico
 ## sólido.
 func settle(f: BattleFighter, dt: float) -> void:
@@ -669,7 +692,7 @@ func settle(f: BattleFighter, dt: float) -> void:
 	if obstacles.is_empty() or not f.active():
 		return
 	_slide_step(f, dt)
-	f.position += push_out(f)
+	f.position += climb.push_out(f) if climb.on else push_out(f)
 	if f.motion == "tunnel" or f.hidden != "":
 		f.ground_y = 0.0
 		return
@@ -811,6 +834,7 @@ func damage(o: Dictionary, n: int, user: BattleFighter = null) -> void:
 ## O relevo desaba: quem está em cima cai, toma dano e fica atordoado.
 func collapse(o: Dictionary, user: BattleFighter = null) -> void:
 	obstacles.erase(o)
+	on_obstacles_changed()
 	_crumbs(o, 10)
 	if is_instance_valid(o.node):
 		o.node.queue_free()
@@ -1091,6 +1115,7 @@ func has_cover() -> bool:
 
 func tick(dt: float) -> void:
 	_water_t += dt
+	climb.tick(dt)
 	ground.tick(dt)
 	props.tick(dt)
 	biomes.tick(dt)
@@ -1234,8 +1259,13 @@ func cover_spot(f: BattleFighter, from: Vector3, max_d := 7.0) -> Vector3:
 	return best
 
 
-## Desvia a direção desejada da IA de picos que ela não escala e (quem não é de Água) do lago.
+## Desvia a direção desejada da IA de picos que ela não escala e (quem não é de Água) do lago; no
+## modo de energia, com o caminho tapado, contorna, salta ou voa (BattleClimb.steer).
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
+	return climb.steer(f, _steer(f, want))
+
+
+func _steer(f: BattleFighter, want: Vector3) -> Vector3:
 	want = ground.steer(f, want)  # contorna a lama e as brasas
 	want = biomes.steer(f, want)  # colunas, lava e neve funda
 	want = props.avoid(f, want)  # esporos, gêiser perto da erupção, enxame
@@ -1284,7 +1314,10 @@ func _build_node(o: Dictionary) -> void:
 	root.position = o.pos
 	match String(o.kind):
 		"hill":
-			root.add_child(_frustum(o.r, o.top, o.h, tex("earth"), 10, 1.0))
+			if BattleClimb.tiers(o) > 0:
+				_steps(root, o, tex("earth"), 10, 1.0)
+			else:
+				root.add_child(_frustum(o.r, o.top, o.h, tex("earth"), 10, 1.0))
 			var cap := _disc(o.top + 0.02, tex("grass"), 1.2)
 			cap.position.y = o.h + 0.01
 			root.add_child(cap)
@@ -1294,7 +1327,10 @@ func _build_node(o: Dictionary) -> void:
 				tuft.position = Vector3(cos(a), 0, sin(a)) * o.top * 0.7 + Vector3(0, o.h + 0.06, 0)
 				root.add_child(tuft)
 		"peak":
-			root.add_child(_frustum(o.r, o.top, o.h, tex("stone"), 7, 0.9))
+			if BattleClimb.tiers(o) > 0:
+				_steps(root, o, tex("stone"), 7, 0.9)
+			else:
+				root.add_child(_frustum(o.r, o.top, o.h, tex("stone"), 7, 0.9))
 			var cap := _frustum(o.top + 0.05, o.top * 0.6, 0.18, tex("stone_light"), 7, 1.5)
 			cap.position.y = o.h - 0.02
 			root.add_child(cap)
@@ -1430,6 +1466,17 @@ func _frustum(
 	mi.position.y = h * 0.5
 	mi.material_override = _mat(t, scale)
 	return mi
+
+
+## Degraus do modo de energia (sem a quadra voxel): um cilindro por nível.
+func _steps(root: Node3D, o: Dictionary, t: Texture2D, segs: int, scale: float) -> void:
+	var n := BattleClimb.tiers(o)
+	for k in range(1, n + 1):
+		var rr := BattleClimb.ring(o, k)
+		var y0 := BattleClimb.tier_h(o, k - 1)
+		var cyl := _frustum(rr, rr, BattleClimb.tier_h(o, k) - y0, t, segs, scale)
+		cyl.position.y += y0
+		root.add_child(cyl)
 
 
 func _disc(r: float, t: Texture2D, scale: float) -> MeshInstance3D:

@@ -87,6 +87,12 @@ func _leap() -> void:
 	check(pas.tick(0.6), "pulo de desespero sai encurralado no canto")
 	check(f.motion == "leap", "o pulo é um salto (motion leap)")
 	check(pas.leap_cd >= BattlePassives.LEAP_CD - 0.01, "recarga do pulo começou")
+	# É o salto de obstáculo (BattleClimb): custa a energia dele e divide a recarga.
+	check(f.jump_cd >= BattleClimb.JUMP_CD - 0.01, "pulo de desespero usa a recarga do salto")
+	check(
+		absf(f.pp_max - (20.0 - BattleClimb.JUMP_COST)) < 0.01,
+		"pulo de desespero custa JUMP_COST (%.1f)" % f.pp_max
+	)
 	var top := 0.0
 	var t := 0.0
 	while f.motion != "" and t < 2.0:
@@ -106,7 +112,7 @@ func _leap() -> void:
 		f.flat_to(foe).length() > 2.0, "pousa longe do inimigo (%.1f m)" % f.flat_to(foe).length()
 	)
 	check(
-		f.pp_max >= 20.0 + BattlePassives.BREATH_ENERGY - 0.5,
+		f.pp_max >= 20.0 - BattleClimb.JUMP_COST + BattlePassives.BREATH_ENERGY - 0.5,
 		"fôlego: energia extra (%.1f)" % f.pp_max
 	)
 	check(f.breath_t > 0.0, "fôlego: recarga mais rápida por uns segundos")
@@ -119,6 +125,12 @@ func _leap() -> void:
 	foe.position = corner + Vector3(1.6, 0.0, 1.2)
 	check(not pas.tick(1.5), "não pula de novo durante a recarga")
 	pas.leap_cd = 0.0
+	check(not pas.tick(1.5), "a recarga do salto (jump_cd) também segura")
+	f.jump_cd = 0.0
+	var en := f.pp_max
+	f.pp_max = BattleClimb.JUMP_COST - 1.0
+	check(not pas.tick(1.5), "sem energia para o salto não pula")
+	f.pp_max = en
 	check(pas.tick(1.5), "pula de novo depois da recarga")
 	# Longe da parede ninguém pula.
 	var f2: BattleFighter = f
@@ -129,6 +141,7 @@ func _leap() -> void:
 	f2.position = Vector3(r.get_center().x, 0.0, r.get_center().y)
 	foe.position = f2.position + Vector3(1.0, 0.0, 0.0)
 	pas.leap_cd = 0.0
+	f2.jump_cd = 0.0
 	check(not pas.tick(2.0), "no meio da quadra não pula")
 	a.queue_free()
 

@@ -1645,8 +1645,8 @@ func _push_out() -> void:
 		for o in items:
 			if not SOLID_R.has(o.kind):
 				continue
-			if f.height() > float(COVER_H.get(o.kind, 0.9)):
-				continue
+			if BattleClimb.pass_h(f) > float(COVER_H.get(o.kind, 0.9)):
+				continue  # no modo de energia só o salto/voo passa por cima
 			var d := _flat(f.position - o.pos)
 			var lim: float = float(SOLID_R[o.kind]) + BODY_R
 			if d.length() >= lim:

@@ -109,6 +109,8 @@ func _layout() -> void:
 
 
 func _put(a: Node, f: BattleFighter, at: Vector3) -> void:
+	# Teleporte: já no chão de lá (como se tivesse saltado; o degrau não empurra para fora).
+	f.ground_y = a.terrain.height_at(at)
 	f.position = Vector3(at.x, f.ground_y, at.z)
 	for i in 90:
 		a.terrain.settle(f, DT)
@@ -126,10 +128,11 @@ func _height() -> void:
 	check(absf(p.ground_y - hill.h) < 0.05, "sobe no morro (%.2f de %.2f)" % [p.ground_y, hill.h])
 	check(absf(p.position.y - hill.h) < 0.1, "corpo na altura do topo")
 	check(a.terrain.on_high(p), "no alto")
-	# Pikachu não escala o pico: é sólido para ele.
+	# Pikachu não sobe o pico andando (modo de energia: degraus para todos, BattleClimb).
+	p.ground_y = 0.0
 	p.position = peak.pos + Vector3(0.1, 0, 0)
 	a.terrain.settle(p, DT)
-	check((p.position - peak.pos).length() > peak.r * 0.7, "pico empurra quem não escala")
+	check((p.position - peak.pos).length() >= peak.r, "pico empurra quem está no chão")
 	var g: BattleFighter = a.enemy
 	check(a.terrain.climber(g), "Geodude (Pedra) escala")
 	_put(a, g, peak.pos)

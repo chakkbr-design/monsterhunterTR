@@ -132,6 +132,9 @@ var last_status := ""
 var entry_t := 0.0
 ## Fôlego (passiva do pulo de desespero): segundos com a energia enchendo mais rápido.
 var breath_t := 0.0
+## Modo de energia: recargas do salto de obstáculo e do voo (BattleClimb).
+var jump_cd := 0.0
+var fly_cd := 0.0
 ## Rodada (BattleTurns.round_n) em que o status / a confusão começou.
 var status_round := -1
 var confusion_round := -1
@@ -366,18 +369,19 @@ func visual_step(dt: float) -> void:
 	_place_status_fx()
 
 
-## Achatar/esticar do pulo de desespero: agacha na decolagem (primeiros 20% do arco), estica no
-## ar e achata de novo ao pousar (squash_t). Só visual, lê o movimento sem mexer nele.
+## Achatar/esticar do pulo de desespero e do salto de obstáculo (BattleClimb): agacha na decolagem
+## (primeiros 20% do arco), estica no ar e achata de novo ao pousar (squash_t). Só visual, lê o
+## movimento sem mexer nele.
 func _leap_squash(dt: float) -> Vector3:
 	squash_t = maxf(squash_t - dt, 0.0)
-	if motion == "leap" and leap_style == "desperate":
+	if motion == "leap" and leap_style in ["desperate", "climb"]:
 		var s := clampf(1.0 - motion_t / maxf(motion_total, 0.001), 0.0, 1.0)
 		if s < 0.2:
 			var k := sin(s / 0.2 * PI)
 			return Vector3(1.0 + 0.28 * k, 1.0 - 0.38 * k, 1.0)
 		var air := sin(s * PI)
 		return Vector3(1.0 - 0.12 * air, 1.0 + 0.2 * air, 1.0)
-	if motion != "leap" and leap_style == "desperate":
+	if motion != "leap" and leap_style != "":
 		leap_style = ""
 	if squash_t > 0.0:
 		var k2 := squash_t / 0.16
@@ -1052,6 +1056,9 @@ func tick(dt: float) -> void:
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
 	entry_t = maxf(entry_t - dt, 0.0)
 	breath_t = maxf(breath_t - dt, 0.0)
+	if energy_mode:
+		jump_cd = maxf(jump_cd - dt, 0.0)
+		fly_cd = maxf(fly_cd - dt, 0.0)
 	status_immune_t = maxf(status_immune_t - dt, 0.0)
 	if status == "paralysis":
 		par_t -= dt

@@ -5,7 +5,8 @@ extends RefCounted
 ## - Pulo de desespero: encurralado na parede (inimigo perto por CORNER_SECS s, ou dois inimigos perto)
 ##   salta LEAP_DIST m para o espaço aberto, passando pelo lado do inimigo e sem sair da quadra; no ar
 ##   a investida passa por baixo. Ao pousar ganha Fôlego: BREATH_ENERGY de energia e a barra enche
-##   BREATH_REGEN x por BREATH_SECS s. Recarga LEAP_CD s por Pokémon.
+##   BREATH_REGEN x por BREATH_SECS s. É o salto de obstáculo (BattleClimb): custa JUMP_COST de
+##   energia (sem ela não sai) e divide a recarga JUMP_CD (LEAP_CD); não sobe mais de um degrau.
 ## - Segundo fôlego: uma vez por entrada, com HP abaixo de SECOND_HP e energia abaixo de SECOND_EN,
 ##   recupera SECOND_ENERGY de energia (com chance SECOND_CHANCE).
 ## - Contra-ataque: esquiva perfeita (a investida passou por baixo, ou saiu de lado e a investida não
@@ -21,7 +22,7 @@ const CORNER_PAIR := 3.6
 const LEAP_DIST := 4.0
 const LEAP_SECS := 0.55
 const LEAP_H := 1.6
-const LEAP_CD := 11.0
+const LEAP_CD := 5.0  ## = BattleClimb.JUMP_CD (recarga do salto, a mesma para os dois)
 const LEAP_MARGIN := 2.0
 ## Pouso a pelo menos LAND_FOE m de todo inimigo (senão a nota do ponto cai).
 const LAND_FOE := 2.6
@@ -98,6 +99,8 @@ func cornered(dt: float) -> bool:
 func can_leap() -> bool:
 	return (
 		leap_cd <= 0.0
+		and f.jump_cd <= 0.0
+		and f.pp_max >= BattleClimb.JUMP_COST
 		and f.can_act()
 		and f.motion == ""
 		and f.launch_t <= 0.0
@@ -124,19 +127,37 @@ func leap() -> bool:
 	var spot := Vector3(to.x, 0.0, to.z)
 	var visual := not _fast()
 	if visual:
-		f.leap_style = "desperate"
 		_takeoff_fx()
-	f.start_motion(
-		"leap",
-		spot,
-		LEAP_SECS,
-		LEAP_H,
-		null,
-		_land,
-		0.0,
-		_trail if visual else Callable(),
-		f.ground_y
-	)
+	var ter = f.arena.get("terrain")
+	if ter != null and ter.get("climb") != null:
+		# Salto de obstáculo (BattleClimb): paga a energia, divide a recarga e pousa na altura de lá.
+		ter.climb.pay_jump(f)
+		var y1: float = float(ter.height_at(spot)) + f.fly_h
+		ter.climb.arc(
+			f,
+			spot,
+			LEAP_SECS,
+			maxf(f.position.y, y1) + LEAP_H,
+			"desperate" if visual else "",
+			_land,
+			_trail if visual else Callable()
+		)
+	else:
+		f.spend(BattleClimb.JUMP_COST)
+		f.jump_cd = BattleClimb.JUMP_CD
+		if visual:
+			f.leap_style = "desperate"
+		f.start_motion(
+			"leap",
+			spot,
+			LEAP_SECS,
+			LEAP_H,
+			null,
+			_land,
+			0.0,
+			_trail if visual else Callable(),
+			f.ground_y
+		)
 	f.popup("Desperate leap!", Color(0.75, 0.95, 1.0), 1.0, 0.8, "special")
 	_note("pulo_desespero")
 	if f.ai:
@@ -146,7 +167,7 @@ func leap() -> bool:
 
 ## Melhor ponto de pouso: LEAP_DIST m na direção do centro girada até ±90° (passa pelo lado do
 ## inimigo), dentro da quadra com LEAP_MARGIN da parede, longe dos inimigos e fora de pico que não
-## escala. INF = nenhum serve.
+## escala (modo de energia com relevo: um salto que vale, BattleClimb.jump_ok). INF = nenhum serve.
 func landing() -> Vector3:
 	var me := f.pos2(f.position)
 	var r: Rect2 = f.arena.rect
@@ -169,7 +190,10 @@ func landing() -> Vector3:
 			p.z = clampf(p.z, safe.position.y, safe.end.y)
 			if (p - me).length() < LEAP_DIST * 0.6:
 				continue
-		if ter != null and _blocked(ter, p):
+		if ter != null and ter.get("climb") != null and ter.climb.on:
+			if not ter.climb.jump_ok(f, p, LEAP_DIST + 0.1):
+				continue
+		elif ter != null and _blocked(ter, p):
 			continue
 		var near := INF
 		for g in foes:

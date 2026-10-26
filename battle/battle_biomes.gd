@@ -572,8 +572,8 @@ func settle(f: BattleFighter, dt: float) -> void:
 	if not on or not f.active() or f.motion == "tunnel":
 		return
 	for s in solids:
-		if f.height() > float(s.h):
-			continue
+		if BattleClimb.pass_h(f) > float(s.h):
+			continue  # só o salto/voo passa por cima (BattleClimb)
 		var d := _flat(f.position - s.pos)
 		var lim := float(s.r) + BODY_R
 		if d.length() >= lim:
