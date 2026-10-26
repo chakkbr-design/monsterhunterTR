@@ -161,14 +161,14 @@ func _autosave() -> void:
 		g.autosave(self)
 
 
-## Original Game.heal_with_fade: fade out, heal the party, "Seu time foi curado!" (or msg) with the
+## Original Game.heal_with_fade: fade out, heal the party, "Your team was healed!" (or msg) with the
 ## heal jingle, 1.8 s of black, fade in.
 func heal_with_fade(msg := "") -> void:
 	await _fade_to(1.0, 0.35)
 	Game.heal_party()
 	var hud := hud_of(self)
 	if hud:
-		hud.toast(msg if msg != "" else "Seu time foi curado!", 2.5)
+		hud.toast(msg if msg != "" else "Your team was healed!", 2.5)
 	_sfx("heal")
 	await _hold(1.8)
 	await _fade_to(0.0, 0.35)
@@ -399,14 +399,14 @@ func _white_out(p: OverworldPlayer, loss := 0) -> void:
 	var was := p.locked
 	p.locked = true
 	var nm := Game.player_name
-	var lines := PackedStringArray(["%s não tem mais Pokémon em condições de lutar!" % nm])
+	var lines := PackedStringArray(["%s has no more Pokémon that can fight!" % nm])
 	if loss > 0:
-		lines.append("%s entrou em pânico e perdeu ₽%d..." % [nm, loss])
+		lines.append("%s panicked and lost ₽%d..." % [nm, loss])
 	lines.append("... ... ... ...")
 	lines.append(
 		(
-			"%s correu %s, protegendo os Pokémon exaustos de mais ferimentos..."
-			% [nm, "para casa" if _heal_id() == "player_house" else "para um Centro Pokémon"]
+			"%s scurried %s, protecting the exhausted Pokémon from further harm..."
+			% [nm, "home" if _heal_id() == "player_house" else "to a Pokémon Center"]
 		)
 	)
 	var hud := hud_of(self)

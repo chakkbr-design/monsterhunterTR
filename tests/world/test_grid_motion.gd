@@ -376,7 +376,7 @@ func _focus() -> void:
 	await put(8, 14, Vector3(0, 0, 1))
 	await frames(2)
 	check(
-		p.focus != null and String(p.focus.npc_name).begins_with("Assistente"),
+		p.focus != null and String(p.focus.npc_name).begins_with("Lab Assistant"),
 		"front tile: the lab assistant (%s)" % [p.focus]
 	)
 	await put(8, 14, Vector3(1, 0, 0))

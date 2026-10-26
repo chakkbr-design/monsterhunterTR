@@ -7,7 +7,7 @@ extends WorldNpc
 ## com FUGIR. Entrada do mapa: "attendant": {options: ["Espécie|nível|placa"], center: [x, y, z], size: [w, d]}.
 
 const Kit := preload("res://ui/ui_kit.gd")
-const QUESTION := "Qual boneco você quer enfrentar?"
+const QUESTION := "Which dummy do you want to face?"
 
 ## Testes: >= 0 responde a escolha sozinho com essa opção (-1 = cancela; -2 = jogador escolhe).
 static var auto_pick := -2
@@ -108,7 +108,7 @@ static func parse_option(entry: String) -> Dictionary:
 	}
 
 
-## {"spe": 1} -> "Velocidade +1".
+## {"spe": 1} -> "Speed +1".
 static func ev_label(ev_yield: Dictionary) -> String:
 	var parts: Array = []
 	for s in ev_yield:
@@ -186,10 +186,10 @@ func start_training_battle(species: String, level: int, card_path: String) -> Di
 	if ow == null or Game.is_busy():
 		return {}
 	if Game.party.is_empty():
-		await say(["Você não tem nenhum Pokémon! Pegue um no laboratório primeiro."])
+		await say(["You don't have any Pokémon! Get one at the lab first."])
 		return {}
 	if Game.first_healthy() < 0:
-		await say(["Todos os seus Pokémon desmaiaram!"])
+		await say(["All your Pokémon have fainted!"])
 		return {}
 	var center := global_position
 	if arena_center.is_finite():

@@ -903,7 +903,7 @@ func _buildings() -> void:
 		door.drawn = inst == null
 		var msg: Dictionary = b.get("message", {})
 		door.npc_name = String(msg.get("title", id.replace("_", " ").capitalize()))
-		door.lines = PackedStringArray(msg.get("lines", ["Fechado."]))
+		door.lines = PackedStringArray(msg.get("lines", ["It's locked."]))
 		door.color = Color(0.45, 0.3, 0.2)
 		door.body_height = 2.0
 		var dr: Dictionary = b.get("door", {})
@@ -1730,9 +1730,9 @@ static func fill_names(lines: Array) -> PackedStringArray:
 func _cut_tree(c: Dictionary) -> void:
 	var sp := SignPost.new()
 	sp.name = "Cut_%s" % String(c.get("uid", "tree"))
-	sp.npc_name = "Árvore"
+	sp.npc_name = "Tree"
 	sp.lines = PackedStringArray(
-		["Uma pequena árvore bloqueia o caminho.", "Parece que um Pokémon poderia cortá-la..."]
+		["A small tree blocks the way.", "It looks like a Pokémon could cut it down..."]
 	)
 	sp.color = Color(0.3, 0.55, 0.3)
 	sp.body_height = 1.8
@@ -1740,7 +1740,7 @@ func _cut_tree(c: Dictionary) -> void:
 	sp.model_scale = 0.8
 	sp.model_billboard = true
 	sp.model_tint = Color(0.74, 0.86, 0.72)
-	sp.verb = "E: Olhar"
+	sp.verb = "E: Look"
 	sp.position = _at(c)
 	sp.add_to_group(CUT_TREE_GROUP)
 	add_child(sp)
@@ -1752,7 +1752,7 @@ func _people() -> void:
 	for s in data.get("signs", []):
 		var sp := SignPost.new()
 		sp.name = String(s.get("name", "Sign"))
-		sp.npc_name = String(s.get("title", "Placa"))
+		sp.npc_name = String(s.get("title", "Sign"))
 		sp.lines = fill_names(s.get("lines", []))
 		sp.color = Color(0.55, 0.4, 0.25)
 		sp.body_height = 1.2
@@ -1806,8 +1806,8 @@ func _people() -> void:
 	for h in data.get("heal_spots", []):
 		var hs := HealSpot.new()
 		hs.name = String(h.get("name", "HealSpot")).replace(" ", "")
-		hs.npc_name = String(h.get("name", "Ponto de cura"))
-		hs.lines = PackedStringArray(h.get("lines", ["Seu time foi curado!"]))
+		hs.npc_name = String(h.get("name", "Healing spot"))
+		hs.lines = PackedStringArray(h.get("lines", ["Your team was healed!"]))
 		hs.color = Color(0.95, 0.5, 0.6)
 		hs.position = _at(h)
 		hs.rotation.y = facing_yaw(h.get("facing", 0))

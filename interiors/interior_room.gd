@@ -20,7 +20,7 @@ const WALL_HEIGHTS := {
 	"pewter_museum": 4.25,
 }
 ## Furniture a chair turns to face (the nearest one of these names).
-const SEATS_FACE := ["Mesa", "Carteira", "Escrivaninha"]
+const SEATS_FACE := ["Table", "School Desk", "Desk"]
 
 var id := ""
 var def: Dictionary = {}
@@ -175,7 +175,7 @@ func _build_shell() -> void:
 
 ## A chair faces the nearest table / desk of the room (Vector3.INF for anything else).
 func _seat_target(fname: String, at: Vector3) -> Vector3:
-	if fname != "Cadeira":
+	if fname != "Chair":
 		return Vector3.INF
 	var best := Vector3.INF
 	for f in def.get("furniture", []):
@@ -195,7 +195,7 @@ func _build_exit(e: Dictionary, back := false) -> void:
 	if (
 		InteriorLook.furniture(
 			self,
-			"Tapete",
+			"Rug",
 			Vector3(x, 0.02, sg * (d / 2.0 - 0.5)),
 			Vector3(1.6, 0.04, 0.8),
 			Color(0.62, 0.22, 0.2)
@@ -223,7 +223,7 @@ func _build_exit(e: Dictionary, back := false) -> void:
 			"Doorway"
 		)
 	var tag := Label3D.new()
-	tag.text = "SAÍDA"
+	tag.text = "EXIT"
 	tag.font_size = 48
 	tag.outline_size = 10
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -251,7 +251,7 @@ func _build_stairs(s: Dictionary) -> void:
 			"Step%d" % i
 		)
 	var tag := Label3D.new()
-	tag.text = "SOBE" if going_up else "DESCE"
+	tag.text = "UP" if going_up else "DOWN"
 	tag.font_size = 40
 	tag.outline_size = 10
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -298,7 +298,7 @@ func _spawn_npc(n: Dictionary) -> void:
 		_:
 			npc = WorldNpc.new()
 	npc.name = "Npc_%s" % n.marker
-	npc.npc_name = String(n.get("name", "Pessoa"))  # trainers replace it from trainers.json
+	npc.npc_name = String(n.get("name", "Person"))  # trainers replace it from trainers.json
 	if n.has("lines"):
 		var ls := PackedStringArray()
 		for l in n.lines:

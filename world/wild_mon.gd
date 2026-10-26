@@ -77,7 +77,7 @@ func _ready() -> void:
 	mi.position.y = r * 1.5
 	add_child(mi)
 	var tag := Label3D.new()
-	tag.text = "%s Nv%d" % [mon.display_name, mon.level]
+	tag.text = "%s Lv%d" % [mon.display_name, mon.level]
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.font_size = 72
 	tag.outline_size = 14

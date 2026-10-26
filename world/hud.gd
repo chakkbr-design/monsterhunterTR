@@ -10,9 +10,9 @@ const Kit := preload("res://ui/ui_kit.gd")
 const Settings := preload("res://ui/front/settings.gd")
 const GROUP := "ow_hud"
 const REARM_S := 0.25  ## anti-repeat after a dialogue closes
-const TEXT_CPS := 45.0  ## "Médio", o padrão das Opções
+const TEXT_CPS := 45.0  ## "Medium", o padrão das Opções
 ## Clock.DAYS do original.
-const DAYS := ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]
+const DAYS := ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
 signal advanced
 
@@ -228,7 +228,7 @@ func _ready() -> void:
 	_orbs = PartyOrbs.new()
 	root.add_child(_orbs)
 
-	_hint = Kit.hint("Shift correr · Esc menu")
+	_hint = Kit.hint("Shift run · Esc menu")
 	root.add_child(_hint)
 
 	_prompt = Kit.hint("")
@@ -250,7 +250,7 @@ func _ready() -> void:
 	root.add_child(_toast)
 
 	_saving = Label.new()
-	_saving.text = "● Salvando…"
+	_saving.text = "● Saving…"
 	_saving.add_theme_font_size_override("font_size", Kit.SIZE_SMALL)
 	_saving.add_theme_color_override("font_color", Kit.PAPER)
 	_saving.add_theme_color_override("font_outline_color", Kit.INK)
@@ -333,7 +333,7 @@ func _overlay_open() -> bool:
 	return false
 
 
-## Game.saved (contrato do autosave) mostra "● Salvando…" no canto, como hud.show_saving do original.
+## Game.saved (contrato do autosave) mostra "● Saving…" no canto, como hud.show_saving do original.
 func _bind_game(g: Node) -> void:
 	if g == _game_bound or g == null:
 		return
@@ -432,10 +432,6 @@ func set_prompt(text: String) -> void:
 		if i > 0 and i <= 6:
 			key = text.substr(0, i).strip_edges()
 			rest = text.substr(i + 1).strip_edges()
-		if rest.begins_with("Battle "):
-			rest = "Batalhar com " + rest.substr(7)
-		elif rest == "Talk":
-			rest = "Falar"
 		_prompt.text = ("%s %s" % [key, rest]) if key != "" else rest
 	elif _prompt.visible == (text != "" and not _open):
 		return

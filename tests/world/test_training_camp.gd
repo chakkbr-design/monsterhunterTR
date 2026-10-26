@@ -86,7 +86,10 @@ func _units() -> void:
 		"parse_option lê espécie|nível|placa"
 	)
 	check(TA.parse_option("|5|x").is_empty(), "parse_option recusa espécie vazia")
-	check(TA.ev_label({"spe": 1}) == "Velocidade +1", "rótulo do EV em português")
+	check(
+		TA.ev_label({"spe": 1}) == "%s +1" % load("res://ui/ui_kit.gd").STATS["spe"],
+		"EV label uses the stat name"
+	)
 
 
 func _camp(where: String, pick: int, species: String, card: String, stat: String) -> void:

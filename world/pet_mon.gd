@@ -32,7 +32,7 @@ static func from_entry(d: Dictionary) -> PetMon:
 	p.owner_name = String(d.get("owner", ""))
 	var sp_name := String(Dex.species(p.species).get("name", p.species))
 	p.npc_name = String(
-		d.get("name", ("%s de %s" % [sp_name, p.owner_name]) if p.owner_name != "" else sp_name)
+		d.get("name", ("%s's %s" % [p.owner_name, sp_name]) if p.owner_name != "" else sp_name)
 	)
 	p.lines = MapBuilder.fill_names(d.get("lines", []))
 	if p.lines.is_empty():  # creature.gd's generic lines
@@ -41,8 +41,8 @@ static func from_entry(d: Dictionary) -> PetMon:
 			[
 				"%s: %s! %s!" % [sp_name, cry, cry.to_lower()],
 				(
-					"Parece acostumado com gente. Pertence a %s."
-					% (p.owner_name if p.owner_name != "" else "alguém")
+					"It seems used to people. It belongs to %s."
+					% (p.owner_name if p.owner_name != "" else "someone")
 				)
 			]
 		)
@@ -121,7 +121,7 @@ func _process(_delta: float) -> void:
 
 
 func prompt() -> String:
-	return "E: Falar"
+	return "E: Talk"
 
 
 func face(pos: Vector3) -> void:

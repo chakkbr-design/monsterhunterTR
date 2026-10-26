@@ -38,12 +38,12 @@ const MIGUEL := "super_nerd_miguel"
 const NPC_LINES := {
 	"BaldingMan":
 	[
-		"Ouvi dizer que existem fósseis raros aqui no Monte da Lua.",
-		"E também caem PEDRAS DA LUA do céu... Dizem que fazem certos Pokémon evoluir!"
+		"I hear there are rare fossils here in Mt. Moon.",
+		"And MOON STONES fall from the sky too... They say they make certain Pokémon evolve!"
 	],
 }
 const SIGN_LINES := {
-	"ZubatSign": ["Cuidado! O ZUBAT suga sangue!"],
+	"ZubatSign": ["Watch out! ZUBAT sucks blood!"],
 }
 ## bg hidden items "<floor>:<x>,<y>" -> [uid of the original scene, hidden].
 const BG_ITEMS := {
@@ -57,7 +57,9 @@ const BG_ITEMS := {
 	"b2f:39,11": ["mmb2f_hidden_ether", true],
 }
 const EXIT_SIGN := [
-	"ROTA 4 - CERULEAN", "A estrada para Cerulean ainda está em obras.", "Continua..."
+	"ROUTE 4 - CERULEAN CITY",
+	"The road to Cerulean is still under construction.",
+	"To be continued..."
 ]
 
 static var _floors: Dictionary = {}
@@ -333,7 +335,7 @@ static func _warps(room: InteriorRoom, fl: String) -> void:
 			room.add_child(trig)
 			room.triggers.append(trig)
 		elif target.has("zone"):
-			_mouth(room, at, "SAÍDA")
+			_mouth(room, at, "EXIT")
 			room.spawns["west_in"] = room.spawns["warp_%d" % i]
 			var trig := InteriorTrigger.new()
 			trig.name = "ExitRoute4West"
@@ -343,7 +345,7 @@ static func _warps(room: InteriorRoom, fl: String) -> void:
 			room.add_child(trig)
 			room.triggers.append(trig)
 		else:
-			_mouth(room, at, "ROTA 4")
+			_mouth(room, at, "ROUTE 4")
 			var st := StoryTrigger.new()
 			st.name = "ExitRoute4East"
 			st.event = EXIT_EVENT
@@ -355,7 +357,7 @@ static func _warps(room: InteriorRoom, fl: String) -> void:
 			_sign(
 				room,
 				"Route4Sign",
-				"Placa",
+				"Sign",
 				PackedStringArray(EXIT_SIGN),
 				tile_local(fl, sign_tile.x, sign_tile.y)
 			)
@@ -388,7 +390,7 @@ static func _ladder(room: InteriorRoom, at: Vector3, up: bool, i: int) -> void:
 	for k in int(h / 0.3):
 		_box(root, Vector3(0, 0.25 + k * 0.3, 0), Vector3(0.6, 0.05, 0.06), C_LADDER)
 	var tag := Label3D.new()
-	tag.text = "SOBE" if up else "DESCE"
+	tag.text = "UP" if up else "DOWN"
 	tag.font_size = 40
 	tag.outline_size = 10
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -475,8 +477,8 @@ static func _objects(room: InteriorRoom, fl: String) -> void:
 				var f := WorldNpc.new()
 				var role := String(e.id)
 				f.name = "Fossil_%s" % role
-				f.npc_name = "Fóssil Domo" if role.begins_with("dome") else "Fóssil Hélice"
-				f.lines = PackedStringArray(["Um fóssil de Pokémon pré-histórico!"])
+				f.npc_name = "Dome Fossil" if role.begins_with("dome") else "Helix Fossil"
+				f.lines = PackedStringArray(["A prehistoric Pokémon fossil!"])
 				f.color = (
 					Color(0.82, 0.74, 0.58) if role.begins_with("dome") else Color(0.7, 0.62, 0.5)
 				)
@@ -489,7 +491,7 @@ static func _objects(room: InteriorRoom, fl: String) -> void:
 			_:
 				var n := WorldNpc.new()
 				n.name = "Npc_%s" % e.id
-				n.npc_name = "Senhor"
+				n.npc_name = "Old Man"
 				n.lines = PackedStringArray(NPC_LINES.get(String(e.id), ["..."]))
 				n.color = Color(0.75, 0.65, 0.5)
 				n.position = at
@@ -521,7 +523,7 @@ static func _bg(room: InteriorRoom, fl: String) -> void:
 		_sign(
 			room,
 			tail,
-			"Placa",
+			"Sign",
 			PackedStringArray(SIGN_LINES.get(tail, ["..."])),
 			tile_local(fl, int(b.x), int(b.y))
 		)
@@ -642,8 +644,8 @@ static func decorate_zone(b: MapBuilder) -> void:
 	for d in b.data.get("doors", []):
 		var door := WorldDoor.new()
 		door.name = "Door_%s" % d.get("id", "cave")
-		door.npc_name = String(d.get("title", "Monte da Lua"))
-		door.lines = PackedStringArray(["A entrada do Monte da Lua."])
+		door.npc_name = String(d.get("title", "Mt. Moon"))
+		door.lines = PackedStringArray(["The entrance to Mt. Moon."])
 		door.color = Color(0.2, 0.17, 0.15)
 		door.target_scene = String(d.get("target_scene", ""))
 		door.target_spawn = String(d.get("target_spawn", ""))

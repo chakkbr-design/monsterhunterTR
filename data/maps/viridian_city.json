@@ -1,6 +1,6 @@
 {
  "id": "viridian_city",
- "name": "CIDADE DE VIRIDIAN",
+ "name": "VIRIDIAN CITY",
  "rect": [
   -44,
   -195,
@@ -171,7 +171,7 @@
    ],
    "scale": 0.8,
    "board": {
-    "text": "CENTRO\nPOKéMON",
+    "text": "POKéMON\nCENTER",
     "color": "#d8423a",
     "ball": true,
     "side": 1
@@ -191,9 +191,9 @@
    ],
    "scale": 0.8,
    "message": {
-    "title": "Casa",
+    "title": "House",
     "lines": [
-     "Está trancada."
+     "It's locked."
     ]
    }
   },
@@ -256,9 +256,9 @@
    ],
    "scale": 0.8,
    "message": {
-    "title": "Casa",
+    "title": "House",
     "lines": [
-     "Está trancada."
+     "It's locked."
     ]
    }
   },
@@ -271,9 +271,9 @@
    ],
    "scale": 0.8,
    "message": {
-    "title": "Ginásio de Viridian",
+    "title": "Viridian Gym",
     "lines": [
-     "As portas do GINÁSIO DE VIRIDIAN estão trancadas..."
+     "The doors of the VIRIDIAN GYM are locked..."
     ]
    }
   }
@@ -5384,7 +5384,7 @@
  ],
  "npcs": [
   {
-   "name": "Coordenador do Acampamento",
+   "name": "Camp Coordinator",
    "node": "NPC_CampCoordinator",
    "pos": [
     -38.3,
@@ -5409,15 +5409,15 @@
     ]
    },
    "lines": [
-    "Bem-vindo ao acampamento de treino de Viridian! Acerte um boneco e seu Pokémon ganha treino de EV de verdade, os pontos de esforço por trás dos atributos.",
-    "Escolha o boneco pelo que ele treina: Rattata e Pidgey dão VELOCIDADE, Nidoran M dá ATAQUE.",
-    "O boneco acompanha o nível do seu Pokémon e se recupera sempre que você o derruba. Pode bater quanto quiser.",
-    "Quando cansar, abra o menu de pausa e escolha FUGIR."
+    "Welcome to the Viridian training camp! Hit a dummy and your Pokémon earns real EV training, the effort points behind its stats.",
+    "Pick the dummy by what it trains: Rattata and Pidgey give SPEED, Nidoran M gives ATTACK.",
+    "The dummy matches your Pokémon's level and recovers every time you knock it down. Hit it as much as you like.",
+    "When you get tired, open the pause menu and choose RUN."
    ],
    "y": 0.0
   },
   {
-   "name": "Aprendiz Mia",
+   "name": "Apprentice Mia",
    "node": "NPC_CampTraineePP",
    "pos": [
     -41.7,
@@ -5426,13 +5426,13 @@
    "sprite": "npc_kid.png",
    "facing": 3,
    "lines": [
-    "Cada golpe tem o seu PP. Gastou tudo, ele fica mudo até você descansar.",
-    "Fora da batalha seus Pokémon recuperam um pouco de PP enquanto você anda. Um CENTRO POKéMON enche tudo de novo."
+    "Every move has its PP. Use it all up and the move goes silent until you rest.",
+    "Outside of battle your Pokémon recover a little PP as you walk. A POKéMON CENTER refills everything."
    ],
    "y": 0.0
   },
   {
-   "name": "Campista Leo",
+   "name": "Camper Leo",
    "node": "NPC_CampTraineeFlyer",
    "pos": [
     -34.5,
@@ -5441,13 +5441,13 @@
    "sprite": "npc_camper.png",
    "facing": 3,
    "lines": [
-    "Um Pidgey selvagem fica de longe e mergulha quando você se distrai.",
-    "Golpes de PEDRA, ELÉTRICO e GELO doem muito num Pidgey. Acerte um e ele cai rapidinho."
+    "A wild Pidgey keeps its distance and dives when you get distracted.",
+    "ROCK, ELECTRIC and ICE moves really hurt a Pidgey. Land one and it goes down fast."
    ],
    "y": 0.0
   },
   {
-   "name": "Alpinista Bo",
+   "name": "Hiker Bo",
    "node": "NPC_CampTraineeStamina",
    "pos": [
     -42.0,
@@ -5456,13 +5456,13 @@
    "sprite": "npc_hiker.png",
    "facing": 2,
    "lines": [
-    "Correr e pular gastam a energia do lutador. Se acabar, ele fica atordoado.",
-    "Um Pokémon atordoado não anda nem usa golpes. Espere um pouco que a barra enche de novo."
+    "Running and jumping use up the fighter's energy. If it runs out, the fighter is stunned.",
+    "A stunned Pokémon can't walk or use moves. Wait a moment and the bar refills."
    ],
    "y": 0.0
   },
   {
-   "name": "Jovem Sam",
+   "name": "Youngster Sam",
    "node": "NPC_CampTraineeDuo",
    "pos": [
     -30.6,
@@ -5471,13 +5471,13 @@
    "sprite": "npc_youngster.png",
    "facing": 3,
    "lines": [
-    "Numa batalha selvagem você pode levar dois Pokémon de uma vez. Segure uma tecla de número para chamar o segundo lutador.",
-    "Você controla um e o outro luta sozinho. Aperte R para trocar quem você controla e dê ordens ao parceiro no menu de pausa."
+    "In a wild battle you can bring two Pokémon at once. Hold a number key to call the second fighter.",
+    "You control one and the other fights on its own. Press R to switch who you control, and give your partner orders in the pause menu."
    ],
    "y": 0.0
   },
   {
-   "name": "Estudante Vera",
+   "name": "Student Vera",
    "node": "NPC_CampTraineeTypes",
    "pos": [
     -30.2,
@@ -5486,13 +5486,13 @@
    "sprite": "npc_lass.png",
    "facing": 1,
    "lines": [
-    "Água apaga Fogo, Fogo queima Planta e Planta bebe Água. Aprenda a tabela e metade das lutas está ganha.",
-    "Veja os tipos do adversário antes de atacar. Um golpe resistido mal arranha, por mais forte que seja."
+    "Water puts out Fire, Fire burns Grass and Grass drinks Water. Learn the chart and half the fights are won.",
+    "Check the foe's types before attacking. A resisted move barely scratches, no matter how strong it is."
    ],
    "y": 0.0
   },
   {
-   "name": "Velhinho",
+   "name": "Old Man",
    "node": "NPC_OldManSleepy",
    "pos": [
     0.0,
@@ -5503,13 +5503,13 @@
    "lying": true,
    "hidden_by_flag": "has_pokedex",
    "lines": [
-    "Eu proíbo terminantemente você de passar por aqui!",
-    "Isto aqui é propriedade particular!"
+    "I absolutely forbid you from passing through here!",
+    "This is private property!"
    ],
    "y": 0.0
   },
   {
-   "name": "Menina",
+   "name": "Girl",
    "node": "NPC_Granddaughter",
    "pos": [
     4.5,
@@ -5519,13 +5519,13 @@
    "facing": 1,
    "hidden_by_flag": "has_pokedex",
    "lines": [
-    "Ah, vovô! Não seja tão chato!",
-    "Me desculpe. Ele ainda não tomou o café dele."
+    "Oh, Grandpa! Don't be such a grump!",
+    "I'm sorry. He hasn't had his coffee yet."
    ],
    "y": 0.0
   },
   {
-   "name": "Velhinho",
+   "name": "Old Man",
    "node": "NPC_OldManAwake",
    "pos": [
     -5.0,
@@ -5536,18 +5536,18 @@
    "requires_flag": "has_pokedex",
    "action": 3,
    "lines": [
-    "Bem, agora já tomei meu café, e era disso que eu precisava para começar o dia!",
-    "Hum? Que caixinha vermelha é essa aí?",
-    "Ah, então você está completando a sua POKéDEX.",
-    "Então deixe eu lhe dar um conselho.",
-    "Sempre que você captura um POKéMON, a POKéDEX atualiza os dados sozinha.",
-    "... Você não sabe capturar um POKéMON?",
-    "Então acho melhor eu lhe mostrar!"
+    "Well, now I've had my coffee, and that's just what I needed to start the day!",
+    "Hm? What's that little red box?",
+    "Oh, so you're filling in your POKéDEX.",
+    "Then let me give you some advice.",
+    "Whenever you catch a POKéMON, the POKéDEX updates its data automatically.",
+    "... You don't know how to catch a POKéMON?",
+    "Then I'd better show you!"
    ],
    "y": 0.0
   },
   {
-   "name": "Menina",
+   "name": "Girl",
    "node": "NPC_GranddaughterAwake",
    "pos": [
     -7.0,
@@ -5557,13 +5557,13 @@
    "facing": 2,
    "requires_flag": "has_pokedex",
    "lines": [
-    "De vez em quando eu vou fazer compras em PEWTER.",
-    "Para ir, tenho que pegar a trilha cheia de curvas da FLORESTA DE VIRIDIAN."
+    "Now and then I go shopping in PEWTER.",
+    "To get there, I have to take the winding trail through VIRIDIAN FOREST."
    ],
    "y": 0.0
   },
   {
-   "name": "Velhinho",
+   "name": "Old Man",
    "node": "NPC_OldMan",
    "pos": [
     25.5,
@@ -5571,13 +5571,13 @@
    ],
    "sprite": "npc_oldman.png",
    "lines": [
-    "Este GINÁSIO POKéMON vive fechado.",
-    "Quem será o LÍDER?"
+    "This POKéMON GYM is always closed.",
+    "I wonder who the LEADER is?"
    ],
    "y": 0.0
   },
   {
-   "name": "Menina",
+   "name": "Girl",
    "node": "NPC_Girl",
    "pos": [
     -22.0,
@@ -5586,13 +5586,13 @@
    "sprite": "npc_girl.png",
    "wander": 1.5,
    "lines": [
-    "Essas POKé BALLS na sua cintura! Você tem POKéMON, não tem?",
-    "Que bom poder levar e usar POKéMON a qualquer hora, em qualquer lugar."
+    "Those POKé BALLS on your belt! You have POKéMON, don't you?",
+    "It's great to be able to carry and use POKéMON anytime, anywhere."
    ],
    "y": 0.0
   },
   {
-   "name": "Aluno",
+   "name": "Student",
    "node": "NPC_Kid",
    "pos": [
     -6.0,
@@ -5601,13 +5601,13 @@
    "sprite": "npc_kid.png",
    "wander": 2.0,
    "lines": [
-    "Estou estudando vantagens de tipo na Escola de Treinadores!",
-    "Água vence Fogo, Fogo vence Planta, Planta vence Água. Moleza!"
+    "I'm studying type advantages at the Trainer School!",
+    "Water beats Fire, Fire beats Grass, Grass beats Water. Easy!"
    ],
    "y": 0.0
   },
   {
-   "name": "Cientista",
+   "name": "Scientist",
    "node": "NPC_Scientist",
    "pos": [
     12.5,
@@ -5615,8 +5615,8 @@
    ],
    "sprite": "npc_scientist.png",
    "lines": [
-    "Pokémon cansado? A enfermeira do Centro Pokémon deixa ele novinho.",
-    "Os assistentes do Prof. Carvalho passam por Viridian a caminho da Liga."
+    "Tired Pokémon? The nurse at the Pokémon Center will have it good as new.",
+    "Prof. Oak's aides pass through Viridian on their way to the League."
    ],
    "y": 0.0
   }
@@ -5628,12 +5628,12 @@
     -34.2,
     -154.6
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "ACAMPAMENTO DE TREINO DE VIRIDIAN",
-    "Acerte um boneco para treinar um atributo. Cada nocaute dá pontos de esforço."
+    "VIRIDIAN TRAINING CAMP",
+    "Hit a dummy to train a stat. Each knock out gives effort points."
    ],
    "y": 0.0
   },
@@ -5643,12 +5643,12 @@
     5.2,
     -122.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "CIDADE DE VIRIDIAN",
-    "O Paraíso Eternamente Verde"
+    "VIRIDIAN CITY",
+    "The Eternally Green Paradise"
    ],
    "y": 0.0
   },
@@ -5658,12 +5658,12 @@
     4.6,
     -192.5
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "ROTA 2",
-    "VIRIDIAN - PEWTER"
+    "ROUTE 2",
+    "VIRIDIAN CITY - PEWTER CITY"
    ],
    "y": 0.0
   },
@@ -5673,12 +5673,12 @@
     -41.5,
     -123.6
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "ROTA 22",
-    "VIRIDIAN - LIGA POKÉMON"
+    "ROUTE 22",
+    "VIRIDIAN CITY - POKéMON LEAGUE"
    ],
    "y": 0.0
   },
@@ -5688,13 +5688,13 @@
     12.0,
     -132.4
    ],
-   "title": "Dicas de Treinador",
+   "title": "Trainer Tips",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "DICAS DE TREINADOR",
-    "Os golpes dos POKéMON são limitados pelos PONTOS DE PODER, os PP.",
-    "Para recuperar os PP, leve seus POKéMON cansados a um CENTRO POKéMON."
+    "TRAINER TIPS",
+    "POKéMON moves are limited by POWER POINTS, or PP.",
+    "To restore PP, take your tired POKéMON to a POKéMON CENTER."
    ],
    "y": 0.0
   },
@@ -5704,13 +5704,13 @@
     -4.6,
     -142.6
    ],
-   "title": "Dicas de Treinador",
+   "title": "Trainer Tips",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "DICAS DE TREINADOR",
-    "Capture POKéMON e aumente a sua coleção.",
-    "Quanto mais você tiver, mais fácil fica batalhar."
+    "TRAINER TIPS",
+    "Catch POKéMON and expand your collection.",
+    "The more you have, the easier battling gets."
    ],
    "y": 0.0
   },
@@ -5720,11 +5720,11 @@
     16.5,
     -145.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "POKé MART DE VIRIDIAN"
+    "VIRIDIAN CITY POKé MART"
    ],
    "y": 0.0
   },
@@ -5734,11 +5734,11 @@
     16.5,
     -161.0
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "GINÁSIO POKéMON DE VIRIDIAN"
+    "VIRIDIAN CITY POKéMON GYM"
    ],
    "y": 0.0
   }

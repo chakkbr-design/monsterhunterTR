@@ -105,7 +105,7 @@ static func set_mist_option(on: bool, path := SETTINGS) -> void:
 
 ## [[id, label], ...] for the F9 sky panel: automatic, then every type.
 func debug_choices() -> Array:
-	var out: Array = [["", "Automático"]]
+	var out: Array = [["", "Auto"]]
 	out.append_array(schedule.names())
 	return out
 

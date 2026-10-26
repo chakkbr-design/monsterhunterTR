@@ -275,8 +275,7 @@ func _rockets() -> void:
 		if tr == null:
 			continue
 		check(
-			String(tr.npc_name) == "Recruta da Equipe Rocket",
-			"%s: nome em português (%s)" % [id, tr.npc_name]
+			String(tr.npc_name) == "Team Rocket Grunt", "%s: English name (%s)" % [id, tr.npc_name]
 		)
 		game.heal_party()
 		if not game.flags.get("trainer_" + id, false):
@@ -347,7 +346,7 @@ func _exit() -> void:
 	var trig: Node3D = r.get_node_or_null("ExitRoute4East")
 	check(
 		trig != null and r.get_node_or_null("Route4Sign") != null,
-		"saída para a Rota 4 com placa 'Continua...'"
+		"saída para a Rota 4 com placa 'To be continued...'"
 	)
 	if trig:
 		p.global_position = trig.global_position + Vector3(0, 0.3, 0)

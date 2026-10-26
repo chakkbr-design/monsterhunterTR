@@ -128,3 +128,9 @@ Depois de criar scripts com `class_name` novos, ou depois de chegar arte nova em
 - A Rota 4 e Cerulean não existem: a demo termina na saída do Mt. Moon.
 - Logo do título copiado do original ("POKéMON BATTLE ADVANCED"), em `ui/front/logo.gd`.
 - Batalha online e troca (WebRTC) do original não foram portadas.
+
+## Idioma
+
+- O jogo inteiro está em inglês (termos FireRed/LeafGreen: Prof. Oak, Pallet Town, Route 1, Viridian Forest...). Falas, placas, nomes de NPC, treinadores e classes (`world/trainer_text.gd`), interiores, painel F9, `desc_pt` das habilidades (agora inglês; a chave continua), nomes dos golpes de dupla e do clima ficam em inglês.
+- Nomes de móveis dos interiores (`interiors/interior_defs.gd`) são chaves de `InteriorLook.FURNITURE` e `SEATS_FACE`: mudam juntos. As palavras-chave de `WorldNpc.NAME_SHEETS` cobrem os nomes em inglês.
+- Teste de texto: `tests/content/test_texts_en.gd` (nenhuma palavra portuguesa nos mapas/treinadores).

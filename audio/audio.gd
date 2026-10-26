@@ -132,7 +132,7 @@ func sfx_stream(sfx_name: String) -> AudioStreamWAV:
 func sfx(sfx_name: String, volume_db := 0.0) -> void:
 	var st: AudioStream = _sfx.get(sfx_name)
 	if st == null:
-		push_warning("Audio: efeito desconhecido '%s'" % sfx_name)
+		push_warning("Audio: unknown effect '%s'" % sfx_name)
 		return
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - float(_sfx_last.get(sfx_name, -1.0)) < SFX_GAP:
@@ -198,7 +198,7 @@ func music(track: String, fade := 0.5) -> void:
 		return
 	var st := music_stream(track)
 	if st == null:
-		push_warning("Audio: faixa desconhecida '%s'" % track)
+		push_warning("Audio: unknown track '%s'" % track)
 		return
 	_swap_out(fade)
 	current_music = track

@@ -11,7 +11,7 @@ var panel: MartPanel
 
 
 func prompt() -> String:
-	return "E: Falar"
+	return "E: Talk"
 
 
 func interact(p: OverworldPlayer) -> void:
@@ -21,18 +21,18 @@ func interact(p: OverworldPlayer) -> void:
 	var f: Dictionary = Game.flags
 	if not bool(f.get("has_pokedex", false)):
 		if bool(f.get("has_parcel", false)):
-			await say(PackedStringArray(["Obrigado! Mande lembranças ao Prof. Carvalho."]))
+			await say(PackedStringArray(["Thanks! Say hi to Prof. Oak for me."]))
 		else:
 			await say(
 				PackedStringArray(
 					[
-						"Olá! Posso ajudar?",
-						"...Desculpe, ainda estamos arrumando as prateleiras. Volte logo!"
+						"Hello! May I help you?",
+						"...Sorry, we're still stocking the shelves. Come back soon!"
 					]
 				)
 			)
 		return
-	await say(PackedStringArray(["Olá! Posso ajudar?"]))
+	await say(PackedStringArray(["Hello! May I help you?"]))
 	await open_shop()
 
 

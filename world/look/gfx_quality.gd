@@ -22,7 +22,7 @@ extends RefCounted
 ## --quality=0..3 (or baixo/medio/alto/ultra) forces a tier for screenshots.
 
 const GROUP := "gfx_quality"
-const NAMES := ["Baixo", "Médio", "Alto", "Ultra"]
+const NAMES := ["Low", "Medium", "High", "Ultra"]
 const LOW := 0
 const MEDIUM := 1
 const HIGH := 2

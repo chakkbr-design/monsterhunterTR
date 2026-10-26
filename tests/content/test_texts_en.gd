@@ -1,76 +1,88 @@
 extends SceneTree
-## Textos dos mapas e dos treinadores em português: nenhuma palavra inglesa comum nas falas de NPCs,
-## placas, portas e treinadores (heurística por lista de palavras). Também confere que os ids continuam.
-## godot --headless --path . --script res://tests/content/test_texts_pt.gd
+## Map and trainer texts are English: no common Portuguese word and no accented letter (other than
+## the é of Pokémon / Poké) in NPC lines, signs, doors and trainer lines (word-list heuristic). Also
+## checks that the ids are kept.
+## godot --headless --path . --script res://tests/content/test_texts_en.gd
 
-## Palavras que só existem em inglês (nada que também seja português, como "a", "me", "no", "do").
-const ENGLISH := [
-	"the",
-	"you",
-	"your",
-	"you're",
-	"i'm",
-	"don't",
-	"can't",
-	"won't",
-	"it's",
-	"that's",
-	"with",
-	"and",
-	"this",
-	"that",
-	"is",
-	"are",
-	"have",
-	"has",
-	"what",
-	"there",
-	"here",
-	"my",
-	"of",
-	"to",
-	"it",
-	"be",
-	"for",
-	"not",
-	"just",
-	"if",
-	"get",
-	"was",
-	"were",
-	"will",
-	"would",
-	"i",
-	"from",
-	"at",
-	"by",
-	"an",
-	"or",
-	"out",
-	"up",
-	"let's",
-	"they",
-	"we",
-	"he",
-	"she",
-	"his",
-	"her",
-	"go",
-	"come",
-	"back",
-	"ahead",
-	"city",
-	"town",
-	"route",
-	"sign",
-	"center",
-	"house",
-	"welcome",
-	"trainer",
-	"tips",
-	"gym",
-	"leader",
-	"badge"
+## Words that only exist in Portuguese (nothing that is also English).
+const PORTUGUESE := [
+	"você",
+	"voce",
+	"não",
+	"nao",
+	"uma",
+	"para",
+	"seu",
+	"sua",
+	"seus",
+	"suas",
+	"está",
+	"muito",
+	"ainda",
+	"mais",
+	"aqui",
+	"porque",
+	"pelo",
+	"pela",
+	"dos",
+	"das",
+	"ele",
+	"ela",
+	"vai",
+	"isso",
+	"esse",
+	"essa",
+	"aquele",
+	"quando",
+	"então",
+	"também",
+	"onde",
+	"são",
+	"das",
+	"ei",
+	"olá",
+	"obrigado",
+	"cidade",
+	"rota",
+	"placa",
+	"treinador",
+	"treinadores",
+	"batalha",
+	"golpe",
+	"golpes",
+	"líder",
+	"insígnia",
+	"ginásio",
+	"vamos",
+	"vencer",
+	"fique",
+	"venha",
+	"cuidado",
+	"meu",
+	"minha",
+	"meus",
+	"nós",
+	"vocês",
+	"deixe",
+	"leve",
+	"pegue",
+	"tenho",
+	"estou",
+	"posso",
+	"preciso",
+	"queria",
+	"quero",
+	"fazer",
+	"depois",
+	"antes",
+	"sempre",
+	"nunca",
+	"agora",
+	"hoje",
+	"lá",
+	"além",
+	"mamãe",
+	"vovô"
 ]
 const TEXT_KEYS := [
 	"lines", "intro", "defeat", "after", "lose", "badge_speech", "gift_speech", "gate_line"
@@ -108,23 +120,23 @@ func _initialize() -> void:
 		for k in TEXT_KEYS:
 			_lines(re, "trainers:%s.%s" % [id, k], t[id].get(k, []))
 		_text(re, "trainers:%s.display_name" % id, t[id].get("display_name", ""))
-	check(_count > 300, "textos verificados (%d)" % _count)
+	check(_count > 300, "texts checked (%d)" % _count)
 	for h in _hits.slice(0, 30):
-		print("  inglês? ", h)
-	check(_hits.is_empty(), "nenhuma palavra inglesa nos textos (%d suspeitos)" % _hits.size())
+		print("  Portuguese? ", h)
+	check(_hits.is_empty(), "no Portuguese word in the texts (%d suspects)" % _hits.size())
 	check(
 		(
 			t.has("rocket_1")
 			and t.has("super_nerd_miguel")
-			and t.rocket_1.get("display_name", "") == "Recruta da Equipe Rocket"
+			and t.rocket_1.get("display_name", "") == "Team Rocket Grunt"
 		),
-		"ids dos treinadores mantidos"
+		"trainer ids kept"
 	)
 	check(
 		int(t.super_nerd_miguel.get("sight", -1)) == 0,
-		"Miguel só luta pela cena dos fósseis (sight 0)"
+		"Miguel only fights through the fossil scene (sight 0)"
 	)
-	print("PASSOU (0 falhas)" if _fails == 0 else "FALHOU (%d falhas)" % _fails)
+	print("PASSED (0 failures)" if _fails == 0 else "FAILED (%d failures)" % _fails)
 	quit(1 if _fails > 0 else 0)
 
 
@@ -144,7 +156,11 @@ func _text(re: RegEx, where: String, s) -> void:
 	if not s is String or s == "":
 		return
 	_count += 1
-	for m in re.search_all(String(s).to_lower().replace("pokémon", "").replace("poké", "")):
-		if ENGLISH.has(m.get_string()):
-			_hits.append('%s: "%s" (%s)' % [where, String(s).replace("\n", " "), m.get_string()])
+	var low := String(s).to_lower().replace("pokémon", "").replace("pokédex", "").replace(
+		"poké", ""
+	)
+	for m in re.search_all(low):
+		var w := m.get_string()
+		if PORTUGUESE.has(w) or w.length() != w.to_utf8_buffer().size():
+			_hits.append('%s: "%s" (%s)' % [where, String(s).replace("\n", " "), w])
 			return

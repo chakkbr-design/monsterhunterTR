@@ -3,1421 +3,1421 @@
   "arena_trap": {
     "name": "ARENA TRAP",
     "desc": "Prevents fleeing.",
-    "desc_pt": "Inimigos terrestres andam mais devagar."
+    "desc_pt": "Grounded foes move slower."
   },
   "blaze": {
     "name": "BLAZE",
     "desc": "Ups FIRE moves in a pinch.",
-    "desc_pt": "Fogo x1,5 com HP baixo."
+    "desc_pt": "Fire moves x1.5 at low HP."
   },
   "chlorophyll": {
     "name": "CHLOROPHYLL",
     "desc": "Boosts Speed in sunshine.",
-    "desc_pt": "No sol, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
+    "desc_pt": "In sun, Speed doubles in turn order (walks and readies moves x1.5)."
   },
   "cloud_nine": {
     "name": "CLOUD NINE",
     "desc": "Eliminates the effects of weather.",
-    "desc_pt": "Ao entrar, anuncia; enquanto está em campo, o clima não tem efeito em ninguém."
+    "desc_pt": "Announces on entry; while on the field, weather has no effect on anyone."
   },
   "cute_charm": {
     "name": "CUTE CHARM",
     "desc": "Infatuates on contact.",
-    "desc_pt": "30% de enfeitiçar quem encosta, se for do sexo oposto."
+    "desc_pt": "30% chance to infatuate whoever touches it, if of the opposite gender."
   },
   "compound_eyes": {
     "name": "COMPOUND EYES",
     "desc": "Raises accuracy.",
-    "desc_pt": "Precisão x1,3."
+    "desc_pt": "Accuracy x1.3."
   },
   "damp": {
     "name": "DAMP",
     "desc": "Prevents self-destruction.",
-    "desc_pt": "Enquanto está em campo, ninguém consegue explodir (Autodestruição falha) e Aftermath não age."
+    "desc_pt": "While on the field, nobody can explode (Self-Destruct fails) and Aftermath does not trigger."
   },
   "effect_spore": {
     "name": "EFFECT SPORE",
     "desc": "Leaves spores on contact.",
-    "desc_pt": "30% de esporos ao contato (Planta não pega)."
+    "desc_pt": "30% chance of spores on contact (Grass types are immune)."
   },
   "guts": {
     "name": "GUTS",
     "desc": "Ups ATTACK if suffering.",
-    "desc_pt": "Ataque x1,5 com status."
+    "desc_pt": "Attack x1.5 with a status condition."
   },
   "inner_focus": {
     "name": "INNER FOCUS",
     "desc": "Prevents flinching.",
-    "desc_pt": "Não hesita nem se intimida."
+    "desc_pt": "Does not flinch and cannot be intimidated."
   },
   "intimidate": {
     "name": "INTIMIDATE",
     "desc": "Lowers the foe's ATTACK.",
-    "desc_pt": "Ao entrar (também na troca), baixa o Ataque de todos os inimigos em campo (os dois no 2x2)."
+    "desc_pt": "On entry (also when switching in), lowers the Attack of all foes on the field (both in 2v2)."
   },
   "keen_eye": {
     "name": "KEEN EYE",
     "desc": "Prevents loss of accuracy.",
-    "desc_pt": "A precisão não cai."
+    "desc_pt": "Accuracy cannot be lowered."
   },
   "levitate": {
     "name": "LEVITATE",
     "desc": "Not hit by GROUND attacks.",
-    "desc_pt": "Imune a golpes de terra."
+    "desc_pt": "Immune to Ground moves."
   },
   "magnet_pull": {
     "name": "MAGNET PULL",
     "desc": "Traps STEEL-type POKéMON.",
-    "desc_pt": "Inimigos de aço andam mais devagar."
+    "desc_pt": "Steel-type foes move slower."
   },
   "oblivious": {
     "name": "OBLIVIOUS",
     "desc": "Prevents attraction.",
-    "desc_pt": "Imune a charme e intimidação."
+    "desc_pt": "Immune to infatuation and intimidation."
   },
   "overgrow": {
     "name": "OVERGROW",
     "desc": "Ups GRASS moves in a pinch.",
-    "desc_pt": "Planta x1,5 com HP baixo."
+    "desc_pt": "Grass moves x1.5 at low HP."
   },
   "own_tempo": {
     "name": "OWN TEMPO",
     "desc": "Prevents confusion.",
-    "desc_pt": "Não fica confuso."
+    "desc_pt": "Cannot be confused."
   },
   "poison_point": {
     "name": "POISON POINT",
     "desc": "Poisons foe on contact.",
-    "desc_pt": "30% de envenenar ao contato."
+    "desc_pt": "30% chance to poison on contact."
   },
   "rock_head": {
     "name": "ROCK HEAD",
     "desc": "Prevents recoil damage.",
-    "desc_pt": "Não sofre dano de recuo."
+    "desc_pt": "Takes no recoil damage."
   },
   "run_away": {
     "name": "RUN AWAY",
     "desc": "Makes escaping easier.",
-    "desc_pt": "Anda um pouco mais rápido."
+    "desc_pt": "Walks a little faster."
   },
   "sand_veil": {
     "name": "SAND VEIL",
     "desc": "Boosts evasion in a sandstorm.",
-    "desc_pt": "Na tempestade de areia, 20% de esquivar e não sofre a areia."
+    "desc_pt": "In a sandstorm, 20% chance to evade and takes no sand damage."
   },
   "shed_skin": {
     "name": "SHED SKIN",
     "desc": "May heal its status at the end of each round.",
-    "desc_pt": "No fim de cada rodada, 1/3 de chance de curar o status."
+    "desc_pt": "At the end of each round, 1/3 chance to cure its status."
   },
   "shield_dust": {
     "name": "SHIELD DUST",
     "desc": "Prevents added effects.",
-    "desc_pt": "Bloqueia efeitos extras de golpes."
+    "desc_pt": "Blocks the added effects of moves."
   },
   "shell_armor": {
     "name": "SHELL ARMOR",
     "desc": "Blocks critical hits.",
-    "desc_pt": "Não leva acerto crítico."
+    "desc_pt": "Cannot be hit by critical hits."
   },
   "soundproof": {
     "name": "SOUNDPROOF",
     "desc": "Avoids sound-based moves.",
-    "desc_pt": "Imune a golpes de som."
+    "desc_pt": "Immune to sound-based moves."
   },
   "static": {
     "name": "STATIC",
     "desc": "Paralyzes on contact.",
-    "desc_pt": "30% de paralisar ao contato."
+    "desc_pt": "30% chance to paralyze on contact."
   },
   "stench": {
     "name": "STENCH",
     "desc": "Helps repel wild POKéMON.",
-    "desc_pt": "10% de fazer o alvo hesitar."
+    "desc_pt": "10% chance to make the target flinch."
   },
   "sticky_hold": {
     "name": "STICKY HOLD",
     "desc": "Prevents item theft.",
-    "desc_pt": "Não é roubado (Thief)."
+    "desc_pt": "Its item cannot be stolen (Thief)."
   },
   "sturdy": {
     "name": "STURDY",
     "desc": "Negates 1-hit KO attacks.",
-    "desc_pt": "Com HP cheio, sobrevive com 1."
+    "desc_pt": "At full HP, survives a hit with 1 HP."
   },
   "swarm": {
     "name": "SWARM",
     "desc": "Ups BUG moves in a pinch.",
-    "desc_pt": "Inseto x1,5 com HP baixo."
+    "desc_pt": "Bug moves x1.5 at low HP."
   },
   "swift_swim": {
     "name": "SWIFT SWIM",
     "desc": "Boosts Speed in rain.",
-    "desc_pt": "Na chuva, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
+    "desc_pt": "In rain, Speed doubles in turn order (walks and readies moves x1.5)."
   },
   "torrent": {
     "name": "TORRENT",
     "desc": "Ups WATER moves in a pinch.",
-    "desc_pt": "Água x1,5 com HP baixo."
+    "desc_pt": "Water moves x1.5 at low HP."
   },
   "vital_spirit": {
     "name": "VITAL SPIRIT",
     "desc": "Prevents sleep.",
-    "desc_pt": "Não dorme."
+    "desc_pt": "Cannot fall asleep."
   },
   "water_absorb": {
     "name": "WATER ABSORB",
     "desc": "Changes water into HP.",
-    "desc_pt": "Golpes de água curam 25%."
+    "desc_pt": "Water moves heal it by 25%."
   },
   "water_veil": {
     "name": "WATER VEIL",
     "desc": "Prevents burns.",
-    "desc_pt": "Não se queima."
+    "desc_pt": "Cannot be burned."
   },
   "illuminate": {
     "name": "ILLUMINATE",
     "desc": "Prevents loss of accuracy.",
-    "desc_pt": "A precisão não cai."
+    "desc_pt": "Accuracy cannot be lowered."
   },
   "natural_cure": {
     "name": "NATURAL CURE",
     "desc": "Heals upon switching out.",
-    "desc_pt": "Cura o status ao sair na troca; em campo, cura no fim da rodada."
+    "desc_pt": "Cures its status when switching out; on the field, cures it at the end of the round."
   },
   "speed_boost": {
     "name": "SPEED BOOST",
     "desc": "Raises Speed at the end of each round.",
-    "desc_pt": "+1 Velocidade no fim de cada rodada (não na rodada em que entrou)."
+    "desc_pt": "+1 Speed at the end of each round (not the round it entered)."
   },
   "technician": {
     "name": "TECHNICIAN",
     "desc": "Powers up weak moves.",
-    "desc_pt": "Golpes fracos (poder 60 ou menos) x1,5."
+    "desc_pt": "Weak moves (power 60 or less) x1.5."
   },
   "adaptability": {
     "name": "ADAPTABILITY",
     "desc": "Powers up same-type moves.",
-    "desc_pt": "Bônus do mesmo tipo x2 no lugar de x1,5."
+    "desc_pt": "Same-type bonus x2 instead of x1.5."
   },
   "sheer_force": {
     "name": "SHEER FORCE",
     "desc": "Moves with extra effects hit harder.",
-    "desc_pt": "Golpes com efeito extra x1,3."
+    "desc_pt": "Moves with extra effects x1.3."
   },
   "multiscale": {
     "name": "MULTISCALE",
     "desc": "Halves damage at full HP.",
-    "desc_pt": "Dano pela metade com HP cheio."
+    "desc_pt": "Halves damage taken at full HP."
   },
   "regenerator": {
     "name": "REGENERATOR",
     "desc": "Restores 1/3 HP when switching out; a little each round on the field.",
-    "desc_pt": "Cura 1/3 do HP ao sair na troca; em campo, 1/16 no fim de cada rodada."
+    "desc_pt": "Restores 1/3 HP when switching out; 1/16 at the end of each round on the field."
   },
   "friend_guard": {
     "name": "FRIEND GUARD",
     "desc": "Reduces damage to the partner.",
-    "desc_pt": "O parceiro toma 25% menos dano."
+    "desc_pt": "The partner takes 25% less damage."
   },
   "plus": {
     "name": "PLUS",
     "desc": "Boosts SP. ATK with a PLUS/MINUS partner.",
-    "desc_pt": "At. Esp. x1,5 com parceiro Plus/Minus."
+    "desc_pt": "Sp. Atk x1.5 with a Plus/Minus partner."
   },
   "minus": {
     "name": "MINUS",
     "desc": "Boosts SP. ATK with a PLUS/MINUS partner.",
-    "desc_pt": "At. Esp. x1,5 com parceiro Plus/Minus."
+    "desc_pt": "Sp. Atk x1.5 with a Plus/Minus partner."
   },
   "telepathy": {
     "name": "TELEPATHY",
     "desc": "Dodges the partner's attacks.",
-    "desc_pt": "Não toma dano dos golpes do parceiro."
+    "desc_pt": "Takes no damage from the partner's moves."
   },
   "flash_fire": {
     "name": "FLASH FIRE",
     "desc": "Absorbs FIRE moves and powers up.",
-    "desc_pt": "Absorve fogo e fica com fogo x1,5."
+    "desc_pt": "Absorbs Fire moves and powers up its Fire moves x1.5."
   },
   "lightning_rod": {
     "name": "LIGHTNING ROD",
     "desc": "Draws in ELECTRIC moves for SP. ATK.",
-    "desc_pt": "Puxa golpes elétricos de alvo único mirados no parceiro; absorve elétrico: sem dano e +1 At. Esp."
+    "desc_pt": "Draws in single-target Electric moves aimed at the partner; absorbs Electric: no damage and +1 Sp. Atk."
   },
   "storm_drain": {
     "name": "STORM DRAIN",
     "desc": "Draws in WATER moves for SP. ATK.",
-    "desc_pt": "Puxa golpes de água de alvo único mirados no parceiro; absorve água: sem dano e +1 At. Esp."
+    "desc_pt": "Draws in single-target Water moves aimed at the partner; absorbs Water: no damage and +1 Sp. Atk."
   },
   "volt_absorb": {
     "name": "VOLT ABSORB",
     "desc": "ELECTRIC moves restore HP.",
-    "desc_pt": "Golpes elétricos curam 25%."
+    "desc_pt": "Electric moves heal it by 25%."
   },
   "motor_drive": {
     "name": "MOTOR DRIVE",
     "desc": "ELECTRIC moves raise SPEED.",
-    "desc_pt": "Elétrico não causa dano: +1 Velocidade."
+    "desc_pt": "Electric moves deal no damage to it: +1 Speed."
   },
   "sap_sipper": {
     "name": "SAP SIPPER",
     "desc": "GRASS moves raise ATTACK.",
-    "desc_pt": "Planta não causa dano: +1 Ataque."
+    "desc_pt": "Grass moves deal no damage to it: +1 Attack."
   },
   "moxie": {
     "name": "MOXIE",
     "desc": "A KO raises ATTACK.",
-    "desc_pt": "Nocautear dá +1 Ataque."
+    "desc_pt": "Knocking out a foe gives +1 Attack."
   },
   "defiant": {
     "name": "DEFIANT",
     "desc": "Stat drops sharply raise ATTACK.",
-    "desc_pt": "Se um atributo cai (também pela Intimidate), +2 Ataque."
+    "desc_pt": "When a stat is lowered (even by Intimidate), +2 Attack."
   },
   "competitive": {
     "name": "COMPETITIVE",
     "desc": "Stat drops sharply raise SP. ATK.",
-    "desc_pt": "Se um atributo cai (também pela Intimidate), +2 At. Esp."
+    "desc_pt": "When a stat is lowered (even by Intimidate), +2 Sp. Atk."
   },
   "justified": {
     "name": "JUSTIFIED",
     "desc": "DARK hits raise ATTACK.",
-    "desc_pt": "Golpe sombrio acertado: +1 Ataque."
+    "desc_pt": "When hit by a Dark move: +1 Attack."
   },
   "iron_fist": {
     "name": "IRON FIST",
     "desc": "Powers up punching moves.",
-    "desc_pt": "Golpes de soco x1,2."
+    "desc_pt": "Punching moves x1.2."
   },
   "strong_jaw": {
     "name": "STRONG JAW",
     "desc": "Powers up biting moves.",
-    "desc_pt": "Mordidas x1,5."
+    "desc_pt": "Biting moves x1.5."
   },
   "tough_claws": {
     "name": "TOUGH CLAWS",
     "desc": "Powers up contact moves.",
-    "desc_pt": "Golpes de contato x1,3."
+    "desc_pt": "Contact moves x1.3."
   },
   "reckless": {
     "name": "RECKLESS",
     "desc": "Powers up risky moves.",
-    "desc_pt": "Golpes com recuo ou de queda x1,2."
+    "desc_pt": "Moves with recoil or crash damage x1.2."
   },
   "skill_link": {
     "name": "SKILL LINK",
     "desc": "Multi-hit moves always hit the maximum number of times.",
-    "desc_pt": "Golpes de vários acertos sempre acertam o máximo de vezes."
+    "desc_pt": "Multi-hit moves always hit the maximum number of times."
   },
   "serene_grace": {
     "name": "SERENE GRACE",
     "desc": "Extra effects happen more often.",
-    "desc_pt": "Efeitos extras quase dobram de chance."
+    "desc_pt": "Extra effects are almost twice as likely."
   },
   "prankster": {
     "name": "PRANKSTER",
     "desc": "Gives priority to status moves.",
-    "desc_pt": "Golpes de status com +1 de prioridade na rodada (e preparo mais rápido); não pegam em inimigo Sombrio."
+    "desc_pt": "Status moves get +1 priority in the round (and ready faster); they fail on Dark-type foes."
   },
   "unburden": {
     "name": "UNBURDEN",
     "desc": "Doubles Speed after using an item.",
-    "desc_pt": "Usou o item: Speed dobrada na ordem da rodada (anda e prepara golpes x1,5)."
+    "desc_pt": "After using its item: Speed doubles in turn order (walks and readies moves x1.5)."
   },
   "gale_wings": {
     "name": "GALE WINGS",
     "desc": "Gives priority to Flying moves at full HP.",
-    "desc_pt": "Com HP cheio, golpes voadores com +1 de prioridade na rodada (e preparo mais rápido)."
+    "desc_pt": "At full HP, Flying moves get +1 priority in the round (and ready faster)."
   },
   "quick_feet": {
     "name": "QUICK FEET",
     "desc": "Moves faster with a status.",
-    "desc_pt": "Com status, Speed x1,5 na ordem da rodada (sem o corte da paralisia), anda e age mais rápido."
+    "desc_pt": "With a status, Speed x1.5 in turn order (ignoring the paralysis cut); walks and acts faster."
   },
   "sniper": {
     "name": "SNIPER",
     "desc": "Powers up moves if they become critical hits.",
-    "desc_pt": "O crítico dá 2,25x em vez de 1,5x."
+    "desc_pt": "Critical hits deal 2.25x instead of 1.5x."
   },
   "super_luck": {
     "name": "SUPER LUCK",
     "desc": "Raises critical hit chance.",
-    "desc_pt": "Mais chance de crítico."
+    "desc_pt": "Higher critical hit chance."
   },
   "pickup": {
     "name": "PICKUP",
     "desc": "Finds a little HP at the end of each round.",
-    "desc_pt": "Recupera 2% do HP no fim de cada rodada."
+    "desc_pt": "Recovers 2% HP at the end of each round."
   },
   "flame_body": {
     "name": "FLAME BODY",
     "desc": "May burn on contact.",
-    "desc_pt": "30% de queimar ao contato."
+    "desc_pt": "30% chance to burn on contact."
   },
   "thick_fat": {
     "name": "THICK FAT",
     "desc": "Halves FIRE and ICE damage.",
-    "desc_pt": "Fogo e gelo causam metade."
+    "desc_pt": "Fire and Ice moves deal half damage."
   },
   "clear_body": {
     "name": "CLEAR BODY",
     "desc": "Stats cannot be lowered.",
-    "desc_pt": "Atributos não caem."
+    "desc_pt": "Stats cannot be lowered."
   },
   "hyper_cutter": {
     "name": "HYPER CUTTER",
     "desc": "ATTACK cannot be lowered.",
-    "desc_pt": "O Ataque não cai."
+    "desc_pt": "Attack cannot be lowered."
   },
   "big_pecks": {
     "name": "BIG PECKS",
     "desc": "DEFENSE cannot be lowered.",
-    "desc_pt": "A Defesa não cai."
+    "desc_pt": "Defense cannot be lowered."
   },
   "battle_armor": {
     "name": "BATTLE ARMOR",
     "desc": "Blocks critical hits.",
-    "desc_pt": "Não leva acerto crítico."
+    "desc_pt": "Cannot be hit by critical hits."
   },
   "huge_power": {
     "name": "HUGE POWER",
     "desc": "Doubles the Pokémon's Attack stat.",
-    "desc_pt": "Golpes físicos x2."
+    "desc_pt": "Physical moves x2."
   },
   "hustle": {
     "name": "HUSTLE",
     "desc": "Boosts Attack, but lowers accuracy.",
-    "desc_pt": "Físico x1,5, precisão x0,8."
+    "desc_pt": "Physical moves x1.5, accuracy x0.8."
   },
   "rough_skin": {
     "name": "ROUGH SKIN",
     "desc": "Hurts attackers on contact.",
-    "desc_pt": "Quem encosta perde 1/8 do HP."
+    "desc_pt": "Whoever touches it loses 1/8 of its HP."
   },
   "no_guard": {
     "name": "NO GUARD",
     "desc": "The Pokémon's moves never miss.",
-    "desc_pt": "Os golpes dele não erram."
+    "desc_pt": "Its moves never miss."
   },
   "tinted_lens": {
     "name": "TINTED LENS",
     "desc": "Powers up resisted hits.",
-    "desc_pt": "Golpes pouco efetivos x2."
+    "desc_pt": "Not very effective moves x2."
   },
   "filter": {
     "name": "FILTER",
     "desc": "Weakens super-effective hits.",
-    "desc_pt": "Super efetivos causam -25%."
+    "desc_pt": "Super effective hits deal 25% less."
   },
   "marvel_scale": {
     "name": "MARVEL SCALE",
     "desc": "Sturdy when suffering a status.",
-    "desc_pt": "Com status, dano físico recebido x2/3 (Defesa x1,5)."
+    "desc_pt": "With a status, physical damage taken x2/3 (Defense x1.5)."
   },
   "poison_heal": {
     "name": "POISON HEAL",
     "desc": "Poison restores HP.",
-    "desc_pt": "Envenenado, não perde HP e cura 1/8 no fim de cada rodada."
+    "desc_pt": "When poisoned, loses no HP and heals 1/8 at the end of each round."
   },
   "steadfast": {
     "name": "STEADFAST",
     "desc": "Flinching raises SPEED.",
-    "desc_pt": "Hesitar dá +1 Velocidade."
+    "desc_pt": "Flinching gives +1 Speed."
   },
   "aftermath": {
     "name": "AFTERMATH",
     "desc": "Hurts the one that knocks it out.",
-    "desc_pt": "Quem o nocautear com golpe de contato perde 1/4 do HP."
+    "desc_pt": "Whoever knocks it out with a contact move loses 1/4 of its HP."
   },
   "limber": {
     "name": "LIMBER",
     "desc": "Cannot be paralyzed.",
-    "desc_pt": "Não se paralisa."
+    "desc_pt": "Cannot be paralyzed."
   },
   "insomnia": {
     "name": "INSOMNIA",
     "desc": "Cannot fall asleep.",
-    "desc_pt": "Não dorme."
+    "desc_pt": "Cannot fall asleep."
   },
   "immunity": {
     "name": "IMMUNITY",
     "desc": "Cannot be poisoned.",
-    "desc_pt": "Não se envenena."
+    "desc_pt": "Cannot be poisoned."
   },
   "drought": {
     "name": "DROUGHT",
     "desc": "Turns the sunlight harsh when the Pokémon enters a battle.",
-    "desc_pt": "Ao entrar, abre o sol por 5 rodadas: Fogo x1,5, Água x0,5, Clorofila acelera."
+    "desc_pt": "On entry, turns the sun harsh for 5 rounds: Fire x1.5, Water x0.5, Chlorophyll speeds up."
   },
   "dry_skin": {
     "name": "DRY SKIN",
     "desc": "Restores HP in rain or when hit by Water moves; hurts in harsh sunlight; Fire moves hurt more.",
-    "desc_pt": "Água absorvida cura 25%. No fim da rodada, chuva cura 1/8 do HP e sol tira 1/8. Fogo causa x1,25."
+    "desc_pt": "Absorbed Water heals 25%. At the end of the round, rain heals 1/8 HP and sun drains 1/8. Fire deals x1.25."
   },
   "frisk": {
     "name": "FRISK",
     "desc": "When it enters a battle, the Pokémon can check an opposing Pokémon's held item.",
-    "desc_pt": "Ao entrar, mostra o item que os inimigos seguram."
+    "desc_pt": "On entry, shows the items the foes are holding."
   },
   "infiltrator": {
     "name": "INFILTRATOR",
     "desc": "Moves are unaffected by the target's barriers, substitutes, and the like.",
-    "desc_pt": "Ignora barreiras: o Friend Guard do parceiro do alvo não reduz o dano."
+    "desc_pt": "Ignores barriers: the target partner's Friend Guard does not reduce damage."
   },
   "magic_guard": {
     "name": "MAGIC GUARD",
     "desc": "The Pokémon only takes damage from attacks.",
-    "desc_pt": "Só leva dano de golpes: sem dano de veneno, queimadura, semente, areia, granizo, sol nem contato."
+    "desc_pt": "Only takes damage from moves: none from poison, burn, seeds, sand, hail, sun or contact."
   },
   "rain_dish": {
     "name": "RAIN DISH",
     "desc": "The Pokémon gradually regains HP in rain.",
-    "desc_pt": "Na chuva, recupera 1/16 do HP no fim de cada rodada."
+    "desc_pt": "In rain, recovers 1/16 HP at the end of each round."
   },
   "rivalry": {
     "name": "RIVALRY",
     "desc": "Deals more damage to the same gender, less to the opposite gender.",
-    "desc_pt": "Dano x1,25 contra o mesmo sexo e x0,75 contra o sexo oposto."
+    "desc_pt": "Damage x1.25 against the same gender and x0.75 against the opposite gender."
   },
   "sand_force": {
     "name": "SAND FORCE",
     "desc": "Boosts Rock, Ground and Steel moves in a sandstorm.",
-    "desc_pt": "Na tempestade de areia, golpes de Pedra, Terra e Aço x1,3 e não sofre a areia."
+    "desc_pt": "In a sandstorm, Rock, Ground and Steel moves x1.3 and takes no sand damage."
   },
   "sand_rush": {
     "name": "SAND RUSH",
     "desc": "Boosts the Pokémon's Speed in a sandstorm.",
-    "desc_pt": "Na tempestade de areia, Speed dobrada na ordem da rodada (anda e prepara golpes x1,5) e não sofre a areia."
+    "desc_pt": "In a sandstorm, Speed doubles in turn order (walks and readies moves x1.5) and takes no sand damage."
   },
   "solar_power": {
     "name": "SOLAR POWER",
     "desc": "In harsh sunlight, Sp. Atk is boosted, but HP decreases every turn.",
-    "desc_pt": "No sol, At. Esp. x1,5, mas perde 1/8 do HP no fim de cada rodada."
+    "desc_pt": "In sun, Sp. Atk x1.5, but loses 1/8 HP at the end of each round."
   },
   "tangled_feet": {
     "name": "TANGLED FEET",
     "desc": "Boosts evasiveness if the Pokémon is confused.",
-    "desc_pt": "Confuso, a esquiva dobra (20% de errar o golpe do inimigo)."
+    "desc_pt": "When confused, evasion doubles (20% chance for foe moves to miss)."
   },
   "unaware": {
     "name": "UNAWARE",
     "desc": "Ignores other Pokémon's stat changes when attacking or being attacked.",
-    "desc_pt": "Ignora os estágios de Defesa do alvo ao atacar e os de Ataque de quem bate nele."
+    "desc_pt": "Ignores the target's Defense stages when attacking and the attacker's Attack stages when hit."
   },
   "unnerve": {
     "name": "UNNERVE",
     "desc": "Unnerves opposing Pokémon and makes them unable to eat Berries.",
-    "desc_pt": "Ao entrar, anuncia; enquanto está em campo, os inimigos não conseguem usar o item do treinador."
+    "desc_pt": "Announces on entry; while on the field, foes cannot use their trainer's item."
   },
   "wonder_skin": {
     "name": "WONDER SKIN",
     "desc": "Makes status moves more likely to miss the Pokémon.",
-    "desc_pt": "Golpes de status dos inimigos (precisão acima de 50%) falham em metade das vezes."
+    "desc_pt": "Foes' status moves (accuracy above 50%) fail half of the time."
   },
   "drizzle": {
     "name": "DRIZZLE",
     "desc": "The Pokémon makes it rain when it enters a battle.",
-    "desc_pt": "Ao entrar, faz chover por 5 rodadas (8 com Damp Rock): Água x1,5, Fogo x0,5."
+    "desc_pt": "On entry, makes it rain for 5 rounds (8 with Damp Rock): Water x1.5, Fire x0.5."
   },
   "sand_stream": {
     "name": "SAND STREAM",
     "desc": "The Pokémon summons a sandstorm when it enters a battle.",
-    "desc_pt": "Ao entrar, cria uma tempestade de areia por 5 rodadas (8 com Smooth Rock)."
+    "desc_pt": "On entry, summons a sandstorm for 5 rounds (8 with Smooth Rock)."
   },
   "snow_warning": {
     "name": "SNOW WARNING",
     "desc": "The Pokémon makes it snow when it enters a battle.",
-    "desc_pt": "Ao entrar, faz nevar por 5 rodadas (8 com Icy Rock): Gelo ganha Def x1,5."
+    "desc_pt": "On entry, makes it snow for 5 rounds (8 with Icy Rock): Ice types get Def x1.5."
   },
   "slush_rush": {
     "name": "SLUSH RUSH",
     "desc": "Boosts the Pokémon's Speed stat in snow.",
-    "desc_pt": "Speed dobrada na neve."
+    "desc_pt": "Speed doubles in snow."
   },
   "ice_body": {
     "name": "ICE BODY",
     "desc": "The Pokémon gradually regains HP in snow.",
-    "desc_pt": "Recupera 1/16 do HP no fim de cada rodada com neve."
+    "desc_pt": "Recovers 1/16 HP at the end of each round in snow."
   },
   "snow_cloak": {
     "name": "SNOW CLOAK",
     "desc": "Boosts evasiveness in snow.",
-    "desc_pt": "Mais esquiva na neve."
+    "desc_pt": "Higher evasion in snow."
   },
   "hydration": {
     "name": "HYDRATION",
     "desc": "Heals status conditions if it's raining.",
-    "desc_pt": "Cura o status no fim da rodada quando está chovendo."
+    "desc_pt": "Cures its status at the end of the round when it is raining."
   },
   "leaf_guard": {
     "name": "LEAF GUARD",
     "desc": "Prevents status conditions in harsh sunlight.",
-    "desc_pt": "Não pega status no sol forte."
+    "desc_pt": "Cannot get a status in harsh sun."
   },
   "analytic": {
     "name": "ANALYTIC",
     "desc": "Boosts move power if the target moved recently.",
-    "desc_pt": "Dano x1,3 em quem usou um golpe nos últimos 3 s (pega o alvo no meio da recuperação)."
+    "desc_pt": "Damage x1.3 against a foe that used a move in the last 3 s (catches the target mid-recovery)."
   },
   "anger_point": {
     "name": "ANGER POINT",
     "desc": "Maxes ATTACK when hit by a critical hit.",
-    "desc_pt": "Ao levar um crítico, o Ataque vai ao máximo (+6) e ele entra em fúria (não recua mais)."
+    "desc_pt": "When hit by a critical hit, Attack maxes out (+6) and it flies into a rage (no longer flinches)."
   },
   "anticipation": {
     "name": "ANTICIPATION",
     "desc": "Senses dangerous moves.",
-    "desc_pt": "Ao entrar, avisa se algum inimigo tem golpe superefetivo contra ele; com o aviso, 25% de se esquivar de golpe superefetivo."
+    "desc_pt": "On entry, warns if a foe has a super effective move against it; once warned, 25% chance to dodge a super effective move."
   },
   "cursed_body": {
     "name": "CURSED BODY",
     "desc": "May disable a move that hit it.",
-    "desc_pt": "30% de travar por 6 s o golpe de quem o acertou (o golpe entra em recarga)."
+    "desc_pt": "30% chance to lock the move of whoever hit it for 6 s (the move goes on cooldown)."
   },
   "download": {
     "name": "DOWNLOAD",
     "desc": "Adjusts power based on a foe's defenses.",
-    "desc_pt": "Ao entrar, analisa os inimigos: sobe o Ataque (+1) se a Defesa deles for menor que a Def. Esp., senão o Atq. Esp. (+1)."
+    "desc_pt": "On entry, analyzes the foes: raises Attack (+1) if their Defense is lower than their Sp. Def, otherwise Sp. Atk (+1)."
   },
   "early_bird": {
     "name": "EARLY BIRD",
     "desc": "Awakens from sleep twice as fast.",
-    "desc_pt": "Acorda duas vezes mais rápido: o sono perde o dobro de rodadas por rodada."
+    "desc_pt": "Wakes up twice as fast: sleep loses twice as many rounds per round."
   },
   "forewarn": {
     "name": "FOREWARN",
     "desc": "Reveals the foes' strongest move.",
-    "desc_pt": "Ao entrar, revela o golpe mais forte de cada inimigo; contra esse golpe, 30% de se esquivar."
+    "desc_pt": "On entry, reveals each foe's strongest move; 30% chance to dodge that move."
   },
   "gluttony": {
     "name": "GLUTTONY",
     "desc": "Eats berries early.",
-    "desc_pt": "Come a frutinha de HP cedo (com 75% do HP no lugar de 50%) e a cura vale x1,5."
+    "desc_pt": "Eats its HP berry early (at 75% HP instead of 50%) and the healing is x1.5."
   },
   "harvest": {
     "name": "HARVEST",
     "desc": "May regrow a used berry.",
-    "desc_pt": "A cada rodada (~4 s) 50% de recuperar a frutinha comida (sempre no sol)."
+    "desc_pt": "Each round (~4 s) 50% chance to regrow the eaten berry (always in sun)."
   },
   "healer": {
     "name": "HEALER",
     "desc": "May heal an ally's status.",
-    "desc_pt": "A cada rodada, 30% de curar o status do aliado (sozinho em campo, 10% de curar o próprio)."
+    "desc_pt": "Each round, 30% chance to cure an ally's status (alone on the field, 10% to cure its own)."
   },
   "liquid_ooze": {
     "name": "LIQUID OOZE",
     "desc": "Drain moves hurt the drainer.",
-    "desc_pt": "Quem drena HP dele (golpe de dreno, Leech Seed) perde o HP em vez de ganhar. A IA evita golpes de dreno nele."
+    "desc_pt": "Whoever drains its HP (drain moves, Leech Seed) loses that HP instead of gaining it. The AI avoids drain moves against it."
   },
   "mold_breaker": {
     "name": "MOLD BREAKER",
     "desc": "Moves ignore the target's ability.",
-    "desc_pt": "Os golpes dele ignoram habilidades defensivas do alvo (Levitate, Sturdy, Thick Fat, Soundproof, Clear Body, Shell Armor...)."
+    "desc_pt": "Its moves ignore the target's defensive abilities (Levitate, Sturdy, Thick Fat, Soundproof, Clear Body, Shell Armor...)."
   },
   "neutralizing_gas": {
     "name": "NEUTRALIZING GAS",
     "desc": "Neutralizes all other abilities.",
-    "desc_pt": "Enquanto está em campo, as habilidades de todos os outros ficam anuladas; ao sair, elas voltam (e as de entrada agem de novo)."
+    "desc_pt": "While on the field, everyone else's abilities are nullified; when it leaves they return (and entry abilities trigger again)."
   },
   "overcoat": {
     "name": "OVERCOAT",
     "desc": "Protects from weather and powder.",
-    "desc_pt": "Imune a golpes de pó e esporos, e ao dano de areia."
+    "desc_pt": "Immune to powder and spore moves, and to sand damage."
   },
   "poison_touch": {
     "name": "POISON TOUCH",
     "desc": "May poison on contact attacks.",
-    "desc_pt": "30% de envenenar o alvo quando acerta um golpe de contato."
+    "desc_pt": "30% chance to poison the target when it lands a contact move."
   },
   "pressure": {
     "name": "PRESSURE",
     "desc": "Foes spend more energy per move.",
-    "desc_pt": "Inimigos a menos de 6 m gastam 25% mais energia (PP) por golpe."
+    "desc_pt": "Foes within 6 m spend 25% more energy (PP) per move."
   },
   "rattled": {
     "name": "RATTLED",
     "desc": "Speed rises when scared.",
-    "desc_pt": "Speed +1 ao levar golpe de Inseto, Fantasma ou Sombrio, ou ao ser intimidado."
+    "desc_pt": "Speed +1 when hit by a Bug, Ghost or Dark move, or when intimidated."
   },
   "scrappy": {
     "name": "SCRAPPY",
     "desc": "Hits Ghost types with Normal and Fighting moves.",
-    "desc_pt": "Golpes Normal e Lutador acertam Fantasma; imune à Intimidate."
+    "desc_pt": "Normal and Fighting moves hit Ghost types; immune to Intimidate."
   },
   "synchronize": {
     "name": "SYNCHRONIZE",
     "desc": "Passes poison, burn and paralysis back.",
-    "desc_pt": "Veneno, queimadura ou paralisia que ele pega passam também para quem causou."
+    "desc_pt": "A poison, burn or paralysis it catches is passed on to whoever caused it."
   },
   "imposter": {
     "name": "IMPOSTER",
     "desc": "Transforms into the foe it faces.",
-    "desc_pt": "Ao entrar, vira uma cópia do inimigo mais perto (tipos, stats menos HP, golpes, habilidade e aparência)."
+    "desc_pt": "On entry, becomes a copy of the nearest foe (types, stats except HP, moves, ability and looks)."
   },
   "trace": {
     "name": "TRACE",
     "desc": "Copies a foe's ability.",
-    "desc_pt": "Ao entrar, copia a habilidade de um inimigo (e a ativa na hora)."
+    "desc_pt": "On entry, copies a foe's ability (and activates it right away)."
   },
   "weak_armor": {
     "name": "WEAK ARMOR",
     "desc": "Physical hits lower DEFENSE and raise SPEED.",
-    "desc_pt": "Golpe físico que o acerta baixa a Defesa (-1) e sobe a Speed (+2); no máximo uma vez por segundo."
+    "desc_pt": "A physical hit lowers its Defense (-1) and raises its Speed (+2); at most once per second."
   },
   "pickpocket": {
     "name": "PICKPOCKET",
     "desc": "Steals attacking Pokémon's held items on contact.",
-    "desc_pt": "Ao levar golpe de contato, rouba o item de quem bateu (se estiver de mão vazia)."
+    "desc_pt": "When hit by a contact move, steals the attacker's item (if empty-handed)."
   },
   "klutz": {
     "name": "KLUTZ",
     "desc": "Prevents the Pokémon from using its held item in battle.",
-    "desc_pt": "Não consegue usar o item segurado (frutinhas e Leftovers ficam parados)."
+    "desc_pt": "Cannot use its held item (berries and Leftovers sit idle)."
   },
   "beast_boost": {
     "name": "BEAST BOOST",
     "desc": "Raises this Pokémon's highest stat by one stage when it faints another Pokémon.",
-    "desc_pt": "Ao nocautear, sobe 1 estágio no melhor atributo."
+    "desc_pt": "On a knock out, raises its best stat by 1 stage."
   },
   "contrary": {
     "name": "CONTRARY",
     "desc": "Inverts stat changes.",
-    "desc_pt": "Inverte as mudanças de atributo: queda vira alta e alta vira queda."
+    "desc_pt": "Inverts stat changes: drops become rises and rises become drops."
   },
   "bulletproof": {
     "name": "BULLETPROOF",
     "desc": "Protects against bullet, ball, and bomb-based moves.",
-    "desc_pt": "Imune a bolas e bombas (Shadow Ball, Sludge Bomb, Focus Blast...)."
+    "desc_pt": "Immune to ball and bomb moves (Shadow Ball, Sludge Bomb, Focus Blast...)."
   },
   "protosynthesis": {
     "name": "PROTOSYNTHESIS",
     "desc": "Raises highest stat in harsh sunlight, or if holding Booster Energy.",
-    "desc_pt": "No sol, o melhor atributo sobe 30% (a Speed, 50%)."
+    "desc_pt": "In sun, its best stat rises 30% (Speed, 50%)."
   },
   "quark_drive": {
     "name": "QUARK DRIVE",
     "desc": "Raises highest stat on Electric Terrain, or if holding Booster Energy.",
-    "desc_pt": "No campo elétrico, o melhor atributo sobe 30% (a Speed, 50%)."
+    "desc_pt": "On Electric Terrain, its best stat rises 30% (Speed, 50%)."
   },
   "sweet_veil": {
     "name": "SWEET VEIL",
     "desc": "Prevents friendly Pokémon from sleeping.",
-    "desc_pt": "Ele e o parceiro não dormem."
+    "desc_pt": "It and its partner cannot fall asleep."
   },
   "moody": {
     "name": "MOODY",
     "desc": "Raises a random stat two stages and lowers another one stage after each turn.",
-    "desc_pt": "Todo fim de rodada: um atributo ao acaso +2 e outro -1."
+    "desc_pt": "Every end of round: a random stat +2 and another -1."
   },
   "heavy_metal": {
     "name": "HEAVY METAL",
     "desc": "Doubles the Pokémon's weight.",
-    "desc_pt": "Peso x2: é empurrado menos e golpes de peso doem mais nele."
+    "desc_pt": "Weight x2: pushed less and weight-based moves hurt it more."
   },
   "stakeout": {
     "name": "STAKEOUT",
     "desc": "This Pokémon's moves have double power against Pokémon that switched in this turn.",
-    "desc_pt": "Dano x2 em quem acabou de entrar em campo (até 4 s)."
+    "desc_pt": "Damage x2 against a foe that just entered the field (up to 4 s)."
   },
   "protean": {
     "name": "PROTEAN",
     "desc": "Changes the bearer's type to match each move it uses.",
-    "desc_pt": "Muda para o tipo do golpe que usa (uma vez por entrada em campo)."
+    "desc_pt": "Changes to the type of the move it uses (once per entry)."
   },
   "magic_bounce": {
     "name": "MAGIC BOUNCE",
     "desc": "Reflects most non-damaging moves back at their user.",
-    "desc_pt": "Rebate golpes de estado de inimigos de volta para quem os usou."
+    "desc_pt": "Bounces foes' status moves back at the user."
   },
   "light_metal": {
     "name": "LIGHT METAL",
     "desc": "Halves the Pokémon's weight.",
-    "desc_pt": "Peso x0,5: é empurrado mais e golpes de peso doem menos nele."
+    "desc_pt": "Weight x0.5: pushed more and weight-based moves hurt it less."
   },
   "cheek_pouch": {
     "name": "CHEEK POUCH",
     "desc": "Restores HP upon eating a Berry, in addition to the Berry's effect.",
-    "desc_pt": "Ao comer uma frutinha, também cura 1/3 do HP."
+    "desc_pt": "When it eats a berry, also heals 1/3 HP."
   },
   "aroma_veil": {
     "name": "AROMA VEIL",
     "desc": "Protects allies against moves that affect their mental state.",
-    "desc_pt": "Ele e o parceiro não sofrem Taunt, Torment, Encore, Disable, Heal Block, Attract nem confusão."
+    "desc_pt": "It and its partner are not affected by Taunt, Torment, Encore, Disable, Heal Block, Attract or confusion."
   },
   "fluffy": {
     "name": "FLUFFY",
     "desc": "Damage from contact moves is halved. Damage from Fire moves is doubled.",
-    "desc_pt": "Golpes de contato causam metade do dano nele; Fogo causa o dobro."
+    "desc_pt": "Contact moves deal half damage to it; Fire deals double."
   },
   "shadow_tag": {
     "name": "SHADOW TAG",
     "desc": "Prevents opponents from fleeing or switching out.",
-    "desc_pt": "Inimigos (menos Fantasma) não conseguem trocar de Pokémon nem fugir."
+    "desc_pt": "Foes (except Ghosts) cannot switch Pokémon or flee."
   },
   "suction_cups": {
     "name": "SUCTION CUPS",
     "desc": "Prevents being forced out of battle by other Pokémon's moves.",
-    "desc_pt": "Não é empurrado nem arrastado para fora por Whirlwind, Roar e golpes parecidos."
+    "desc_pt": "Cannot be forced out or dragged by Whirlwind, Roar and similar moves."
   },
   "simple": {
     "name": "SIMPLE",
     "desc": "Doubles the Pokémon's stat modifiers. These doubled modifiers are still capped at -6 or 6 stages.",
-    "desc_pt": "As mudanças de atributo valem o dobro."
+    "desc_pt": "Stat changes count double."
   },
   "heatproof": {
     "name": "HEATPROOF",
     "desc": "Halves damage from Fire moves and burns.",
-    "desc_pt": "Fogo causa metade do dano nele e a queimadura tira só metade."
+    "desc_pt": "Fire deals half damage to it and burn drains only half."
   },
   "magician": {
     "name": "MAGICIAN",
     "desc": "Steals the target's held item when the bearer uses a damaging move.",
-    "desc_pt": "Ao acertar um golpe de dano, rouba o item do alvo (se estiver de mão vazia)."
+    "desc_pt": "When it lands a damaging move, steals the target's item (if empty-handed)."
   },
   "gooey": {
     "name": "GOOEY",
     "desc": "Lowers attacking Pokémon's Speed by one stage on contact.",
-    "desc_pt": "Quem encosta nele perde 1 estágio de Speed."
+    "desc_pt": "Whoever touches it loses 1 Speed stage."
   },
   "honey_gather": {
     "name": "HONEY GATHER",
     "desc": "The Pokémon may pick up Honey after battle.",
-    "desc_pt": "Ao vencer a luta, 5% (+5% a cada 10 níveis, até 50%) de achar Mel."
+    "desc_pt": "After winning a fight, 5% (+5% per 10 levels, up to 50%) chance to find Honey."
   },
   "solid_rock": {
     "name": "SOLID ROCK",
     "desc": "Decreases damage taken from super-effective moves by 1/4.",
-    "desc_pt": "Golpes superefetivos causam 25% a menos de dano nele."
+    "desc_pt": "Super effective moves deal 25% less damage to it."
   },
   "white_smoke": {
     "name": "WHITE SMOKE",
     "desc": "Prevents stats from being lowered by other Pokémon.",
-    "desc_pt": "Ninguém consegue baixar os atributos dele."
+    "desc_pt": "Nobody can lower its stats."
   },
   "flower_veil": {
     "name": "FLOWER VEIL",
     "desc": "Protects friendly Grass Pokémon from having their stats lowered by other Pokémon.",
-    "desc_pt": "Ele e o parceiro do tipo Grama não perdem atributo nem pegam status dos inimigos."
+    "desc_pt": "It and its Grass-type partner cannot lose stats or get statuses from foes."
   },
   "symbiosis": {
     "name": "SYMBIOSIS",
     "desc": "Passes the bearer's held item to an ally when the ally uses up its item.",
-    "desc_pt": "Quando o item do parceiro acaba, passa o seu para ele."
+    "desc_pt": "When its partner's item is used up, passes its own to the partner."
   },
   "corrosion": {
     "name": "CORROSION",
     "desc": "This Pokémon can inflict poison on Poison and Steel Pokémon.",
-    "desc_pt": "Consegue envenenar Pokémon Veneno e Aço."
+    "desc_pt": "Can poison Poison and Steel types."
   },
   "grassy_surge": {
     "name": "GRASSY SURGE",
     "desc": "When this Pokémon enters battle, it changes the terrain to Grassy Terrain.",
-    "desc_pt": "Ao entrar, cria o campo de grama (5 rodadas)."
+    "desc_pt": "On entry, creates Grassy Terrain (5 rounds)."
   },
   "magma_armor": {
     "name": "MAGMA ARMOR",
     "desc": "Prevents freezing.",
-    "desc_pt": "Não congela."
+    "desc_pt": "Cannot be frozen."
   },
   "wind_rider": {
     "name": "WIND RIDER",
     "desc": "Gives immunity to wind moves, and causes the Pokémon's Attack to increase by one stage when hit by one.",
-    "desc_pt": "Imune a golpes de vento; quando um o atinge, Ataque +1."
+    "desc_pt": "Immune to wind moves; when one hits it, Attack +1."
   },
   "truant": {
     "name": "TRUANT",
     "desc": "Skips every second turn.",
-    "desc_pt": "Age numa rodada e vadia na seguinte (não consegue usar golpes)."
+    "desc_pt": "Acts one round and loafs the next (cannot use moves)."
   },
   "sharpness": {
     "name": "SHARPNESS",
     "desc": "Powers up slicing moves.",
-    "desc_pt": "Golpes de corte (Slash, Leaf Blade, X-Scissor...) x1,5."
+    "desc_pt": "Slicing moves (Slash, Leaf Blade, X-Scissor...) x1.5."
   },
   "iron_barbs": {
     "name": "IRON BARBS",
     "desc": "Damages attacking Pokémon for 1/8 their max HP on contact.",
-    "desc_pt": "Quem encosta nele perde 1/8 do HP máximo."
+    "desc_pt": "Whoever touches it loses 1/8 of its max HP."
   },
   "long_reach": {
     "name": "LONG REACH",
     "desc": "This Pokémon's moves do not make contact.",
-    "desc_pt": "Os golpes dele nunca encostam: não ativam habilidades de contato."
+    "desc_pt": "Its moves never make contact: they do not trigger contact abilities."
   },
   "liquid_voice": {
     "name": "LIQUID VOICE",
     "desc": "Sound-based moves become Water-type.",
-    "desc_pt": "Golpes de som viram tipo Água."
+    "desc_pt": "Sound moves become Water type."
   },
   "stamina": {
     "name": "STAMINA",
     "desc": "Raises this Pokémon's Defense by one stage when it takes damage from a move.",
-    "desc_pt": "Sobe 1 de Defesa cada vez que leva dano de um golpe."
+    "desc_pt": "+1 Defense every time it takes damage from a move."
   },
   "libero": {
     "name": "LIBERO",
     "desc": "Libero changes the Pokémon's type to that of its previously used attack.",
-    "desc_pt": "Muda para o tipo do golpe que usa (uma vez por entrada em campo)."
+    "desc_pt": "Changes to the type of the move it uses (once per entry)."
   },
   "steam_engine": {
     "name": "STEAM ENGINE",
     "desc": "Boosts the Speed stat drastically when the Pokémon is hit by a Fire- or Water-type move.",
-    "desc_pt": "Ao levar golpe de Fogo ou Água, a Speed sobe 6 estágios."
+    "desc_pt": "When hit by a Fire or Water move, Speed rises 6 stages."
   },
   "ripen": {
     "name": "RIPEN",
     "desc": "Doubles the effect of berries.",
-    "desc_pt": "Frutinhas curam o dobro (Oran 20, Sitrus 1/2 do HP)."
+    "desc_pt": "Berries heal double (Oran 20, Sitrus 1/2 HP)."
   },
   "purifying_salt": {
     "name": "PURIFYING SALT",
     "desc": "Protects from status conditions and halves damage from Ghost-type moves.",
-    "desc_pt": "Imune a status e leva metade do dano de golpes Fantasma."
+    "desc_pt": "Immune to statuses and takes half damage from Ghost moves."
   },
   "thermal_exchange": {
     "name": "THERMAL EXCHANGE",
     "desc": "Raises Attack when hit by a Fire-type move. Cannot be burned.",
-    "desc_pt": "Ao levar golpe de Fogo, Ataque +1. Não se queima."
+    "desc_pt": "When hit by a Fire move, Attack +1. Cannot be burned."
   },
   "toxic_chain": {
     "name": "TOXIC CHAIN",
     "desc": "May cause bad poisoning when the Pokémon hits an opponent with a move.",
-    "desc_pt": "30% de envenenar gravemente o alvo ao acertar um golpe."
+    "desc_pt": "30% chance to badly poison the target when it lands a move."
   },
   "normalize": {
     "name": "NORMALIZE",
     "desc": "Makes the Pokémon's moves all act Normal-type.",
-    "desc_pt": "Todos os golpes viram Normal e ganham x1,2 de poder."
+    "desc_pt": "All moves become Normal type and gain x1.2 power."
   },
   "pure_power": {
     "name": "PURE POWER",
     "desc": "Doubles Attack in battle.",
-    "desc_pt": "Dano de golpes físicos x2."
+    "desc_pt": "Physical move damage x2."
   },
   "flare_boost": {
     "name": "FLARE BOOST",
     "desc": "Increases Special Attack to 1.5× when burned.",
-    "desc_pt": "Dano de golpes especiais x1,5 enquanto está queimado."
+    "desc_pt": "Special move damage x1.5 while burned."
   },
   "slow_start": {
     "name": "SLOW START",
     "desc": "Halves Attack and Speed for five turns upon entering battle.",
-    "desc_pt": "Por 5 rodadas depois de entrar, Ataque e Speed pela metade."
+    "desc_pt": "For 5 rounds after entering, Attack and Speed are halved."
   },
   "mummy": {
     "name": "MUMMY",
     "desc": "Changes attacking Pokémon's abilities to Mummy on contact.",
-    "desc_pt": "Quem encosta nele passa a ter a habilidade Mummy."
+    "desc_pt": "Whoever touches it gets the Mummy ability."
   },
   "defeatist": {
     "name": "DEFEATIST",
     "desc": "Halves Attack and Special Attack at 50% max HP or less.",
-    "desc_pt": "Com metade do HP ou menos, o dano que causa cai pela metade."
+    "desc_pt": "At half HP or less, the damage it deals is halved."
   },
   "illusion": {
     "name": "ILLUSION",
     "desc": "Takes the appearance of the last conscious party Pokémon upon being sent out until hit by a damaging move.",
-    "desc_pt": "Entra com a cara do último aliado de pé, até levar um golpe de dano."
+    "desc_pt": "Enters looking like the last ally left standing, until it takes damage from a move."
   },
   "grass_pelt": {
     "name": "GRASS PELT",
     "desc": "Boosts Defense while Grassy Terrain is in effect.",
-    "desc_pt": "No campo de grama, Defesa x1,5."
+    "desc_pt": "On Grassy Terrain, Defense x1.5."
   },
   "mega_launcher": {
     "name": "MEGA LAUNCHER",
     "desc": "Strengthens aura and pulse moves to 1.5× their power.",
-    "desc_pt": "Golpes de pulso e aura (Aura Sphere, Dark Pulse, Water Pulse...) x1,5."
+    "desc_pt": "Pulse and aura moves (Aura Sphere, Dark Pulse, Water Pulse...) x1.5."
   },
   "refrigerate": {
     "name": "REFRIGERATE",
     "desc": "Turns the bearer's Normal moves into Ice moves and strengthens them to 1.3× their power.",
-    "desc_pt": "Golpes Normal viram Gelo e ganham x1,2 de poder."
+    "desc_pt": "Normal moves become Ice and gain x1.2 power."
   },
   "merciless": {
     "name": "MERCILESS",
     "desc": "This Pokémon's moves critical hit against poisoned targets.",
-    "desc_pt": "Todo golpe dele é crítico contra alvo envenenado."
+    "desc_pt": "All its moves are critical hits against a poisoned target."
   },
   "water_bubble": {
     "name": "WATER BUBBLE",
     "desc": "Halves damage from Fire moves, doubles damage of Water moves, and prevents burns.",
-    "desc_pt": "Fogo causa metade do dano nele, golpes de Água dele x2 e não se queima."
+    "desc_pt": "Fire deals half damage to it, its Water moves x2, and it cannot be burned."
   },
   "water_compaction": {
     "name": "WATER COMPACTION",
     "desc": "Raises this Pokémon's Defense by two stages when it's hit by a Water move.",
-    "desc_pt": "Ao levar golpe de Água, Defesa +2."
+    "desc_pt": "When hit by a Water move, Defense +2."
   },
   "electric_surge": {
     "name": "ELECTRIC SURGE",
     "desc": "When this Pokémon enters battle, it changes the terrain to Electric Terrain.",
-    "desc_pt": "Ao entrar, cria o campo elétrico (5 rodadas)."
+    "desc_pt": "On entry, creates Electric Terrain (5 rounds)."
   },
   "psychic_surge": {
     "name": "PSYCHIC SURGE",
     "desc": "When this Pokémon enters battle, it changes the terrain to Psychic Terrain.",
-    "desc_pt": "Ao entrar, cria o campo psíquico (5 rodadas)."
+    "desc_pt": "On entry, creates Psychic Terrain (5 rounds)."
   },
   "cotton_down": {
     "name": "COTTON DOWN",
     "desc": "When Ignores moves and abilities that draw in moves.",
-    "desc_pt": "Ao levar golpe de dano, todos os outros em campo perdem 1 de Speed."
+    "desc_pt": "When hit by a damaging move, everyone else on the field loses 1 Speed stage."
   },
   "sand_spit": {
     "name": "SAND SPIT",
     "desc": "Creates a sandstorm when hit by an attack.",
-    "desc_pt": "Ao levar golpe de dano, cria uma tempestade de areia (5 rodadas)."
+    "desc_pt": "When hit by a damaging move, creates a sandstorm (5 rounds)."
   },
   "propeller_tail": {
     "name": "PROPELLER TAIL",
     "desc": "Ignores moves and abilities that draw in moves.",
-    "desc_pt": "Nada desvia os golpes dele (ignora Lightning Rod e Storm Drain)."
+    "desc_pt": "Nothing diverts its moves (ignores Lightning Rod and Storm Drain)."
   },
   "ice_scales": {
     "name": "ICE SCALES",
     "desc": "Halves damage from Special moves.",
-    "desc_pt": "Dano de golpes especiais pela metade."
+    "desc_pt": "Special move damage taken is halved."
   },
   "stalwart": {
     "name": "STALWART",
     "desc": "Ignores moves and abilities that draw in moves.",
-    "desc_pt": "Nada desvia os golpes dele (ignora Lightning Rod e Storm Drain)."
+    "desc_pt": "Nothing diverts its moves (ignores Lightning Rod and Storm Drain)."
   },
   "wind_power": {
     "name": "WIND POWER",
     "desc": "When hit by a wind move, the power of the next Electric-type move it uses is doubled.",
-    "desc_pt": "Ao ser atingido por golpe de vento, o próximo golpe Elétrico dele sai com o dobro de poder."
+    "desc_pt": "When hit by a wind move, its next Electric move deals double power."
   },
   "guard_dog": {
     "name": "GUARD DOG",
     "desc": "Boosts Attack if intimidated, and prevents being forced to switch out.",
-    "desc_pt": "Intimidate o deixa mais forte (Ataque +1) e ele não é arrastado para fora."
+    "desc_pt": "Intimidate makes it stronger (Attack +1) and it cannot be dragged out."
   },
   "mycelium_might": {
     "name": "MYCELIUM MIGHT",
     "desc": "Status moves go last, but are not affected by the opponent's ability.",
-    "desc_pt": "Golpes de estado dele passam por cima da habilidade do alvo, mas saem mais devagar (x0,7)."
+    "desc_pt": "Its status moves ignore the target's ability, but come out slower (x0.7)."
   },
   "toxic_debris": {
     "name": "TOXIC DEBRIS",
     "desc": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
-    "desc_pt": "Ao levar golpe físico, espalha espinhos venenosos aos pés dos inimigos."
+    "desc_pt": "When hit by a physical move, scatters poison spikes at the foes' feet."
   },
   "supersweet_syrup": {
     "name": "SUPERSWEET SYRUP",
     "desc": "Once per battle, when a Pokémon with Supersweet Syrup enters the battle, it lowers the evasion stat of all adjacent opponents by one stage.",
-    "desc_pt": "Uma vez por luta, ao entrar, melaça os inimigos: Speed -1."
+    "desc_pt": "Once per fight, on entry, coats the foes in syrup: Speed -1."
   },
   "hospitality": {
     "name": "HOSPITALITY",
     "desc": "When a Pokémon with Hospitality enters a battle, it restores HP for an ally by 25%.",
-    "desc_pt": "Ao entrar, cura 25% do HP do parceiro."
+    "desc_pt": "On entry, heals the partner by 25% HP."
   },
   "wonder_guard": {
     "name": "WONDER GUARD",
     "desc": "Protects against damaging moves that are not super effective.",
-    "desc_pt": "Só leva dano de golpes superefetivos."
+    "desc_pt": "Only takes damage from super effective moves."
   },
   "stall": {
     "name": "STALL",
     "desc": "Makes the Pokémon move last within its move's priority bracket.",
-    "desc_pt": "Age por último na rodada e prepara os golpes mais devagar (x0,75)."
+    "desc_pt": "Acts last in the round and readies moves slower (x0.75)."
   },
   "toxic_boost": {
     "name": "TOXIC BOOST",
     "desc": "Increases Attack to 1.5× when poisoned.",
-    "desc_pt": "Dano de golpes físicos x1,5 enquanto está envenenado."
+    "desc_pt": "Physical move damage x1.5 while poisoned."
   },
   "forecast": {
     "name": "FORECAST",
     "desc": "Changes Castform's type and form to match the weather.",
-    "desc_pt": "O tipo e a cor seguem o clima: sol Fogo, chuva Água, neve Gelo."
+    "desc_pt": "Its type and color follow the weather: sun Fire, rain Water, snow Ice."
   },
   "color_change": {
     "name": "COLOR CHANGE",
     "desc": "Changes type to match when hit by a damaging move.",
-    "desc_pt": "Muda para o tipo do golpe que o atingiu."
+    "desc_pt": "Changes to the type of the move that hit it."
   },
   "air_lock": {
     "name": "AIR LOCK",
     "desc": "Negates all effects of weather, but does not prevent the weather itself.",
-    "desc_pt": "Ao entrar, anuncia; enquanto está em campo, o clima não tem efeito em ninguém."
+    "desc_pt": "Announces on entry; while on the field, weather has no effect on anyone."
   },
   "flower_gift": {
     "name": "FLOWER GIFT",
     "desc": "Increases friendly Pokémon's Attack and Special Defense to 1.5× during strong sunlight.",
-    "desc_pt": "No sol, ele e o parceiro: dano físico x1,5 e dano especial recebido x0,67."
+    "desc_pt": "In sun, it and its partner: physical damage x1.5 and special damage taken x0.67."
   },
   "bad_dreams": {
     "name": "BAD DREAMS",
     "desc": "Damages sleeping opponents for 1/8 their max HP after each turn.",
-    "desc_pt": "No fim da rodada, inimigos dormindo perdem 1/8 do HP."
+    "desc_pt": "At the end of the round, sleeping foes lose 1/8 HP."
   },
   "multitype": {
     "name": "MULTITYPE",
     "desc": "Changes Arceus's type and form to match its held Plate.",
-    "desc_pt": "O tipo vem da Placa segurada (sem placa, do melhor golpe que não é Normal); Judgment segue o tipo."
+    "desc_pt": "Its type comes from the held Plate (with no plate, from its best non-Normal move); Judgment follows the type."
   },
   "victory_star": {
     "name": "VICTORY STAR",
     "desc": "Increases moves' accuracy to 1.1× for friendly Pokémon.",
-    "desc_pt": "Precisão x1,1 para ele e o parceiro."
+    "desc_pt": "Accuracy x1.1 for it and its partner."
   },
   "zen_mode": {
     "name": "ZEN MODE",
     "desc": "Changes Darmanitan's form after each turn depending on its HP: Zen Mode below 50% max HP, and Standard Mode otherwise.",
-    "desc_pt": "Com metade do HP ou menos, entra no Modo Zen: vira Psíquico, defesas altas, Atq. Esp. enorme."
+    "desc_pt": "At half HP or less, enters Zen Mode: becomes Psychic, high defenses, huge Sp. Atk."
   },
   "turboblaze": {
     "name": "TURBOBLAZE",
     "desc": "Bypasses targets' abilities if they could hinder or prevent moves.",
-    "desc_pt": "Os golpes dele passam por cima das habilidades defensivas do alvo (como Mold Breaker)."
+    "desc_pt": "Its moves ignore the target's defensive abilities (like Mold Breaker)."
   },
   "teravolt": {
     "name": "TERAVOLT",
     "desc": "Bypasses targets' abilities if they could hinder or prevent moves.",
-    "desc_pt": "Os golpes dele passam por cima das habilidades defensivas do alvo (como Mold Breaker)."
+    "desc_pt": "Its moves ignore the target's defensive abilities (like Mold Breaker)."
   },
   "fur_coat": {
     "name": "FUR COAT",
     "desc": "Halves damage from physical attacks.",
-    "desc_pt": "Dano de golpes físicos recebido pela metade."
+    "desc_pt": "Physical damage taken is halved."
   },
   "stance_change": {
     "name": "STANCE CHANGE",
     "desc": "Changes Aegislash to Blade Forme before using a damaging move, or Shield Forme before using King’s Shield.",
-    "desc_pt": "Vira Forma Lâmina ao usar golpe de dano (ataques altos, defesas baixas) e Forma Escudo com King's Shield."
+    "desc_pt": "Becomes Blade Forme when using a damaging move (high attacks, low defenses) and Shield Forme with King's Shield."
   },
   "pixilate": {
     "name": "PIXILATE",
     "desc": "Turns the bearer's Normal moves into Fairy moves and strengthens them to 1.3× their power.",
-    "desc_pt": "Golpes Normal viram Fada e ganham x1,2 de poder."
+    "desc_pt": "Normal moves become Fairy and gain x1.2 power."
   },
   "fairy_aura": {
     "name": "FAIRY AURA",
     "desc": "Strengthens Fairy moves to 1.33× their power for all friendly and opposing Pokémon.",
-    "desc_pt": "Golpes Fada de todos em campo x1,33."
+    "desc_pt": "Fairy moves of everyone on the field x1.33."
   },
   "dark_aura": {
     "name": "DARK AURA",
     "desc": "Strengthens Dark moves to 1.33× their power for all friendly and opposing Pokémon.",
-    "desc_pt": "Golpes Sombrio de todos em campo x1,33."
+    "desc_pt": "Dark moves of everyone on the field x1.33."
   },
   "aura_break": {
     "name": "AURA BREAK",
     "desc": "Makes Dark Aura and Fairy Aura weaken moves of their respective types.",
-    "desc_pt": "Inverte Dark Aura e Fairy Aura: esses golpes saem x0,75."
+    "desc_pt": "Reverses Dark Aura and Fairy Aura: those moves come out x0.75."
   },
   "battery": {
     "name": "BATTERY",
     "desc": "Ally Pokémon's moves have their power increased to 1.3×.",
-    "desc_pt": "Golpes especiais do parceiro x1,3."
+    "desc_pt": "Partner's special moves x1.3."
   },
   "dancer": {
     "name": "DANCER",
     "desc": "Whenever another Pokémon uses a dance move, this Pokémon will use the same move immediately afterwards.",
-    "desc_pt": "Quando outro usa golpe de dança, repete o mesmo passo logo depois (sem gastar energia)."
+    "desc_pt": "When another Pokémon uses a dance move, repeats the same step right after (costs no energy)."
   },
   "schooling": {
     "name": "SCHOOLING",
     "desc": "Wishiwashi becomes Schooling Form when its HP is 25% or higher.",
-    "desc_pt": "Com nível 20+ e HP em 25% ou mais, vira Cardume: atributos enormes, Speed menor."
+    "desc_pt": "At level 20+ and HP at 25% or more, becomes School Form: huge stats, lower Speed."
   },
   "queenly_majesty": {
     "name": "QUEENLY MAJESTY",
     "desc": "Opposing Pokémon cannot use priority attacks.",
-    "desc_pt": "Inimigos não acertam ele nem o parceiro com golpes de prioridade."
+    "desc_pt": "Foes cannot hit it or its partner with priority moves."
   },
   "triage": {
     "name": "TRIAGE",
     "desc": "This Pokémon's healing moves have their priority increased by 3.",
-    "desc_pt": "Golpes que curam têm +3 de prioridade e saem x1,5 mais rápido."
+    "desc_pt": "Healing moves get +3 priority and come out x1.5 faster."
   },
   "receiver": {
     "name": "RECEIVER",
     "desc": "When an ally faints, this Pokémon gains its Ability.",
-    "desc_pt": "Quando o parceiro desmaia, fica com a habilidade dele."
+    "desc_pt": "When the partner faints, takes on its ability."
   },
   "wimp_out": {
     "name": "WIMP OUT",
     "desc": "This Pokémon automatically switches out when its HP drops below half.",
-    "desc_pt": "Ao cair para metade do HP ou menos, foge para o banco (modo de energia)."
+    "desc_pt": "When it drops to half HP or less, flees to the bench (energy mode)."
   },
   "emergency_exit": {
     "name": "EMERGENCY EXIT",
     "desc": "This Pokémon automatically switches out when its HP drops below half.",
-    "desc_pt": "Ao cair para metade do HP ou menos, foge para o banco (modo de energia)."
+    "desc_pt": "When it drops to half HP or less, flees to the bench (energy mode)."
   },
   "innards_out": {
     "name": "INNARDS OUT",
     "desc": "When this Pokémon faints from an opponent's move, that opponent takes damage equal to the HP this Pokémon had remaining.",
-    "desc_pt": "Se desmaiar por um golpe, quem bateu perde o HP que ele ainda tinha."
+    "desc_pt": "If it faints from a move, the attacker loses the HP it had left."
   },
   "rks_system": {
     "name": "RKS SYSTEM",
     "desc": "Changes this Pokémon's type to match its held Memory.",
-    "desc_pt": "O tipo vem da Memória segurada (sem memória, do melhor golpe que não é Normal); Multi-Attack segue o tipo."
+    "desc_pt": "Its type comes from the held Memory (with no memory, from its best non-Normal move); Multi-Attack follows the type."
   },
   "shields_down": {
     "name": "SHIELDS DOWN",
     "desc": "Transforms this Minior between Core Form and Meteor Form. Prevents major status ailments and drowsiness while in Meteor Form.",
-    "desc_pt": "Com mais da metade do HP (Meteoro) não pega status; com metade ou menos vira Núcleo: ataque e Speed altos, defesas baixas."
+    "desc_pt": "With more than half HP (Meteor Form) it cannot get statuses; at half or less it becomes Core Form: high attack and Speed, low defenses."
   },
   "comatose": {
     "name": "COMATOSE",
     "desc": "This Pokémon always acts as though it were Asleep.",
-    "desc_pt": "Sempre adormecido: não pega nenhum status."
+    "desc_pt": "Always asleep: cannot get any status."
   },
   "disguise": {
     "name": "DISGUISE",
     "desc": "Prevents the first instance of battle damage.",
-    "desc_pt": "O primeiro golpe de dano é anulado (perde só 1/8 do HP); depois o disfarce rompe."
+    "desc_pt": "The first damaging move is nullified (it loses only 1/8 HP); then the disguise breaks."
   },
   "dazzling": {
     "name": "DAZZLING",
     "desc": "Opposing Pokémon cannot use priority attacks.",
-    "desc_pt": "Inimigos não acertam ele nem o parceiro com golpes de prioridade."
+    "desc_pt": "Foes cannot hit it or its partner with priority moves."
   },
   "berserk": {
     "name": "BERSERK",
     "desc": "Raises this Pokémon's Special Attack by one stage every time its HP drops below half.",
-    "desc_pt": "Ao cair para metade do HP ou menos, Atq. Esp. +1."
+    "desc_pt": "When it drops to half HP or less, Sp. Atk +1."
   },
   "steelworker": {
     "name": "STEELWORKER",
     "desc": "This Pokémon's Steel moves have 1.5× power.",
-    "desc_pt": "Golpes Aço x1,5."
+    "desc_pt": "Steel moves x1.5."
   },
   "misty_surge": {
     "name": "MISTY SURGE",
     "desc": "When this Pokémon enters battle, it changes the terrain to Misty Terrain.",
-    "desc_pt": "Ao entrar, cria o campo de névoa (5 rodadas)."
+    "desc_pt": "On entry, creates Misty Terrain (5 rounds)."
   },
   "full_metal_body": {
     "name": "FULL METAL BODY",
     "desc": "Other Pokémon cannot lower this Pokémon's stats.",
-    "desc_pt": "Ninguém consegue baixar os atributos dele (nem com Mold Breaker)."
+    "desc_pt": "Nobody can lower its stats (not even with Mold Breaker)."
   },
   "shadow_shield": {
     "name": "SHADOW SHIELD",
     "desc": "When this Pokémon has full HP, regular damage from moves is halved.",
-    "desc_pt": "Com HP cheio, o dano recebido é pela metade."
+    "desc_pt": "At full HP, damage taken is halved."
   },
   "prism_armor": {
     "name": "PRISM ARMOR",
     "desc": "Reduces super-effective damage to 0.75×.",
-    "desc_pt": "Golpes superefetivos causam 25% a menos de dano nele (Mold Breaker não passa)."
+    "desc_pt": "Super effective moves deal 25% less damage to it (Mold Breaker does not get past)."
   },
   "soul_heart": {
     "name": "SOUL-HEART",
     "desc": "This Pokémon's Special Attack rises by one stage every time any Pokémon faints.",
-    "desc_pt": "Sobe 1 de Atq. Esp. cada vez que qualquer Pokémon desmaia."
+    "desc_pt": "+1 Sp. Atk every time any Pokémon faints."
   },
   "mirror_armor": {
     "name": "MIRROR ARMOR",
     "desc": "Reflects any stat-lowering effects.",
-    "desc_pt": "Quedas de atributo causadas por inimigos voltam para eles."
+    "desc_pt": "Stat drops caused by foes are reflected back at them."
   },
   "ball_fetch": {
     "name": "BALL FETCH",
     "desc": "If the Pokémon is not holding an item, it will fetch the Poké Ball from the first failed throw of the battle.",
-    "desc_pt": "Sem item, busca a primeira Poké Bola que falhar na luta e ela volta para a mochila."
+    "desc_pt": "With no item, fetches the first Poké Ball that fails in the fight and returns it to the bag."
   },
   "gulp_missile": {
     "name": "GULP MISSILE",
     "desc": "If a Cramorant with Gulp Missile uses Surf or Dive, it catches prey and changes its form depending on its remaining HP.",
-    "desc_pt": "Depois de Surf ou Dive engole uma presa; ao levar golpe a cospe: 1/4 do HP de quem bateu e Def -1 (ou paralisia, com HP baixo)."
+    "desc_pt": "After Surf or Dive it swallows prey; when hit it spits it out: 1/4 of the attacker's HP and Def -1 (or paralysis at low HP)."
   },
   "punk_rock": {
     "name": "PUNK ROCK",
     "desc": "Boosts sound-based moves and halves damage from the same moves.",
-    "desc_pt": "Golpes de som x1,3 e leva metade do dano de golpes de som."
+    "desc_pt": "Sound moves x1.3 and takes half damage from sound moves."
   },
   "steely_spirit": {
     "name": "STEELY SPIRIT",
     "desc": "Powers up ally Pokémon's Steel-type moves.",
-    "desc_pt": "Golpes Aço dele e do parceiro x1,5."
+    "desc_pt": "Its and its partner's Steel moves x1.5."
   },
   "perish_body": {
     "name": "PERISH BODY",
     "desc": "When hit by a move that makes direct contact, the Pokémon and the attacker will faint after three turns unless they switch out of battle.",
-    "desc_pt": "Ao levar golpe de contato, ele e quem bateu começam a Canção da Morte (3 rodadas)."
+    "desc_pt": "When hit by a contact move, it and the attacker start a Perish Song (3 rounds)."
   },
   "screen_cleaner": {
     "name": "SCREEN CLEANER",
     "desc": "Nullifies effects of Light Screen, Reflect, and Aurora Veil.",
-    "desc_pt": "Ao entrar, desfaz Reflect, Light Screen e Aurora Veil dos dois lados."
+    "desc_pt": "On entry, removes Reflect, Light Screen and Aurora Veil from both sides."
   },
   "wandering_spirit": {
     "name": "WANDERING SPIRIT",
     "desc": "Swaps abilities with opponents on contact.",
-    "desc_pt": "No contato, troca de habilidade com quem bateu."
+    "desc_pt": "On contact, swaps abilities with the attacker."
   },
   "power_spot": {
     "name": "POWER SPOT",
     "desc": "Just being next to the Pokémon powers up moves.",
-    "desc_pt": "Golpes do parceiro x1,3."
+    "desc_pt": "Partner's moves x1.3."
   },
   "ice_face": {
     "name": "ICE FACE",
     "desc": "The Pokémon’s ice head can take a physical attack as a substitute, but the attack also changes the Pokémon’s appearance. The ice will be restored when it snows.",
-    "desc_pt": "Absorve o primeiro golpe físico (o gelo quebra: Speed alta, defesas baixas); na neve o gelo volta."
+    "desc_pt": "Absorbs the first physical move (the ice breaks: high Speed, low defenses); the ice returns in snow."
   },
   "hunger_switch": {
     "name": "HUNGER SWITCH",
     "desc": "Causes Morpeko to change its form each turn, alternating between Full Belly Mode and Hangry Mode",
-    "desc_pt": "A cada rodada alterna entre saciado e faminto; faminto, Aura Wheel vira tipo Sombrio."
+    "desc_pt": "Every round alternates between Full Belly and Hangry; when Hangry, Aura Wheel becomes Dark type."
   },
   "intrepid_sword": {
     "name": "INTREPID SWORD",
     "desc": "Boosts Attack in battle.",
-    "desc_pt": "Ao entrar (uma vez por luta), Ataque +1."
+    "desc_pt": "On entry (once per fight), Attack +1."
   },
   "dauntless_shield": {
     "name": "DAUNTLESS SHIELD",
     "desc": "Boosts Defense in battle.",
-    "desc_pt": "Ao entrar (uma vez por luta), Defesa +1."
+    "desc_pt": "On entry (once per fight), Defense +1."
   },
   "unseen_fist": {
     "name": "UNSEEN FIST",
     "desc": "Contact moves can strike through Protect/Detect.",
-    "desc_pt": "Golpes de contato dele atravessam Protect."
+    "desc_pt": "Its contact moves go through Protect."
   },
   "transistor": {
     "name": "TRANSISTOR",
     "desc": "Powers up Electric-type moves.",
-    "desc_pt": "Golpes Elétrico x1,3."
+    "desc_pt": "Electric moves x1.3."
   },
   "dragons_maw": {
     "name": "DRAGON’S MAW",
     "desc": "Powers up Dragon-type moves.",
-    "desc_pt": "Golpes Dragão x1,5."
+    "desc_pt": "Dragon moves x1.5."
   },
   "chilling_neigh": {
     "name": "CHILLING NEIGH",
     "desc": "Boosts Attack after knocking out a Pokémon.",
-    "desc_pt": "Sobe 1 de Ataque ao nocautear."
+    "desc_pt": "+1 Attack on a knock out."
   },
   "grim_neigh": {
     "name": "GRIM NEIGH",
     "desc": "Boosts Special Attack after knocking out a Pokémon.",
-    "desc_pt": "Sobe 1 de Atq. Esp. ao nocautear."
+    "desc_pt": "+1 Sp. Atk on a knock out."
   },
   "lingering_aroma": {
     "name": "LINGERING AROMA",
     "desc": "Contact changes the attacker's Ability to Lingering Aroma.",
-    "desc_pt": "Quem encosta nele passa a ter a habilidade Lingering Aroma."
+    "desc_pt": "Whoever touches it gets the Lingering Aroma ability."
   },
   "well_baked_body": {
     "name": "WELL-BAKED BODY",
     "desc": "Immune to Fire-type moves, and Defense is sharply boosted.",
-    "desc_pt": "Imune a Fogo; quando um o atinge, Defesa +2."
+    "desc_pt": "Immune to Fire; when one hits it, Defense +2."
   },
   "seed_sower": {
     "name": "SEED SOWER",
     "desc": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
-    "desc_pt": "Ao levar golpe de dano, cria o campo de grama (5 rodadas)."
+    "desc_pt": "When hit by a damaging move, creates Grassy Terrain (5 rounds)."
   },
   "electromorphosis": {
     "name": "ELECTROMORPHOSIS",
     "desc": "When hit by an attack, the power of the next Electric-type move it uses is doubled.",
-    "desc_pt": "Ao levar golpe de dano, o próximo golpe Elétrico dele sai com o dobro de poder."
+    "desc_pt": "When hit by a damaging move, its next Electric move deals double power."
   },
   "anger_shell": {
     "name": "ANGER SHELL",
     "desc": "When the Pokémon's HP drops below half, Anger Shell lowers its Defense and Special Defense but its Attack, Special Attack and Speed are raised.",
-    "desc_pt": "Ao cair para metade do HP ou menos: Defesa e Def. Esp. -1; Ataque, Atq. Esp. e Speed +1."
+    "desc_pt": "When it drops to half HP or less: Defense and Sp. Def -1; Attack, Sp. Atk and Speed +1."
   },
   "opportunist": {
     "name": "OPPORTUNIST",
     "desc": "Copies stat boosts by the opponent.",
-    "desc_pt": "Copia na hora os aumentos de atributo dos inimigos."
+    "desc_pt": "Instantly copies the foes' stat boosts."
   },
   "rocky_payload": {
     "name": "ROCKY PAYLOAD",
     "desc": "Powers up Rock-type moves.",
-    "desc_pt": "Golpes Pedra x1,5."
+    "desc_pt": "Rock moves x1.5."
   },
   "zero_to_hero": {
     "name": "ZERO TO HERO",
     "desc": "Transforms into its Hero Form when switching out.",
-    "desc_pt": "Palafin vira Herói (atributos altos) ao voltar de uma troca, ou ao cair para metade do HP."
+    "desc_pt": "Palafin becomes Hero Form (high stats) when it returns from a switch, or when it drops to half HP."
   },
   "earth_eater": {
     "name": "EARTH EATER",
     "desc": "Restores HP when hit by a Ground-type move.",
-    "desc_pt": "Imune a Terra: golpe de Terra cura 25% do HP dele."
+    "desc_pt": "Immune to Ground: Ground moves heal it by 25% HP."
   },
   "costar": {
     "name": "COSTAR",
     "desc": "Copies ally's stat changes on entering battle.",
-    "desc_pt": "Ao entrar, copia os estágios de atributo do parceiro."
+    "desc_pt": "On entry, copies the partner's stat stages."
   },
   "commander": {
     "name": "COMMANDER",
     "desc": "Goes inside the mouth of an ally Dondozo if one is on the field.",
-    "desc_pt": "Com um Dondozo de parceiro, entra na boca dele (some) e o Dondozo ganha +2 em tudo."
+    "desc_pt": "With a Dondozo partner, enters its mouth (disappears) and Dondozo gets +2 in everything."
   },
   "cud_chew": {
     "name": "CUD CHEW",
     "desc": "Causes the Pokémon to reuse an already consumed Berry at the end of the next turn.",
-    "desc_pt": "A frutinha comida volta a ser comida na rodada seguinte."
+    "desc_pt": "The eaten berry is eaten again the next round."
   },
   "armor_tail": {
     "name": "ARMOR TAIL",
     "desc": "Prevents the opponent from using any moves that have priority, such as Quick Attack.",
-    "desc_pt": "Inimigos não acertam ele nem o parceiro com golpes de prioridade."
+    "desc_pt": "Foes cannot hit it or its partner with priority moves."
   },
   "supreme_overlord": {
     "name": "SUPREME OVERLORD",
     "desc": "Attack and Special Attack are boosted for each party Pokémon that has been defeated.",
-    "desc_pt": "Dano +10% por aliado derrotado no time (até 5)."
+    "desc_pt": "Damage +10% per fallen ally on the team (up to 5)."
   },
   "good_as_gold": {
     "name": "GOOD AS GOLD",
     "desc": "Gives immunity to status moves.",
-    "desc_pt": "Imune a golpes de estado de inimigos."
+    "desc_pt": "Immune to foes' status moves."
   },
   "tablets_of_ruin": {
     "name": "TABLETS OF RUIN",
     "desc": "Lowers Attack of all Pokémon except itself.",
-    "desc_pt": "Todos os outros em campo causam dano físico x0,75."
+    "desc_pt": "Everyone else on the field deals x0.75 physical damage."
   },
   "sword_of_ruin": {
     "name": "SWORD OF RUIN",
     "desc": "Lowers Defense of all Pokémon except itself.",
-    "desc_pt": "Todos os outros em campo levam dano físico x1,33."
+    "desc_pt": "Everyone else on the field takes x1.33 physical damage."
   },
   "vessel_of_ruin": {
     "name": "VESSEL OF RUIN",
     "desc": "Lowers Special Attack of all Pokémon except itself.",
-    "desc_pt": "Todos os outros em campo causam dano especial x0,75."
+    "desc_pt": "Everyone else on the field deals x0.75 special damage."
   },
   "beads_of_ruin": {
     "name": "BEADS OF RUIN",
     "desc": "Lowers Special Defense of all Pokémon except itself.",
-    "desc_pt": "Todos os outros em campo levam dano especial x1,33."
+    "desc_pt": "Everyone else on the field takes x1.33 special damage."
   },
   "orichalcum_pulse": {
     "name": "ORICHALCUM PULSE",
     "desc": "Turns the sunlight harsh when entering battle, and boosts Attack while active.",
-    "desc_pt": "Ao entrar, cria sol (5 rodadas); no sol, dano físico x1,33."
+    "desc_pt": "On entry, creates sun (5 rounds); in sun, physical damage x1.33."
   },
   "hadron_engine": {
     "name": "HADRON ENGINE",
     "desc": "Creates an Electric Terrain when entering battle, and boosts Special Attack while active.",
-    "desc_pt": "Ao entrar, cria o campo elétrico; nele, dano especial x1,33."
+    "desc_pt": "On entry, creates Electric Terrain; on it, special damage x1.33."
   },
   "tera_shift": {
     "name": "TERA SHIFT",
     "desc": "When Terapagos enters the battle, it turns into its Terastal Form until the end of the battle.",
-    "desc_pt": "Entra na Forma Terastal: atributos mais altos."
+    "desc_pt": "Enters Terastal Form: higher stats."
   },
   "poison_puppeteer": {
     "name": "POISON PUPPETEER",
     "desc": "Pokémon poisoned by Pecharunt's moves will also become confused.",
-    "desc_pt": "Quem ele envenena também fica confuso."
+    "desc_pt": "Whoever it poisons also becomes confused."
   }
 }

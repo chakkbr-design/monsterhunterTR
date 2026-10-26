@@ -107,32 +107,32 @@ static func first_rival_party(flags: Dictionary) -> Array:
 static func oak_lines(flags: Dictionary) -> PackedStringArray:
 	if on(flags, "has_pokedex"):
 		return PackedStringArray(
-			["Venha me visitar de vez em quando.", "Quero saber como está indo a sua Pokédex!"]
+			["Come visit me once in a while.", "I want to know how your Pokédex is coming along!"]
 		)
 	if on(flags, "has_parcel"):
-		return PackedStringArray(["Hm? Você tem algo para mim?"])
+		return PackedStringArray(["Hm? Do you have something for me?"])
 	if on(flags, "rival_battle_done"):
 		return PackedStringArray(
 			[
-				"{PLAYER}, a Cidade de Viridian fica ao norte, depois da Rota 1.",
-				"Dizem que a loja de lá recebeu uma encomenda minha."
+				"{PLAYER}, Viridian City is to the north, past Route 1.",
+				"They say the shop there received a parcel of mine."
 			]
 		)
 	if on(flags, "got_starter"):
-		return PackedStringArray(["Se um Pokémon selvagem aparecer, o seu pode lutar com ele."])
+		return PackedStringArray(["If a wild Pokémon appears, yours can battle it."])
 	if on(flags, "oak_stopped"):
 		return PackedStringArray(
-			["Nessas três Poké Balls há Pokémon.", "Pode escolher um, {PLAYER}!"]
+			["There are Pokémon in these three Poké Balls.", "You can pick one, {PLAYER}!"]
 		)
-	return PackedStringArray(["Ah, {PLAYER}! Hoje é um grande dia."])
+	return PackedStringArray(["Ah, {PLAYER}! Today is a big day."])
 
 
 static func rival_lines(flags: Dictionary) -> PackedStringArray:
 	if on(flags, "got_starter"):
-		return PackedStringArray(["Meu Pokémon parece bem mais forte que o seu."])
+		return PackedStringArray(["My Pokémon looks a lot stronger than yours."])
 	if on(flags, "oak_stopped"):
-		return PackedStringArray(["Pode escolher primeiro, {PLAYER}. Eu sou maduro!"])
-	return PackedStringArray(["{PLAYER}? O vovô ainda não chegou. Que demora!"])
+		return PackedStringArray(["You can pick first, {PLAYER}. I'm mature!"])
+	return PackedStringArray(["{PLAYER}? Gramps isn't here yet. What a wait!"])
 
 
 ## lines_for "Mom" do original (antes do inicial; depois ela só cura).
@@ -140,64 +140,59 @@ static func mom_lines(flags: Dictionary) -> PackedStringArray:
 	if not on(flags, "got_starter"):
 		return PackedStringArray(
 			[
-				"...Certo.\nTodo garoto sai de casa um dia.\nDisseram isso na TV.",
-				"Ah, sim. O PROF. CARVALHO, aqui do lado,\nestava procurando você."
+				"...Right.\nAll boys leave home someday.\nIt said so on TV.",
+				"Oh, yes. PROF. OAK, next door,\nwas looking for you."
 			]
 		)
-	return PackedStringArray(
-		["{PLAYER}! Descanse um pouco.", "Pronto, seu time está cheio de energia!"]
-	)
+	return PackedStringArray(["{PLAYER}! Take a rest.", "There, your team is full of energy!"])
 
 
 ## lines_for "Daisy" do original (story.gd:85-88).
 static func daisy_lines(flags: Dictionary) -> PackedStringArray:
 	if on(flags, "rival_battle_done"):
 		return PackedStringArray(
-			["{PLAYER}, ouvi dizer que você\nbatalhou contra o {RIVAL}.", "Queria ter visto isso!"]
+			["{PLAYER}, I heard you\nbattled {RIVAL}.", "I wish I'd seen that!"]
 		)
-	return PackedStringArray(["Oi, {PLAYER}!", "Meu irmão, {RIVAL}, está no\nlaboratório do vovô."])
+	return PackedStringArray(["Hi, {PLAYER}!", "My brother, {RIVAL}, is at\nGramps's lab."])
 
 
 ## NPCs do lab do original: Head Researcher (aide_1, story.gd:89-91) e Lab Aide (aide_2).
 static func lab_npc_name(role: String) -> String:
-	return "Pesquisador-chefe" if role == "aide_1" else "Assistente do lab"
+	return "Head Researcher" if role == "aide_1" else "Lab Aide"
 
 
 static func lab_npc_lines(flags: Dictionary, role: String) -> PackedStringArray:
 	if role == "aide_1":
 		if on(flags, "starter_chosen") or on(flags, "got_starter"):
-			return PackedStringArray(["Esse Pokémon já confia em você. Cuide bem dele!"])
+			return PackedStringArray(["That Pokémon already trusts you. Take good care of it!"])
 		return PackedStringArray(
 			[
-				"O professor? Ele saiu faz um tempinho...",
-				"Aquelas Poké Balls na mesa são para treinadores novos, mas só o Prof. Carvalho pode entregá-las."
+				"The professor? He stepped out a little while ago...",
+				"Those Poké Balls on the table are for new trainers, but only Prof. Oak can hand them out."
 			]
 		)
 	return PackedStringArray(
 		[
-			"Estou anotando como os Pokémon reagem aos treinadores. Uns fogem, uns atacam, outros só observam.",
-			"Pokémon de treinador ficam calmos perto das pessoas. Tente falar com o Pidgey!"
+			"I'm noting how Pokémon react to trainers. Some flee, some attack, others just watch.",
+			"A trainer's Pokémon stay calm around people. Try talking to the Pidgey!"
 		]
 	)
 
 
 ## Ajudante do Oak depois de dar o HM05 (lines_for "Aide", story.gd:114-117).
 static func aide_lines() -> PackedStringArray:
-	return PackedStringArray(["Como está indo a sua POKéDEX?", "Continue assim!"])
+	return PackedStringArray(["How is your POKéDEX coming along?", "Keep it up!"])
 
 
 ## Cartões da aula do velhinho (catch_weaken/catch_status/catch_throw do battle_tutorial.gd).
 const CATCH_CARDS := [
 	[
-		"Enfraqueça primeiro",
-		"Um Pokémon com a vida cheia escapa da bola. Deixe o HP dele no amarelo ou no vermelho, mas sem desmaiar!"
+		"Weaken it first",
+		"A Pokémon at full health escapes the ball. Get its HP into the yellow or red, but don't make it faint!"
 	],
 	[
-		"Status ajuda",
-		"Um Pokémon dormindo ou paralisado é bem mais fácil de capturar. Golpes como Sleep Powder ou Thunder Wave são os melhores amigos de um treinador."
+		"Status helps",
+		"A sleeping or paralyzed Pokémon is much easier to catch. Moves like Sleep Powder or Thunder Wave are a trainer's best friends."
 	],
-	[
-		"Lance a bola",
-		"Na batalha, aperte Q para lançar uma Poké Ball. Bolas melhores, chances melhores!"
-	],
+	["Throw the ball", "In battle, press Q to throw a Poké Ball. Better balls, better odds!"],
 ]

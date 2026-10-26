@@ -1197,7 +1197,7 @@ func _doors() -> void:
 		door.drawn = false
 		var msg: Dictionary = b.get("message", {})
 		door.npc_name = String(msg.get("title", id.replace("_", " ").capitalize()))
-		door.lines = PackedStringArray(msg.get("lines", ["Fechado."]))
+		door.lines = PackedStringArray(msg.get("lines", ["It's locked."]))
 		door.color = Color(0.45, 0.3, 0.2)
 		door.body_height = 2.0
 		door.target_scene = String(dr.get("target_scene", ""))

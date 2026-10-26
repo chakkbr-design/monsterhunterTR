@@ -47,7 +47,7 @@ static func from_entry(e: Dictionary) -> StaticMon:
 
 func _ready() -> void:
 	var nm := String(Dex.species(Dex.canon(species)).get("name", species))
-	npc_name = "%s Nv%d" % [nm, level]
+	npc_name = "%s Lv%d" % [nm, level]
 	body_height = 1.0
 	color = Color(0.85, 0.75, 0.4)
 	super._ready()
@@ -114,7 +114,7 @@ func _process(delta: float) -> void:
 
 
 func prompt() -> String:
-	return "E: Examinar"
+	return "E: Examine"
 
 
 func _set_shown(on: bool) -> void:

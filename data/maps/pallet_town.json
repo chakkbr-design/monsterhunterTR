@@ -1,6 +1,6 @@
 {
  "id": "pallet_town",
- "name": "CIDADE DE PALLET",
+ "name": "PALLET TOWN",
  "rect": [
   -32.5,
   -19.5,
@@ -161,13 +161,13 @@
    "sprite": "npc_girl.png",
    "wander": 3.0,
    "lines": [
-    "Os Pokémon da cidade são tão calmos. Nunca arranjam briga!",
-    "A Rota 1 fica logo ao norte. O mato alto de lá está cheio de surpresas."
+    "The Pokémon in town are so calm. They never pick fights!",
+    "Route 1 is just to the north. The tall grass there is full of surprises."
    ],
    "y": 0.0
   },
   {
-   "name": "Assistente do Laboratório",
+   "name": "Lab Assistant",
    "node": "NPC_Scientist",
    "pos": [
     8,
@@ -175,14 +175,14 @@
    ],
    "sprite": "npc_scientist.png",
    "lines": [
-    "Ah, bem-vindo! Eu estudo como os Pokémon se comportam na natureza.",
-    "Já reparou? Alguns Pokémon fogem de você, outros vêm direto para cima!",
-    "Aperte de 1 a 6 para soltar seus parceiros das Poké Balls. Eles adoram passear com você."
+    "Ah, welcome! I study how Pokémon behave in the wild.",
+    "Ever notice? Some Pokémon run from you, others charge right at you!",
+    "Press 1 to 6 to send your partners out of their Poké Balls. They love to walk with you."
    ],
    "y": 0.0
   },
   {
-   "name": "Velhinho",
+   "name": "Old Man",
    "node": "NPC_OldMan",
    "pos": [
     3,
@@ -190,9 +190,9 @@
    ],
    "sprite": "npc_oldman.png",
    "lines": [
-    "Vai para a Rota 1, é?",
-    "Quanto mais tempo você anda pelo mato alto, mais chance de algo pular em você.",
-    "Fique na trilha se quiser evitar encrenca. Ho, ho!"
+    "Heading to Route 1, are you?",
+    "The longer you walk in the tall grass, the more likely something will jump out at you.",
+    "Stay on the path if you want to avoid trouble. Ho ho!"
    ],
    "y": 0.0
   }
@@ -204,12 +204,12 @@
     -3,
     -13
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "CIDADE DE PALLET",
-    "Cores da sua jornada esperam por você!"
+    "PALLET TOWN",
+    "Shades of your journey await!"
    ],
    "y": 0.0
   },
@@ -219,11 +219,11 @@
     12,
     23
    ],
-   "title": "Placa",
+   "title": "Sign",
    "model": "hgss/common/sign_a",
    "model_scale": 0.8,
    "lines": [
-    "LABORATÓRIO DE PESQUISA POKéMON DO PROF. CARVALHO"
+    "PROF. OAK'S POKéMON RESEARCH LAB"
    ],
    "y": 0.0
   },
@@ -233,11 +233,11 @@
     -12,
     -3
    ],
-   "title": "Caixa de correio",
+   "title": "Mailbox",
    "model": "hgss/common/mailbox",
    "model_scale": 0.8,
    "lines": [
-    "Casa de {PLAYER}"
+    "{PLAYER}'s house"
    ],
    "y": 0.0
   },
@@ -247,11 +247,11 @@
     12,
     -3
    ],
-   "title": "Caixa de correio",
+   "title": "Mailbox",
    "model": "hgss/common/mailbox",
    "model_scale": 0.8,
    "lines": [
-    "Casa de {RIVAL}"
+    "{RIVAL}'s house"
    ],
    "y": 0.0
   }
@@ -320,7 +320,7 @@
    "speed": 1.2,
    "lines": [
     "Pidgey: Pidge! Pidge!",
-    "O Pidgey de Lily pula em volta dos pés dela. Ele não quer lutar, só quer atenção."
+    "Lily's Pidgey hops around her feet. It doesn't want to fight, it just wants attention."
    ]
   }
  ]

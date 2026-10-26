@@ -11,14 +11,14 @@ extends Node
 signal cutscene_started(id: String)
 signal cutscene_finished(id: String)
 
-const OAK := "Prof. Carvalho"
-const MOM := "Mamãe"
-const CLERK := "Vendedor"
+const OAK := "Prof. Oak"
+const MOM := "Mom"
+const CLERK := "Clerk"
 const HANDLED_EVENTS := ["oak_stop", "pewter_east_block"]
 const GYM := "pewter_gym"
 const BROCK := "brock"
 const TYPE_PT := {
-	"grass": "Planta", "fire": "Fogo", "water": "Água", "poison": "Veneno", "normal": "Normal"
+	"grass": "Grass", "fire": "Fire", "water": "Water", "poison": "Poison", "normal": "Normal"
 }
 const LAB := "oak_lab"
 ## Quadra da 1ª luta com o rival: RIVAL_ARENA do original (story.gd), centrada no marcador
@@ -37,16 +37,16 @@ const LAB_EXIT_TRIGGER := {
 const MT_MOON_B2F := "mt_moon_b2f"
 const MOON_CENTER := "pokemon_center_mt_moon"
 const MAGIKARP_PRICE := 500
-const SALESMAN := "Vendedor"
+const SALESMAN := "Salesman"
 const LAB_SPAWN := "door"
 ## STARTER_QUESTIONS do original (story.gd:25-29).
 const STARTER_QUESTIONS := {
 	"Bulbasaur":
-	"Entendi! Você escolheu o BULBASAUR.\nEle é muito fácil de criar.\nEntão, {PLAYER}, você quer ficar com\no POKéMON do tipo PLANTA, BULBASAUR?",
+	"I see! You've chosen BULBASAUR.\nIt's very easy to raise.\nSo, {PLAYER}, do you want the\nGRASS-type POKéMON, BULBASAUR?",
 	"Charmander":
-	"Ah! Você escolheu o CHARMANDER.\nCrie-o com paciência.\nEntão, {PLAYER}, você fica com o\nPOKéMON do tipo FOGO, CHARMANDER?",
+	"Ah! You've chosen CHARMANDER.\nRaise it with patience.\nSo, {PLAYER}, do you want the\nFIRE-type POKéMON, CHARMANDER?",
 	"Squirtle":
-	"Hum! Você escolheu o SQUIRTLE.\nVale a pena criá-lo.\nEntão, {PLAYER}, você decidiu pelo\nPOKéMON do tipo ÁGUA, SQUIRTLE?",
+	"Hm! You've chosen SQUIRTLE.\nIt's worth raising.\nSo, {PLAYER}, have you decided on the\nWATER-type POKéMON, SQUIRTLE?",
 }
 ## Ajudante do Oak na guarita sul da Floresta (Action.GIFT do original): HM05 com 10 espécies capturadas.
 const AIDE_ROOM := "forest_gate_south"
@@ -219,7 +219,7 @@ func aide_reward() -> void:
 	if is_running() or flag("hm05_flash") or Game.caught.size() < AIDE_CAUGHT:
 		return
 	await begin("aide_reward")
-	await give_item("hm_flash", 1, "o HM05 Flash")
+	await give_item("hm_flash", 1, "HM05 Flash")
 	set_flag("hm05_flash")
 	end()
 
@@ -237,7 +237,7 @@ func _old_man_hook(npc: Node) -> bool:
 
 
 ## old_man_lesson do original (story.gd:261-289): cartões de captura e a TEACHY TV.
-func old_man_lesson(who := "Velhinho") -> void:
+func old_man_lesson(who := "Old Man") -> void:
 	if is_running():
 		return
 	await begin("old_man_lesson")
@@ -245,27 +245,27 @@ func old_man_lesson(who := "Velhinho") -> void:
 		await say(
 			who,
 			[
-				"Bem, agora já tomei meu café, e era disso que eu precisava para começar o dia!",
-				"Mas fiz forte demais. Me deu dor de cabeça...",
-				"Aliás, você está completando a sua POKéDEX?",
-				"No começo, enfraqueça o POKéMON antes de tentar capturá-lo."
+				"Well, now I've had my coffee, and that's just what I needed to start the day!",
+				"But I made it too strong. Gave me a headache...",
+				"By the way, are you filling in your POKéDEX?",
+				"At first, weaken the POKéMON before you try to catch it."
 			]
 		)
 		end()
 		return
-	if not await ask("Quer que eu mostre como capturar Pokémon?"):
-		await say(who, ["Ah... Bem, se precisar saber, volte quando quiser."])
+	if not await ask("Would you like me to show you how to catch Pokémon?"):
+		await say(who, ["Ah... Well, if you need to know, come back anytime."])
 		end()
 		return
 	for card in StoryFlags.CATCH_CARDS:
 		await say(String(card[0]), [String(card[1])])
-	await say(who, ["Pronto! Diga, isso foi educativo, não foi?", "E tome, leve isto também."])
+	await say(who, ["There! Tell me, that was educational, wasn't it?", "And here, take this too."])
 	await give_item("teachy_tv", 1, "a TEACHY TV")
 	await say(
 		who,
 		[
-			"Se tiver alguma coisa que você não entenda, assista a ela.",
-			"Ela ensina o básico de ser um TREINADOR POKéMON."
+			"If there's anything you don't understand, watch it.",
+			"It teaches the basics of being a POKéMON TRAINER."
 		]
 	)
 	set_flag("old_man_lesson")
@@ -477,7 +477,7 @@ func give_item(id: String, n := 1, label := "") -> void:
 	if label == "":
 		label = String(Dex.item(id).get("name", id))
 	sfx("item_get")
-	await say("", ["{PLAYER} recebeu %s!" % label])
+	await say("", ["{PLAYER} received %s!" % label])
 
 
 # --- Som (contrato de sons do Audio; nada acontece se a faixa ou o efeito ainda não existe) ---
@@ -696,7 +696,7 @@ func oak_stop() -> void:
 	p.show_alert(true)
 	await wait(0.6)
 	push_music("oak")
-	await say(OAK, ["Espere! Não vá lá fora!"])
+	await say(OAK, ["Wait! Don't go out!"])
 	p.show_alert(false)
 	var oak := spawn_npc(
 		"oak_out", OAK, p.global_position + Vector3(0, 0, 6.0), Color(0.92, 0.92, 0.88)
@@ -706,9 +706,9 @@ func oak_stop() -> void:
 	await say(
 		OAK,
 		[
-			"É perigoso! Pokémon selvagens vivem no mato alto!",
-			"Você precisa do seu próprio Pokémon para se proteger.",
-			"Já sei! Venha comigo!"
+			"It's unsafe! Wild Pokémon live in tall grass!",
+			"You need your own Pokémon for protection.",
+			"I know! Come with me!"
 		]
 	)
 	var dest := oak.global_position + Vector3(0, 0, 3.0)
@@ -731,20 +731,20 @@ func lab_intro() -> void:
 	var rival := actor("rival")
 	if p and oak:
 		await approach(p, oak, 1.8)
-	await say("{RIVAL}", ["Vovô! Cansei de esperar!"])
+	await say("{RIVAL}", ["Gramps! I'm fed up with waiting!"])
 	await say(
 		OAK,
 		[
-			"{RIVAL}? Ah, é verdade, eu pedi para você vir. Espere um pouco!",
-			"Aqui, {PLAYER}. Nessa mesa há três Pokémon, dentro das Poké Balls.",
-			"Quando eu era jovem, fui um treinador sério.",
-			"Agora só me restam esses três. Pode ficar com um. Vamos, escolha!"
+			"{RIVAL}? Oh, that's right, I told you to come. Wait a moment!",
+			"Here, {PLAYER}. There are three Pokémon here, inside the Poké Balls.",
+			"When I was young, I was a serious trainer.",
+			"Now I have only these three left. You can have one. Go on, choose!"
 		]
 	)
 	if rival and p:
 		face_each_other(rival, p)
-	await say("{RIVAL}", ["Ei, vovô! E eu?"])
-	await say(OAK, ["Calma, {RIVAL}. Você também vai ganhar um!"])
+	await say("{RIVAL}", ["Hey, Gramps! What about me?"])
+	await say(OAK, ["Be patient, {RIVAL}. You'll get one too!"])
 
 
 static func type_label(species: String) -> String:
@@ -765,16 +765,17 @@ func pick_starter(b: StarterBall) -> void:
 		await begin("ball_locked")
 		if flag("got_starter"):
 			await say(
-				"Poké Ball", ["É uma Poké Ball com %s dentro." % nm, "Ela espera outro treinador."]
+				"Poké Ball",
+				["It's a Poké Ball with %s inside." % nm, "It's waiting for another trainer."]
 			)
 		else:
-			await say("Poké Ball", ["São POKé BALLS.\nTem POKéMON dentro delas!"])
+			await say("Poké Ball", ["Those are POKé BALLS.\nThere are POKéMON inside them!"])
 		end()
 		return
 	await begin("pick_starter")
 	Game.mark_seen(sp)  # o cartão já registra a espécie como vista, mesmo com NÃO
 	var q: String = STARTER_QUESTIONS.get(
-		sp, "Então, {PLAYER}, você quer %s, o Pokémon do tipo %s?" % [nm, type_label(sp)]
+		sp, "So, {PLAYER}, do you want %s, the %s-type Pokémon?" % [nm, type_label(sp)]
 	)
 	var yes := await ask(q, sp)
 	if not yes:
@@ -784,17 +785,17 @@ func pick_starter(b: StarterBall) -> void:
 	set_flag("got_starter")
 	set_flag("starter_chosen")
 	b.take()
-	await say("", ["{PLAYER} recebeu %s do Prof. Carvalho!" % nm])
-	await say(OAK, ["Este POKéMON é mesmo cheio de energia!"])
+	await say("", ["{PLAYER} received %s from Prof. Oak!" % nm])
+	await say(OAK, ["This POKéMON is really energetic!"])
 	var rsp := String(Game.flags.get("rival_starter", ""))
 	var rival := actor("rival")
 	var rb := ball(rsp)
 	if rival and rb:
-		await say("{RIVAL}", ["Então eu fico com este!"])
+		await say("{RIVAL}", ["Then I'll take this one!"])
 		await approach(rival, rb, 0.9)
 		rb.take()
 	await say(
-		"", ["{RIVAL} recebeu %s do Prof. Carvalho!" % String(Dex.species(rsp).get("name", rsp))]
+		"", ["{RIVAL} received %s from Prof. Oak!" % String(Dex.species(rsp).get("name", rsp))]
 	)
 	end()
 
@@ -806,7 +807,7 @@ func lab_exit() -> void:
 		return
 	if not flag("got_starter"):
 		await begin("lab_exit")
-		await say(OAK, ["Ei! Não vá embora ainda!"])
+		await say(OAK, ["Hey! Don't leave yet!"])
 		var p := player()
 		if p:
 			await walk(p, p.global_position + Vector3(0, 0, -1.5))
@@ -826,7 +827,7 @@ func rival_battle() -> void:
 		rival = _spawn_role("rival", door_pos(LAB, p.global_position + Vector3(0, 0, 4)))
 	if rival and p:
 		face_each_other(rival, p)
-	await say("{RIVAL}", ["Espere, {PLAYER}! Vamos ver qual Pokémon é mais forte!"])
+	await say("{RIVAL}", ["Wait, {PLAYER}! Let's see which Pokémon is stronger!"])
 	# story.gd:437-445 do original: com "dicas de batalha", na 1ª vez o Oak vai até a borda da quadra
 	# e avisa que vai ensinar; a lição em si é o battle_tutorial.gd (opts.tutorial).
 	var oak := actor("oak")
@@ -836,8 +837,8 @@ func rival_battle() -> void:
 		await say(
 			OAK,
 			[
-				"{RIVAL} está sempre com tanta pressa.",
-				"{PLAYER}, esta é a sua primeira batalha.\nDeixe-me mostrar como se faz."
+				"{RIVAL} is always in such a hurry.",
+				"{PLAYER}, this is your first battle.\nLet me show you how it's done."
 			]
 		)
 	var enemies: Array = []
@@ -876,22 +877,25 @@ func rival_battle() -> void:
 	set_flag("rival_battle_done")
 	set_flag("rival_battle_won", outcome == "win")
 	if outcome == "win":
-		await say("{RIVAL}", ["O quê? Não acredito! Escolhi o Pokémon errado!"])
+		await say("{RIVAL}", ["What? Unbelievable! I picked the wrong Pokémon!"])
 	else:
-		await say("{RIVAL}", ["Isso! Meu Pokémon é demais!"])
+		await say("{RIVAL}", ["Yeah! My Pokémon is great!"])
 	# story.gd:475-484 do original: o Oak fala, cura com fade no próprio lab e o rival sai.
 	await say(
 		OAK,
 		[
-			"Se um POKéMON selvagem aparecer, o seu POKéMON pode lutar com ele.",
-			"Com ele ao seu lado, você deve conseguir chegar à próxima cidade."
+			"If a wild POKéMON appears, your POKéMON can battle it.",
+			"With it at your side, you should be able to reach the next town."
 		]
 	)
 	await heal_with_fade()
 	push_music("rival")
 	await say(
 		"{RIVAL}",
-		["Vou treinar meu Pokémon e ficar ainda mais forte.", "{PLAYER}! Vovô! Até mais!"]
+		[
+			"I'm going to train my Pokémon and get even stronger.",
+			"{PLAYER}! Gramps! Smell ya later!"
+		]
 	)
 	if rival:
 		await walk(rival, door_pos(LAB, rival.global_position + Vector3(0, 0, 6)))
@@ -935,7 +939,7 @@ func heal_with_fade() -> void:
 	Game.heal_party()
 	var h := hud()
 	if h:
-		h.toast("Seu time foi curado!", 1.8)
+		h.toast("Your team was healed!", 1.8)
 	sfx("heal")
 
 
@@ -972,7 +976,7 @@ func mart_parcel() -> void:
 	await begin("mart_parcel")
 	var p := player()
 	var clerk := npc_at("mart_viridian", "clerk")
-	await say(CLERK, ["Ei! Você veio de Pallet?"])
+	await say(CLERK, ["Hey! You came from Pallet, right?"])
 	if p:
 		var at := marker_pos("mart_viridian", "clerk", p.global_position)
 		var to := p.global_position - at
@@ -982,13 +986,10 @@ func mart_parcel() -> void:
 		p.face_toward(at)
 		if clerk:
 			face_each_other(clerk, p)
-	await say(
-		CLERK,
-		["Você conhece o Prof. Carvalho, não é? A encomenda dele chegou.", "Pode levar para ele?"]
-	)
-	await give_item(StoryFlags.PARCEL, 1, "a ENCOMENDA DO PROF. CARVALHO")
+	await say(CLERK, ["You know Prof. Oak, right? His order came in.", "Could you take it to him?"])
+	await give_item(StoryFlags.PARCEL, 1, "OAK'S PARCEL")
 	set_flag("has_parcel")
-	await say(CLERK, ["Obrigado! Mande lembranças ao Prof. Carvalho."])
+	await say(CLERK, ["Thanks! Say hi to Prof. Oak for me."])
 	end()
 
 
@@ -1004,16 +1005,16 @@ func parcel_deliver() -> void:
 	await say(
 		OAK,
 		[
-			"Ah, {PLAYER}! Como vai o meu velho POKéMON?",
-			"Bem, parece que ele está cada vez mais apegado a você.",
-			"Você deve ter talento como TREINADOR POKéMON.",
-			"O que é isso? Você tem algo para mim?"
+			"Ah, {PLAYER}! How is my old POKéMON?",
+			"Well, it seems to be getting more attached to you.",
+			"You must have talent as a POKéMON TRAINER.",
+			"What's that? Do you have something for me?"
 		]
 	)
 	Game.take_item(StoryFlags.PARCEL)
 	set_flag("has_parcel", false)
-	await say("", ["{PLAYER} entregou a ENCOMENDA DO PROF. CARVALHO."])
-	await say(OAK, ["Ah! É a POKé BALL especial!", "Eu tinha encomendado. Obrigado!"])
+	await say("", ["{PLAYER} delivered OAK'S PARCEL."])
+	await say(OAK, ["Ah! It's the special POKé BALL!", "I had ordered it. Thank you!"])
 	push_music("rival")
 	var rival := actor("rival")
 	if rival == null:
@@ -1022,49 +1023,49 @@ func parcel_deliver() -> void:
 		)
 	if p:
 		await approach(rival, p, 1.4)
-	await say("{RIVAL}", ["Quase esqueci!", "Para que você me chamou?"])
+	await say("{RIVAL}", ["I almost forgot!", "What did you call me for?"])
 	await say(
 		OAK,
 		[
-			"Ah, sim! Tenho um pedido para vocês dois.",
-			"Ali na mesa está a minha invenção, a POKéDEX!",
-			"Ela registra sozinha os dados dos POKéMON que você vir ou capturar.",
-			"É uma enciclopédia de alta tecnologia!",
-			"{PLAYER} e {RIVAL}, levem estas com vocês."
+			"Ah, yes! I have a request for the two of you.",
+			"On that table is my invention, the POKéDEX!",
+			"It automatically records data on POKéMON you see or catch.",
+			"It's a hi-tech encyclopedia!",
+			"{PLAYER} and {RIVAL}, take these with you."
 		]
 	)
-	await give_item(StoryFlags.POKEDEX, 1, "a POKéDEX do PROF. CARVALHO")
+	await give_item(StoryFlags.POKEDEX, 1, "PROF. OAK'S POKéDEX")
 	set_flag("has_pokedex")
 	_remove_dex_props()
 	await say(
 		OAK,
 		[
-			"Só de ver um POKéMON não dá para ter dados detalhados sobre ele.",
-			"É preciso capturá-lo para ter os dados completos.",
-			"Então, aqui estão algumas ferramentas para capturar POKéMON selvagens."
+			"Just seeing a POKéMON doesn't give you detailed data on it.",
+			"You have to catch it to get the full data.",
+			"So, here are some tools for catching wild POKéMON."
 		]
 	)
 	await give_item("poke_ball", StoryFlags.DEX_BALLS, "%d POKé BALLS" % StoryFlags.DEX_BALLS)
 	await say(
 		OAK,
 		[
-			"Fazer um guia completo de todos os POKéMON do mundo...",
-			"Esse era o meu sonho!",
-			"Mas estou velho demais. Não consigo mais fazer isso.",
-			"Então quero que vocês dois realizem o meu sonho por mim.",
-			"Vão, vocês dois.",
-			"Esta é uma grande empreitada na história dos POKéMON!"
+			"To make a complete guide on all the POKéMON in the world...",
+			"That was my dream!",
+			"But I'm too old. I can't do it anymore.",
+			"So I want you two to fulfill my dream for me.",
+			"Go on, you two.",
+			"This is a great undertaking in POKéMON history!"
 		]
 	)
 	push_music("rival")
 	await say(
 		"{RIVAL}",
 		[
-			"Pode deixar, vovô! Deixe tudo comigo!",
-			"{PLAYER}, sinto dizer, mas você não vai ser necessário.",
-			"Já sei! Vou pegar um MAPA DA CIDADE emprestado com a minha irmã!",
-			"Vou dizer a ela para não emprestar um para você, {PLAYER}! Hahaha!",
-			"Nem se dê ao trabalho de passar lá em casa depois disso!"
+			"Leave it to me, Gramps! I'll take care of everything!",
+			"{PLAYER}, sorry to say, but I won't be needing you.",
+			"I know! I'll borrow a TOWN MAP from my sis!",
+			"I'll tell her not to lend you one, {PLAYER}! Hahaha!",
+			"Don't even bother stopping by my house after this!"
 		]
 	)
 	await walk(rival, door_pos(LAB, rival.global_position + Vector3(0, 0, 6)))
@@ -1095,10 +1096,10 @@ func pewter_east_block() -> void:
 	if p:
 		p.show_alert(true)
 	await say(
-		"Garoto",
+		"Boy",
 		[
-			"Você não pode ir para o leste, até a Rota 3, sem a Insígnia da Rocha.",
-			"Vença o Líder Brock no Ginásio de Pewter e depois volte!"
+			"You can't go east to Route 3 without the Boulder Badge.",
+			"Beat Leader Brock at the Pewter Gym, then come back!"
 		]
 	)
 	if p:
@@ -1147,10 +1148,10 @@ func brock_battle(npc: Node = null) -> Dictionary:
 	last_battle = r
 	if String(r.get("outcome", "")) == "win":
 		await say("Brock", TrainerText.lines(BROCK, "defeat", def))
-		await award_badge("boulder", "INSÍGNIA DA ROCHA")
+		await award_badge("boulder", "BOULDERBADGE")
 		await say("Brock", TrainerText.lines(BROCK, "badge_speech", def))
 		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(0, 1))
-		await give_item(String(def.get("gift", "tm39")), 1, "o TM39 (TUMBA DE PEDRAS)")
+		await give_item(String(def.get("gift", "tm39")), 1, "TM39 (ROCK TOMB)")
 		await say("Brock", TrainerText.lines(BROCK, "gift_speech", def).slice(1))
 	# Derrota: o apagão da RouteWorld já levou o jogador ao ponto de cura; o original
 	# (trainer.gd:168) não diz nada depois.
@@ -1172,8 +1173,8 @@ func award_badge(id: String, label: String) -> void:
 	sfx("badge")  # Audio.jingle("music/badge_get") do trainer.gd:235 do original
 	var h := hud()
 	if h:
-		h.toast("%s obtida!" % label, 3.0)
-	await say("", ["{PLAYER} recebeu a %s de Brock!" % label])
+		h.toast("%s obtained!" % label, 3.0)
+	await say("", ["{PLAYER} received the %s from Brock!" % label])
 
 
 # --- Monte da Lua ------------------------------------------------------------------------------------
@@ -1248,18 +1249,18 @@ func mt_moon_fossils() -> Dictionary:
 			end()
 			return r
 		await say(who, TrainerText.lines(id, "defeat", def))
-	await say(who, ["Vamos dividir: um fóssil para cada um!", "Nada de ganância!"])
+	await say(who, ["Let's split them: one fossil each!", "No being greedy!"])
 	var took := ""
 	for i in 8:
-		if await ask("Você quer o FÓSSIL DOMO?"):
+		if await ask("Do you want the DOME FOSSIL?"):
 			took = "dome"
-		elif await ask("Você quer o FÓSSIL HÉLICE?"):
+		elif await ask("Do you want the HELIX FOSSIL?"):
 			took = "helix"
 		if took != "":
 			break
 	if took == "":
 		took = "dome"
-	var label := "FÓSSIL DOMO" if took == "dome" else "FÓSSIL HÉLICE"
+	var label := "DOME FOSSIL" if took == "dome" else "HELIX FOSSIL"
 	Game.add_item(took + "_fossil", 1)
 	set_flag("FLAG_GOT_%s_FOSSIL" % took.to_upper())
 	set_flag(CaveBuilder.FOSSIL_FLAG)
@@ -1268,8 +1269,8 @@ func mt_moon_fossils() -> Dictionary:
 		var f := b2f_npc(role)
 		if f:
 			f.queue_free()
-	await say("", ["{PLAYER} recebeu o %s!" % label])
-	await say(who, ["Tá bom. Então este fóssil aqui é meu!"])
+	await say("", ["{PLAYER} received the %s!" % label])
+	await say(who, ["Okay. Then this fossil here is mine!"])
 	await say(who, TrainerText.lines(id, "after", def))
 	end()
 	return r
@@ -1282,13 +1283,13 @@ func mt_moon_exit() -> void:
 	set_flag("mt_moon_cleared")
 	var h := hud()
 	if h and first:
-		h.toast("Monte da Lua atravessado!", 3.0)
+		h.toast("Mt. Moon crossed!", 3.0)
 	await say(
 		"",
 		[
-			"Lá fora, a Rota 4 desce em direção a Cerulean...",
-			"A estrada ainda está bloqueada. Esta parte da aventura termina aqui.",
-			"Continua..."
+			"Outside, Route 4 descends toward Cerulean...",
+			"The road is still blocked. This part of the adventure ends here.",
+			"To be continued..."
 		]
 	)
 	var p := player()
@@ -1313,34 +1314,34 @@ func _salesman_hook(_npc: Node) -> bool:
 func magikarp_sale() -> void:
 	await begin("magikarp_sale")
 	if flag("bought_magikarp"):
-		await say(SALESMAN, ["Eu já vendi um MAGIKARP para você!", "Cuide bem dele!"])
+		await say(SALESMAN, ["I already sold you a MAGIKARP!", "Take good care of it!"])
 		end()
 		return
 	if Game.money < MAGIKARP_PRICE:
-		await say(SALESMAN, ["Desculpe, garoto. Você não tem ₽%d." % MAGIKARP_PRICE])
+		await say(SALESMAN, ["Sorry, kid. You don't have ₽%d." % MAGIKARP_PRICE])
 		end()
 		return
-	await say(SALESMAN, ["Ei, você aí! Tenho uma oferta imperdível!"])
-	if not await ask("Vendo um MAGIKARP por apenas ₽%d. Fechado?" % MAGIKARP_PRICE, "Magikarp"):
-		await say(SALESMAN, ["Que pena. É uma pechincha de verdade!"])
+	await say(SALESMAN, ["Hey, you there! I've got an offer you can't pass up!"])
+	if not await ask("I'll sell you a MAGIKARP for just ₽%d. Deal?" % MAGIKARP_PRICE, "Magikarp"):
+		await say(SALESMAN, ["Too bad. It's a real bargain!"])
 		end()
 		return
 	Game.money -= MAGIKARP_PRICE
 	Game.add_mon(Mon.create("magikarp", 5))
 	set_flag("bought_magikarp")
-	await say(SALESMAN, ["Aqui está!"])
+	await say(SALESMAN, ["Here you go!"])
 	await say(
 		"",
 		[
 			(
-				"{PLAYER} recebeu o MAGIKARP!"
+				"{PLAYER} received the MAGIKARP!"
 				+ (
 					""
 					if (
 						Game.party.size() <= Game.PARTY_MAX
 						and Game.party.back().species.to_lower() == "magikarp"
 					)
-					else " Ele foi para o PC."
+					else " It was sent to the PC."
 				)
 			)
 		]

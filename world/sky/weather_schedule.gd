@@ -47,7 +47,7 @@ func _init(data := {}) -> void:
 	types = cfg.get("types", {})
 	ids = types.keys()
 	if not types.has("clear"):
-		types["clear"] = {"name": "Limpo", "weight": 1.0, "cloud": 0.04}
+		types["clear"] = {"name": "Clear", "weight": 1.0, "cloud": 0.04}
 		ids.push_front("clear")
 
 
