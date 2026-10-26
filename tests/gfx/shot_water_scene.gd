@@ -62,6 +62,7 @@ func build(parent: Node3D) -> Dictionary:
 	for p in [Vector3(1.0, 0, 3.75), Vector3(-9.0, 0, -1.0), Vector3(4.5, 0, 4.75)]:
 		_lamp(p)
 	_lamp(Vector3(10.5, 0, -2.0))
+	_lamp(Vector3(-4.25, 0, -3.25))  # north bank: reflects in the pond from the low view
 	var parts := {2: {"sway": 0.035, "sway_base": 2.0}, 3: {"sway": 0.035, "sway_base": 2.0}}
 	parts[4] = {"sway": 0.035, "sway_base": 2.5}
 	for mi in VoxelMat.instances(g, "Vox", parts):

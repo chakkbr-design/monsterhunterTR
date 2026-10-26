@@ -48,6 +48,7 @@ uniform float refract_strength = 0.3;
 uniform float roughness = 0.07;
 uniform float reflect_strength = 1.0;
 uniform float fresnel_min = 0.04;
+uniform float lamp_pool = 0.02;  // warm sheen lamps (omni / spot lights) leave on the surface
 
 group_uniforms foam;
 uniform float foam_width = 0.2;  // m of water column that foams at the shore
@@ -738,10 +739,12 @@ void light() {
 	float fr = 0.02 + 0.98 * pow(1.0 - clamp(dot(LIGHT, h), 0.0, 1.0), 5.0);
 	vec3 s = dist * vis * fr * nl * ATTENUATION * LIGHT_COLOR * v_spec * (1.0 + v_twinkle);
 	if (!LIGHT_IS_DIRECTIONAL) {
-		// Lamps also leave a broad warm pool on the rippled surface.
+		// Lamps also leave a warm pool on the rippled surface around them (the glitter of many
+		// small ripples, brighter on the facets tilted towards the lamp).
 		float b2 = 0.09;
 		float db = nh * nh * (b2 - 1.0) + 1.0;
 		s += b2 / (PI * db * db) * 0.25 * fr * nl * ATTENUATION * LIGHT_COLOR * v_spec;
+		s += (0.08 + pow(nh, 16.0)) * lamp_pool * ATTENUATION * LIGHT_COLOR * v_spec;
 	}
 	SPECULAR_LIGHT += min(s, vec3(80.0));
 }
