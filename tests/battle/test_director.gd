@@ -1,8 +1,9 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_director.gd
 ## Câmera de ação do treino (BattleDirector, modo de energia): enquadra os Pokémon mais perto que a
-## câmera antiga, câmera lenta 0,5x antes do golpe que nocauteia e no desmaio, todo mundo parado
-## na troca (a energia de ninguém muda) e nada disso no VGC nem no fast_sim.
+## câmera antiga, hit-stop e câmera lenta só no nocaute de verdade (golpe fatal que o alvo desvia não
+## dá zoom), todo mundo parado na troca (a energia de ninguém muda) e nada disso no VGC nem no
+## fast_sim.
 ## The camera never leaves a fighter it frames under the top HUD cards (BattleHUD.top_band): from
 ## the intro to the knockout, in doubles (campo) and singles (praia), on a 16:9 screen; and no hill,
 ## tree or boulder stays solid between it and a fighter (they fade, BattleDirector.FADE_ALPHA).
@@ -154,7 +155,64 @@ func _check_band(st: Dictionary, what: String) -> void:
 	)
 
 
+## Golpe que seria fatal não dá zoom antes de acertar (o alvo ainda pode desviar); o desmaio dá.
+func _ko_zoom() -> void:
+	var a: Node = load("res://battle/battle_arena.tscn").instantiate()
+	a.manual = true
+	root.add_child(a)
+	a.start(
+		[Mon.create("charizard", 50)],
+		[Mon.create("bulbasaur", 50), Mon.create("pidgey", 50)],
+		{
+			"kind": "trainer",
+			"battle_size": 1,
+			"speed": 1.0,
+			"battle_mode": "energy",
+			"action_cam": true,
+			"autoplay": true,
+			"no_rewards": true,
+			"seed": 3
+		}
+	)
+	var t := 0.0
+	while a.state == "intro" and t < 10.0:
+		a.step(1.0 / 60.0)
+		t += 1.0 / 60.0
+	var d: BattleDirector = a.director
+	var u: BattleFighter = a.player
+	var foe: BattleFighter = a.enemy
+	foe.entry_t = 0.0
+	foe.hp = 1
+	foe.mon.hp = 1
+	d.on_move(u, Dex.move("flamethrower"))  # dano de sobra, mas ainda não acertou
+	check(
+		d.shot != "ko" and is_equal_approx(d.time_scale(), 1.0),
+		(
+			"golpe fatal a caminho: sem zoom nem câmera lenta (cena '%s', %.2fx)"
+			% [d.shot, d.time_scale()]
+		)
+	)
+	for i in 90:  # o alvo desviou: nada acontece
+		d.tick(1.0 / 60.0)
+	check(d.shot != "ko", "o alvo desviou do golpe fatal: sem zoom de nocaute")
+	foe.take_damage(40, u.flat_to(foe).normalized(), 4.0, {"source": u})
+	check(not foe.alive(), "o golpe acertou e o alvo desmaiou")
+	check(d.shot == "ko" and d.target == foe, "nocaute de verdade: zoom no desmaiado")
+	check(
+		d.time_scale() < BattleDirector.KO_SCALE,
+		"hit-stop no impacto do nocaute (%.2fx)" % d.time_scale()
+	)
+	d.tick(BattleDirector.KO_HIT + 0.01)
+	check(
+		is_equal_approx(d.time_scale(), BattleDirector.KO_SCALE),
+		"depois do impacto, câmera lenta no desmaio (%.2fx)" % d.time_scale()
+	)
+	a.queue_free()
+	await process_frame
+
+
 func _run() -> void:
+	await _ko_zoom()
 	Cfg.current = _cfg("energy")
 	var tb: Node = load(SCENE).instantiate()
 	root.add_child(tb)
@@ -203,10 +261,7 @@ func _run() -> void:
 		med < old_dist, "enquadramento mais perto: mediana %.1f m (antes %.1f m)" % [med, old_dist]
 	)
 	check(int(shots.get("ko", 0)) > 0, "zoom no desmaio (%d quadros)" % int(shots.get("ko", 0)))
-	check(
-		int(shots.get("finish", 0)) > 0,
-		"zoom antes do golpe que nocauteia (%d quadros)" % int(shots.get("finish", 0))
-	)
+	check(not shots.has("finish"), "sem zoom pela previsão de dano antes do golpe")
 	check(int(shots.get("big", 0)) > 0, "destaque de golpe grande (%d)" % int(shots.get("big", 0)))
 	check(slow > 0, "câmera lenta em %d quadros" % slow)
 	check(hold_frames > 0, "troca segurou a luta por %d quadros" % hold_frames)

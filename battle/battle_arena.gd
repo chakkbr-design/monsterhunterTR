@@ -125,6 +125,13 @@ var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta
 ## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
 ## câmera lenta no golpe que nocauteia e todo mundo parado na troca.
 var director: BattleDirector = null
+## Pausa da luta no modo de energia: "" = lutando; "regroup" = alguém desmaiou e todos voltam ao ponto
+## de entrada (BattleRegroup; a luta volta sozinha); outro valor (ex.: "opening", a abertura do
+## treino) = parado até alguém limpar. Na pausa ninguém anda nem age, os timers (energia, cooldowns,
+## status) não correm e os eventos de golpe ficam congelados; só os eventos da arena (recolher,
+## mandar o substituto) e a bola seguem. fight_paused() lê.
+var energy_pause := ""
+var regroup: BattleRegroup = null
 ## IA do treinador por lado (BattleTrainerAI, opcional): round_start() no começo da rodada e
 ## pick_replacement(slot) -> índice de bench_of(side) (-1 = a arena escolhe).
 var trainer_ai := {}
@@ -276,6 +283,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
 	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
 	end_turn = BattleEndTurn.new(self)
+	if energy_on():
+		regroup = BattleRegroup.new(self)
 	if bool(o.get("action_cam", false)) and energy_on() and not bool(o.get("fast_sim", false)):
 		director = BattleDirector.new(self)
 	if String(o.get("telemetry", "")) != "":
@@ -756,6 +765,7 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	add_child(f)
 	f.setup(m, side, ctrl)
 	f.position = at
+	f.set_meta("start_at", Vector3(at.x, 0.0, at.z))  # ponto de volta do reagrupar (BattleRegroup)
 	f.facing = axis if side == 0 else -axis
 	f.fainted.connect(_on_fainted)
 	fighters.append(f)
@@ -1282,6 +1292,7 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 		nf = enemy2 if slot == 1 else enemy
 	if is_instance_valid(nf):
 		nf.position = at
+		nf.set_meta("start_at", out.get_meta("start_at", at))  # entra no lugar de quem saiu
 		if turns.on:
 			nf.set_meta("sit_round", turns.round_n)
 		for g in aimed:
@@ -1549,13 +1560,22 @@ func _fight_step(dt: float) -> void:
 		_cmd_cd[k] = maxf(float(_cmd_cd[k]) - dt, 0.0)
 	var evs := _events
 	_events = []
+	var paused := energy_pause != ""
 	for e in evs:
+		if paused and not _own_event(e):
+			_events.append(e)  # golpe em andamento: congelado na pausa
+			continue
 		e.t -= dt
 		if e.t <= 0.0:
 			e.cb.call()
 		else:
 			_events.append(e)
 	if state != "fight":
+		return
+	if energy_pause != "":
+		# Reagrupar depois do nocaute (BattleRegroup) ou pausa de fora (abertura): ninguém age.
+		if energy_pause == "regroup" and regroup:
+			regroup.step(dt)
 		return
 	if director and director.holding():
 		return  # troca: todos param até o antigo sair e o novo cair
@@ -1569,7 +1589,7 @@ func _fight_step(dt: float) -> void:
 	moves.effects.tick(dt)
 	turns.tick(dt)
 	for f in fighters:
-		if f.on_field:
+		if f.on_field and energy_pause == "":  # um desmaio aqui para os outros já (reagrupar)
 			f.tick(dt)
 	for f in fighters.duplicate():
 		if not f.on_field or state != "fight":
@@ -1579,7 +1599,12 @@ func _fight_step(dt: float) -> void:
 		if f.alive():
 			if f.controller == "player":
 				want = _player_input(f)
-			elif f.controller == "ai" and f.impact_t <= 0.0 and not tut_hold_foe:
+			elif (
+				f.controller == "ai"
+				and f.impact_t <= 0.0
+				and not tut_hold_foe
+				and energy_pause == ""
+			):  # alguém desmaiou neste passo: ninguém começa golpe
 				if f == player and _human():
 					_commands(f)
 				if f.controller == "ai" and f.on_field:
@@ -1597,7 +1622,8 @@ func _fight_step(dt: float) -> void:
 	_separate()
 	_clash()
 	for p in projectiles:
-		p.step(dt, self)
+		if energy_pause == "":
+			p.step(dt, self)
 	for p in projectiles.filter(func(q): return q.done):
 		projectiles.erase(p)
 		p.queue_free()
@@ -2447,6 +2473,8 @@ func _on_fainted(f: BattleFighter) -> void:
 		_enemy_fainted(f)
 	else:
 		_player_fainted(f)
+	if regroup and state == "fight":
+		regroup.begin()  # modo de energia: todos voltam ao ponto de entrada até os lugares encherem
 
 
 func _enemy_fainted(f: BattleFighter) -> void:
@@ -2824,8 +2852,7 @@ func _player_fainted(f: BattleFighter) -> void:
 		say("Você não tem mais Pokémon para lutar!", "faint")
 		_end("lose", 2.0)
 		return
-	var at := f.position
-	at.y = 0.0
+	var at := _respawn_at(f)
 	var m_next: Mon = party[nxt]
 	_pending.append(m_next)
 	later(
@@ -2844,6 +2871,26 @@ func _player_fainted(f: BattleFighter) -> void:
 	)
 
 
+## Onde entra o substituto de `f`: no modo de energia o ponto de entrada de f (todos se reagrupam
+## nele, BattleRegroup); senão onde f estava.
+func _respawn_at(f: BattleFighter) -> Vector3:
+	var at: Vector3 = BattleRegroup.start_of(f) if energy_on() else f.position
+	at.y = 0.0
+	return at
+
+
+## Evento da própria arena (recolher, mandar o substituto, comando): segue na pausa. Lambda com self
+## devolve a arena; lambda sem self devolve o script dela; os de golpe devolvem BattleMoves etc.
+func _own_event(e: Dictionary) -> bool:
+	var o: Object = e.cb.get_object()
+	return o == self or (o != null and o == get_script())
+
+
+## Luta parada no modo de energia (reagrupar depois do nocaute ou pausa de fora, energy_pause).
+func fight_paused() -> bool:
+	return energy_pause != ""
+
+
 ## 2x2: o lugar de quem desmaiou é preenchido pelo próximo da equipe (o outro segue lutando).
 ## false = ninguém para entrar (segue a regra de sempre).
 func _doubles_refill(f: BattleFighter) -> bool:
@@ -2859,8 +2906,7 @@ func _doubles_refill(f: BattleFighter) -> bool:
 		player.controller = _player_ctrl()
 		ally = null
 		as_ally = true
-	var at := f.position
-	at.y = 0.0
+	var at := _respawn_at(f)
 	later(
 		FAINT_CLEAR,
 		func() -> void:
@@ -2931,6 +2977,7 @@ func _end(outcome: String, delay: float, extra := {}) -> void:
 		for m in _participants.values():
 			if not m.is_fainted():
 				m.set_friend(m.friend + FRIEND_WIN)
+	energy_pause = ""
 	result = {"outcome": outcome}
 	result.merge(extra)
 	if telemetry:

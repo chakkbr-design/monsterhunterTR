@@ -3,8 +3,10 @@ extends RefCounted
 ## Câmera de ação do treino no modo de energia (opts.action_cam; nunca no fast_sim nem no VGC).
 ## Enquadra todos os Pokémon em campo com uma margem pequena (CAM_MARGIN m) em vez de mostrar a
 ## quadra inteira, e faz as cenas:
-## - golpe que vai nocautear (dano esperado >= HP do alvo): zoom no alvo e a luta a FINISH_SCALE
-##   antes do golpe chegar; no desmaio, zoom mais fechado nele ainda em câmera lenta (KO_SECS);
+## - nocaute (só o de verdade: o golpe já acertou, o HP zerou e nada o segurou — Focus Sash, Sturdy,
+##   a amizade, a entrada protegida): no impacto a luta quase congela (KO_HIT_SCALE por KO_HIT s) e
+##   a câmera fecha no desmaiado em câmera lenta (KO_SCALE por KO_SECS). Não há mais o zoom antes
+##   do golpe pela previsão de dano (Caio, 2026-10-26: o alvo desviava e o zoom vinha mesmo assim);
 ## - golpe grande (poder >= BIG_BP): enquadra quem usou e o alvo, câmera um pouco lenta (BIG_SCALE);
 ## - troca (recolher ou soltar): todo mundo para (holding) até o antigo sair e o novo cair, com a
 ##   câmera no treinador e no ponto da bola.
@@ -12,7 +14,7 @@ extends RefCounted
 
 const FOV := 50.0
 const PITCH := deg_to_rad(30.0)
-## Nas cenas de nocaute a câmera sobe (PITCH_KO) para os morros e pedras não taparem o alvo.
+## Na cena de nocaute a câmera sobe (PITCH_KO) para os morros e pedras não taparem o alvo.
 const PITCH_KO := deg_to_rad(48.0)
 ## Margin around each Pokémon, and the least body height that must fit (taller art uses its own
 ## visible height, BattleFighter.visual_height).
@@ -37,14 +39,11 @@ const MAX_DIST := 47.0
 ## Suavidade (por segundo real) do enquadramento normal e das cenas.
 const EASE := 2.6
 const EASE_SHOT := 5.0
-## Golpe que nocauteia: velocidade da luta, tempo de espera pelo acerto e folga entre alarmes falsos.
-const FINISH_SCALE := 0.5
-const FINISH_WAIT := 1.2
-const FINISH_GAP := 2.5
-const FINISH_MARGIN := 1.6
-## O dano esperado é a média: um pouco acima dela já conta (rolagem alta, crítico).
-const FINISH_ROLL := 1.1
-## Desmaio: tempo do zoom (a arena some com o corpo em FAINT_CLEAR = 1 s) e a margem.
+## Nocaute: o impacto quase congela (KO_HIT s de luta a KO_HIT_SCALE, o hit-stop da cena) e depois
+## o zoom em câmera lenta (KO_SCALE) por KO_SECS (a arena some com o corpo em FAINT_CLEAR = 1 s).
+const KO_HIT := 0.06
+const KO_HIT_SCALE := 0.2
+const KO_SCALE := 0.5
 const KO_SECS := 1.1
 const KO_MARGIN := 0.9
 const KO_DIST := 4.5
@@ -78,7 +77,7 @@ const RELIEF_PAD := 0.1
 const FADE_STEP := 1.0 / 30.0
 
 var arena: Node
-## Cena atual: "" (enquadrar todos), "finish", "ko", "big", "switch".
+## Cena atual: "" (enquadrar todos), "ko", "big", "switch".
 var shot := ""
 var shot_t := 0.0
 var target: BattleFighter = null
@@ -88,7 +87,7 @@ var _switch_side := 0
 var _hold_t := 0.0
 var _held := 0.0
 var _await_send := false
-var _finish_gap := 0.0
+var _ko_hit := 0.0
 var _big_gap := 0.0
 var _focus := Vector3.ZERO
 var _dist := MAX_DIST
@@ -106,8 +105,8 @@ func _init(a: Node) -> void:
 ## Velocidade da luta agora (a arena multiplica o dt).
 func time_scale() -> float:
 	match shot:
-		"finish", "ko":
-			return FINISH_SCALE
+		"ko":
+			return KO_HIT_SCALE if _ko_hit > 0.0 else KO_SCALE
 		"big":
 			return BIG_SCALE
 	return 1.0
@@ -123,7 +122,7 @@ func holding() -> bool:
 
 ## Passo da luta (dt escalado).
 func tick(dt: float) -> void:
-	_finish_gap = maxf(_finish_gap - dt, 0.0)
+	_ko_hit = maxf(_ko_hit - dt, 0.0)
 	_big_gap = maxf(_big_gap - dt, 0.0)
 	if holding():
 		_hold_t = maxf(_hold_t - dt, 0.0)
@@ -133,9 +132,9 @@ func tick(dt: float) -> void:
 		_await_send = false
 		if shot == "switch":
 			shot = ""
-	if shot in ["finish", "ko", "big"]:
+	if shot in ["ko", "big"]:
 		shot_t -= dt
-		if shot_t <= 0.0 or (shot == "finish" and not _ok(target)):
+		if shot_t <= 0.0:
 			shot = ""
 	if _await_send and not _waiting_replacement():
 		_await_send = false
@@ -154,16 +153,9 @@ func _waiting_replacement() -> bool:
 
 
 func on_move(u: BattleFighter, mv: Dictionary) -> void:
-	if shot in ["switch", "ko", "finish"] or String(mv.get("category", "")) == "status":
+	if shot in ["switch", "ko"] or String(mv.get("category", "")) == "status":
 		return
 	var t = u.opponent
-	if _ok(t) and t.side != u.side and _finish_gap <= 0.0 and _lethal(u, t, mv):
-		shot = "finish"
-		user = u
-		target = t
-		shot_t = FINISH_WAIT + Dex.prepare_time(mv) + float(mv.get("duration", 0.0))
-		_finish_gap = FINISH_GAP
-		return
 	if _big_gap <= 0.0 and BattleEnergy.nominal_bp(mv) >= BIG_BP and float(mv.get("bp", 0)) > 0:
 		shot = "big"
 		user = u
@@ -172,28 +164,15 @@ func on_move(u: BattleFighter, mv: Dictionary) -> void:
 		_big_gap = BIG_GAP
 
 
-## O golpe deve nocautear: dano esperado (o da IA, sem sorteio) x FINISH_ROLL >= HP; a entrada
-## protegida segura.
-func _lethal(u: BattleFighter, t: BattleFighter, mv: Dictionary) -> bool:
-	var mvs = arena.get("moves")
-	if mvs == null:
-		return false
-	if t.entry_t > 0.0 and t.hp >= t.max_hp:
-		return false
-	if String(mv.get("special", "")) == "future_sight":
-		return false  # cai segundos depois: o zoom do desmaio cobre
-	var est: float = mvs.expected_damage(u, t, mv)
-	if String(mv.get("kind", "")) in ["zone", "stream"] and float(mv.get("tick", 0.0)) > 0.0:
-		est *= maxf(float(mv.get("duration", 0.0)) / float(mv.tick), 1.0)  # vários acertos
-	return est * FINISH_ROLL >= float(t.hp)
-
-
+## Nocaute de verdade (o sinal fainted sai depois do dano e das defesas contra o golpe fatal):
+## hit-stop no impacto e zoom em câmera lenta no desmaiado.
 func on_faint(f: BattleFighter) -> void:
 	if shot == "switch":
 		return
 	shot = "ko"
 	target = f
 	shot_t = KO_SECS
+	_ko_hit = KO_HIT
 
 
 func on_recall(f: BattleFighter) -> void:
@@ -227,9 +206,7 @@ func camera(cam: Camera3D, raw: float) -> void:
 		return
 	cam.fov = FOV
 	var pts: Array = []
-	var margin := float(
-		{"finish": FINISH_MARGIN, "ko": KO_MARGIN, "big": BIG_MARGIN}.get(shot, CAM_MARGIN)
-	)
+	var margin := float({"ko": KO_MARGIN, "big": BIG_MARGIN}.get(shot, CAM_MARGIN))
 	var ease := EASE_SHOT if _scene_fighters().size() > 0 or shot == "switch" else EASE
 	if shot == "switch":
 		pts.append(_switch_at)
@@ -433,10 +410,10 @@ func _in_the_way(
 
 
 func _shot_pitch() -> float:
-	return PITCH_KO if shot in ["finish", "ko"] else PITCH
+	return PITCH_KO if shot == "ko" else PITCH
 
 
-## The fighters the camera frames now: the scene's (finish, knockout, big move) or, without one,
+## The fighters the camera frames now: the scene's (knockout, big move) or, without one,
 ## everyone on the field. Empty in the switch scene, which frames the trainer and the ball spot.
 func framed() -> Array:
 	if shot == "switch":
@@ -449,15 +426,10 @@ func framed() -> Array:
 	return out
 
 
-## The finish scene frames the target (and the user when close), the knockout the fainted one, a
-## big move its user (and the target when close).
+## The knockout frames the fainted one, a big move its user (and the target when close).
 func _scene_fighters() -> Array:
 	var out: Array = []
 	match shot:
-		"finish":
-			out.append(target)
-			if _ok(user) and user.flat_to(target).length() < 5.0:
-				out.append(user)
 		"ko":
 			out.append(target)
 		"big":
