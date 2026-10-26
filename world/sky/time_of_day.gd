@@ -12,10 +12,13 @@ extends Node
 ##   never overlap, so shadows switch at zero energy), and colour keys from pre-dawn to night that
 ##   modulate the zone's look (sun colour / energy, sky, ambient, exposure, post-fx tints, ground
 ##   tints, lamps, windows). Indoors the look stays at the 12:30 identity like the original.
+##   While the sun is down a shadowless night fill from behind the camera tops up the moon, so
+##   sprites stay readable in the twilight gaps.
 ## - One persistent Environment: a location change copies the look's properties (world/look/*.tres
 ##   picked by the zone's look.env, interior_env / cave_env indoors) onto the live Environment
 ##   instead of swapping resources, so SDFGI and volumetric fog keep their caches. The live sky is
-##   always world/sky/sky.gdshader; the look only gives its base colours. Two outdoor looks blend.
+##   always world/sky/sky.gdshader; the look only gives its base colours. Two outdoor looks blend
+##   (numbers over LOOK_BLEND seconds; SDFGI fades its energy in or out instead of popping).
 ## - Publishes the shader globals night_lamps, night_windows, sun_dir_world, sun_color_world,
 ##   sun_amount, sky_top_color, sky_horizon_color when they change, drives the NightLights shadow
 ##   budget and halos, the graphics tier's environment flags (group "gfx_quality").

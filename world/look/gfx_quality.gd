@@ -12,7 +12,8 @@ extends RefCounted
 ##     A look (.tres) still decides what it wants; the tier only allows or forbids it. SSIL is
 ##     dropped whenever SDFGI runs (SDFGI already gives the bounce);
 ##   - the sun / moon shadow (apply_sun): distance, splits, PCSS angular size;
-##   - how many street lamps cast shadows (NightLights budget) and the sky radiance size.
+##   - how many street lamps cast shadows (NightLights budget), the sky radiance size and the
+##     weather particle budget (particles(): a multiplier for rain / snow / splash amounts).
 ## Settings.apply() calls set_tier() + apply_all(); nodes in the "gfx_quality" group get
 ## apply_quality() so live environments (the world, the training stadium) re-apply their flags.
 ## --quality=0..3 (or baixo/medio/alto/ultra) forces a tier for screenshots.
@@ -50,6 +51,7 @@ const TIERS := [
 		"sun_angular": 0.0,
 		"pos_atlas": 2048,
 		"lamp_shadows": 0,
+		"particles": 0.5,
 		"radiance": 64,
 	},
 	{  # Médio: no GI, screen-space bounce instead.
@@ -76,6 +78,7 @@ const TIERS := [
 		"sun_angular": 0.0,
 		"pos_atlas": 2048,
 		"lamp_shadows": 2,
+		"particles": 0.75,
 		"radiance": 128,
 	},
 	{  # Alto (default): SDFGI at half resolution, SSR for wet streets, lamp halos.
@@ -102,6 +105,7 @@ const TIERS := [
 		"sun_angular": 0.0,
 		"pos_atlas": 4096,
 		"lamp_shadows": 4,
+		"particles": 1.0,
 		"radiance": 128,
 	},
 	{  # Ultra: full-resolution GI and reflections, FSR 2.2 native AA, contact-hardening sun.
@@ -128,6 +132,7 @@ const TIERS := [
 		"sun_angular": 0.5,
 		"pos_atlas": 4096,
 		"lamp_shadows": 6,
+		"particles": 1.0,
 		"radiance": 256,
 	},
 ]
@@ -278,6 +283,11 @@ static func apply_sun(light: DirectionalLight3D, t := -1, far_mult := 1.0) -> vo
 ## Street lamps (nearest to the camera focus) allowed to cast shadows.
 static func lamp_shadows(t := -1) -> int:
 	return int(spec(t).lamp_shadows)
+
+
+## Multiplier for weather particle amounts (rain, snow, splashes) on this tier.
+static func particles(t := -1) -> float:
+	return float(spec(t).particles)
 
 
 static func radiance_size(t := -1) -> int:
