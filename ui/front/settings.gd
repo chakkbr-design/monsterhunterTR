@@ -3,10 +3,13 @@ extends RefCounted
 ## velocidade do texto e da batalha, música, som, janela, gráficos e dicas de batalha.
 ## Uso: const Settings := preload("res://ui/front/settings.gd")
 ## load_cfg() devolve {text_speed 0..3, battle_speed 0..1, music 0..100, sfx 0..100, fullscreen,
-## quality 0..3, battle_tips} (e "volume", o volume geral antigo, só para compatibilidade).
+## quality 0..3, weather_mist, battle_tips} (e "volume", o volume geral antigo, só para
+## compatibilidade).
 ## Gráficos: Baixo / Médio / Alto / Ultra (GfxQuality, world/look/gfx_quality.gd), gravados em
 ## [video] graphics. Saves antigos só têm [options] quality 0..1 (Baixo/Alto): 0 vira Baixo e 1 vira
 ## Alto; o save novo continua gravando esse quality antigo (Alto e Ultra = 1) para versões velhas.
+## Névoa do clima: a névoa baixa do clima do mundo (WorldWeather.mist_enabled, em
+## world/sky/weather.gd), gravada em [video] weather_mist (padrão ligada), a chave do painel F9.
 
 const PATH := "user://settings.cfg"
 const TEXT_SPEEDS := ["Lento", "Médio", "Rápido", "Instantâneo"]
@@ -16,6 +19,7 @@ const BATTLE_SPEED_MULT := [0.6, 1.0]
 const WINDOW_MODES := ["Janela", "Tela cheia"]
 const QUALITY_NAMES := ["Baixo", "Médio", "Alto", "Ultra"]  ## = GfxQuality.NAMES
 const QUALITY_DEFAULT := 2  ## Alto
+const WEATHER_SCRIPT := "res://world/sky/weather.gd"  ## WorldWeather (névoa do clima)
 const DEFAULTS := {
 	"text_speed": 1,
 	"battle_speed": 0,
@@ -23,6 +27,7 @@ const DEFAULTS := {
 	"sfx": 100,
 	"fullscreen": false,
 	"quality": QUALITY_DEFAULT,
+	"weather_mist": true,
 	"battle_tips": true,
 	"volume": 80,
 }
@@ -35,6 +40,7 @@ const ROWS := [
 	["sfx", "SOM", "volume", []],
 	["fullscreen", "JANELA", "choice", WINDOW_MODES],
 	["quality", "GRÁFICOS", "choice", QUALITY_NAMES],
+	["weather_mist", "NÉVOA DO CLIMA", "toggle", []],
 	["battle_tips", "DICAS DE BATALHA", "toggle", []],
 	["controls", "CONTROLES", "action", []],
 	["back", "VOLTAR", "action", []],
@@ -59,6 +65,7 @@ static func load_cfg(path := PATH) -> Dictionary:
 			)
 		elif cf.has_section_key("options", "quality"):
 			d.quality = 0 if int(cf.get_value("options", "quality", 1)) <= 0 else QUALITY_DEFAULT
+		d.weather_mist = bool(cf.get_value("video", "weather_mist", d.weather_mist))
 		d.battle_tips = bool(cf.get_value("options", "battle_tips", d.battle_tips))
 		d.volume = clampi(int(cf.get_value("audio", "volume", d.volume)), 0, 100)
 		d.music = clampi(int(cf.get_value("audio", "music", d.music)), 0, 100)
@@ -74,6 +81,7 @@ static func save_cfg(d: Dictionary, path := PATH) -> bool:
 	var q := clampi(int(d.get("quality", DEFAULTS.quality)), 0, QUALITY_NAMES.size() - 1)
 	cf.set_value("options", "quality", 1 if q >= QUALITY_DEFAULT else 0)  # saves antigos (Baixo/Alto)
 	cf.set_value("video", "graphics", q)
+	cf.set_value("video", "weather_mist", bool(d.get("weather_mist", DEFAULTS.weather_mist)))
 	cf.set_value("options", "battle_tips", bool(d.get("battle_tips", DEFAULTS.battle_tips)))
 	for k in ["volume", "music", "sfx"]:
 		cf.set_value("audio", k, int(d.get(k, DEFAULTS[k])))
@@ -98,8 +106,8 @@ static func row_value(d: Dictionary, key: String):
 			return int(d.get(key, DEFAULTS[key])) / 10
 		"fullscreen":
 			return 1 if bool(d.get("fullscreen", false)) else 0
-		"battle_tips":
-			return bool(d.get("battle_tips", true))
+		"battle_tips", "weather_mist":
+			return bool(d.get(key, DEFAULTS[key]))
 	return int(d.get(key, 0))
 
 
@@ -115,7 +123,7 @@ static func change(d: Dictionary, key: String, dir: int) -> bool:
 				return false
 			d[key] = v
 			return true
-		"fullscreen", "battle_tips":
+		"fullscreen", "battle_tips", "weather_mist":
 			d[key] = not bool(d.get(key, DEFAULTS[key]))
 			return true
 		"text_speed", "battle_speed", "quality":
@@ -134,7 +142,8 @@ static func change(d: Dictionary, key: String, dir: int) -> bool:
 
 
 ## Aplica no motor: volumes nos barramentos Music/SFX/UI (se existirem; o Audio relê o arquivo),
-## modo da janela e qualidade da renderização (ignorados em headless).
+## névoa do clima, modo da janela e qualidade da renderização (janela e renderização não mudam em
+## headless).
 static func apply(d: Dictionary) -> void:
 	AudioServer.set_bus_volume_db(0, 0.0)
 	AudioServer.set_bus_mute(0, false)
@@ -152,6 +161,7 @@ static func apply(d: Dictionary) -> void:
 			if au.has_method(m):
 				au.call(m)
 				break
+	set_weather_mist(bool(d.get("weather_mist", DEFAULTS.weather_mist)))
 	GfxQuality.set_tier(int(d.get("quality", QUALITY_DEFAULT)))
 	if DisplayServer.get_name() == "headless":
 		return
@@ -167,3 +177,15 @@ static func apply(d: Dictionary) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	elif not d.get("fullscreen", false) and full:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+
+
+## Liga ou desliga a névoa baixa do clima na hora: o WorldWeather lê `mist_enabled` a cada quadro.
+## Não grava (quem chama já gravou com save_cfg). Sem o script do clima carregado (no título, sem
+## mundo) não há o que mudar: o WorldWeather lê o [video] weather_mist quando o mundo abre.
+## O script vai por caminho, porque citar a classe WorldWeather puxaria o mundo para os testes.
+static func set_weather_mist(on: bool) -> void:
+	if not ResourceLoader.has_cached(WEATHER_SCRIPT):
+		return
+	var ww: Script = load(WEATHER_SCRIPT)
+	ww.set("mist_enabled", on)
+	ww.set("_mist_loaded", true)

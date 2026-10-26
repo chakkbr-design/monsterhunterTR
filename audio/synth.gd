@@ -27,7 +27,8 @@ const SFX_NAMES := [
 	"run_away",
 	"badge",
 	"caught",
-	"spotted"
+	"spotted",
+	"bump"
 ]
 
 const NOTE_SEMI := {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
@@ -507,6 +508,25 @@ static func make_sfx(sfx_name: String) -> AudioStreamWAV:
 			voice(
 				b, 0.2, 0.08, {"wave": "noise", "f0": 7000.0, "f1": 2000.0, "vol": 0.22, "r": 0.06}
 			)
+		"bump":
+			# Esbarrão no andar em grade (parede, NPC): baque baixo e macio (triângulo 170 -> 62 Hz em
+			# 0,06 s) com um estalo de ruído de 12 ms. Mais baixo que o resto: toca a cada 0,4 s empurrando.
+			b = _buf(0.14)
+			voice(
+				b,
+				0,
+				0.06,
+				{
+					"wave": "triangle",
+					"f0": 170.0,
+					"f1": 62.0,
+					"vol": 0.4,
+					"d": 0.04,
+					"s": 0.45,
+					"r": 0.05
+				}
+			)
+			voice(b, 0, 0.012, {"wave": "noise", "f0": 1800.0, "vol": 0.07, "r": 0.015})
 		_:
 			return null
 	return to_wav(b, false)

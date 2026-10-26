@@ -314,7 +314,7 @@ func _run() -> void:
 		cfg.text_speed == 2 and cfg.battle_speed == 1 and cfg.music == mus - 10,
 		"opções gravadas: %s" % cfg
 	)
-	for i in 4:
+	for i in 5:  # som, janela, gráficos, névoa do clima, dicas
 		menu.press("down")
 	check(Settings.ROWS[menu.cursor][0] == "battle_tips", "dicas de batalha")
 	menu.press("ok")

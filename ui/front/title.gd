@@ -419,6 +419,7 @@ func _go_press() -> void:
 	_show(true, false)
 	_press.visible = true
 	_menu_row.visible = false
+	_logo.visible = true
 	_logo.modulate.a = 0.0
 	create_tween().tween_property(_logo, "modulate:a", 1.0, fade_time)
 
@@ -426,6 +427,7 @@ func _go_press() -> void:
 func _go_menu(at := "") -> void:
 	state = "menu"
 	_show(true, false)
+	_logo.visible = true
 	_logo.modulate.a = 1.0
 	_press.visible = false
 	_menu_row.visible = true
@@ -437,9 +439,11 @@ func _go_menu(at := "") -> void:
 	_render()
 
 
+## Opções sem o logo: com as 10 linhas o painel passava da borda de baixo da tela.
 func _go_options() -> void:
 	state = "options"
 	cursor = 0
+	_logo.visible = false
 	_render()
 
 
