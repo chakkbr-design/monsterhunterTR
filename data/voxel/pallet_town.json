@@ -32,7 +32,8 @@
     {"model": "prop_wheelbarrow", "pos": [-25.0, -4.05], "rot": 1, "block": true},
     {"model": "prop_tool_rack", "pos": [-23.31, -14.0], "rot": 1, "block": true},
     {"model": "watering_can", "pos": [-22.25, -13.32], "rot": 0},
-    {"model": "prop_firewood", "pos": [-26.1, -4.0], "rot": 1, "block": true}
+    {"model": "prop_firewood", "pos": [-26.1, -4.0], "rot": 1, "block": true},
+    {"model": "prop_flagpole", "pos": [22.0, 23.0], "rot": 0, "block": true}
   ],
   "ground": [
     ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;....+===+....;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",

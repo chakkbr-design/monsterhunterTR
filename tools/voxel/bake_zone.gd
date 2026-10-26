@@ -46,6 +46,21 @@ func _init() -> void:
 			]
 		)
 	)
+	# Instanced triangles per kind (what the GPU draws if everything were in view).
+	var inst := {"tree": [0, 0], "prop": [0, 0], "decor": [0, 0]}
+	for e in bake.multimeshes:
+		var k := String(e.kind)
+		var models: Dictionary = bake.decor_models if k == "decor" else bake.tree_models
+		var mesh: Mesh = models[e.model].mesh
+		var n: int = (e.xf as PackedFloat32Array).size() / 12
+		inst[k][0] += n
+		inst[k][1] += n * mesh.get_faces().size() / 3
+	print(
+		(
+			"bake_zone %s: instances (count, triangles): trees %s, props %s, decor %s"
+			% [zone, inst.tree, inst.prop, inst.decor]
+		)
+	)
 	var err := bake.save_files()
 	if err != OK:
 		printerr("bake_zone: save failed (%s)" % error_string(err))

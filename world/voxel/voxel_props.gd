@@ -134,6 +134,10 @@ static func _design_props(gen: VoxelZoneGen) -> void:
 		var rot := int(e.get("rot", 0))
 		if VoxelModels.is_prop(m):
 			add_prop(gen, m, at, rot)
+			if m == "prop_flagpole":
+				var top := at + Vector3(0, VoxelModels.FLAG_TOP * VoxelModels.PROP_VS, 0)
+				var flag := {"pos": top, "rot": rot, "cloth": String(e.get("cloth", "pallet"))}
+				gen.meta.get_or_add("flags", []).append(flag)
 		else:
 			gen.add_decor(m, Transform3D(Basis(Vector3.UP, rot * PI * 0.5), at))
 		if bool(e.get("block", false)):

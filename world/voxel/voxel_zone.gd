@@ -240,6 +240,7 @@ func _scenery() -> void:
 	_lights(meta)
 	_smoke(meta)
 	_butterflies(meta)
+	_flags(meta)
 	_bump("voxel")
 
 
@@ -672,6 +673,48 @@ func _butterflies(meta: Dictionary) -> void:
 	_group("Life").add_child(bf)
 	butterflies = bf
 	_bump("butterflies", pts.size())
+
+
+## Flags on the flagpoles: a subdivided quad hung from the pole top, rippling in the breeze
+## (voxel_flag.gdshader), painted from a small pixel texture.
+func _flags(meta: Dictionary) -> void:
+	for f in meta.get("flags", []):
+		var quad := QuadMesh.new()
+		quad.size = Vector2(1.2, 0.8)
+		quad.subdivide_width = 12
+		quad.subdivide_depth = 2
+		var m := ShaderMaterial.new()
+		m.shader = load("res://world/voxel/voxel_flag.gdshader")
+		m.set_shader_parameter("cloth", ImageTexture.create_from_image(flag_cloth(String(f.cloth))))
+		m.set_shader_parameter("phase", _v3(f.pos).x)
+		var mi := MeshInstance3D.new()
+		mi.name = "Flag"
+		mi.mesh = quad
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var b := Basis(Vector3.UP, int(f.rot) * PI * 0.5)
+		mi.transform = Transform3D(b, _v3(f.pos) + b * Vector3(0.66, -0.4, 0.0))
+		_group("Life").add_child(mi)
+		_bump("flags")
+
+
+## The pixel cloth of a flag ("pallet": a sky-blue field, a white band and a red-and-white disc).
+static func flag_cloth(_kind: String) -> Image:
+	var img := Image.create(24, 16, false, Image.FORMAT_RGBA8)
+	for y in 16:
+		for x in 24:
+			var c := Color("3f7fc0") if (x + y) % 7 != 0 else Color("3a76b4")
+			if y >= 6 and y <= 9:
+				c = Color("f2f0ea")
+			var d := Vector2(x - 6.5, y - 7.5).length()
+			if d < 4.2:
+				c = Color("d8343a") if y < 8 else Color("f2f0ea")
+				if d < 1.6:
+					c = Color("f2f0ea")
+				elif absf(y - 7.5) < 0.6:
+					c = Color("2a2a30")
+			img.set_pixel(x, y, c)
+	return img
 
 
 ## Day-only particles: WorldTimeOfDay calls set_period_mult(day) on the "day_ambient" group.

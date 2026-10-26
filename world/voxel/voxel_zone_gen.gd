@@ -940,6 +940,7 @@ func meta_json() -> Dictionary:
 		"signs": meta.signs,
 		"smoke": _jsonable(meta.get("smoke", [])),
 		"butterflies": _jsonable(meta.get("butterflies", [])),
+		"flags": _jsonable(meta.get("flags", [])),
 		"beacons": _jsonable(meta.get("beacons", [])),
 	}
 	for b in meta.buildings:

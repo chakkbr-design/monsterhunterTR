@@ -29,8 +29,14 @@ const GUTTER := Color("5d5c62")
 const COPPER := Color("9a6a48")
 ## Models drawn one instance per node so the camera fader can see through them (tall props).
 const TALL := [
-	"prop_lamp", "prop_lamp_double", "prop_lantern_post", "prop_laundry_post", "prop_arch"
+	"prop_lamp",
+	"prop_lamp_double",
+	"prop_lantern_post",
+	"prop_laundry_post",
+	"prop_arch",
+	"prop_flagpole",
 ]
+const FLAG_TOP := 39  ## voxel row of the flagpole's top halyard ring (the flag hangs below it)
 
 
 static func names() -> PackedStringArray:
@@ -59,6 +65,7 @@ static func names() -> PackedStringArray:
 			"prop_arch",
 			"prop_gutter",
 			"prop_nozzle",
+			"prop_flagpole",
 			"prop_wall_lantern",
 			"prop_wall_lamp_lab",
 		]
@@ -130,6 +137,8 @@ static func build(model: String) -> VoxelGrid:
 			return _gutter()
 		"prop_nozzle":
 			return _nozzle()
+		"prop_flagpole":
+			return _flagpole()
 		"prop_wall_lantern":
 			return _wall_lantern()
 		"prop_wall_lamp_lab":
@@ -658,4 +667,20 @@ static func _nozzle() -> VoxelGrid:
 			g.put(Vector3i(x, 1, z), _v(stone, x, 1, z, 0.04), VoxelMat.STONE)
 			g.put(Vector3i(x, 2, z), BRASS, VoxelMat.METAL)
 	g.put(Vector3i(0, 2, 0), Color("2a3236"), VoxelMat.METAL)
+	return g
+
+
+## Flagpole (5 m): a stepped stone base, a slim white pole, a halyard ring and a brass ball. The
+## cloth is a separate animated mesh (VoxelZone flags, voxel_flag.gdshader) hung from FLAG_TOP.
+static func _flagpole() -> VoxelGrid:
+	var g := _grid(2, FLAG_TOP + 3)
+	var stone := Color("a39d94")
+	_box(g, Vector3i(-2, 0, -2), Vector3i(2, 0, 2), stone.darkened(0.06), VoxelMat.STONE, 0.05)
+	_box(g, Vector3i(-1, 1, -1), Vector3i(1, 1, 1), stone, VoxelMat.STONE, 0.05)
+	var white := Color("e8e8e4")
+	for y in range(2, FLAG_TOP + 1):
+		g.put(Vector3i(0, y, 0), _v(white, 0, y, 0, 0.02), VoxelMat.METAL)
+	g.put(Vector3i(0, FLAG_TOP + 1, 0), BRASS, VoxelMat.METAL)
+	g.put(Vector3i(0, FLAG_TOP + 2, 0), BRASS.lightened(0.15), VoxelMat.METAL)
+	g.put(Vector3i(1, 9, 0), IRON_LIGHT, VoxelMat.METAL)  # cleat
 	return g
