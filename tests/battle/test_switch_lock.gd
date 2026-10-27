@@ -52,6 +52,11 @@ func _arena(mode: String) -> Node:
 
 
 func _run(a: Node, secs: float) -> void:
+	# Passa a apresentação ("intro") antes de contar o tempo de luta.
+	for i in 600:
+		if a.state != "intro":
+			break
+		a.step(DT)
 	for i in int(secs / DT):
 		if a.state != "fight":
 			return
@@ -65,7 +70,7 @@ func _energy() -> void:
 	check(a.switch_out(a.enemy) == null, "U-turn no começo não troca")
 	_run(a, a.SWITCH_OPEN + 0.5 - a.fight_clock)
 	if a.state != "fight":
-		check(false, "a luta acabou antes de testar")
+		check(false, "a luta acabou antes de testar (%s, %.1f s)" % [a.state, a.fight_clock])
 		a.free()
 		return
 	check(not a.switch_locked(), "troca abre depois de %.0f s" % a.SWITCH_OPEN)
@@ -73,9 +78,14 @@ func _energy() -> void:
 	check(nf != null, "troca do lado B sai")
 	check(a.switch_locked(), "a troca trava os dois lados")
 	check(a.switch_out(a.player) == null, "o lado A espera a trava")
-	_run(a, a.SWITCH_LOCK + 0.5)
+	# A trava conta só tempo de luta (fight_clock para na troca e nas pausas).
+	var c0: float = a.fight_clock
+	for i in int(30.0 / DT):
+		if a.state != "fight" or a.fight_clock - c0 > a.SWITCH_LOCK + 0.1:
+			break
+		a.step(DT)
 	if a.state == "fight":
-		check(not a.switch_locked(), "a trava some em %.0f s" % a.SWITCH_LOCK)
+		check(not a.switch_locked(), "a trava some em %.0f s de luta" % a.SWITCH_LOCK)
 	a.free()
 
 

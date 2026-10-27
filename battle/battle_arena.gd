@@ -1194,6 +1194,7 @@ func _recall_ball(f: BattleFighter) -> void:
 		. append(
 			{
 				"recall": true,
+				"watch": RECALL_OUT + RECALL_IN,  # a câmera fica no Pokémon até ele entrar
 				"ball": ball,
 				"from": from,
 				"to": spot,

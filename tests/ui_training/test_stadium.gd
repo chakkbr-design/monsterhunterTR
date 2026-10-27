@@ -105,7 +105,8 @@ func _run() -> void:
 	var fans := 0
 	for mm in st.find_children("Crowd", "MultiMeshInstance3D", true, false):
 		fans += (mm as MultiMeshInstance3D).multimesh.instance_count
-	check(fans > 2500, "torcida: %d torcedores" % fans)
+	# The pixel-art fans fill fewer seats (ArenaCrowd.SPRITE_FILL: bigger, so fewer of them).
+	check(fans > (1500 if ArenaCrowd.uses_sprites() else 2500), "torcida: %d torcedores" % fans)
 	# Pixel-art fans (overworld NPC sheets) without the main cast; voxel figures without the sheets.
 	var cast := ArenaCrowd.CROWD_SHEETS.filter(
 		func(n): return n in ["npc_oak", "npc_rival"] or String(n).begins_with("trainer")
