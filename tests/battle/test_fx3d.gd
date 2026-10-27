@@ -154,6 +154,7 @@ func _arena_moves() -> void:
 			_calm(a)
 			e.hp = e.max_hp
 			p.hp = p.max_hp
+		await process_frame  # solta os nós com queue_free (o laço manual roda num frame só)
 	check(n_moves > 600, "golpes testados: %d" % n_moves)
 	check(a.state == "fight", "luta continua (%s)" % a.state)
 	check(
@@ -171,14 +172,15 @@ func _arena_moves() -> void:
 		_calm(a)
 		e.hp = e.max_hp
 		p.hp = p.max_hp
-	var left := a.vfx.nodes.filter(
+	await process_frame
+	var left: Array = a.vfx.nodes.filter(
 		func(n): return n is Fx3DParticles or n is Fx3DMesh or n is Fx3DRibbon or n is Fx3DLight
 	)
 	check(left.size() <= 4, "efeitos 3D somem (sobraram %d)" % left.size())
 	check(Fx3DLight.alive <= Fx3DLight.MAX, "luzes dentro do limite (%d)" % Fx3DLight.alive)
 	# Carga: o Thunderbolt solta raios em volta enquanto prepara.
 	var tb: Dictionary = Dex.move("thunderbolt")
-	var before := a.vfx.nodes.filter(func(n): return n is Fx3DRibbon).size()
+	var before: int = a.vfx.nodes.filter(func(n): return n is Fx3DRibbon).size()
 	a.vfx.prepare(p, tb, 0.5)
 	var bolts := 0
 	for i in 20:
