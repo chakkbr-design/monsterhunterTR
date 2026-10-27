@@ -718,7 +718,7 @@ func _free_fire(dt: float, d: float) -> void:
 		tactic_on = _tactic_ok()
 		if not grass_spot.is_empty():
 			tag = "ambush_strike"  # sai da moita atacando (telemetria do golpe)
-		if _use_best_move():
+		if _use_best_move(d):
 			_after_fire(mode)
 		elif intent != "" and not _ready(intent):
 			intent = ""
@@ -808,10 +808,10 @@ func _band() -> Vector2:
 		b *= 0.7
 	elif f.mood_state == "panic":
 		var opp := f.opponent
-		# Energia: com o alvo sem energia o pânico não foge (é a hora de bater).
-		if not (energy and is_instance_valid(opp) and opp.pp_max < PANIC_STRIKE_EN):
+		# Com o alvo sem energia o pânico não foge (é a hora de bater).
+		if not (plan != "" and is_instance_valid(opp) and opp.pp_max < PANIC_STRIKE_EN):
 			b *= 1.4
-	if energy and hi < INF:
+	if plan != "" and hi < INF:
 		# Energia: nada empurra a faixa para fora do alcance do golpe pretendido (ficava rodando longe).
 		var cap := move_reach(intent) * BattlePlan.ARTY_BAND.y
 		b.y = minf(b.y, maxf(cap, 0.7))
@@ -1270,7 +1270,7 @@ func _punish(d: float) -> bool:
 	return move_ready(d)
 
 
-func _use_best_move() -> bool:
+func _use_best_move(d: float) -> bool:
 	var avail: Array = f.moves.filter(
 		func(id):
 			return (

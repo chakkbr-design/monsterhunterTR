@@ -291,7 +291,7 @@ func _fx_energy() -> void:
 	ab.set_weather_rounds("hail")
 	for i in 30:
 		fx._process(0.1)
-	check(fx.energy and fx.rig != null, "energia usa o WeatherRig compartilhado")
+	check(fx.rig != null, "energia usa o WeatherRig compartilhado")
 	var r: Rect2 = a.rect
 	var want := r.size * 0.5 + Vector2(BattleWeatherFx.STANDS_MARGIN, BattleWeatherFx.STANDS_MARGIN)
 	check(fx.rig.area.is_equal_approx(want), "cobre a quadra e a arquibancada (%s)" % fx.rig.area)
@@ -338,7 +338,7 @@ func _fx_energy() -> void:
 	v.abilities.set_weather_rounds("rain")
 	for i in 20:
 		vfx._process(0.1)
-	check(vfx.energy and vfx._ground == null, "quadra voxel: sem a placa lisa por cima do piso")
+	check(vfx._ground == null, "quadra voxel: sem a placa lisa por cima do piso")
 	check(float(vfx.published.get("rain_wet", 0.0)) > 0.4, "quadra voxel: piso molhado pelo global")
 	v.free()
 	we.free()

@@ -241,7 +241,7 @@ func _weather_chain(tb: Node) -> void:
 	for i in 150:
 		await process_frame
 	var fx := a.get_node_or_null("WeatherFx") as BattleWeatherFx
-	check(fx != null and fx.energy and fx.light_owner == st, "chuva do treino acha o estádio")
+	check(fx != null and fx.light_owner == st, "chuva do treino acha o estádio")
 	if fx == null or fx.rig == null:
 		return
 	var want := st.weather_area().size * 0.5
