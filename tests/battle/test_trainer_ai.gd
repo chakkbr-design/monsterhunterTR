@@ -63,6 +63,8 @@ func _still2(mine: Array, theirs: Array, seed_n := 3, extra := {}) -> Node:
 		f.controller = "none"
 		f.hp = f.max_hp
 		f.clear_status()
+		for k in f.stages:
+			f.stages[k] = 0  # golpes da entrada (sorteio sem semente) não mudam o matchup
 	return a
 
 
