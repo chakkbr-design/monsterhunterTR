@@ -17,9 +17,15 @@ mkdir -p "$OUT"
 abs() { if command -v cygpath >/dev/null; then cygpath -m "$(realpath "$1")"; else realpath "$1"; fi; }
 CFG_ABS=$(abs "$CFG")
 OUT_ABS=$(abs "$OUT")
-"$GODOT" --path . --resolution 1080x1920 --write-movie "$OUT_ABS/raw.avi" --fixed-fps "$FPS" \
+# Movie Maker grava no tamanho de janela do projeto (ignora --resolution): um override.cfg só durante a
+# gravação põe o viewport em 1080x1920 (a janela pode passar da tela; a imagem sai inteira).
+if [ -e override.cfg ]; then echo "override.cfg já existe na raiz; tire antes de gravar" >&2; exit 1; fi
+trap 'rm -f override.cfg' EXIT
+printf '[display]\n\nwindow/size/viewport_width=1080\nwindow/size/viewport_height=1920\n' >override.cfg
+"$GODOT" --path . --write-movie "$OUT_ABS/raw.avi" --fixed-fps "$FPS" \
 	res://ui/training/training_battle.tscn -- \
 	--training-config="$CFG_ABS" --clean-hud --portrait=1080x1920 --quit-at-end \
 	--match-file="$OUT_ABS/match.json" < /dev/null
+rm -f override.cfg
 "$PY" tools/video/make_vertical.py "$OUT/raw.avi" "$OUT/match.json" "$OUT/video.mp4"
 echo "Video: $OUT/video.mp4"
