@@ -138,6 +138,10 @@ const MIN_STATUS_COOLDOWN_VIVA := 8.0
 const STRONG_BP := 70.0
 const STRONG_BP_SPAN := 80.0
 const GLOBAL_COOLDOWN := 1.0
+## Especiais fortes (poder 80+) que saem do corpo carregam um pouco mais: a carga aparece.
+const STRONG_SPECIAL_CHARGE := 0.4
+const STRONG_SPECIAL_POWER := 80.0
+const STRONG_SPECIAL_KINDS := ["projectile", "homing", "stream"]
 const PREPARE_BY_KIND := {
 	"dash": 0.18,
 	"arc": 0.15,
@@ -174,9 +178,14 @@ static func prepare_time(mv: Dictionary) -> float:
 	var kind := String(mv.get("kind", ""))
 	if kind in ["beam", "aoe_self", "aoe_target"]:
 		return 0.0
-	if mv.has("windup"):
-		return float(mv.windup)
-	return float(PREPARE_BY_KIND.get(kind, 0.15))
+	var t := float(mv.windup) if mv.has("windup") else float(PREPARE_BY_KIND.get(kind, 0.15))
+	if (
+		kind in STRONG_SPECIAL_KINDS
+		and String(mv.get("category", "")) == "special"
+		and float(mv.get("power", 0.0)) >= STRONG_SPECIAL_POWER
+	):
+		t += STRONG_SPECIAL_CHARGE
+	return t
 
 
 static func cooldown(mv: Dictionary) -> float:
