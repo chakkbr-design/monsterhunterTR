@@ -59,7 +59,7 @@ func spot(side: int, n: Node3D, walkers: Array, taken: Array) -> Variant:
 	var r: Rect2 = arena.rect
 	var depth := absf(dir.x) * r.size.x * 0.5 + absf(dir.z) * r.size.y * 0.5
 	var c: Vector3 = arena.to_global(Vector3(r.get_center().x, 0, r.get_center().y))
-	var ideal: Vector3 = c + dir * (depth + OUT) - lat * BattleArena.TRAINER_SIDE
+	var ideal: Vector3 = c + dir * (depth + OUT) - lat * float(arena.TRAINER_SIDE)
 	var inner := r.grow(OUT - 0.01)
 	var outer := r.grow(OUT + RING)
 	var cands: Array = []
