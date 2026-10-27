@@ -1551,7 +1551,8 @@ func step(dt: float) -> void:
 		return
 	_visual_step(dt)
 	_update_camera(raw)
-	var cards := state != "opening"  # na abertura do treino os cartões só entram com a luta
+	# na abertura do treino os cartões só entram com a luta; no painel de EXP do fim eles somem
+	var cards := not state in ["opening", "results"]
 	hud.refresh(
 		player if cards else null,
 		enemy if _revealed else null,  # o cartão do adversário só depois da bola
