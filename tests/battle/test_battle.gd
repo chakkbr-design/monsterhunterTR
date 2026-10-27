@@ -202,6 +202,12 @@ func _capture() -> void:
 	_done(r)
 
 
+## Fora da trava de troca (BattleArena.switch_locked: começo da luta e logo depois de outra troca).
+func _open(a: Node) -> void:
+	a.fight_clock = maxf(float(a.fight_clock), float(a.SWITCH_OPEN))
+	a.switch_lock = 0.0
+
+
 func _swap() -> void:
 	var party := [Mon.create("charmander", 10), Mon.create("squirtle", 10)]
 	var a := _arena(party, [Mon.create("pidgey", 5)], {"seed": 5, "battle_size": 1})
@@ -209,6 +215,7 @@ func _swap() -> void:
 	a.player.hp = 7
 	a.player.mon.hp = 7
 	var old: BattleFighter = a.player
+	_open(a)
 	check(a.swap(), "troca de mon")
 	check(not a.swap(), "troca tem cooldown")
 	_next_round(a)  # a troca sai no começo da rodada
@@ -480,10 +487,12 @@ func _control_swap() -> void:
 	]
 	var b := _arena(party, [Mon.create("rattata", 12)], {"seed": 4})
 	_run(b, 1.3)
+	_open(b)
 	check(b.send_in(2, true), "pede a troca do aliado")
 	_next_round(b)
 	check(b.ally.mon == party[2], "escolhe da party quem entra como aliado")
 	_run(b, 1.1)
+	_open(b)
 	check(b.send_in(1), "pede a troca do controlado")
 	_next_round(b)
 	check(

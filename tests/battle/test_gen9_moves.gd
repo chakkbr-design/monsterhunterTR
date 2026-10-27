@@ -435,6 +435,12 @@ func _field_moves() -> void:
 	a.free()
 
 
+## Fora da trava de troca (BattleArena.switch_locked: começo da luta e logo depois de outra troca).
+func _open(a: Node) -> void:
+	a.fight_clock = maxf(float(a.fight_clock), float(a.SWITCH_OPEN))
+	a.switch_lock = 0.0
+
+
 func _priority() -> void:
 	var a := _still()
 	var p: BattleFighter = a.player
@@ -625,12 +631,14 @@ func _switch_moves() -> void:
 	_ready_all(p)
 	p.stages.atk = 2
 	p.crit_stage = 1
+	_open(a)
 	check(a.moves.use(p, "baton_pass"), "Baton Pass")
 	_run(a, 0.5)
 	var q: BattleFighter = a.player
 	check(q != p and q.mon.species.to_lower() == "squirtle", "Baton Pass troca com o reserva")
 	check(int(q.stages.atk) == 2 and q.crit_stage == 1, "Baton Pass passa os estágios")
 	q.controller = "none"
+	_open(a)
 	a.moves.hit(q, a.enemy, Dex.move("u_turn"), Vector3.FORWARD)
 	_run(a, 0.6)
 	check(
@@ -640,6 +648,7 @@ func _switch_moves() -> void:
 	check(int(a.player.stages.atk) == 0, "U-turn não passa estágios")
 	a.player.controller = "none"
 	var e: BattleFighter = a.enemy
+	_open(a)
 	a.moves.hit(e, a.player, Dex.move("u_turn"), Vector3.BACK)
 	_run(a, 0.6)
 	check(

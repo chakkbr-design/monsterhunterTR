@@ -228,6 +228,7 @@ func _status_on_switch() -> void:
 			out.sleep_turns = 1
 		var back: BattleFighter = null
 		for k in 6:
+			_open(a)
 			var nf: BattleFighter = a.switch_out(a.player)
 			if nf == null:
 				break
@@ -262,12 +263,14 @@ func _paralysis_secs() -> void:
 	# A luta só conta o tempo de campo (a entrada e as pausas de impacto não contam).
 	var left := f.par_t
 	check(left > 3.0 and left < 9.0, "contou o tempo de campo (%.2f)" % left)
+	_open(a)
 	var nf: BattleFighter = a.switch_out(f)
 	check(is_equal_approx(f.mon.par_left, left), "guardou o que falta (%.2f)" % f.mon.par_left)
 	var m: Mon = f.mon
 	for k in 6:
 		if nf == null or nf.mon == m:
 			break
+		_open(a)
 		nf = a.switch_out(nf)
 	check(nf != null and nf.mon == m and nf.status == "paralysis", "voltou paralisado")
 	if nf:

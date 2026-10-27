@@ -54,6 +54,12 @@ func _run(a: Node, secs: float) -> void:
 
 
 ## Roda até a luta começar (o treinador tem a apresentação mais longa) e mais um pouco.
+## Fora da trava de troca (BattleArena.switch_locked: começo da luta e logo depois de outra troca).
+func _open(a: Node) -> void:
+	a.fight_clock = maxf(float(a.fight_clock), float(a.SWITCH_OPEN))
+	a.switch_lock = 0.0
+
+
 func _fight(a: Node) -> void:
 	var t := 0.0
 	while a.state != "fight" and t < 10.0:
@@ -158,6 +164,7 @@ func _pinch() -> void:
 	var sm: Mon = slow.mon
 	slow.hp = int(slow.max_hp / 4.0)
 	var hp_out := slow.hp
+	_open(sw)
 	check(sw.send_in(1), "troca para o segundo da party")
 	sw.step(DT)
 	check(
@@ -464,6 +471,7 @@ func _intimidate_doubles() -> void:
 		a.ally if a.abilities.ability_of(a.player) == "intimidate" else a.player
 	)
 	var as_ally: bool = sub == a.ally
+	_open(a)
 	if not as_ally:
 		check(a.send_in(2), "troca do controlado pelo Ekans")
 	else:
