@@ -56,6 +56,7 @@ func _still(me := "charmander", foe := "rattata", moves: Array = []) -> Node:
 	_run(a, 1.5)
 	for f in [a.player, a.enemy]:
 		f.hp = f.max_hp
+		f.pp_max = f.pp_base
 		f.clear_status()
 		f.confusion_t = 0.0
 		f.evasion_t = 0.0

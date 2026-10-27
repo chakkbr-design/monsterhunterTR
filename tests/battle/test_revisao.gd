@@ -49,6 +49,7 @@ func _still(me := "charmander", foe := "slowbro") -> Node:
 	_run(a, 1.5)
 	for f in [a.player, a.enemy]:
 		f.hp = f.max_hp
+		f.pp_max = f.pp_base
 		f.clear_status()
 		f.move_cd.clear()
 		f.gcd_t = 0.0

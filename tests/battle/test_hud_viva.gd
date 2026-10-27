@@ -13,7 +13,7 @@ func _initialize() -> void:
 	var a: Node = _arena(
 		[Mon.create("charmander", 10), Mon.create("squirtle", 10)],
 		[Mon.create("pidgey", 10)],
-		{"seed": 7}
+		{"seed": 7, "loud_callouts": true}  # todos os textos (o filtro quieto tem teste próprio)
 	)
 	for i in 80:
 		a.step(DT)

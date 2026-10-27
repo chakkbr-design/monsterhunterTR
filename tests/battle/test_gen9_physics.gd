@@ -301,9 +301,11 @@ func _push_and_crash() -> void:
 	)
 	check(t.position.x <= r.end.x - 0.4, "não atravessa a cerca")
 	a.free()
-	# Caixa no campo.
+	# Caixa no campo: o tranco simples (sem BattleDestruction, que tem o próprio teste).
 	var b := _arena(
-		[_mon("pidgey", 30)], [_mon("rattata", 30)], {"seed": 12, "field_objects": true}
+		[_mon("pidgey", 30)],
+		[_mon("rattata", 30)],
+		{"seed": 12, "field_objects": true, "destruction": false}
 	)
 	var tb: BattleFighter = b.enemy
 	if not b.field.objects.is_empty():

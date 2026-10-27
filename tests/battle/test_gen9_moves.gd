@@ -194,6 +194,7 @@ func _still(me := "charmander", foe := "rattata", lv := 30, foe_lv := 30) -> Nod
 	_run(a, 1.5)
 	for f in [a.player, a.enemy]:
 		f.hp = f.max_hp
+		f.pp_max = f.pp_base
 		f.clear_status()
 		f.confusion_t = 0.0
 		f.trap_t = 0.0
@@ -206,6 +207,7 @@ func _still(me := "charmander", foe := "rattata", lv := 30, foe_lv := 30) -> Nod
 
 
 func _ready_all(f: BattleFighter) -> void:
+	f.pp_max = f.pp_base  # energia cheia
 	f.move_cd.clear()
 	f.gcd_t = 0.0
 	f.stun_t = 0.0
@@ -926,5 +928,6 @@ func _ai_fight(i: int) -> void:
 		t += DT
 	print("  %s x %s: %.1f s, golpes %s" % [m[0], m[2], t, str(used.keys())])
 	check(a.state == "done", "luta IA %s x %s termina" % [m[0], m[2]])
-	check(used.size() >= 4, "IA usa vários golpes novos (%d)" % used.size())
+	# Escolha suave do modo de energia: o melhor golpe sai quase sempre, os outros às vezes.
+	check(used.size() >= 2, "IA usa mais de um golpe (%d)" % used.size())
 	a.free()

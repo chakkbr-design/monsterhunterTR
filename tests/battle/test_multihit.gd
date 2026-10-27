@@ -93,6 +93,7 @@ func _arena() -> Node:
 func _reset(a: Node) -> void:
 	for f in [a.player, a.enemy]:
 		f.hp = f.max_hp
+		f.pp_max = f.pp_base
 		f.clear_status()
 		f.confusion_t = 0.0
 		f.trap_t = 0.0

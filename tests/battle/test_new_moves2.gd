@@ -126,6 +126,7 @@ func _still(me := "charmander", foe := "slowbro", lv := 30, foe_lv := 40) -> Nod
 	_run(a, 1.5)
 	for f in [a.player, a.enemy]:
 		f.hp = f.max_hp
+		f.pp_max = f.pp_base
 		f.clear_status()
 		f.confusion_t = 0.0
 		f.trap_t = 0.0
@@ -138,6 +139,7 @@ func _still(me := "charmander", foe := "slowbro", lv := 30, foe_lv := 40) -> Nod
 
 
 func _ready_all(f: BattleFighter) -> void:
+	f.pp_max = f.pp_base  # energia cheia
 	f.move_cd.clear()
 	f.gcd_t = 0.0
 	f.stun_t = 0.0
