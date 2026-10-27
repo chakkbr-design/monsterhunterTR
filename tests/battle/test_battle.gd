@@ -327,6 +327,8 @@ func _items() -> void:
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.ally.controller = "none"
+	a.player.controller = "none"  # ninguém derruba o Pidgey enquanto a bolsa é testada
+	a.enemy.immortal = true
 	var p: BattleFighter = a.player
 	check(
 		a.battle_items() == ["antidote", "potion", "revive"],

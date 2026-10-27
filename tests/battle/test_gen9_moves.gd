@@ -629,6 +629,8 @@ func _switch_moves() -> void:
 	for f in a.fighters:
 		f.controller = "none"
 	_run(a, 1.5)
+	for f in a.fighters:
+		f.immortal = true  # o U-turn com +2 não derruba ninguém (a troca é o teste)
 	var p: BattleFighter = a.player
 	_ready_all(p)
 	p.stages.atk = 2
