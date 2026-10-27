@@ -927,6 +927,9 @@ func exact_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dir: 
 	if sp == "ohko" and not target.alive():
 		target.popup("ONE-HIT KO!", Color(1, 0.55, 0.3), 1.2, 0.8, "crit")
 	arena.note_hit(user, target, mv, amount, hp_before)
+	var tel = arena.get("telemetry")
+	if tel:
+		tel.hit(user, target, mv, amount, hp_before, false, eff)  # OHKO, Metal Burst, Endeavor...
 	if amount >= hp_before and arena.has_method("on_knocked_out"):
 		arena.on_knocked_out(user, target)
 	st(target).hurt_t = now
