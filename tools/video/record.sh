@@ -17,7 +17,7 @@ mkdir -p "$OUT"
 abs() { if command -v cygpath >/dev/null; then cygpath -m "$(realpath "$1")"; else realpath "$1"; fi; }
 CFG_ABS=$(abs "$CFG")
 OUT_ABS=$(abs "$OUT")
-"$GODOT" --path . --write-movie "$OUT_ABS/raw.avi" --fixed-fps "$FPS" \
+"$GODOT" --path . --resolution 1080x1920 --write-movie "$OUT_ABS/raw.avi" --fixed-fps "$FPS" \
 	res://ui/training/training_battle.tscn -- \
 	--training-config="$CFG_ABS" --clean-hud --portrait=1080x1920 --quit-at-end \
 	--match-file="$OUT_ABS/match.json" < /dev/null
