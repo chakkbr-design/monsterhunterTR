@@ -591,9 +591,16 @@ func _band(cam: Camera3D) -> Array:
 	var sz: Vector2 = vp.get_visible_rect().size if vp else Vector2(1152, 648)
 	var rows := 2 if int(arena.get("_battle_size")) >= 2 else 1
 	var top_px := BattleHUD.top_band(rows) + TOP_PAD
+	var bot := FRAME_BOT
+	# Vídeo vertical (opts.frame_band = [topo, baixo], frações da tela): o HUD do vídeo cobre essas
+	# faixas (tools/video/make_vertical.py), e a luta fica no meio.
+	var band = arena.get("opts").get("frame_band") if arena.get("opts") is Dictionary else null
+	if band is Array and band.size() == 2:
+		top_px = float(band[0]) * sz.y
+		bot = float(band[1])
 	var t := tan(deg_to_rad(FOV) * 0.5)
 	var ft := clampf(1.0 - 2.0 * top_px / maxf(sz.y, 1.0), 0.1, 1.0)
-	var fb := 1.0 - 2.0 * FRAME_BOT
+	var fb := 1.0 - 2.0 * bot
 	return [t * ft, t * fb, t * (fb - ft) * 0.5, t * sz.x / maxf(sz.y, 1.0) * 0.92]
 
 

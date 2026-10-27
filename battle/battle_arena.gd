@@ -130,6 +130,9 @@ var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## relógio de rodadas (fim de turno, troca e item do treinador)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
 var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta para a bateria
+## opts.clean_hud (treino, "No HUD"): sem cartões, botões, log, avisos nem barra de vida na cabeça;
+## ficam só os números de dano e os efeitos da luta (para gravar vídeo com outro HUD por cima).
+var clean_hud := false
 ## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
 ## câmera lenta no golpe que nocauteia e todo mundo parado na troca.
 var director: BattleDirector = null
@@ -263,6 +266,8 @@ var _evo_check_t := 0.0
 func _physics_process(delta: float) -> void:
 	if not manual:
 		step(delta)
+		if telemetry:
+			telemetry.frame(delta)
 
 
 func _notification(what: int) -> void:
@@ -334,8 +339,10 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		load("res://core/controls.gd").register()
 	_setup_court(o)
 	_build()
+	clean_hud = bool(o.get("clean_hud", false))
 	if hud:
 		hud.quiet = quiet_callouts()
+		hud.clean = clean_hud
 	BattleWalkOut.run(self, o)  # no mundo: jogador e treinador saem da quadra
 	_setup_stands()
 	terrain.setup()
