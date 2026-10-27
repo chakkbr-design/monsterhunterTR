@@ -311,7 +311,9 @@ func emitter(
 	if fol != null:
 		p.follow = fol
 		p.carry = float(o.get("carry", 0.0))
-	var deps: Array = _scope
+	var deps: Array = _scope.duplicate()
+	if fol != null:
+		deps.append(weakref(fol))
 	p.spawn = func(pp: Fx3DParticles) -> void:
 		var q: Vector3 = at
 		if where.is_valid():

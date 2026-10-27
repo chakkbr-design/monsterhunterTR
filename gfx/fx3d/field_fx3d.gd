@@ -134,6 +134,7 @@ func screen(side: int, kind: String, secs: float) -> void:
 	var col: Color = SCREEN_COLS.get(kind, Color(0.8, 0.9, 1.0))
 	for f in _side(side):
 		if kind == "tailwind":
+			fx.scope([f])
 			var e := fx.emitter(
 				Vector3.ZERO,
 				minf(secs, 2.0),
@@ -433,6 +434,7 @@ func weather(kind: String, _secs: float) -> void:
 func terrain(kind: String, secs: float) -> void:
 	var col := Color(0.5, 1.0, 0.5) if kind == "grassy" else Color(1.0, 0.7, 0.95)
 	for f in _all():
+		fx.scope([f])
 		fx.emitter(
 			Vector3.ZERO,
 			minf(secs, 1.5),
@@ -462,6 +464,7 @@ func gravity(_secs: float) -> void:
 			0.6,
 			{"inner": 0.85}
 		)
+		fx.scope([f])
 		fx.emitter(
 			Vector3.ZERO,
 			0.6,
