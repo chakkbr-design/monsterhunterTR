@@ -158,9 +158,9 @@ func _review_fx() -> void:
 	e.controller = "none"
 	p.apply_status("burn")
 	_run(a, 0.1)
-	var sfx: FxSprite = p._status_fx
+	var sfx: Node3D = p._status_fx
 	check(sfx != null, "efeito de queimadura no lutador")
-	if sfx:
+	if sfx is FxSprite:
 		var base := p.to_global(p._status_fx_off)
 		var cam: Vector3 = a._cam.global_position
 		check(
@@ -169,10 +169,13 @@ func _review_fx() -> void:
 		)
 	a.moves.deliver(p, Dex.move("flamethrower"))
 	_run(a, 0.2)
-	var jets: Array = a.vfx.nodes.filter(
-		func(n): return n is BeamFx and n.name.begins_with("FlameJet")
-	)
-	check(jets.size() == 1, "jato do Lança-chamas")
+	if a.vfx.use3d():
+		check(a.vfx.nodes.any(func(n): return n is Fx3DParticles), "Lança-chamas em 3D")
+	else:
+		var jets: Array = a.vfx.nodes.filter(
+			func(n): return n is BeamFx and n.name.begins_with("FlameJet")
+		)
+		check(jets.size() == 1, "jato do Lança-chamas")
 	p.take_damage(1, Vector3.FORWARD, 1.0, {"source": e})
 	_run(a, DT)
 	p.take_damage(p.hp, Vector3.FORWARD, 1.0, {"source": e})

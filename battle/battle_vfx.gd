@@ -514,6 +514,8 @@ func heal(f: BattleFighter) -> void:
 		fx3d.scope([f])
 		field3d.heal(f)
 		return
+	if not is_instance_valid(f) or not f.is_inside_tree():
+		return
 	show.ctx = [f]
 	show.heal(f)
 
