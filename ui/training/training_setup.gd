@@ -95,7 +95,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = _make_theme()
 	if not change_scene.is_valid():
-		change_scene = func(path: String): get_tree().change_scene_to_file(path)
+		change_scene = _default_change
 	cfg = Cfg.current if not Cfg.current.is_empty() else Cfg.load_config()
 	Cfg.current = cfg
 	Cfg.block_pause_menu(get_tree(), true)
@@ -378,9 +378,17 @@ func start() -> void:
 		return
 	Cfg.current = cfg
 	Cfg.save_config(cfg)
-	if has_node("/root/Loading"):
-		get_node("/root/Loading").begin_now("scene")  # the battle scene lets go once the stage is built
 	change_scene.call(BATTLE_SCENE)
+
+
+## Troca de cena de verdade: para a luta, a tela de load entra antes e a cena carrega por trás dela
+## (a luta solta a tela quando o estádio está montado).
+func _default_change(path: String) -> void:
+	var ld := get_node_or_null("/root/Loading")
+	if ld and path == BATTLE_SCENE:
+		ld.go_to_scene(path)
+	else:
+		get_tree().change_scene_to_file(path)
 
 
 ## Volta ao título guardando a config (ela volta igual na próxima vez).

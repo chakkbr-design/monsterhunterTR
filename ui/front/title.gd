@@ -203,7 +203,7 @@ func _ready() -> void:
 	if game == null:
 		game = get_node_or_null("/root/Game")
 	if not change_scene.is_valid():
-		change_scene = func(path: String): get_tree().change_scene_to_file(path)
+		change_scene = _default_change
 	settings = Settings.load_cfg(settings_path)
 	Settings.apply(settings)
 	if text_speed < 0.0:
@@ -745,16 +745,21 @@ func _continue() -> void:
 	_leave()
 
 
+## Troca de cena de verdade: para o mundo, a tela de load entra antes e a cena e o assado voxel de
+## Pallet carregam numa thread por trás dela (RouteWorld solta a tela quando monta).
+func _default_change(path: String) -> void:
+	var ld := get_node_or_null("/root/Loading")
+	if ld and path == WORLD_SCENE:
+		ld.go_to_scene(path, [VoxelZoneBake.res_path("pallet_town")])
+	else:
+		get_tree().change_scene_to_file(path)
+
+
 func _leave(scene := WORLD_SCENE) -> void:
 	state = "leaving"
 	var tw := create_tween()
 	tw.tween_property(_fade, "color:a", 1.0, fade_time)
-	tw.tween_callback(
-		func():
-			if scene == WORLD_SCENE and has_node("/root/Loading"):
-				get_node("/root/Loading").begin_now("scene")  # RouteWorld lets go once built
-			change_scene.call(scene)
-	)
+	tw.tween_callback(func(): change_scene.call(scene))
 
 
 # --- Entrada ---

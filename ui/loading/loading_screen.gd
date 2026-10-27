@@ -8,6 +8,7 @@ extends CanvasLayer
 ##   Loading.begin_now("scene")   # aparece já (troca de cena, trabalho que bloqueia o quadro)
 ##   Loading.end("zone")          # some com fade (fica no mínimo MIN_SHOW na tela, sem piscar)
 ##   Loading.end_later("scene", 3)  # igual, depois de 3 quadros (a cena nova ainda está montando)
+##   Loading.go_to_scene(path, [extra])  # tela já cheia, carrega a cena (e extras) numa thread e troca
 ## Chaves diferentes se somam: a tela some quando todas terminaram.
 
 signal shown
@@ -34,6 +35,7 @@ var _alpha := 0.0
 var _shown_for := 0.0
 var _face: Control
 var _cells: Array = []  ## [Color, Rect2] da bola, centrada em (0, 0)
+var _keep: Array = []  ## recursos pré-carregados por go_to_scene (soltos quando a tela some)
 
 
 func _ready() -> void:
@@ -53,6 +55,46 @@ func begin(key := "load", after := -1.0) -> void:
 	_holds[key] = {"t": 0.0, "delay": delay if after < 0.0 else after, "left": -1}
 	if _holds[key].delay <= 0.0:
 		_show()
+
+
+## Troca de cena sem travar antes da tela (Caio, 2026-10-27): a tela entra cheia (sem fade), espera
+## dois quadros para ela estar desenhada, carrega a cena e os `extras` (ex.: o assado voxel da zona)
+## numa thread enquanto a bola anima, e só então troca. A cena nova solta a chave "scene" quando
+## termina de montar (end_later); os extras ficam guardados até a tela sumir, para o load() da cena
+## achar tudo no cache. Sem tela (headless) carrega direto.
+func go_to_scene(path: String, extras: Array = []) -> void:
+	begin_now("scene")
+	_alpha = 1.0
+	if _face:
+		_face.modulate.a = 1.0
+		_face.visible = true
+		_face.queue_redraw()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var threaded := DisplayServer.get_name() != "headless"
+	var wanted: Array = [path]
+	for e in extras:
+		if ResourceLoader.exists(String(e)):
+			wanted.append(String(e))
+	if threaded:
+		for w in wanted:
+			ResourceLoader.load_threaded_request(w)
+		for w in wanted:
+			while (
+				ResourceLoader.load_threaded_get_status(w) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+			):
+				await get_tree().process_frame
+	var scene: PackedScene = null
+	for w in wanted:
+		var r: Resource = ResourceLoader.load_threaded_get(w) if threaded else load(w)
+		if w == path:
+			scene = r as PackedScene
+		elif r:
+			_keep.append(r)
+	if scene:
+		get_tree().change_scene_to_packed(scene)
+	else:
+		get_tree().change_scene_to_file(path)
 
 
 ## Mostra a tela já, sem esperar o `delay`.
@@ -115,6 +157,7 @@ func _process(delta: float) -> void:
 			_shown = false
 			if _face:
 				_face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_keep.clear()
 			hidden.emit()
 	_alpha = move_toward(_alpha, 1.0 if _shown else 0.0, delta / FADE_S)
 	if _face:
