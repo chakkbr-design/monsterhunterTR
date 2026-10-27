@@ -9,6 +9,7 @@ var _fails := 0
 var game: Node
 var w: Node3D
 var p: CharacterBody3D
+var home: Vector3  ## tile de partida (start de Pallet)
 
 
 func _initialize() -> void:
@@ -48,6 +49,7 @@ func _run() -> void:
 		await physics_frame
 	await frames(10)
 	check(p.grid_active(), "Pallet on the grid")
+	home = p.global_position
 	await _wild("Pallet (grid)", true)
 	await _trainer()
 	await _cut_short()
@@ -77,7 +79,7 @@ func _end(arena) -> void:
 func _outside(arena, n: Node3D, side: int) -> bool:
 	var l: Vector3 = arena.to_local(n.global_position)
 	var dir: Vector3 = -arena.axis if side == 0 else arena.axis
-	var r: Rect2 = arena.rect.grow(BattleWalkOut.OUT - 0.05)
+	var r: Rect2 = arena.rect.grow(load("res://battle/battle_walk_out.gd").OUT - 0.05)
 	return not r.has_point(Vector2(l.x, l.z)) and Vector3(l.x, 0, l.z).dot(dir) > 0.0
 
 
@@ -109,7 +111,11 @@ func _wild(where: String, grid: bool) -> void:
 
 
 func _trainer() -> void:
-	var t := WorldTrainer.new()
+	# De volta ao start: a luta selvagem deixa o jogador na beira sul, sem lugar atrás dele.
+	p.global_position = home
+	await frames(5)
+	var trainer_script = load("res://world/trainer.gd")
+	var t = trainer_script.new()
 	t.trainer_id = "test_youngster"
 	t.sight = 0.0
 	w.add_child(t)
@@ -117,7 +123,7 @@ func _trainer() -> void:
 	await frames(3)
 	t.sight = 0.0
 	var arena = await _start(
-		WorldTrainer.build_party(Dex.trainer("test_youngster")),
+		trainer_script.build_party(Dex.trainer("test_youngster")),
 		{"kind": "trainer", "trainer_id": "test_youngster", "speed": 1.0, "autoplay": true}
 	)
 	check(arena != null, "trainer battle started")
