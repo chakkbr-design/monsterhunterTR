@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_biomes.gd
 ## Biomas do modo de energia (BattleBiomes): montagem dos cinco (chão, colunas, montes, lava, lama,
-## nada nas entradas, sem nó no fast_sim), sorteio só no modo de energia (VGC nunca), círculo de runas
+## nada nas entradas, sem nó no fast_sim), sorteio, círculo de runas
 ## (energia do lado sozinho, disputa, Psíquico/Fantasma), montanha (neve, avalanche, neve funda, Fogo
 ## derrete), vulcão (lava queima e empurra, Água esfria, erupção, Fogo recupera perto), caverna (escuro,
 ## luz de Elétrico/Fogo e cristal, Fantasma/Sombrio), pântano (neblina, Veneno/Terra), a IA de cada um,
@@ -200,17 +200,6 @@ func _draws() -> void:
 		a.free()
 	var bio := seen.keys().filter(func(k): return k in B.LIST)
 	check(bio.size() >= 2, "energia sorteia biomas (%s)" % [seen.keys()])
-	for s in range(1, 13):
-		var v := _two(200 + s, "", "pikachu", "rattata", {"battle_mode": "vgc"})
-		check(not v.terrain.scenario in BattleTerrain.ENERGY_ONLY, "VGC nunca sorteia bioma")
-		check(not v.terrain.biomes.on, "VGC sem bioma")
-		v.free()
-	var w := _two(7, "vulcao", "pikachu", "rattata", {"battle_mode": "vgc"})
-	check(
-		not w.terrain.scenario in BattleTerrain.ENERGY_ONLY, "VGC pedido no vulcão: sorteia outro"
-	)
-	check(w.terrain.biomes.lava.is_empty(), "VGC: sem lava")
-	w.free()
 
 
 func _rune() -> void:
@@ -512,7 +501,6 @@ func _picker() -> void:
 	for sc in B.LIST:
 		check(Cfg.SCENARIOS.has(sc) and Cfg.SCENARIO_NAMES.has(sc), "%s no seletor do treino" % sc)
 		check(BattleTerrain.SCENARIOS.has(sc), "%s nos cenários" % sc)
-		check(sc in BattleTerrain.ENERGY_ONLY, "%s só no modo de energia" % sc)
 	var cfg := Cfg.default_config()
 	cfg.scenario = "vulcao"
 	check(Cfg.arena_opts(cfg, Vector3.ZERO).get("scenario") == "vulcao", "vai nas opts da arena")

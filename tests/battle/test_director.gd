@@ -1,9 +1,8 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_director.gd
-## Câmera de ação do treino (BattleDirector, modo de energia): enquadra os Pokémon mais perto que a
+## Câmera de ação do treino (BattleDirector): enquadra os Pokémon mais perto que a
 ## câmera antiga, hit-stop e câmera lenta só no nocaute de verdade (golpe fatal que o alvo desvia não
-## dá zoom), todo mundo parado na troca (a energia de ninguém muda) e nada disso no VGC nem no
-## fast_sim.
+## dá zoom), todo mundo parado na troca (a energia de ninguém muda) e nada disso no fast_sim.
 ## The camera never leaves a fighter it frames under the top HUD cards (BattleHUD.top_band): from
 ## the intro to the knockout, in doubles (campo) and singles (praia), on a 16:9 screen; and no hill,
 ## tree or boulder stays solid between it and a fighter (they fade, BattleDirector.FADE_ALPHA).
@@ -31,7 +30,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 
-func _cfg(mode: String, size := 2, scenario := "") -> Dictionary:
+func _cfg(size := 2, scenario := "") -> Dictionary:
 	Cfg.path = "user://test_director_cfg.json"
 	var c := Cfg.default_config()
 	var a: Array = []
@@ -45,7 +44,6 @@ func _cfg(mode: String, size := 2, scenario := "") -> Dictionary:
 	c.speed = 2.0
 	c.seed = 11
 	c.battle_size = size
-	c.battle_mode = mode
 	c.scenario = scenario
 	return c
 
@@ -167,7 +165,6 @@ func _ko_zoom() -> void:
 			"kind": "trainer",
 			"battle_size": 1,
 			"speed": 1.0,
-			"battle_mode": "energy",
 			"action_cam": true,
 			"autoplay": true,
 			"no_rewards": true,
@@ -213,7 +210,7 @@ func _ko_zoom() -> void:
 
 func _run() -> void:
 	await _ko_zoom()
-	Cfg.current = _cfg("energy")
+	Cfg.current = _cfg()
 	var tb: Node = load(SCENE).instantiate()
 	root.add_child(tb)
 	await process_frame
@@ -274,7 +271,7 @@ func _run() -> void:
 	await process_frame
 
 	# Singles on another scenario: one row of cards, so a lower band.
-	Cfg.current = _cfg("energy", 1, "praia")
+	Cfg.current = _cfg(1, "praia")
 	tb = load(SCENE).instantiate()
 	root.add_child(tb)
 	await process_frame
@@ -294,15 +291,7 @@ func _run() -> void:
 	tb.queue_free()
 	await process_frame
 
-	Cfg.current = _cfg("vgc")
-	tb = load(SCENE).instantiate()
-	root.add_child(tb)
-	await process_frame
-	check(tb.arena.get("director") == null, "VGC: câmera antiga")
-	tb.queue_free()
-	await process_frame
-
-	var c := _cfg("energy")
+	var c := _cfg()
 	c["extra_opts"] = {"fast_sim": true}
 	Cfg.current = c
 	tb = load(SCENE).instantiate()

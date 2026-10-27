@@ -44,14 +44,14 @@ func _init(v: BattleVfx) -> void:
 	sig = MoveFx3DSig.new(self)
 
 
-## Liga só no modo de energia, com a arena na árvore e fora da bateria rápida.
+## Liga com a arena na árvore e fora da bateria rápida.
 func on() -> bool:
 	if not vfx.enabled or not is_instance_valid(arena) or not arena.is_inside_tree():
 		return false
 	var o = arena.get("opts")
 	if o is Dictionary and bool(o.get("fast_sim", false)):
 		return false
-	return arena.has_method("energy_on") and arena.energy_on()
+	return true
 
 
 func tick(dt: float) -> void:

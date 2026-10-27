@@ -3,8 +3,8 @@ extends SceneTree
 ## Cenários do treino (BattleTerrain + BattleTerrainAI): cenário sorteado e espalhado sem nada nas
 ## entradas, metades equilibradas, grama alta (esconde, energia de Grama, queima, chuva e sol), Elétrico
 ## na água, energia na água por tipo, Fogo na água, clima no lago, puxar para a água, derrubar do morro,
-## a IA do cenário e a quadra voxel do modo de energia (quantidades pela área, grade de 0,25 m, visual
-## voxel só fora do fast_sim, mesma luta com e sem visual, VGC intocado).
+## a IA do cenário e a quadra voxel (quantidades pela área, grade de 0,25 m, visual voxel só fora do
+## fast_sim, mesma luta com e sem visual).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -153,7 +153,7 @@ func _layout() -> void:
 	var ponds: int = b.terrain.obstacles.filter(func(o): return o.kind == "pond").size()
 	check(ponds == int(b.terrain.plan_for("lagoa").pond), "lagoa com %d lagos" % ponds)
 	b.free()
-	# Sem opts.terrain (VGC fora do treino): nada de cenário.
+	# Sem opts.terrain (fora do treino): nada de cenário.
 	var c := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], 3, {"terrain": false})
 	check(c.terrain.scenario == "" and not c.terrain.has_scenery(), "sem terreno, sem cenário")
 	c.free()
@@ -522,14 +522,13 @@ func _ai() -> void:
 	d.free()
 
 
-## Arena montada com a config do treino no modo `mode` (fora da árvore com `tree` false).
-func _mode_arena(mode: String, seed: int, extra := {}, tree := true) -> Node:
+## Arena montada com a config do treino (fora da árvore com `tree` false).
+func _mode_arena(seed: int, extra := {}, tree := true) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	if tree:
 		root.add_child(a)
 	var cfg := Cfg.default_config()
-	cfg.battle_mode = mode
 	var o := Cfg.arena_opts(cfg, Vector3.ZERO)
 	o.merge({"speed": 1.0, "seed": seed, "battle_size": 1}, true)
 	o.merge(extra, true)
@@ -566,18 +565,9 @@ func _layout_key(a: Node) -> String:
 
 
 func _voxel() -> void:
-	# Quantidades pela área: uma função só, 0 fica 0, VGC fica no plano.
+	# Quantidades pela área: uma função só, 0 fica 0.
 	check(T.scale_count(0, 4.0) == 0 and T.scale_count(1, 4.0) == 4, "scale_count 0 e 1")
 	check(T.scale_count(3, 1.0) == 3 and T.scale_count(2, 2.5) == 5, "scale_count arredonda")
-	for sc in ["campo", "lagoa", "pedreira", "misto"]:
-		var v := _mode_arena("vgc", 4, {"scenario": sc})
-		var vt: BattleTerrain = v.terrain
-		check(not vt.lattice and vt.count_k == 1.0, "VGC: sem grade, k = 1 (%s)" % sc)
-		check(v.rect.size == Cfg.ARENA, "VGC: quadra 24 x 14")
-		check(vt.plan_for(sc) == T.SCENARIOS[sc], "VGC: plano de %s sem escala" % sc)
-		check(vt.floor_node == null, "VGC: sem piso voxel")
-		check(v.get_node_or_null("ArenaQuad") != null, "VGC: quadra antiga")
-		v.free()
 	# Lago voxel: água redonda (elipse do WaterSurface) e o gelo é o do shader da água.
 	var po := {"pos": Vector3.ZERO, "r": 1.5, "r0": 1.5}
 	var pn := ArenaVoxels.pond(po, "lagoa")
@@ -594,7 +584,7 @@ func _voxel() -> void:
 	pn.free()
 	for sc in T.SCENARIOS.keys():
 		# Com visual (na árvore, sem fast_sim): cada coisa tem nó voxel e o piso é o ArenaFloor.
-		var a := _mode_arena("energy", 6, {"scenario": sc})
+		var a := _mode_arena(6, {"scenario": sc})
 		var t: BattleTerrain = a.terrain
 		check(t.lattice and t.count_k == 1.0 + 3.0 * T.COUNT_CURVE, "%s: grade, k pela área" % sc)
 		check(t.floor_node is ArenaFloor and t.floor_node.get_parent() == a, "%s: piso voxel" % sc)
@@ -617,7 +607,7 @@ func _voxel() -> void:
 		var st: int = a.rng.state
 		a.free()
 		# fast_sim (bateria): o mesmo cenário, o mesmo RNG da luta e nenhum nó.
-		var b := _mode_arena("energy", 6, {"scenario": sc, "fast_sim": true})
+		var b := _mode_arena(6, {"scenario": sc, "fast_sim": true})
 		var bt: BattleTerrain = b.terrain
 		check(_layout_key(b) == key, "%s: mesmo layout com e sem visual" % sc)
 		check(int(b.rng.state) == st, "%s: o visual não gasta o RNG da luta" % sc)
@@ -628,6 +618,6 @@ func _voxel() -> void:
 		check(made == 0 and bt.floor_node == null, "%s: fast_sim sem visual (%d nós)" % [sc, made])
 		b.free()
 		# A mesma semente monta o mesmo cenário.
-		var c := _mode_arena("energy", 6, {"scenario": sc, "fast_sim": true})
+		var c := _mode_arena(6, {"scenario": sc, "fast_sim": true})
 		check(_layout_key(c) == key, "%s: layout determinístico pela semente" % sc)
 		c.free()

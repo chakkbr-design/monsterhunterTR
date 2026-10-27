@@ -1,6 +1,6 @@
 class_name BattleProps
 extends RefCounted
-## Objetos vivos do cenário (só no modo de energia): árvore, Voltorb dormindo, arbusto de frutas e
+## Objetos vivos do cenário: árvore, Voltorb dormindo, arbusto de frutas e
 ## cristal. Quem cria é o BattleTerrain (terrain.props); ele chama os ganchos abaixo (setup, tick,
 ## golpe que caiu, tiro parado, raio) e o resto do jogo fala com ele por lá.
 ##
@@ -189,11 +189,9 @@ func _init(t) -> void:
 	arena = t.arena
 
 
-## Os objetos só existem no modo de energia (o VGC fica como está); opts.props: false desliga.
+## Objetos vivos ligados (opts.props: false desliga).
 func enabled() -> bool:
-	if not bool(arena.opts.get("props", true)):
-		return false
-	return arena.has_method("energy_on") and arena.energy_on()
+	return bool(arena.opts.get("props", true))
 
 
 func _tele(kind: String, data: Dictionary) -> void:
@@ -873,7 +871,7 @@ func _tick_berries(dt: float) -> void:
 
 ## Nada a ganhar (HP cheio e barra cheia; no 1x1 só a barra): deixa a fruta no chão.
 func _wants_berry(f: BattleFighter) -> bool:
-	var en := f.energy_mode and f.pp_max < BattleEnergy.MAX - 1.0
+	var en := f.pp_max < BattleEnergy.MAX - 1.0
 	if _energy_only(f):
 		return en
 	return f.hp < f.max_hp or en
@@ -881,12 +879,12 @@ func _wants_berry(f: BattleFighter) -> bool:
 
 ## No 1x1 a Oran só dá energia (cura alongava as lutas: bateria 126 s contra 117 s sem frutas).
 func _energy_only(f: BattleFighter) -> bool:
-	return f.energy_mode and int(arena.get("_battle_size")) < 2
+	return int(arena.get("_battle_size")) < 2
 
 
 func _eat(f: BattleFighter, b: Dictionary) -> void:
 	var hp_k := float(f.hp) / maxf(f.max_hp, 1)
-	var en_k := f.pp_max / BattleEnergy.MAX if f.energy_mode else 1.0
+	var en_k := f.pp_max / BattleEnergy.MAX
 	var gain := "hp" if hp_k <= en_k and not _energy_only(f) else "energy"
 	var n := 0
 	if gain == "hp":
@@ -1849,7 +1847,7 @@ func _berry_steer(ai, d: float) -> Vector3:
 	if _t < float(st.chase_cd):
 		return Vector3.INF
 	var low_hp := float(f.hp) <= float(f.max_hp) * BERRY_HP and not _energy_only(f)
-	var low_en := f.energy_mode and f.pp_max < BERRY_LOW_EN
+	var low_en := f.pp_max < BERRY_LOW_EN
 	if not low_hp and not low_en:
 		st.chase = 0.0
 		return Vector3.INF

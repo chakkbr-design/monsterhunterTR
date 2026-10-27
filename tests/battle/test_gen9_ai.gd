@@ -235,7 +235,7 @@ func _pick_weights() -> void:
 	a.free()
 
 
-## Os dois sem PP perto um do outro: o Desespero sai (antes ninguém batia e a luta ia até o tempo).
+## Os dois sem energia perto um do outro: o Desespero sai (antes ninguém batia e a luta ia até o tempo).
 func _struggle_deadlock() -> void:
 	var a := _still("clefairy", "oddish", [])
 	var p: BattleFighter = a.player
@@ -244,10 +244,10 @@ func _struggle_deadlock() -> void:
 	e.controller = "ai"
 	for f in [p, e]:
 		f.pp_max = 0.0
-	check(p.out_of_pp() and e.out_of_pp(), "os dois sem PP")
+	check(p.pp_max <= 0.0 and e.pp_max <= 0.0, "os dois sem energia")
 	var hp0 := p.hp + e.hp
 	_run(a, 12.0)
-	check(p.hp + e.hp < hp0, "sem PP eles se batem no Desespero (%d -> %d)" % [hp0, p.hp + e.hp])
+	check(p.hp + e.hp < hp0, "sem energia eles se batem no Desespero (%d -> %d)" % [hp0, p.hp + e.hp])
 	a.free()
 
 

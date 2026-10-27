@@ -2,7 +2,7 @@ extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_fx3d.gd
 ## Efeitos 3D dos golpes (gfx/fx3d) no modo de energia: todo golpe solta partículas/luzes/malhas 3D
 ## sem erro, nada do PMD nem do MoveShow aparece nos golpes, os discos no chão sumiram, a carga
-## acompanha a preparação e tudo some sozinho depois. O VGC continua com os efeitos antigos.
+## acompanha a preparação e tudo some sozinho depois.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
@@ -36,7 +36,6 @@ func _main() -> void:
 	await process_frame
 	_particles()
 	await _arena_moves()
-	await _vgc_untouched()
 	print("fx3d: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -69,7 +68,7 @@ func _particles() -> void:
 	host.queue_free()
 
 
-func _arena(mode: String) -> Node:
+func _arena() -> Node:
 	var host := Node3D.new()
 	root.add_child(host)
 	var a: Node = load(ARENA).instantiate()
@@ -83,7 +82,6 @@ func _arena(mode: String) -> Node:
 			"battle_size": 1,
 			"speed": 1.0,
 			"field_objects": false,
-			"battle_mode": mode,
 			"no_rewards": true
 		}
 	)
@@ -97,7 +95,7 @@ func _calm(a: Node) -> void:
 
 
 func _arena_moves() -> void:
-	var a := _arena("energy")
+	var a := _arena()
 	await process_frame
 	for i in 240:
 		a.step(DT)
@@ -187,24 +185,5 @@ func _arena_moves() -> void:
 		a.step(DT)
 		bolts = maxi(bolts, a.vfx.nodes.filter(func(n): return n is Fx3DRibbon).size())
 	check(bolts > before, "Thunderbolt: raios em volta na carga")
-	a.get_parent().queue_free()
-	await process_frame
-
-
-## O VGC continua com os efeitos antigos (PMD + MoveShow) e os discos.
-func _vgc_untouched() -> void:
-	var a := _arena("vgc")
-	await process_frame
-	for i in 240:
-		a.step(DT)
-		_calm(a)
-	check(not a.vfx.use3d(), "VGC sem os efeitos 3D")
-	var p: BattleFighter = a.player
-	var mv: Dictionary = Dex.move("thunder").duplicate(true)
-	mv.accuracy = 0
-	var fx0: int = a._fx.size()
-	a.moves.deliver(p, mv)
-	a.step(DT)
-	check(a._fx.size() > fx0, "VGC: disco do Thunder continua")
 	a.get_parent().queue_free()
 	await process_frame

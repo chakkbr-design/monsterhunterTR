@@ -27,7 +27,6 @@ func _arena(party: Array, enemies: Array) -> Node:
 		{
 			"kind": "wild",
 			"speed": 1.0,
-			"battle_mode": "energy",
 			"battle_size": 1,
 			"no_rewards": true,
 			"field_objects": false,

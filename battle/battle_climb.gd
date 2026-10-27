@@ -1,7 +1,7 @@
 class_name BattleClimb
 extends RefCounted
 ## Obstáculos no modo de energia (Caio, 2026-10-26): ninguém sobe encosta andando nem atravessa objeto.
-## A arena cria um por luta (terrain.climb); no VGC fica desligado (on = false) e nada daqui roda.
+## A arena cria um por luta (terrain.climb).
 ##
 ## - Níveis: morro e pico viram degraus de ~LEVEL m (n = altura / LEVEL arredondado, mín. 1; o morro
 ##   pequeno e o médio têm 1, o grande e o pico 2). O degrau k vai até o raio ring(o, k) (o de baixo é o
@@ -68,7 +68,7 @@ const DIRS := [
 
 var terrain  ## BattleTerrain (dono)
 var arena: Node
-var on := false  ## modo de energia com relevo
+var on := false  ## ligado no setup do relevo
 var _dirty := true
 var _built_t := -INF
 var _clock := 0.0
@@ -92,9 +92,9 @@ func _init(t) -> void:
 	arena = t.arena
 
 
-## No começo do setup do relevo: liga no modo de energia.
+## No começo do setup do relevo: liga.
 func prepare() -> void:
-	on = arena.has_method("energy_on") and arena.energy_on()
+	on = true
 	_dirty = true
 
 
@@ -160,11 +160,9 @@ static func profile(o: Dictionary, d: float) -> float:
 	return tier_h(o, tier_at_d(o, d))
 
 
-## Altura que conta para passar por cima de objeto sólido: no modo de energia só no salto/voo (motion
-## "leap"); o voo de cruzeiro e o pulinho de esquiva não passam. Fora dele, a altura de sempre.
+## Altura que conta para passar por cima de objeto sólido: só no salto/voo (motion "leap"); o voo de
+## cruzeiro e o pulinho de esquiva não passam.
 static func pass_h(f: BattleFighter) -> float:
-	if not f.energy_mode:
-		return f.height()
 	return f.position.y if f.motion == "leap" else 0.0
 
 
@@ -246,7 +244,7 @@ func _free(f: BattleFighter) -> bool:
 
 
 func jump_ready(f: BattleFighter) -> bool:
-	return f.energy_mode and f.jump_cd <= 0.0 and f.pp_max >= JUMP_COST and _free(f)
+	return f.jump_cd <= 0.0 and f.pp_max >= JUMP_COST and _free(f)
 
 
 ## Voa: tipo Voador ou perfil Voador (o mesmo que cruza a ~1,3 m); Smack Down/Thousand Arrows não.
@@ -258,7 +256,7 @@ func can_fly(f: BattleFighter) -> bool:
 
 
 func fly_ready(f: BattleFighter) -> bool:
-	return f.energy_mode and can_fly(f) and f.fly_cd <= 0.0 and f.pp_max >= FLY_COST and _free(f)
+	return can_fly(f) and f.fly_cd <= 0.0 and f.pp_max >= FLY_COST and _free(f)
 
 
 ## O salto até `to` vale: no máximo `reach` m, dentro da quadra, sobe no máximo um degrau, nada mais
@@ -438,10 +436,10 @@ func _landed(f: BattleFighter, cb: Callable, style: String) -> void:
 		cb.call()
 
 
-## Tecla de pulo do jogador (modo de energia): com algo tapando a frente, salta para o degrau/por cima
+## Tecla de pulo do jogador: com algo tapando a frente, salta para o degrau/por cima
 ## do objeto na direção `dir`; quem voa, sem salto que sirva, voa. false = pulinho normal.
 func player_jump(f: BattleFighter, dir: Vector3) -> bool:
-	if not on or not f.energy_mode or dir.length() < 0.1:
+	if not on or dir.length() < 0.1:
 		return false
 	_ensure()
 	var d := f.pos2(dir).normalized()
@@ -848,7 +846,7 @@ func _fly_spot(f: BattleFighter, goal: Vector3) -> Vector3:
 ## IA (fim do BattleTerrain.steer): com o caminho até o objetivo tapado por degrau ou objeto, contorna
 ## pela grade, salta ou voa. Sem nada no caminho devolve `want` como veio.
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
-	if not on or not f.energy_mode or f.motion != "" or want.length() < 0.05:
+	if not on or f.motion != "" or want.length() < 0.05:
 		return want
 	# Reagrupar depois do nocaute (BattleRegroup._walk, luta parada): volta andando ao ponto de
 	# entrada contornando, sem salto nem voo (o movimento do salto não anda com a luta parada).

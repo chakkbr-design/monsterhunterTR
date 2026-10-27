@@ -54,13 +54,10 @@ const KEEP_SPOT := 1.8  ## longe dos pontos de entrada
 const KEEP_WALL := 1.0
 const GAP := 1.2  ## distância mínima entre as bordas de dois obstáculos (espalha o cenário)
 const HIT_CD := 0.35
-## VGC: meia largura do corredor livre entre as posições dos dois lados (m).
-const VGC_LANE := 2.8
 ## Cenários (opts.scenario; sem ele, sorteado pela rng da arena): quantos de cada obstáculo aparecem.
-## "crate" são as caixas/pedras do BattleField. Todo cenário do sorteio do VGC tem ao menos um morro, um
-## pico e um lago (a praia não tem lago: a maré faz o papel dele; VGC_SKIP).
+## "crate" são as caixas/pedras do BattleField. Na praia a maré faz o papel do lago.
 ## "tree", "bush", "voltorb", "crystal", "geyser", "hive", "mushroom" e "boulder" são os objetos vivos
-## (BattleProps, só no modo de energia; o pedregulho fica no topo de um morro).
+## (BattleProps; o pedregulho fica no topo de um morro).
 const SCENARIOS := {
 	"campo":
 	{
@@ -126,7 +123,7 @@ const SCENARIOS := {
 		"geyser": 1,
 		"boulder": 1
 	},
-	# Biomas (BattleBiomes, só no modo de energia; colunas, montes, lava e lama em BattleBiomes.EXTRAS).
+	# Biomas (BattleBiomes; colunas, montes, lava e lama em BattleBiomes.EXTRAS).
 	"ruinas": {"pond": 1, "hill": 1, "peak": 1, "grass": 3, "crate": 2, "tree": 1},
 	"montanha": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 1},
 	"vulcao": {"pond": 1, "hill": 2, "peak": 3, "grass": 0, "crate": 2, "geyser": 1, "boulder": 1},
@@ -135,11 +132,6 @@ const SCENARIOS := {
 }
 ## Cenários fora de todo sorteio: só quando escolhidos (opts.scenario).
 const PICK_ONLY: Array = []
-## Fora do sorteio do VGC: a praia não tem lago (a maré e a lama do BattleGround são do modo de energia).
-## No modo de energia ela entra no sorteio.
-const VGC_SKIP := ["praia"]
-## Cenários só do modo de energia (BattleBiomes): o VGC não sorteia nem monta (pedido no VGC = sorteio).
-const ENERGY_ONLY := ["ruinas", "montanha", "vulcao", "caverna", "pantano"]
 const PLACE_ORDER := ["pond", "hill", "peak", "grass", "crate"]  ## os grandes primeiro
 ## Tamanho por tipo: [raio mín., raio máx., altura mín., altura máx.].
 const SIZES := {
@@ -157,8 +149,8 @@ const HILL_CLASSES := [
 	[0.4, 1.7, 2.2, 0.9, 1.15, 0.55],
 	[0.3, 1.0, 1.5, 0.5, 0.5, 0.5],
 ]
-## Quantidades pela área (modo de energia): a quadra de 24 x 14 (BASE_AREA m²) é a base, com
-## k = 1 + (área / BASE_AREA - 1) x COUNT_CURVE. O VGC fica sempre com k = 1 (as mesmas quantidades).
+## Quantidades pela área: a quadra de 24 x 14 (BASE_AREA m²) é a base, com
+## k = 1 + (área / BASE_AREA - 1) x COUNT_CURVE.
 const BASE_AREA := 336.0
 const COUNT_CURVE := 1.0
 ## Grade dos voxels (docs/VOXEL.md): na quadra voxel, centro, raio e altura caem nela.
@@ -292,10 +284,8 @@ static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
 
-## Multiplicador das quantidades pela área da quadra: 1 fora do modo de energia (o VGC não muda).
+## Multiplicador das quantidades pela área da quadra.
 func _count_k() -> float:
-	if not arena.has_method("energy_on") or not arena.energy_on():
-		return 1.0
 	var area: float = arena.rect.get_area()
 	return maxf(1.0, 1.0 + (area / BASE_AREA - 1.0) * COUNT_CURVE)
 
@@ -351,12 +341,9 @@ func setup() -> void:
 	climb.prepare()  # modo de energia: morro e pico em degraus (antes de criar os obstáculos)
 	var rng: RandomNumberGenerator = arena.rng
 	scenario = String(arena.opts.get("scenario", ""))
-	var energy: bool = not arena.has_method("energy_on") or arena.energy_on()
-	if not SCENARIOS.has(scenario) or (scenario in ENERGY_ONLY and not energy):
+	if not SCENARIOS.has(scenario):
 		var names: Array = SCENARIOS.keys()
 		names = names.filter(func(n): return not n in PICK_ONLY)
-		if not energy:
-			names = names.filter(func(n): return not n in ENERGY_ONLY and not n in VGC_SKIP)
 		names.sort()
 		scenario = String(names[rng.randi() % names.size()])
 	var tel = arena.get("telemetry")
@@ -369,7 +356,7 @@ func setup() -> void:
 	for kind in PLACE_ORDER + BattleProps.ORDER:
 		var n := int(plan.get(kind, 0))
 		if BattleProps.SIZES.has(kind) and not props.enabled():
-			continue  # objetos vivos só no modo de energia
+			continue  # objetos vivos desligados (opts.props: false)
 		var sz: Array = SIZES[kind] if SIZES.has(kind) else BattleProps.SIZES[kind]
 		for i in n:
 			var top_k := 0.55
@@ -411,7 +398,7 @@ func setup() -> void:
 					props.add(String(kind), at)
 				_:
 					_add(String(kind), at, r, h, snap(r * top_k) if lattice else -1.0)
-	ground.setup()  # lama e maré (só no modo de energia)
+	ground.setup()  # lama e maré
 	biomes.setup()  # colunas, montes, paredão, lama do pântano, chão e luz do bioma
 	_build_voxels()
 
@@ -449,8 +436,6 @@ func _place(rng: RandomNumberGenerator, r: float, side: int, gap: float) -> Vect
 
 
 func _spot_free(at: Vector3, r: float, gap: float) -> bool:
-	if _in_vgc_lane(at, r):
-		return false
 	for s in [arena.player_spot, arena.enemy_spot]:
 		if _flat(at - s).length() < r + KEEP_SPOT:
 			return false
@@ -461,18 +446,6 @@ func _spot_free(at: Vector3, r: float, gap: float) -> bool:
 		if _flat(at - c).length() < r + BattleField.OBJ_R + gap:
 			return false
 	return props.spot_free(at, r, gap) and biomes.spot_free(at, r, gap)
-
-
-## VGC (posições fixas): nada entre as duas posições dos lados, senão tiro e raio de casa batem na
-## cobertura e a luta se arrasta (bateria 5: empates no 1x1 do VGC subiram com os cenários).
-func _in_vgc_lane(at: Vector3, r: float) -> bool:
-	if not arena.has_method("energy_on") or arena.energy_on():
-		return false
-	var a: Vector3 = _flat(arena.player_spot)
-	var b: Vector3 = _flat(arena.enemy_spot)
-	var ab := b - a
-	var t := clampf((_flat(at) - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
-	return _flat(at - (a + ab * t)).length() < VGC_LANE + r
 
 
 func _add(kind: String, at: Vector3, r: float, h: float, top := -1.0) -> void:

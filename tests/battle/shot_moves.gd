@@ -1301,7 +1301,6 @@ func _arena() -> Node:
 			"kind": "wild",
 			"speed": 1.0,
 			"field_objects": false,
-			"battle_mode": "energy" if _args.has("energy") else "vgc",
 			"no_rewards": true
 		}
 	)

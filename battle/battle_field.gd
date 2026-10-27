@@ -421,8 +421,8 @@ func _tick_objects(dt: float) -> void:
 ## Deslocamento (plano) que tira o lutador de dentro de um objeto; zero se está livre.
 func push_out(f: BattleFighter) -> Vector3:
 	var out := Vector3.ZERO
-	if f.energy_mode and BattleClimb.pass_h(f) > BattleClimb.CRATE_H:
-		return out  # modo de energia: o salto/voo passa por cima da caixa/pedra (BattleClimb)
+	if BattleClimb.pass_h(f) > BattleClimb.CRATE_H:
+		return out  # o salto/voo passa por cima da caixa/pedra (BattleClimb)
 	for o in objects:
 		var d := _flat(f.position - o.pos)
 		var lim := OBJ_R + BODY_R + 0.01

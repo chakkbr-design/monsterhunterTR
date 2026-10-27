@@ -35,11 +35,8 @@ const PARALYSIS_FAIL := 0.2
 const JITTER := 0.05
 const PRIORITY_PREPARE := 0.04
 const PRIORITY_GCD := 0.6
-## Ritmo da luta (Batalha Viva, "rápido": 15-30 s por Pokémon): a fórmula Gen 3 fica igual e o dano
-## final é escalado por arena.damage_pace (padrão DAMAGE_PACE, opts.damage_pace muda).
-const DAMAGE_PACE := 0.75
-## Dupla com o mesmo dano da luta 1x1 (o Caio pediu: só o tempo muda, não o dano por golpe).
-const DOUBLES_PACE := 1.0
+## Ritmo da luta: a fórmula fica igual e o dano final é escalado por arena.damage_pace
+## (BattleEnergy.DAMAGE_PACE; opts.damage_pace muda), igual no 1x1 e no 2x2.
 ## Cobrir o parceiro com HP baixo: distância máxima e chance por golpe.
 const COVER_DIST := 2.5
 const COVER_CHANCE := 0.35
@@ -93,16 +90,14 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	var cost := user.pp_cost_of(mv)
 	if user.pp_max < cost:
 		if feedback:
-			user.popup(
-				"Not enough energy!" if user.energy_mode else "Not enough PP!", Color(1, 0.6, 0.4)
-			)
+			user.popup("Not enough energy!", Color(1, 0.6, 0.4))
 		return false
 	user.spend(cost)
 	var sf := user.speed_factor()
 	if arena.abilities and arena.abilities.has_method("cast_speed_mult"):
 		sf *= arena.abilities.cast_speed_mult(user, mv)
 	var jit := 1.0 + rng.randf_range(-JITTER, JITTER)
-	var base_cd := BattleEnergy.cooldown(mv) if user.energy_mode else Dex.cooldown(mv)
+	var base_cd := BattleEnergy.cooldown(mv)
 	user.move_cd[id] = base_cd / sf * jit
 	user.gcd_t = (
 		Dex.GLOBAL_COOLDOWN / sf * (PRIORITY_GCD if int(mv.get("priority", 0)) > 0 else 1.0)
@@ -493,8 +488,7 @@ func hit(
 			_landed(user, target, mv)
 			return
 		dmg = effects.cap_damage(user, target, mv, dmg)
-		if target.energy_mode:
-			dmg = BattleEnergy.entry_damage(target, dmg)
+		dmg = BattleEnergy.entry_damage(target, dmg)
 		var hp_before := target.hp
 		target.last_hit_by = user
 		var knock := (
@@ -629,11 +623,9 @@ func _cover(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Battl
 	return p
 
 
-## Combos (marcas, Ressonância, dupla) e habilidades no fim da fórmula de dano.
+## Habilidades, efeitos de campo e relevo no fim da fórmula de dano.
 func extra_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
 	var m := 1.0
-	if arena.combos and user.side != target.side:
-		m *= arena.combos.damage_mult(user, target, mv)
 	if arena.abilities:
 		m *= arena.abilities.damage_mult(user, target, mv)
 	m *= effects.damage_mult(user, target, mv)
@@ -978,8 +970,8 @@ func _area_point(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	var t: BattleFighter = user.opponent
 	if is_instance_valid(t) and t.active() and user.flat_to(t).length() <= rng_m:
 		at = user.pos2(t.position)
-		if user.energy_mode and user.controller == "ai" and user.ai:
-			at += user.ai.area_lead(t, mv)  # IA do modo de energia mira à frente de quem anda
+		if user.controller == "ai" and user.ai:
+			at += user.ai.area_lead(t, mv)  # a IA mira à frente de quem anda
 	if miss != null:
 		var side := dir.cross(Vector3.UP).normalized() * (1.0 if rng.randf() < 0.5 else -1.0)
 		at += side * (radius + rng.randf_range(0.9, 1.5))

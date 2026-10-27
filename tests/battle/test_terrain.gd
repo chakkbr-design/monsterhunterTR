@@ -71,12 +71,12 @@ func _layout() -> void:
 	for s in [1, 2, 3, 4, 5]:
 		var a := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s)
 		var t: BattleTerrain = a.terrain
-		# Config padrão = modo de energia: quadra voxel de 48 x 28 (Cfg.arena_size; o VGC fica em 24 x 14).
-		check(a.rect.size == Cfg.arena_size(Cfg.default_config()), "quadra 48 x 28 (energia)")
-		# A praia (fora do sorteio do VGC, VGC_SKIP) é menor e não tem lago: a maré faz o papel dele.
-		var vgc_draw := not t.scenario in BattleTerrain.VGC_SKIP
+		# Config padrão: quadra voxel de 48 x 28 (Cfg.ARENA).
+		check(a.rect.size == Cfg.ARENA, "quadra 48 x 28")
+		# A praia é menor e não tem lago: a maré faz o papel dele.
+		var pond_draw: bool = t.scenario != "praia"
 		var n_scene: int = t.obstacles.size() + t.grass.size()
-		check(n_scene >= (6 if vgc_draw else 3), "cenário montado (%d)" % n_scene)  # relevo + grama
+		check(n_scene >= (6 if pond_draw else 3), "cenário montado (%d)" % n_scene)  # relevo + grama
 		var kinds := {}
 		for o in t.obstacles:
 			kinds[o.kind] = true
@@ -93,7 +93,7 @@ func _layout() -> void:
 			for sp in [a.player_spot, a.enemy_spot]:
 				check((o.pos - sp * Vector3(1, 0, 1)).length() > o.r + 1.5, "longe da entrada")
 		check(kinds.has("hill") and kinds.has("peak"), "morro e pico")
-		check(kinds.has("pond") or not vgc_draw, "lago em todo cenário do sorteio do VGC")
+		check(kinds.has("pond") or not pond_draw, "lago em todo cenário fora a praia")
 		for ob in a.field.objects:
 			for o in t.obstacles:
 				check((ob.pos - o.pos).length() > o.r, "caixa/pedra fora do relevo")

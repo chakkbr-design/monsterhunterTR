@@ -176,7 +176,6 @@ func _cfg(sc: String) -> Dictionary:
 	c.sides[1].mons = b
 	c.seed = int(_args.get("seed", "11"))
 	c.battle_size = int(_args.get("size", "2"))
-	c.battle_mode = "energy"
 	c.speed = float(_args.get("speed", "2"))
 	c["scenario"] = sc
 	c["time_of_day"] = String(_args.get("mood", "dia"))

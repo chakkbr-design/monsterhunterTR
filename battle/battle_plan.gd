@@ -1,9 +1,9 @@
 class_name BattlePlan
 extends RefCounted
-## Plano (estratégia) da IA no modo de energia: escolhido na entrada e reavaliado a cada PLAN_SECS s,
+## Plano (estratégia) da IA: escolhido na entrada e reavaliado a cada PLAN_SECS s,
 ## sorteado por pesos (perfil, golpes, tipos, HP, energia, relevo, 1x1/2x2, ânimo, comando), com o
 ## melhor na frente mas sem ser sempre ele. O plano muda a faixa de distância, o recuo, a preferência de
-## golpe e o alvo (BattleAI lê). Só vale com f.energy_mode (o VGC usa BattleTactics).
+## golpe e o alvo (BattleAI lê).
 ## - pressao: encosta e encadeia golpes baratos, quase não recua.
 ## - artilharia: fica no fim do alcance do golpe de longe (e no alto do morro, se tiver).
 ## - emboscada: espera atrás de cobertura (ou longe) e ataca com o alvo sem energia, de costas ou

@@ -1,8 +1,8 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/ui_training/test_stadium.gd
-## Estádio voxel do modo de energia (ArenaStadium): monta uma vez por cena de treino, só no modo de
-## energia (nem VGC nem fast_sim), sem corpo físico nenhum, nada dentro da quadra nem acima da linha
-## de visão da câmera de ação do lado da câmera, placar com os dados da luta, luzes pela hora.
+## Estádio voxel do treino (ArenaStadium): monta uma vez por cena de treino, fora do fast_sim, sem
+## corpo físico nenhum, nada dentro da quadra nem acima da linha de visão da câmera de ação do lado
+## da câmera, placar com os dados da luta, luzes pela hora.
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -35,7 +35,7 @@ func _run() -> void:
 	check(bodies.is_empty(), "nenhum corpo físico (%d)" % bodies.size())
 
 	# Nada dentro da quadra (até a margem do piso) acima do chão: vértices de cada malha.
-	var half := Cfg.ARENA_ENERGY * 0.5 + Vector2.ONE * ArenaFloor.MARGIN
+	var half := Cfg.ARENA * 0.5 + Vector2.ONE * ArenaFloor.MARGIN
 	var inside := 0
 	var count := 0
 	for n in st.find_children("*", "MeshInstance3D", true, false):
@@ -202,12 +202,10 @@ func _run() -> void:
 	check(t_second < t_first, "a segunda montagem usa o cache (%d ms)" % t_second)
 	st2.free()
 
-	# Cena de treino: estádio só no modo de energia.
-	for mode in ["energy", "vgc", "fast"]:
+	# Cena de treino: estádio só fora do fast_sim.
+	for mode in ["energy", "fast"]:
 		var c := Cfg.default_config()
 		c.seed = 3
-		if mode == "vgc":
-			c.battle_mode = "vgc"
 		if mode == "fast":
 			c.extra_opts = {"fast_sim": true}
 		Cfg.current = c

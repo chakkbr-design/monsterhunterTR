@@ -1,7 +1,7 @@
 class_name ArenaStadium
 extends Node3D
-## Voxel stadium around the energy-mode training field (docs/VOXEL.md §7), built once per training
-## scene (TrainingBattle._build_stage; never under fast_sim, never in VGC). Visual only: no
+## Voxel stadium around the training field (docs/VOXEL.md §7), built once per training
+## scene (TrainingBattle._build_stage; never under fast_sim). Visual only: no
 ## physics bodies at all, so the arena's wall queries (layer 1) never see it.
 ## Layout (metres, field centre at the origin; the field is 48 x 28, its barrier at 24.5 x 14.5):
 ## - a bowl of stands (StadiumParts) whose front walls run on |x| = IN_X and |z| = IN_Z: 10 m
@@ -937,7 +937,7 @@ func _build_ring() -> void:
 func _paint_ring(sc: String) -> void:
 	var g := _ring_grid
 	var p := ArenaPalette.of(sc if sc != "" else "campo")
-	var half := Cfg.ARENA_ENERGY * 0.5 + Vector2.ONE * ArenaFloor.MARGIN
+	var half := Cfg.ARENA * 0.5 + Vector2.ONE * ArenaFloor.MARGIN
 	for z in range(g.origin.z, g.origin.z + g.size.z):
 		for x in range(g.origin.x, g.origin.x + g.size.x):
 			var v := Vector3i(x, -1, z)

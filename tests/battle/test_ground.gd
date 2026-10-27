@@ -2,7 +2,7 @@ extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_ground.gd
 ## Chão do modo de energia (BattleGround): lama (atola, enlameado, lama nova, seca no sol, espalha na
 ## chuva), marcas de golpe (fenda, gelo, brasas, poça), a maré da praia, a IA (Terra na lama, Fogo sai da
-## maré, contorna a lama), o seletor do treino e o VGC sem nada disso.
+## maré, contorna a lama), o seletor do treino e o sorteio.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -21,7 +21,7 @@ func _process(_d: float) -> bool:
 	_mud()
 	_mud_new()
 	_mud_weather()
-	_vgc()
+	_pick()
 	_fissure()
 	_ice()
 	_ember()
@@ -196,46 +196,28 @@ func _mud_weather() -> void:
 	a.free()
 
 
-func _vgc() -> void:
-	var a := _arena(
-		[Mon.create("pikachu", 50)],
-		[Mon.create("rattata", 50)],
-		3,
-		{"scenario": "misto", "battle_mode": "vgc"}
-	)
-	var g: BattleGround = a.terrain.ground
-	check(not g.on and g.mud.is_empty() and g.tide.is_empty(), "VGC: sem lama nem maré")
-	g.on_move_landed(a.player, Dex.move("earthquake"), Vector3.ZERO, 4.0)
-	check(g.marks.is_empty(), "VGC: sem marcas")
-	a.free()
+func _pick() -> void:
 	var seen_energy := {}
 	for s in range(1, 13):
 		var b := _arena(
 			[Mon.create("pikachu", 50)],
 			[Mon.create("rattata", 50)],
 			s,
-			{"battle_mode": "vgc" if s % 2 else "energy"}
+			{}
 		)
-		var vgc := s % 2 == 1
 		check(
 			not b.terrain.scenario in BattleTerrain.PICK_ONLY, "o sorteio não pega os só escolhidos"
 		)
-		if vgc:
-			check(
-				not b.terrain.scenario in BattleTerrain.VGC_SKIP,
-				"o sorteio do VGC não pega a praia"
-			)
-		else:
-			seen_energy[b.terrain.scenario] = true
+		seen_energy[b.terrain.scenario] = true
 		b.free()
-	# No modo de energia a praia entra no sorteio.
+	# A praia entra no sorteio.
 	for s in range(100, 140):
 		if seen_energy.has("praia"):
 			break
 		var b := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s, {})
 		seen_energy[b.terrain.scenario] = true
 		b.free()
-	check(seen_energy.has("praia"), "energia: a praia sai no sorteio (%s)" % [seen_energy.keys()])
+	check(seen_energy.has("praia"), "a praia sai no sorteio (%s)" % [seen_energy.keys()])
 
 
 func _fissure() -> void:

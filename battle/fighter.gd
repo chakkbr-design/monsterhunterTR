@@ -103,8 +103,7 @@ var hp := 1
 var max_hp := 1
 var pp_base := 100.0
 var pp_max := 100.0
-## Modo de energia (BattleEnergy): pp_base/pp_max viram a barra de energia, que enche com o tempo.
-var energy_mode := false
+## pp_base/pp_max são a barra de energia (BattleEnergy), que enche com o tempo.
 
 var move_cd := {}
 var gcd_t := 0.0
@@ -144,8 +143,6 @@ var sleep_act_t := 0.0
 var seeded := false
 var leech_source: BattleFighter
 var toxic_n := 0
-## Rodada em que a vez dele já começou (o sono/congelado/confusão contam a tentativa uma vez).
-var _turn_round := -1
 
 var prepare_t := 0.0
 var prepare_id := ""
@@ -237,12 +234,8 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 		stages[k] = 0
 	max_hp = m.max_hp
 	hp = clampi(m.hp, 0, max_hp)
-	pp_base = m.pp_base
-	pp_max = clampf(m.pp, 0.0, pp_base)
-	energy_mode = BattleEnergy.on(arena)
-	if energy_mode:
-		pp_base = BattleEnergy.MAX
-		pp_max = BattleEnergy.MAX * BattleEnergy.START
+	pp_base = BattleEnergy.MAX
+	pp_max = BattleEnergy.MAX * BattleEnergy.START
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
 	jump_time = sqrt(8.0 * jump_height / JUMP_G) if jump_height > 0.0 else 0.0
 	look_h = clampf(float(sp.get("height_m", 1.0)) * 0.9, 0.45, 1.8)
@@ -492,9 +485,7 @@ func speed_factor() -> float:
 
 ## Velocidade de andar absoluta (m/s) pela Speed, chão e habilidade (paralisia é aplicada em drive).
 func walk_speed() -> float:
-	var v := StatCalc.walk_speed(stat("spe"))
-	if energy_mode:
-		v *= BattleEnergy.WALK_PACE
+	var v := StatCalc.walk_speed(stat("spe")) * BattleEnergy.WALK_PACE
 	if controller == "player":
 		v *= PLAYER_WALK_MULT
 	if arena:
@@ -536,26 +527,13 @@ func may_start(mv: Dictionary) -> bool:
 	return not is_airborne() or bool(mv.get("allowed_midair", true))
 
 
-## PP gasto pelo golpe: o oficial (o Caio pediu só o dano reduzido; o PP não acompanha o ritmo).
+## Energia gasta pelo golpe (BattleEnergy.cost).
 func pp_cost_of(mv: Dictionary) -> float:
-	var c := BattleEnergy.cost(mv) if energy_mode else Dex.pp_cost(mv)
+	var c := BattleEnergy.cost(mv)
 	var ab = arena.get("abilities") if arena else null
 	if ab and ab.has_method("cost_mult"):
 		c *= ab.cost_mult(self)  # Pressure: inimigo perto faz o golpe custar mais
-	return roundf(c) if energy_mode else c
-
-
-func min_move_cost() -> float:
-	var best := INF
-	for id in moves:
-		var mv := Dex.move(id)
-		if not mv.is_empty():
-			best = minf(best, pp_cost_of(mv))
-	return best if best < INF else 1.0
-
-
-func out_of_pp() -> bool:
-	return not energy_mode and pp_max < min_move_cost()
+	return roundf(c)
 
 
 func dash_reach() -> float:
@@ -580,8 +558,6 @@ func aim_dir() -> Vector3:
 
 func spend(cost: float) -> void:
 	pp_max -= cost
-	if not energy_mode:
-		mon.pp = pp_max
 
 
 func can_jump() -> bool:
@@ -719,8 +695,8 @@ func apply_status(s: String, source: BattleFighter = null) -> bool:
 		sleep_turns = _roll(SLEEP_COUNTER)
 	elif s == "paralysis":
 		par_t = mon.par_left if mon.par_left > 0.0 else PARALYSIS_SECS
-	status_t = float(BattleEnergy.STATUS_SECS.get(s, 0.0)) if energy_mode else 0.0
-	if energy_mode and s == "paralysis":
+	status_t = float(BattleEnergy.STATUS_SECS.get(s, 0.0))
+	if s == "paralysis":
 		par_t = minf(par_t, status_t)
 	if s in Mon.PERSIST_STATUS:
 		mon.status = s
@@ -752,7 +728,7 @@ func clear_status() -> void:
 	if status != "":
 		_tele("cure", {"st": status})
 		last_status = status
-		status_immune_t = BattleEnergy.STATUS_IMMUNE if energy_mode else 0.0
+		status_immune_t = BattleEnergy.STATUS_IMMUNE
 	status_t = 0.0
 	status = ""
 	sleep_turns = 0
@@ -782,22 +758,6 @@ func round_now() -> int:
 	return int(t.round_n) if t else -1
 
 
-## O sono/congelado/confusão conta na tentativa de agir: na vez dele (fila de BattleTurns) ou, para
-## quem não segue a fila (jogador no teclado, ritmo antigo), no fim de cada rodada (BattleEndTurn).
-func counts_on_turn() -> bool:
-	var t = arena.get("turns") if arena else null
-	return t != null and bool(t.on) and t.tracked(self)
-
-
-## A vez dele começou nesta rodada: conta a tentativa de agir uma vez.
-func _check_turn() -> void:
-	var t = arena.get("turns") if arena else null
-	if t == null or not bool(t.on) or t.current != self or _turn_round == int(t.round_n):
-		return
-	_turn_round = int(t.round_n)
-	try_act()
-
-
 ## Tentativa de agir (oficial: antes do golpe). Sono: o contador desce e acorda no zero (e age nesta
 ## vez). Congelado: 20% de descongelar. Confusão: o contador desce e sai dela no zero.
 func try_act() -> void:
@@ -818,7 +778,7 @@ func try_act() -> void:
 			popup("Snapped out of confusion!", Color(0.9, 0.8, 1.0), 0.9)
 
 
-## Fim da rodada para quem não segue a fila: a rodada inteira vale como a tentativa de agir (menos a
+## Fim da rodada: a rodada inteira vale como a tentativa de agir (menos a
 ## rodada em que o status começou). Acorda / sai da confusão quando a próxima tentativa já seria livre.
 func round_count() -> void:
 	if not alive():
@@ -845,23 +805,20 @@ func _chance(p: float) -> bool:
 	return randf() < p
 
 
-## Ritmo da luta para o dano físico de tempo real (batida no arremesso, chão queimado): igual ao
-## original até o ritmo padrão do 1x1. No modo de energia é o próprio ritmo do dano (0,6), como todo
-## dano indireto (paced). O dano de fim de turno do VGC segue o oficial puro (docs/MECANICAS.md).
+## Ritmo da luta para o dano físico de tempo real (batida no arremesso, chão queimado): o próprio
+## ritmo do dano (0,6), como todo dano indireto (paced).
 func dot_scale() -> float:
 	if arena == null or not arena.get("moves"):
 		return 1.0
-	if energy_mode:
-		return clampf(float(arena.damage_pace), 0.0, 1.0)
-	return clampf(arena.moves.pace() / BattleMoves.DAMAGE_PACE, 0.0, 1.0)
+	return clampf(float(arena.damage_pace), 0.0, 1.0)
 
 
-## Caio, 2026-10-25: no modo de energia todo dano indireto (veneno, queimadura, semente, clima...) e toda
+## Caio, 2026-10-25: todo dano indireto (veneno, queimadura, semente, clima...) e toda
 ## cura em fração do HP (Recover, Leftovers, frutinha, poção...) seguem o mesmo fator do dano dos golpes
 ## (arena.damage_pace, 0,6), para a luta continuar proporcional. Cura cheia (Rest, Healing Wish) fica cheia;
-## dreno e recuo já saem do dano feito. No VGC devolve n.
+## dreno e recuo já saem do dano feito.
 func paced(n: int) -> int:
-	if not energy_mode or arena == null or n <= 0 or n >= max_hp:
+	if arena == null or n <= 0 or n >= max_hp:
 		return n
 	return maxi(1, int(round(float(n) * float(arena.damage_pace))))
 
@@ -1035,10 +992,8 @@ func popup(text: String, col: Color, scale_k := 1.0, extra := 0.15, style := "")
 # --- Por frame ---
 
 
-## Avança timers (o status conta em turnos: try_act e BattleEndTurn). dt já escalado.
+## Avança timers (o status conta em turnos: BattleEndTurn). dt já escalado.
 func tick(dt: float) -> void:
-	if alive():
-		_check_turn()
 	if impact_t > 0.0:
 		impact_t = maxf(impact_t - dt, 0.0)
 		if impact_t <= 0.0 and impact_knock != Vector3.ZERO:
@@ -1056,17 +1011,16 @@ func tick(dt: float) -> void:
 	sleep_act_t = maxf(sleep_act_t - dt, 0.0)
 	entry_t = maxf(entry_t - dt, 0.0)
 	breath_t = maxf(breath_t - dt, 0.0)
-	if energy_mode:
-		jump_cd = maxf(jump_cd - dt, 0.0)
-		fly_cd = maxf(fly_cd - dt, 0.0)
+	jump_cd = maxf(jump_cd - dt, 0.0)
+	fly_cd = maxf(fly_cd - dt, 0.0)
 	status_immune_t = maxf(status_immune_t - dt, 0.0)
 	if status == "paralysis":
 		par_t -= dt
 		if par_t <= 0.0:
 			clear_status()
 			popup("No longer paralyzed", Color(1, 1, 0.5), 0.8)
-	if energy_mode and status_t > 0.0 and status != "paralysis":
-		# Modo de energia: o status grave passa sozinho (descansando, mais rápido).
+	if status_t > 0.0 and status != "paralysis":
+		# O status grave passa sozinho (descansando, mais rápido).
 		status_t -= dt * (BattleEnergy.REST_CURE if BattleEnergy.resting(self) else 1.0)
 		if status_t <= 0.0:
 			clear_status()
@@ -1074,8 +1028,7 @@ func tick(dt: float) -> void:
 	for k in move_cd.keys():
 		move_cd[k] = maxf(move_cd[k] - dt, 0.0)
 	gcd_t = maxf(gcd_t - dt, 0.0)
-	if energy_mode:
-		pp_max = minf(pp_max + BattleEnergy.regen(self) * dt, pp_base)
+	pp_max = minf(pp_max + BattleEnergy.regen(self) * dt, pp_base)
 	if prepare_t > 0.0:
 		prepare_t = maxf(prepare_t - dt, 0.0)
 		if prepare_t <= 0.0 and prepare_cb.is_valid():
@@ -1360,8 +1313,6 @@ func write_back() -> void:
 	if not alive() and mon.hp > 0:
 		return  # desmaiou em campo e foi revivido por item depois: não desfaz o Revive
 	mon.hp = hp
-	if not energy_mode:
-		mon.pp = pp_max
 	mon.status = "poison" if status == "toxic" else status if status in Mon.PERSIST_STATUS else ""
 	mon.battle_status = status if status in ["toxic", "freeze"] else ""
 	mon.par_left = par_t if status == "paralysis" else 0.0

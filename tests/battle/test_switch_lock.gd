@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_switch_lock.gd
-## Modo de energia (Caio, 2026-10-27): troca voluntária só depois de SWITCH_OPEN s de luta e cada troca
-## trava as dos dois lados por SWITCH_LOCK s. O VGC não muda.
+## Trava de troca (Caio, 2026-10-27): troca voluntária só depois de SWITCH_OPEN s de luta e cada troca
+## trava as dos dois lados por SWITCH_LOCK s.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -17,7 +17,6 @@ func _process(_d: float) -> bool:
 		return true
 	_ran = true
 	_energy()
-	_vgc()
 	print("switch_lock: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 	return true
@@ -30,7 +29,7 @@ func check(ok: bool, what: String) -> void:
 		print("FALHOU: ", what)
 
 
-func _arena(mode: String) -> Node:
+func _arena() -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
@@ -42,10 +41,9 @@ func _arena(mode: String) -> Node:
 			"autoplay": true,
 			"seed": 3,
 			"speed": 1.0,
-			"battle_mode": mode,
 			"no_rewards": true,
 			"fast_sim": true,
-			"arena": Cfg.ARENA
+			"arena": Cfg.SMALL_ARENA
 		}
 	)
 	return a
@@ -64,7 +62,7 @@ func _run(a: Node, secs: float) -> void:
 
 
 func _energy() -> void:
-	var a := _arena("energy")
+	var a := _arena()
 	_run(a, 1.0)
 	check(a.switch_locked(), "energia: troca fechada no começo (%.1f s)" % a.fight_clock)
 	check(a.switch_out(a.enemy) == null, "U-turn no começo não troca")
@@ -89,8 +87,3 @@ func _energy() -> void:
 	a.free()
 
 
-func _vgc() -> void:
-	var a := _arena("vgc")
-	_run(a, 0.5)
-	check(not a.switch_locked(), "VGC sem trava de troca")
-	a.free()

@@ -50,7 +50,6 @@ func _arena(party: Array, enemies: Array, size := 1) -> Node:
 				"speed": 1.0,
 				"seed": 31,
 				"battle_size": size,
-				"battle_mode": "energy",
 				"scenario": "campo",
 				"autoplay": true,
 			},

@@ -705,9 +705,8 @@ class FighterCard:
 			3
 		)
 		var base := maxf(body.pp_base, 1.0)
-		# Modo de energia: a mesma linha vira a barra de energia (enche com o tempo).
-		var pp_col := ENERGY_COL if body.energy_mode else UiDraw.PP_BLUE
-		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), body.pp_max / base, pp_col)
+		# A barra de energia (enche com o tempo).
+		UiDraw.bar(self, Rect2(x0, PP_ROW_Y, PP_W, 6), body.pp_max / base, ENERGY_COL)
 		UiDraw.bar(
 			self,
 			Rect2(x0 + PP_W + 6.0, PP_ROW_Y, EXP_W, 6),
@@ -883,12 +882,11 @@ class MoveButton:
 			for l in lines:
 				UiDraw.text_center(self, Vector2(c.x, y), String(l), fs, name_col, 3, tf)
 				y += lh
-		var cost_col := ENERGY_COL if body.energy_mode else UiDraw.PP_BLUE
+		var cost_col := ENERGY_COL
 		if not afford:
 			cost_col = Color(1, 0.4, 0.35)
-		var unit := "EN" if body.energy_mode else "PP"
 		UiDraw.text_center(
-			self, Vector2(c.x, c.y + r - 14.0), "%d %s" % [int(round(cost)), unit], 10, cost_col, 3
+			self, Vector2(c.x, c.y + r - 14.0), "%d EN" % int(round(cost)), 10, cost_col, 3
 		)
 		UiDraw.key_pill(self, c + Vector2(-r + 6.0, -r + 6.0), str(index + 1), 22, not afford)
 		if cd > 0.0:
@@ -896,7 +894,7 @@ class MoveButton:
 				(
 					Dex.GLOBAL_COOLDOWN
 					if use_gcd
-					else (BattleEnergy.cooldown(mv) if body.energy_mode else Dex.cooldown(mv))
+					else BattleEnergy.cooldown(mv)
 				)
 				/ maxf(body.speed_factor(), 0.01)
 			)

@@ -4,7 +4,7 @@ extends SceneTree
 ## com golpe forte quebra caixa, árvore (cai) e coluna; Rattata com golpe fraco não quebra a coluna (com
 ## golpe forte só a caixa); morro perde um degrau, montinho desaba; o que está em cima de um apoio
 ## destruído cai (pedregulho no morro, caixa na coluna, lutador no morro); obstacles_changed dispara;
-## coluna destruída para de cobrir; efeitos (pedaços e entulho) só fora do fast_sim; VGC sem mudança.
+## coluna destruída para de cobrir; efeitos (pedaços e entulho) só fora do fast_sim.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -26,7 +26,6 @@ func _process(_d: float) -> bool:
 	_relief()
 	_support()
 	_fast_sim()
-	_vgc()
 	print("destruction: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 	return true
@@ -49,7 +48,6 @@ func _arena(party: Array, enemies: Array, seed: int, extra := {}, idle := true) 
 			"speed": 1.0,
 			"seed": seed,
 			"battle_size": 1,
-			"battle_mode": "energy",
 			"scenario": "campo"
 		},
 		true
@@ -295,23 +293,3 @@ func _fast_sim() -> void:
 	b.free()
 
 
-func _vgc() -> void:
-	var a := _arena(
-		[Mon.create("snorlax", 50)], [Mon.create("rattata", 50)], 9, {"battle_mode": "vgc"}
-	)
-	check(not a.terrain.destruction.on(), "VGC: destruição desligada")
-	check(
-		a.terrain.destruction.crash_target(a.player, a.player.position).is_empty(),
-		"VGC: nada novo para bater"
-	)
-	_clean(a)
-	var o := _crate(a, Vector3(0, 0, 3))
-	_put(a.player, o.pos - Vector3(BattleField.OBJ_R + BattleField.BODY_R + 0.3, 0, 0))
-	a.moves.phys.launch(a.player, Vector3(1, 0, 0), 1.3, false, 120.0)
-	for i in 60:
-		if a.player.launch_t <= 0.0:
-			break
-		a.player._launch_step(DT)
-	check(a.field.objects.has(o) and int(o.hp) == 1, "VGC: a caixa perde 1 como antes")
-	check(_count_fx(a)[0] == 0, "VGC: sem pedaços novos")
-	a.free()

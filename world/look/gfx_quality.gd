@@ -6,8 +6,7 @@ extends RefCounted
 ##     a compositor effect on the 3D geometry's edges only, attached with attach_aa()): never
 ##     MSAA (the water's depth / screen reads come back empty and the transparent water turns
 ##     opaque, gfx/water) and never SMAA / FXAA / FSR 2 / TAA, which smear the pixel-art sprites
-##     (every texel staircase gets blended). The VGC stage keeps its old look instead
-##     (classic_stage(): MSAA 2x, no water there);
+##     (every texel staircase gets blended);
 ##   - the renderer's global settings: directional and lamp shadow atlases, soft-shadow filter,
 ##     SSAO / SSIL / SSR quality, SDFGI rays and light-update rate, GI half resolution,
 ##     volumetric fog volume;
@@ -230,52 +229,6 @@ static func attach_aa(we: WorldEnvironment) -> void:
 		we.compositor = aa_compositor()
 
 
-## The VGC stage keeps its look from before the graphics tiers (aa14e13): MSAA 2x at full scale
-## from Médio up, 0.75 bilinear without MSAA on Baixo; no screen-space AA, no debanding, the
-## project's sun shadow filter. It has no water to break and no EdgeAA. Applied now and on every
-## tier change while `stage` lives; the tier's viewport and renderer come back when it leaves.
-static func classic_stage(stage: Node) -> void:
-	if stage == null or stage.get_node_or_null("GfxClassicAA"):
-		return
-	var n := _ClassicAA.new()
-	n.name = "GfxClassicAA"
-	stage.add_child(n)
-
-
-static func apply_classic_viewport(vp: Viewport, t := -1) -> void:
-	if vp == null:
-		return
-	var low := (t if t >= 0 else tier()) == LOW
-	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
-	vp.scaling_3d_scale = 0.75 if low else 1.0
-	vp.msaa_3d = Viewport.MSAA_DISABLED if low else Viewport.MSAA_2X
-	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
-	vp.use_taa = false
-	vp.use_debanding = false
-	# The shadows of before too: the project's atlas and soft-shadow filter, not the tier's.
-	RenderingServer.directional_shadow_atlas_set_size(
-		int(
-			ProjectSettings.get_setting(
-				"rendering/lights_and_shadows/directional_shadow/size", 4096
-			)
-		),
-		true
-	)
-	var q := int(
-		ProjectSettings.get_setting(
-			"rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", 2
-		)
-	)
-	RenderingServer.directional_soft_shadow_filter_set_quality(q)
-	RenderingServer.positional_soft_shadow_filter_set_quality(
-		int(
-			ProjectSettings.get_setting(
-				"rendering/lights_and_shadows/positional_shadow/soft_shadow_filter_quality", 2
-			)
-		)
-	)
-
-
 static func apply_server(t := -1) -> void:
 	var s := spec(t)
 	RenderingServer.directional_shadow_atlas_set_size(int(s.dir_shadow), true)
@@ -387,20 +340,3 @@ class _EnvTracker:
 		var we := get_parent() as WorldEnvironment
 		if we:
 			GfxQuality.apply_env(we.environment)
-
-
-## Child of a classic_stage() (the VGC training stage): its viewport look, kept over tier changes.
-class _ClassicAA:
-	extends Node
-
-	func _ready() -> void:
-		add_to_group(GfxQuality.GROUP)
-		apply_quality()
-
-	func apply_quality() -> void:
-		if DisplayServer.get_name() != "headless":
-			GfxQuality.apply_classic_viewport(get_viewport())
-
-	func _exit_tree() -> void:
-		if DisplayServer.get_name() != "headless":
-			GfxQuality.apply_all(get_viewport())

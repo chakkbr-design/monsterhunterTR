@@ -1,8 +1,7 @@
 class_name BattleEndTurn
 extends RefCounted
-## Fim de turno oficial (Gen 9), uma vez por rodada (BattleTurns), depois que todos em campo agiram.
-## A arena cria um por luta (arena.end_turn) e BattleTurns._end_round chama run() antes das
-## substituições de quem desmaiou (com opts.turn_mode false, a cada ROUND_SECS s).
+## Fim de turno oficial (Gen 9), uma vez por rodada (BattleTurns, a cada ROUND_SECS s).
+## A arena cria um por luta (arena.end_turn) e BattleTurns._end_round chama run().
 ##
 ## Ordem (Showdown "residual order" da Gen 9; dentro de cada passo pela Speed, arena.turns.speed_order,
 ## com Trick Room invertendo):
@@ -17,7 +16,7 @@ extends RefCounted
 ##   14. campo: Trick Room, Gravity, terrenos  15. Uproar
 ##   16. Speed Boost, Natural Cure/Regenerator/Pickup (adaptados)
 ##   17. o que dura só a rodada (Protect, Endure, Quick/Wide Guard, Roost, Follow Me)
-##   18. sono/congelado/confusão de quem não segue a fila (a vez de quem segue conta em try_act)
+##   18. sono/congelado/confusão
 ## Frutinhas seguradas (Oran, Sitrus, Pecha, Persim) agem na hora, como no oficial (held_check).
 
 const COL_POISON := Color(0.75, 0.35, 0.95)
@@ -186,9 +185,9 @@ func run() -> void:
 	# 17. O que dura só a rodada
 	if fx:
 		fx.end_turn_only()
-	# 18. Sono/congelado/confusão de quem não segue a fila
+	# 18. Sono/congelado/confusão
 	for f in order:
-		if f.active() and not f.counts_on_turn():
+		if f.active():
 			f.round_count()
 	_show()
 

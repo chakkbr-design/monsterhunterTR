@@ -1,8 +1,8 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_energy.gd
-## Modo de energia (BattleEnergy, opts.battle_mode "energy"): custo e cooldown, barra que enche,
-## sem rodadas nem posições fixas, IA que recua para recuperar, não repete o mesmo golpe e luta até o
-## fim no 1x1 e no 2x2; opção do treino.
+## Modo de energia (BattleEnergy, o único modo de batalha): custo e cooldown, barra que enche, IA que
+## recua para recuperar, não repete o mesmo golpe e luta até o fim no 1x1 e no 2x2; o jogo normal
+## (selvagem e treinador, sem opção nenhuma) também luta com energia.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -23,6 +23,7 @@ func _initialize() -> void:
 	check(_rest_sum > 1.5, "recua para recuperar (%.1f s nas lutas)" % _rest_sum)
 	_paced()
 	_training()
+	_campaign()
 	print("energy: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -38,9 +39,7 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
-	# "-- vgc" roda as mesmas lutas no modo VGC, para comparar a duração.
-	var mode := "vgc" if "vgc" in OS.get_cmdline_user_args() else "energy"
-	opts.merge({"speed": 1.0, "battle_mode": mode, "no_rewards": true}, false)
+	opts.merge({"speed": 1.0, "no_rewards": true}, false)
 	a.start(party, enemies, opts)
 	return a
 
@@ -76,8 +75,7 @@ func _bar() -> void:
 		{"kind": "trainer", "battle_size": 1, "seed": 1}
 	)
 	var f: BattleFighter = a.player
-	check(not a.turns.on, "sem fila de rodadas")
-	check(f.energy_mode and f.pp_base == BattleEnergy.MAX, "barra de energia no lugar do PP")
+	check(f.pp_base == BattleEnergy.MAX, "barra de energia no lugar do PP")
 	var pp_before := f.mon.pp
 	a.step(DT)
 	f.pp_max = 50.0
@@ -109,8 +107,7 @@ func _paced() -> void:
 		[Mon.create("snorlax", 50)], [Mon.create("rattata", 50)], {"kind": "trainer", "seed": 3}
 	)
 	var f: BattleFighter = a.player
-	var mode := "vgc" if "vgc" in OS.get_cmdline_user_args() else "energy"
-	var k := 0.6 if mode == "energy" else 1.0
+	var k := BattleEnergy.DAMAGE_PACE
 	var eighth := int(f.max_hp / 8.0)
 	check(
 		f.paced(eighth) == maxi(1, int(round(eighth * k))),
@@ -144,7 +141,7 @@ func _fight(i: int, doubles: bool) -> void:
 			"battle_size": 2 if doubles else 1,
 			"autoplay": true,
 			"seed": 40 + i,
-			"arena": Cfg.ARENA
+			"arena": Cfg.SMALL_ARENA
 		}
 	)
 	var tag := "%s seed %d" % ["2x2" if doubles else "1x1", i]
@@ -194,9 +191,24 @@ func _fight(i: int, doubles: bool) -> void:
 
 func _training() -> void:
 	var cfg := Cfg.default_config()
-	check(Cfg.battle_mode(cfg) == "energy", "treino: energia é o padrão")
-	check(Cfg.arena_opts(cfg, Vector3.ZERO).battle_mode == "energy", "treino: opção chega na arena")
-	cfg.erase("battle_mode")
-	check(Cfg.battle_mode(cfg) == "energy", "treino: config antiga vira energia")
-	cfg["battle_mode"] = "vgc"
-	check(Cfg.arena_opts(cfg, Vector3.ZERO).battle_mode == "vgc", "treino: VGC continua")
+	check(Cfg.arena_opts(cfg, Vector3.ZERO).get("voxel", false), "treino: quadra voxel")
+	cfg["battle_mode"] = "vgc"  # config antiga salva com o modo que saiu
+	check(not Cfg.arena_opts(cfg, Vector3.ZERO).has("battle_mode"), "treino: modo antigo ignorado")
+
+
+## O jogo normal (sem opção de modo, como world/overworld.gd e story/story.gd chamam): selvagem e
+## treinador lutam no modo de energia, com o dano em 0,6x.
+func _campaign() -> void:
+	for kind in ["wild", "trainer"]:
+		var o := {"kind": kind, "seed": 5}
+		if kind == "trainer":
+			o["trainer_id"] = "brock"
+		var a: Node = load(ARENA).instantiate()
+		a.manual = true
+		root.add_child(a)
+		a.start([Mon.create("charmander", 12)], [Mon.create("geodude", 12)], o)
+		var f: BattleFighter = a.player
+		check(f.pp_base == BattleEnergy.MAX, "%s: barra de energia" % kind)
+		check(is_equal_approx(a.damage_pace, BattleEnergy.DAMAGE_PACE), "%s: dano 0,6x" % kind)
+		check(a.get("regroup") != null, "%s: reagrupar do modo de energia" % kind)
+		a.queue_free()

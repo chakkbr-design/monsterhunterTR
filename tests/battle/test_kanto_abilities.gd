@@ -77,8 +77,6 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 		opts["speed"] = 1.0
 	if not opts.has("auto_battle"):
 		opts["auto_battle"] = false
-	if not opts.has("battle_mode"):
-		opts["battle_mode"] = "energy"
 	a.start(party, enemies, opts)
 	return a
 
@@ -510,7 +508,6 @@ func _poison_touch() -> void:
 
 func _pressure() -> void:
 	var a := _still()
-	check(a.enemy.energy_mode, "arena em modo de energia")
 	var tackle := Dex.move("tackle")
 	a.enemy.position = a.player.position + Vector3(10, 0, 0)
 	var base: float = a.enemy.pp_cost_of(tackle)

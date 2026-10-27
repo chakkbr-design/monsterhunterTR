@@ -3,10 +3,10 @@ extends SceneTree
 ## IA e formato sorteados pela semente, cada luta gravando a telemetria completa (BattleTelemetry) em
 ## out/<semente>.json. Roda em turbo (passos de 1x, o resultado não muda; ver tests/balance/turbo_check.gd).
 ## Rodar várias em paralelo (tools/battery.sh) e analisar com tools/battery_report.py.
-## Opções (depois de --): n=N, seed=N, out=DIR, mode=energy|vgc, size=1|2|mix, weather=mix|none,
+## Opções (depois de --): n=N, seed=N, out=DIR, size=1|2|mix, weather=mix|none,
 ## pace=X (damage_pace), think=mix|1, team=N (Pokémon por lado, padrão 6), limit=S,
 ## scenario=campo|lagoa|pedreira|misto|praia|ruinas|montanha|vulcao|caverna|pantano (omitido ou
-## aleatorio = sorteado por luta; os biomas só no modo de energia).
+## aleatorio = sorteado por luta).
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -15,7 +15,6 @@ const WEATHERS := ["", "", "", "sun", "rain", "sand", "hail"]
 var n := 10
 var seed0 := 1
 var out := "user://battery"
-var mode := "energy"
 var size := "mix"
 var weather := "mix"
 var pace := -1.0
@@ -39,8 +38,6 @@ func _initialize() -> void:
 				seed0 = int(kv[1])
 			"out":
 				out = kv[1]
-			"mode":
-				mode = kv[1]
 			"size":
 				size = kv[1]
 			"weather":
@@ -70,7 +67,7 @@ func _run() -> void:
 	for k in n:
 		var sd := seed0 + k
 		var r := await _one(sd)
-		print("seed %d %s %dx%d -> %-7s %6.1fs" % [sd, r.mode, r.size, r.size, r.outcome, r.time])
+		print("seed %d %dx%d -> %-7s %6.1fs" % [sd, r.size, r.size, r.outcome, r.time])
 	print("fim: %d lutas em %.0f s" % [n, (Time.get_ticks_msec() - t0) / 1000.0])
 	quit(0)
 
@@ -86,7 +83,6 @@ func _one(sd: int) -> Dictionary:
 			c.sides[s].think_scale = [0.8, 1.0, 1.0, 1.2][rng.randi() % 4]
 	var sz := int(size) if size != "mix" else 1 + rng.randi() % 2
 	var w: String = WEATHERS[rng.randi() % WEATHERS.size()] if weather == "mix" else ""
-	c.battle_mode = mode
 	c.battle_size = sz
 	c.seed = sd
 	c.scenario = scenario
@@ -98,7 +94,6 @@ func _one(sd: int) -> Dictionary:
 	var eo := {"telemetry": path}
 	eo["telemetry_meta"] = {
 		"seed": sd,
-		"mode": mode,
 		"size": sz,
 		"weather": w,
 		"think": [c.sides[0].think_scale, c.sides[1].think_scale],
@@ -119,7 +114,6 @@ func _one(sd: int) -> Dictionary:
 		if tb._result_box.visible:
 			break
 	var r := {
-		"mode": mode,
 		"size": sz,
 		"outcome": String(tb.result.get("outcome", "?")),
 		"time": float(tb.fight_time),

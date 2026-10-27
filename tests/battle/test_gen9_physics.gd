@@ -206,12 +206,6 @@ func _single_target() -> void:
 
 
 func _same_damage() -> void:
-	check(
-		is_equal_approx(
-			BattleMoves.DAMAGE_PACE * BattleMoves.DOUBLES_PACE, BattleMoves.DAMAGE_PACE
-		),
-		"ritmo da dupla = ritmo do 1x1"
-	)
 	var dmg := []
 	var p := [_mon("mankey", 30), _mon("squirtle", 30)]
 	var e := [_mon("rattata", 30), _mon("rattata", 30)]

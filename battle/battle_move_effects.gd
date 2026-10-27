@@ -945,13 +945,11 @@ func _break_screens(target: BattleFighter) -> void:
 
 
 ## Dano final que o alvo aguenta: Endure e False Swipe deixam 1 HP.
-## Status mais difícil de pegar no modo de energia (BattleEnergy.status_chance_mult); no VGC, o oficial.
+## Status mais difícil de pegar (BattleEnergy.status_chance_mult).
 ## Recém-curado do mesmo status (BattleEnergy.STATUS_IMMUNE) não pega.
 func status_chance_mult(
 	_user: BattleFighter, target: BattleFighter, mv: Dictionary, s: String
 ) -> float:
-	if not target.energy_mode:
-		return 1.0
 	if target.status_immune_t > 0.0 and target.last_status == s:
 		return 0.0
 	return BattleEnergy.status_chance_mult(mv, s)
@@ -1384,12 +1382,7 @@ func after_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, dealt
 			else:
 				var cut := 4.0 * target.pp_cost_of(Dex.move(last))
 				target.pp_max = maxf(target.pp_max - cut, 0.0)
-				if not target.energy_mode:
-					target.mon.pp = target.pp_max
-				var said := "%s's PP fell!" % Dex.move(last).get("name", last)
-				target.popup(
-					"Energy dropped!" if target.energy_mode else said, Color(0.8, 0.6, 0.9)
-				)
+				target.popup("Energy dropped!", Color(0.8, 0.6, 0.9))
 		"disable":
 			var last2 := _last_of(target)
 			if last2 == "":

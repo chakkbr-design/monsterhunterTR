@@ -1,11 +1,10 @@
 extends Node3D
 ## Modo de treinamento: a luta automática entre os dois times montados em training_setup.
-## Arena fixa de Cfg.arena_size (24 x 14 no VGC, 48 x 28 em voxel no modo de energia, com relevo), as
-## duas IAs lutando sozinhas
+## Arena fixa de Cfg.ARENA (48 x 28, em voxel, com relevo), as duas IAs lutando sozinhas
 ## (opts.autoplay), sem mexer no save nem na equipe do jogo. Com p1_control "manual" o Time A é
 ## do teclado (só na luta única; a série sempre roda com IA). No fim mostra o vencedor e o
 ## placar da série.
-## No modo de energia (fora do fast_sim) a quadra fica dentro de um estádio voxel (ArenaStadium:
+## Fora do fast_sim a quadra fica dentro de um estádio voxel (ArenaStadium:
 ## arquibancadas com torcida, refletores, placares ao vivo, céu e luz pela hora "time_of_day"),
 ## montado uma vez por cena e repintado pelo cenário de cada luta.
 ## Esc para a luta e volta para a tela de montar.
@@ -21,35 +20,15 @@ const TITLE_SCENE := "res://ui/front/title.tscn"
 const CAM_FOV := 60.0
 const CAM_FOCUS := Vector3(0, 0, Cfg.ARENA.y * 0.2)
 const CAM_DIST := 14.0 * Cfg.ARENA.x / 16.0
-## O mesmo para a quadra do modo de energia (48 x 28, em voxel).
-const CAM_FOCUS_ENERGY := Vector3(0, 0, Cfg.ARENA_ENERGY.y * 0.2)
-const CAM_DIST_ENERGY := 14.0 * Cfg.ARENA_ENERGY.x / 16.0
 ## Chão de fora da quadra voxel (até o horizonte da câmera de ação).
 const GROUND_ENERGY := Vector2(420, 300)
 const CAM_PITCH := deg_to_rad(30.0)
 const GROUND := Color(0.36, 0.55, 0.3)
-const DIRT := Color(0.62, 0.52, 0.38)
-const WOOD := Color(0.5, 0.34, 0.2)
-const FENCE_GAP := 1.6
 ## Primeira ola da torcida (segundos de luta) e o intervalo entre as outras
 ## (WAVE_GAP .. +WAVE_JITTER).
 const WAVE_FIRST := 12.0
 const WAVE_GAP := 45.0
 const WAVE_JITTER := 30.0
-const POST_STEP := 2.0
-## Cor do chão de fora e do piso da quadra por cenário ([fora, quadra]): cada cenário tem cara própria.
-const STAGE_COLORS := {
-	"campo": [GROUND, DIRT],
-	"lagoa": [Color(0.3, 0.52, 0.36), Color(0.52, 0.5, 0.36)],
-	"pedreira": [Color(0.5, 0.48, 0.42), Color(0.6, 0.56, 0.5)],
-	"misto": [Color(0.4, 0.52, 0.3), Color(0.58, 0.5, 0.36)],
-	"praia": [Color(0.86, 0.78, 0.56), Color(0.92, 0.85, 0.64)],
-	"ruinas": [Color(0.46, 0.5, 0.36), Color(0.66, 0.62, 0.52)],
-	"montanha": [Color(0.86, 0.9, 0.95), Color(0.74, 0.78, 0.82)],
-	"vulcao": [Color(0.26, 0.2, 0.18), Color(0.4, 0.3, 0.26)],
-	"caverna": [Color(0.22, 0.22, 0.26), Color(0.34, 0.32, 0.32)],
-	"pantano": [Color(0.28, 0.36, 0.24), Color(0.38, 0.36, 0.26)],
-}
 
 ## Placar da série enquanto a config não muda (sobrevive a "Repeat").
 ## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
@@ -79,14 +58,11 @@ var _result_box: Control
 var _stop: Button
 var _last_log: Array = []
 var _stage_cam: Camera3D
+## Quadra voxel: o piso, as linhas e a cerca vêm de ArenaFloor (BattleTerrain); aqui só o chão de fora
+## e a câmera do cenário.
 var _ground_mat: StandardMaterial3D
-var _court_mat: StandardMaterial3D
-## Quadra voxel (modo de energia): o piso, as linhas e a cerca vêm de ArenaFloor (BattleTerrain); aqui
-## só o chão de fora e a câmera do cenário. O piso liso e a cerca de madeira (VGC) ficam escondidos.
-var _voxel := false
-var _court_root: Node3D
-## Estádio voxel em volta da quadra de energia (ArenaStadium: arquibancadas, torcida, refletores,
-## placar, céu e luz). Nunca no VGC nem no fast_sim.
+## Estádio voxel em volta da quadra (ArenaStadium: arquibancadas, torcida, refletores, placar, céu e
+## luz). Nunca no fast_sim.
 var _stadium: ArenaStadium
 ## Pokémon desmaiados de cada time (a torcida do outro lado comemora quando sobe) e segundos de luta
 ## até a próxima ola.
@@ -128,18 +104,17 @@ func _exit_tree() -> void:
 # --- Cenário ---
 
 
-## Opções do estádio (ArenaStadium.build); vazio quando não há estádio (VGC, fast_sim).
+## Opções do estádio (ArenaStadium.build); vazio quando não há estádio (fast_sim).
 func _stadium_opts() -> Dictionary:
 	var extra = cfg.get("extra_opts", {})
 	var fast: bool = extra is Dictionary and bool(extra.get("fast_sim", false))
-	if Cfg.battle_mode(cfg) != "energy" or fast:
+	if fast:
 		return {}
 	return {"mood": Cfg.time_of_day(cfg), "names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)]}
 
 
 ## `built`: o estádio já montado (numa thread, _ready); null monta aqui.
 func _build_stage(built: ArenaStadium = null) -> void:
-	_voxel = Cfg.battle_mode(cfg) == "energy"
 	var so := _stadium_opts()
 	if not so.is_empty():
 		# Estádio com céu, sol, ambiente (AgX, SSAO, brilho) e luzes próprios; vento para bandeiras
@@ -150,7 +125,6 @@ func _build_stage(built: ArenaStadium = null) -> void:
 		wind.name = "Wind"
 		add_child(wind)
 	else:
-		GfxQuality.classic_stage(self)  # VGC: o visual de antes dos níveis gráficos (MSAA 2x)
 		var env := WorldEnvironment.new()
 		env.environment = Environment.new()
 		env.environment.background_mode = Environment.BG_COLOR
@@ -162,17 +136,7 @@ func _build_stage(built: ArenaStadium = null) -> void:
 		sun.rotation_degrees = Vector3(-55, 30, 0)
 		sun.shadow_enabled = true
 		add_child(sun)
-	if _voxel:
-		if _stadium == null:
-			_ground_mat = _ground_ring()
-	else:
-		_ground_mat = _plane(Vector2(90, 70), GROUND, -0.01)
-	_court_root = Node3D.new()
-	_court_root.name = "Court"
-	_court_root.visible = not _voxel
-	add_child(_court_root)
-	_court_mat = _plane(Cfg.ARENA + Vector2(FENCE_GAP, FENCE_GAP) * 2.0, DIRT, 0.0, _court_root)
-	_build_fence(Cfg.ARENA * 0.5 + Vector2(FENCE_GAP, FENCE_GAP))
+		_ground_mat = _ground_ring()
 	# Câmera do cenário no mesmo ponto da câmera fixa da arena: a arena a devolve no fim da luta.
 	_stage_cam = Camera3D.new()
 	_stage_cam.fov = CAM_FOV
@@ -184,11 +148,11 @@ func _build_stage(built: ArenaStadium = null) -> void:
 
 ## Distância e foco da câmera fixa (a do cenário e a da arena quando não há câmera de ação).
 func cam_dist() -> float:
-	return CAM_DIST_ENERGY if _voxel else CAM_DIST
+	return CAM_DIST
 
 
 func cam_focus() -> Vector3:
-	return CAM_FOCUS_ENERGY if _voxel else CAM_FOCUS
+	return CAM_FOCUS
 
 
 ## Chão de fora da quadra voxel: GROUND_ENERGY menos o piso voxel (a quadra e ArenaFloor.MARGIN m
@@ -197,7 +161,7 @@ func _ground_ring() -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = GROUND
 	mat.roughness = 1.0
-	var inner := Cfg.ARENA_ENERGY * 0.5 + Vector2.ONE * (ArenaFloor.MARGIN - 0.25)
+	var inner := Cfg.ARENA * 0.5 + Vector2.ONE * (ArenaFloor.MARGIN - 0.25)
 	var outer := GROUND_ENERGY * 0.5
 	# Faixas de trás e da frente (largura toda) e dos lados (entre elas).
 	var strips := [
@@ -217,20 +181,6 @@ func _ground_ring() -> StandardMaterial3D:
 	return mat
 
 
-func _plane(sz: Vector2, col: Color, y: float, parent: Node = self) -> StandardMaterial3D:
-	var mi := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	pm.size = sz
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = col
-	mat.roughness = 1.0
-	pm.material = mat
-	mi.mesh = pm
-	mi.position.y = y
-	parent.add_child(mi)
-	return mat
-
-
 ## Nome do cenário da luta atual ("" sem relevo).
 func scenario() -> String:
 	if not is_instance_valid(arena) or arena.get("terrain") == null:
@@ -238,54 +188,15 @@ func scenario() -> String:
 	return String(arena.terrain.scenario)
 
 
-## Pinta o chão de fora e o piso da quadra com as cores do cenário sorteado ou escolhido.
+## Pinta o estádio (ou o chão de fora) com as cores do cenário sorteado ou escolhido.
 func _paint_stage() -> void:
-	var cols: Array = STAGE_COLORS.get(scenario(), [GROUND, DIRT])
-	if _ground_mat:
-		_ground_mat.albedo_color = cols[0]
-	_court_mat.albedo_color = cols[1]
 	if _stadium:
 		_stadium.theme(scenario())
-	elif _voxel:
+	elif _ground_mat:
 		# Em volta do piso voxel: a calçada do cenário, um pouco mais escura longe da quadra.
 		var sc := scenario() if scenario() != "" else "campo"
 		var p := ArenaPalette.of(sc)
 		_ground_mat.albedo_color = Color(p.surround).darkened(0.12)
-
-
-## Cerca de madeira em volta da quadra (só visual: a arena já prende os Pokémon na quadra).
-func _build_fence(half: Vector2) -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = WOOD
-	mat.roughness = 0.9
-	var post := BoxMesh.new()
-	post.size = Vector3(0.18, 0.9, 0.18)
-	post.material = mat
-	var corners := [
-		Vector3(-half.x, 0, -half.y),
-		Vector3(half.x, 0, -half.y),
-		Vector3(half.x, 0, half.y),
-		Vector3(-half.x, 0, half.y)
-	]
-	for i in 4:
-		var a: Vector3 = corners[i]
-		var b: Vector3 = corners[(i + 1) % 4]
-		var length := a.distance_to(b)
-		var steps := maxi(1, roundi(length / POST_STEP))
-		for k in steps:
-			var p := MeshInstance3D.new()
-			p.mesh = post
-			p.position = a.lerp(b, float(k) / steps) + Vector3(0, 0.45, 0)
-			_court_root.add_child(p)
-		for h in [0.35, 0.7]:
-			var rail := MeshInstance3D.new()
-			var rm := BoxMesh.new()
-			rm.size = Vector3(length, 0.08, 0.06)
-			rm.material = mat
-			rail.mesh = rm
-			rail.position = (a + b) * 0.5 + Vector3(0, h, 0)
-			rail.rotation.y = -atan2(b.z - a.z, b.x - a.x)
-			_court_root.add_child(rail)
 
 
 # --- Luta ---
@@ -312,11 +223,11 @@ func start_fight() -> void:
 	if _series:
 		o.merge({"autoplay": true, "auto_battle": true, "keyboard": false}, true)
 	o.seed = last_seed
-	# Câmera de ação no modo de energia (BattleDirector): enquadra a ação, KO em câmera lenta e
+	# Câmera de ação (BattleDirector): enquadra a ação, KO em câmera lenta e
 	# todo mundo parado na troca. A bateria (fast_sim) não tem câmera.
 	o["action_cam"] = true
 	# Abertura (BattleOpening, só com a câmera de ação): os nomes no telão, a arena inteira, os
-	# treinadores jogam os titulares e só então a luta começa. Sem efeito no fast_sim nem no VGC.
+	# treinadores jogam os titulares e só então a luta começa. Sem efeito no fast_sim.
 	if not o.has("opening"):
 		o["opening"] = true
 	o["opening_names"] = [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)]

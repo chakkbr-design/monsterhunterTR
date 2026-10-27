@@ -178,7 +178,7 @@ func step(dt: float) -> void:
 			r["stun"] = true
 		if f.mood_state != "":
 			r["mood"] = f.mood_state
-		if f.energy_mode and BattleEnergy.resting(f):
+		if BattleEnergy.resting(f):
 			r["rest"] = true
 		if f.ai:
 			r["ai"] = f.ai.tag

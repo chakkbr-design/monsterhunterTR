@@ -47,7 +47,6 @@ var _seed: SpinBox
 var _turbo: CheckBox
 var _battle: OptionButton
 var _p1: OptionButton
-var _mode: OptionButton
 var _scenario: OptionButton
 var _time: OptionButton
 var _limit: SpinBox
@@ -303,19 +302,13 @@ func set_battle_size(n: int) -> void:
 	_refresh_all()
 
 
-## Modo da batalha: "energy" (barra de energia, sem rodadas) ou "vgc" (rodadas pela Speed).
-func set_battle_mode(mode: String) -> void:
-	cfg["battle_mode"] = "vgc" if mode == "vgc" else "energy"
-	_refresh_all()
-
-
-## Cenário do relevo (só energia/treino): "" = aleatório (sorteado a cada luta) ou um de Cfg.SCENARIOS.
+## Cenário do relevo: "" = aleatório (sorteado a cada luta) ou um de Cfg.SCENARIOS.
 func set_scenario(id: String) -> void:
 	cfg["scenario"] = id if Cfg.SCENARIOS.has(id) else ""
 	_refresh_all()
 
 
-## Hora do dia no estádio (só no modo de energia): "dia" (padrão), "tarde" ou "noite".
+## Hora do dia no estádio: "dia" (padrão), "tarde" ou "noite".
 func set_time_of_day(id: String) -> void:
 	cfg["time_of_day"] = id if Cfg.TIMES.has(id) else "dia"
 	_refresh_all()
@@ -931,18 +924,6 @@ func _build_top() -> Control:
 	_battle.tooltip_text = "How many Pokémon of each team fight at the same time"
 	_battle.item_selected.connect(_on_battle)
 	r2.add_child(_battle)
-	r2.add_child(_small("Mode"))
-	_mode = OptionButton.new()
-	_mode.add_item("Energy")
-	_mode.add_item("VGC")
-	_mode.set_item_metadata(0, "energy")
-	_mode.set_item_metadata(1, "vgc")
-	_mode.tooltip_text = (
-		"Energy: a bar that fills over time, moves spend energy, free movement\n"
-		+ "VGC: rounds by Speed, fixed positions"
-	)
-	_mode.item_selected.connect(_on_mode)
-	r2.add_child(_mode)
 	r2.add_child(_small("Scenery"))
 	_scenario = OptionButton.new()
 	_scenario.add_item("Random")
@@ -958,7 +939,7 @@ func _build_top() -> Control:
 	for id in Cfg.TIMES:
 		_time.add_item(String(Cfg.TIME_NAMES[id]))
 		_time.set_item_metadata(_time.item_count - 1, id)
-	_time.tooltip_text = "Time of day at the stadium (energy mode). At night the floodlights turn on"
+	_time.tooltip_text = "Time of day at the stadium. At night the floodlights turn on"
 	_time.item_selected.connect(_on_time)
 	r2.add_child(_time)
 	r2.add_child(_small("Player 1"))
@@ -1293,10 +1274,8 @@ func _refresh_all() -> void:
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
-	_mode.select(1 if Cfg.battle_mode(cfg) == "vgc" else 0)
 	_scenario.select(maxi(Cfg.SCENARIOS.find(Cfg.scenario(cfg)) + 1, 0))
 	_time.select(maxi(Cfg.TIMES.find(Cfg.time_of_day(cfg)), 0))
-	_time.disabled = Cfg.battle_mode(cfg) == "vgc"
 	for i in Cfg.SIDES:
 		_sync_team(i)
 	_sync_editor()
@@ -1485,11 +1464,6 @@ func _on_turbo(on: bool) -> void:
 func _on_battle(i: int) -> void:
 	if not _syncing:
 		set_battle_size(i + 1)
-
-
-func _on_mode(i: int) -> void:
-	if not _syncing:
-		set_battle_mode(String(_mode.get_item_metadata(i)))
 
 
 func _on_scenario(i: int) -> void:

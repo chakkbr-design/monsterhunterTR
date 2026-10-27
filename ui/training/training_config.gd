@@ -3,12 +3,11 @@ extends RefCounted
 ## Formato (salvo em user://training.json, nunca no save do jogo):
 ##   {sides: [{name, item, think_scale, mons: [Mon.to_dict() + "hp_pct"]}, {...}],
 ##    speed, seed (-1 = aleatório), turbo (bool), time_limit (s de jogo, 0 = sem limite),
-##    battle_size (1 ou 2), battle_mode ("energy" = barra de energia sem rodadas, padrão; "vgc" =
-##    rodadas pela Speed com posições fixas), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
+##    battle_size (1 ou 2), p1_control ("ai" = IA dos dois lados; "manual" = o Time A é do teclado,
 ##    só na luta única: a série roda com IA), scenario ("" = aleatório, padrão; ou campo, lagoa,
-##    pedreira, misto, praia; só no modo de energia ruinas, montanha, vulcao, caverna, pantano: o relevo
-##    da quadra, opts.scenario do BattleTerrain), time_of_day ("dia", padrão; "tarde" = pôr do sol;
-##    "noite": a hora no estádio voxel do modo de energia)}
+##    pedreira, misto, praia, ruinas, montanha, vulcao, caverna, pantano: o relevo da quadra,
+##    opts.scenario do BattleTerrain), time_of_day ("dia", padrão; "tarde" = pôr do sol;
+##    "noite": a hora no estádio voxel)}
 ## Times salvos (user://training_teams.json): {slots: [lado ou {}, ...]}, TEAM_SLOTS posições;
 ## cada lado salvo é {name, item, think_scale, mons} + "saved_at" (data e hora em texto).
 ## Sem IVs e EVs no treino: todo Pokémon luta com IV 31 e EV 0 (só base, natureza e habilidade).
@@ -25,15 +24,13 @@ const SIDES := 2
 const PARTY_MAX := 6
 ## Nível de todo Pokémon do treino (build_mon força este nível).
 const LEVEL := 50
-## Quadra fixa do treino no VGC: 24 x 14 (o dobro da área da antiga 16 x 10), com relevo (BattleTerrain).
-const ARENA := Vector2(24, 14)
-## Quadra do modo de energia (Caio, 2026-10-26): comprimento e largura dobrados (48 x 28, 4x a área),
-## estádio voxel em volta (docs/VOXEL.md). Os Pokémon entram no mesmo ponto de antes (ENTRY_X do
-## centro): a distância da abertura não muda; os treinadores ficam nas linhas de fundo novas.
-const ARENA_ENERGY := Vector2(48, 28)
+## Quadra do treino (Caio, 2026-10-26): 48 x 28, estádio voxel em volta (docs/VOXEL.md). Os Pokémon
+## entram a ENTRY_X m do centro; os treinadores ficam nas linhas de fundo.
+const ARENA := Vector2(48, 28)
+## Quadra pequena de antes (24 x 14), para os testes que lutam sem estádio.
+const SMALL_ARENA := Vector2(24, 14)
 const ENTRY_X := 6.0
 ## Cenários do relevo para escolher na tela (os ids são os de BattleTerrain.SCENARIOS).
-## Os biomas (ruínas em diante) são só do modo de energia (BattleTerrain.ENERGY_ONLY).
 const SCENARIOS := [
 	"campo",
 	"lagoa",
@@ -95,7 +92,6 @@ static func default_config() -> Dictionary:
 		"turbo": false,
 		"time_limit": 0,
 		"battle_size": 2,
-		"battle_mode": "energy",
 		"scenario": "",
 		"time_of_day": "dia",
 		"p1_control": "ai",
@@ -173,7 +169,7 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"can_run": false,
 		"floor": false,
 		"center": center,
-		"arena": arena_size(cfg),
+		"arena": ARENA,
 		"speed": float(cfg.get("speed", 1.0)),
 		"trainer_name": side_name(cfg, 1),
 		"trainer_item": String(cfg.sides[1].get("item", "")),
@@ -182,38 +178,26 @@ static func arena_opts(cfg: Dictionary, center: Vector3) -> Dictionary:
 		"enemy_think_scale": float(cfg.sides[1].get("think_scale", 1.0)),
 		"no_rewards": true,
 		"battle_size": clampi(int(cfg.get("battle_size", 2)), 1, 2),
-		"battle_mode": battle_mode(cfg),
 		"terrain": bool(cfg.get("terrain", true)),
 		"mirror_court": true,
-	}
-	if battle_mode(cfg) == "energy":
 		# Quadra grande em voxel (BattleTerrain.lattice): obstáculos na grade de 0,25 m, piso, linhas e
-		# cerca voxel; entradas a ENTRY_X m do centro como na quadra de 24 m.
-		o["voxel"] = true
-		o["entry_x"] = ENTRY_X
+		# cerca voxel; entradas a ENTRY_X m do centro.
+		"voxel": true,
+		"entry_x": ENTRY_X,
+	}
 	if scenario(cfg) != "":
 		o["scenario"] = scenario(cfg)
 	if int(cfg.get("seed", -1)) >= 0:
 		o["seed"] = int(cfg.seed)
-	# Comparar IAs (tests/balance/ia_duel.gd): IA VGC e IA do treinador por lado ([lado 0, lado 1]);
-	# weather: clima da luta toda (sun, rain, sand, hail), para testes e fotos.
-	for k in ["vgc_ai", "trainer_ai", "weather"]:
+	# IA do treinador por lado ([lado 0, lado 1]); weather: clima da luta toda (sun, rain, sand,
+	# hail), para testes e fotos.
+	for k in ["trainer_ai", "weather"]:
 		if cfg.has(k):
 			o[k] = cfg[k]
 	# Bateria de testes (tests/balance/battery.gd): telemetria, damage_pace etc. passam direto.
 	if cfg.get("extra_opts") is Dictionary:
 		o.merge(cfg.extra_opts, true)
 	return o
-
-
-## Tamanho da quadra do treino: ARENA_ENERGY no modo de energia, ARENA no VGC.
-static func arena_size(cfg: Dictionary) -> Vector2:
-	return ARENA_ENERGY if battle_mode(cfg) == "energy" else ARENA
-
-
-## Modo da batalha do treino: "energy" (padrão) ou "vgc".
-static func battle_mode(cfg: Dictionary) -> String:
-	return "vgc" if String(cfg.get("battle_mode", "energy")) == "vgc" else "energy"
 
 
 ## Cenário escolhido ("" = aleatório: a arena sorteia pela rng da luta).

@@ -3,7 +3,7 @@ extends SceneTree
 ## Obstáculos do modo de energia (BattleClimb): ninguém atravessa caixa nem sobe morro andando (nem o
 ## voo de cruzeiro nem o pulinho de esquiva), o salto custa JUMP_COST, tem recarga JUMP_CD e sobe um
 ## nível por vez (também por cima da caixa), o voo custa FLY_COST, recarga FLY_CD e chega em qualquer
-## altura, a IA contorna/salta com o caminho tapado, lutas com relevo acabam e o VGC não muda.
+## altura, a IA contorna/salta com o caminho tapado, lutas com relevo acabam.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -24,7 +24,6 @@ func _process(_d: float) -> bool:
 	_jump()
 	_fly()
 	_ai_route()
-	_vgc()
 	_fights()
 	print("climb: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -275,30 +274,6 @@ func _ai_route() -> void:
 		_sim(a, r, want, DT)
 		tt += DT
 	check(r.position.x >= 2.5, "a IA passa o morro (%.1f s, x %.2f)" % [tt, r.position.x])
-	a.free()
-
-
-## VGC: nada disso (a encosta, o pico só para escaladores e o voo de cruzeiro como antes).
-func _vgc() -> void:
-	var a := _arena(
-		[Mon.create("rattata", 30)], [Mon.create("pidgey", 30)], 7, {"battle_mode": "vgc"}
-	)
-	a.step(DT)
-	var t: BattleTerrain = a.terrain
-	check(not t.climb.on, "VGC: BattleClimb desligado")
-	var hill := {}
-	for o in t.obstacles:
-		check(C.tiers(o) == 0, "VGC: sem degraus (%s)" % o.kind)
-		if o.kind == "hill":
-			hill = o
-	if not hill.is_empty():
-		var d := (float(hill.top) + float(hill.r)) * 0.5
-		var h := t.height_at(hill.pos + Vector3(d, 0, 0))
-		check(h > 0.05 and h < float(hill.h) - 0.05, "VGC: encosta (%.2f)" % h)
-	var p: BattleFighter = a.enemy
-	check(not p.energy_mode, "VGC: fora do modo de energia")
-	check(is_equal_approx(C.pass_h(p), p.height()), "VGC: altura de sempre contra objeto")
-	check(t.steer(p, Vector3.RIGHT).length() > 0.9, "VGC: steer como antes")
 	a.free()
 
 

@@ -101,26 +101,25 @@ func _cooldowns() -> void:
 	var p: BattleFighter = a.player
 	var sf := p.speed_factor()
 	var mv := Dex.move("ember")
+	p.pp_max = p.pp_base
 	var pp0 := p.pp_max
 	check(a.moves.use(p, "ember"), "usa ember")
-	check(near(p.pp_max, pp0 - Dex.pp_cost(mv), 0.001), "debita PP")
-	check(
-		near(p.move_cd["ember"], Dex.cooldown(mv) / sf, Dex.cooldown(mv) / sf * 0.051),
-		"cooldown por golpe / fator (+-5%)"
-	)
+	check(near(p.pp_max, pp0 - p.pp_cost_of(mv), 0.001), "debita energia")
+	var cd := BattleEnergy.cooldown(mv) / sf
+	check(near(p.move_cd["ember"], cd, cd * 0.051), "cooldown por golpe / fator (+-5%)")
 	check(near(p.gcd_t, 1.0 / sf, 0.001), "GCD 1 s / fator")
 	check(not a.moves.use(p, "scratch"), "GCD bloqueia outro golpe")
 	_run(a, 1.0 / sf + 0.4)  # o hit-stop do acerto congela os timers do atacante
 	check(not a.moves.use(p, "ember"), "cooldown do golpe ainda ativo")
 	check(a.moves.use(p, "scratch"), "outro golpe depois do GCD")
-	_run(a, Dex.cooldown(mv) / sf * 1.06)
+	_run(a, cd * 1.06)
+	p.pp_max = p.pp_base
 	check(a.moves.use(p, "ember"), "ember volta após cooldown")
-	p.pp_max = 0.5
 	a.enemy.immortal = true  # queimadura do Ember não pode acabar a luta antes do struggle
-	_run(a, 10.0)
-	check(p.out_of_pp(), "sem PP")
-	check(not a.moves.use(p, "ember"), "sem PP não usa golpe")
-	check(p.struggle(), "struggle sem PP")
+	_run(a, 1.5)
+	p.pp_max = 0.5
+	check(not a.moves.use(p, "scratch"), "sem energia não usa golpe")
+	check(p.struggle(), "struggle")
 	_done(a)
 
 
@@ -225,10 +224,7 @@ func _swap() -> void:
 ## Golpe de vários acertos (multi_arc) não continua do lutador recolhido pela troca.
 func _recall_stops_combo() -> void:
 	var party := [Mon.create("charmander", 20), Mon.create("squirtle", 20)]
-	# Troca na hora (sem a fila de rodadas): o golpe em andamento é o que importa aqui.
-	var a := _arena(
-		party, [Mon.create("onix", 30)], {"seed": 3, "battle_size": 1, "turn_mode": false}
-	)
+	var a := _arena(party, [Mon.create("onix", 30)], {"seed": 3, "battle_size": 1})
 	_run(a, 1.3)
 	a.enemy.controller = "none"
 	a.player.position = Vector3(0, 0, 0.6)
@@ -237,6 +233,7 @@ func _recall_stops_combo() -> void:
 	var mv := Dex.move("fury_swipes").duplicate()
 	mv.accuracy = 0  # sem erro aleatório
 	a.moves.deliver(old, mv)
+	a.fight_clock = a.SWITCH_OPEN  # passou a trava do começo da luta
 	check(a.swap() and a.player != old, "troca no meio do Fury Swipes")
 	a.player.position = Vector3(2.5, 0, 0.6)
 	a.enemy.position = Vector3(0, 0, -0.4)  # entra no alcance do recolhido
@@ -363,14 +360,7 @@ func _trainer_item() -> void:
 	var a := _arena(
 		party,
 		foes,
-		# Regra do item na hora (sem a fila de rodadas, em que o item espera a vez).
-		{
-			"kind": "trainer",
-			"trainer_id": "brock",
-			"seed": 9,
-			"trainer_item": "super_potion",
-			"turn_mode": false
-		}
+		{"kind": "trainer", "trainer_id": "brock", "seed": 9, "trainer_item": "super_potion"}
 	)
 	check(a.ally == null, "batalha de treinador é 1x1 (sem aliado)")
 	_run(a, TRAINER_INTRO)

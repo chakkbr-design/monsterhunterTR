@@ -11,8 +11,7 @@ extends Node3D
 ## shaders do mapa ficam molhados ou brancos. Sem mundo (treino, cena de teste) vai um piso próprio.
 ## Também mostra o nome do clima e as rodadas que faltam no alto da tela.
 ##
-## Energy mode (arena.energy_on(): training and energy fights) uses the shared gfx/weather pieces
-## instead of the VGC particles:
+## Rain, snow and lightning use the shared gfx/weather pieces:
 ## - WeatherRig fixed over the court and the stands: the training stadium's weather_area() (the
 ##   whole bowl out to the parapet), else arena.rect plus STANDS_MARGIN. Velocity-aligned rain that
 ##   stops on the stands, roofs and pond water (collision heightfield, pond collision boxes) and
@@ -27,7 +26,6 @@ extends Node3D
 ##   globals go back to the project defaults and the stadium gets weather_light(0, 0);
 ## - the voxel court (arena.voxel_court()) reads rain_wet, rain_puddle and snow_cover in its own
 ##   shader, so it gets no flat ground overlay.
-## The VGC path (and its look) is unchanged.
 
 const KINDS := ["rain", "hail", "sun", "sand"]
 ## Força: segundos para entrar/sair; a neve no chão acumula e derrete mais devagar.
@@ -36,15 +34,12 @@ const FADE_OUT := 2.2
 const SNOW_PILE_SECS := 9.0
 const SNOW_MELT_SECS := 6.0
 const WET_DRY_SECS := 5.0
-## Folga em volta da quadra coberta pelas partículas e pelo piso.
-const MARGIN := 6.0
-const RAIN_TOP := 11.0
 const LIGHTNING_GAP := Vector2(6.0, 14.0)
 const SHAFTS := 6
 ## Neve no chão do mundo: não chega ao branco puro, para os flocos aparecerem por cima.
 const WORLD_SNOW_MAX := 0.82
 const NAMES := {"rain": "Rain", "hail": "Snow", "sun": "Harsh sun", "sand": "Sandstorm"}
-## Energy mode: metres of cover around arena.rect when there is no stadium to ask, and the rain
+## Metres of cover around arena.rect when there is no stadium to ask, and the rain
 ## heightfield.
 const STANDS_MARGIN := 12.0
 const ENERGY_FIELD_RES := GPUParticlesCollisionHeightField3D.RESOLUTION_1024
@@ -87,9 +82,6 @@ var flash := 0.0
 var _rng := RandomNumberGenerator.new()
 var _half := Vector2(10.0, 7.0)
 var _center := Vector3.ZERO
-var _rain: GPUParticles3D
-var _splash: GPUParticles3D
-var _snow: GPUParticles3D
 var _sand_grains: GPUParticles3D
 var _motes: GPUParticles3D
 var _shafts: Array[MeshInstance3D] = []
@@ -99,12 +91,8 @@ var _screen: ColorRect
 var _glow: ColorRect
 var _label: Label
 var _layer: CanvasLayer
-var _bolt_t := 8.0
-var _bolt_seq: Array = []
 var _world: Node
 var _built := false
-## Energy mode (see the header).
-var energy := false
 var rig: WeatherRig
 var bolts: WeatherLightning
 var audio: WeatherAudio
@@ -127,26 +115,18 @@ func _build() -> void:
 		_half = r.size * 0.5
 		_center = Vector3(r.get_center().x, 0.0, r.get_center().y)
 	_world = get_tree().get_first_node_in_group("weather") if is_inside_tree() else null
-	energy = arena != null and arena.has_method("energy_on") and bool(arena.energy_on())
-	if energy:
-		_build_energy()
-	else:
-		_build_rain()
-		_build_snow()
+	_build_energy()
 	_build_sand()
 	_build_sun()
 	if _world == null and not _voxel_court():
 		_build_ground()
 	_build_screen()
-	_bolt_t = _rng.randf_range(LIGHTNING_GAP.x, LIGHTNING_GAP.y)
 
 
-## Voxel court (training in energy mode): its floor shader shows the wet, the puddles and the snow
+## Voxel court (training): its floor shader shows the wet, the puddles and the snow
 ## from the globals, so the flat overlay plane would only cut through its relief.
 func _voxel_court() -> bool:
-	return (
-		energy and arena != null and arena.has_method("voxel_court") and bool(arena.voxel_court())
-	)
+	return arena != null and arena.has_method("voxel_court") and bool(arena.voxel_court())
 
 
 ## A shader global's default from the project ([shader_globals]); null if it has none. (Reading the
@@ -196,13 +176,7 @@ func _process(dt: float) -> void:
 	wet_ground = move_toward(
 		wet_ground, rain, dt / (FADE_IN if rain > wet_ground else WET_DRY_SECS)
 	)
-	if energy:
-		_update_energy(dt, rain, snow)
-	else:
-		_lightning(dt, rain)
-		_emit(_rain, rain)
-		_emit(_splash, rain * 0.9)
-		_emit(_snow, snow)
+	_update_energy(dt, rain, snow)
 	_emit(_sand_grains, sand)
 	_emit(_motes, sun)
 	_update_shafts(sun)
@@ -222,7 +196,7 @@ func _process(dt: float) -> void:
 	_screen.visible = rain + snow + sand + sun > 0.001
 	var gm := _glow.material as ShaderMaterial
 	gm.set_shader_parameter("sun", sun)
-	var screen_flash := flash * (0.1 if energy else 1.0)  # energy: the real light does the work
+	var screen_flash := flash * 0.1  # the real light does the work
 	gm.set_shader_parameter("flash", screen_flash)
 	_glow.visible = sun > 0.001 or screen_flash > 0.001
 	_update_label(w)
@@ -231,22 +205,6 @@ func _process(dt: float) -> void:
 func _emit(p: GPUParticles3D, k: float) -> void:
 	p.amount_ratio = clampf(k, 0.0, 1.0)
 	p.emitting = k > 0.01
-
-
-## Relâmpago na chuva forte: clarão duplo a cada LIGHTNING_GAP s.
-func _lightning(dt: float, rain: float) -> void:
-	flash = maxf(flash - dt * 4.0, 0.0)
-	for i in range(_bolt_seq.size() - 1, -1, -1):
-		_bolt_seq[i] -= dt
-		if _bolt_seq[i] <= 0.0:
-			flash = 1.0
-			_bolt_seq.remove_at(i)
-	if rain < 0.6:
-		return
-	_bolt_t -= dt
-	if _bolt_t <= 0.0:
-		_bolt_t = _rng.randf_range(LIGHTNING_GAP.x, LIGHTNING_GAP.y)
-		_bolt_seq = [0.0, _rng.randf_range(0.12, 0.22)]
 
 
 func _set_world_cover(c: Color) -> void:
@@ -306,63 +264,9 @@ func _area(thick: float) -> Vector3:
 	return Vector3(_half.x + _margin(), thick, _half.y + _margin())
 
 
-## Cover around the court: the stands in energy mode, the VGC margin otherwise.
+## Cover around the court: the stands.
 func _margin() -> float:
-	return STANDS_MARGIN if energy else MARGIN
-
-
-func _build_rain() -> void:
-	var box := _area(0.3)
-	_rain = _particles(2600, 0.5, box, Vector3(0, RAIN_TOP, 0))
-	var pm := _rain.process_material as ParticleProcessMaterial
-	pm.direction = Vector3(0.12, -1.0, 0.06)
-	pm.spread = 3.0
-	pm.initial_velocity_min = 21.0
-	pm.initial_velocity_max = 25.0
-	pm.gravity = Vector3(0, -6.0, 0)
-	pm.scale_min = 0.7
-	pm.scale_max = 1.2
-	var q := QuadMesh.new()
-	q.size = Vector2(0.025, 0.8)
-	q.material = _mat(
-		_gradient_tex(), Color(0.8, 0.88, 1.0, 0.55), BaseMaterial3D.BILLBOARD_FIXED_Y
-	)
-	_rain.draw_pass_1 = q
-	_splash = _particles(420, 0.4, Vector3(_half.x + 0.5, 0.02, _half.y + 0.5), Vector3(0, 0.07, 0))
-	var sp := _splash.process_material as ParticleProcessMaterial
-	sp.direction = Vector3(0, 1, 0)
-	sp.spread = 5.0
-	sp.initial_velocity_min = 0.0
-	sp.initial_velocity_max = 0.05
-	sp.gravity = Vector3.ZERO
-	sp.scale_curve = _curve_tex([Vector2(0, 0.3), Vector2(1, 1.4)])
-	sp.alpha_curve = _curve_tex([Vector2(0, 0), Vector2(0.15, 1), Vector2(1, 0)])
-	var pl := PlaneMesh.new()
-	pl.size = Vector2(0.18, 0.18)
-	pl.material = _mat(_ring_tex(), Color(0.82, 0.9, 1.0, 0.6), BaseMaterial3D.BILLBOARD_DISABLED)
-	_splash.draw_pass_1 = pl
-
-
-func _build_snow() -> void:
-	_snow = _particles(1500, 7.0, _area(0.5), Vector3(0, 8.0, 0))
-	var pm := _snow.process_material as ParticleProcessMaterial
-	pm.direction = Vector3(0.25, -1.0, 0.1)
-	pm.spread = 20.0
-	pm.initial_velocity_min = 0.9
-	pm.initial_velocity_max = 1.6
-	pm.gravity = Vector3(0, -0.25, 0)
-	pm.turbulence_enabled = true
-	pm.turbulence_noise_strength = 0.8
-	pm.turbulence_noise_scale = 3.0
-	pm.turbulence_influence_min = 0.05
-	pm.turbulence_influence_max = 0.15
-	pm.scale_min = 0.45
-	pm.scale_max = 1.3
-	pm.alpha_curve = _curve_tex([Vector2(0, 0), Vector2(0.08, 1), Vector2(0.9, 1), Vector2(1, 0)])
-	var q := QuadMesh.new()
-	q.size = Vector2(0.16, 0.16)
-	q.material = _mat(_flake_tex(), Color(1, 1, 1, 0.95), BaseMaterial3D.BILLBOARD_PARTICLES)
-	_snow.draw_pass_1 = q
+	return STANDS_MARGIN
 
 
 func _build_sand() -> void:
@@ -453,7 +357,7 @@ func _update_shafts(k: float) -> void:
 func _build_ground() -> void:
 	_ground = MeshInstance3D.new()
 	var pm := PlaneMesh.new()
-	var gm := 1.0 if energy else MARGIN  # energy: the court only, the stands read the globals
+	var gm := 1.0  # the court only, the stands read the globals
 	pm.size = (_half + Vector2(gm, gm)) * 2.0
 	pm.subdivide_width = 0
 	_ground.mesh = pm
@@ -497,7 +401,7 @@ func _full_rect(shader: String) -> ColorRect:
 	return r
 
 
-# --- Energy mode ---
+# --- Rain, snow and lightning ---
 
 
 func _build_energy() -> void:
@@ -624,12 +528,3 @@ static func _gradient_tex(wide := false) -> ImageTexture:
 ## Ponto macio (floco, poeira); `core` > 0 deixa o miolo mais duro.
 static func _dot_tex(core := 0.35) -> ImageTexture:
 	return WeatherKit.dot_tex(core)
-
-
-## Floco: miolo branco com uma borda azul-acinzentada, para aparecer até por cima da neve.
-static func _flake_tex() -> ImageTexture:
-	return WeatherKit.flake_tex()
-
-
-static func _ring_tex() -> ImageTexture:
-	return WeatherKit.ring_tex(24, Vector2(0.5, 0.72), Vector2(0.86, 1.02))

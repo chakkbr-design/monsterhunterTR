@@ -3,7 +3,8 @@ extends SceneTree
 ## Fim de turno oficial (BattleEndTurn): uma vez por rodada, valores da Gen 9 (veneno 1/8, queimadura
 ## 1/16, Toxic n/16, Leftovers, Black Sludge, Leech Seed, areia...), a ordem oficial dos passos, a Speed
 ## dentro do passo, sono/confusão/congelado contados em turnos, clima/Tailwind/Trick Room/Protect em
-## rodadas, frutinhas e o popup/clarão.
+## rodadas, frutinhas e o popup/clarão. As lutas daqui usam damage_pace 1 (os valores oficiais); o
+## ritmo do modo de energia (0,6) entra pelo fighter.paced (_pace).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
@@ -15,7 +16,7 @@ var _count := 0
 func _initialize() -> void:
 	seed(4)
 	_once_per_round()
-	_old_mode()
+	_clock()
 	_values()
 	_toxic()
 	_items()
@@ -24,14 +25,13 @@ func _initialize() -> void:
 	_order()
 	_speed_order()
 	_sleep_and_confusion()
-	_sleep_on_turn()
 	_freeze()
 	_durations()
 	_protect()
 	_protect_stall()
 	_follow_me()
 	_yawn_wish_future()
-	_no_pace()
+	_pace()
 	print("end_turn: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -48,6 +48,8 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	a.manual = true
 	root.add_child(a)
 	opts["speed"] = 1.0
+	if not opts.has("damage_pace"):
+		opts["damage_pace"] = 1.0
 	if not opts.has("auto_battle"):
 		opts["auto_battle"] = false
 	opts["field_objects"] = false
@@ -124,6 +126,7 @@ func _once_per_round() -> void:
 		guard += 1
 	_reset(e)
 	e.apply_status("poison", a.player)
+	e.status_t = 999.0  # o veneno passaria sozinho em BattleEnergy.STATUS_SECS
 	var hp0 := e.hp
 	var r1: int = a.end_turn.rounds
 	_run(a, 0.5)
@@ -135,7 +138,6 @@ func _once_per_round() -> void:
 		e.hp == hp0 - 3 * _eighth(e),
 		"veneno 1/8 uma vez por rodada: 3 ticks (%d -> %d, 1/8 = %d)" % [hp0, e.hp, _eighth(e)]
 	)
-	check(e.status == "poison", "veneno não acaba sozinho (oficial)")
 	# popup e clarão na hora do fim da rodada
 	_reset(e)
 	e.apply_status("burn", a.player)
@@ -146,17 +148,17 @@ func _once_per_round() -> void:
 	a.free()
 
 
-## Ritmo antigo (turn_mode false): o fim de turno vira um relógio de ROUND_SECS.
-func _old_mode() -> void:
-	var a := _still("charmander", "rattata", 40, {"turn_mode": false})
+## O fim de turno é um relógio de ROUND_SECS.
+func _clock() -> void:
+	var a := _still("charmander", "rattata", 40)
 	var e: BattleFighter = a.enemy
 	e.apply_status("burn", a.player)
 	var hp0 := e.hp
 	var r0: int = a.end_turn.rounds
 	_run(a, BattleTurns.ROUND_SECS * 2.0 + 0.1)
 	var n: int = a.end_turn.rounds - r0
-	check(n == 2, "sem fila: fim de turno a cada ROUND_SECS (%d)" % n)
-	check(e.hp == hp0 - n * _sixteenth(e), "sem fila: queimadura 1/16 por rodada")
+	check(n == 2, "fim de turno a cada ROUND_SECS (%d)" % n)
+	check(e.hp == hp0 - n * _sixteenth(e), "queimadura 1/16 por rodada")
 	a.free()
 
 
@@ -414,7 +416,7 @@ func _sleep_and_confusion() -> void:
 		seen.keys().all(func(k): return k >= 2 and k <= 5) and seen.size() == 4,
 		"confusão: contador 2-5"
 	)
-	# tentativa de agir (quem segue a fila conta na vez): contador 2 = dorme 1 turno
+	# tentativa de agir: contador 2 = dorme 1 turno
 	e.confusion_t = 0.0
 	e.clear_status()
 	e.apply_status("sleep")
@@ -430,7 +432,7 @@ func _sleep_and_confusion() -> void:
 	check(e.confusion_t > 0.0, "confusão segue nas 2 primeiras tentativas")
 	e.try_act()
 	check(e.confusion_t == 0.0, "confusão acaba na 3ª tentativa")
-	# quem não segue a fila conta no fim da rodada (não na rodada em que dormiu)
+	# conta no fim da rodada (não na rodada em que dormiu)
 	e.apply_status("sleep")
 	e.sleep_turns = 3
 	var r0: int = a.end_turn.rounds
@@ -439,41 +441,11 @@ func _sleep_and_confusion() -> void:
 		a.step(DT)
 		guard += 1
 	var n: int = a.end_turn.rounds - r0
-	check(n == 3, "fora da fila: Rest/contador 3 dorme a rodada do uso + 2 (%d fins de turno)" % n)
-	check(not e.counts_on_turn(), "sem controle não segue a fila")
+	check(n == 3, "Rest/contador 3 dorme a rodada do uso + 2 (%d fins de turno)" % n)
 	# golpe não acorda (oficial)
 	e.apply_status("sleep")
 	e.take_damage(1, Vector3.FORWARD, 4.0)
 	check(e.status == "sleep", "golpe com empurrão não acorda")
-	a.free()
-
-
-## Na fila (IA x IA), quem dorme acorda na vez dele, contando as tentativas.
-func _sleep_on_turn() -> void:
-	var a := _arena(
-		[Mon.create("charmander", 30)],
-		[Mon.create("slowbro", 40)],
-		{"seed": 21, "autoplay": true, "kind": "trainer", "no_rewards": true}
-	)
-	_run(a, 3.0)
-	var e: BattleFighter = a.enemy
-	e.set_meta("ability_override", "")
-	e.immortal = true
-	e.clear_status()
-	check(e.counts_on_turn(), "a IA segue a fila")
-	e.apply_status("sleep")
-	e.sleep_turns = 3
-	var r0: int = a.turns.round_n
-	var woke_turn := false
-	var guard := 0
-	while e.status == "sleep" and guard < 60 * 40:
-		a.step(DT)
-		guard += 1
-		if e.status != "sleep":
-			woke_turn = a.turns.current == e
-	var rounds: int = a.turns.round_n - r0
-	check(woke_turn, "acorda na vez dele (tentativa de agir)")
-	check(rounds >= 2 and rounds <= 3, "contador 3: acorda na 3ª vez (%d rodadas)" % rounds)
 	a.free()
 
 
@@ -679,13 +651,13 @@ func _yawn_wish_future() -> void:
 	a.free()
 
 
-## O dano residual segue o oficial puro: o ritmo do dano dos golpes (damage_pace) não entra.
-func _no_pace() -> void:
+## O dano residual segue o ritmo do dano dos golpes (damage_pace, fighter.paced).
+func _pace() -> void:
 	var a := _still("charmander", "rattata", 40, {"damage_pace": 0.375})
 	var e: BattleFighter = a.enemy
 	check(e.dot_scale() < 1.0, "ritmo baixo nesta arena")
 	e.apply_status("poison", a.player)
 	var h := e.hp
 	a.end_turn.run()
-	check(e.hp == h - _eighth(e), "veneno 1/8 mesmo com damage_pace baixo")
+	check(e.hp == h - e.paced(_eighth(e)), "veneno 1/8 x damage_pace")
 	a.free()

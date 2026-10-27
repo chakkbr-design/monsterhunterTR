@@ -1,6 +1,6 @@
 class_name BattleEnergy
 extends RefCounted
-## Modo de energia (opts.battle_mode = "energy"): sem rodadas nem posições fixas. Cada lutador tem uma
+## Modo de energia (o único modo de batalha): sem fila de rodadas nem posições fixas. Cada lutador tem uma
 ## barra de energia (no lugar do PP) que enche com o tempo; a Speed acelera um pouco e ficar longe dos
 ## inimigos sem atacar enche mais rápido (recuar para recuperar). Cada golpe gasta energia pelo poder,
 ## crescendo mais que ele, e o efeito secundário cobra a mais; status grave e sono custam caro;
@@ -50,7 +50,7 @@ const MEAN_HITS_2_5 := 3.1
 ## Prioridade (Quick Attack...): custo PRIORITY_COST x, cooldown PRIORITY_CD x.
 const PRIORITY_COST := 0.6
 const PRIORITY_CD := 1.8
-## Dano final no modo de energia (o VGC fica no BattleMoves.DAMAGE_PACE, 0,75). O Caio escolheu 0,6
+## Dano final (x do oficial). O Caio escolheu 0,6
 ## em 2026-10-25 pela bateria: menos "entrou e morreu" e ~21 s por Pokémon. opts.damage_pace muda.
 const DAMAGE_PACE := 0.6
 ## Andar no modo de energia (Caio, 2026-10-25: a luta estava rápida demais): todo Pokémon anda
@@ -73,10 +73,6 @@ const STATUS_IMMUNE := 6.0
 ## HP cheio com um golpe só (fica com 1).
 const ENTRY_GUARD := 3.0
 const ENTRY_MULT := 0.5
-
-
-static func on(arena) -> bool:
-	return arena != null and arena.has_method("energy_on") and bool(arena.energy_on())
 
 
 static func cost(mv: Dictionary) -> float:

@@ -2,7 +2,7 @@ class_name BattleAbilities
 extends RefCounted
 ## Efeitos das habilidades (data/abilities.json) na luta em tempo real, com a faixa de habilidade no HUD.
 ## A arena cria um por luta (arena.abilities) e chama os ganchos abaixo.
-## Regras oficiais (Gen 9, VGC) adaptadas à rodada (BattleTurns): o "fim de turno" do oficial roda em
+## Regras oficiais (Gen 9) adaptadas à rodada (BattleTurns): o "fim de turno" do oficial roda em
 ## BattleEndTurn.run(), que chama os passos daqui na ordem oficial (count_weather_round +
 ## weather_residual, shed_skin, Poison Heal no passo do veneno, late_residual); on_round_end() faz só
 ## a parte das habilidades. "Ao entrar" dispara na troca e na substituição, em ordem pela Speed (do mais
@@ -1954,7 +1954,7 @@ func _sand_proof(f: BattleFighter, a: String) -> bool:
 	return false
 
 
-## Dano de clima: oficial puro no VGC; no modo de energia x0,6 como todo dano indireto (fighter.paced).
+## Dano de clima: x0,6 como todo dano indireto (fighter.paced).
 func _weather_chip(f: BattleFighter, pct: float, col: Color, why: String) -> void:
 	f.residual_damage(f.paced(maxi(1, int(float(f.max_hp) * pct))), why, col)
 

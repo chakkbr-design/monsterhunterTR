@@ -1,6 +1,6 @@
 class_name BattleDestruction
 extends RefCounted
-## Obstáculos destrutíveis (só no modo de energia; o VGC não muda). O BattleTerrain cria um
+## Obstáculos destrutíveis. O BattleTerrain cria um
 ## (terrain.destruction); o BattlePhysics chama crash_target/impact quando um lutador arremessado bate
 ## em algo, e todo caminho que tira um obstáculo do jogo passa por broken() (que dispara o sinal
 ## BattleTerrain.obstacles_changed).
@@ -124,11 +124,9 @@ func _init(t) -> void:
 	arena = t.arena
 
 
-## Destruição ligada: modo de energia (opts.destruction: false desliga).
+## Destruição ligada (opts.destruction: false desliga).
 func on() -> bool:
-	if not bool(arena.opts.get("destruction", true)):
-		return false
-	return arena.has_method("energy_on") and arena.energy_on()
+	return bool(arena.opts.get("destruction", true))
 
 
 func _vis() -> bool:

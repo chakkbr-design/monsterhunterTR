@@ -38,10 +38,6 @@ const DEFAULT_SPEED := 0.6  ## original Settings "Slow" (the default battle spee
 const FAINT_CLEAR := 1.0
 const NEXT_TRAINER_MON := 1.4
 const SWAP_CD := 1.0
-## Folga no começo da rodada quando alguém trocou (a bola voltando e saindo) antes do 1º golpe.
-const SWITCH_HOLD := 1.0
-## Até ROUND_GRACE s depois da virada (sem ninguém ter agido) o substituto entra na hora.
-const ROUND_GRACE := 2.0
 const CAM_DIST := 5.0
 const CAM_HEIGHT := 3.4
 const BALL_FLIGHT := 0.5
@@ -75,8 +71,6 @@ const CUT_IN_GAP := 2.5
 ## Dupla de treinador: distância lateral entre os dois mons de cada lado.
 ## Dupla: distância entre os dois de cada lado (lado a lado, de frente para a outra dupla).
 const DOUBLES_GAP := 3.6
-## Posição fixa de cada lado longe da parede pelo menos HOME_WALL m.
-const HOME_WALL := 1.8
 ## Treinador de cada lado: TRAINER_BACK m atrás da posição do lado e TRAINER_SIDE m de lado.
 const TRAINER_BACK := 2.6
 const TRAINER_SIDE := 2.2
@@ -134,7 +128,7 @@ var combos: BattleCombos  ## marcas de tipo, reações, golpes de dupla, Sintoni
 var field: BattleField  ## terreno que muda, objetos, clones
 var terrain: BattleTerrain  ## relevo 3D (morros, picos, lagos), opts.terrain
 var abilities: BattleAbilities  ## efeitos das habilidades
-var turns: BattleTurns  ## rodadas pela Speed (fila de quem solta golpe)
+var turns: BattleTurns  ## relógio de rodadas (fim de turno, troca e item do treinador)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
 var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta para a bateria
 ## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
@@ -153,8 +147,6 @@ var trainer_ai := {}
 ## Pedidos para o começo da próxima rodada: troca {side: {out, mon}} e itens [{side, item, target}].
 var _switch_req := {}
 var _item_req: Array = []
-## Substituições de quem desmaiou, feitas no fim da rodada (como no oficial).
-var _round_end_q: Array = []
 ## Treinador parado atrás de cada lado {side: Node3D} (o corpo do mundo ou um boneco criado aqui).
 var _stands := {}
 var _stand_owned := {}
@@ -162,8 +154,6 @@ var _balls: Array = []
 var _ball_show: BallShow = null
 ## Abertura do treino em andamento (state "opening", opts.opening com a câmera de ação).
 var opening: BattleOpening = null
-var _turn_mark: Node3D  ## anel + seta brilhando em quem é o próximo da fila
-var _turn_pulse := 0.0
 var hud: BattleHUD
 var vfx: BattleVfx
 var fight_speed := DEFAULT_SPEED
@@ -187,8 +177,8 @@ var _cut_t := 0.0
 var _cut_gap := 0.0
 ## 2x2 de treinador: os dois lados com dois em campo; enemy2 é o 2º do adversário.
 var doubles := false
-## Escala do dano final (ritmo da luta; BattleMoves.DAMAGE_PACE).
-var damage_pace := BattleMoves.DAMAGE_PACE
+## Escala do dano final (ritmo da luta; BattleEnergy.DAMAGE_PACE).
+var damage_pace := BattleEnergy.DAMAGE_PACE
 var enemy2: BattleFighter
 var _pending: Array = []  ## Mons do jogador já chamados para entrar (ainda não em campo)
 var _enemy_pending := 0
@@ -305,12 +295,10 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	field = BattleField.new(self)
 	terrain = BattleTerrain.new(self)
 	abilities = BattleAbilities.new(self)
-	# Modo de energia (BattleEnergy): sem fila de rodadas nem posições fixas.
-	turns = BattleTurns.new(self, bool(o.get("turn_mode", true)) and not energy_on())
+	turns = BattleTurns.new(self)
 	end_turn = BattleEndTurn.new(self)
-	if energy_on():
-		regroup = BattleRegroup.new(self)
-	if bool(o.get("action_cam", false)) and energy_on() and not bool(o.get("fast_sim", false)):
+	regroup = BattleRegroup.new(self)
+	if bool(o.get("action_cam", false)) and not bool(o.get("fast_sim", false)):
 		director = BattleDirector.new(self)
 	if String(o.get("telemetry", "")) != "":
 		telemetry = BattleTelemetry.new(self, String(o.telemetry))
@@ -319,9 +307,9 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	# treino), o lado do jogador. opts.trainer_ai = false desliga ([lado 0, lado 1] por lado).
 	trainer_ai = {}
 	var tai = o.get("trainer_ai", true)
-	if kind == "trainer" and BattleTactics.side_on(tai, 1):
+	if kind == "trainer" and BattleTrainerAI.side_on(tai, 1):
 		trainer_ai[1] = BattleTrainerAI.new(self, 1)
-	if bool(o.get("autoplay", false)) and BattleTactics.side_on(tai, 0):
+	if bool(o.get("autoplay", false)) and BattleTrainerAI.side_on(tai, 0):
 		trainer_ai[0] = BattleTrainerAI.new(self, 0)
 	if kind == "trainer":
 		var tr := Dex.trainer(String(o.get("trainer_id", "")))
@@ -343,11 +331,8 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		if up < 2 or foes < 2:
 			_battle_size = 1
 	doubles = kind == "trainer" and _battle_size >= 2
-	# Na dupla cada um apanha de dois: o dano anda mais devagar para o Pokémon durar o mesmo tanto.
-	var pace_def := BattleMoves.DAMAGE_PACE * (BattleMoves.DOUBLES_PACE if doubles else 1.0)
-	if energy_on():
-		pace_def = BattleEnergy.DAMAGE_PACE  # Caio, 2026-10-25: 0,6x no modo de energia
-	damage_pace = float(o.get("damage_pace", pace_def))
+	# Caio, 2026-10-25: 0,6x do oficial, igual no 1x1 e no 2x2.
+	damage_pace = float(o.get("damage_pace", BattleEnergy.DAMAGE_PACE))
 	auto_commands = bool(o.get("auto_commands", o.get("autoplay", false)))
 	if not InputMap.has_action("move_1"):
 		load("res://core/controls.gd").register()
@@ -817,7 +802,7 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 		vfx.puff(f.to_global(Vector3(0, 0.45, 0)), 1.6)
 	if abilities:
 		abilities.on_enter(f)
-	if energy_on() and state == "fight":
+	if state == "fight":
 		f.entry_t = BattleEnergy.ENTRY_GUARD  # entrada protegida (o 1º do time entra com a luta parada)
 	if telemetry:
 		telemetry.enter(f)
@@ -961,53 +946,16 @@ func _nearest(f: BattleFighter, cands: Array) -> BattleFighter:
 	return best
 
 
-## opts.battle_mode "energy": barra de energia no lugar do PP, sem rodadas (BattleEnergy). Padrão "vgc".
-func energy_on() -> bool:
-	return String(opts.get("battle_mode", "vgc")) == "energy"
-
-
 ## Modo de energia: na tela só dano, gatilhos especiais e o nome do golpe (BattleHUD.quiet).
 ## opts.loud_callouts = true volta a mostrar todos os textos.
 func quiet_callouts() -> bool:
-	return energy_on() and not bool(opts.get("loud_callouts", false))
+	return not bool(opts.get("loud_callouts", false))
 
 
 ## Quadra voxel (opts.voxel, o treino no modo de energia): obstáculos na grade de 0,25 m e piso, linhas
-## e cerca em voxel no lugar da quadra dourada. Nunca no VGC.
+## e cerca em voxel no lugar da quadra dourada.
 func voxel_court() -> bool:
-	return bool(opts.get("voxel", false)) and energy_on()
-
-
-## Posição fixa do lutador na quadra (como no VGC): no 1x1 um ponto por lado; com dois do mesmo lado,
-## esquerda (controlado / 1º do adversário) e direita (aliado / 2º), de frente para o outro lado.
-func home_of(f: BattleFighter) -> Vector3:
-	var base := player_spot if f.side == 0 else enemy_spot
-	var pair := false
-	var slot := 0
-	if f.side == 0:
-		pair = (
-			is_instance_valid(ally)
-			and ally.active()
-			and is_instance_valid(player)
-			and player.active()
-		)
-		slot = 1 if f == ally else 0
-	else:
-		pair = (
-			is_instance_valid(enemy2)
-			and enemy2.active()
-			and is_instance_valid(enemy)
-			and enemy.active()
-		)
-		slot = 1 if f == enemy2 else 0
-	var p := base
-	if pair:
-		p += _lateral() * DOUBLES_GAP * (0.5 if slot == 1 else -0.5)
-	var r := rect.grow(-HOME_WALL)
-	p.x = clampf(p.x, r.position.x, r.end.x)
-	p.z = clampf(p.z, r.position.y, r.end.y)
-	p.y = 0.0
-	return p
+	return bool(opts.get("voxel", false))
 
 
 func targets_of(user: BattleFighter) -> Array:
@@ -1384,40 +1332,35 @@ func _recall_beam(f: BattleFighter) -> void:
 		show.recall(f, to_global(to), maxf(RECALL_BEAM, 0.35 if big else 0.0))
 
 
-## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial, e depois a entrada
-## dos substitutos de quem desmaiou.
+## Fim da rodada (BattleTurns): efeitos de fim de turno uma vez, na ordem oficial.
 func end_of_round() -> void:
 	if end_turn and state == "fight":
 		end_turn.run()
-	var q := _round_end_q
-	_round_end_q = []
-	for cb in q:
-		cb.call()
 
 
-## Começo da rodada (BattleTurns, antes de montar a fila): a IA de treinador de cada lado decide
-## (round_start), depois saem as trocas (uma por lado) e os itens pedidos. Quem entrou e quem recebeu
-## item ficam fora da fila nesta rodada. Devolve a folga (s) para a bola antes do 1º golpe.
-func begin_of_round() -> float:
+## Começo da rodada (BattleTurns): a IA de treinador de cada lado decide (round_start) e saem as
+## trocas (uma por lado) e os itens pedidos.
+func begin_of_round() -> void:
 	if state != "fight":
-		return 0.0
+		return
 	for side in [0, 1]:
 		var t = trainer_ai.get(side)
 		if t != null and t.has_method("round_start"):
 			t.round_start()
-	var hold := 0.0
+	_run_requests()
+
+
+func _run_requests() -> void:
 	for side in [0, 1]:
 		var req: Dictionary = _switch_req.get(side, {})
 		if req.is_empty():
 			continue
 		_switch_req.erase(side)
-		if _do_switch(req.out, req.mon):
-			hold = maxf(hold, SWITCH_HOLD)
+		_do_switch(req.out, req.mon)
 	var items := _item_req
 	_item_req = []
 	for r in items:
 		_do_trainer_item(int(r.side), String(r.item), r.target)
-	return hold
 
 
 ## Mons do banco do lado (vivos, fora de campo, sem estar chamados). O índice é o que request_switch e
@@ -1437,9 +1380,8 @@ func bench_of(side: int) -> Array:
 	return out
 
 
-## Pede a troca de `out` pelo Mon bench_of(side)[bench_idx] no começo da próxima rodada (uma por lado
-## por rodada; Mean Look segura). Quem entra não ataca nessa rodada e herda os golpes mirados em `out`.
-## Sem a fila de rodadas (turn_mode false) a troca sai na hora.
+## Troca `out` pelo Mon bench_of(side)[bench_idx] na hora (uma pendente por lado; Mean Look segura).
+## Quem entra herda os golpes mirados em `out`.
 func request_switch(side: int, out: BattleFighter, bench_idx: int) -> bool:
 	if state != "fight" or not is_instance_valid(out) or out.side != side or not out.active():
 		return false
@@ -1453,8 +1395,7 @@ func request_switch(side: int, out: BattleFighter, bench_idx: int) -> bool:
 	if moves.effects.cant_escape(out):
 		return false
 	_switch_req[side] = {"out": out, "mon": bench[bench_idx]}
-	if not turns.on:
-		begin_of_round()
+	_run_requests()
 	return true
 
 
@@ -1463,8 +1404,7 @@ func pending_switch(side: int) -> Dictionary:
 	return _switch_req.get(side, {})
 
 
-## Pede o item `item` (id de items.json; um por Mon por luta, como o item do treinador) em `target` no
-## começo da próxima rodada; o alvo não ataca nessa rodada.
+## Usa o item `item` (id de items.json; um por Mon por luta, como o item do treinador) em `target`.
 func request_trainer_item(side: int, item: String, target: BattleFighter) -> bool:
 	if state != "fight" or not is_instance_valid(target) or target.side != side or target.item_used:
 		return false
@@ -1474,8 +1414,7 @@ func request_trainer_item(side: int, item: String, target: BattleFighter) -> boo
 		if r.target == target:
 			return false
 	_item_req.append({"side": side, "item": item, "target": target})
-	if not turns.on:
-		begin_of_round()
+	_run_requests()
 	return true
 
 
@@ -1491,23 +1430,20 @@ func _do_trainer_item(side: int, item: String, target: BattleFighter) -> void:
 		target.popup("+%d HP" % (target.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
 	if e.has("cure") and (String(e.cure) == "all" or target.status == String(e.cure)):
 		target.clear_status()
-	if turns.on:
-		target.set_meta("sit_round", turns.round_n)
 	item_used_by_trainer(target, String(Dex.item(item).get("name", item)))
 
 
-## Troca de fato: recolhe `out`, o treinador joga a bola com `m` no mesmo lugar; os golpes mirados em
-## `out` vão para quem entrou, que fica fora da fila desta rodada.
-## Modo de energia: troca voluntária fechada (começo da luta ou outra troca há menos de SWITCH_LOCK s).
+## Troca voluntária fechada (começo da luta ou outra troca há menos de SWITCH_LOCK s).
 func switch_locked() -> bool:
-	return energy_on() and (fight_clock < SWITCH_OPEN or switch_lock > 0.0)
+	return fight_clock < SWITCH_OPEN or switch_lock > 0.0
 
 
 func _note_switch() -> void:
-	if energy_on():
-		switch_lock = SWITCH_LOCK
+	switch_lock = SWITCH_LOCK
 
 
+## Troca de fato: recolhe `out`, o treinador joga a bola com `m` no mesmo lugar; os golpes mirados em
+## `out` vão para quem entrou.
 func _do_switch(out: BattleFighter, m: Mon) -> bool:
 	if not is_instance_valid(out) or not out.active() or m.is_fainted():
 		return false
@@ -1538,30 +1474,9 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 	if is_instance_valid(nf):
 		nf.position = at
 		nf.set_meta("start_at", out.get_meta("start_at", at))  # entra no lugar de quem saiu
-		if turns.on:
-			nf.set_meta("sit_round", turns.round_n)
 		for g in aimed:
 			if is_instance_valid(g) and g.active():
 				g.opponent = nf
-	return true
-
-
-## Ritmo de rodadas: guarda a ação para o fim da rodada; sem a fila, faz na hora.
-func at_round_end(cb: Callable) -> void:
-	if turns and turns.on and state == "fight" and not _round_just_began():
-		_round_end_q.append(cb)
-	else:
-		cb.call()
-
-
-## A rodada acabou de virar e ninguém agiu ainda (quem caiu no fim de turno entra agora, sem esperar a
-## rodada inteira; fica fora da fila desta rodada como quem troca).
-func _round_just_began() -> bool:
-	if turns.round_t > ROUND_GRACE:
-		return false
-	for e in turns.history:
-		if int(e.round) == turns.round_n:
-			return false
 	return true
 
 
@@ -1649,7 +1564,6 @@ func step(dt: float) -> void:
 			"commands": _commands_info(),
 			"obey": obey,
 			"sync": [combos.sync_of(0), combos.sync_of(1)] if combos else [0.0, 0.0],
-			"marks": _marks_info(),
 			"item_cd": item_cd,
 			"menu": _menu_text() if menu != "" else "",
 			"foe_tag": "WILD" if kind == "wild" else "TRAINER",
@@ -1676,18 +1590,6 @@ func _commands_info() -> Dictionary:
 		if auto_commands:
 			m = f.command
 		out[slot] = ALLY_MODE_NAMES[clampi(m, 0, ALLY_MODE_NAMES.size() - 1)]
-	return out
-
-
-func _marks_info() -> Dictionary:
-	var out := {}
-	if combos == null:
-		return out
-	for f in fighters:
-		if is_instance_valid(f) and f.active():
-			var mk: Array = combos.marks_of(f)
-			if not mk.is_empty():
-				out[f.get_instance_id()] = mk
 	return out
 
 
@@ -1734,65 +1636,6 @@ func _visual_step(dt: float) -> void:
 	if vfx:
 		vfx.tick(dt)
 	_tick_balls(dt)
-	_place_turn_mark(dt)
-
-
-## Marcador de vez: anel no chão e seta sobre a cabeça de quem solta o próximo golpe (o alvo tem tempo
-## de ver e desviar). Amarelo = lado do jogador, vermelho = adversário; brilha mais na vez de fato.
-func _place_turn_mark(dt: float) -> void:
-	var who: BattleFighter = turns.next_up() if turns and state == "fight" else null
-	if who == null or not is_instance_valid(who) or not who.visible:
-		if _turn_mark:
-			_turn_mark.visible = false
-		return
-	if _turn_mark == null:
-		_turn_mark = _build_turn_mark()
-	_turn_pulse += dt
-	var live := turns.can_fire(who)
-	var col := Color(1.0, 0.9, 0.35) if who.side == 0 else Color(1.0, 0.4, 0.35)
-	col.a = (0.95 if live else 0.55) * (0.75 + 0.25 * sin(_turn_pulse * 9.0))
-	for c in _turn_mark.get_children():
-		(c as MeshInstance3D).material_override.albedo_color = col
-	_turn_mark.visible = true
-	_turn_mark.position = Vector3(who.position.x, 0.0, who.position.z)
-	var ring: Node3D = _turn_mark.get_node("Ring")
-	var k := 1.0 + 0.08 * sin(_turn_pulse * 6.0)
-	ring.scale = Vector3(k, 0.05, k)
-	var arrow: Node3D = _turn_mark.get_node("Arrow")
-	arrow.position.y = who.position.y + who.look_h + 0.55 + 0.08 * sin(_turn_pulse * 5.0)
-
-
-func _build_turn_mark() -> Node3D:
-	var root := Node3D.new()
-	root.name = "TurnMark"
-	add_child(root)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	var tm := TorusMesh.new()
-	tm.inner_radius = 0.55
-	tm.outer_radius = 0.66
-	var ring := MeshInstance3D.new()
-	ring.name = "Ring"
-	ring.mesh = tm
-	ring.material_override = mat
-	ring.position.y = 0.05
-	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(ring)
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.16
-	cm.bottom_radius = 0.0
-	cm.height = 0.3
-	cm.radial_segments = 4
-	var arrow := MeshInstance3D.new()
-	arrow.name = "Arrow"
-	arrow.mesh = cm
-	arrow.material_override = mat.duplicate()
-	arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(arrow)
-	ring.scale = Vector3(1, 0.05, 1)
-	return root
 
 
 func _foe_balls() -> Array:
@@ -1979,17 +1822,14 @@ func _player_input(f: BattleFighter) -> Vector3:
 		return _locked_input(f)
 	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if Input.is_action_just_pressed("jump"):
-		# Modo de energia: com degrau/objeto na frente salta (ou voa) por cima (BattleClimb).
+		# Com degrau/objeto na frente salta (ou voa) por cima (BattleClimb).
 		var jd := Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
 		if not terrain.climb.player_jump(f, jd if jd.length() > 0.1 else f.facing):
 			f.start_jump()
 	f.sprinting = Input.is_action_pressed("sprint") and f.can_sprint(i.length() > 0.1)
 	for k in mini(f.moves.size(), 4):
 		if Input.is_action_just_pressed("move_%d" % (k + 1)) and f.can_act():
-			if f.out_of_pp():
-				f.struggle()
-			else:
-				moves.use(f, String(f.moves[k]), true)
+			moves.use(f, String(f.moves[k]), true)
 	return Vector3(i.x, 0.0, i.y).rotated(Vector3.UP, _yaw)
 
 
@@ -2031,10 +1871,7 @@ func _locked_input(f: BattleFighter) -> Vector3:
 		and Input.is_action_just_pressed("move_%d" % (k + 1))
 		and f.can_act()
 	):
-		if f.out_of_pp():
-			f.struggle()
-		else:
-			moves.use(f, String(f.moves[k]), true)
+		moves.use(f, String(f.moves[k]), true)
 	if not tut_walk:
 		return Vector3.ZERO
 	var i := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -2099,15 +1936,6 @@ func send_in(i: int, as_ally := false) -> bool:
 	var voluntary := is_instance_valid(out_now) and out_now.active()
 	if voluntary and switch_locked():
 		return false
-	# Rodadas: trocar quem está em campo só no começo da próxima rodada (request_switch).
-	var out: BattleFighter = ally if as_ally else player
-	if turns and turns.on and is_instance_valid(out) and out.active():
-		var k := bench_of(0).find(m)
-		if not request_switch(0, out, k):
-			return false
-		out.popup("Switching next round", Color(0.7, 0.9, 1.0), 0.8, 0.8)
-		_swap_cd = SWAP_CD
-		return true
 	if as_ally:
 		if _battle_size < 2 or not is_instance_valid(player) or not player.active():
 			return false
@@ -2767,8 +2595,8 @@ func _enemy_fainted(f: BattleFighter) -> void:
 				if fighters.has(f):
 					_recall(f)
 		)
-		# O substituto entra no fim da rodada (oficial); a IA do treinador pode escolher outro.
-		later(RECALL_SECS, func() -> void: at_round_end(_enemy_refill.bind(nxt, slot)))
+		# A IA do treinador pode escolher outro substituto.
+		later(RECALL_SECS, func() -> void: _enemy_refill(nxt, slot))
 		return
 	if doubles and _enemy_pending == 0:
 		_last_stand(f)
@@ -2791,7 +2619,7 @@ func _enemy_fainted(f: BattleFighter) -> void:
 				if fighters.has(f):
 					_recall(f)
 		)
-		later(RECALL_SECS, func() -> void: at_round_end(_enemy_refill.bind(nxt, 0)))
+		later(RECALL_SECS, func() -> void: _enemy_refill(nxt, 0))
 		return
 	say(
 		(
@@ -2804,7 +2632,7 @@ func _enemy_fainted(f: BattleFighter) -> void:
 	_end("win", 2.0)
 
 
-## Substituto do adversário (fim da rodada): o escolhido pela IA do treinador ou o reservado; anuncia
+## Substituto do adversário: o escolhido pela IA do treinador ou o reservado; anuncia
 ## e manda depois de NEXT_TRAINER_MON s.
 func _enemy_refill(nxt: int, slot: int) -> void:
 	_enemy_reserved.erase(enemies[nxt])
@@ -3129,21 +2957,17 @@ func _player_fainted(f: BattleFighter) -> void:
 		func() -> void:
 			if fighters.has(f):
 				_recall(f)
-			at_round_end(
-				func() -> void:
-					_pending.erase(m_next)
-					if state != "fight":
-						return
-					var k := _replacement(0, 0, party.find(m_next))
-					_send_player(k if not party[k].is_fainted() else party.find(m_next), at)
-			)
+			_pending.erase(m_next)
+			if state != "fight":
+				return
+			var k := _replacement(0, 0, party.find(m_next))
+			_send_player(k if not party[k].is_fainted() else party.find(m_next), at)
 	)
 
 
-## Onde entra o substituto de `f`: no modo de energia o ponto de entrada de f (todos se reagrupam
-## nele, BattleRegroup); senão onde f estava.
+## Onde entra o substituto de `f`: o ponto de entrada de f (todos se reagrupam nele, BattleRegroup).
 func _respawn_at(f: BattleFighter) -> Vector3:
-	var at: Vector3 = BattleRegroup.start_of(f) if energy_on() else f.position
+	var at: Vector3 = BattleRegroup.start_of(f)
 	at.y = 0.0
 	return at
 
@@ -3181,27 +3005,24 @@ func _doubles_refill(f: BattleFighter) -> bool:
 		func() -> void:
 			if fighters.has(f):
 				_recall(f)
-			at_round_end(
-				func() -> void:
-					_pending.erase(m)
-					if state != "fight" or m.is_fainted():
-						return
-					var k := _replacement(0, 1 if as_ally else 0, party.find(m))
-					if party[k].is_fainted():
-						k = party.find(m)
-					# O lugar sai de quem está de pé agora (dois desmaios seguidos mandavam os dois
-					# substitutos como "player" e o lado ficava sem dono: luta sem fim).
-					var p_ok := is_instance_valid(player) and player.active()
-					if not p_ok and is_instance_valid(ally) and ally.active():
-						player = ally
-						player.controller = _player_ctrl()
-						ally = null
-						p_ok = true
-					if p_ok or (as_ally and is_instance_valid(player) and player.active()):
-						_send_ally(k, at)
-					else:
-						_send_player(k, at)
-			)
+			_pending.erase(m)
+			if state != "fight" or m.is_fainted():
+				return
+			var k := _replacement(0, 1 if as_ally else 0, party.find(m))
+			if party[k].is_fainted():
+				k = party.find(m)
+			# O lugar sai de quem está de pé agora (dois desmaios seguidos mandavam os dois
+			# substitutos como "player" e o lado ficava sem dono: luta sem fim).
+			var p_ok := is_instance_valid(player) and player.active()
+			if not p_ok and is_instance_valid(ally) and ally.active():
+				player = ally
+				player.controller = _player_ctrl()
+				ally = null
+				p_ok = true
+			if p_ok or (as_ally and is_instance_valid(player) and player.active()):
+				_send_ally(k, at)
+			else:
+				_send_player(k, at)
 	)
 	_bind()
 	return true

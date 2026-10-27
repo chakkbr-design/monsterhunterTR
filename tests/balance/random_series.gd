@@ -4,7 +4,7 @@ extends SceneTree
 ## marca luta parada (ninguém soltou golpe por STALL s) e luta que não terminou no limite de tempo.
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/balance/random_series.gd
 ## Opções (depois de --): n=N (lutas, padrão 20), seed=N (primeira semente, padrão 1000),
-## mode=energy|vgc|mix (padrão mix), size=1|2|mix (padrão mix).
+## size=1|2|mix (padrão mix).
 ## Cada linha traz a semente: Cfg.randomize_sides com ela refaz os times (e a luta).
 
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -15,7 +15,6 @@ const STATUSES := ["", "burn", "poison", "toxic", "paralysis", "sleep", "freeze"
 
 var n := 20
 var seed0 := 1000
-var mode := "mix"
 var size := "mix"
 var problems: Array = []
 var used := {}
@@ -31,8 +30,6 @@ func _initialize() -> void:
 				n = int(kv[1])
 			"seed":
 				seed0 = int(kv[1])
-			"mode":
-				mode = kv[1]
 			"size":
 				size = kv[1]
 	_run.call_deferred()
@@ -48,8 +45,8 @@ func _run() -> void:
 		outcomes[r.outcome] = int(outcomes.get(r.outcome, 0)) + 1
 		print(
 			(
-				"seed %d %s %dx%d -> %-7s %6.1fs %s"
-				% [sd, r.mode, r.size, r.size, r.outcome, r.time, " | ".join(r.notes)]
+				"seed %d %dx%d -> %-7s %6.1fs %s"
+				% [sd, r.size, r.size, r.outcome, r.time, " | ".join(r.notes)]
 			)
 		)
 	print("resultados: %s" % str(outcomes))
@@ -124,9 +121,7 @@ func _one(sd: int) -> Dictionary:
 	rng.seed = sd
 	var c := Cfg.default_config()
 	Cfg.randomize_sides(c, rng)
-	var m: String = mode if mode != "mix" else ["energy", "vgc"][sd % 2]
 	var sz := int(size) if size != "mix" else 1 + (sd / 2) % 2
-	c.battle_mode = m
 	c.battle_size = sz
 	c.seed = sd
 	c.turbo = true
@@ -160,7 +155,6 @@ func _one(sd: int) -> Dictionary:
 	if outcome == "timeout" or not tb._result_box.visible:
 		_note(notes, sd, "não terminou (%s)" % outcome)
 	var r := {
-		"mode": m,
 		"size": sz,
 		"outcome": outcome,
 		"time": float(tb.fight_time),

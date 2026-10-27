@@ -1,8 +1,7 @@
 class_name BattleBiomes
 extends RefCounted
-## Biomas do modo de energia: cinco cenários com chão, regra e IA próprios (ruínas, montanha nevada,
-## vulcão, caverna escura e pântano). Só no modo de energia (o VGC não sorteia nem monta: ENERGY_ONLY em
-## BattleTerrain). O BattleTerrain cria um (terrain.biomes) e chama os ganchos abaixo (pre_setup, setup,
+## Biomas: cinco cenários com chão, regra e IA próprios (ruínas, montanha nevada, vulcão, caverna escura
+## e pântano). O BattleTerrain cria um (terrain.biomes) e chama os ganchos abaixo (pre_setup, setup,
 ## spot_free, move_mult, regen_mult, acc_mult, damage_mult, on_move_landed, blocks_shot, cover_cands,
 ## steer, settle, tick). A IA tem um gancho só, BattleBiomes.steer_ai, em BattleAI._energy_steer.
 ## opts.biomes: false desliga as regras (o relevo do cenário fica).
@@ -164,10 +163,6 @@ static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
 
-func _energy() -> bool:
-	return arena.has_method("energy_on") and arena.energy_on()
-
-
 func _dmg(f: BattleFighter, frac: float) -> int:
 	return maxi(1, int(float(f.max_hp) * frac * f.dot_scale()))
 
@@ -217,7 +212,7 @@ func _half(v: Vector3) -> float:
 ## Antes do relevo: o círculo de runas no meio e os rios de lava (o resto do cenário desvia deles).
 func pre_setup() -> void:
 	kind = terrain.scenario if terrain.scenario in LIST else ""
-	on = kind != "" and _energy() and bool(arena.opts.get("biomes", true))
+	on = kind != "" and bool(arena.opts.get("biomes", true))
 	if not on:
 		kind = ""
 		return

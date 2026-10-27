@@ -65,16 +65,9 @@ func _run() -> void:
 	)
 	check(
 		o.arena == Vector2(48, 28) and o.terrain and o.mirror_court and o.voxel,
-		"modo de energia: quadra fixa de 48 x 28 com relevo, em voxel"
+		"quadra fixa de 48 x 28 com relevo, em voxel"
 	)
 	check(o.entry_x == Cfg.ENTRY_X, "entradas a %.0f m do centro" % Cfg.ENTRY_X)
-	var vgc_cfg := _cfg([e], [e])
-	vgc_cfg.battle_mode = "vgc"
-	var ov := Cfg.arena_opts(vgc_cfg, Vector3.ZERO)
-	check(
-		ov.arena == Vector2(24, 14) and not ov.has("voxel") and not ov.has("entry_x"),
-		"VGC: quadra fixa de 24 x 14 de antes"
-	)
 	check(o.battle_size == 2, "opts: 2x2 por padrão")
 	check(
 		o.keyboard == false and Cfg.default_config().p1_control == "ai", "padrão: IA, sem teclado"
@@ -106,7 +99,7 @@ func _run() -> void:
 	check(pm == null or not pm.is_processing_unhandled_input(), "menu de pausa bloqueado no treino")
 	check(is_instance_valid(tb.arena) and tb.arena.get("fixed") == true, "arena na quadra fixa")
 	check(
-		tb.arena.get("rect").size == Cfg.arena_size(Cfg.current),
+		tb.arena.get("rect").size == Cfg.ARENA,
 		"quadra da arena %s" % str(tb.arena.get("rect").size)
 	)
 	var done := await _wait_result(tb)
@@ -232,17 +225,13 @@ func _run() -> void:
 		check(sp.size() == Cfg.PARTY_MAX and uniq.size() == sp.size(), "lado %d: 6 diferentes" % s)
 	tb.random_series = false
 
-	# Cenário aleatório sorteia de novo a cada luta; o escolhido fica, e o piso segue o cenário.
+	# Cenário aleatório sorteia de novo a cada luta; o escolhido fica.
 	tb.cfg.erase("scenario")
 	tb.cfg.seed = -1  # semente fixa repete a luta (e o cenário) até a série andar
 	var scns := {}
 	for i in 6:
 		tb.start_fight()
 		scns[tb.scenario()] = true
-		check(
-			tb._court_mat.albedo_color == tb.STAGE_COLORS[tb.scenario()][1],
-			"piso da quadra com a cor de %s" % tb.scenario()
-		)
 	check(scns.size() >= 3, "aleatório varia o cenário (%d em 6 lutas)" % scns.size())
 	tb.cfg["scenario"] = "vulcao"
 	tb.start_fight()

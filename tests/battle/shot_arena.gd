@@ -49,7 +49,6 @@ func _cfg(sc: String) -> Dictionary:
 	c.sides[1].mons = b
 	c.seed = int(_args.get("seed", "11"))
 	c.battle_size = int(_args.get("size", "2"))
-	c.battle_mode = "energy"
 	c["scenario"] = sc
 	return c
 

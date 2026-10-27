@@ -193,7 +193,6 @@ func _arena(party: Array, enemies: Array, size := 1) -> Node:
 		{
 			"kind": "trainer" if size > 1 else "wild",
 			"speed": 1.0,
-			"battle_mode": "energy",
 			"battle_size": size,
 			"no_rewards": true,
 			"field_objects": false,

@@ -1,6 +1,6 @@
 class_name BattleGroundExtras
 extends RefCounted
-## Mais coisas do chão no modo de energia (só com cenário; o VGC não muda). O BattleGround cria um
+## Mais coisas do chão (só com cenário). O BattleGround cria um
 ## (ground.extras) e repassa os ganchos dele; o resto do jogo fala com ele por lá (terrain.ground).
 ##
 ## - Tronco sobre o lago (GROUND_EXTRAS "log_bridge"): ponte de tronco atravessando um lago. Em cima não

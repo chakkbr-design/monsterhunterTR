@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bateria em paralelo: tools/battery.sh OUT N_TOTAL JOBS [opções do battery.gd...]
-# Ex.: tools/battery.sh /tmp/b1 800 4 mode=energy size=mix
+# Ex.: tools/battery.sh /tmp/b1 800 4 size=mix
 # Cada job roda N_TOTAL/JOBS lutas com sementes seguidas (o job k começa em SEED0 + k*por_job).
 set -u
 OUT=$1; N=$2; J=$3; shift 3

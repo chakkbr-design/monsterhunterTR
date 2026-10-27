@@ -1,7 +1,7 @@
 class_name BattlePassives
 extends RefCounted
 ## Passivas de movimento do modo de energia (não são golpes; todo Pokémon tem, cada uma com a própria
-## regra e recarga). Rodam dentro da IA (BattleAI.step), só com f.energy_mode.
+## regra e recarga). Rodam dentro da IA (BattleAI.step).
 ## - Pulo de desespero: encurralado na parede (inimigo perto por CORNER_SECS s, ou dois inimigos perto)
 ##   salta LEAP_DIST m para o espaço aberto, passando pelo lado do inimigo e sem sair da quadra; no ar
 ##   a investida passa por baixo. Ao pousar ganha Fôlego: BREATH_ENERGY de energia e a barra enche
@@ -60,7 +60,7 @@ func _init(fighter: BattleFighter) -> void:
 func tick(dt: float) -> bool:
 	leap_cd = maxf(leap_cd - dt, 0.0)
 	counter_cd = maxf(counter_cd - dt, 0.0)
-	if not f.energy_mode or not f.alive():
+	if not f.alive():
 		return false
 	if not _hooked and f.arena and f.arena.has_signal("dodged"):
 		_hooked = true
@@ -303,7 +303,7 @@ func _watch_dodge() -> void:
 
 
 func _counter() -> void:
-	if counter_cd > 0.0 or not f.energy_mode:
+	if counter_cd > 0.0:
 		return
 	counter_cd = COUNTER_ICD
 	f.pp_max = minf(f.pp_max + COUNTER_ENERGY, f.pp_base)

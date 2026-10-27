@@ -1,6 +1,6 @@
 class_name BattleDirector
 extends RefCounted
-## Câmera de ação do treino no modo de energia (opts.action_cam; nunca no fast_sim nem no VGC).
+## Câmera de ação do treino (opts.action_cam; nunca no fast_sim).
 ## Enquadra todos os Pokémon em campo com uma margem pequena (CAM_MARGIN m) em vez de mostrar a
 ## quadra inteira, e faz as cenas:
 ## - nocaute (só o de verdade: o golpe já acertou, o HP zerou e nada o segurou — Focus Sash, Sturdy,

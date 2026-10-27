@@ -1,6 +1,6 @@
 class_name BattleGround
 extends RefCounted
-## Chão do cenário no modo de energia (só com opts.terrain e o modo de energia; o VGC não muda): lama,
+## Chão do cenário (só com opts.terrain): lama,
 ## marcas de golpe no chão e a maré da praia. O BattleTerrain cria um (terrain.ground) e repassa os
 ## ganchos (setup, tick, settle, move_mult, regen_mult, acc_mult, damage_mult, on_move_landed, shot_block,
 ## steer). A IA tem um gancho só, BattleGround.steer_ai, no começo de BattleAI._energy_steer.
@@ -109,14 +109,9 @@ static func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
 
 
-## Monta a lama do cenário e a maré (praia). Só no modo de energia (opts.ground: false desliga tudo).
+## Monta a lama do cenário e a maré (praia). opts.ground: false desliga tudo.
 func setup() -> void:
-	on = (
-		terrain.scenario != ""
-		and arena.has_method("energy_on")
-		and arena.energy_on()
-		and bool(arena.opts.get("ground", true))
-	)
+	on = terrain.scenario != "" and bool(arena.opts.get("ground", true))
 	if not on:
 		return
 	visual = not bool(arena.opts.get("fast_sim", false))

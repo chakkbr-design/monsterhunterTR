@@ -1,9 +1,9 @@
 class_name BattleTrainerAI
 extends RefCounted
-## IA do treinador de um lado (pesquisa em docs/IA_VGC.md): no começo de cada rodada decide trocas e
+## IA do treinador de um lado (pesquisa em docs/IA_TREINADOR.md): no começo de cada rodada decide trocas e
 ## o item do treinador, e escolhe quem entra no lugar de quem desmaiou. Usa a interface da arena
 ## (request_switch, request_trainer_item, bench_of; arena.trainer_ai[side]).
-## Troca (como a "Smart Switching" do pokeemerald-expansion e os jogadores de VGC): só quem ainda tem
+## Troca (como a "Smart Switching" do pokeemerald-expansion e os jogadores competitivos): só quem ainda tem
 ## HP para valer a pena sai, quando o matchup está ruim (leva >= 50% e tira < 30%, todos os golpes sem
 ## efeito, ou o atributo de ataque em -2) e há no banco alguém que aguenta o golpe da entrada e bate
 ## pelo menos parecido. Uma troca por lado por rodada, sem ping-pong, com chance de não trocar pelo
@@ -38,6 +38,13 @@ var items := 0
 func _init(a, s: int) -> void:
 	arena = a
 	side = s
+
+
+## Opção por lado (opts.trainer_ai): bool vale para os dois; Array [lado 0, lado 1].
+static func side_on(v, side: int) -> bool:
+	if v is Array:
+		return side < v.size() and bool(v[side])
+	return bool(v)
 
 
 func _rng() -> RandomNumberGenerator:

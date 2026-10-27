@@ -51,7 +51,7 @@ func _arena(party: Array, enemies: Array, seed: int, extra := {}) -> Node:
 	a.manual = true
 	root.add_child(a)
 	var o := Cfg.arena_opts(Cfg.default_config(), Vector3.ZERO)
-	o.merge({"speed": 1.0, "seed": seed, "battle_size": 1, "battle_mode": "energy"}, true)
+	o.merge({"speed": 1.0, "seed": seed, "battle_size": 1}, true)
 	o.merge(extra, true)
 	a.start(party, enemies, o)
 	a.step(DT)

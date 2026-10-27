@@ -176,7 +176,6 @@ func _arena(party: Array, enemies: Array) -> Node:
 		enemies,
 		{
 			"speed": 1.0,
-			"battle_mode": "energy",
 			"no_rewards": true,
 			"field_objects": false,
 			"seed": 11

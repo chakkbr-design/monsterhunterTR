@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_ai_plans.gd
 ## IA do modo de energia: passivas de movimento (pulo de desespero encurralado, dentro da quadra e com
-## recarga; fôlego; nada disso no VGC), planos escolhidos e trocados (e vazios no VGC), escolha suave
+## recarga; fôlego), planos escolhidos e trocados, escolha suave
 ## que nunca pega golpe sem efeito e às vezes troca de golpe, e lutas que acabam: Squirtle só com
 ## Water Pledge contra Nidoran F em pânico com 3% de HP e a semente 2 da bateria (1x1).
 
@@ -25,7 +25,6 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_leap()
-	_leap_vgc()
 	_plans()
 	_soft_pick()
 	for sd in PANIC_SEEDS:
@@ -47,7 +46,7 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	a.manual = true
 	root.add_child(a)
 	opts.merge(
-		{"speed": 1.0, "battle_mode": "energy", "no_rewards": true, "kind": "trainer"}, false
+		{"speed": 1.0, "no_rewards": true, "kind": "trainer"}, false
 	)
 	a.start(party, enemies, opts)
 	return a
@@ -146,25 +145,6 @@ func _leap() -> void:
 	a.queue_free()
 
 
-## No VGC as passivas e os planos ficam de fora.
-func _leap_vgc() -> void:
-	var a := _arena(
-		[Mon.create("pikachu", 30)],
-		[Mon.create("geodude", 30)],
-		{"battle_size": 1, "autoplay": true, "seed": 5, "battle_mode": "vgc", "terrain": false}
-	)
-	_to_fight(a)
-	var f: BattleFighter = a.player
-	var r: Rect2 = a.rect
-	f.position = Vector3(r.position.x + 0.8, 0.0, r.position.y + 0.8)
-	a.enemy.position = f.position + Vector3(1.5, 0.0, 1.0)
-	check(not f.ai.passives.tick(2.0), "VGC: sem pulo de desespero")
-	for i in 120:
-		a.step(DT)
-	check(f.ai.plan == "", "VGC: sem plano")
-	a.queue_free()
-
-
 ## Plano escolhido na entrada, reavaliado e trocado ao longo da luta (pesos com sorteio).
 func _plans() -> void:
 	var seen := {}
@@ -177,7 +157,7 @@ func _plans() -> void:
 		var a := _arena(
 			[Mon.create("pikachu", 30, mrng), Mon.create("geodude", 30, mrng)],
 			[Mon.create("charmander", 30, mrng), Mon.create("squirtle", 30, mrng)],
-			{"battle_size": 2, "autoplay": true, "seed": 60 + sd, "arena": Cfg.ARENA}
+			{"battle_size": 2, "autoplay": true, "seed": 60 + sd, "arena": Cfg.SMALL_ARENA}
 		)
 		var last := {}
 		var last_t := {}
@@ -271,7 +251,7 @@ func _panic_duel(sd: int) -> void:
 	ni.nature = "timid"
 	ni.hp = maxi(1, int(ni.max_hp * 0.03))
 	var a := _arena(
-		[sq], [ni], {"battle_size": 1, "autoplay": true, "seed": sd, "arena": Cfg.ARENA}
+		[sq], [ni], {"battle_size": 1, "autoplay": true, "seed": sd, "arena": Cfg.SMALL_ARENA}
 	)
 	_to_fight(a)
 	if is_instance_valid(a.enemy):
@@ -305,7 +285,6 @@ func _seed2() -> void:
 	var w: String = ["", "", "", "sun", "rain", "sand", "hail"][rng.randi() % 7]  # clima da bateria
 	if w != "":
 		c.weather = w
-	c.battle_mode = "energy"
 	c.battle_size = 1
 	c.seed = 2
 	c.turbo = true

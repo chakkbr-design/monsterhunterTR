@@ -1014,9 +1014,9 @@ static func _threshold(ab: BattleAbilities, f: BattleFighter, a: String, s: Dict
 			_eject(ab, f)
 
 
-## Wimp Out / Emergency Exit: ao cair da metade do HP foge para o banco (só no modo de energia).
+## Wimp Out / Emergency Exit: ao cair da metade do HP foge para o banco.
 static func _eject(ab: BattleAbilities, f: BattleFighter) -> void:
-	if not ab.arena.energy_on() or not _fx(ab).has_reserve(f):
+	if not _fx(ab).has_reserve(f):
 		return
 	ab._fire(f, Color(0.8, 0.9, 1.0))
 	f.popup("Fled!", Color(0.8, 0.9, 1.0), 1.0, 0.8)

@@ -76,13 +76,10 @@ static func _berry(fx: BattleMoveEffects, user: BattleFighter) -> String:
 	return ""
 
 
-## Bolt Beak / Fishious Rend: o usuário chega antes do alvo. No modo VGC, o alvo ainda não agiu na
-## rodada; no resto, ele está no meio de um golpe ou parado há mais de IDLE_SECS.
+## Bolt Beak / Fishious Rend: o usuário chega antes do alvo: ele está no meio de um golpe ou parado
+## há mais de IDLE_SECS.
 static func _moved_first(fx: BattleMoveEffects, target: BattleFighter) -> bool:
 	var ts := fx.st(target)
-	var t = fx.arena.get("turns")
-	if t != null and bool(t.on):
-		return int(ts.get("act_round", -1)) != fx._round_id()
 	return (
 		target.prepare_t > 0.0
 		or target.dash_t > 0.0
@@ -170,7 +167,6 @@ static func on_use(fx: BattleMoveEffects, user: BattleFighter, mv: Dictionary) -
 	var id := String(mv.get("id", ""))
 	var sp := String(mv.get("special", ""))
 	s["move_t"] = fx.now
-	s["act_round"] = fx._round_id()
 	if id == "fusion_flare":
 		fx.field["fusion_flare_t"] = fx.now
 	if sp == "glaive":

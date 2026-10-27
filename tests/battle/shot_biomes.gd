@@ -43,7 +43,7 @@ func _run() -> void:
 			if arena == null:
 				var found := tb.find_children("*", "Node3D", true, false)
 				for n in found:
-					if n.has_method("energy_on") and n.get("terrain") != null:
+					if n.has_method("switch_locked") and n.get("terrain") != null:
 						arena = n
 			if arena and arena.state == "fight" and float(arena.get("_state_t")) >= at:
 				break

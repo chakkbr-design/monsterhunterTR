@@ -476,7 +476,7 @@ func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
 	show.toxic_spikes(side, at, r, life)
 
 
-## Stealth Rock (`at` local): só nos efeitos 3D; o VGC usa o disco da arena.
+## Stealth Rock (`at` local): só nos efeitos 3D (fora deles, o disco da arena).
 func stealth_rock(side: int, at: Vector3, r: float, life: float) -> void:
 	if use3d():
 		field3d.stealth_rock(side, at, r, life)

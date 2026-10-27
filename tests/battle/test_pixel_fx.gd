@@ -58,9 +58,6 @@ func _in_arena() -> void:
 	for i in 40:
 		a.step(DT)
 	check(not is_instance_valid(fx) or fx.is_queued_for_deletion(), "pop some depois da vida")
-	var n0: int = a.vfx.spawned
-	a.combos._detonate(a.player, a.enemy, BattleCombos.REACTIONS[1])
-	check(a.vfx.spawned >= n0 + 2, "reação solta estouro + floco")
 	a.field._add_mark("crater", Vector3(2, 0, 2), 1.2, 0)
 	check(a.field.marks[-1].node is Sprite3D, "crater usa decalque")
 	a.field._add_object(Vector3(-3, 0, 3))

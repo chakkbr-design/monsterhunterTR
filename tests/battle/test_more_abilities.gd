@@ -207,8 +207,6 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 		opts["speed"] = 1.0
 	if not opts.has("auto_battle"):
 		opts["auto_battle"] = false
-	if not opts.has("battle_mode"):
-		opts["battle_mode"] = "energy"
 	a.start(party, enemies, opts)
 	return a
 

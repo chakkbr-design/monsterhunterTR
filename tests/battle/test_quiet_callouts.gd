@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_quiet_callouts.gd
-## Modo de energia: sem marcas de tipo, reações nem Ressonância (BattleCombos.marks_on) e, na tela da
-## luta, só números de dano, gatilhos especiais e o balão do golpe (BattleHUD.quiet). O VGC não muda.
+## Na tela da luta, só números de dano, gatilhos especiais e o balão do golpe (BattleHUD.quiet);
+## opts.loud_callouts volta a mostrar tudo.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -18,9 +18,8 @@ func _process(_d: float) -> bool:
 	if _ran:
 		return true
 	_ran = true
-	_vgc_loud()
+	_loud()
 	_filter()
-	_no_marks()
 	_fight()
 	print("quiet_callouts: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
@@ -34,7 +33,7 @@ func check(ok: bool, what: String) -> void:
 		print("FALHOU: ", what)
 
 
-func _arena(mode: String, extra := {}) -> Node:
+func _arena(extra := {}) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
@@ -44,9 +43,8 @@ func _arena(mode: String, extra := {}) -> Node:
 		"autoplay": true,
 		"seed": 5,
 		"speed": 1.0,
-		"battle_mode": mode,
 		"no_rewards": true,
-		"arena": Cfg.ARENA
+		"arena": Cfg.SMALL_ARENA
 	}
 	opts.merge(extra, true)
 	a.start(
@@ -57,22 +55,18 @@ func _arena(mode: String, extra := {}) -> Node:
 	return a
 
 
-## VGC: tudo como antes (marcas ligadas, HUD mostra todos os textos).
-func _vgc_loud() -> void:
-	var a := _arena("vgc")
-	check(not a.quiet_callouts() and not a.hud.quiet, "VGC: HUD com todos os textos")
-	check(a.combos.marks_on(), "VGC: marcas de tipo continuam")
-	a.free()
-	var b := _arena("energy", {"loud_callouts": true})
+## opts.loud_callouts: HUD mostra todos os textos.
+func _loud() -> void:
+	var b := _arena({"loud_callouts": true})
 	check(not b.hud.quiet, "opts.loud_callouts desliga o filtro")
 	b.free()
 
 
 ## O filtro do HUD sozinho.
 func _filter() -> void:
-	var a := _arena("energy")
+	var a := _arena()
 	var hud: BattleHUD = a.hud
-	check(a.quiet_callouts() and hud.quiet, "energia: HUD quieto")
+	check(a.quiet_callouts() and hud.quiet, "HUD quieto")
 	var p: BattleFighter = a.player
 	hud.shown.clear()
 	p.popup("23", Color.WHITE, 1.0, 0.35, "damage")
@@ -100,41 +94,13 @@ func _filter() -> void:
 	a.free()
 
 
-## Marcas: nada é colocado, reação nenhuma acha alvo nem multiplica o dano.
-func _no_marks() -> void:
-	var a := _arena("energy")
-	for i in 90:
-		a.step(DT)
-	var c: BattleCombos = a.combos
-	var p: BattleFighter = a.player
-	var al: BattleFighter = a.ally
-	var foe: BattleFighter = a.enemy
-	check(not c.marks_on(), "energia: marcas desligadas")
-	var water := Dex.move("water_gun")
-	var spark := Dex.move("thunder_shock")
-	c.on_hit(al, foe, water, 5)
-	check(c.marks_of(foe).is_empty(), "água não deixa Molhado")
-	# Mesmo com uma marca forçada, nada reage.
-	c._marks[foe.get_instance_id()] = {
-		"f": foe, "m": {"wet": {"t": 3.0, "side": al.side, "by": al.get_instance_id()}}
-	}
-	check(c._find_reaction(p, foe, spark).is_empty(), "sem reação")
-	check(is_equal_approx(c.damage_mult(p, foe, spark), 1.0), "sem bônus de reação")
-	check(not c.sets_up_reaction(al, p, water), "IA não prepara reação")
-	c._marks.clear()
-	a.free()
-
-
-## Luta curta de verdade no 2x2: nenhuma marca e só textos permitidos na tela.
+## Luta curta de verdade no 2x2: só textos permitidos na tela.
 func _fight() -> void:
-	var a := _arena("energy", {"seed": 21})
-	var c: BattleCombos = a.combos
-	var marks_seen := 0
+	var a := _arena({"seed": 21})
 	var t := 0.0
 	while t < 45.0 and a.state in ["intro", "fight"]:
 		a.step(DT)
 		t += DT
-		marks_seen += c._marks.size() + c._icd.size()
 	var bad: Array = []
 	var dmg := 0
 	var moves := 0
@@ -147,7 +113,6 @@ func _fight() -> void:
 				bad.append(e)
 		elif e.kind == "move":
 			moves += 1
-	check(marks_seen == 0, "nenhuma marca na luta (%d)" % marks_seen)
 	check(bad.is_empty(), "só textos permitidos (%s)" % [bad.slice(0, 5)])
 	check(dmg > 0, "números de dano aparecem (%d)" % dmg)
 	check(moves > 0, "balão de golpe aparece (%d)" % moves)

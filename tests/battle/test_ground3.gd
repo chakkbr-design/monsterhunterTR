@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/battle/test_ground3.gd
 ## Mais coisas do chão no modo de energia (BattleGroundExtras): tronco sobre o lago, pilar condutor,
-## teia e cipó, vento, pedras que ficam, clima no chão, a IA de cada um e o VGC sem nada disso.
+## teia e cipó, vento, pedras que ficam, clima no chão e a IA de cada um.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -26,7 +26,6 @@ func _process(_d: float) -> bool:
 	_wind()
 	_rocks()
 	_weather()
-	_vgc()
 	print("ground3: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 	return true
@@ -620,17 +619,3 @@ func _weather() -> void:
 	a.free()
 
 
-func _vgc() -> void:
-	for sc in ["lagoa", "pedreira", "misto"]:
-		var a := _arena(
-			[Mon.create("pikachu", 50)],
-			[Mon.create("rattata", 50)],
-			3,
-			{"scenario": sc, "battle_mode": "vgc"}
-		)
-		var ex: BattleGroundExtras = a.terrain.ground.extras
-		check(ex.bridges.is_empty() and ex.pylons.is_empty(), "VGC: sem tronco nem pilar (%s)" % sc)
-		ex.on_move_landed(a.player, Dex.move("rock_slide"), Vector3.ZERO, 2.4)
-		ex.on_move_used(a.player, Dex.move("gust"), Vector3.RIGHT)
-		check(ex.rocks.is_empty() and ex.winds.is_empty(), "VGC: sem pedrinha nem vento")
-		a.free()

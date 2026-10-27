@@ -1,34 +1,23 @@
 class_name BattleCombos
 extends RefCounted
-## Marcas de tipo, reações entre parceiros, Ressonância, golpes de dupla e a Sintonia de cada lado.
-## A arena cria um por luta (arena.combos) e chama os ganchos abaixo; tudo aqui é opcional para o resto.
-## Modo de energia (Caio, 2026-10-26): sem marcas, reações nem Ressonância (não são mecânicas oficiais);
-## ficam os golpes de dupla e a Sintonia, e o nome da dupla sai no balão normal de golpe.
+## Golpes de dupla e a Sintonia de cada lado. A arena cria um por luta (arena.combos) e chama os
+## ganchos abaixo; tudo aqui é opcional para o resto. Sem marcas de tipo, reações nem Ressonância
+## (Caio, 2026-10-26: não são mecânicas oficiais); o nome da dupla sai no balão normal de golpe.
 
-## Duração da marca (5 s desde 2026-10-25: com 3 s o parceiro quase nunca chegava a tempo).
-const MARK_TIME := 5.0
-const REACT_ICD := 2.5
-const MULT_CAP := 1.5
-const RESONANCE_WINDOW := 1.0
-const RESONANCE_MULT := 1.25
 ## Janela entre os dois golpes de tipos que formam a dupla (2 s desde 2026-10-25: com 1,2 s a IA quase
 ## nunca fechava o par).
 const DUO_WINDOW := 2.0
 const DUO_CHANCE := 0.06
 ## Chance da dupla com a Sintonia cheia pela metade ou mais (sobe linear de DUO_CHANCE até aqui).
 const DUO_CHANCE_SYNC := 0.15
-## Sintonia a partir da qual a IA do par escolhe de propósito golpes que fecham reação ou dupla.
+## Sintonia a partir da qual a IA do par escolhe de propósito golpes que fecham a dupla.
 const SYNC_COORD := 0.3
 const DUO_COOLDOWN := 12.0
 const DUO_DELAY := 0.5
 const SYNC_NEAR_WINDOW := 1.5
 const SYNC_HIT := 0.1
-const SYNC_REACT := 0.25
-const SYNC_RESONANCE := 0.25
 const SYNC_DECAY := 0.04
 const SYNC_IDLE := 2.0
-const CONTACT_KINDS := ["dash", "arc", "multi_arc", "whip"]
-const KNOCKDOWN := 7.0
 const DUO_PATH := "res://data/duo_moves.json"
 const STAT_WORDS := {
 	"atk": "Attack",
@@ -39,135 +28,14 @@ const STAT_WORDS := {
 	"acc": "Accuracy"
 }
 
-## Marcas: id -> nome, tipo da cor.
-const MARKS := {
-	"wet": {"name": "Wet", "color": "water"},
-	"burning": {"name": "Smoldering", "color": "fire"},
-	"pollen": {"name": "Pollen", "color": "grass"},
-	"dust": {"name": "Dust", "color": "ground"},
-	"down": {"name": "Knocked down", "color": "fighting"},
-	"psy": {"name": "Confused", "color": "psychic"},
-	"slow": {"name": "Slowed", "color": "ice"},
-}
-## Tipo do golpe -> marca que ele deixa (derrubado/lento têm regra própria em _mark_for).
-const TYPE_MARK := {
-	"water": "wet",
-	"fire": "burning",
-	"grass": "pollen",
-	"ground": "dust",
-	"rock": "dust",
-	"psychic": "psy",
-	"ice": "slow",
-}
-## Reações: marca + tipos que reagem (ou "contact") -> multiplicador e efeitos. Uma por acerto.
-const REACTIONS := [
-	{
-		"id": "shock",
-		"mark": "wet",
-		"by": ["electric"],
-		"name": "Electrocuted!",
-		"color": "electric",
-		"mult": 1.35,
-		"status": ["paralysis", 0.4]
-	},
-	{
-		"id": "freeze",
-		"mark": "wet",
-		"by": ["ice"],
-		"name": "Froze!",
-		"color": "ice",
-		"mult": 1.15,
-		"root": 1.2,
-		"slow": 4.0
-	},
-	{
-		"id": "venom",
-		"mark": "wet",
-		"by": ["poison"],
-		"name": "Diluted venom!",
-		"color": "poison",
-		"mult": 1.25,
-		"status": ["poison", 0.5]
-	},
-	{
-		"id": "blaze_grass",
-		"mark": "burning",
-		"by": ["grass"],
-		"name": "Wildfire!",
-		"color": "fire",
-		"mult": 1.2,
-		"area": [40, 1.8, "fire"]
-	},
-	{
-		"id": "blaze_wind",
-		"mark": "burning",
-		"by": ["flying"],
-		"name": "Wildfire!",
-		"color": "fire",
-		"mult": 1.2,
-		"area": [40, 1.8, "fire"]
-	},
-	{
-		"id": "pollen_blast",
-		"mark": "pollen",
-		"by": ["fire"],
-		"name": "Pollen blast!",
-		"color": "grass",
-		"mult": 1.4,
-		"area": [35, 1.6, "grass"]
-	},
-	{
-		"id": "mud",
-		"mark": "dust",
-		"by": ["water"],
-		"name": "Mud!",
-		"color": "ground",
-		"mult": 1.1,
-		"slow": 4.0,
-		"acc": 4.0
-	},
-	{
-		"id": "sandstorm",
-		"mark": "dust",
-		"by": ["flying"],
-		"name": "Sandstorm!",
-		"color": "rock",
-		"mult": 1.15,
-		"acc": 4.0,
-		"area": [30, 2.0, "rock"]
-	},
-	{
-		"id": "ground_combo",
-		"mark": "down",
-		"contact": true,
-		"name": "Ground combo!",
-		"color": "fighting",
-		"mult": 1.35
-	},
-	{"id": "melt", "mark": "slow", "by": ["fire"], "name": "Melted!", "color": "fire", "mult": 1.3},
-	{
-		"id": "nightmare",
-		"mark": "psy",
-		"by": ["ghost", "dark"],
-		"name": "Nightmare!",
-		"color": "ghost",
-		"mult": 1.3,
-		"confuse": true
-	},
-]
-
 var arena: Node
 var _clock := 0.0
-var _marks := {}  ## id do alvo -> {f, m: {mark_id: {t, side, by}}}
-var _icd := {}  ## id do alvo -> segundos restantes
-var _last_hit := {}  ## id do alvo -> {user, type, t, used}
 var _user_hit := {}  ## id do atacante -> {side, t}
 var _used := {}  ## id do atacante -> {user, type, t}
 var _sync := [0.0, 0.0]
 var _idle := [0.0, 0.0]
 var _duo_cd := [0.0, 0.0]
 var _duos: Array = []
-var _pending := {}  ## cálculo de damage_mult reaproveitado no on_hit
 
 
 func _init(a: Node) -> void:
@@ -178,24 +46,9 @@ func _init(a: Node) -> void:
 		_duos = j.get("duo_moves", [])
 
 
-## Avança durações das marcas, ICDs e a Sintonia. dt já escalado pela velocidade da luta.
+## Avança a Sintonia e o intervalo das duplas. dt já escalado pela velocidade da luta.
 func tick(dt: float) -> void:
 	_clock += dt
-	for k in _marks.keys():
-		var e: Dictionary = _marks[k]
-		if not is_instance_valid(e.f) or not e.f.alive():
-			_marks.erase(k)
-			continue
-		for mid in e.m.keys():
-			e.m[mid].t -= dt
-			if e.m[mid].t <= 0.0:
-				e.m.erase(mid)
-		if e.m.is_empty():
-			_marks.erase(k)
-	for k in _icd.keys():
-		_icd[k] -= dt
-		if _icd[k] <= 0.0:
-			_icd.erase(k)
 	for s in 2:
 		_idle[s] += dt
 		_duo_cd[s] = maxf(0.0, _duo_cd[s] - dt)
@@ -203,61 +56,11 @@ func tick(dt: float) -> void:
 			_sync[s] = maxf(0.0, _sync[s] - SYNC_DECAY * dt)
 
 
-## Marcas de tipo, reações e Ressonância ligadas? Só fora do modo de energia.
-func marks_on() -> bool:
-	return not (arena.has_method("energy_on") and arena.energy_on())
-
-
-## Multiplicador aplicado no fim da fórmula de dano (1.0 = nada). Chamado antes de cada acerto com dano.
-func damage_mult(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> float:
-	_pending = {}
-	if not marks_on() or bool(mv.get("combo", false)) or not _ok(user) or not _ok(target):
-		return 1.0
-	var react := _find_reaction(user, target, mv)
-	var reson := _resonates(user, target, mv)
-	var m := 1.0
-	if not react.is_empty():
-		m *= float(react.mult)
-	if reson:
-		m *= RESONANCE_MULT
-	m = minf(m, MULT_CAP)
-	_pending = {"mv": mv, "user": user, "target": target, "react": react, "reson": reson}
-	return m
-
-
-## Depois de um acerto (com ou sem dano): coloca marcas, detona reações do parceiro.
+## Depois de um acerto (com ou sem dano): enche a Sintonia (golpes de dupla).
 func on_hit(user: BattleFighter, target: BattleFighter, mv: Dictionary, _dmg: int) -> void:
 	if bool(mv.get("combo", false)) or not _ok(user) or not _ok(target):
 		return
-	if not marks_on():
-		_note_near(user)  # a Sintonia continua (golpes de dupla)
-		return
-	var react: Dictionary = {}
-	var reson := false
-	if (
-		not _pending.is_empty()
-		and is_same(_pending.mv, mv)
-		and _pending.user == user
-		and _pending.target == target
-	):
-		react = _pending.react
-		reson = _pending.reson
-	else:
-		react = _find_reaction(user, target, mv)
-		reson = _resonates(user, target, mv)
-	_pending = {}
-	var tid := target.get_instance_id()
-	var side := user.side
 	_note_near(user)
-	if reson:
-		_hit_resonance(user, target, mv)
-		_add_sync(side, SYNC_RESONANCE)
-	if not react.is_empty():
-		_detonate(user, target, react)
-		_add_sync(side, SYNC_REACT)
-	_last_hit[tid] = {"user": user, "type": String(mv.get("type", "")), "t": _clock, "used": reson}
-	if target.alive():
-		_place_mark(user, target, mv)
 
 
 ## Golpe saiu (antes da entrega).
@@ -305,26 +108,6 @@ func completes_duo(user: BattleFighter, mv: Dictionary) -> bool:
 	return false
 
 
-## Para a IA do par: o golpe `mv` deixa uma marca que algum golpe do parceiro detona?
-func sets_up_reaction(user: BattleFighter, partner: BattleFighter, mv: Dictionary) -> bool:
-	if not marks_on():
-		return false
-	var mid := _mark_for(mv)
-	if mid == "" or not _ok(partner):
-		return false
-	for pid in partner.moves:
-		var pm: Dictionary = Dex.move(String(pid))
-		if float(pm.get("power", 0)) <= 0.0:
-			continue
-		var pt := String(pm.get("type", ""))
-		for r in REACTIONS:
-			if r.mark != mid:
-				continue
-			if (r.get("contact", false) and _is_contact(pm)) or pt in r.get("by", []):
-				return true
-	return false
-
-
 ## Sintonia do lado (0..1) para o HUD.
 func sync_of(side: int) -> float:
 	if side < 0 or side > 1:
@@ -332,116 +115,8 @@ func sync_of(side: int) -> float:
 	return clampf(_sync[side], 0.0, 1.0)
 
 
-## Marcas ativas no lutador para o HUD: [{id, name, color, t}].
-func marks_of(f: BattleFighter) -> Array:
-	var out: Array = []
-	if not is_instance_valid(f) or not _marks.has(f.get_instance_id()):
-		return out
-	var m: Dictionary = _marks[f.get_instance_id()].m
-	for mid in m:
-		var d: Dictionary = MARKS[mid]
-		out.append(
-			{"id": mid, "name": d.name, "color": Dex.type_color(d.color), "t": float(m[mid].t)}
-		)
-	return out
-
-
-# --- Marcas e reações ---
-
-
 func _ok(f: Variant) -> bool:
 	return is_instance_valid(f) and f.active()
-
-
-func _is_contact(mv: Dictionary) -> bool:
-	return (
-		String(mv.get("kind", "")) in CONTACT_KINDS and String(mv.get("category", "")) == "physical"
-	)
-
-
-func _mark_for(mv: Dictionary) -> String:
-	var ty := String(mv.get("type", ""))
-	if ty in ["fighting", "normal"]:
-		return "down" if float(mv.get("knockback", 0.0)) >= KNOCKDOWN else ""
-	if ty == "bug":
-		var id := String(mv.get("id", ""))
-		return "slow" if "web" in id or "string" in id else ""
-	return String(TYPE_MARK.get(ty, ""))
-
-
-func _place_mark(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> void:
-	var mid := _mark_for(mv)
-	if mid == "":
-		return
-	var tid := target.get_instance_id()
-	if not _marks.has(tid):
-		_marks[tid] = {"f": target, "m": {}}
-	var fresh: bool = not _marks[tid].m.has(mid)
-	_marks[tid].m[mid] = {"t": MARK_TIME, "side": user.side, "by": user.get_instance_id()}
-	if fresh:
-		var d: Dictionary = MARKS[mid]
-		target.popup(String(d.name), Dex.type_color(d.color), 0.7, 0.55, "status")
-
-
-## Primeira reação da tabela que casa com uma marca do parceiro e o golpe.
-func _find_reaction(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> Dictionary:
-	if not marks_on():
-		return {}
-	var tid := target.get_instance_id()
-	if not _marks.has(tid) or _icd.has(tid):
-		return {}
-	var ty := String(mv.get("type", ""))
-	var m: Dictionary = _marks[tid].m
-	for r in REACTIONS:
-		if not m.has(r.mark):
-			continue
-		var mk: Dictionary = m[r.mark]
-		if int(mk.side) != user.side or int(mk.by) == user.get_instance_id():
-			continue
-		if r.get("contact", false):
-			if _is_contact(mv):
-				return r
-		elif ty in r.by:
-			return r
-	return {}
-
-
-func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> void:
-	var tel = arena.get("telemetry")
-	if tel:
-		tel.note(
-			"combo",
-			{
-				"who": tel.uid(user),
-				"tgt": tel.uid(target),
-				"r": String(r.get("name", r.get("id", "")))
-			}
-		)
-	var tid := target.get_instance_id()
-	_icd[tid] = REACT_ICD
-	if _marks.has(tid):
-		_marks[tid].m.erase(r.mark)
-	var col := Dex.type_color(String(r.color))
-	_notify(String(r.name), col)
-	if not _fx3d():
-		arena.fx_disc(target.pos2(target.position), 1.2, col * Color(1, 1, 1, 0.6), 0.35)
-	_pixel_burst(target, String(r.color), 2.0 if not r.has("area") else float(r.area[1]) * 1.6)
-	if String(r.id) == "freeze":
-		_pixel_burst_key(target, "snow", 1.2, 0.6)
-	if r.has("status") and target.alive():
-		if arena.rng.randf() < float(r.status[1]):
-			_status(user, target, String(r.status[0]))
-	if r.get("confuse", false) and target.alive():
-		_status(user, target, "confusion")
-	if r.has("root") and target.alive():
-		target.root_t = maxf(target.root_t, float(r.root))
-	if r.has("slow") and target.alive():
-		_temp_stage(target, "spe", -1, float(r.slow))
-	if r.has("acc") and target.alive():
-		_temp_stage(target, "acc", -1, float(r.acc))
-	if r.has("area"):
-		var a: Array = r.area
-		_area_hit(user, target, float(a[0]), float(a[1]), String(a[2]), false)
 
 
 ## Estouro de pixel art no alvo, pela cor/tipo (Sprite3D animado; sem arte nada acontece).
@@ -456,7 +131,7 @@ func _pixel_burst(target: BattleFighter, type: String, size: float) -> void:
 	_pixel_burst_key(target, PixelFx.key_for_type(type), size, 0.5)
 
 
-## Golpes e combos do modo de energia usam os efeitos 3D (gfx/fx3d).
+## Golpes e combos usam os efeitos 3D (gfx/fx3d) quando há efeitos.
 func _fx3d() -> bool:
 	return arena.vfx != null and arena.vfx.use3d()
 
@@ -470,24 +145,6 @@ func _pixel_burst_key(target: BattleFighter, key: String, size: float, life: flo
 		return
 	var at := target.pos2(target.position)
 	PixelFx.pop(arena, key, Vector3(at.x, maxf(target.look_h, 0.8) * 0.6, at.z), size, life)
-
-
-func _resonates(user: BattleFighter, target: BattleFighter, mv: Dictionary) -> bool:
-	var rec = _last_hit.get(target.get_instance_id())
-	if rec == null or bool(rec.used):
-		return false
-	return (
-		is_instance_valid(rec.user)
-		and rec.user != user
-		and rec.user.side == user.side
-		and String(rec.type) == String(mv.get("type", ""))
-		and _clock - float(rec.t) <= RESONANCE_WINDOW
-	)
-
-
-func _hit_resonance(_user: BattleFighter, _target: BattleFighter, mv: Dictionary) -> void:
-	var col := Dex.type_color(String(mv.get("type", "normal")))
-	_notify("Resonance!", col)
 
 
 ## Acertos dos dois parceiros próximos no tempo enchem a Sintonia.
@@ -509,28 +166,6 @@ func _add_sync(side: int, v: float) -> void:
 
 
 # --- Efeitos ---
-
-
-## Reações, Ressonância e combos de dupla avisam embaixo da arena (BattleHUD.warn), nunca sobre o Pokémon.
-func _notify(text: String, col: Color) -> void:
-	if arena.hud and arena.hud.has_method("warn"):
-		arena.hud.warn(text, col)
-
-
-func _status(user: BattleFighter, target: BattleFighter, st: String) -> void:
-	var mvs = arena.moves
-	if mvs.STATUS_IMMUNE.get(st, "-") in target.types:
-		return
-	if arena.abilities and arena.abilities.blocks_status(target, st):
-		return
-	if target.apply_status(st, user):
-		target.popup(
-			String(mvs.STATUS_WORDS.get(st, st.to_upper() + "!")),
-			Color(1, 0.9, 0.6),
-			1.0,
-			0.15,
-			"status"
-		)
 
 
 ## Estágio temporário sem popup de estágio (volta sozinho).
@@ -628,17 +263,10 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 	_duo_cd[u1.side] = DUO_COOLDOWN
 	_used.clear()
 	_add_sync(u1.side, 0.0)
-	if not marks_on():
-		# Modo de energia: o nome da dupla sai no balão de golpe de quem fechou, como um golpe normal.
-		arena.say("%s and %s: %s!" % [u1.mon.display_name, u2.mon.display_name, String(duo.name)])
-		if arena.hud and arena.hud.has_method("callout"):
-			arena.hud.callout(u1, String(duo.name), col)
-	else:
-		_notify("COMBO! %s" % String(duo.name), col)
-		var mid_at := (u1.pos2(u1.position) + u2.pos2(u2.position)) * 0.5
-		arena.popup(
-			mid_at + Vector3(0, 2.2, 0), String(duo.name).to_upper() + "!", col, 2.2, "super"
-		)
+	# O nome da dupla sai no balão de golpe de quem fechou, como um golpe normal.
+	arena.say("%s and %s: %s!" % [u1.mon.display_name, u2.mon.display_name, String(duo.name)])
+	if arena.hud and arena.hud.has_method("callout"):
+		arena.hud.callout(u1, String(duo.name), col)
 	if _fx3d():
 		for u in [u1, u2]:
 			arena.vfx.fx3d.charge(u, {"type": String(duo.type), "power": 90}, DUO_DELAY, 1.1)

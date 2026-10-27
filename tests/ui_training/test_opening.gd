@@ -1,9 +1,9 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/ui_training/test_opening.gd
-## Abertura do treino no modo de energia (BattleOpening): o telão com os nomes, a arena inteira,
+## Abertura do treino (BattleOpening): o telão com os nomes, a arena inteira,
 ## cada treinador joga os titulares (close no treinador, a bola, zoom no Pokémon) e só então a
 ## luta começa. Antes disso ninguém está em campo à vista nem gasta energia; a abertura acaba em
-## tempo limitado; nada disso no fast_sim, no VGC nem com opts.opening = false.
+## tempo limitado; nada disso no fast_sim nem com opts.opening = false.
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const SCENE := "res://ui/training/training_battle.tscn"
@@ -27,7 +27,7 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 
-func _cfg(mode: String, size: int, extra := {}) -> Dictionary:
+func _cfg(size: int, extra := {}) -> Dictionary:
 	Cfg.path = "user://test_opening_cfg.json"
 	var c := Cfg.default_config()
 	var a: Array = []
@@ -43,7 +43,6 @@ func _cfg(mode: String, size: int, extra := {}) -> Dictionary:
 	c.speed = 1.0
 	c.seed = 5
 	c.battle_size = size
-	c.battle_mode = mode
 	if not extra.is_empty():
 		c["extra_opts"] = extra
 	return c
@@ -51,7 +50,7 @@ func _cfg(mode: String, size: int, extra := {}) -> Dictionary:
 
 func _opening(size: int, limit: float) -> void:
 	var tag := "%dx%d" % [size, size]
-	Cfg.current = _cfg("energy", size)
+	Cfg.current = _cfg(size)
 	var tb: Node = load(SCENE).instantiate()
 	var beats: Array = []
 	root.add_child(tb)
@@ -175,8 +174,7 @@ func _skipped(c: Dictionary, what: String) -> void:
 func _run() -> void:
 	await _opening(2, MAX_2V2)
 	await _opening(1, MAX_1V1)
-	await _skipped(_cfg("energy", 2, {"fast_sim": true}), "fast_sim (bateria)")
-	await _skipped(_cfg("vgc", 2), "VGC")
-	await _skipped(_cfg("energy", 2, {"opening": false}), "opts.opening = false")
+	await _skipped(_cfg(2, {"fast_sim": true}), "fast_sim (bateria)")
+	await _skipped(_cfg(2, {"opening": false}), "opts.opening = false")
 	print("FALHAS: %d" % fails)
 	quit(1 if fails > 0 else 0)

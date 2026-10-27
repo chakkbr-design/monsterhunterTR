@@ -1,9 +1,9 @@
 extends SceneTree
 ## Rodar: godot --headless --path . --script res://tests/battle/test_regroup.gd
-## Reagrupar depois do nocaute no modo de energia (BattleRegroup, arena.energy_pause "regroup"):
+## Reagrupar depois do nocaute (BattleRegroup, arena.energy_pause "regroup"):
 ## quando alguém desmaia ninguém usa golpe nem toma dano até todo lugar que pode ser preenchido
 ## estar em campo e todos estarem perto do ponto de entrada; a luta ainda acaba. No 1x1 e no 2x2,
-## com e sem fast_sim (a bateria), e nunca no VGC.
+## com e sem fast_sim (a bateria).
 
 const ARENA := "res://battle/battle_arena.tscn"
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -18,7 +18,6 @@ func _initialize() -> void:
 	_fight(1, true, true)
 	_fight(2, false, false)
 	_fight(3, true, false)
-	_vgc()
 	print("regroup: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
 
@@ -34,7 +33,7 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
-	opts.merge({"speed": 1.0, "battle_mode": "energy", "no_rewards": true}, false)
+	opts.merge({"speed": 1.0, "no_rewards": true}, false)
 	a.start(party, enemies, opts)
 	return a
 
@@ -52,7 +51,7 @@ func _fight(i: int, doubles: bool, fast: bool) -> void:
 			"battle_size": 2 if doubles else 1,
 			"autoplay": true,
 			"seed": 70 + i,
-			"arena": Cfg.ARENA,
+			"arena": Cfg.SMALL_ARENA,
 			"fast_sim": fast
 		}
 	)
@@ -121,17 +120,3 @@ func _hps(a: Node) -> Dictionary:
 	return out
 
 
-func _vgc() -> void:
-	var a := _arena(
-		[Mon.create("pikachu", 30), Mon.create("geodude", 30)],
-		[Mon.create("charmander", 30), Mon.create("squirtle", 30)],
-		{"kind": "trainer", "battle_size": 1, "autoplay": true, "seed": 5, "battle_mode": "vgc"}
-	)
-	var paused := false
-	var t := 0.0
-	while t < 200.0 and a.state in ["intro", "fight"]:
-		a.step(DT)
-		t += DT
-		paused = paused or a.fight_paused()
-	check(a.regroup == null and not paused, "VGC: sem reagrupar")
-	a.queue_free()

@@ -282,7 +282,7 @@ func _fx_energy() -> void:
 	root.add_child(sun)
 	var lt := FakeLight.new()
 	root.add_child(lt)
-	var a := _still("pidgey", "rattata", {"battle_mode": "energy"})
+	var a := _still("pidgey", "rattata", {})
 	var fx := a.get_node_or_null("WeatherFx") as BattleWeatherFx
 	var ab: BattleAbilities = a.abilities
 	_clear(ab)
@@ -332,7 +332,7 @@ func _fx_energy() -> void:
 	fx.free()
 	a.free()
 	# Quadra voxel (treino de energia): o próprio piso mostra chão molhado e neve, sem a placa lisa.
-	var v := _still("pidgey", "rattata", {"battle_mode": "energy", "voxel": true})
+	var v := _still("pidgey", "rattata", {"voxel": true})
 	var vfx := v.get_node_or_null("WeatherFx") as BattleWeatherFx
 	_clear(v.abilities)
 	v.abilities.set_weather_rounds("rain")
