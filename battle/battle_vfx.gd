@@ -121,6 +121,7 @@ func _center(f: BattleFighter, k := 0.5) -> Vector3:
 ## Ao soltar o golpe: papel "user" do move_fx.json.
 func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.cast(user, mv, dir)
 		return
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "user")
@@ -142,6 +143,7 @@ func on_hit(
 	if not is_instance_valid(target):
 		return
 	if use3d():
+		fx3d.scope([user, target])
 		fx3d.hit(user, target, mv, dir, crit, eff)
 		return
 	var roles := PmdFx.move_roles(String(mv.get("id", "")))
@@ -169,6 +171,7 @@ func beam(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, dur:
 	if not enabled or not is_instance_valid(user) or not arena.is_inside_tree():
 		return
 	if use3d():
+		fx3d.scope([user])
 		fx3d.beam(user, mv, dir, length, dur)
 		return
 	var id := BeamFx.beam_for(String(mv.get("id", "")))
@@ -213,6 +216,7 @@ func stream(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, du
 	if not enabled or not is_instance_valid(user) or not arena.is_inside_tree():
 		return
 	if use3d():
+		fx3d.scope([user])
 		fx3d.stream(user, mv, dir, length, dur)
 		return
 	var roles := PmdFx.move_roles(String(mv.get("id", "")))
@@ -243,6 +247,7 @@ func stream(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, du
 ## Ponta do chicote (vine_whip/aqua_tail): papel "tip" na ponta.
 func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.tip(user, mv, at_local, dir)
 		return
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "tip")
@@ -254,6 +259,7 @@ func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -
 ## Visual de projétil: papel "travel" (PMD em laço) ou uma orbe brilhante do tipo.
 func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
 	if use3d():
+		fx3d.scope([p, p.get("user")])
 		fx3d.projectile(p, mv, dir)
 		return
 	show.ctx = [p]
@@ -295,6 +301,7 @@ func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
 ## Estágio subiu/caiu: anel/linhas coloridas do move_fx.json ("stats").
 func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 	if use3d():
+		fx3d.scope([f])
 		fx3d.stat_change(f, key, up)
 		return
 	var st: Dictionary = PmdFx.data().get("stats", {}).get(key, {})
@@ -308,6 +315,7 @@ func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 ## Efeito de status em laço preso ao lutador ("status" do move_fx.json).
 func status_look(f: BattleFighter, status: String) -> Node3D:
 	if use3d():
+		fx3d.scope([f])
 		return fx3d.status_look(f, status)
 	var r := PmdFx.role(PmdFx.data().get("status", {}), status)
 	if r.is_empty():
@@ -321,6 +329,7 @@ func status_look(f: BattleFighter, status: String) -> Node3D:
 ## O golpe começou a preparar (carga antes de soltar): só nos efeitos 3D.
 func prepare(user: BattleFighter, mv: Dictionary, secs: float) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.prepare(user, mv, secs)
 
 
@@ -329,6 +338,7 @@ func area_pre(
 	user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, windup: float
 ) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.area_pre(user, mv, at_local, r, windup)
 
 
@@ -337,12 +347,14 @@ func area_land(
 	user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, around_user: bool
 ) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.area_land(user, mv, at_local, r, around_user)
 
 
 ## Zona que fica no chão (Fire Spin, Whirlpool...).
 func zone_at(user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, dur: float) -> void:
 	if use3d():
+		fx3d.scope([user])
 		fx3d.zone_at(user, mv, at_local, r, dur)
 
 
@@ -353,6 +365,7 @@ func zone_at(user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, d
 ## fighter.position) em `duration` s, com terra levantando.
 func dig_trail(user: BattleFighter, from: Vector3, to: Vector3, duration: float) -> void:
 	if use3d():
+		fx3d.scope([user])
 		field3d.dig_trail(user, from, to, duration)
 		return
 	show.ctx = [user]
@@ -362,6 +375,7 @@ func dig_trail(user: BattleFighter, from: Vector3, to: Vector3, duration: float)
 ## O lutador entrou no chão: buraco e terra espirrando.
 func burrow(user: BattleFighter) -> void:
 	if use3d():
+		fx3d.scope([user])
 		field3d.burrow(user)
 		return
 	show.ctx = [user]
@@ -371,6 +385,7 @@ func burrow(user: BattleFighter) -> void:
 ## O lutador saiu do chão: estouro de terra, pedras e anel de poeira.
 func unburrow(user: BattleFighter) -> void:
 	if use3d():
+		fx3d.scope([user])
 		field3d.unburrow(user)
 		return
 	show.ctx = [user]
@@ -380,6 +395,7 @@ func unburrow(user: BattleFighter) -> void:
 ## Lutador arremessado bateu na cerca/caixa/pedra/parede (`at` local da arena): poeira e estrelinhas.
 func crash(f: BattleFighter, at: Vector3, what: String) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.crash(f, at, what)
 		return
 	show.ctx = [f]
@@ -389,6 +405,7 @@ func crash(f: BattleFighter, at: Vector3, what: String) -> void:
 ## Arremesso forte (Whirlwind, Roar, Dragon Tail, contato 80+): rastro de vento enquanto voa.
 func launch(f: BattleFighter, dir: Vector3, dist: float) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.launch(f, dir, dist)
 		return
 	show.ctx = [f]
@@ -398,6 +415,7 @@ func launch(f: BattleFighter, dir: Vector3, dist: float) -> void:
 ## Reapareceu de repente (Aerial Ace "blink"): flash e linhas onde surge.
 func blink(f: BattleFighter) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.blink(f)
 		return
 	show.ctx = [f]
@@ -409,6 +427,7 @@ func blink(f: BattleFighter) -> void:
 
 func protect_shield(f: BattleFighter, secs: float) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.protect_shield(f, secs)
 		return
 	show.ctx = [f]
@@ -418,6 +437,7 @@ func protect_shield(f: BattleFighter, secs: float) -> void:
 ## Follow Me / Rage Powder.
 func spotlight(f: BattleFighter, secs: float) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.spotlight(f, secs)
 		return
 	show.ctx = [f]
@@ -427,6 +447,7 @@ func spotlight(f: BattleFighter, secs: float) -> void:
 ## light_screen, reflect, safeguard, quick_guard, tailwind sobre o lado `side`.
 func screen(side: int, kind: String, secs: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.screen(side, kind, secs)
 		return
 	show.ctx = []
@@ -436,6 +457,7 @@ func screen(side: int, kind: String, secs: float) -> void:
 ## sun, rain, sand, hail.
 func weather(kind: String, secs: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.weather(kind, secs)
 		return
 	show.ctx = []
@@ -445,6 +467,7 @@ func weather(kind: String, secs: float) -> void:
 ## "grassy".
 func terrain(kind: String, secs: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.terrain(kind, secs)
 		return
 	show.ctx = []
@@ -453,6 +476,7 @@ func terrain(kind: String, secs: float) -> void:
 
 func gravity(secs: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.gravity(secs)
 		return
 	show.ctx = []
@@ -461,6 +485,7 @@ func gravity(secs: float) -> void:
 
 func haze(user: BattleFighter) -> void:
 	if use3d():
+		fx3d.scope([user])
 		field3d.haze(user)
 		return
 	show.ctx = [user]
@@ -470,6 +495,7 @@ func haze(user: BattleFighter) -> void:
 ## `at` local da arena.
 func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.toxic_spikes(side, at, r, life)
 		return
 	show.ctx = []
@@ -479,11 +505,13 @@ func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
 ## Stealth Rock (`at` local): só nos efeitos 3D (fora deles, o disco da arena).
 func stealth_rock(side: int, at: Vector3, r: float, life: float) -> void:
 	if use3d():
+		fx3d.scope([])
 		field3d.stealth_rock(side, at, r, life)
 
 
 func heal(f: BattleFighter) -> void:
 	if use3d():
+		fx3d.scope([f])
 		field3d.heal(f)
 		return
 	show.ctx = [f]

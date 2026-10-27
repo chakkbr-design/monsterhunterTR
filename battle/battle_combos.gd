@@ -123,6 +123,7 @@ func _ok(f: Variant) -> bool:
 func _pixel_burst(target: BattleFighter, type: String, size: float) -> void:
 	if _fx3d():
 		var fx: MoveFx3D = arena.vfx.fx3d
+		fx.scope([target])
 		var c := fx.center(target, 0.5)
 		fx.element(type, c, int(10 + size * 6.0), {"k": clampf(size * 0.5, 0.6, 1.8)})
 		fx.flash(c, size * 0.6, Fx3DKit.core(type), 0.14)
@@ -213,6 +214,7 @@ func _area_hit(
 	var mv := _synth("combo_area", "Combo", ty, power, radius)
 	mv.merge(extra, true)
 	if _fx3d():
+		arena.vfx.fx3d.scope([])
 		arena.vfx.fx3d.burst_area(mv, arena.vfx.fx3d.gpos(at), radius, 0.9)
 	else:
 		arena.fx_disc(at, radius, Dex.type_color(ty) * Color(1, 1, 1, 0.45), 0.3)
@@ -269,6 +271,7 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 		arena.hud.callout(u1, String(duo.name), col)
 	if _fx3d():
 		for u in [u1, u2]:
+			arena.vfx.fx3d.scope([u])
 			arena.vfx.fx3d.charge(u, {"type": String(duo.type), "power": 90}, DUO_DELAY, 1.1)
 	else:
 		arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
@@ -295,6 +298,7 @@ func _duo_effect(
 		"field":
 			_run_field(u1, at, duo, extra, int(ceil(float(duo.duration) / float(duo.tick))))
 			if _fx3d():
+				arena.vfx.fx3d.scope([])
 				arena.vfx.fx3d.vortex(
 					{"type": ty, "power": float(duo.power)},
 					arena.vfx.fx3d.gpos(at),
@@ -410,6 +414,7 @@ func _duo_vis(at: Vector3, duo: Dictionary) -> void:
 ## Golpe de dupla em 3D (mesmos estilos do _duo_vis): ring, pillar, rain, bolts, spiral, sparkle.
 func _duo_vis3d(at_local: Vector3, duo: Dictionary) -> void:
 	var fx: MoveFx3D = arena.vfx.fx3d
+	fx.scope([])
 	var ty := String(duo.type)
 	var r := float(duo.radius)
 	var mv := {"type": ty, "power": maxf(float(duo.get("power", 90)), 90.0), "category": "special"}

@@ -45,7 +45,11 @@ const ACCENT := {
 
 var vfx: BattleVfx
 var arena: Node3D
-var _events: Array = []  ## {t, cb}
+var _events: Array = []  ## {t, cb, deps}
+## Nós de que o efeito em montagem depende (WeakRef). Agendamentos, emissores e raios guardam o
+## escopo de quando nasceram e param sozinhos quando um desses nós é liberado, sem chamar o lambda
+## (chamar um lambda com captura liberada solta "Lambda capture ... was freed").
+var _scope: Array = []
 
 
 func _init(v: BattleVfx) -> void:
@@ -53,12 +57,27 @@ func _init(v: BattleVfx) -> void:
 	arena = v.arena
 
 
-## Agenda `cb` daqui a `delay` s (tempo da luta).
+## Define de quais nós (lutador, projétil...) os próximos efeitos dependem.
+func scope(nodes: Array) -> void:
+	_scope = []
+	for n in nodes:
+		if n is Object and is_instance_valid(n):
+			_scope.append(weakref(n))
+
+
+static func scope_ok(deps: Array) -> bool:
+	for w in deps:
+		if (w as WeakRef).get_ref() == null:
+			return false
+	return true
+
+
+## Agenda `cb` daqui a `delay` s (tempo da luta). Não roda se um nó do escopo sumiu.
 func later(delay: float, cb: Callable) -> void:
 	if delay <= 0.0:
 		cb.call()
 	else:
-		_events.append({"t": delay, "cb": cb})
+		_events.append({"t": delay, "cb": cb, "deps": _scope})
 
 
 func tick_events(dt: float) -> void:
@@ -66,12 +85,15 @@ func tick_events(dt: float) -> void:
 		return
 	var evs := _events
 	_events = []
+	var prev := _scope
 	for e in evs:
 		e.t -= dt
-		if e.t <= 0.0:
-			e.cb.call()
-		else:
+		if e.t > 0.0:
 			_events.append(e)
+		elif scope_ok(e.deps):
+			_scope = e.deps
+			e.cb.call()
+	_scope = prev
 
 
 func clear() -> void:
@@ -173,6 +195,8 @@ func floor_y() -> float:
 
 
 func _add(n: Node3D) -> Node3D:
+	if n is Fx3DRibbon:
+		(n as Fx3DRibbon).deps = _scope
 	arena.add_child(n)
 	vfx._track(n)
 	return n
@@ -287,9 +311,13 @@ func emitter(
 	if fol != null:
 		p.follow = fol
 		p.carry = float(o.get("carry", 0.0))
+	var deps := _scope
 	p.spawn = func(pp: Fx3DParticles) -> void:
 		var q: Vector3 = at
 		if where.is_valid():
+			if not scope_ok(deps):
+				pp.emit_for = 0.0
+				return
 			var w = where.call()
 			if w == null:
 				pp.emit_for = 0.0

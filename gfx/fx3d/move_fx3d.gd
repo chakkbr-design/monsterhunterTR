@@ -603,13 +603,15 @@ func orb(p: Node3D, type: String, s: float, t: int) -> void:
 func _die_with(n: Node3D, p: Node3D) -> void:
 	if n == null:
 		return
+	var wp := weakref(p)
+	var prev := _scope
+	scope([n])
 	repeat(
 		0.03,
 		30.0,
 		func(_i: int) -> bool:
-			if not is_instance_valid(n):
-				return false
-			if not is_instance_valid(p) or not p.is_inside_tree() or p.get("done"):
+			var pp: Node3D = wp.get_ref()
+			if not is_instance_valid(pp) or not pp.is_inside_tree() or pp.get("done"):
 				if n is Fx3DMesh:
 					var m := n as Fx3DMesh
 					m.life = minf(m.life, m.age + 0.06)
@@ -619,6 +621,7 @@ func _die_with(n: Node3D, p: Node3D) -> void:
 				return false
 			return true
 	)
+	_scope = prev
 
 
 # --- Investida ---
@@ -1535,6 +1538,7 @@ func status_look(f: BattleFighter, status: String) -> Fx3DStatus:
 	var hh := height(f)
 	h.position = Vector3(0, hh * (1.05 if status in ["sleep", "confusion"] else 0.55), 0)
 	_add(h)
+	scope([h, f])
 	var at := func(k: float) -> Variant:
 		return null if not is_instance_valid(h) or h.ended() else center(f, k)
 	var big := 3600.0

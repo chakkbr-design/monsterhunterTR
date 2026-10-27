@@ -15,6 +15,7 @@ var col := Color.WHITE
 var cam_pos := Vector3.ZERO
 var cam_node: Camera3D
 var shape: Callable  ## func(r: Fx3DRibbon, k: float) -> void (k = age/life), muda pts
+var deps: Array = []  ## WeakRefs (Fx3DKit.scope): sumiu um, `shape` para e o raio fica parado
 var jitter_every := 0.0
 var _jt := 0.0
 var _im := ImmediateMesh.new()
@@ -40,6 +41,8 @@ func tick(dt: float) -> bool:
 	if age >= life or not is_inside_tree():
 		return false
 	var k := age / life
+	if shape.is_valid() and not Fx3DKit.scope_ok(deps):
+		shape = Callable()
 	if shape.is_valid():
 		if jitter_every <= 0.0:
 			shape.call(self, k)
