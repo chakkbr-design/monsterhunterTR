@@ -27,9 +27,12 @@ def load(d):
         if fn.endswith(".json"):
             try:
                 with open(os.path.join(d, fn)) as fh:
-                    yield fn, json.load(fh)
+                    f = json.load(fh)
             except Exception as e:
                 print("ignorado", fn, e, file=sys.stderr)
+                continue
+            if isinstance(f, dict) and "result" in f and "events" in f:  # pula report.json etc.
+                yield fn, f
 
 
 def stuck_runs(samples):
