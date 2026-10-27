@@ -40,8 +40,8 @@ func _run(a: Node, secs: float) -> void:
 		a.step(DT)
 
 
-func _mons(list: Array, lv := 40) -> Array:
-	return list.map(func(s): return Mon.create(String(s), lv))
+func _mons(list: Array, lv := 40, rng: RandomNumberGenerator = null) -> Array:
+	return list.map(func(s): return Mon.create(String(s), lv, rng))
 
 
 ## Dupla de treinador parada (ninguém anda nem bate sozinho): os testes chamam a IA na mão.
@@ -52,7 +52,9 @@ func _still2(mine: Array, theirs: Array, seed_n := 3, extra := {}) -> Node:
 	o.merge(extra, true)
 	var tai: bool = bool(o.get("trainer_ai", true))
 	o["trainer_ai"] = false  # ninguém troca sozinho enquanto o teste monta a cena
-	var a := _arena(_mons(mine), _mons(theirs), o)
+	var r := RandomNumberGenerator.new()
+	r.seed = seed_n  # IV/natureza fixos: o matchup não depende do sorteio
+	var a := _arena(_mons(mine, 40, r), _mons(theirs, 40, r), o)
 	for i in int(3.0 / DT):
 		a.step(DT)
 		for f in a.fighters:
@@ -139,9 +141,11 @@ func _replacement() -> void:
 
 ## Luta de verdade: o treinador troca o Charmander que só apanharia (depois da trava do começo).
 func _switch_in_battle() -> void:
+	var r := RandomNumberGenerator.new()
+	r.seed = 4  # IV/natureza fixos: com atributos sorteados o matchup às vezes nem fica ruim
 	var a := _arena(
-		_mons(["squirtle", "psyduck"]),
-		_mons(["charmander", "spearow", "bulbasaur"]),
+		_mons(["squirtle", "psyduck"], 40, r),
+		_mons(["charmander", "spearow", "bulbasaur"], 40, r),
 		{"kind": "trainer", "battle_size": 2, "seed": 4, "no_rewards": true, "autoplay": true}
 	)
 	_run(a, 3.0)
