@@ -30,7 +30,7 @@ void fragment() {
 	float x = UV.x;
 	if (edge >= 1.0) {
 		if (x <= fill) {
-			col = bar_col.rgb * (UV.y < 0.45 ? 1.0 : 0.82);
+			col = bar_col.rgb * (UV.y > 0.55 ? 1.0 : 0.82);
 		} else if (x <= trail) {
 			col = vec3(0.95, 0.55, 0.45);
 		} else {
