@@ -18,6 +18,8 @@ const MAX_SECS := 10.0
 ## chão, empurrado pelo vizinho): anda em linha reta atravessando o que houver.
 const STUCK_SECS := 1.2
 const NEAR_GAIN := 0.15
+## Todos chegam em até uns tantos segundos, por mais longe ou lento que estejam.
+const ARRIVE_SECS := 4.5
 
 ## A arena (sem tipo: os campos dela são lidos direto).
 var arena
@@ -179,7 +181,8 @@ func _walk(f: BattleFighter, dt: float) -> void:
 		if arena.terrain and not straight:
 			want = arena.terrain.steer(f, want)
 	var before := f.position
-	var speed: float = f.walk_speed()
+	# Lento, na lama ou do outro lado da quadra de 48 m: apressa o passo para chegar em ARRIVE_SECS.
+	var speed: float = maxf(f.walk_speed(), dist / maxf(ARRIVE_SECS - t, 0.5))
 	if want.length() > 0.01:
 		var stride := minf(speed * dt, dist)
 		f.position += want.normalized() * stride
