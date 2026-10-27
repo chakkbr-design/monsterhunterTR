@@ -58,6 +58,8 @@ var _pause_bg: PanelContainer
 var _pause: Label
 var _mode_btns := {"player": [], "ally": []}
 var quiet := false
+## Painel de EXP do fim da batalha (a arena chama begin/step).
+var exp_panel: Control
 ## Textos que apareceram na tela da luta, para os testes: [{kind, text}] (os últimos SHOWN_MAX).
 var shown: Array = []
 
@@ -169,6 +171,9 @@ func _init() -> void:
 	_viva = VivaLayer.new()
 	_root.add_child(_viva)
 	_viva.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	exp_panel = preload("res://battle/battle_exp_panel.gd").new()
+	_root.add_child(exp_panel)
+	exp_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
 func _place(c: Control, anchor: Vector2, size_px: Vector2, center: Vector2) -> void:
@@ -424,13 +429,7 @@ func refresh(
 	_ally_card.cmd = String(cmds.get("ally", ""))
 	_ally_card.obey = bool(obey.get("ally", true))
 	_ally_card.visible = has_ally
-	# Resultado do fim: a barra de EXP do cartão enche sob o controle da arena (begin_scripted/fill_to).
-	var xs: Dictionary = info.get("exp_script", {})
 	for c in [_player_card, _foe_card, _foe2_card, _ally_card]:
-		c.script_xp = -1.0
-		if not xs.is_empty() and c.body != null and c.body.mon == xs.get("mon"):
-			c.script_xp = float(xs.xp)
-			c.script_level = int(xs.level)
 		c.visible = c.body != null
 		c.marks = _marks_of(marks, c.body)
 		c.step(dt)
@@ -559,9 +558,6 @@ class FighterCard:
 	var marks: Array = []
 	## Onde os chips de estágio (▲▼) foram desenhados, local ao cartão (holofote do tutorial).
 	var chips := Rect2()
-	## >= 0: XP mostrado pela sequência de resultado (barra enchendo) e o nível que ela anuncia.
-	var script_xp := -1.0
-	var script_level := 0
 	var _mon: Mon
 	var _hp_ratio := 1.0
 	var _ghost := 1.0
@@ -593,9 +589,6 @@ class FighterCard:
 		var m := body.mon
 		var xp := float(m.xp)
 		var lvl := m.level
-		if script_xp >= 0.0:
-			xp = script_xp
-			lvl = Growth.level_for_exp(m.growth, int(xp))
 		if lvl >= Growth.MAX_LEVEL:
 			return 1.0
 		var lo := float(Growth.exp_for_level(m.growth, lvl))
@@ -632,7 +625,7 @@ class FighterCard:
 		var x1 := size.x - 98.0 if foe else size.x - 16.0
 		var tf := UiDraw.title_font()
 		drawn_name = body.mon.display_name
-		var lv := "Lv %d" % (script_level if script_xp >= 0.0 and script_level > 0 else body.level)
+		var lv := "Lv %d" % body.level
 		var lvw := UiDraw.text_width(lv, 15, tf)
 		if foe:
 			UiDraw.text(

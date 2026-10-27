@@ -65,6 +65,8 @@ const CMD_IGNORE_SECS := 2.0
 ## Amizade ganha por vencer (cada participante de pé) e por obedecer um comando.
 const FRIEND_WIN := 3
 const FRIEND_OBEY := 1
+## Exp. Share (Gen 8/9): fração da EXP que vai para quem ficou na party sem lutar.
+const EXP_SHARE := 0.5
 ## Cena de impacto (KO, combo, crítico supereficaz): a luta congela por CUT_IN_SECS, no máx. 1 a cada CUT_IN_GAP.
 const CUT_IN_SECS := 0.4
 const CUT_IN_GAP := 2.5
@@ -107,9 +109,6 @@ const SOLID_MASK := 1
 const TRAINER_CHALLENGE := 1.2
 ## Troca do treinador (o original: "Come back" e recolhe em Game.RECALL_SECS; "is about to send out" 1.4 s).
 const RECALL_SECS := 0.45
-## Resultado do fim (o original _results_sequence): auto-avanço sem jogador; tempo de encher um nível de EXP.
-const RESULT_AUTO := 0.35
-const EXP_LEVEL_SECS := 0.7
 ## Velocidade da batalha das opções (o original: Lento 0.6x, o padrão; Rápido 1.0x).
 const BATTLE_SPEEDS := [0.6, 1.0]
 const SETTINGS := "res://ui/front/settings.gd"
@@ -237,12 +236,9 @@ var _probe: PhysicsShapeQueryParameters3D
 ## Pausa da batalha (Esc; o original: pause_menu.gd _battle_items com a luta parada).
 var pause_open := false
 var pause_sel := 0
-## Sequência de resultado do fim (EXP, nível, golpes, prêmio), um passo por vez.
-var _results: Array = []
-var _beat := {}
-var _last_exp: Array = []
-var _xp_shown := -1.0
-var _xp_level := 0
+## EXP da batalha inteira por Mon (instance id): {mon, xp0, level0, gain, learned: {nível: [nomes]}}.
+## O painel do fim (BattleExpPanel) enche a barra de xp0 até xp0 + gain.
+var _exp_rows := {}
 var _revealed := true
 ## opts.out (índices da equipe fora da bola, que o Game passa): o líder é quem está fora, o aliado da
 ## selvagem só sai de quem já está fora (battle.gd:316-327 do original). Sem opts.out (testes da arena)
@@ -1534,13 +1530,16 @@ func step(dt: float) -> void:
 			_capture_step(dt)
 		"ending":
 			if _state_t >= _end_delay:
-				_results = _build_results() if result.get("outcome") == "win" else []
-				if _results.is_empty():
+				if not _begin_results():
 					_finish()
 					return
 				state = "results"
 		"results":
-			if _results_step(raw):
+			var done: bool = hud.exp_panel.step(raw, _confirm_pressed())
+			for line in hud.exp_panel.take_news():
+				say(line, "exp")
+			if done:
+				_finish()
 				return
 	if state == "done":
 		return
@@ -1569,13 +1568,7 @@ func step(dt: float) -> void:
 			"foe_tag": "WILD" if kind == "wild" else "TRAINER",
 			"show_moves": _human(),
 			"foe_balls": _foe_balls(),
-			"pause": _pause_text() if pause_open else "",
-			"exp_script":
-			(
-				{"mon": _beat.get("mon"), "xp": _xp_shown, "level": _xp_level}
-				if _xp_shown >= 0.0
-				else {}
-			)
+			"pause": _pause_text() if pause_open else ""
 		}
 	)
 
@@ -2535,6 +2528,7 @@ func _capture_step(_dt: float) -> void:
 			var at := ball.global_position + Vector3(0, 0.25, 0)
 			vfx.sparkle(at, 1.6)
 			vfx.pmd("swift_star", at, Vector3.FORWARD, {"scale": 1.2, "billboard": true})
+		_award_exp(enemy.mon)  # Gen 6+: capturar também dá EXP
 		_end("caught", 1.6, {"caught_mon": enemy.mon})
 		return
 	ball.queue_free()
@@ -2671,23 +2665,37 @@ func _other_enemy_up(f: BattleFighter) -> bool:
 	return false
 
 
-## EXP sem aviso na hora (o original: Progression.award_exp(..., quiet = true)); o fim da batalha mostra
-## a última leva em _build_results, como o _results_sequence do original.
+## EXP sem aviso na hora; o painel do fim da batalha (BattleExpPanel) mostra a soma da luta inteira.
+## Exp. Share sempre ligado, como na Gen 8/9: cada participante de pé ganha a EXP cheia (sem dividir) e
+## o resto da party de pé ganha metade (EXP_SHARE). Desmaiado não ganha nada.
 func _award_exp(defeated: Mon) -> void:
-	_last_exp = []
 	if not _rewards():
 		return
-	var receivers: Array = _participants.values().filter(func(m): return not m.is_fainted())
-	if receivers.is_empty():
+	var fought: Array = _participants.values().filter(func(m): return not m.is_fainted())
+	if fought.is_empty():
 		return
-	for m in receivers:
-		var amount := maxi(
-			1, int(defeated.exp_yield(m.level, kind == "trainer") / float(receivers.size()))
-		)
+	for m in party:
+		if m.is_fainted():
+			continue
+		var shared := not fought.has(m)
+		var full := defeated.exp_yield(m.level, kind == "trainer")
+		var amount := maxi(1, int(full * EXP_SHARE)) if shared else full
+		var id := m.get_instance_id()
+		if not _exp_rows.has(id):
+			_exp_rows[id] = {"mon": m, "xp0": m.xp, "level0": m.level, "gain": 0, "learned": {}}
+		var xp_before: int = m.xp
 		var events: Array = m.add_exp(amount)
-		var entry := {"mon": m, "amount": amount, "events": events}
-		exp_log.append(entry)
-		_last_exp.append(entry)
+		var row: Dictionary = _exp_rows[id]
+		row.gain = int(row.gain) + m.xp - xp_before
+		var lv := m.level
+		for e in events:
+			if e.type == "level":
+				lv = int(e.level)
+			elif e.type == "move" and e.learned:
+				if not row.learned.has(lv):
+					row.learned[lv] = []
+				row.learned[lv].append(String(Dex.move(e.move).get("name", e.move)))
+		exp_log.append({"mon": m, "amount": amount, "events": events, "shared": shared})
 		var f := _fighter_of(m)
 		if f:
 			_sync_from_mon(f)
@@ -2760,60 +2768,23 @@ func _on_evolution_finished(evolved: bool) -> void:
 # --- Resultado do fim (EXP, nível, prêmio) ---
 
 
-## Passos do _results_sequence do original para a última leva de EXP e o prêmio. Cada passo:
-## {mon?, start? (xp de partida), fill? (xp alvo), level?, text?, kind?, sfx?, confirm?, end?}.
-func _build_results() -> Array:
-	var out: Array = []
-	for r in _last_exp:
-		var m: Mon = r.mon
-		if _fighter_of(m) == null:
-			continue  # sem cartão em campo: o original pula (card_for == null)
-		var gain := int(r.amount)
-		out.append(
-			{
-				"mon": m,
-				"start": float(m.xp - gain),
-				"text": "%s gained %d EXP." % [m.display_name, gain],
-				"kind": "exp"
-			}
-		)
-		var evs: Array = r.events
-		var ei := 0
-		while ei < evs.size():
-			var e: Dictionary = evs[ei]
-			ei += 1
-			if e.type != "level":
-				continue
-			var lv := int(e.level)
-			out.append(
-				{
-					"mon": m,
-					"fill": float(Growth.exp_for_level(m.growth, lv)),
-					"level": lv,
-					"text": "%s grew to Lv %d!" % [m.display_name, lv],
-					"kind": "level",
-					"sfx": "level_up",
-					"confirm": true
-				}
-			)
-			while ei < evs.size() and evs[ei].type == "move":
-				var me: Dictionary = evs[ei]
-				ei += 1
-				if me.learned:
-					var mv := String(Dex.move(me.move).get("name", me.move))
-					out.append(
-						{
-							"mon": m,
-							"text": "%s learned %s!" % [m.display_name, mv],
-							"kind": "level",
-							"confirm": true
-						}
-					)
-		out.append({"mon": m, "fill": float(m.xp), "confirm": true, "end": true})
-	var prize := _prize()
+## Fim da vitória (ou da captura): o prêmio vai para o log e o painel de EXP abre com a party
+## inteira. false quando não há o que mostrar (sem EXP nesta luta).
+func _begin_results() -> bool:
+	if not result.get("outcome") in ["win", "caught"] or _exp_rows.is_empty():
+		return false
+	var prize := _prize() if result.get("outcome") == "win" else 0
 	if prize > 0:
-		out.append({"text": "You got ₽%d for winning!" % prize, "kind": "money", "confirm": true})
-	return out
+		say("You got ₽%d for winning!" % prize, "money")
+	var list: Array = []
+	for m in party:
+		var id: int = m.get_instance_id()
+		if _exp_rows.has(id):
+			list.append(_exp_rows[id])
+		else:
+			list.append({"mon": m, "xp0": m.xp, "level0": m.level, "gain": 0, "learned": {}})
+	hud.exp_panel.begin(list)
+	return true
 
 
 ## Prêmio da vitória contra treinador (o mesmo cálculo de Game._finish, que é quem paga).
@@ -2844,60 +2815,6 @@ func _confirm_pressed() -> bool:
 		(not manual or bool(opts.get("keyboard", false)))
 		and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("ui_accept"))
 	)
-
-
-## Um quadro da sequência de resultado. true quando acabou e a batalha terminou.
-func _results_step(raw: float) -> bool:
-	if _beat.is_empty():
-		if _results.is_empty():
-			_xp_shown = -1.0
-			hud.log_hint("")
-			_finish()
-			return true
-		_beat = _results.pop_front()
-	var b := _beat
-	var m: Mon = b.get("mon")
-	if not b.has("_go"):
-		b["_go"] = true
-		if b.has("start"):
-			_xp_shown = float(b.start)
-			_xp_level = Growth.level_for_exp(m.growth, int(_xp_shown))
-		if b.has("text") and not b.has("fill"):
-			say(String(b.text), String(b.get("kind", "info")))
-	if b.has("fill") and not b.has("_filled"):
-		var target := float(b.fill)
-		var lv := Growth.level_for_exp(m.growth, int(_xp_shown))
-		var span := float(
-			Growth.exp_for_level(m.growth, lv + 1) - Growth.exp_for_level(m.growth, lv)
-		)
-		_xp_shown = minf(_xp_shown + maxf(span, 1.0) / EXP_LEVEL_SECS * raw, target)
-		if _xp_shown < target and not _confirm_pressed():
-			return false
-		_xp_shown = target
-		b["_filled"] = true
-		if b.has("level"):
-			_xp_level = int(b.level)
-		if b.has("sfx"):
-			preload("res://audio/cue.gd").sfx(String(b.sfx))
-		if b.has("text"):
-			say(String(b.text), String(b.get("kind", "info")))
-		b["_t"] = 0.0
-		return false  # o E que pulou o enchimento não confirma a linha
-	if b.get("confirm", false):
-		b["_t"] = float(b.get("_t", 0.0)) + raw
-		hud.log_hint("E", "continue")
-		var done := (
-			float(b._t) >= RESULT_AUTO
-			if _auto_confirm()
-			else (float(b._t) > 0.0 and _confirm_pressed())
-		)
-		if not done:
-			return false
-		hud.log_hint("")
-	if b.get("end", false):
-		_xp_shown = -1.0
-	_beat = {}
-	return false
 
 
 func _fighter_of(m: Mon) -> BattleFighter:
