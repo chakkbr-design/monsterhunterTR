@@ -199,7 +199,7 @@ class Hud:
         self.t = track
         self.f_team = load_font(font_path, 40)
         self.f_name = load_font(font_path, 42)
-        self.f_lv = load_font(font_path, 34)
+        self.f_lv = load_font(None, 34)  # números legíveis (o 5 da Pixelify parece S)
         self.f_big = load_font(font_path, 96)
         self.sides = [Side(track.teams[0], track.size), Side(track.teams[1], track.size)]
         self.row_h = 100
@@ -212,7 +212,9 @@ class Hud:
         if snap is None:
             return
         for s in range(2):
-            self.sides[s].update(snap["hp"][s], snap["on"][s], vt, dt)
+            # Na abertura os cartões esperam o "Fight!" (os titulares ainda estão saindo da bola).
+            on = [] if snap.get("st") == "opening" else [int(i) for i in snap["on"][s]]
+            self.sides[s].update(snap["hp"][s], on, vt, dt)
         self.snap = snap
 
     def draw(self, img, vt):
@@ -250,7 +252,7 @@ class Hud:
             m = team[idx]
             name = str(m.get("name") or m.get("sp", "")).upper()
             d.text((x0 + 34, ry), name, font=self.f_name, fill=INK)
-            lv = ":L%d" % int(m.get("lv", 50))
+            lv = "Lv%d" % int(m.get("lv", 50))
             nw = d.textlength(name, font=self.f_name)
             d.text((x0 + 34 + nw + 18, ry + 10), lv, font=self.f_lv, fill=INK)
             # "HP:" e a barra com moldura preta.
@@ -333,7 +335,7 @@ def main():
     if has_audio:
         enc += ["-ss", "%.3f" % start, "-t", "%.3f" % length, "-i", a.video, "-map", "0:v", "-map", "1:a"]
         enc += ["-c:a", "aac", "-b:a", "160k"]
-    enc += ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p"]
+    enc += ["-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "8M", "-bufsize", "16M", "-pix_fmt", "yuv420p"]
     enc += ["-movflags", "+faststart", "-shortest", a.out]
     pd = subprocess.Popen(dec, stdout=subprocess.PIPE)
     pe = subprocess.Popen(enc, stdin=subprocess.PIPE)
