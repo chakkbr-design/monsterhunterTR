@@ -498,6 +498,7 @@ func _control_swap() -> void:
 		Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("pidgey", 12)
 	]
 	var b := _arena(party, [Mon.create("rattata", 12)], {"seed": 4})
+	b.enemy.immortal = true  # a troca é o teste: o Rattata não cai no meio dela
 	_run(b, 1.3)
 	_open(b)
 	check(b.send_in(2, true), "pede a troca do aliado")
@@ -572,7 +573,7 @@ func _two_vs_one(i: int) -> void:
 				gained.append(party[k])
 		check(
 			gained.size() == alive.size() and got.get("exp", []).size() == alive.size(),
-			"XP dividida entre os participantes vivos (%d)" % gained.size()
+			"XP para os participantes vivos (%d)" % gained.size()
 		)
 	else:
 		check(party[0].is_fainted() and party[1].is_fainted(), "2x1 perdido com os dois desmaiados")
@@ -670,41 +671,54 @@ func _trainer_lines() -> void:
 func _results() -> void:
 	var g := _game_with({})
 	var mine := Mon.create("charmander", 5)
+	var bench := Mon.create("bulbasaur", 5)
+	var down := Mon.create("pidgey", 5)
+	down.hp = 0
+	var foe := Mon.create("geodude", 12)
 	var a := _arena(
-		[mine],
-		[Mon.create("geodude", 12)],
-		{"kind": "trainer", "trainer_id": "brock", "seed": 2, "game": g}
+		[mine, bench, down], [foe], {"kind": "trainer", "trainer_id": "brock", "seed": 2, "game": g}
 	)
 	_run(a, TRAINER_INTRO)
 	a.enemy.controller = "none"
 	a.enemy.last_hit_by = a.player
 	var lv0 := mine.level
+	var xp_mine := mine.xp
+	var xp_bench := bench.xp
+	var xp_down := down.xp
+	var full := foe.exp_yield(mine.level, true)
+	var half := maxi(1, int(foe.exp_yield(bench.level, true) * a.EXP_SHARE))
 	a.enemy.take_damage(a.enemy.hp, Vector3.ZERO, 0.0)
 	a.step(DT)
 	check(a.state == "ending", "vitória entra no fim")
 	check(not a.log_lines.any(func(l): return l.begins_with("+")), "sem popup de EXP na hora")
-	var saw_fill := false
+	check(mine.xp - xp_mine == full, "Exp. Share: quem lutou ganha a EXP cheia (%d)" % full)
+	check(bench.xp - xp_bench == half, "Exp. Share: quem ficou na party ganha metade (%d)" % half)
+	check(down.xp == xp_down, "desmaiado não ganha EXP")
+	var panel: Control = a.hud.exp_panel
+	var saw_panel := false
+	var rows := 0
 	var t := 0.0
 	while a.state != "done" and t < 30.0:
 		a.step(DT)
 		t += DT
-		if a.state == "results" and a.hud._player_card.script_xp >= 0.0:
-			saw_fill = true
+		if a.state == "results" and panel.visible:
+			saw_panel = true
+			rows = panel.rows.size()
+	check(saw_panel and rows == 3, "painel de EXP com a party inteira (%d linhas)" % rows)
+	check(a.state == "done" and t < 15.0, "painel termina sozinho, sem confirmação (%.1f s)" % t)
+	var gained: Array = panel.lines.filter(func(l): return l.contains(" gained "))
+	check(gained.size() == 2, "linha de EXP para quem ganhou (%s)" % [gained])
 	var lines: Array = a.log_lines
-	var gained := lines.filter(func(l): return l.contains(" gained ") and l.ends_with(" EXP."))
-	check(gained.size() == 1, "linha de EXP no resultado (%s)" % [lines.slice(-6)])
-	check(saw_fill, "barra de EXP enche no cartão")
 	if mine.level > lv0:
 		check(
 			lines.has("%s grew to Lv %d!" % [mine.display_name, mine.level]),
 			"linha de nível no resultado"
 		)
+	var st: Dictionary = panel.stats_at(mine, mine.level)
+	check(st.hp == mine.stat("hp") and st.spe == mine.stat("spe"), "janela de stats no nível novo")
 	var prize: int = g.trainer_payout("brock", 12)
-	check(
-		lines[-1] == "You got ₽%d for winning!" % prize,
-		"linha do prêmio por último (%s)" % lines[-1]
-	)
-	check(a.state == "done" and a.get_meta("got").outcome == "win", "resultado termina a batalha")
+	check(lines.has("You got ₽%d for winning!" % prize), "linha do prêmio (%s)" % [lines.slice(-4)])
+	check(a.get_meta("got").outcome == "win", "resultado termina a batalha")
 	_done(a)
 	g.free()
 

@@ -71,7 +71,7 @@ e contorne localmente até ele existir. Não edite `core/` nem `project.godot`.
 ## Integração (estado atual)
 
 - `opts` extras lidos só pela arena: `autoplay: bool` (IA controla o seu Pokémon), `seed: int`, `speed: float`, `ball: String`.
-- `result` traz também `exp: [{mon, amount, events}]`, `prize: int` (treinador vencido) e `evolved: [[de, para]]`.
+- `result` traz também `exp: [{mon, amount, events, shared}]` (`shared` = ganhou pelo Exp. Share, sem lutar), `prize: int` (treinador vencido) e `evolved: [[de, para]]`.
 - Depois da batalha o `Game` evolui quem ficou com evolução por nível pendente.
 - A arena grava em cada `Mon` o HP, o pool de PP e o status persistente.
 - Pendentes: tela de esquecer golpe (eventos `learned: false`), itens durante a batalha, batalha 2x1 com aliado.
