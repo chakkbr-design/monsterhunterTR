@@ -306,7 +306,9 @@ func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 
 
 ## Efeito de status em laço preso ao lutador ("status" do move_fx.json).
-func status_look(f: BattleFighter, status: String) -> FxSprite:
+func status_look(f: BattleFighter, status: String) -> Node3D:
+	if use3d():
+		return fx3d.status_look(f, status)
 	var r := PmdFx.role(PmdFx.data().get("status", {}), status)
 	if r.is_empty():
 		return null
@@ -472,6 +474,12 @@ func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
 		return
 	show.ctx = []
 	show.toxic_spikes(side, at, r, life)
+
+
+## Stealth Rock (`at` local): só nos efeitos 3D; o VGC usa o disco da arena.
+func stealth_rock(side: int, at: Vector3, r: float, life: float) -> void:
+	if use3d():
+		field3d.stealth_rock(side, at, r, life)
 
 
 func heal(f: BattleFighter) -> void:

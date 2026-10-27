@@ -1521,3 +1521,162 @@ func stat_change(f: BattleFighter, key: String, up: bool) -> void:
 		0.45,
 		{"follow": f, "off": Vector3(0, 0.05, 0) if up else Vector3(0, h * 1.1, 0), "inner": 0.85}
 	)
+
+
+# --- Status em laço ---
+
+
+## Efeito de status preso ao lutador, feito de partículas 3D. Devolve a alça (Fx3DStatus).
+func status_look(f: BattleFighter, status: String) -> Fx3DStatus:
+	if not on() or not is_instance_valid(f) or not f.is_inside_tree():
+		return null
+	var h := Fx3DStatus.new()
+	h.fighter = f
+	var hh := height(f)
+	h.position = Vector3(0, hh * (1.05 if status in ["sleep", "confusion"] else 0.55), 0)
+	_add(h)
+	var at := func(k: float) -> Variant: return null if h.ended() else center(f, k)
+	var big := 3600.0
+	match status:
+		"burn":
+			emitter(
+				center(f, 0.3),
+				big,
+				16.0,
+				{
+					"shape": Fx3D.Shape.EMBER,
+					"col": [core("fire"), deep("fire", 0.0)],
+					"size": [0.12, 0.03],
+					"life": [0.5, 0.9],
+					"speed": [0.1, 0.4],
+					"up": 1.2,
+					"r": hh * 0.35,
+					"turb": 2.0
+				},
+				at.bind(0.3)
+			)
+		"poison", "toxic":
+			emitter(
+				center(f, 0.4),
+				big,
+				7.0,
+				{
+					"shape": Fx3D.Shape.BUBBLE,
+					"col": [core("poison"), mid("poison", 0.0)],
+					"size": [0.08, 0.16],
+					"life": [0.6, 1.0],
+					"speed": [0.05, 0.2],
+					"up": 0.6,
+					"r": hh * 0.35
+				},
+				at.bind(0.4)
+			)
+		"paralysis":
+			emitter(
+				center(f, 0.5),
+				big,
+				6.0,
+				{
+					"shape": Fx3D.Shape.SPARK,
+					"stretch": 1.0,
+					"col": [core("electric"), mid("electric", 0.0)],
+					"size": [0.1, 0.02],
+					"life": [0.15, 0.3],
+					"speed": [1.5, 3.0],
+					"r": hh * 0.3
+				},
+				at.bind(0.5)
+			)
+			repeat(
+				0.7,
+				big,
+				func(_i: int) -> bool:
+					if h.ended():
+						return false
+					if randf() < 0.6:
+						var c := center(f, randf_range(0.3, 0.8))
+						var d := rand_dir() * hh * 0.45
+						bolt(
+							c - d,
+							c + d,
+							core("electric"),
+							0.04,
+							0.1,
+							{"segs": 4, "amp": 0.08, "core": false}
+						)
+					return true
+			)
+		"freeze":
+			emitter(
+				center(f, 0.5),
+				big,
+				5.0,
+				{
+					"shape": Fx3D.Shape.STAR,
+					"col": [lightc("ice"), core("ice", 0.0)],
+					"size": [0.12, 0.04],
+					"life": [0.4, 0.8],
+					"speed": [0.0, 0.15],
+					"r": hh * 0.45,
+					"spin": 3.0
+				},
+				at.bind(0.5)
+			)
+		"sleep":
+			emitter(
+				center(f, 1.0),
+				big,
+				1.6,
+				{
+					"shape": Fx3D.Shape.RING,
+					"col": [Color(0.75, 0.85, 1.0, 0.9), Color(0.6, 0.7, 1.0, 0.0)],
+					"size": [0.08, 0.2],
+					"life": [1.0, 1.4],
+					"speed": [0.05, 0.15],
+					"up": 0.45,
+					"dir": Vector3(1, 1, 0),
+					"spread": 0.4
+				},
+				at.bind(1.0)
+			)
+		"confusion":
+			var spin := func() -> Variant:
+				if h.ended():
+					return null
+				var a := h.age * 4.0 + randf_range(-0.2, 0.2)
+				var r := hh * 0.3
+				return center(f, 1.05) + Vector3(cos(a) * r, 0.0, sin(a) * r)
+			emitter(
+				center(f, 1.05),
+				big,
+				14.0,
+				{
+					"shape": Fx3D.Shape.STAR,
+					"col": [Color(1.0, 0.95, 0.4), Color(1.0, 0.7, 0.2, 0.0)],
+					"size": [0.12, 0.05],
+					"life": [0.3, 0.45],
+					"speed": [0.0, 0.1],
+					"spin": 4.0
+				},
+				spin
+			)
+		"leech":
+			emitter(
+				center(f, 0.5),
+				big,
+				5.0,
+				{
+					"shape": Fx3D.Shape.GLOW,
+					"col": [core("grass"), mid("grass", 0.0)],
+					"size": [0.1, 0.03],
+					"life": [0.6, 0.9],
+					"speed": [0.05, 0.2],
+					"up": 0.7,
+					"r": hh * 0.35
+				},
+				at.bind(0.5)
+			)
+		_:
+			h.queue_free()
+			return null
+	return h

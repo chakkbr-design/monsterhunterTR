@@ -315,6 +315,10 @@ func _foes(f: BattleFighter) -> Array:
 	return arena.targets_of(f)
 
 
+func _fx3d() -> bool:
+	return arena.vfx != null and arena.vfx.use3d()
+
+
 func _vfx(name: String, args: Array) -> void:
 	if arena.vfx and arena.vfx.has_method(name):
 		arena.vfx.callv(name, args)
@@ -2161,9 +2165,13 @@ func _lay_toxic_spikes(user: BattleFighter) -> void:
 			spikes.append(
 				{"pos": at, "side": user.side, "layers": 1, "t": now + TOXIC_SPIKE_LIFE, "hit": {}}
 			)
-			arena.fx_disc(
-				at, TOXIC_SPIKE_R, Dex.type_color("poison") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE
-			)
+			if not _fx3d():
+				arena.fx_disc(
+					at,
+					TOXIC_SPIKE_R,
+					Dex.type_color("poison") * Color(1, 1, 1, 0.3),
+					TOXIC_SPIKE_LIFE
+				)
 			_vfx("toxic_spikes", [user.side, at, TOXIC_SPIKE_R, TOXIC_SPIKE_LIFE])
 	user.popup("Toxic Spikes!", Dex.type_color("poison"))
 
@@ -2178,7 +2186,10 @@ func _lay_stealth_rock(user: BattleFighter) -> void:
 		var at := Vector3(foe.position.x, 0.0, foe.position.z)
 		var t := now + TOXIC_SPIKE_LIFE
 		spikes.append({"pos": at, "side": user.side, "layers": 1, "t": t, "hit": {}, "rock": true})
-		arena.fx_disc(at, STEALTH_R, Dex.type_color("rock") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE)
+		if not _fx3d():
+			arena.fx_disc(
+				at, STEALTH_R, Dex.type_color("rock") * Color(1, 1, 1, 0.3), TOXIC_SPIKE_LIFE
+			)
 		_vfx("stealth_rock", [user.side, at, STEALTH_R, TOXIC_SPIKE_LIFE])
 	user.popup("Floating rocks!", Dex.type_color("rock"))
 

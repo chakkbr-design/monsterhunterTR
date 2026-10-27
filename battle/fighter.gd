@@ -211,7 +211,7 @@ var look: CreatureSprite  # arte do original (gfx/creature_sprite.gd)
 ## Evoluindo no meio da luta (creature.gd evolving): a tela Evolution pinta o sprite, a luta fica parada.
 var evolving := false
 var vfx: BattleVfx
-var _status_fx: FxSprite
+var _status_fx: Node3D  # FxSprite (PMD) ou Fx3DStatus (modo de energia)
 var _status_fx_id := ""
 var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
@@ -398,7 +398,7 @@ func _update_status_fx() -> void:
 	if want == _status_fx_id:
 		return
 	if is_instance_valid(_status_fx):
-		_status_fx.life = maxf(_status_fx.age, 0.001)
+		_status_fx.set("life", maxf(float(_status_fx.get("age")), 0.001))
 	_status_fx = null
 	_status_fx_id = want
 	if want != "" and vfx:
@@ -410,7 +410,7 @@ func _update_status_fx() -> void:
 ## Efeito de status puxado para a câmera (como o FX_TOWARD_CAM_M do original): preso no centro do lutador,
 ## o quad cortava o sprite ao meio no teste de profundidade.
 func _place_status_fx() -> void:
-	if not is_instance_valid(_status_fx) or not is_inside_tree():
+	if not is_instance_valid(_status_fx) or not is_inside_tree() or _status_fx is Fx3DStatus:
 		return
 	var at := to_global(_status_fx_off)
 	_status_fx.global_position = at + PmdFx.toward_camera(at, vfx.cam())

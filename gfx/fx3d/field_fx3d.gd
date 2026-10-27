@@ -247,6 +247,28 @@ func toxic_spikes(_side: int, at_local: Vector3, r: float, life: float) -> void:
 		m.fade_out = 0.05
 
 
+## Stealth Rock: pedras pontudas flutuando devagar em volta do ponto, enquanto duram.
+func stealth_rock(_side: int, at_local: Vector3, r: float, life: float) -> void:
+	var at := fx.gpos(at_local)
+	for i in 5:
+		var a := TAU * i / 5.0 + randf() * 0.5
+		var q := at + Vector3(cos(a) * r * 0.8, randf_range(0.5, 1.1), sin(a) * r * 0.8)
+		var m := fx.solid(
+			q,
+			{
+				"kind": "shard",
+				"col": Color(0.62, 0.52, 0.4),
+				"emit": 0.15,
+				"size": randf_range(0.16, 0.24),
+				"life": life,
+				"spin": 0.8,
+				"floor": false,
+				"grow0": 0.1
+			}
+		)
+		m.fade_out = 0.05
+
+
 func burrow(user: BattleFighter) -> void:
 	if not is_instance_valid(user):
 		return

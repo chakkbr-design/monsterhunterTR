@@ -323,8 +323,11 @@ func _land_strike(user: BattleFighter, mv: Dictionary, miss: BattleFighter) -> v
 	var at := _flat(user.position)
 	if arena.field:
 		arena.field.on_move_landed(user, mv, at, 0.9)
-	arena.fx_disc(at, 1.1, Color(0.85, 0.75, 0.55, 0.6), 0.25)
-	PixelFx.pop(arena, "dust", at + Vector3(0, 0.3, 0), 1.6, 0.4)
+	if arena.vfx and arena.vfx.use3d():
+		arena.vfx.area_land(user, mv, at, 0.9, true)
+	else:
+		arena.fx_disc(at, 1.1, Color(0.85, 0.75, 0.55, 0.6), 0.25)
+		PixelFx.pop(arena, "dust", at + Vector3(0, 0.3, 0), 1.6, 0.4)
 	var best: BattleFighter = null
 	var bd := STRIKE_R
 	for t in arena.moves._victims(user, mv, at):

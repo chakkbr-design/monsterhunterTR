@@ -12,7 +12,7 @@ const SNOW := "res://assets/pixellab/fx/snowflake.png"
 ## bits: as partículas da matéria do tipo (ver element()).
 const TYPES := {
 	"normal": {"core": "fffdf2", "mid": "f4ecd6", "deep": "a89c86", "light": "fff4dc"},
-	"fire": {"core": "fff6c2", "mid": "ff8c1a", "deep": "c2280a", "light": "ff9a3a"},
+	"fire": {"core": "ffd98a", "mid": "ff6a12", "deep": "b81e06", "light": "ff8a2e"},
 	"water": {"core": "eafcff", "mid": "47a6ff", "deep": "1747b8", "light": "6cc0ff"},
 	"electric": {"core": "ffffff", "mid": "ffe83a", "deep": "ffae00", "light": "fff27a"},
 	"grass": {"core": "f0ffc8", "mid": "62d43c", "deep": "1e7a2c", "light": "a6ff7a"},
