@@ -10,6 +10,7 @@ var spawned := 0  # total de efeitos criados (testes)
 var show: MoveShow  # espetáculo procedural por cima do PMD (gfx/move_show.gd)
 ## Efeitos 3D dos golpes no modo de energia (gfx/fx3d): no lugar do PMD + MoveShow nos golpes.
 var fx3d: MoveFx3D
+var field3d: FieldFx3D
 var lights_on := true  ## luzes dos efeitos (testes podem desligar)
 
 
@@ -17,6 +18,7 @@ func _init(a: Node3D) -> void:
 	arena = a
 	show = MoveShow.new(self)
 	fx3d = MoveFx3D.new(self)
+	field3d = FieldFx3D.new(fx3d)
 
 
 ## Os golpes usam os efeitos 3D (modo de energia, fora da bateria rápida)?
@@ -348,36 +350,54 @@ func zone_at(user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, d
 ## Rastro de terra que avança pelo chão de `from` até `to` (coordenadas locais da arena, como
 ## fighter.position) em `duration` s, com terra levantando.
 func dig_trail(user: BattleFighter, from: Vector3, to: Vector3, duration: float) -> void:
+	if use3d():
+		field3d.dig_trail(user, from, to, duration)
+		return
 	show.ctx = [user]
 	show.dig_trail(user, from, to, duration)
 
 
 ## O lutador entrou no chão: buraco e terra espirrando.
 func burrow(user: BattleFighter) -> void:
+	if use3d():
+		field3d.burrow(user)
+		return
 	show.ctx = [user]
 	show.burrow(user)
 
 
 ## O lutador saiu do chão: estouro de terra, pedras e anel de poeira.
 func unburrow(user: BattleFighter) -> void:
+	if use3d():
+		field3d.unburrow(user)
+		return
 	show.ctx = [user]
 	show.unburrow(user)
 
 
 ## Lutador arremessado bateu na cerca/caixa/pedra/parede (`at` local da arena): poeira e estrelinhas.
 func crash(f: BattleFighter, at: Vector3, what: String) -> void:
+	if use3d():
+		field3d.crash(f, at, what)
+		return
 	show.ctx = [f]
 	show.crash(f, at, what)
 
 
 ## Arremesso forte (Whirlwind, Roar, Dragon Tail, contato 80+): rastro de vento enquanto voa.
 func launch(f: BattleFighter, dir: Vector3, dist: float) -> void:
+	if use3d():
+		field3d.launch(f, dir, dist)
+		return
 	show.ctx = [f]
 	show.launch(f, dir, dist)
 
 
 ## Reapareceu de repente (Aerial Ace "blink"): flash e linhas onde surge.
 func blink(f: BattleFighter) -> void:
+	if use3d():
+		field3d.blink(f)
+		return
 	show.ctx = [f]
 	show.blink(f)
 
@@ -386,51 +406,78 @@ func blink(f: BattleFighter) -> void:
 
 
 func protect_shield(f: BattleFighter, secs: float) -> void:
+	if use3d():
+		field3d.protect_shield(f, secs)
+		return
 	show.ctx = [f]
 	show.protect_shield(f, secs)
 
 
 ## Follow Me / Rage Powder.
 func spotlight(f: BattleFighter, secs: float) -> void:
+	if use3d():
+		field3d.spotlight(f, secs)
+		return
 	show.ctx = [f]
 	show.spotlight(f, secs)
 
 
 ## light_screen, reflect, safeguard, quick_guard, tailwind sobre o lado `side`.
 func screen(side: int, kind: String, secs: float) -> void:
+	if use3d():
+		field3d.screen(side, kind, secs)
+		return
 	show.ctx = []
 	show.screen(side, kind, secs)
 
 
 ## sun, rain, sand, hail.
 func weather(kind: String, secs: float) -> void:
+	if use3d():
+		field3d.weather(kind, secs)
+		return
 	show.ctx = []
 	show.weather(kind, secs)
 
 
 ## "grassy".
 func terrain(kind: String, secs: float) -> void:
+	if use3d():
+		field3d.terrain(kind, secs)
+		return
 	show.ctx = []
 	show.terrain(kind, secs)
 
 
 func gravity(secs: float) -> void:
+	if use3d():
+		field3d.gravity(secs)
+		return
 	show.ctx = []
 	show.gravity(secs)
 
 
 func haze(user: BattleFighter) -> void:
+	if use3d():
+		field3d.haze(user)
+		return
 	show.ctx = [user]
 	show.haze(user)
 
 
 ## `at` local da arena.
 func toxic_spikes(side: int, at: Vector3, r: float, life: float) -> void:
+	if use3d():
+		field3d.toxic_spikes(side, at, r, life)
+		return
 	show.ctx = []
 	show.toxic_spikes(side, at, r, life)
 
 
 func heal(f: BattleFighter) -> void:
+	if use3d():
+		field3d.heal(f)
+		return
 	show.ctx = [f]
 	show.heal(f)
 
