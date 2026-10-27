@@ -13,6 +13,8 @@ extends RefCounted
 ## janelas de reação curtas (Fake Out, Revenge, Assurance, Helping Hand) seguem em segundos.
 
 ## Duração "sem fim em segundos" de um efeito contado em rodadas (o fim vem de count_round).
+## A IA só usa Rest abaixo disto de HP (bateria de 2026-10-27: usava demais e dormia muito).
+const REST_AI_HP := 0.4
 const FOREVER := 1.0e9
 ## Cooldown que trava um golpe (Disable, Encore) até o efeito acabar no fim de turno.
 const LOCK_CD := 1.0e6
@@ -1853,7 +1855,7 @@ func self_move(user: BattleFighter, mv: Dictionary) -> bool:
 			user.confusion_t = 0.0
 			_heal(user, user.max_hp)
 			user.apply_status("sleep")
-			user.sleep_turns = BattleFighter.REST_COUNTER  # dorme 2 turnos
+			user.sleep_turns = BattleFighter.REST_COUNTER  # dorme 1 rodada (bateria de 2026-10-27)
 			user.popup("Slept and became healthy!", Color(0.75, 0.8, 0.95))
 		"life_dew":
 			for f in [user, partner(user)]:
@@ -2484,7 +2486,7 @@ func ai_worth(f: BattleFighter, mv: Dictionary) -> Variant:
 		"protect", "quick_guard":
 			return _threatened(f)
 		"rest":
-			return hp < 0.35 or (f.status in MAJOR and hp < 0.6)
+			return hp < REST_AI_HP
 		"roost", "heal_weather", "heal_half":
 			return hp < 0.5
 		"magnet_rise":

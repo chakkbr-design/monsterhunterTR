@@ -50,6 +50,14 @@ const MEAN_HITS_2_5 := 3.1
 ## Prioridade (Quick Attack...): custo PRIORITY_COST x, cooldown PRIORITY_CD x.
 const PRIORITY_COST := 0.6
 const PRIORITY_CD := 1.8
+## Bateria de 2026-10-27 (sugestões que o Caio acatou): prioridade ainda rendia 2-3x a média por
+## energia, então soma PRIORITY_EXTRA depois do desconto (Ice Shard 12 -> 18, Sucker Punch 20 -> 26).
+const PRIORITY_EXTRA := 6.0
+## Golpes que somem do campo e rendiam demais: custo a mais.
+const EXTRA_COST := {"dig": 8.0, "phantom_force": 8.0}
+## Golpes em corrente (stream) custam STREAM_MULT x; golpes de dano de Planta GRASS_MULT x.
+const STREAM_MULT := 1.1
+const GRASS_MULT := 0.9
 ## Dano final (x do oficial). O Caio escolheu 0,6
 ## em 2026-10-25 pela bateria: menos "entrou e morreu" e ~21 s por Pokémon. opts.damage_pace muda.
 const DAMAGE_PACE := 0.6
@@ -85,8 +93,17 @@ static func cost(mv: Dictionary) -> float:
 	else:
 		c = status_cost(mv)
 	if int(mv.get("priority", 0)) > 0 and String(mv.get("special", "")) != "protect":
-		c *= PRIORITY_COST
-	return roundf(c)
+		c = (
+			c * PRIORITY_COST
+			+ (PRIORITY_EXTRA if String(mv.get("category", "")) != "status" else 0.0)
+		)
+	if String(mv.get("category", "")) != "status":
+		if String(mv.get("kind", "")) == "stream":
+			c *= STREAM_MULT
+		if String(mv.get("type", "")) == "grass":
+			c *= GRASS_MULT
+	c += float(EXTRA_COST.get(String(mv.get("id", "")), 0.0))
+	return roundf(minf(c, MAX_COST))
 
 
 static func status_cost(mv: Dictionary) -> float:

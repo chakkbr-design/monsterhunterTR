@@ -360,7 +360,9 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 		# Treinador: os outros fora da bola voltam para ela (start_trainer_battle do original).
 		_out = _out.filter(func(m): return m == party[pi])
 	var lat := _lateral()
-	_send_player(pi, player_spot - lat * (DOUBLES_GAP * 0.5 if doubles else 0.0))
+	var lead_at := player_spot - lat * (DOUBLES_GAP * 0.5 if doubles else 0.0)
+	# Dupla: o titular também procura um ponto livre, como o aliado e os dois do outro lado.
+	_send_player(pi, _nearest_free(lead_at) if fixed and doubles else lead_at)
 	if _battle_size >= 2:
 		var ai_i := _out_ally(pi) if _track_out and not doubles else _next_healthy(pi)
 		if ai_i >= 0:
