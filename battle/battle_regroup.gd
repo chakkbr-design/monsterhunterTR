@@ -20,6 +20,9 @@ const STUCK_SECS := 1.2
 const NEAR_GAIN := 0.15
 ## Todos chegam em até uns tantos segundos, por mais longe ou lento que estejam.
 const ARRIVE_SECS := 4.5
+## Nem em linha reta chega mais perto por GIVE_UP_SECS s (empurrado por um sólido ou pelo
+## vizinho): fica onde está e conta como chegado, para a luta não esperar o teto.
+const GIVE_UP_SECS := 2.5
 
 ## A arena (sem tipo: os campos dela são lidos direto).
 var arena
@@ -130,9 +133,15 @@ func home() -> bool:
 		if is_instance_valid(f) and f.active():
 			var d: Vector3 = goal_of(f) - f.position
 			d.y = 0.0
-			if d.length() > NEAR:
+			if d.length() > NEAR and not gave_up(f):
 				return false
 	return true
+
+
+## Parou de chegar mais perto há GIVE_UP_SECS s.
+func gave_up(f: BattleFighter) -> bool:
+	var b: Array = _best.get(f.get_instance_id(), [INF, t])
+	return t - float(b[1]) > GIVE_UP_SECS
 
 
 func _finish() -> void:
@@ -157,7 +166,19 @@ func _report() -> void:
 			var d: Vector3 = goal_of(f) - f.position
 			d.y = 0.0
 			if d.length() > NEAR:
-				far.append({"id": arena.telemetry.uid(f), "d": snappedf(d.length(), 0.01)})
+				var g := goal_of(f)
+				var row := {
+					"id": arena.telemetry.uid(f),
+					"d": snappedf(d.length(), 0.01),
+					"gave_up": gave_up(f),
+					"pos": [snappedf(f.position.x, 0.01), snappedf(f.position.z, 0.01)],
+					"goal": [snappedf(g.x, 0.01), snappedf(g.z, 0.01)],
+					"gy": snappedf(f.ground_y, 0.01),
+					"fly": snappedf(f.fly_h, 0.01),
+					"hidden": f.hidden,
+					"motion": f.motion,
+				}
+				far.append(row)
 	arena.telemetry.note(
 		"regroup_end",
 		{"secs": snappedf(t, 0.01), "timeout": t >= MAX_SECS, "filled": filled(), "far": far}

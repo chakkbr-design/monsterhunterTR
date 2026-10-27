@@ -129,7 +129,12 @@ def main():
     print("lutas:", rep["fights"])
     print("timeouts:", len(rep["timeouts"]))
     print("reagrupar: %(n)d, mediana %(median)s s, p90 %(p90)s s, máx %(max)s s" % rep["regroup"])
-    print("reagrupar ruim (teto ou longe):", len(rep["regroup_bad"]))
+    bad = rep["regroup_bad"]
+    print("reagrupar ruim (teto ou longe):", len(bad), "| no teto de 10 s:",
+          sum(1 for e in bad if e.get("timeout")), "| desistiu (gave_up):",
+          sum(1 for e in bad for w in e.get("far", []) if w.get("gave_up")))
+    for e in bad[:12]:
+        print("  ", e)
     print("travas (hold):", len(rep["holds"]))
     print("parados %ss+:" % STUCK_S, len(rep["stuck"]))
     for s in sorted(rep["stuck"], key=lambda s: -s["secs"])[:15]:
