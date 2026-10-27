@@ -55,6 +55,7 @@ var _check_t := 0.0
 var _since_arrival := 0.0
 var _fade: ColorRect
 var _cam_out := Vector4(12.0, 32.0, 35.0, 6.0)  ## outdoor rig distance, pitch, fov, dof band
+var _slice_start := false  ## the first zone builds over frames (behind the title's loading screen)
 
 
 func _ready() -> void:
@@ -79,27 +80,43 @@ func _ready() -> void:
 	var sz := String(start.get("zone", "pallet_town"))
 	var sp := String(start.get("spawn", "start"))
 	var saved := _vec(sv.get("pos"))
+	# Behind the title's loading screen (a real window) the first zone builds over frames, so the
+	# screen keeps animating; the player waits frozen until it is placed. Headless (tests): at once.
+	_slice_start = stream and Loading.busy() and VoxelZone.threaded_load()
+	var p := player_of(self)
+	var p_mode := p.process_mode if p else Node.PROCESS_MODE_INHERIT
+	if _slice_start and p:
+		p.process_mode = Node.PROCESS_MODE_DISABLED
+		traveling = true
 	if start_zone != "":
-		_start_zone(start_zone, start_spawn if start_spawn != "" else sp, Vector3.INF)
+		await _start_zone(start_zone, start_spawn if start_spawn != "" else sp, Vector3.INF)
 	elif interiors.has(String(req.get("interior", ""))):
 		_start_interior(String(req.interior), String(req.get("spawn", "door")), Vector3.INF)
 	elif zones.has(String(req.get("zone", ""))):
-		_start_zone(String(req.zone), String(req.get("spawn", "")), Vector3.INF)
+		await _start_zone(String(req.zone), String(req.get("spawn", "")), Vector3.INF)
 	elif interiors.has(String(sv.get("interior", ""))):
 		_start_interior(String(sv.interior), String(sv.get("spawn", "door")), saved)
 	elif saved != Vector3.INF and interior_at(saved) != "":
 		_start_interior(interior_at(saved), "door", saved)
 	elif saved != Vector3.INF and zone_at(saved) != "":
-		_start_zone(zone_at(saved), sp, saved)
+		await _start_zone(zone_at(saved), sp, saved)
 	else:
-		_start_zone(sz, sp, Vector3.INF)
+		await _start_zone(sz, sp, Vector3.INF)
+	if _slice_start and p:
+		p.process_mode = p_mode
+		traveling = false
+	_slice_start = false
 	# Continue / New game began a "scene" loading screen (title.gd): let go once the world is up.
 	Loading.end_later("scene", 3)
 
 
 func _start_zone(zone: String, spawn: String, exact: Vector3) -> void:
 	for id in ZONES if not stream else [zone]:
-		if not builders.has(id):
+		if _slice_start and not builders.has(id):
+			_loading = id  # _process streams nothing else meanwhile
+			await _make_builder(id, 60).build()
+			_loading = ""
+		elif not builders.has(id):
 			_make_builder(id, 0).build()  # items_per_frame 0: finishes synchronously
 	place_player(zone, spawn)
 	if exact != Vector3.INF:

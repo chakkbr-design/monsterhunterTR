@@ -19,6 +19,7 @@ const Kit := preload("res://ui/ui_kit.gd")
 const FADE_S := 0.15  ## fade in / out
 const MIN_SHOW := 0.35  ## depois de aparecer, fica pelo menos isto
 const MAX_HOLD := 30.0  ## segurança: uma chave esquecida solta sozinha
+const MAX_STEP := 0.05  ## o maior passo de tempo que um quadro conta (quadro travado = um curto)
 const CELL := 7.0  ## tamanho de um "pixel" da bola
 const BALL_N := 15
 const INK_DARK := Color("181c28")
@@ -138,6 +139,9 @@ func _show() -> void:
 
 
 func _process(delta: float) -> void:
+	# Quadro travado (o _ready de uma cena montando por trás) conta como um quadro curto: senão comia
+	# o MIN_SHOW e o fade, e a tela sumia de uma vez (piscava).
+	delta = minf(delta, MAX_STEP)
 	for k in _holds.keys():
 		var h: Dictionary = _holds[k]
 		h.t += delta

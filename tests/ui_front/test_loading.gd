@@ -61,6 +61,16 @@ func _run() -> void:
 	await _secs(ld.MIN_SHOW + ld.FADE_S + 0.2)
 	check(not ld.is_showing() and not ld.busy(), "all keys released")
 
+	# A frozen frame (a scene's _ready building behind the screen) does not eat MIN_SHOW: no flash.
+	ld.begin_now("frozen")
+	ld.end("frozen")
+	ld._process(3.0)
+	check(
+		ld.is_showing() and ld.is_visible_now(), "a frozen frame does not hide the screen at once"
+	)
+	await _secs(ld.MIN_SHOW + ld.FADE_S + 0.2)
+	check(not ld.is_visible_now(), "and it fades out after")
+
 	# House -> Pallet with a real (short) fade: the screen wraps the trip.
 	var game = root.get_node("/root/Game")
 	game.spawn_request = {"interior": "player_house", "spawn": "door"}

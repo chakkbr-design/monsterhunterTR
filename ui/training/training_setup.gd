@@ -386,7 +386,7 @@ func start() -> void:
 func _default_change(path: String) -> void:
 	var ld := get_node_or_null("/root/Loading")
 	if ld and path == BATTLE_SCENE:
-		ld.go_to_scene(path)
+		ld.go_to_scene(path, ["res://battle/battle_arena.tscn"])  # a arena carrega junto
 	else:
 		get_tree().change_scene_to_file(path)
 

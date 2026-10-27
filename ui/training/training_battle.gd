@@ -102,7 +102,20 @@ func _ready() -> void:
 	var key := JSON.stringify(cfg)
 	if String(series.key) != key:
 		series = {"key": key, "a": 0, "b": 0, "draw": 0, "n": 0}
-	_build_stage()
+	# Atrás da tela de load da preparação (janela de verdade), o estádio monta numa thread e a bola
+	# continua animando; parado até lá. Headless (testes): monta aqui mesmo, como antes.
+	var built: ArenaStadium = null
+	var so := _stadium_opts()
+	if not so.is_empty() and Loading.busy() and VoxelZone.threaded_load():
+		process_mode = Node.PROCESS_MODE_DISABLED
+		var box := []
+		var task := WorkerThreadPool.add_task(func(): box.append(ArenaStadium.build(so)))
+		while not WorkerThreadPool.is_task_completed(task):
+			await get_tree().process_frame
+		WorkerThreadPool.wait_for_task_completion(task)
+		built = box[0]
+		process_mode = Node.PROCESS_MODE_INHERIT
+	_build_stage(built)
 	_build_ui()
 	start_fight()
 	Loading.end_later("scene", 3)  # the setup screen's loading screen (see Loading)
@@ -115,22 +128,23 @@ func _exit_tree() -> void:
 # --- Cenário ---
 
 
-func _build_stage() -> void:
-	_voxel = Cfg.battle_mode(cfg) == "energy"
+## Opções do estádio (ArenaStadium.build); vazio quando não há estádio (VGC, fast_sim).
+func _stadium_opts() -> Dictionary:
 	var extra = cfg.get("extra_opts", {})
 	var fast: bool = extra is Dictionary and bool(extra.get("fast_sim", false))
-	if _voxel and not fast:
+	if Cfg.battle_mode(cfg) != "energy" or fast:
+		return {}
+	return {"mood": Cfg.time_of_day(cfg), "names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)]}
+
+
+## `built`: o estádio já montado (numa thread, _ready); null monta aqui.
+func _build_stage(built: ArenaStadium = null) -> void:
+	_voxel = Cfg.battle_mode(cfg) == "energy"
+	var so := _stadium_opts()
+	if not so.is_empty():
 		# Estádio com céu, sol, ambiente (AgX, SSAO, brilho) e luzes próprios; vento para bandeiras
 		# e grama.
-		_stadium = (
-			ArenaStadium
-			. build(
-				{
-					"mood": Cfg.time_of_day(cfg),
-					"names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)],
-				}
-			)
-		)
+		_stadium = built if built else ArenaStadium.build(so)
 		add_child(_stadium)
 		var wind := WorldWind.new()
 		wind.name = "Wind"
