@@ -38,6 +38,7 @@ uniform float heal = 1.0;
 uniform float flash = 0.0;
 uniform float pulse = 1.0;
 uniform vec4 bar_col : source_color = vec4(0.3, 0.9, 0.35, 1.0);
+uniform vec4 trail_col : source_color = vec4(1.0, 0.88, 0.25, 1.0);
 uniform vec2 size_px = vec2(88.0, 15.0);
 uniform vec2 shake_px = vec2(0.0);
 uniform float border = 3.0;
@@ -84,7 +85,7 @@ void fragment() {
 		} else if (x <= heal) {
 			col = vec3(0.65, 1.0, 0.75) * shade;
 		} else if (x <= trail) {
-			col = mix(vec3(1.0, 0.93, 0.45) * shade, vec3(1.0), flash * 0.6);
+			col = mix(trail_col.rgb * shade, vec3(1.0), flash * 0.6);
 		}
 		// Quarter ticks.
 		float q = x * 4.0;
@@ -174,3 +175,7 @@ func step(dt: float, hp: int, max_hp: int, head: float, show: bool) -> void:
 	_mat.set_shader_parameter("pulse", 0.8 + 0.25 * sin(_t * 9.0) if f <= LOW else 1.0)
 	_mat.set_shader_parameter("shake_px", shake)
 	_mat.set_shader_parameter("bar_col", col)
+	# The trail is yellow; on a yellow bar it goes pale cream so the two still read apart.
+	_mat.set_shader_parameter(
+		"trail_col", Color(1.0, 0.98, 0.82) if f > 0.2 and f <= 0.5 else Color(1.0, 0.88, 0.25)
+	)
