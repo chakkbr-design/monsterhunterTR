@@ -412,7 +412,7 @@ GUIDE = {
     "beak_blast": "Prioridade -3 (preparo longo de 0,9 s + 0,3 s da prioridade). Enquanto prepara, o bico esquenta: quem acerta o usuário com golpe de contato é queimado.",
     "bide": "Prioridade +1. O usuário aguenta por 2 rodadas (pode andar, mas não usa outros golpes) guardando o dano que leva; no fim devolve o dobro a quem mais o acertou. Sem dano guardado, falha.",
     "bitter_blade": "Talho que cura o usuário em metade do dano causado.",
-    "bolt_beak": "Bicada elétrica com o dobro de poder se o usuário chega antes: o alvo ainda não agiu na rodada (modo VGC) ou está preparando um golpe, ou parado há mais de 2,5 s (modo de energia).",
+    "bolt_beak": "Bicada elétrica com o dobro de poder se o usuário chega antes: o alvo está preparando um golpe ou parado há mais de 2,5 s.",
     "bolt_strike": "Investida elétrica forte, 20% de paralisar.",
     "branch_poke": "Estocada curta de galho.",
     "collision_course": "Investida forte: no superefetivo o poder sobe 4/3 (1,33x, como o oficial).",

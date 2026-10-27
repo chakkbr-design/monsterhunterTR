@@ -462,7 +462,7 @@ GUIDE = {
     "sketch": "Copia de verdade o último golpe do alvo: o Sketch some da lista do usuário e o golpe novo fica no lugar, para o resto da vida do Pokémon.",
     "spicy_extract": "O alvo ganha 2 de Ataque e perde 2 de Defesa.",
     "spiky_shield": "Protege como o Protect (prioridade +4, o turno todo). Quem encosta com golpe de contato perde 1/8 do HP.",
-    "sticky_web": "Teia no chão do lado inimigo: em volta do adversário nascem até 3 teias; quem pisar (no chão, que não seja Inseto) fica preso 1 s e perde 1 de Velocidade. Sem o chão vivo (VGC/campo plano), baixa a Velocidade dele direto.",
+    "sticky_web": "Teia no chão do lado inimigo: em volta do adversário nascem até 3 teias; quem pisar (no chão, que não seja Inseto) fica preso 1 s e perde 1 de Velocidade. Sem o chão vivo (campo plano), baixa a Velocidade dele direto.",
     "stuff_cheeks": "O usuário come a frutinha que segura (ou uma a até 2 m dele no chão) e ganha 2 de Defesa; falha sem frutinha.",
     "tail_glow": "Sobe o At. Esp. do usuário em 3 estágios.",
     "take_heart": "Cura o status do usuário e sobe At. Esp. e Def. Esp. em 1.",

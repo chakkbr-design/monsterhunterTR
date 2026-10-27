@@ -12,9 +12,9 @@ Em cada golpe: tipo, categoria, poder oficial (`bp`), precisão, PP oficial, o t
 
 - **Dano.** A fórmula é a oficial Gen 5+ (`core/damage.gd`), com os arredondamentos oficiais: base com nível, poder e Ataque/Defesa já com estágios, depois spread, clima, crítico (1,5x), sorteio inteiro de 85 a 100%, STAB (1,5x), eficácia da tabela de 18 tipos, queimadura (0,5x no físico) e os 'outros' (telas, habilidades, combos). No fim, o ritmo do jogo multiplica o dano final por **0,75** (`damage_pace`): vale só sobre o dano dos golpes; veneno, queimadura, clima, dreno e cura usam o valor oficial.
 - **Precisão = erro físico.** O golpe rola a precisão (com estágios de Precisão, (3+n)/3) ao sair. Se falhar, ele sai desviado do alvo mirado (projétil, raio e investida passam ao lado; área cai 2-3 m longe) e pode acertar outro. Só erram as entregas `dash`, `arc`, `multi_arc`, `whip`, `projectile`, `beam`, `aoe_target` e `zone`; `homing`, `stream`, `aoe_self` e golpes de status sem projétil nunca erram. Golpe sem precisão (Swift) nunca erra. Evasão (Double Team, Minimize) é uma chance de esquiva por alguns segundos. Fora isso, o jogo é físico: dá para pular a investida e sair da área avisada.
-- **PP e energia.** Nos modos normais há um único pool de PP de 100: cada golpe gasta `100 / PP oficial` (os PP do oficial viram 'usos'). No **modo de energia** (padrão no treino) a barra de energia (0 a 100, enche 5/s) substitui o PP: o custo é `12 + 0,25 x poder` (teto 50), status custa 28, golpe de poder variável conta como 70, multi-hit conta pelos acertos (2-5 = 3,1 de média) e prioridade custa 0,6x.
+- **PP e energia.** A barra de energia (0 a 100, enche 5/s) substitui o PP: o custo é `12 + 0,25 x poder` (teto 50), status custa 28, golpe de poder variável conta como 70, multi-hit conta pelos acertos (2-5 = 3,1 de média) e prioridade custa 0,6x.
 - **Cooldown.** Cada golpe tem o seu: `(preparo + duração + peso/40) x 2,5`, com `peso` = 10 x custo de PP, mínimo 1,6 s. Golpe forte (poder > 70) alonga por `1 + (poder - 70)/80`. Status espera x3, mínimo 8 s. Prioridade multiplica o cooldown por 1,8 no modo de energia. Os números das tabelas são antes do fator de Speed e do GCD (1 s entre golpes).
-- **Prioridade e Speed.** No modo VGC a rodada (4 s) ordena a fila pela prioridade do golpe e depois pela Speed (Trick Room inverte). Em qualquer modo, prioridade positiva sai quase sem preparo e com GCD 0,6x; negativa prepara 0,1 s a mais por nível.
+- **Prioridade e Speed.** Prioridade positiva sai quase sem preparo e com GCD 0,6x; negativa prepara 0,1 s a mais por nível.
 - **Efeitos secundários e status.** A chance é rolada a cada acerto (Serene Grace dobra, Sheer Force tira o efeito e dá 1,3x). Os status seguem o oficial em rodadas e dano de fim de turno (queimadura 1/16, veneno 1/8, Toxic n/16, sono 1-3 rodadas...). Imunidades de tipo valem.
 - **Campo e dupla.** Clima e terrenos duram 5 rodadas, telas 5, Tailwind 4, Gravity 5; Protect, Endure, Quick/Wide Guard e Follow Me valem até o fim da rodada. Golpes de vários alvos (`all_opponents`, `all_other_pokemon`) acertam todos e dão 0,75x se pegam mais de um.
 
@@ -62,7 +62,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Precisão** é a oficial; 'nunca erra' = o golpe não tem precisão nos dados.
 - **PP oficial** é o `uses` dos dados (PP de série principal).
 - **Alcance, raio, ângulo, preparo (windup)** são metros e segundos do jogo; a Adaptação traduz o que cada um significa na entrega.
-- 'Rodada' = turno do oficial (4 s no modo VGC); efeitos que duram 'N rodadas' contam no fim de turno.
+- 'Rodada' = turno do oficial (4 s); efeitos que duram 'N rodadas' contam no fim de turno.
 
 ## Golpes por tipo
 
@@ -132,7 +132,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder variável (ver abaixo)), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Prioridade +1. O usuário aguenta por 2 rodadas (pode andar, mas não usa outros golpes) guardando o dano que leva; no fim devolve o dobro a quem mais o acertou. Sem dano guardado, falha.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Bind
 
@@ -406,7 +406,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 990 espécie(s) do jogo
 - **Adaptação:**
   - Até o fim da rodada, o usuário aguenta qualquer golpe com 1 HP.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Entrainment
 
@@ -441,7 +441,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 80), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,6 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Facade
 
@@ -465,7 +465,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Só sai logo depois de entrar em campo (até 1,5 s); acerta primeiro (prioridade +3) e faz o alvo hesitar.
   - Sempre causa Hesitar no alvo (depois do dano). Hesitar: o alvo fica parado 0,5 s.
-  - Prioridade +3: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +3: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### False Swipe
 
@@ -488,7 +488,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 30), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Quebra o Protect/Quick Guard do alvo (a proteção cai) e bate normalmente.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Fillet Away
 
@@ -540,7 +540,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 8 espécie(s) do jogo
 - **Adaptação:**
   - Até o fim da rodada, os golpes de alvo único dos adversários passam a mirar o usuário.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Foresight
 
@@ -692,7 +692,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 550 espécie(s) do jogo
 - **Adaptação:**
   - Se o parceiro soltar um golpe de dano em até 4 s, ele sai com 1,5x por 2,5 s. Sem parceiro, falha.
-  - Prioridade +5: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +5: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Hidden Power
 
@@ -1080,7 +1080,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1003 espécie(s) do jogo
 - **Adaptação:**
   - Bloqueia quase tudo até o fim da rodada. Usado em rodadas seguidas: chance 1, 1/3, 1/9... (zera quando uma rodada passa sem usar). Feint quebra.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Psych Up
 
@@ -1101,7 +1101,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 128 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Rage
 
@@ -1248,7 +1248,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - No oficial força a troca; aqui o alvo é arremessado 5 m para longe.
   - Golpe de som: atravessa o Substitute e Throat Chop o bloqueia por 2 rodadas.
-  - Prioridade -6: na fila da rodada sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -6: sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Rock Climb
 
@@ -1844,7 +1844,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 29 espécie(s) do jogo
 - **Adaptação:**
   - No oficial força a troca; aqui o alvo é arremessado 5 m para longe.
-  - Prioridade -6: na fila da rodada sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -6: sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Wish
 
@@ -1981,7 +1981,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Como o Protect (prioridade +4); quem encosta com golpe de contato é queimado.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Burning Jealousy
 
@@ -2376,7 +2376,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Prioridade -3 (prepara um pouco mais). Arma a armadilha por 1,5 s com o usuário parado: se levar um golpe físico nesse tempo, ela explode na hora em volta dele (onda de 3,8 m, poder 150, acerta todos os adversários); se ninguém o acertar fisicamente, o golpe falha.
   - Se acertar um alvo congelado, descongela.
-  - Prioridade -3: na fila da rodada sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -3: sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
   - Golpe de vários alvos (todos os adversários): acerta todos ao alcance; se um uso pega mais de um, dano x0,75 (spread).
 
 ### Sunny Day
@@ -2463,7 +2463,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 38 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Aqua Ring
 
@@ -2635,7 +2635,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Soco com prioridade +1.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Life Dew
 
@@ -2846,7 +2846,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, especial, poder 15), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - De 2 a 5 estrelas de água rápidas (35/35/15/15%), prioridade +1.
   - Multi-hit oficial: sorteia 2 a 5 acertos por uso (35% / 35% / 15% / 15% para 2/3/4/5), cada um com o poder oficial (15); Skill Link sempre dá 5. O visual solta os projéteis sorteados, todos no mesmo alvo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Water Sport
 
@@ -2945,7 +2945,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 2 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 85), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Bicada elétrica com o dobro de poder se o usuário chega antes: o alvo ainda não agiu na rodada (modo VGC) ou está preparando um golpe, ou parado há mais de 2,5 s (modo de energia).
+  - Bicada elétrica com o dobro de poder se o usuário chega antes: o alvo está preparando um golpe ou parado há mais de 2,5 s.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,8 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
 
 ### Bolt Strike
@@ -3302,7 +3302,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Raio instantâneo (prioridade +1, preparo de 0,12 s) que só sai se o alvo estiver preparando um golpe de dano.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Volt Switch
 
@@ -3851,7 +3851,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 6 espécie(s) do jogo
 - **Adaptação:**
   - Protege como o Protect (prioridade +4, o turno todo). Quem encosta com golpe de contato perde 1/8 do HP.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Spore
 
@@ -3996,7 +3996,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Poder x2 se o alvo acertou o usuário nos últimos 1,5 s (o 'virou o jogo' do Revenge/Avalanche/Payback).
-  - Prioridade -4: na fila da rodada sai depois dos normais; prepara 0,4 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -4: sai depois dos normais; prepara 0,4 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Blizzard
 
@@ -4137,7 +4137,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 22 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Ice Spinner
 
@@ -4325,7 +4325,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - No oficial força a troca; aqui o alvo é arremessado 4 m para longe depois do dano.
-  - Prioridade -6: na fila da rodada sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -6: sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Close Combat
 
@@ -4371,7 +4371,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 39 espécie(s) do jogo
 - **Adaptação:**
   - Postura de 1 s parado (prioridade -5): o primeiro golpe físico recebido nela volta com o dobro do dano para quem bateu.
-  - Prioridade -5: na fila da rodada sai depois dos normais; prepara 0,5 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -5: sai depois dos normais; prepara 0,5 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Cross Chop
 
@@ -4394,7 +4394,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 38 espécie(s) do jogo
 - **Adaptação:**
   - Bloqueia quase tudo até o fim da rodada. Usado em rodadas seguidas: chance 1, 1/3, 1/9... (zera quando uma rodada passa sem usar). Feint quebra.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Double Kick
 
@@ -4474,7 +4474,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 150), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Concentra primeiro (prioridade -3); se o usuário levar dano antes de bater, perde a concentração e o golpe falha.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 2,7 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
-  - Prioridade -3: na fila da rodada sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -3: sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Force Palm
 
@@ -4554,7 +4554,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 6 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Meteor Assault
 
@@ -4609,7 +4609,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 33 espécie(s) do jogo
 - **Adaptação:**
   - Até o fim da rodada, o lado do usuário não é atingido por golpes de prioridade.
-  - Prioridade +3: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +3: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Revenge
 
@@ -4621,7 +4621,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Poder x2 se o alvo acertou o usuário nos últimos 1,5 s (o 'virou o jogo' do Revenge/Avalanche/Payback).
-  - Prioridade -4: na fila da rodada sai depois dos normais; prepara 0,4 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -4: sai depois dos normais; prepara 0,4 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Reversal
 
@@ -4740,7 +4740,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 65), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Só sai se o alvo está preparando um golpe de prioridade; acerta primeiro e faz hesitar.
   - Sempre causa Hesitar no alvo (depois do dano). Hesitar: o alvo fica parado 0,5 s.
-  - Prioridade +3: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +3: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Vacuum Wave
 
@@ -4751,7 +4751,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 47 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, especial, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Vital Throw
 
@@ -4762,7 +4762,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 8 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade -1: na fila da rodada sai depois dos normais; prepara 0,1 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -1: sai depois dos normais; prepara 0,1 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 <a id="tipo-poison"></a>
 
@@ -4810,7 +4810,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Como o Protect (prioridade +4); quem encosta com golpe de contato fica envenenado.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Barb Barrage
 
@@ -5504,7 +5504,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 100), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Prioridade -3 (preparo longo de 0,9 s + 0,3 s da prioridade). Enquanto prepara, o bico esquenta: quem acerta o usuário com golpe de contato é queimado.
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 1,2 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
-  - Prioridade -3: na fila da rodada sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -3: sai depois dos normais; prepara 0,3 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Bleakwind Storm
 
@@ -5749,7 +5749,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 64 espécie(s) do jogo
 - **Adaptação:**
   - O usuário e o parceiro trocam de lugar. Sem parceiro, falha.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Amnesia
 
@@ -6013,7 +6013,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 5 espécie(s) do jogo
 - **Adaptação:**
   - Janela curta em que golpes de status do inimigo voltam contra quem os lançou.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Magic Powder
 
@@ -6045,7 +6045,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 23 espécie(s) do jogo
 - **Adaptação:**
   - Postura de 1 s parado (prioridade -5): o primeiro golpe especial recebido nela volta com o dobro do dano para quem bateu.
-  - Prioridade -5: na fila da rodada sai depois dos normais; prepara 0,5 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -5: sai depois dos normais; prepara 0,5 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Mist Ball
 
@@ -6340,7 +6340,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 17 espécie(s) do jogo
 - **Adaptação:**
   - Some e reaparece num ponto livre da quadra, longe dos inimigos; solta de prisões.
-  - Prioridade -6: na fila da rodada sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -6: sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Trick
 
@@ -6361,7 +6361,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 142 espécie(s) do jogo
 - **Adaptação:**
   - Prioridade -7: inverte a ordem da fila de Speed por 5 rodadas; usar de novo desliga.
-  - Prioridade -7: na fila da rodada sai depois dos normais; prepara 0,7 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -7: sai depois dos normais; prepara 0,7 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Twin Beam
 
@@ -6472,7 +6472,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
   - Dano pela fórmula oficial (Gen 5+, físico, poder 90), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Só funciona como primeiro golpe do usuário em campo (o primeiro turno do oficial).
   - Contato forte (poder >= 80): além do empurrão, arremessa o alvo 0,9 m; se ele bater na cerca, caixa ou pedra perde até 8% do HP.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Fury Cutter
 
@@ -6585,7 +6585,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Até o fim da rodada, os golpes de alvo único dos adversários passam a mirar o usuário. Pó: não funciona contra Planta.
   - Golpe de pó: não afeta Planta nem quem tem Overcoat.
-  - Prioridade +2: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +2: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Signal Beam
 
@@ -6608,7 +6608,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Protege como o Protect (prioridade +4, o turno todo). Só barra golpes de dano (os de status passam). Quem encosta com golpe de contato perde 1 de Velocidade.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Skitter Smack
 
@@ -6629,7 +6629,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Energia:** custo 28 · cooldown 9,4 s
 - **Aprendem:** 14 espécie(s) do jogo
 - **Adaptação:**
-  - Teia no chão do lado inimigo: em volta do adversário nascem até 3 teias; quem pisar (no chão, que não seja Inseto) fica preso 1 s e perde 1 de Velocidade. Sem o chão vivo (VGC/campo plano), baixa a Velocidade dele direto.
+  - Teia no chão do lado inimigo: em volta do adversário nascem até 3 teias; quem pisar (no chão, que não seja Inseto) fica preso 1 s e perde 1 de Velocidade. Sem o chão vivo (campo plano), baixa a Velocidade dele direto.
 
 ### String Shot
 
@@ -6714,7 +6714,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Investida rápida com prioridade +1 (sai quase sem preparo).
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Ancient Power
 
@@ -6948,7 +6948,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 32 espécie(s) do jogo
 - **Adaptação:**
   - Até o fim da rodada, o lado do usuário não é atingido por golpes de vários alvos.
-  - Prioridade +3: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +3: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 <a id="tipo-ghost"></a>
 
@@ -7148,7 +7148,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - Some e reaparece em cima do alvo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Spectral Thief
 
@@ -7380,7 +7380,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 60), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
   - No oficial força a troca; aqui o alvo é arremessado 4 m para longe depois do dano.
-  - Prioridade -6: na fila da rodada sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
+  - Prioridade -6: sai depois dos normais; prepara 0,6 s mais devagar (0,1 s por nível) e segura o GCD um pouco mais.
 
 ### Dual Chop
 
@@ -7776,7 +7776,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Protege como o Protect (prioridade +4, o turno todo, uso seguido falha mais). Só barra golpes de dano (os de status passam). Quem encosta com golpe de contato perde 2 estágios de Defesa.
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Parting Shot
 
@@ -7866,7 +7866,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 79 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 70), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Switcheroo
 
@@ -7979,7 +7979,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 5 espécie(s) do jogo
 - **Adaptação:**
   - Dano pela fórmula oficial (Gen 5+, físico, poder 40), STAB, eficácia, crítico e sorteio de 85-100%, depois x0,75 do ritmo do jogo.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Doom Desire
 
@@ -8128,7 +8128,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 1 espécie(s) do jogo
 - **Adaptação:**
   - Prioridade +4 até o fim da rodada: bloqueia golpes de dano (não os de status); quem encosta com golpe de contato perde -1 de Ataque (Gen 8+).
-  - Prioridade +4: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +4: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Make It Rain
 
@@ -8318,7 +8318,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 39 espécie(s) do jogo
 - **Adaptação:**
   - Ataque do adversário mais perto cai em 1 estágio, alcance 6 m.
-  - Prioridade +1: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +1: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Charm
 
@@ -8339,7 +8339,7 @@ A exceção são os golpes que no oficial batem várias vezes (`hits_range` nos 
 - **Aprendem:** 3 espécie(s) do jogo
 - **Adaptação:**
   - Prioridade +3. Até o fim da rodada, golpes de status dos adversários não passam no lado do usuário.
-  - Prioridade +3: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
+  - Prioridade +3: sai quase sem preparo (0,04 s) e com GCD 0,6x. No modo de energia custa 0,6x e o cooldown é 1,8x.
 
 ### Dazzling Gleam
 

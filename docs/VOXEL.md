@@ -3,7 +3,7 @@
 Direção de arte decidida em 2026-10-25/26 (conceito B, "Vila de pedra"): cenário em voxel 3D,
 personagens e Pokémon em sprite 2D (2.5D), luz forte no próprio Godot (sem render de Blender).
 Pallet Town é a única zona nesse estilo; da Rota 1 em diante a arte antiga (HGSS) continua igual.
-O campo de treino do modo de energia também é voxel (quadra de 48 × 28 m com estádio). O VGC não muda.
+O campo de treino do modo de energia também é voxel (quadra de 48 × 28 m com estádio).
 Céu contínuo, clima do mundo e níveis gráficos valem para todas as zonas.
 
 ## 1. Malha (lattice) e grade
@@ -86,8 +86,6 @@ Céu contínuo, clima do mundo e níveis gráficos valem para todas as zonas.
   saem exatamente como desenhados. `GfxQuality.attach_aa` liga no mundo (TimeOfDay) e no estádio
   (`track`). `--edge-aa=debug` pinta a máscara (vermelho = sprite, verde = borda), `--edge-aa=off`
   desliga.
-- **VGC:** `GfxQuality.classic_stage` devolve o visual de antes (MSAA 2x, sem debanding, sombra do
-  projeto); lá não há água.
 - Detalhes no §11.
 
 ### Globais (project.godot `[shader_globals]`)
@@ -252,8 +250,8 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 
 ## 7. Arenas do treino (modo de energia)
 
-- **Tamanho:** 48 × 28 m (`Cfg.ARENA_ENERGY`; comprimento e largura dobrados em relação a 24 × 14,
-  4× a área). O VGC continua com 24 × 14, sem nenhuma mudança.
+- **Tamanho:** 48 × 28 m (`Cfg.ARENA`; comprimento e largura dobrados em relação a 24 × 14,
+  4× a área; `Cfg.SMALL_ARENA` 24 × 14 só nos testes).
   - Os Pokémon entram a 6 m do centro (`opts.entry_x` = `Cfg.ENTRY_X`), como na quadra antiga; cada
     treinador fica 0,8 m fora da linha de fundo (±24,8 m).
   - A câmera de ação vai até 47 m (`BattleDirector.MAX_DIST`) para caber a quadra inteira.
@@ -276,7 +274,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
     `PixelFx`; tremida curta da câmera pelo `h_offset` (o `BattleDirector` só mexe em posição e `v_offset`); no
     lugar fica um monte baixo de entulho em voxel (1–3 voxels `FINE`, `meta rubble`). RNG própria (`randomize`).
 - **Estádio voxel em volta, fora dos limites** (`ArenaStadium`, battle/voxel/arena_stadium.gd):
-  - montado uma vez por cena de treino (`TrainingBattle._build_stage`), só no modo de energia; nunca no VGC nem com `fast_sim`; sem corpo físico (a arena consulta paredes na camada 1);
+  - montado uma vez por cena de treino (`TrainingBattle._build_stage`), nunca com `fast_sim`; sem corpo físico (a arena consulta paredes na camada 1);
   - arquibancada em anel de 12 fileiras (`StadiumParts`: cadeiras, escadas, vomitórios, parapeito, fachada, túneis dos treinadores no meio das cabeceiras); a da frente (+z) fica abaixo da linha de 30° da câmera de ação;
   - torcida (`ArenaCrowd`): um MultiMesh por setor; `cheer(lado, força)` e `wave()` (ola), uniforms via `ArenaCrowd.set_param`;
     - os torcedores são os NPCs pixel-art do mundo (`ArenaCrowd.CROWD_SHEETS`: todas as folhas `npc_*` que mapas, treinadores e interiores usam, menos o protagonista, a protagonista, o rival e o Prof. Carvalho), sorteados por hash da cadeira (nunca `arena.rng`) e espelhados metade das vezes;
@@ -287,7 +285,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
   - céu, sol e ambiente próprios (stadium_sky.gdshader, AgX, SSAO, brilho); `set_mood("dia" | "tarde" | "noite")` pela opção Hora do treino (`time_of_day`); `theme(cenário)` repinta o gramado de fora e muda o céu (caverna de noite, pântano nublado, vulcão) sem mexer no sol e no ambiente que o `BattleBiomes` ajustou para a luta.
 - **Clima da luta no modo de energia:** `BattleWeatherFx` usa as peças do clima do mundo (§10) sobre a
   quadra mais 12 m (`STANDS_MARGIN`), com relâmpago e som; no treino ele dirige os globais de clima e
-  devolve tudo no fim (§3). O VGC fica com o visual antigo.
+  devolve tudo no fim (§3).
 - O piso continua com o topo em y = 0; o tapete do time e o botão da Poké Bola no centro são pintura do `ArenaFloor`.
 - **Água das arenas:** lagos com `WaterSurface` redonda (`shape: "ellipse"`), o nível sobe e desce no buraco pelo raio; congelar usa o gelo do shader (`set_freeze`). A maré da praia é uma lâmina `sea` rasa (5 cm) com absorção forte e espuma só na beira.
 - **Fotos:** `tests/battle/shot_arena_stadium.gd -- --scenario=<id> --mood=dia|tarde|noite --views=inicio,meio,ko,aberta,placar,tunel,torcida,lago,gelo,mare` (com `--fixed-fps 60`; sem `--out=<prefixo>` grava em `user://shots/arena/estadio_<vista>.png`).
@@ -308,7 +306,7 @@ Todas declaradas no project.godot, então existem desde a abertura (editor e tes
 - **Prints prontos:** `tests/world/shot_pallet.gd` (§9), `tests/world/shot_sky_voxel.gd` (diorama:
   `--hours=`, `--weathers=`), `tests/world/shot_sky_world.gd` (zonas HGSS: `--places=`, `--hours=`,
   `--weather=`), `tests/gfx/shot_water.gd` (§4), `tests/battle/shot_arena_stadium.gd` (§7),
-  `tests/battle/shot_weather.gd` (`weather=rain|snow mode=energy|vgc`).
+  `tests/battle/shot_weather.gd` (`weather=rain|snow`).
 - **Formatação:** rodar `gdformat` nos scripts editados antes do commit.
 
 ## 9. Formato do desenho de zona (`data/voxel/<id>.json`)

@@ -6,7 +6,7 @@ treinador em cima dela. A IA de cada Pokémon (golpe, alvo, movimento) é a do m
 
 ## Pesquisa (resumo)
 
-Fontes lidas: vgcguide.com, Smogon (Momentum), documentação das flags de IA do pokeemerald-expansion
+Fontes lidas: vgcguide.com (guia de jogo competitivo), Smogon (Momentum), documentação das flags de IA do pokeemerald-expansion
 (`docs/tutorials/ai_flags.md`) e a wiki da IA de troca dele. Os limiares marcados como "nosso" são escolha
 nossa.
 
@@ -21,7 +21,7 @@ nossa.
 Um por lado em `arena.trainer_ai` (o adversário treinador e, sem teclado, o lado do jogador). A cada
 rodada do relógio (`BattleTurns`, 4 s) a arena chama `round_start()`; a IA usa `request_switch`,
 `request_trainer_item`, `bench_of` e `pick_replacement(slot)`. Pedidos saem na hora; a troca voluntária
-respeita a trava do modo de energia (`arena.switch_locked()`).
+respeita a trava de troca (`SWITCH_OPEN`/`SWITCH_LOCK`, `arena.switch_locked()`).
 
 - **Troca** (uma por vez): matchup ruim = leva >= 50% e tira < 30%, ou nenhum golpe pega, ou ataque em
   -2; HP >= 40%; quem entra leva no máximo 60% (e no máximo 60% do que o atual levaria) e bate pelo menos

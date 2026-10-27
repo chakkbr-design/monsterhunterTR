@@ -48,7 +48,7 @@ o que podia quebrar foi guardado e está no teste.
 - Mycelium Might e Stall atrasam o preparo do golpe (x0,7 e x0,75) em vez de "agir por último".
 - Zen Mode, Schooling, Shields Down, Zero to Hero, Stance Change, Tera Shift: formas sem arte, por multiplicador de
   stat, tom e tamanho do sprite.
-- Wimp Out / Emergency Exit só trocam no modo de energia (no VGC o jogador escolhe).
+- Wimp Out / Emergency Exit só trocam sozinhos (o jogador não escolhe).
 
 ## O que ficou diferente do oficial
 

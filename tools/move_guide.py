@@ -456,9 +456,9 @@ for _part in (moves_more_a, moves_more_b):
 # ---------------------------------------------------------------- montagem das linhas
 def priority_text(p):
     if p > 0:
-        return ("Prioridade +%d: no modo VGC entra na frente da fila da rodada; em qualquer modo sai quase sem preparo (0,04 s) e com GCD 0,6x. "
+        return ("Prioridade +%d: sai quase sem preparo (0,04 s) e com GCD 0,6x. "
                 "No modo de energia custa 0,6x e o cooldown é 1,8x." % p)
-    return ("Prioridade %d: na fila da rodada sai depois dos normais; prepara %s s mais devagar (0,1 s por nível) e segura o GCD um pouco mais." %
+    return ("Prioridade %d: sai depois dos normais; prepara %s s mais devagar (0,1 s por nível) e segura o GCD um pouco mais." %
             (p, num(0.1 * -p)))
 
 
@@ -835,11 +835,11 @@ def intro_blocks(n_moves, n_species):
             "**Precisão = erro físico.** O golpe rola a precisão (com estágios de Precisão, (3+n)/3) ao sair. Se falhar, ele sai desviado do alvo mirado (projétil, raio e investida passam ao lado; área cai 2-3 m longe) e pode acertar outro. "
             "Só erram as entregas `dash`, `arc`, `multi_arc`, `whip`, `projectile`, `beam`, `aoe_target` e `zone`; `homing`, `stream`, `aoe_self` e golpes de status sem projétil nunca erram. "
             "Golpe sem precisão (Swift) nunca erra. Evasão (Double Team, Minimize) é uma chance de esquiva por alguns segundos. Fora isso, o jogo é físico: dá para pular a investida e sair da área avisada.",
-            "**PP e energia.** Nos modos normais há um único pool de PP de 100: cada golpe gasta `100 / PP oficial` (os PP do oficial viram 'usos'). No **modo de energia** (padrão no treino) a barra de energia (0 a 100, enche 5/s) substitui o PP: "
+            "**PP e energia.** A barra de energia (0 a 100, enche 5/s) substitui o PP: "
             "o custo é `12 + 0,25 x poder` (teto 50), status custa 28, golpe de poder variável conta como 70, multi-hit conta pelos acertos (2-5 = 3,1 de média) e prioridade custa 0,6x.",
             "**Cooldown.** Cada golpe tem o seu: `(preparo + duração + peso/40) x 2,5`, com `peso` = 10 x custo de PP, mínimo 1,6 s. Golpe forte (poder > 70) alonga por `1 + (poder - 70)/80`. Status espera x3, mínimo 8 s. "
             "Prioridade multiplica o cooldown por 1,8 no modo de energia. Os números das tabelas são antes do fator de Speed e do GCD (1 s entre golpes).",
-            "**Prioridade e Speed.** No modo VGC a rodada (4 s) ordena a fila pela prioridade do golpe e depois pela Speed (Trick Room inverte). Em qualquer modo, prioridade positiva sai quase sem preparo e com GCD 0,6x; negativa prepara 0,1 s a mais por nível.",
+            "**Prioridade e Speed.** Prioridade positiva sai quase sem preparo e com GCD 0,6x; negativa prepara 0,1 s a mais por nível.",
             "**Efeitos secundários e status.** A chance é rolada a cada acerto (Serene Grace dobra, Sheer Force tira o efeito e dá 1,3x). Os status seguem o oficial em rodadas e dano de fim de turno (queimadura 1/16, veneno 1/8, Toxic n/16, sono 1-3 rodadas...). Imunidades de tipo valem.",
             "**Campo e dupla.** Clima e terrenos duram 5 rodadas, telas 5, Tailwind 4, Gravity 5; Protect, Endure, Quick/Wide Guard e Follow Me valem até o fim da rodada. Golpes de vários alvos (`all_opponents`, `all_other_pokemon`) acertam todos e dão 0,75x se pegam mais de um.",
         ]),
@@ -866,7 +866,7 @@ def intro_blocks(n_moves, n_species):
             "**Precisão** é a oficial; 'nunca erra' = o golpe não tem precisão nos dados.",
             "**PP oficial** é o `uses` dos dados (PP de série principal).",
             "**Alcance, raio, ângulo, preparo (windup)** são metros e segundos do jogo; a Adaptação traduz o que cada um significa na entrega.",
-            "'Rodada' = turno do oficial (4 s no modo VGC); efeitos que duram 'N rodadas' contam no fim de turno.",
+            "'Rodada' = turno do oficial (4 s); efeitos que duram 'N rodadas' contam no fim de turno.",
         ]),
     ]
 

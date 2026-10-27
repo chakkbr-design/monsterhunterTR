@@ -62,15 +62,12 @@ a resistência a Fantasma e Sombrio).
 Jet/Sucker Punch +1, Extreme Speed +2, Fake Out +3, Protect/Detect +4, Helping Hand +5, Whirlwind/Roar/
 Dragon Tail/Circle Throw -6.
 
-**Jogo:** rodadas em tempo real (`battle/battle_turns.gd`, desde 2026-10-24). No começo de cada rodada
-(`ROUND_SECS` = 4 s) a IA escolhe o golpe; a fila sai como no oficial: prioridade do golpe (maior antes,
-mais o bônus da habilidade em `BattleAbilities.priority_bonus`), depois a Speed efetiva (estágios,
-paralisia 0,5x, Tailwind 2x, `BattleAbilities.order_speed_mult`), Trick Room invertendo dentro da faixa e
-empate no sorteio. Cada lutador solta um golpe por rodada, na vez dele, com `MOVE_GAP` (0,8 s) entre um golpe
-e o seguinte. Item do treinador entra como prioridade +6. Adaptado: a Speed decide a ordem, não quantas vezes
-cada um ataca; quem entra no meio da rodada espera a próxima; quem não consegue soltar em `TURN_MAX` passa.
-Por cima da fila continuam valendo: `"priority" > 0` sai quase sem preparo (0,04 s) e com GCD 0,6x, e a
-prioridade negativa prepara mais devagar (`battle_moves.gd` `use`). Speed segue como fator de ritmo
+**Jogo:** tempo real, sem fila de golpes: cada lutador age quando o cooldown, o GCD e a energia deixam.
+`battle/battle_turns.gd` é só o relógio de rodada (`ROUND_SECS` = 4 s), que roda o fim de turno e guarda o
+Trick Room e a ordem pela Speed (`speed_order`: Speed efetiva com estágios, paralisia 0,5x, Tailwind 2x,
+`BattleAbilities.order_speed_mult`; Trick Room inverte; empate no sorteio), usada na ordem do fim de turno.
+`"priority" > 0` sai quase sem preparo (0,04 s) e com GCD 0,6x, e a prioridade negativa prepara mais
+devagar (`battle_moves.gd` `use`). Speed segue como fator de ritmo
 (`StatCalc.battle_speed_factor`: cooldown, GCD, reflexo da IA) e velocidade de andar.
 
 ## 5. Precisão, evasão e estágios
@@ -108,15 +105,13 @@ fim de turno (`battle/battle_end_turn.gd`, uma vez por rodada; ver "Fim de turno
 | Hesitar | só se o alvo age depois | 0,5 s parado (tempo real) |
 | Leech Seed | volátil, 1/8 por turno para quem plantou | igual (`seeded`, convive com outro status, sai na troca ou com Rapid Spin) |
 
-"Tentativa de agir": para quem segue a fila de `BattleTurns` (IA em campo), o contador desce quando a vez
-dele começa (`fighter.gd` `try_act`); quem acorda age na mesma vez, como no oficial. Quem não segue a
-fila (Pokémon no teclado, `turn_mode` false) conta no fim de cada rodada, menos a rodada em que o status
-começou (`round_count`). Mudou do tempo real antigo: o golpe com empurrão acordava; agora não acorda.
+Contagem do sono/congelamento/confusão: todos contam no fim de cada rodada, menos a rodada em que o status
+começou (`fighter.gd` `round_count`). Mudou do tempo real antigo: o golpe com empurrão acordava; agora não acorda.
 
 Imunidades oficiais: Fogo não queima, Elétrico não paralisa, Veneno não envenena, Planta não pega
 Leech Seed (`battle_moves.gd` `STATUS_IMMUNE`).
 
-**Dano residual sem o ritmo.** Regra do Caio: o 0,75 (`DAMAGE_PACE`) vale só sobre o dano final dos
+**Dano residual sem o ritmo.** Regra do Caio: o `DAMAGE_PACE` vale só sobre o dano final dos
 golpes. Veneno, queimadura, Toxic, semente, Curse, Wrap/Bind, clima e Black Sludge (e as curas de fim de
 turno) usam o valor oficial puro: `fighter.dot_scale()` não entra mais neles. `dot_scale` ficou só no dano
 físico de tempo real (batida do arremesso em `battle_physics.gd`, chão queimado em `battle_field.gd`).
@@ -127,7 +122,7 @@ Rough Skin, Aftermath, recuo do Desespero, lava, brasas, queda...) e toda cura e
 Roost, Leftovers, Aqua Ring, Wish, frutinha, poção, Regenerator...) usam o mesmo fator do dano dos golpes
 (`arena.damage_pace`, `BattleEnergy.DAMAGE_PACE` = 0,6), para tudo ficar proporcional. Fica de fora a cura
 cheia (Rest, Healing Wish, Full Restore) e o que já sai do dano feito (dreno, recuo). Tudo passa por
-`fighter.paced(n)` (e `dot_scale()`, que no modo de energia devolve o próprio 0,6). No VGC nada muda.
+`fighter.paced(n)` (e `dot_scale()`, que no modo de energia devolve o próprio 0,6).
 
 ## 8. Regras de dupla
 
@@ -151,11 +146,11 @@ cheia (Rest, Healing Wish, Full Restore) e o que já sai do dano feito (dreno, r
   (Heat Wave, Twister) conta quem está ao alcance ao soltar.
 - `all_other_pokemon` acerta o parceiro perto (Earthquake). O parceiro pula quando vê o Earthquake do
   aliado (`battle_ai.gd` `_partner_quake`). Acerto no parceiro não marca combo nem aciona "Protegeu".
-- Mesmo dano do 1x1: `DOUBLES_PACE = 1,0` (`battle_moves.gd`); só o spread muda o dano.
-- Troca (oficial): sai antes de todos os golpes da rodada; quem entra não age nessa rodada e leva os golpes
-  mirados em quem saiu; uma por lado por rodada (aqui por regra, no oficial por Pokémon); substituto de quem
-  desmaiou no fim do turno. Jogo: `battle_arena.gd` `request_switch` / `begin_of_round` / `at_round_end`.
-  Adaptado: quem cai no próprio fim de turno entra logo depois da virada e espera a rodada seguinte para agir.
+- Mesmo dano do 1x1 (`BattleEnergy.DAMAGE_PACE`, 0,6x); só o spread muda o dano.
+- Troca (oficial): sai antes de todos os golpes do turno; quem entra leva os golpes mirados em quem saiu;
+  substituto de quem desmaiou no fim do turno. Jogo: `battle_arena.gd` `request_switch` sai na hora (com a
+  trava `SWITCH_OPEN`/`SWITCH_LOCK`), quem entra herda os golpes mirados em quem saiu e o substituto de quem
+  desmaiou entra no fim da rodada (`begin_of_round` / `at_round_end`).
 - Follow Me ainda não existe; o mais parecido é "cobrir o parceiro" (`battle_moves.gd` `_cover`: em
   DEFENSIVO ou Muralha, com o parceiro abaixo de 60% de HP, 35% de chance de levar o golpe no lugar).
   Helping Hand existe nos dados, ainda sem efeito no parceiro.
@@ -175,7 +170,7 @@ de proteção (`battle_move_effects.gd`) valem a rodada inteira, como o turno do
 da rodada (`BattleEndTurn`, passo 17): Protect/Detect (Feint quebra), Quick Guard, Endure (aguenta com 1
 HP), Wide Guard (golpes de vários alvos no lado), e também Follow Me/Rage Powder e Roost. Protect/Detect
 em rodadas seguidas: chance 1, 1/3, 1/9... (`_stall_ok`), zera quando uma rodada passa sem usar (Detect
-ainda não existe nos dados; o handler `special: "protect"` já serve). Com `turn_mode` false a rodada é o
+ainda não existe nos dados; o handler `special: "protect"` já serve). A rodada é o
 relógio de `ROUND_SECS`. Counter/Mirror Coat (-5): postura de 1 s parado (tempo real); o golpe
 físico/especial recebido nela volta 2x para quem bateu. Substitute: boneco com 1/4 do HP que leva dano e
 status até quebrar (som atravessa).
@@ -200,7 +195,7 @@ oficial a rodada conta antes do efeito, então no 5º fim de turno o clima acaba
 tira 4 vezes). No modo de energia a "rodada" é o relógio de 4 s, então o clima dura 20 s. Tudo da lista
 oficial acima vale (Def x1,5 em `_mults`, precisão em `BattleMoveEffects.accuracy_of`, carga do Solar
 Beam/Blade em `move_for`, congelar/Leaf Guard em `blocks_status`, Hydration no passo do Shed Skin, Ice
-Body/Rain Dish em `weather_residual`); o dano segue com o 0,75x do jogo no fim. A neve usa o id "hail".
+Body/Rain Dish em `weather_residual`); o dano segue com o `damage_pace` do jogo no fim. A neve usa o id "hail".
 `set_weather(kind, secs)` em segundos ficou só para testes; `arena.opts.weather` vale a luta toda (o
 treino repassa `cfg.weather`).
 
@@ -231,7 +226,7 @@ order"; dentro de cada passo pela Speed, Trick Room invertendo). Cada efeito com
 antes de agir: no turno em que acaba, não age.
 
 **Jogo:** `battle/battle_end_turn.gd` (`arena.end_turn`), `run()` chamado UMA vez por rodada por
-`BattleTurns._end_round` -> `arena.end_of_round` (com `turn_mode` false, a cada `ROUND_SECS`). Mostra
+`BattleTurns._end_round` -> `arena.end_of_round` (a cada `ROUND_SECS`). Mostra
 cada efeito na hora: popup no lutador ("-12 veneno", "+5 Leftovers"), clarão curto da cor do efeito no
 sprite (`fighter.residual_damage/residual_heal/flash`), aviso no log quando algo de campo acaba e a linha
 "Fim da rodada" no HUD (`warn`). `last_log` guarda os passos na ordem (testes).
@@ -255,7 +250,7 @@ sprite (`fighter.residual_damage/residual_heal/flash`), aviso no log quando algo
 | 15 | Uproar (3) | — |
 | 16 | Speed Boost (+1, não no turno em que entrou) e os adaptados Natural Cure, Regenerator 1/16, Pickup 2% | — |
 | 17 | Acaba o que vale só a rodada: Protect, Endure, Quick/Wide Guard, Roost, Follow Me (e conta o Laser Focus, 2) | — |
-| 18 | Sono/congelado/confusão de quem não segue a fila | — |
+| 18 | Sono/congelado/confusão (contagem da rodada) | — |
 
 Todo dano/cura residual: `floor(HP máx. x fração)`, mínimo 1 (Toxic: `floor(HP/16)` x n). Magic Guard
 segura o dano. Frutinhas seguradas agem na hora, como no oficial (não no fim de turno): Oran +10 e Sitrus
@@ -265,7 +260,7 @@ Leftovers, Black Sludge e Sitrus Berry entraram em `data/items.json` (sem `hp`/`
 IA não "usar" como item do treinador nem aparecerem na lista do treino).
 
 Adaptado / fora do oficial: o turno é a rodada de `ROUND_SECS` (4 s); Natural Cure e Regenerator agem em
-campo; sono/confusão de quem não segue a fila contam no fim da rodada; Future Sight só cai se quem usou
+campo; sono/confusão contam no fim da rodada; Future Sight só cai se quem usou
 ainda está vivo. Não existem nos dados: Nightmare, Salt Cure, Hydration, Ice Body, Moody, Binding Band,
 Big Root, Detect (handler pronto). Sem Trick Room nos golpes (só `toggle_trick_room`).
 
@@ -325,7 +320,7 @@ no Earthquake, parceiro no `all_other_pokemon`, Swift nos dois, alvo único na d
 mesmo dano no 1x1 e 2x2, empurrão por eficácia/crítico/peso, Whirlwind, batida na cerca e na caixa, Body
 Slam, Earthquake pulando, Aerial Ace, Dig e a IA.
 
-## Habilidades (Gen 9 / VGC)
+## Habilidades (Gen 9)
 
 **Oficial:** "ao entrar" (Intimidate, Drought, Frisk, Unnerve, Cloud Nine) age na entrada e na troca, do
 mais rápido ao mais lento; "fim de turno" (Speed Boost, Shed Skin, Rain Dish, Dry Skin, Solar Power,
@@ -335,7 +330,7 @@ golpes de alvo único do tipo, ficam imunes e ganham +1 At. Esp.; golpes de vár
 **Jogo (`battle/battle_abilities.gd`, `data/abilities.json`):** o turno é a rodada de `BattleTurns`
 (`ROUND_SECS`). O fim de turno é `BattleEndTurn.run()` (os passos 1, 4, 8 e 16 chamam as habilidades;
 `on_round_end()` faz só a parte delas); BattleTurns consulta
-`order_speed_mult(f)` e `priority_bonus(f, mv)` para a fila; `BattleMoves.hit` chama
+`order_speed_mult(f)` e `priority_bonus(f, mv)` para a ordem; `BattleMoves.hit` chama
 `redirect(user, target, mv)` antes de `immune`. A ordem de ativação usa `arena.turns.speed_order`
 (Trick Room inverte, empate no sorteio).
 
