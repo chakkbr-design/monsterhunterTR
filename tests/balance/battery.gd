@@ -109,10 +109,24 @@ func _one(sd: int) -> Dictionary:
 	var tb: Node = load(SCENE).instantiate()
 	root.add_child(tb)
 	await process_frame
+	# Vigia de travas: quadros seguidos em que a luta está em "fight" mas o relógio da luta não anda
+	# (reagrupar, troca, abertura). Cada trava de 3 s+ vira o evento "hold" na telemetria.
+	var held := 0
+	var last_clock := -1.0
 	for i in 60 * 60 * 30:
 		await process_frame
 		if tb._result_box.visible:
 			break
+		var a = tb.arena
+		if not is_instance_valid(a) or a.state != "fight":
+			continue
+		if is_equal_approx(float(a.fight_clock), last_clock):
+			held += 1
+		else:
+			if held >= 180 and a.telemetry:
+				a.telemetry.note("hold", {"frames": held, "pause": String(a.energy_pause)})
+			held = 0
+		last_clock = float(a.fight_clock)
 	var r := {
 		"size": sz,
 		"outcome": String(tb.result.get("outcome", "?")),

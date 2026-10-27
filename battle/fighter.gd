@@ -967,6 +967,10 @@ func _endure() -> bool:
 func _faint() -> void:
 	end_motion()
 	launch_t = 0.0
+	air_t = 0.0  # desmaio no ar (pulo, voo): cai no chão em vez de ficar parado na altura
+	air_h = 0.0
+	fly_h = 0.0
+	position.y = ground_y
 	clear_prepare()
 	dash_t = 0.0
 	lunge_t = 0.0
@@ -1140,7 +1144,7 @@ func start_motion(
 	cb: Callable,
 	track := 0.0,
 	tick_cb := Callable(),
-	y0 := 0.0
+	y0 := NAN
 ) -> void:
 	motion = kind
 	motion_t = maxf(secs, 0.01)
@@ -1149,7 +1153,7 @@ func start_motion(
 	motion_to = pos2(to)
 	motion_off = motion_to - pos2(target.position) if target else Vector3.ZERO
 	motion_h = h
-	motion_y0 = y0
+	motion_y0 = position.y if is_nan(y0) else y0  # sem y0: sai da altura em que está (morro, voo)
 	motion_track = track
 	motion_target = target
 	motion_cb = cb
@@ -1209,7 +1213,9 @@ func _motion_step(dt: float) -> void:
 	match motion:
 		"leap":
 			var p := motion_from.lerp(motion_to, s)
-			position = Vector3(p.x, motion_y0 * (1.0 - s) + motion_h * 4.0 * s * (1.0 - s), p.z)
+			position = Vector3(
+				p.x, lerpf(motion_y0, ground_y, s) + motion_h * 4.0 * s * (1.0 - s), p.z
+			)
 		"tunnel":
 			var to := motion_to - pos2(position)
 			var stp := motion_h * dt

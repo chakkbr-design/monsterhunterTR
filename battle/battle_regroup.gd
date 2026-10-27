@@ -14,12 +14,25 @@ extends RefCounted
 const NEAR := 0.75
 ## Teto de segurança (segundos de luta): o reagrupar nunca segura a luta mais que isto.
 const MAX_SECS := 10.0
+## Sem chegar NEAR_GAIN m mais perto por STUCK_SECS s (preso num objeto, rodeando um perigo do
+## chão, empurrado pelo vizinho): anda em linha reta atravessando o que houver.
+const STUCK_SECS := 1.2
+const NEAR_GAIN := 0.15
+## Todos chegam em até uns tantos segundos, por mais longe ou lento que estejam.
+const ARRIVE_SECS := 4.5
+## Nem em linha reta chega mais perto por GIVE_UP_SECS s (empurrado por um sólido ou pelo
+## vizinho): fica onde está e conta como chegado, para a luta não esperar o teto.
+const GIVE_UP_SECS := 2.5
+## Depois disto todos andam em linha reta (o desvio do relevo pode dar voltas sem chegar nunca).
+const STRAIGHT_SECS := 3.0
 
 ## A arena (sem tipo: os campos dela são lidos direto).
 var arena
 ## Segundos de luta desde o começo do reagrupar.
 var t := 0.0
 var _fresh := false
+## Por lutador (instance id): [menor distância até o ponto, t em que ela melhorou].
+var _best := {}
 
 
 func _init(a) -> void:
@@ -32,11 +45,21 @@ static func start_of(f: BattleFighter) -> Vector3:
 	return Vector3(p.x, 0.0, p.z)
 
 
+## Para onde o reagrupar anda: o ponto de entrada dentro da área em que _walk deixa andar.
+func goal_of(f: BattleFighter) -> Vector3:
+	var p := start_of(f)
+	var b: Rect2 = arena.rect.grow(-0.5)
+	return Vector3(clampf(p.x, b.position.x, b.end.x), 0.0, clampf(p.z, b.position.y, b.end.y))
+
+
 ## Um Pokémon desmaiou (a luta não acabou): começa (ou recomeça) o reagrupar.
 func begin() -> void:
 	arena.energy_pause = "regroup"
 	t = 0.0
 	_fresh = true
+	_best.clear()
+	if arena.telemetry:
+		arena.telemetry.note("regroup_begin")
 
 
 ## Passo do reagrupar (dt de luta). Devolve true quando a luta volta.
@@ -94,7 +117,12 @@ func filled() -> bool:
 				healthy += 1
 		var on := 0
 		for f in arena.fighters:
-			if is_instance_valid(f) and f.side == side and f.active() and f.visible:
+			if (
+				is_instance_valid(f)
+				and f.side == side
+				and f.active()
+				and (f.visible or f.hidden == "commander")
+			):  # Tatsugiri na boca do Dondozo
 				on += 1
 		if on < mini(slots, healthy):
 			return false
@@ -105,15 +133,23 @@ func filled() -> bool:
 func home() -> bool:
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active():
-			var d: Vector3 = start_of(f) - f.position
+			var d: Vector3 = goal_of(f) - f.position
 			d.y = 0.0
-			if d.length() > NEAR:
+			if d.length() > NEAR and not gave_up(f):
 				return false
 	return true
 
 
+## Parou de chegar mais perto há GIVE_UP_SECS s.
+func gave_up(f: BattleFighter) -> bool:
+	var b: Array = _best.get(f.get_instance_id(), [INF, t])
+	return t - float(b[1]) > GIVE_UP_SECS
+
+
 func _finish() -> void:
 	arena.energy_pause = ""
+	if arena.telemetry:
+		_report()
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active():
 			f.velocity = Vector3.ZERO
@@ -124,18 +160,54 @@ func _finish() -> void:
 		arena.hud.fight_flash("Fight!")
 
 
+## Bateria: quanto o reagrupar durou, se estourou o teto e quem ficou longe do ponto de entrada.
+func _report() -> void:
+	var far := []
+	for f in arena.fighters:
+		if is_instance_valid(f) and f.active():
+			var d: Vector3 = goal_of(f) - f.position
+			d.y = 0.0
+			if d.length() > NEAR:
+				var g := goal_of(f)
+				var row := {
+					"id": arena.telemetry.uid(f),
+					"d": snappedf(d.length(), 0.01),
+					"gave_up": gave_up(f),
+					"pos": [snappedf(f.position.x, 0.01), snappedf(f.position.z, 0.01)],
+					"goal": [snappedf(g.x, 0.01), snappedf(g.z, 0.01)],
+					"gy": snappedf(f.ground_y, 0.01),
+					"fly": snappedf(f.fly_h, 0.01),
+					"hidden": f.hidden,
+					"motion": f.motion,
+					"best": snappedf(float(_best.get(f.get_instance_id(), [-1.0])[0]), 0.01),
+					"slide": arena.terrain != null and arena.terrain.sliding(f),
+				}
+				far.append(row)
+	arena.telemetry.note(
+		"regroup_end",
+		{"secs": snappedf(t, 0.01), "timeout": t >= MAX_SECS, "filled": filled(), "far": far}
+	)
+
+
 ## Anda (passo normal, sem correr) até o ponto de entrada, contornando o relevo.
 func _walk(f: BattleFighter, dt: float) -> void:
-	var to := start_of(f) - f.position
+	var to := goal_of(f) - f.position
 	to.y = 0.0
 	var dist := to.length()
+	var k := f.get_instance_id()
+	var b: Array = _best.get(k, [INF, t])
+	if dist < float(b[0]) - NEAR_GAIN:
+		b = [dist, t]
+		_best[k] = b
+	var straight := t - float(b[1]) > STUCK_SECS or t > STRAIGHT_SECS
 	var want := Vector3.ZERO
 	if dist > 0.05:
 		want = to / dist
-		if arena.terrain:
+		if arena.terrain and not straight:
 			want = arena.terrain.steer(f, want)
 	var before := f.position
-	var speed: float = f.walk_speed()
+	# Lento, na lama ou do outro lado da quadra de 48 m: apressa o passo para chegar em ARRIVE_SECS.
+	var speed: float = maxf(f.walk_speed(), dist / maxf(ARRIVE_SECS - t, 0.5))
 	if want.length() > 0.01:
 		var stride := minf(speed * dt, dist)
 		f.position += want.normalized() * stride
@@ -149,7 +221,7 @@ func _walk(f: BattleFighter, dt: float) -> void:
 	f.position.y = f.ground_y + f.air_h + f.fly_h
 	if arena.terrain:
 		arena.terrain.settle(f, dt)
-	if arena.fixed:
+	if arena.fixed and not straight:
 		arena._block_solid(f, before)
 	var bounds: Rect2 = arena.rect.grow(-0.5)
 	f.position.x = clampf(f.position.x, bounds.position.x, bounds.end.x)

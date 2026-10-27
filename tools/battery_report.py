@@ -48,9 +48,12 @@ def load(dirs):
             if fn.endswith(".json"):
                 try:
                     with open(os.path.join(d, fn)) as fh:
-                        out.append(json.load(fh))
+                        f = json.load(fh)
                 except Exception as e:  # luta cortada no meio
                     print("ignorado", fn, e, file=sys.stderr)
+                    continue
+                if isinstance(f, dict) and "result" in f and "events" in f:  # pula report/anomalies
+                    out.append(f)
     return out
 
 
