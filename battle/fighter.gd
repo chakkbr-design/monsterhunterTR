@@ -214,6 +214,7 @@ var _status_fx_off := Vector3.ZERO
 var _flash_t := 0.0
 var _flash_col := Color(2.2, 2.2, 2.2)
 var _ring: MeshInstance3D
+var _hp_bar: BattleHpBar
 var _spawn_t := 0.0
 
 const SPAWN_GROW := 0.25  ## game.gd send_out: escala 0.05 -> 1.15 em 0.15 s, -> 1.0 em 0.1 s
@@ -293,6 +294,8 @@ func _build_visual() -> void:
 		ring.name = "SideRing"
 		add_child(ring)
 		_ring = ring
+	_hp_bar = BattleHpBar.new(self)
+	add_child(_hp_bar)
 	_spawn_t = SPAWN_GROW
 	refresh_label()
 
@@ -352,6 +355,8 @@ func visual_step(dt: float) -> void:
 	if _ring:
 		_ring.visible = alive() and on_field
 		_ring.position.y = 0.03 + ground_y - position.y  # fica no chão mesmo pulando ou voando
+	if _hp_bar:
+		_hp_bar.step(dt, hp, max_hp, visual_height(), on_field and not evolving)
 	var tint := _tint()
 	if _flash_t > 0.0:
 		_flash_t -= dt

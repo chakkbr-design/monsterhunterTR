@@ -17,9 +17,10 @@ extends RefCounted
 ## Os tempos das cenas são em segundos de luta (dt já escalado), para casarem com o desmaio e a bola.
 
 const FOV := 50.0
+## The one camera angle (Caio, 2026-10-27): every scene (knockout, ball, opening, cine) keeps
+## this pitch and the fixed yaw, and zooms only by moving closer along the same line of sight.
+## Obstacles in the way fade instead (FADE_*).
 const PITCH := deg_to_rad(30.0)
-## Na cena de nocaute a câmera sobe (PITCH_KO) para os morros e pedras não taparem o alvo.
-const PITCH_KO := deg_to_rad(48.0)
 ## Margin around each Pokémon, and the least body height that must fit (taller art uses its own
 ## visible height, BattleFighter.visual_height).
 const CAM_MARGIN := 1.4
@@ -106,7 +107,8 @@ var _held := 0.0
 var _await_send := false
 ## Quem saiu da bola na cena "send" (o zoom depois de ela abrir).
 var _spot: Array = []
-## Cena fixa {pts (locais da arena), margin, pitch, min_d} (set_cine); vazio = as cenas normais.
+## Cena fixa {pts (locais da arena), margin, pitch, min_d} (set_cine; o pitch é ignorado, a câmera
+## fica sempre em PITCH); vazio = as cenas normais.
 var cine := {}
 var _ko_hit := 0.0
 var _big_gap := 0.0
@@ -320,18 +322,16 @@ func camera(cam: Camera3D, raw: float) -> void:
 		if _scene_fighters().size() > 0 or shot in ["switch", "send"] or not cine.is_empty()
 		else EASE
 	)
-	var pitch := _shot_pitch()
+	var pitch := PITCH
 	var min_d := KO_DIST if shot == "ko" else MIN_DIST
 	if not cine.is_empty():
 		pts = (cine.pts as Array).duplicate()
 		margin = float(cine.margin)
-		pitch = float(cine.pitch)
 		min_d = float(cine.min_d)
 	elif shot == "send":
 		var fr := _send_frame()
 		pts = fr[0]
 		margin = fr[1]
-		pitch = fr[2]
 		min_d = fr[3]
 	elif shot == "switch":
 		pts.append(_switch_at)
@@ -532,10 +532,6 @@ func _in_the_way(
 		seen += 1
 	var cover := rect.intersection(Rect2(Vector2.ZERO, vp)).get_area() / maxf(vp.x * vp.y, 1.0)
 	return seen > 1 and cover > FADE_COVER
-
-
-func _shot_pitch() -> float:
-	return PITCH_KO if shot == "ko" else PITCH
 
 
 ## The fighters the camera frames now: the scene's (knockout, big move) or, without one,

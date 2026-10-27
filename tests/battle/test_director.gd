@@ -55,6 +55,15 @@ func _watch_band(ar: Node, d: BattleDirector, st: Dictionary) -> void:
 		return
 	var band := BattleHUD.top_band(2 if int(ar._battle_size) >= 2 else 1)
 	var framed := d.framed()
+	# One camera angle in every scene: the zoom only moves closer (BattleDirector.PITCH, fixed yaw).
+	var fwd := -cam.global_transform.basis.z
+	var dev := absf(asin(clampf(-fwd.y, -1.0, 1.0)) - BattleDirector.PITCH) + absf(fwd.x)
+	st.angle = maxf(float(st.get("angle", 0.0)), dev)
+	for f in ar.fighters:
+		if is_instance_valid(f) and f.on_field and f.visible and f.alive():
+			var bar := f.get_node_or_null("HpBar") as Node3D
+			st.bars = int(st.get("bars", 0)) + (1 if bar and bar.visible else 0)
+			st.mons = int(st.get("mons", 0)) + 1
 	var key := "%s|%s" % [d.shot, framed]
 	st.since = 0 if key != String(st.get("key", "")) else int(st.get("since", 0)) + 1
 	st.key = key
@@ -150,6 +159,17 @@ func _check_band(st: Dictionary, what: String) -> void:
 	check(
 		int(st.get("intro", 0)) > 0 and int(st.get("ko", 0)) > 0,
 		"%s: vigiado da entrada (%d) ao desmaio (%d)" % [what, st.get("intro", 0), st.get("ko", 0)]
+	)
+	check(
+		float(st.get("angle", 0.0)) < 0.01,
+		"%s: o ângulo da câmera nunca muda (desvio máximo %.3f rad)" % [what, st.get("angle", 0.0)]
+	)
+	check(
+		int(st.get("mons", 0)) > 0 and int(st.get("bars", 0)) == int(st.get("mons", 0)),
+		(
+			"%s: barra de vida em cima de cada Pokémon (%d de %d)"
+			% [what, st.get("bars", 0), st.get("mons", 0)]
+		)
 	)
 
 
