@@ -7,8 +7,8 @@ desenhado a partir do arquivo da partida, sozinho.
 ## No HUD (treino)
 
 - Opção **No HUD** na tela de montar (`cfg.clean_hud`). Na luta somem os cartões, botões, log, avisos,
-  faixas de golpe, a barra do treino e a barra de vida em cima da cabeça (`arena.clean_hud`,
-  `BattleHUD.clean`). Ficam os números de dano (popups) e todos os efeitos da luta, o estádio e o telão.
+  faixas de golpe e a barra do treino (`arena.clean_hud`, `BattleHUD.clean`). Ficam a barra de vida
+  em cima da cabeça (pedido do Caio), os números de dano (popups) e todos os efeitos da luta, o estádio e o telão.
 - Quando a arena começa, um clarão branco de 3 quadros na tela inteira (acima da tela de load) marca o
   vt 0 do arquivo da partida: gravando com OBS, o montador acha o clarão sozinho.
 - Cada luta grava `user://matches/match_<data>_<n>.json`

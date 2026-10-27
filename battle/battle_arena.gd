@@ -130,8 +130,8 @@ var abilities: BattleAbilities  ## efeitos das habilidades
 var turns: BattleTurns  ## relógio de rodadas (fim de turno, troca e item do treinador)
 var end_turn: BattleEndTurn  ## efeitos de fim de turno, uma vez por rodada
 var telemetry: BattleTelemetry = null  ## opts.telemetry (caminho): grava a luta para a bateria
-## opts.clean_hud (treino, "No HUD"): sem cartões, botões, log, avisos nem barra de vida na cabeça;
-## ficam só os números de dano e os efeitos da luta (para gravar vídeo com outro HUD por cima).
+## opts.clean_hud (treino, "No HUD"): sem cartões, botões, log nem avisos; ficam a barra de vida em
+## cima da cabeça, os números de dano e os efeitos da luta (para gravar vídeo com outro HUD por cima).
 var clean_hud := false
 ## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
 ## câmera lenta no golpe que nocauteia e todo mundo parado na troca.

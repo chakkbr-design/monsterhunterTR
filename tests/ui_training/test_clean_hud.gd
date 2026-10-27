@@ -1,7 +1,7 @@
 extends SceneTree
 ## Rodar: godot --headless --fixed-fps 60 --path . --script res://tests/ui_training/test_clean_hud.gd
-## "No HUD" do treino (para vídeo): sem cartões, botões, log nem barra de vida na cabeça (só os
-## popups de dano), a barra do treino some, e o arquivo da partida sai com a linha do tempo da vida
+## "No HUD" do treino (para vídeo): sem cartões, botões nem log (ficam os popups de dano e a barra
+## de vida em cima da cabeça), a barra do treino some, e o arquivo da partida sai com a linha do tempo da vida
 ## (track no relógio do vídeo) que tools/video/make_vertical.py lê.
 
 const Cfg := preload("res://ui/training/training_config.gd")
@@ -39,7 +39,7 @@ func _run() -> void:
 	root.add_child(tb)
 	var seen_fight := false
 	var hud_ok := true
-	var bars_ok := true
+	var bars_ok := false
 	for i in LIMIT:
 		await process_frame
 		if tb._result_box.visible:
@@ -54,10 +54,10 @@ func _run() -> void:
 		for f in a.fighters:
 			var bar = f.get_node_or_null("HpBar")
 			if bar and bar.visible:
-				bars_ok = false
+				bars_ok = true
 	check(seen_fight, "a luta rodou")
 	check(hud_ok, "só os popups do HUD aparecem")
-	check(bars_ok, "nenhuma barra de vida na cabeça")
+	check(bars_ok, "a barra de vida na cabeça continua")
 	check(not tb._top.visible, "barra do treino escondida")
 	var f := FileAccess.open(MATCH, FileAccess.READ)
 	var d = JSON.parse_string(f.get_as_text()) if f else null

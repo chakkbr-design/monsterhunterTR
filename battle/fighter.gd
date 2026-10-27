@@ -367,8 +367,7 @@ func visual_step(dt: float) -> void:
 		_ring.visible = alive() and on_field
 		_ring.position.y = 0.03 + ground_y - position.y  # fica no chão mesmo pulando ou voando
 	if _hp_bar:
-		var bar := on_field and not evolving and not (arena and bool(arena.get("clean_hud")))
-		_hp_bar.step(dt, hp, max_hp, visual_height(), bar)
+		_hp_bar.step(dt, hp, max_hp, visual_height(), on_field and not evolving)
 	var tint := _tint()
 	if _flash_t > 0.0:
 		_flash_t -= dt

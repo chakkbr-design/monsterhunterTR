@@ -988,7 +988,8 @@ func _build_top() -> Control:
 	_clean.text = "No HUD"
 	_clean.focus_mode = Control.FOCUS_NONE
 	_clean.tooltip_text = (
-		"For recording videos: hides every panel, button and HP bar (damage numbers and effects stay)"
+		"For recording videos: hides every panel and button (HP bars over the heads, damage numbers"
+		+ " and effects stay)"
 		+ " and saves a match file in user://matches"
 	)
 	_clean.toggled.connect(_on_clean)
