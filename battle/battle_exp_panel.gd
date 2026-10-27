@@ -113,7 +113,14 @@ func _level_up(row: Dictionary) -> void:
 	var m: Mon = row.mon
 	row.level = int(row.level) + 1
 	row.flash = 1.2
-	stat_queue.append({"mon": m, "from": int(row.level) - 1, "to": int(row.level)})
+	# Vários níveis seguidos do mesmo Mon viram uma janela só (do nível de antes até o novo).
+	var merged := false
+	for w in stat_queue:
+		if w.mon == m:
+			w.to = int(row.level)
+			merged = true
+	if not merged:
+		stat_queue.append({"mon": m, "from": int(row.level) - 1, "to": int(row.level)})
 	lines.append("%s grew to Lv %d!" % [m.display_name, int(row.level)])
 	for mv in row.get("learned", {}).get(int(row.level), []):
 		lines.append("%s learned %s!" % [m.display_name, mv])

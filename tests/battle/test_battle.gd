@@ -498,6 +498,7 @@ func _control_swap() -> void:
 		Mon.create("charmander", 12), Mon.create("squirtle", 12), Mon.create("pidgey", 12)
 	]
 	var b := _arena(party, [Mon.create("rattata", 12)], {"seed": 4})
+	b.enemy.immortal = true  # a troca é o teste: o Rattata não cai no meio dela
 	_run(b, 1.3)
 	_open(b)
 	check(b.send_in(2, true), "pede a troca do aliado")

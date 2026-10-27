@@ -2674,7 +2674,7 @@ func _award_exp(defeated: Mon) -> void:
 	var fought: Array = _participants.values().filter(func(m): return not m.is_fainted())
 	if fought.is_empty():
 		return
-	for m in party:
+	for m: Mon in party:
 		if m.is_fainted():
 			continue
 		var shared := not fought.has(m)
