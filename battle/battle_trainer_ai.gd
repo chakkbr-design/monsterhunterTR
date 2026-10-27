@@ -150,8 +150,10 @@ func matchup(u: Dictionary, against: Array) -> Dictionary:
 	var faster := true
 	for o in against:
 		var e := unit_of(o)
-		deal = maxf(deal, minf(best(u, e) / maxf(float(e.hp), 1.0), 1.0))
-		take = maxf(take, best(e, u) / maxf(float(u.hp), 1.0))
+		# Fractions of the Mon's own HP (the fighter has HP_MULT times it), so the thresholds keep
+		# their meaning with the doubled battle HP.
+		deal = maxf(deal, minf(best(u, e) * BattleFighter.HP_MULT / maxf(float(e.hp), 1.0), 1.0))
+		take = maxf(take, best(e, u) * BattleFighter.HP_MULT / maxf(float(u.hp), 1.0))
 		if float(e.spe) >= float(u.spe):
 			faster = false
 	return {"deal": deal, "take": take, "faster": faster}
@@ -242,7 +244,9 @@ func item_for(f: BattleFighter) -> String:
 	var e: Dictionary = Dex.item(id).get("effect", {})
 	var hp := float(f.hp) / maxf(float(f.max_hp), 1.0)
 	if e.has("hp") and hp <= HEAL_AT:
-		var heal := float(f.max_hp) if str(e.hp) == "full" else float(e.hp)
+		var heal := (
+			float(f.max_hp) if str(e.hp) == "full" else float(BattleFighter.hp_from_mon(int(e.hp)))
+		)
 		heal = minf(heal, float(f.max_hp - f.hp))
 		if incoming(f) < float(f.hp) + heal:
 			return id

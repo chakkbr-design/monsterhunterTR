@@ -168,7 +168,7 @@ func _pinch() -> void:
 	check(sw.send_in(1), "troca para o segundo da party")
 	sw.step(DT)
 	check(
-		sm.hp >= hp_out + int(sm.max_hp / 3.0),
+		sm.hp >= BattleFighter.hp_to_mon(hp_out) + int(sm.max_hp / 3.0),
 		"Regenerator: +1/3 do HP ao sair (%d -> %d)" % [hp_out, sm.hp]
 	)
 	sw.free()

@@ -575,7 +575,13 @@ func _mon_line(m: Mon) -> String:
 	var st := "" if m.status == "" else " · " + String(Cfg.STATUS_NAMES.get(m.status, m.status))
 	return (
 		"%s Lv %d: %d/%d HP%s"
-		% [m.display_name, m.level, m.hp, m.max_hp, " · fainted" if m.is_fainted() else st]
+		% [
+			m.display_name,
+			m.level,
+			BattleFighter.hp_from_mon(m.hp),
+			BattleFighter.hp_from_mon(m.max_hp),
+			" · fainted" if m.is_fainted() else st,
+		]
 	)
 
 

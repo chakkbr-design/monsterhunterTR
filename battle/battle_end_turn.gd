@@ -377,7 +377,9 @@ func held_check(f: BattleFighter) -> void:
 			return
 		var amt := float(row[1])
 		_eat(f)
-		var heal_n := int(amt) if amt >= 1.0 else maxi(1, int(f.max_hp * amt))
+		var heal_n := (
+			BattleFighter.hp_from_mon(int(amt)) if amt >= 1.0 else maxi(1, int(f.max_hp * amt))
+		)
 		if glut:
 			heal_n = int(heal_n * BattleAbilities.GLUTTONY_HEAL)  # Gluttony: devora a frutinha
 			ab._fire(f, Color(0.9, 0.7, 0.4))

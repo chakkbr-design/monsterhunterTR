@@ -1422,7 +1422,11 @@ func _do_trainer_item(side: int, item: String, target: BattleFighter) -> void:
 	var e: Dictionary = Dex.item(item).get("effect", {})
 	target.item_used = true
 	if e.has("hp"):
-		var amount: int = target.max_hp if str(e.hp) == "full" else target.paced(int(e.hp))
+		var amount: int = (
+			target.max_hp
+			if str(e.hp) == "full"
+			else target.paced(BattleFighter.hp_from_mon(int(e.hp)))
+		)
 		var before := target.hp
 		target.heal(mini(amount, target.max_hp - target.hp))
 		target.popup("+%d HP" % (target.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
@@ -2231,7 +2235,7 @@ func best_heal_item(missing: int) -> String:
 		var e: Dictionary = Dex.item(String(id)).get("effect", {})
 		if not e.has("hp"):
 			continue
-		var amt: int = 9999 if str(e.hp) == "full" else int(e.hp)
+		var amt: int = 9999 if str(e.hp) == "full" else BattleFighter.hp_from_mon(int(e.hp))
 		if (
 			best == ""
 			or (amt >= missing and (best_amt < missing or amt < best_amt))
@@ -2363,10 +2367,20 @@ func _menu_text() -> String:
 				tag = " [ally]"
 			elif m.is_fainted():
 				tag = " [fainted]"
-			lines.append(
-				(
-					"%s %s Lv%d %d/%d%s"
-					% [">" if k == menu_sel else " ", m.display_name, m.level, m.hp, m.max_hp, tag]
+			(
+				lines
+				. append(
+					(
+						"%s %s Lv%d %d/%d%s"
+						% [
+							">" if k == menu_sel else " ",
+							m.display_name,
+							m.level,
+							BattleFighter.hp_from_mon(m.hp),
+							BattleFighter.hp_from_mon(m.max_hp),
+							tag,
+						]
+					)
 				)
 			)
 		lines.append(

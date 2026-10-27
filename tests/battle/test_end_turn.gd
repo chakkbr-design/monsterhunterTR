@@ -243,7 +243,10 @@ func _items() -> void:
 	k.take_damage(1, Vector3.ZERO, 0.0)
 	check(not k.item_used, "Oran Berry não age com HP alto")
 	k.take_damage(k.hp - k.max_hp / 2, Vector3.ZERO, 0.0)
-	check(k.item_used and k.hp == k.max_hp / 2 + 10, "Oran Berry +10 na metade (%d)" % k.hp)
+	check(
+		k.item_used and k.hp == k.max_hp / 2 + BattleFighter.hp_from_mon(10),
+		"Oran Berry +10 (HP do Mon) na metade (%d)" % k.hp
+	)
 	k.trainer_item = "pecha_berry"
 	k.item_used = false
 	k.clear_status()

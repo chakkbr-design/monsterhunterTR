@@ -1272,8 +1272,13 @@ func _items() -> void:
 	var e0: int = a.enemy.hp
 	et.held_check(a.player)
 	et.held_check(a.enemy)
-	check(a.player.hp - p0 == a.player.paced(20), "Ripen: Oran cura 20 (%d)" % (a.player.hp - p0))
-	check(a.enemy.hp - e0 == a.enemy.paced(10), "sem Ripen a Oran cura 10")
+	check(
+		a.player.hp - p0 == a.player.paced(BattleFighter.hp_from_mon(20)),
+		"Ripen: Oran cura 20 (%d)" % (a.player.hp - p0)
+	)
+	check(
+		a.enemy.hp - e0 == a.enemy.paced(BattleFighter.hp_from_mon(10)), "sem Ripen a Oran cura 10"
+	)
 	_give(a.player, "klutz")
 	a.player.trainer_item = "oran_berry"
 	a.player.item_used = false

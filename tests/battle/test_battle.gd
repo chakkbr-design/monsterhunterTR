@@ -224,7 +224,10 @@ func _swap() -> void:
 		"novo mon em campo e alvo do inimigo"
 	)
 	# Até a troca sair o recolhido ainda pode apanhar: o HP dele na hora da volta é o que fica.
-	check(party[0].hp == old.hp and old.hp <= 7, "HP do mon recolhido persiste")
+	check(
+		party[0].hp == BattleFighter.hp_to_mon(old.hp) and old.hp <= 14,
+		"HP do mon recolhido persiste"
+	)
 	_done(a)
 
 
