@@ -306,6 +306,7 @@ func _build_visual() -> void:
 		_ring = ring
 	_hp_bar = BattleHpBar.new(self)
 	add_child(_hp_bar)
+	_hp_bar.visible = not (arena and bool(arena.get("clean_hud")))  # No HUD: nem no 1º quadro
 	_spawn_t = SPAWN_GROW
 	refresh_label()
 

@@ -72,7 +72,7 @@ func _run() -> void:
 		var last: Dictionary = tr[-1]
 		check(int(last.hp[1][0]) == 0 and int(last.hp[1][1]) == 0, "no fim o Time B está todo a 0")
 		check(String(tr[0].st) == "opening", "relógio do vídeo começa na abertura (%s)" % tr[0].st)
-		var on_seen := tr.any(func(s): return (s.on[1] as Array).has(1))
+		var on_seen := tr.any(func(s): return (s.on[1] as Array).any(func(i): return int(i) == 1))
 		check(on_seen, "o segundo do Time B aparece em campo")
 		var ev_vt: bool = (d.events as Array).all(func(e): return e.has("vt"))
 		check(ev_vt, "todo evento tem vt")
