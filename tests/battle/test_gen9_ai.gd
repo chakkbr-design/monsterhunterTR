@@ -248,7 +248,9 @@ func _struggle_deadlock() -> void:
 	check(p.pp_max <= 0.0 and e.pp_max <= 0.0, "os dois sem energia")
 	var hp0 := p.hp + e.hp
 	_run(a, 12.0)
-	check(p.hp + e.hp < hp0, "sem energia eles se batem no Desespero (%d -> %d)" % [hp0, p.hp + e.hp])
+	check(
+		p.hp + e.hp < hp0, "sem energia eles se batem no Desespero (%d -> %d)" % [hp0, p.hp + e.hp]
+	)
 	a.free()
 
 

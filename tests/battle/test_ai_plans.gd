@@ -45,9 +45,7 @@ func _arena(party: Array, enemies: Array, opts: Dictionary) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
-	opts.merge(
-		{"speed": 1.0, "no_rewards": true, "kind": "trainer"}, false
-	)
+	opts.merge({"speed": 1.0, "no_rewards": true, "kind": "trainer"}, false)
 	a.start(party, enemies, opts)
 	return a
 

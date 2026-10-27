@@ -77,13 +77,7 @@ func _arena() -> Node:
 	a.start(
 		[Mon.create("pikachu", 40)],
 		[Mon.create("onix", 100)],
-		{
-			"seed": 7,
-			"battle_size": 1,
-			"speed": 1.0,
-			"field_objects": false,
-			"no_rewards": true
-		}
+		{"seed": 7, "battle_size": 1, "speed": 1.0, "field_objects": false, "no_rewards": true}
 	)
 	return a
 

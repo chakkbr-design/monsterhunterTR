@@ -617,5 +617,3 @@ func _weather() -> void:
 		check(absf(float(b.grow_t) - (100.0 - 1.0 - X.SUN_BERRY)) < 0.05, "sol: fruta 1,5x")
 		a.abilities.weather = ""
 	a.free()
-
-

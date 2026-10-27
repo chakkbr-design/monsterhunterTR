@@ -85,5 +85,3 @@ func _energy() -> void:
 	if a.state == "fight":
 		check(not a.switch_locked(), "a trava some em %.0f s de luta" % a.SWITCH_LOCK)
 	a.free()
-
-

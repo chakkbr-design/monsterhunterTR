@@ -192,7 +192,9 @@ func step(dt: float) -> void:
 		var rc: Rect2 = arena.rect
 		var p: Vector3 = f.position
 		r["wall"] = snappedf(
-			minf(minf(p.x - rc.position.x, rc.end.x - p.x), minf(p.z - rc.position.y, rc.end.y - p.z)),
+			minf(
+				minf(p.x - rc.position.x, rc.end.x - p.x), minf(p.z - rc.position.y, rc.end.y - p.z)
+			),
 			0.01
 		)
 		rows.append(r)
@@ -204,12 +206,13 @@ func finish(result: Dictionary) -> void:
 		return
 	var teams: Array = [[], []]
 	for side in 2:
-		for m in (arena.party if side == 0 else arena.enemies):
+		for m in arena.party if side == 0 else arena.enemies:
 			teams[side].append(
 				{
 					"sp": m.species,
 					"types": Dex.species(m.species).get("types", []),
-					"moves": m.moves.map(func(e): return String(e.id) if e is Dictionary else String(e)),
+					"moves":
+					m.moves.map(func(e): return String(e.id) if e is Dictionary else String(e)),
 					"ability": m.ability if m.get("ability") != null else "",
 					"hp_end": m.hp,
 					"fainted": m.is_fainted(),

@@ -199,12 +199,7 @@ func _mud_weather() -> void:
 func _pick() -> void:
 	var seen_energy := {}
 	for s in range(1, 13):
-		var b := _arena(
-			[Mon.create("pikachu", 50)],
-			[Mon.create("rattata", 50)],
-			s,
-			{}
-		)
+		var b := _arena([Mon.create("pikachu", 50)], [Mon.create("rattata", 50)], s, {})
 		check(
 			not b.terrain.scenario in BattleTerrain.PICK_ONLY, "o sorteio não pega os só escolhidos"
 		)

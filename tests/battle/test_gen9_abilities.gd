@@ -243,7 +243,9 @@ func _rain_sun() -> void:
 	ab.on_round_end()
 	check(a.enemy.hp < e0, "Dry Skin perde HP no sol no fim da rodada")
 	a.free()
-	var b := _still(_mon("charmander", "solar_power"), Mon.create("pidgey", 20), {"damage_pace": 1.0})
+	var b := _still(
+		_mon("charmander", "solar_power"), Mon.create("pidgey", 20), {"damage_pace": 1.0}
+	)
 	var ab2: BattleAbilities = b.abilities
 	var ember := Dex.move("ember")
 	var tackle := Dex.move("tackle")

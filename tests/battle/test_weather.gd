@@ -211,7 +211,10 @@ func _status_and_heal() -> void:
 	var hp0 := f.hp
 	ab.set_weather_rounds("hail")
 	ab.weather_residual(f)
-	check(f.hp == hp0 + f.paced(maxi(1, f.max_hp / 16)), "Ice Body +1/16 (x0,6) na neve (%d -> %d)" % [hp0, f.hp])
+	check(
+		f.hp == hp0 + f.paced(maxi(1, f.max_hp / 16)),
+		"Ice Body +1/16 (x0,6) na neve (%d -> %d)" % [hp0, f.hp]
+	)
 	f.set_meta("ability_override", "slush_rush")
 	check(ab.order_speed_mult(f) == 2.0, "Slush Rush: Speed 2x na neve")
 	f.set_meta("ability_override", "snow_cloak")

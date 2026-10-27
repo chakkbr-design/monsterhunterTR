@@ -891,11 +891,7 @@ class MoveButton:
 		UiDraw.key_pill(self, c + Vector2(-r + 6.0, -r + 6.0), str(index + 1), 22, not afford)
 		if cd > 0.0:
 			var total := (
-				(
-					Dex.GLOBAL_COOLDOWN
-					if use_gcd
-					else BattleEnergy.cooldown(mv)
-				)
+				(Dex.GLOBAL_COOLDOWN if use_gcd else BattleEnergy.cooldown(mv))
 				/ maxf(body.speed_factor(), 0.01)
 			)
 			draw_circle(c, r - 2.0, Color(0, 0, 0, 0.55 * clampf(cd / maxf(total, 0.01), 0.0, 1.0)))

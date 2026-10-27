@@ -43,15 +43,7 @@ func _arena(party: Array, enemies: Array, seed: int, extra := {}, idle := true) 
 	a.manual = true
 	root.add_child(a)
 	var o := Cfg.arena_opts(Cfg.default_config(), Vector3.ZERO)
-	o.merge(
-		{
-			"speed": 1.0,
-			"seed": seed,
-			"battle_size": 1,
-			"scenario": "campo"
-		},
-		true
-	)
+	o.merge({"speed": 1.0, "seed": seed, "battle_size": 1, "scenario": "campo"}, true)
 	o.merge(extra, true)
 	a.start(party, enemies, o)
 	a.step(DT)
@@ -291,5 +283,3 @@ func _fast_sim() -> void:
 		b.step(DT)
 	check(true, "fast_sim: 10 s de luta sem erro")
 	b.free()
-
-

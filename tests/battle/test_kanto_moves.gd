@@ -111,16 +111,7 @@ func _arena(party: Array, enemies: Array) -> Node:
 	var a: Node = load(ARENA).instantiate()
 	a.manual = true
 	root.add_child(a)
-	a.start(
-		party,
-		enemies,
-		{
-			"speed": 1.0,
-			"no_rewards": true,
-			"field_objects": false,
-			"seed": 11
-		}
-	)
+	a.start(party, enemies, {"speed": 1.0, "no_rewards": true, "field_objects": false, "seed": 11})
 	return a
 
 

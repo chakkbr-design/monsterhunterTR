@@ -118,5 +118,3 @@ func _hps(a: Node) -> Dictionary:
 		if is_instance_valid(f) and f.on_field:
 			out[f.get_instance_id()] = f.hp
 	return out
-
-
