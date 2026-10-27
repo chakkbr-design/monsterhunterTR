@@ -8,11 +8,26 @@ var nodes: Array = []  # FxSprite / BeamFx / emissores com tick(dt) -> bool
 var enabled := true
 var spawned := 0  # total de efeitos criados (testes)
 var show: MoveShow  # espetáculo procedural por cima do PMD (gfx/move_show.gd)
+## Efeitos 3D dos golpes no modo de energia (gfx/fx3d): no lugar do PMD + MoveShow nos golpes.
+var fx3d: MoveFx3D
+var lights_on := true  ## luzes dos efeitos (testes podem desligar)
 
 
 func _init(a: Node3D) -> void:
 	arena = a
 	show = MoveShow.new(self)
+	fx3d = MoveFx3D.new(self)
+
+
+## Os golpes usam os efeitos 3D (modo de energia, fora da bateria rápida)?
+func use3d() -> bool:
+	return fx3d != null and fx3d.on()
+
+
+## Tremor curto da câmera (ArenaDebris.shake, h_offset).
+func shake(amount: float, secs: float) -> void:
+	if arena.is_inside_tree():
+		ArenaDebris.shake(arena, amount, secs)
 
 
 func cam() -> Camera3D:
@@ -26,6 +41,8 @@ func _cam_pos(fallback: Vector3) -> Vector3:
 
 
 func tick(dt: float) -> void:
+	if fx3d:
+		fx3d.tick(dt)
 	for n in nodes.duplicate():
 		if not is_instance_valid(n):
 			nodes.erase(n)
@@ -41,6 +58,8 @@ func clear() -> void:
 		if is_instance_valid(n) and n is Node:
 			n.queue_free()
 	nodes.clear()
+	if fx3d:
+		fx3d.clear()
 
 
 func _track(n: Object) -> Object:
@@ -99,6 +118,9 @@ func _center(f: BattleFighter, k := 0.5) -> Vector3:
 
 ## Ao soltar o golpe: papel "user" do move_fx.json.
 func on_cast(user: BattleFighter, mv: Dictionary, dir: Vector3) -> void:
+	if use3d():
+		fx3d.cast(user, mv, dir)
+		return
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "user")
 	if not r.is_empty():
 		pmd(String(r.fx), _center(user), dir, r)
@@ -116,6 +138,9 @@ func on_hit(
 	eff := 1.0
 ) -> void:
 	if not is_instance_valid(target):
+		return
+	if use3d():
+		fx3d.hit(user, target, mv, dir, crit, eff)
 		return
 	var roles := PmdFx.move_roles(String(mv.get("id", "")))
 	var r := PmdFx.role(roles, "hit")
@@ -141,6 +166,9 @@ func on_hit(
 func beam(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, dur: float) -> void:
 	if not enabled or not is_instance_valid(user) or not arena.is_inside_tree():
 		return
+	if use3d():
+		fx3d.beam(user, mv, dir, length, dur)
+		return
 	var id := BeamFx.beam_for(String(mv.get("id", "")))
 	if id == "" or BeamFx.axis_of(id) != "aim":
 		id = ""
@@ -164,8 +192,8 @@ func beam(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, dur:
 ## Raio do céu (thunder) no ponto. A arena chama isto quando qualquer golpe em área no alvo cai:
 ## além do raio (só quem tem "beam" de eixo "sky"), toca o "land" do look do golpe.
 func sky_bolt(move_id: String, at: Vector3, dur := 0.6, notify := true) -> void:
-	if not enabled or not arena.is_inside_tree():
-		return
+	if not enabled or not arena.is_inside_tree() or use3d():
+		return  # 3D: a área cai por area_land
 	if notify:
 		show.ctx = []
 		show.landed(move_id, at)
@@ -181,6 +209,9 @@ func sky_bolt(move_id: String, at: Vector3, dur := 0.6, notify := true) -> void:
 ## Jorro (stream): flamethrower = jato com shader; outros = partículas PMD que viajam pelo cone.
 func stream(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, dur: float) -> void:
 	if not enabled or not is_instance_valid(user) or not arena.is_inside_tree():
+		return
+	if use3d():
+		fx3d.stream(user, mv, dir, length, dur)
 		return
 	var roles := PmdFx.move_roles(String(mv.get("id", "")))
 	var s := PmdFx.role(roles, "stream")
@@ -209,6 +240,9 @@ func stream(user: BattleFighter, mv: Dictionary, dir: Vector3, length: float, du
 
 ## Ponta do chicote (vine_whip/aqua_tail): papel "tip" na ponta.
 func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -> void:
+	if use3d():
+		fx3d.tip(user, mv, at_local, dir)
+		return
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "tip")
 	if r.is_empty() or not is_instance_valid(user) or not arena.is_inside_tree():
 		return
@@ -217,6 +251,9 @@ func tip(user: BattleFighter, mv: Dictionary, at_local: Vector3, dir: Vector3) -
 
 ## Visual de projétil: papel "travel" (PMD em laço) ou uma orbe brilhante do tipo.
 func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
+	if use3d():
+		fx3d.projectile(p, mv, dir)
+		return
 	show.ctx = [p]
 	show.projectile_trail(p, mv)
 	var r := PmdFx.role(PmdFx.move_roles(String(mv.get("id", ""))), "travel")
@@ -255,6 +292,9 @@ func projectile_look(p: Node3D, mv: Dictionary, dir: Vector3) -> void:
 
 ## Estágio subiu/caiu: anel/linhas coloridas do move_fx.json ("stats").
 func stat_change(f: BattleFighter, key: String, up: bool) -> void:
+	if use3d():
+		fx3d.stat_change(f, key, up)
+		return
 	var st: Dictionary = PmdFx.data().get("stats", {}).get(key, {})
 	var id := String(st.get("up" if up else "down", ""))
 	if id != "" and is_instance_valid(f):
@@ -272,6 +312,34 @@ func status_look(f: BattleFighter, status: String) -> FxSprite:
 	r.billboard = true
 	var k := 1.05 if status in ["sleep", "confusion"] else 0.55
 	return attach(f, String(r.fx), Vector3.FORWARD, r, Vector3(0, f.visual_height() * k, 0))
+
+
+## O golpe começou a preparar (carga antes de soltar): só nos efeitos 3D.
+func prepare(user: BattleFighter, mv: Dictionary, secs: float) -> void:
+	if use3d():
+		fx3d.prepare(user, mv, secs)
+
+
+## Área no alvo começando (windup): o efeito se forma no lugar (3D) em vez do disco no chão.
+func area_pre(
+	user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, windup: float
+) -> void:
+	if use3d():
+		fx3d.area_pre(user, mv, at_local, r, windup)
+
+
+## Área caiu (no alvo ou em volta do usuário), `at_local` em coordenadas da arena.
+func area_land(
+	user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, around_user: bool
+) -> void:
+	if use3d():
+		fx3d.area_land(user, mv, at_local, r, around_user)
+
+
+## Zona que fica no chão (Fire Spin, Whirlpool...).
+func zone_at(user: BattleFighter, mv: Dictionary, at_local: Vector3, r: float, dur: float) -> void:
+	if use3d():
+		fx3d.zone_at(user, mv, at_local, r, dur)
 
 
 # --- Cavar (a mecânica chama via has_method) ---

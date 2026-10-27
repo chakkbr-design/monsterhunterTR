@@ -121,6 +121,8 @@ func use(user: BattleFighter, id: String, feedback := false) -> bool:
 	elif prepare > 0.0:
 		prepare /= maxf(sf, 0.5)
 		_telegraph_prepare(user, mv, prepare)
+		if arena.vfx:
+			arena.vfx.prepare(user, mv, prepare)  # carga visível antes de soltar (efeitos 3D)
 	if asleep:
 		# Snore/Sleep Talk: o lutador age dormindo só enquanto o golpe sai.
 		user.sleep_act_t = maxf(
@@ -159,6 +161,11 @@ func _telegraph_prepare(user: BattleFighter, mv: Dictionary, prepare: float) -> 
 				"r": float(mv.get("range", 1.8)) * 0.8
 			}
 		)
+
+
+## Discos/cones no chão marcando o golpe: só sem os efeitos 3D (lá o próprio efeito avisa).
+func _decals() -> bool:
+	return not (arena.vfx and arena.vfx.use3d())
 
 
 func acc_mult(stage: int) -> float:
@@ -698,14 +705,15 @@ func _arc(
 ) -> void:
 	var r := float(mv.get("range", 1.8))
 	var half := deg_to_rad(float(mv.get("angle", 90))) / 2.0
-	arena.fx_cone(
-		user.position + Vector3(0, user.look_h * 0.4, 0),
-		dir,
-		r,
-		half,
-		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5),
-		0.15
-	)
+	if _decals():
+		arena.fx_cone(
+			user.position + Vector3(0, user.look_h * 0.4, 0),
+			dir,
+			r,
+			half,
+			Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.5),
+			0.15
+		)
 	for t in _victims(user, mv, user.position):
 		if t != miss and in_cone(user, t, dir, r, half):
 			var to := user.flat_to(t)
@@ -746,14 +754,15 @@ func _whip(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 			if victim == null or along < stop:
 				stop = along
 				victim = t
-		arena.fx_beam(
-			user.position + Vector3(0, user.look_h * 0.4, 0),
-			tipdir,
-			stop,
-			0.08,
-			Dex.type_color(String(mv.type)),
-			0.2
-		)
+		if _decals():
+			arena.fx_beam(
+				user.position + Vector3(0, user.look_h * 0.4, 0),
+				tipdir,
+				stop,
+				0.08,
+				Dex.type_color(String(mv.type)),
+				0.2
+			)
 		if arena.vfx:
 			arena.vfx.tip(user, mv, user.position + tipdir * stop, tipdir)
 		if victim != null:
@@ -864,9 +873,10 @@ func _beam(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 		}
 	)
 	var col := Dex.type_color(String(mv.type))
-	arena.fx_beam(
-		user.position + Vector3(0, 0.05, 0), dir, r, w, col * Color(1, 1, 1, 0.35), windup
-	)
+	if _decals():
+		arena.fx_beam(
+			user.position + Vector3(0, 0.05, 0), dir, r, w, col * Color(1, 1, 1, 0.35), windup
+		)
 	arena.later(
 		windup,
 		func() -> void:
@@ -922,7 +932,8 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 	if mv.get("slam", false):
 		phys.slam_hop(user, mv, windup)
 	var col := Dex.type_color(String(mv.type))
-	arena.fx_disc(user.position, radius, col * Color(1, 1, 1, 0.3), windup)
+	if _decals():
+		arena.fx_disc(user.position, radius, col * Color(1, 1, 1, 0.3), windup)
 	arena.telegraph(
 		{
 			"kind": "disc",
@@ -937,7 +948,10 @@ func _aoe_self(user: BattleFighter, mv: Dictionary) -> void:
 		func() -> void:
 			if not is_instance_valid(user) or not user.alive():
 				return
-			arena.fx_disc(user.position, radius, col, 0.25)
+			if _decals():
+				arena.fx_disc(user.position, radius, col, 0.25)
+			if arena.vfx:
+				arena.vfx.area_land(user, mv, user.pos2(user.position), radius, true)
 			if arena.field:
 				arena.field.on_move_landed(user, mv, user.pos2(user.position), radius)
 			var got := _victims(user, mv, user.position).filter(
@@ -979,14 +993,20 @@ func _aoe_target(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: Battle
 	var radius := float(mv.get("radius", 2.0))
 	var at := _area_point(user, mv, dir, miss)
 	var col := Dex.type_color(String(mv.type))
-	arena.fx_disc(at, radius, col * Color(1, 1, 1, 0.3), windup)
+	if _decals():
+		arena.fx_disc(at, radius, col * Color(1, 1, 1, 0.3), windup)
+	elif arena.vfx:
+		arena.vfx.area_pre(user, mv, at, radius, windup)
 	arena.telegraph({"kind": "disc", "side": user.side, "t": windup, "at": at, "r": radius})
 	arena.later(
 		windup,
 		func() -> void:
 			if not is_instance_valid(user) or not user.alive():
 				return
-			arena.fx_disc(at, radius, col, 0.25)
+			if _decals():
+				arena.fx_disc(at, radius, col, 0.25)
+			if arena.vfx:
+				arena.vfx.area_land(user, mv, at, radius, false)
 			if arena.field:
 				arena.field.on_move_landed(user, mv, at, radius)
 			if arena.vfx and arena.is_inside_tree():
@@ -1013,7 +1033,10 @@ func _zone(user: BattleFighter, mv: Dictionary, dir: Vector3, miss: BattleFighte
 	var radius := float(mv.get("radius", 2.0))
 	var dur := float(mv.get("duration", 4.0))
 	var tick := float(mv.get("tick", 0.5))
-	arena.fx_disc(at, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), dur)
+	if _decals():
+		arena.fx_disc(at, radius, Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.25), dur)
+	elif arena.vfx:
+		arena.vfx.zone_at(user, mv, at, radius, dur)
 	if arena.field:
 		arena.field.on_move_landed(user, mv, at, radius)
 	_zone_tick(user, mv, at, radius, tick, int(ceil(dur / tick)))
@@ -1055,12 +1078,13 @@ const DEBUFF_FX_R := 2.5
 
 func _debuff(user: BattleFighter, mv: Dictionary) -> void:
 	var radius := float(mv.get("radius", 6.0))
-	arena.fx_disc(
-		user.position,
-		minf(radius, DEBUFF_FX_R),
-		Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.18),
-		0.3
-	)
+	if _decals():
+		arena.fx_disc(
+			user.position,
+			minf(radius, DEBUFF_FX_R),
+			Dex.type_color(String(mv.type)) * Color(1, 1, 1, 0.18),
+			0.3
+		)
 	var single := multi_target(mv) == ""
 	for t in _victims(user, mv, user.position):
 		if user.flat_to(t).length() > radius or t.hidden != "":

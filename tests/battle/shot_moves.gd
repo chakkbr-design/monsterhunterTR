@@ -4,11 +4,13 @@ extends SceneTree
 ##     moves=ember,thunder out=C:/pasta [sheet=1] [single=1]
 ## sheet=1 (padrão): uma folha PNG por 4 golpes, cada linha = 3 momentos do golpe.
 ## single=1: um PNG em tela cheia por golpe (no momento do meio), para docs/screens.
+## energy=1: modo de energia (efeitos 3D, gfx/fx3d); a 1ª coluna vira a carga antes de soltar.
 ## Golpes que ainda não estão no moves.json usam um kind provisório (GUESS) só para a captura.
 
 const ARENA := "res://battle/battle_arena.tscn"
 const DT := 1.0 / 60.0
 const TILE := Vector2i(400, 250)
+const CHARGE := 0.5
 ## Golpes novos (Gen 9) ainda sem entrada no moves.json deste branch (cópia do gen9-golpes):
 ## [tipo, kind, categoria, poder, extras].
 const GUESS := {
@@ -1133,7 +1135,7 @@ func _main() -> void:
 	var out := String(_args.get("out", ProjectSettings.globalize_path("user://shots")))
 	DirAccess.make_dir_recursive_absolute(out)
 	var a := _arena()
-	await _steps(a, 3.0)
+	await _steps(a, 5.0 if _args.has("energy") else 3.0)
 	var single := _args.has("single")
 	var rows: Array = []
 	var sheet_n := 0
@@ -1221,10 +1223,22 @@ func _shoot(a: Node, mv: Dictionary, single: bool) -> Array:
 	p.facing = (e.position - p.position).normalized()
 	await _steps(a, 0.1)
 	_label.text = "%s  (%s, %s)" % [String(mv.id), String(mv.kind), String(mv.type)]
-	a.moves.deliver(p, mv)
 	var imgs: Array = []
-	var t := 0.0
 	var times := _times(mv)
+	if _args.has("energy") and not single:
+		# Carga (prepare) antes de soltar: 1ª coluna no meio dela.
+		a.vfx.prepare(p, mv, CHARGE)
+		var ct := 0.0
+		while ct < CHARGE * 0.7:
+			a.step(DT)
+			ct += DT
+		imgs.append(await _grab(a, single))
+		while ct < CHARGE:
+			a.step(DT)
+			ct += DT
+		times = [times[1], times[2]]
+	a.moves.deliver(p, mv)
+	var t := 0.0
 	if single:
 		times = [times[1]]
 	for want in times:
@@ -1281,7 +1295,15 @@ func _arena() -> Node:
 	a.start(
 		[p],
 		[Mon.create("rattata", 100)],
-		{"seed": 3, "battle_size": 1, "kind": "wild", "speed": 1.0, "field_objects": false}
+		{
+			"seed": 3,
+			"battle_size": 1,
+			"kind": "wild",
+			"speed": 1.0,
+			"field_objects": false,
+			"battle_mode": "energy" if _args.has("energy") else "vgc",
+			"no_rewards": true
+		}
 	)
 	return a
 
