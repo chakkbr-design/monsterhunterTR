@@ -37,6 +37,8 @@ func begin() -> void:
 	arena.energy_pause = "regroup"
 	t = 0.0
 	_fresh = true
+	if arena.telemetry:
+		arena.telemetry.note("regroup_begin")
 
 
 ## Passo do reagrupar (dt de luta). Devolve true quando a luta volta.
@@ -114,6 +116,8 @@ func home() -> bool:
 
 func _finish() -> void:
 	arena.energy_pause = ""
+	if arena.telemetry:
+		_report()
 	for f in arena.fighters:
 		if is_instance_valid(f) and f.active():
 			f.velocity = Vector3.ZERO
@@ -122,6 +126,21 @@ func _finish() -> void:
 				f.facing = f.flat_to(foe).normalized()
 	if arena.hud and not bool(arena.opts.get("fast_sim", false)) and arena.state == "fight":
 		arena.hud.fight_flash("Fight!")
+
+
+## Bateria: quanto o reagrupar durou, se estourou o teto e quem ficou longe do ponto de entrada.
+func _report() -> void:
+	var far := []
+	for f in arena.fighters:
+		if is_instance_valid(f) and f.active():
+			var d: Vector3 = start_of(f) - f.position
+			d.y = 0.0
+			if d.length() > NEAR:
+				far.append({"id": arena.telemetry.uid(f), "d": snappedf(d.length(), 0.01)})
+	arena.telemetry.note(
+		"regroup_end",
+		{"secs": snappedf(t, 0.01), "timeout": t >= MAX_SECS, "filled": filled(), "far": far}
+	)
 
 
 ## Anda (passo normal, sem correr) até o ponto de entrada, contornando o relevo.
