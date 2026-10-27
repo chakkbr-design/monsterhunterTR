@@ -46,6 +46,7 @@ var _speed: OptionButton
 var _seed: SpinBox
 var _turbo: CheckBox
 var _legends: CheckBox
+var _clean: CheckBox
 var _battle: OptionButton
 var _p1: OptionButton
 var _scenario: OptionButton
@@ -300,6 +301,12 @@ func set_random_legends(on: bool) -> void:
 
 func set_turbo(on: bool) -> void:
 	cfg["turbo"] = on
+	_refresh_all()
+
+
+## No HUD: a luta sem HUD nenhum (só dano e efeitos) e com o arquivo da partida, para gravar vídeo.
+func set_clean_hud(on: bool) -> void:
+	cfg["clean_hud"] = on
 	_refresh_all()
 
 
@@ -977,6 +984,16 @@ func _build_top() -> Control:
 	_legends.tooltip_text = "Random teams can roll legendary, mythical and Ultra Beast Pokémon"
 	_legends.toggled.connect(_on_legends)
 	r2.add_child(_legends)
+	_clean = CheckBox.new()
+	_clean.text = "No HUD"
+	_clean.focus_mode = Control.FOCUS_NONE
+	_clean.tooltip_text = (
+		"For recording videos: hides every panel and button (HP bars over the heads, damage numbers"
+		+ " and effects stay)"
+		+ " and saves a match file in user://matches"
+	)
+	_clean.toggled.connect(_on_clean)
+	r2.add_child(_clean)
 	r2.add_child(_small("Limit (s)"))
 	_limit = _spin(0, 3600, 5.0, 72)
 	_limit.tooltip_text = "Maximum game time; past it the fight ends without a winner (0 = none)"
@@ -1286,6 +1303,7 @@ func _refresh_all() -> void:
 	_limit.value = int(cfg.get("time_limit", 0))
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
 	_legends.set_pressed_no_signal(bool(cfg.get("random_legends", false)))
+	_clean.set_pressed_no_signal(bool(cfg.get("clean_hud", false)))
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
 	_scenario.select(maxi(Cfg.SCENARIOS.find(Cfg.scenario(cfg)) + 1, 0))
@@ -1478,6 +1496,11 @@ func _on_legends(on: bool) -> void:
 func _on_turbo(on: bool) -> void:
 	if not _syncing:
 		set_turbo(on)
+
+
+func _on_clean(on: bool) -> void:
+	if not _syncing:
+		set_clean_hud(on)
 
 
 func _on_battle(i: int) -> void:

@@ -9,8 +9,13 @@ extends RefCounted
 ##   se pegou), status aplicado/curado, dano residual, desmaio, entrada, esquiva, eventos do terreno, passivas.
 ## - samples: a cada SAMPLE s, o estado de cada lutador em campo (posição, chão, HP, energia, status,
 ##   estágios, estado da IA, alvo, distância, parede, água, alto, grama, descanso, corrida, ânimo, comando).
+## - track (para montar vídeo, tools/video/): a cada TRACK s de vídeo, a vida de todo Pokémon dos dois
+##   times (em campo ou no banco), quem está em campo e o estado da arena. O relógio do vídeo (vt) é o
+##   tempo real de quadro (frame(), uma vez por quadro de física, desde a arena começar): conta a
+##   abertura, as trocas paradas e a câmera lenta, que o t da luta não conta. Todo evento leva o vt.
 
 const SAMPLE := 0.25
+const TRACK := 0.1
 
 var arena: Node
 var path := ""
@@ -22,6 +27,12 @@ var ids := {}
 var entered_at := {}
 var meta := {}
 var _n := 0
+## Relógio do vídeo (segundos reais de quadro desde a arena começar) e a linha do tempo da vida.
+var vt := 0.0
+var _track_t := 0.0
+var track: Array = []
+## Quadro desenhado quando a arena começou (com --write-movie, o quadro do vídeo onde vt = 0).
+var frame0 := 0
 
 
 func _init(a: Node, p: String) -> void:
@@ -29,6 +40,7 @@ func _init(a: Node, p: String) -> void:
 	path = p
 	arena.move_used.connect(_on_move)
 	arena.dodged.connect(func(f, what): ev("dodge", {"who": uid(f), "what": what}))
+	frame0 = Engine.get_frames_drawn()
 
 
 ## Id curto e estável do lutador: lado, posição no time e espécie ("0:2:pikachu").
@@ -44,6 +56,7 @@ func uid(f) -> String:
 
 func ev(kind: String, data: Dictionary) -> void:
 	data["t"] = snappedf(t, 0.01)
+	data["vt"] = snappedf(vt, 0.001)
 	data["ev"] = kind
 	events.append(data)
 
@@ -201,6 +214,47 @@ func step(dt: float) -> void:
 	samples.append({"t": snappedf(t, 0.01), "f": rows})
 
 
+## Um quadro de física (dt real, uma vez por quadro, mesmo com a arena em vários passos): anda o
+## relógio do vídeo e grava a vida dos dois times a cada TRACK s.
+func frame(dt: float) -> void:
+	vt += dt
+	_track_t -= dt
+	if _track_t > 0.0:
+		return
+	_track_t = TRACK
+	track.append(snapshot())
+
+
+## Vida de todo Pokémon dos dois times agora: {vt, t, st, hp: [[hp, ...], [...]], on: [[i, ...], [...]]}.
+## hp em pontos de batalha (os do banco convertidos do Mon), on = índices no time de quem está em campo.
+func snapshot() -> Dictionary:
+	var by_mon := {}
+	for f in arena.fighters:
+		if is_instance_valid(f):
+			by_mon[f.mon] = f
+	var hp: Array = [[], []]
+	var on: Array = [[], []]
+	for side in 2:
+		var team: Array = arena.party if side == 0 else arena.enemies
+		for i in team.size():
+			var m = team[i]
+			var f = by_mon.get(m)
+			if f and f.on_field and f.alive():
+				hp[side].append(maxi(f.hp, 0))
+				on[side].append(i)
+			elif m.is_fainted():
+				hp[side].append(0)
+			else:
+				hp[side].append(BattleFighter.hp_from_mon(m.hp))
+	return {
+		"vt": snappedf(vt, 0.001),
+		"t": snappedf(t, 0.01),
+		"st": String(arena.get("state")),
+		"hp": hp,
+		"on": on,
+	}
+
+
 func finish(result: Dictionary) -> void:
 	if path == "":
 		return
@@ -210,6 +264,9 @@ func finish(result: Dictionary) -> void:
 			teams[side].append(
 				{
 					"sp": m.species,
+					"name": m.display_name,
+					"lv": m.level,
+					"max": BattleFighter.hp_from_mon(m.max_hp),
 					"types": Dex.species(m.species).get("types", []),
 					"moves":
 					m.moves.map(func(e): return String(e.id) if e is Dictionary else String(e)),
@@ -218,12 +275,25 @@ func finish(result: Dictionary) -> void:
 					"fainted": m.is_fainted(),
 				}
 			)
+	track.append(snapshot())
 	var out := {
 		"meta": meta,
-		"result": {"outcome": String(result.get("outcome", "")), "time": snappedf(t, 0.01)},
+		"result":
+		{
+			"outcome": String(result.get("outcome", "")),
+			"time": snappedf(t, 0.01),
+			"vt": snappedf(vt, 0.001),
+		},
+		"video":
+		{
+			"frame0": frame0,
+			"physics_fps": Engine.physics_ticks_per_second,
+			"track_step": TRACK,
+		},
 		"teams": teams,
 		"events": events,
 		"samples": samples,
+		"track": track,
 	}
 	var fa := FileAccess.open(path, FileAccess.WRITE)
 	if fa:

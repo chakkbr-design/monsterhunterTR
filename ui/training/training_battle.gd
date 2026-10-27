@@ -8,6 +8,17 @@ extends Node3D
 ## arquibancadas com torcida, refletores, placares ao vivo, céu e luz pela hora "time_of_day"),
 ## montado uma vez por cena e repintado pelo cenário de cada luta.
 ## Esc para a luta e volta para a tela de montar.
+## "No HUD" (cfg.clean_hud): a luta sem nenhum HUD (só os números de dano e os efeitos), um clarão
+## branco de 3 quadros quando a arena começa (marca de sincronia para gravação de tela) e o arquivo da
+## partida (BattleTelemetry com a linha do tempo da vida) em user://matches/. Com ele,
+## tools/video/make_vertical.py monta o vídeo vertical com o HUD do vídeo por cima.
+## Linha de comando (depois de "--"), para gravar sozinho com --write-movie (tools/video/record.sh):
+##   --training-config=<json>  times e opções no formato de training.json (o treino salvo não muda)
+##   --clean-hud               liga o No HUD
+##   --match-file=<json>       onde gravar o arquivo da partida
+##   --portrait=1080x1920      a imagem do jogo nesse tamanho (a janela mostra em escala) e a câmera
+##                             deixa livres as faixas do HUD do vídeo (PORTRAIT_BAND)
+##   --quit-at-end             fecha o jogo END_HOLD s depois do fim da luta
 
 const Cfg := preload("res://ui/training/training_config.gd")
 const Kit := preload("res://ui/ui_kit.gd")
@@ -29,6 +40,14 @@ const GROUND := Color(0.36, 0.55, 0.3)
 const WAVE_FIRST := 12.0
 const WAVE_GAP := 45.0
 const WAVE_JITTER := 30.0
+## Com --quit-at-end: segundos de imagem depois do fim da luta antes de fechar.
+const END_HOLD := 3.0
+## Clarão de sincronia do No HUD (quadros brancos na tela inteira quando a arena começa).
+const FLASH_FRAMES := 3
+const MATCHES_DIR := "user://matches"
+## Vídeo vertical (--portrait): faixas de cima e de baixo da tela (frações) que o HUD do vídeo cobre;
+## a câmera de ação enquadra a luta entre elas (BattleDirector._band). Casa com make_vertical.py.
+const PORTRAIT_BAND := [0.24, 0.3]
 
 ## Placar da série enquanto a config não muda (sobrevive a "Repeat").
 ## Com semente fixa, a luta k da série usa semente + k (n): nunca repete uma luta já contada.
@@ -70,11 +89,17 @@ var _down := [0, 0]
 var _wave_in := WAVE_FIRST
 ## Texto grande no telão durante a abertura da luta ("VS", "FIGHT!"; arena.opening_beat).
 var _headline := ""
+## Opções da linha de comando (--chave=valor, --chave = true).
+var _cli := {}
+var _top: Control
+## Arquivo da partida da luta atual ("" sem No HUD).
+var match_file := ""
 
 
 func _ready() -> void:
 	Cfg.block_pause_menu(get_tree(), true)
 	cfg = Cfg.current if not Cfg.current.is_empty() else Cfg.load_config()
+	_read_cli()
 	var key := JSON.stringify(cfg)
 	if String(series.key) != key:
 		series = {"key": key, "a": 0, "b": 0, "draw": 0, "n": 0}
@@ -99,6 +124,41 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Cfg.block_pause_menu(get_tree(), false)
+
+
+func _read_cli() -> void:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--"):
+			var kv := a.substr(2).split("=", true, 1)
+			_cli[kv[0]] = kv[1] if kv.size() > 1 else "true"
+	if _cli.has("training-config"):
+		var f := FileAccess.open(String(_cli["training-config"]), FileAccess.READ)
+		var d = JSON.parse_string(f.get_as_text()) if f else null
+		if d is Dictionary and d.get("sides") is Array and d.sides.size() == Cfg.SIDES:
+			cfg = d
+			Cfg.current = cfg
+		else:
+			push_error("--training-config: could not read %s" % _cli["training-config"])
+	if _cli.has("clean-hud"):
+		cfg["clean_hud"] = true
+	if _cli.has("portrait"):
+		var wh := String(_cli["portrait"]).split("x")
+		var size := Vector2i(int(wh[0]), int(wh[1])) if wh.size() == 2 else Vector2i(1080, 1920)
+		var root := get_tree().root
+		root.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+		root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+		root.content_scale_size = size
+		# A janela mostra em escala, inteira na tela.
+		if DisplayServer.get_name() != "headless":
+			var scr := DisplayServer.screen_get_usable_rect()
+			var k := minf(scr.size.y * 0.9 / size.y, scr.size.x * 0.9 / size.x)
+			root.size = Vector2i(roundi(size.x * k), roundi(size.y * k))
+			root.position = scr.position + (scr.size - root.size) / 2
+
+
+## No HUD (cfg.clean_hud): sem HUD e com o arquivo da partida.
+func clean_hud() -> bool:
+	return bool(cfg.get("clean_hud", false))
 
 
 # --- Cenário ---
@@ -231,6 +291,22 @@ func start_fight() -> void:
 	if not o.has("opening"):
 		o["opening"] = true
 	o["opening_names"] = [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)]
+	match_file = ""
+	if clean_hud():
+		o["clean_hud"] = true
+		if _cli.has("portrait"):
+			o["frame_band"] = PORTRAIT_BAND
+		if String(o.get("telemetry", "")) == "":
+			match_file = _match_path()
+			o["telemetry"] = match_file
+			o["telemetry_meta"] = {
+				"names": [Cfg.side_name(cfg, 0), Cfg.side_name(cfg, 1)],
+				"seed": last_seed,
+				"battle_size": int(cfg.get("battle_size", 2)),
+				"scenario": Cfg.scenario(cfg),
+				"time_of_day": Cfg.time_of_day(cfg),
+				"sync_flash_frames": FLASH_FRAMES,
+			}
 	if _stadium:
 		o["opening_screen"] = _stadium.screen_corners()
 	_headline = ""
@@ -247,11 +323,38 @@ func start_fight() -> void:
 	if arena.has_signal("opening_beat"):
 		arena.opening_beat.connect(_on_opening_beat)
 	arena.start(team_a, team_b, o)
+	if clean_hud():
+		_sync_flash()
 	_paint_stage()
 	_fit_camera()
 	var help = arena.hud.get("_help") if arena.get("hud") else null
 	if help is Control and not bool(o.get("keyboard", false)):
 		help.visible = false  # teclas do jogador: ninguém controla nada no treino (manual: ficam)
+
+
+## user://matches/<data e hora>.json (ou o --match-file); a pasta é criada se faltar.
+func _match_path() -> String:
+	if _cli.has("match-file") and int(series.n) == 0:
+		return String(_cli["match-file"])
+	DirAccess.make_dir_recursive_absolute(MATCHES_DIR)
+	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
+	return "%s/match_%s_%d.json" % [MATCHES_DIR, stamp, int(series.n)]
+
+
+## Clarão branco na tela inteira (acima da tela de load) por FLASH_FRAMES quadros: no vídeo gravado,
+## o primeiro quadro branco é o vt 0 do arquivo da partida.
+func _sync_flash() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 120
+	var rect := ColorRect.new()
+	rect.color = Color.WHITE
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(rect)
+	add_child(layer)
+	for i in FLASH_FRAMES:
+		await get_tree().process_frame
+	layer.queue_free()
 
 
 ## Solta a arena atual sem deixar ela terminar depois (Parar, Repetir).
@@ -280,6 +383,10 @@ func _physics_process(dt: float) -> void:
 		if fighting and is_instance_valid(a):
 			fight_time += dt * float(a.get("fight_speed")) * float(a.call("cine_scale"))
 			_check_time_limit()
+	# Relógio do vídeo do arquivo da partida: um quadro real, mesmo com vários passos por quadro.
+	var tel = arena.get("telemetry") if is_instance_valid(arena) else null
+	if tel:
+		tel.frame(dt)
 
 
 ## A câmera da arena olha o meio entre o jogador e o 1º mon do adversário; aqui olha o centro da
@@ -366,6 +473,8 @@ static func _alive_list(team: Array) -> Array:
 func _on_finished(r: Dictionary) -> void:
 	result = r
 	_keep_log()
+	if match_file != "":
+		print("Match file: ", ProjectSettings.globalize_path(match_file))
 	var outcome := String(r.get("outcome", ""))
 	if _stadium and outcome in ["win", "lose"]:
 		_stadium.cheer(0 if outcome == "win" else 1, 1.0)
@@ -381,12 +490,20 @@ func _on_finished(r: Dictionary) -> void:
 		auto_left -= 1
 		_next_with_loading.call_deferred()
 		return
+	if _cli.has("quit-at-end"):
+		await get_tree().create_timer(END_HOLD).timeout
+		get_tree().quit()
+		return
 	_show_result()
 
 
 func stop_fight() -> void:
 	auto_left = 0
 	_keep_log()
+	# No HUD parado no meio: o arquivo da partida fica com o que já aconteceu.
+	var tel = arena.get("telemetry") if is_instance_valid(arena) else null
+	if tel and String(arena.get("state")) in ["opening", "intro", "fight", "capture"]:
+		tel.finish({"outcome": "stopped"})
 	_drop_arena()
 	_show_result()
 
@@ -442,6 +559,7 @@ func _build_ui() -> void:
 	top.offset_bottom = -36
 	top.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	root.add_child(top)
+	_top = top
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	top.add_child(row)
@@ -493,6 +611,7 @@ func _refresh_info() -> void:
 		s += "   ·   %d left" % auto_left
 	_info.text = s
 	_stop.visible = not _result_box.visible
+	_top.visible = not clean_hud()
 
 
 ## "2/3": Pokémon de pé no time.

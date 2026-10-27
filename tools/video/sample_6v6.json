@@ -1,0 +1,160 @@
+{
+ "sides": [
+  {
+   "name": "Team Red",
+   "item": "",
+   "think_scale": 1.0,
+   "mons": [
+    {
+     "species": "Charizard",
+     "moves": [
+      "flamethrower",
+      "air_slash",
+      "dragon_pulse",
+      "focus_blast"
+     ],
+     "nature": "timid",
+     "hp_pct": 100
+    },
+    {
+     "species": "Snorlax",
+     "moves": [
+      "body_slam",
+      "crunch",
+      "earthquake",
+      "rest"
+     ],
+     "nature": "adamant",
+     "hp_pct": 100
+    },
+    {
+     "species": "Lapras",
+     "moves": [
+      "surf",
+      "ice_beam",
+      "thunderbolt",
+      "sing"
+     ],
+     "nature": "modest",
+     "hp_pct": 100
+    },
+    {
+     "species": "Venusaur",
+     "moves": [
+      "giga_drain",
+      "sludge_bomb",
+      "earth_power",
+      "sleep_powder"
+     ],
+     "nature": "modest",
+     "hp_pct": 100
+    },
+    {
+     "species": "Jolteon",
+     "moves": [
+      "thunderbolt",
+      "shadow_ball",
+      "volt_switch",
+      "thunder_wave"
+     ],
+     "nature": "timid",
+     "hp_pct": 100
+    },
+    {
+     "species": "Machamp",
+     "moves": [
+      "close_combat",
+      "knock_off",
+      "stone_edge",
+      "bulk_up"
+     ],
+     "nature": "adamant",
+     "hp_pct": 100
+    }
+   ]
+  },
+  {
+   "name": "Team Blue",
+   "item": "",
+   "think_scale": 1.0,
+   "mons": [
+    {
+     "species": "Gengar",
+     "moves": [
+      "shadow_ball",
+      "sludge_bomb",
+      "thunderbolt",
+      "will_o_wisp"
+     ],
+     "nature": "timid",
+     "hp_pct": 100
+    },
+    {
+     "species": "Gyarados",
+     "moves": [
+      "waterfall",
+      "crunch",
+      "earthquake",
+      "dragon_dance"
+     ],
+     "nature": "jolly",
+     "hp_pct": 100
+    },
+    {
+     "species": "Arcanine",
+     "moves": [
+      "flare_blitz",
+      "extreme_speed",
+      "crunch",
+      "wild_charge"
+     ],
+     "nature": "adamant",
+     "hp_pct": 100
+    },
+    {
+     "species": "Alakazam",
+     "moves": [
+      "psychic",
+      "dazzling_gleam",
+      "focus_blast",
+      "calm_mind"
+     ],
+     "nature": "timid",
+     "hp_pct": 100
+    },
+    {
+     "species": "Nidoking",
+     "moves": [
+      "earth_power",
+      "sludge_wave",
+      "ice_beam",
+      "thunderbolt"
+     ],
+     "nature": "modest",
+     "hp_pct": 100
+    },
+    {
+     "species": "Starmie",
+     "moves": [
+      "hydro_pump",
+      "psychic",
+      "ice_beam",
+      "thunderbolt"
+     ],
+     "nature": "timid",
+     "hp_pct": 100
+    }
+   ]
+  }
+ ],
+ "speed": 1.0,
+ "seed": 2026,
+ "turbo": false,
+ "time_limit": 0,
+ "battle_size": 2,
+ "scenario": "campo",
+ "time_of_day": "dia",
+ "p1_control": "ai",
+ "random_legends": false,
+ "clean_hud": true
+}

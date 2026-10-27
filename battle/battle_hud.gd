@@ -58,6 +58,8 @@ var _pause_bg: PanelContainer
 var _pause: Label
 var _mode_btns := {"player": [], "ally": []}
 var quiet := false
+## Sem HUD (arena.clean_hud): só os popups da luta (números de dano) ficam; o resto some.
+var clean := false
 ## Painel de EXP do fim da batalha (a arena chama begin/step).
 var exp_panel: Control
 ## Textos que apareceram na tela da luta, para os testes: [{kind, text}] (os últimos SHOWN_MAX).
@@ -449,6 +451,9 @@ func refresh(
 		b.body = player if is_instance_valid(player) else null
 		b.visible = b.body != null and bool(info.get("show_moves", true))
 		b.queue_redraw()
+	if clean:
+		for c in _root.get_children():
+			c.visible = c == _pops
 
 
 func _marks_of(marks: Dictionary, f: BattleFighter) -> Array:
