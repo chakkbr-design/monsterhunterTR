@@ -423,7 +423,8 @@ func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> voi
 		_marks[tid].m.erase(r.mark)
 	var col := Dex.type_color(String(r.color))
 	_notify(String(r.name), col)
-	arena.fx_disc(target.pos2(target.position), 1.2, col * Color(1, 1, 1, 0.6), 0.35)
+	if not _fx3d():
+		arena.fx_disc(target.pos2(target.position), 1.2, col * Color(1, 1, 1, 0.6), 0.35)
 	_pixel_burst(target, String(r.color), 2.0 if not r.has("area") else float(r.area[1]) * 1.6)
 	if String(r.id) == "freeze":
 		_pixel_burst_key(target, "snow", 1.2, 0.6)
@@ -445,10 +446,28 @@ func _detonate(user: BattleFighter, target: BattleFighter, r: Dictionary) -> voi
 
 ## Estouro de pixel art no alvo, pela cor/tipo (Sprite3D animado; sem arte nada acontece).
 func _pixel_burst(target: BattleFighter, type: String, size: float) -> void:
+	if _fx3d():
+		var fx: MoveFx3D = arena.vfx.fx3d
+		var c := fx.center(target, 0.5)
+		fx.element(type, c, int(10 + size * 6.0), {"k": clampf(size * 0.5, 0.6, 1.8)})
+		fx.flash(c, size * 0.6, Fx3DKit.core(type), 0.14)
+		fx.light(c, Fx3DKit.lightc(type), 3.0, size * 2.0 + 2.0, 0.3)
+		return
 	_pixel_burst_key(target, PixelFx.key_for_type(type), size, 0.5)
 
 
+## Golpes e combos do modo de energia usam os efeitos 3D (gfx/fx3d).
+func _fx3d() -> bool:
+	return arena.vfx != null and arena.vfx.use3d()
+
+
 func _pixel_burst_key(target: BattleFighter, key: String, size: float, life: float) -> void:
+	if _fx3d():
+		var t3 := {"snow": "ice", "sparkle": "fairy"}.get(key, "normal") as String
+		arena.vfx.fx3d.element(
+			t3, arena.vfx.fx3d.center(target, 0.5), int(8 + size * 6.0), {"k": 0.9}
+		)
+		return
 	var at := target.pos2(target.position)
 	PixelFx.pop(arena, key, Vector3(at.x, maxf(target.look_h, 0.8) * 0.6, at.z), size, life)
 
@@ -558,7 +577,10 @@ func _area_hit(
 	var at := center.pos2(center.position)
 	var mv := _synth("combo_area", "Combo", ty, power, radius)
 	mv.merge(extra, true)
-	arena.fx_disc(at, radius, Dex.type_color(ty) * Color(1, 1, 1, 0.45), 0.3)
+	if _fx3d():
+		arena.vfx.fx3d.burst_area(mv, arena.vfx.fx3d.gpos(at), radius, 0.9)
+	else:
+		arena.fx_disc(at, radius, Dex.type_color(ty) * Color(1, 1, 1, 0.45), 0.3)
 	arena.later(
 		0.05,
 		func() -> void:
@@ -617,8 +639,12 @@ func _fire_duo(u1: BattleFighter, u2: BattleFighter, duo: Dictionary) -> void:
 		arena.popup(
 			mid_at + Vector3(0, 2.2, 0), String(duo.name).to_upper() + "!", col, 2.2, "super"
 		)
-	arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
-	arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
+	if _fx3d():
+		for u in [u1, u2]:
+			arena.vfx.fx3d.charge(u, {"type": String(duo.type), "power": 90}, DUO_DELAY, 1.1)
+	else:
+		arena.fx_disc(u1.pos2(u1.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
+		arena.fx_disc(u2.pos2(u2.position), 1.2, col * Color(1, 1, 1, 0.5), 0.5)
 	_pixel_burst_key(u1, "sparkle", 1.4, 0.5)
 	_pixel_burst_key(u2, "sparkle", 1.4, 0.5)
 	arena.later(DUO_DELAY, func() -> void: _duo_effect(u1, u2, target, duo))
@@ -640,9 +666,17 @@ func _duo_effect(
 	match String(duo.effect):
 		"field":
 			_run_field(u1, at, duo, extra, int(ceil(float(duo.duration) / float(duo.tick))))
-			arena.fx_disc(
-				at, radius, Dex.type_color(ty) * Color(1, 1, 1, 0.35), float(duo.duration)
-			)
+			if _fx3d():
+				arena.vfx.fx3d.vortex(
+					{"type": ty, "power": float(duo.power)},
+					arena.vfx.fx3d.gpos(at),
+					radius,
+					float(duo.duration)
+				)
+			else:
+				arena.fx_disc(
+					at, radius, Dex.type_color(ty) * Color(1, 1, 1, 0.35), float(duo.duration)
+				)
 		"buff_team":
 			for f in [u1, u2]:
 				if _ok(f):
@@ -681,7 +715,7 @@ func _run_field(
 		"combo_field", String(duo.name), String(duo.type), float(duo.power), float(duo.radius)
 	)
 	mv.merge(extra, true)
-	if left < int(ceil(float(duo.duration) / float(duo.tick))):
+	if left < int(ceil(float(duo.duration) / float(duo.tick))) and not _fx3d():
 		PixelFx.pop(
 			arena,
 			PixelFx.key_for_type(String(duo.type)),
@@ -702,6 +736,9 @@ func _run_field(
 ## spiral = espiral subindo, sparkle = faíscas em volta. Cada estouro entra com um atraso curto.
 func _duo_vis(at: Vector3, duo: Dictionary) -> void:
 	if bool(arena.opts.get("fast_sim", false)):
+		return
+	if _fx3d():
+		_duo_vis3d(at, duo)
 		return
 	var ty := String(duo.type)
 	var key := PixelFx.key_for_type(ty)
@@ -740,3 +777,88 @@ func _duo_vis(at: Vector3, duo: Dictionary) -> void:
 				size = r * 0.5
 		arena.later(delay + 0.01, func() -> void: PixelFx.pop(arena, key, pos, size, 0.5))
 	arena.fx_disc(at, r, Dex.type_color(ty) * Color(1, 1, 1, 0.3), 0.6)
+
+
+## Golpe de dupla em 3D (mesmos estilos do _duo_vis): ring, pillar, rain, bolts, spiral, sparkle.
+func _duo_vis3d(at_local: Vector3, duo: Dictionary) -> void:
+	var fx: MoveFx3D = arena.vfx.fx3d
+	var ty := String(duo.type)
+	var r := float(duo.radius)
+	var mv := {"type": ty, "power": maxf(float(duo.get("power", 90)), 90.0), "category": "special"}
+	var at := fx.gpos(at_local)
+	at.y = fx.floor_y()
+	match String(duo.get("vis", "ring")):
+		"pillar":
+			fx.tube(
+				at, Vector3.UP, 5.0, r * 0.45, Fx3DKit.mid(ty, 0.9), 0.7, {"noise": 0.8, "l0": 0.1}
+			)
+			fx.tube(at, Vector3.UP, 5.0, r * 0.2, Fx3DKit.core(ty), 0.6, {"noise": 0.4, "l0": 0.1})
+			fx.element(
+				ty,
+				at + Vector3(0, 0.5, 0),
+				40,
+				{"dir": Vector3.UP, "spread": 0.3, "speed": [4.0, 9.0], "k": 1.3, "r": r * 0.4}
+			)
+		"rain":
+			for i in 14:
+				var q := (
+					at
+					+ (
+						Vector3(randf_range(-r, r), 5.0 + randf() * 2.0, randf_range(-r, r))
+						* Vector3(0.8, 1, 0.8)
+					)
+				)
+				fx.later(
+					randf() * 0.4,
+					func() -> void:
+						fx.burst(
+							q,
+							{
+								"n": 6,
+								"shape": Fx3D.Shape.SPARK,
+								"stretch": 0.06,
+								"speed": [8.0, 11.0],
+								"life": [0.5, 0.6],
+								"size": [0.2, 0.12],
+								"col": [Fx3DKit.core(ty), Fx3DKit.mid(ty, 0.6)],
+								"dir": Vector3.DOWN,
+								"spread": 0.05,
+								"floor": true
+							}
+						)
+				)
+			fx.later(0.5, fx.burst_area.bind(mv, at, r, 1.0))
+		"bolts":
+			for i in 6:
+				var q2 := at + Vector3(randf_range(-r, r) * 0.8, 0, randf_range(-r, r) * 0.8)
+				fx.later(
+					0.07 * i,
+					func() -> void:
+						fx.bolt(
+							q2 + Vector3(0, 6, 0),
+							q2,
+							Fx3DKit.mid(
+								"electric" if ty in ["electric", "ground", "steel"] else ty
+							),
+							0.06,
+							0.25,
+							{"branches": 1}
+						)
+						fx.element(
+							ty, q2 + Vector3(0, 0.2, 0), 10, {"dir": Vector3.UP, "spread": 1.0}
+						)
+				)
+		"spiral":
+			fx.vortex(mv, at, r, 0.9, 1.3)
+		_:
+			fx.burst_area(mv, at, r, 1.2)
+			for i in 8:
+				var a := TAU * float(i) / 8.0
+				var q3 := at + Vector3(cos(a), 0.3, sin(a)) * r * 0.8
+				fx.later(
+					0.04 * i,
+					func() -> void:
+						fx.element(ty, q3, 10, {"dir": Vector3.UP, "spread": 0.6, "k": 1.1})
+				)
+	fx.light(at + Vector3(0, 1.5, 0), Fx3DKit.lightc(ty), 8.0, r * 3.0 + 3.0, 0.8, {"attack": 0.1})
+	fx.shake(0.12, 0.4)

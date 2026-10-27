@@ -84,6 +84,12 @@ const TRAINER_SIDE := 2.2
 const SEND_FLIGHT := 0.45
 const SEND_OPEN := 0.3
 const RECALL_BEAM := 0.3
+## Recolher pela bola com a câmera de ação: ida até atrás do Pokémon, ele entra, volta para a mão.
+const RECALL_OUT := 0.28
+const RECALL_IN := 0.3
+const RECALL_BACK := 0.3
+const RECALL_TOTAL := RECALL_OUT + RECALL_IN + RECALL_BACK
+const RECALL_RED := Color(1.0, 0.25, 0.2)
 const BATTLE_ITEM_CATEGORIES := ["medicine", "berries"]
 ## Quadra fixa, valores do original (battle.gd start_trainer_battle / start_battle, battle_arena.gd):
 ## sem `arena` o tamanho é 10 x 6; os treinadores ficam 0.3 m fora da borda no eixo X (jogador a oeste);
@@ -218,6 +224,13 @@ var _cam: Camera3D
 var _prev_cam: Camera3D
 var _yaw := 0.0
 var _swap_cd := 0.0
+## Modo de energia (Caio, 2026-10-27): troca voluntária (Tab, IA de treinador, U-turn/Volt Switch/
+## Baton Pass, Emergency Exit) só depois de SWITCH_OPEN s de luta, e cada troca trava as trocas dos
+## dois lados por SWITCH_LOCK s (um treinador por vez). Substituto de quem desmaiou não conta.
+const SWITCH_OPEN := 5.0
+const SWITCH_LOCK := 5.0
+var fight_clock := 0.0  ## segundos de luta de verdade (sem abertura, pausa nem troca)
+var switch_lock := 0.0
 var _ball_fetched := false  ## Ball Fetch já buscou a bola desta luta
 var _capture := {}
 var _think_scale := 1.0
@@ -1152,9 +1165,114 @@ func throw_ball_fx(side: int, to: Vector3, on_open: Callable, who: BattleFighter
 		e.ground = maxf(to.y, 0.0)
 		e.to = Vector3(to.x, e.ground + PokeBall3D.R * BallShow.BALL_SCALE, to.z)
 		e.peak = 2.0 + from.distance_to(e.to) * 0.12
+		e.t = -_recall_left(side)
 	_balls.append(e)
 	if director:
 		director.on_send(side, to)
+
+
+## Recolher com a câmera de ação (Caio, 2026-10-27): o treinador joga a bola até atrás do Pokémon,
+## ela abre, o Pokémon vira luz vermelha e entra, a bola fecha e volta para a mão; a bola do novo só
+## sai depois (throw_ball_fx espera a volta). Só visual: o Pokémon já saiu do campo na hora.
+func _recall_ball(f: BattleFighter) -> void:
+	var ball := PokeBall3D.create()
+	add_child(ball)
+	ball.scale = Vector3.ONE * BallShow.BALL_SCALE
+	var from := _hand(f.side)
+	ball.position = from
+	var away := (f.position - trainer_spot(f.side)) * Vector3(1, 0, 1)
+	away = away.normalized() if away.length() > 0.01 else Vector3.RIGHT
+	var spot := f.position * Vector3(1, 0, 1) + away * 0.9
+	spot.y = maxf(f.position.y, 0.0) + 1.0
+	var copy: Sprite3D = null
+	var src: Sprite3D = f.look.sprite() if f.look else null
+	if src and src.is_inside_tree():
+		copy = src.duplicate(0) as Sprite3D  # sem script: só o quadro parado
+		add_child(copy)
+		copy.global_transform = src.global_transform
+	(
+		_balls
+		. append(
+			{
+				"recall": true,
+				"watch": RECALL_OUT + RECALL_IN,  # a câmera fica no Pokémon até ele entrar
+				"ball": ball,
+				"from": from,
+				"to": spot,
+				"t": 0.0,
+				"side": f.side,
+				"copy": copy,
+				"base": copy.scale if copy else Vector3.ONE,
+				"opened": false,
+				"closed": false,
+			}
+		)
+	)
+	preload("res://audio/cue.gd").sfx("ball_throw", -3.0)
+
+
+## Fim previsto da volta da bola de recolher do lado (0 = nenhuma), para a bola nova esperar.
+func _recall_left(side: int) -> float:
+	var left := 0.0
+	for e in _balls:
+		if e.get("recall", false) and int(e.side) == side:
+			left = maxf(left, RECALL_TOTAL - float(e.t))
+	return left
+
+
+func _tick_recall(e: Dictionary, dt: float, show: BallShow) -> void:
+	var ball: PokeBall3D = e.ball
+	var t: float = e.t
+	if show:
+		show.trainer_pose(int(e.side), t - RECALL_OUT * 0.5)
+	var copy: Sprite3D = e.copy if is_instance_valid(e.get("copy")) else null
+	if t < RECALL_OUT:
+		var k := t / RECALL_OUT
+		var p: Vector3 = e.from.lerp(e.to, k)
+		p.y += sin(k * PI) * 0.8
+		ball.position = p
+		ball.set_spin(-k * TAU * 3.0)
+		if show:
+			show.trail(ball, dt, true)
+		return
+	if t < RECALL_OUT + RECALL_IN:
+		if not e.opened:
+			e.opened = true
+			ball.set_spin(0.0)
+			ball.set_lid(1.0)
+			ball.set_glow(RECALL_RED, 3.0)
+			if copy:
+				var from := to_local(copy.global_position)
+				var d := ball.position - from
+				fx_beam(from, d, d.length(), 0.14, RECALL_RED, RECALL_IN)
+		var k := (t - RECALL_OUT) / RECALL_IN
+		ball.position = e.to + Vector3(0, 0.08 * sin(k * PI), 0)
+		if copy:
+			# O Pokémon vira luz vermelha, encolhe e é puxado para a bola.
+			copy.modulate = Color(1, 1, 1).lerp(Color(2.6, 0.45, 0.4), minf(k * 2.5, 1.0))
+			copy.scale = e.base * maxf(1.0 - k * k, 0.02)
+			copy.global_position = copy.global_position.lerp(
+				ball.global_position, minf(k * 0.5, 1.0)
+			)
+		return
+	if not e.closed:
+		e.closed = true
+		ball.set_lid(0.0)
+		ball.set_glow(RECALL_RED, 0.6)
+		if copy:
+			copy.queue_free()
+			e.copy = null
+		preload("res://audio/cue.gd").sfx("ball_shake", -6.0)
+	var kb := clampf((t - RECALL_OUT - RECALL_IN) / RECALL_BACK, 0.0, 1.0)
+	var q: Vector3 = e.to.lerp(e.from, kb)
+	q.y += sin(kb * PI) * 0.6
+	ball.position = q
+	ball.set_spin(kb * TAU * 2.0)
+	if t >= RECALL_TOTAL:
+		ball.queue_free()
+		if copy:
+			copy.queue_free()
+		_balls.erase(e)
 
 
 ## Espetáculo da bola (BallShow): nunca no fast_sim nem fora da árvore.
@@ -1177,6 +1295,13 @@ func _tick_balls(dt: float) -> void:
 		show.tick(dt)
 	for e in _balls.duplicate():
 		e.t += dt
+		if e.get("recall", false):
+			_tick_recall(e, dt, show)
+			continue
+		if e.t < 0.0:
+			e.ball.visible = false  # espera a bola de recolher voltar para a mão
+			continue
+		e.ball.visible = true
 		var ball: PokeBall3D = e.ball
 		var w: float = e.windup
 		var fl: float = e.flight
@@ -1245,6 +1370,9 @@ func _tick_balls(dt: float) -> void:
 
 ## Raio vermelho do Pokémon recolhido até a mão do treinador; o Pokémon encolhe numa luz vermelha.
 func _recall_beam(f: BattleFighter) -> void:
+	if director != null and ball_show() != null:
+		_recall_ball(f)
+		return
 	var from := f.position + Vector3(0, 0.5, 0)
 	var to := _hand(f.side)
 	var d := to - from
@@ -1315,6 +1443,8 @@ func bench_of(side: int) -> Array:
 func request_switch(side: int, out: BattleFighter, bench_idx: int) -> bool:
 	if state != "fight" or not is_instance_valid(out) or out.side != side or not out.active():
 		return false
+	if switch_locked():
+		return false
 	if _switch_req.has(side):
 		return false
 	var bench := bench_of(side)
@@ -1368,9 +1498,20 @@ func _do_trainer_item(side: int, item: String, target: BattleFighter) -> void:
 
 ## Troca de fato: recolhe `out`, o treinador joga a bola com `m` no mesmo lugar; os golpes mirados em
 ## `out` vão para quem entrou, que fica fora da fila desta rodada.
+## Modo de energia: troca voluntária fechada (começo da luta ou outra troca há menos de SWITCH_LOCK s).
+func switch_locked() -> bool:
+	return energy_on() and (fight_clock < SWITCH_OPEN or switch_lock > 0.0)
+
+
+func _note_switch() -> void:
+	if energy_on():
+		switch_lock = SWITCH_LOCK
+
+
 func _do_switch(out: BattleFighter, m: Mon) -> bool:
 	if not is_instance_valid(out) or not out.active() or m.is_fainted():
 		return false
+	_note_switch()
 	var side := out.side
 	var at := out.position
 	at.y = 0.0
@@ -1703,6 +1844,8 @@ func _fight_step(dt: float) -> void:
 	if director and director.holding():
 		return  # troca: todos param até o antigo sair e o novo cair
 	_swap_cd = maxf(_swap_cd - dt, 0.0)
+	fight_clock += dt
+	switch_lock = maxf(switch_lock - dt, 0.0)
 	item_cd = maxf(item_cd - dt, 0.0)
 	_support_heal()
 	combos.tick(dt)
@@ -1952,6 +2095,10 @@ func send_in(i: int, as_ally := false) -> bool:
 	var m: Mon = party[i]
 	if m.is_fainted() or _field_mons().has(m):
 		return false
+	var out_now: BattleFighter = ally if as_ally else player
+	var voluntary := is_instance_valid(out_now) and out_now.active()
+	if voluntary and switch_locked():
+		return false
 	# Rodadas: trocar quem está em campo só no começo da próxima rodada (request_switch).
 	var out: BattleFighter = ally if as_ally else player
 	if turns and turns.on and is_instance_valid(out) and out.active():
@@ -1982,6 +2129,8 @@ func send_in(i: int, as_ally := false) -> bool:
 		at.y = 0.0
 		_recall(player)
 		_send_player(i, at)
+	if voluntary:
+		_note_switch()
 	_swap_cd = SWAP_CD
 	return true
 
@@ -1991,6 +2140,8 @@ func send_in(i: int, as_ally := false) -> bool:
 func switch_out(f: BattleFighter) -> BattleFighter:
 	if state != "fight" or not is_instance_valid(f) or not f.active() or not fighters.has(f):
 		return null
+	if switch_locked():
+		return null  # energia: troca fechada, o golpe sai sem trocar (como sem ninguém no banco)
 	var at := f.position
 	at.y = 0.0
 	if f.side == 0:
@@ -1998,6 +2149,7 @@ func switch_out(f: BattleFighter) -> BattleFighter:
 		if i < 0:
 			return null
 		var was_ally := f == ally
+		_note_switch()
 		_recall(f)
 		if was_ally:
 			_send_ally(i, at)
@@ -2015,6 +2167,7 @@ func switch_out(f: BattleFighter) -> BattleFighter:
 	if j < 0 or i_out < 0:
 		return null
 	var slot := 1 if f == enemy2 else 0
+	_note_switch()
 	_recall(f)
 	enemies[i_out] = enemies[j]
 	enemies[j] = f.mon

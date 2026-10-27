@@ -253,6 +253,20 @@ func _side_balls() -> Array:
 ## Quadro da cena "send": [pontos, margem, inclinação, distância mínima]. Com o treinador ainda
 ## preparando: ele de perto; com a bola no ar: a bola e onde ela cai; depois: quem saiu (framed).
 func _send_frame() -> Array:
+	# Recolher pela bola: a bola indo até o Pokémon e ele entrando antes do close no treinador.
+	for e in arena.get("_balls"):
+		if (
+			bool(e.get("recall", false))
+			and int(e.get("side", -1)) == _switch_side
+			and float(e.t) < float(e.get("watch", 0.0))
+		):
+			var to: Vector3 = e.get("to", _switch_at)
+			var floor_at := Vector3(to.x, maxf(to.y - 1.0, 0.0), to.z)
+			var rp: Array = [floor_at, floor_at + Vector3(0, BODY_H, 0), _switch_at]
+			var b = e.get("ball")
+			if b is Node3D and is_instance_valid(b):
+				rp.append((b as Node3D).position)
+			return [rp, SEND_BALL_MARGIN, SEND_BALL_PITCH, SEND_BALL_DIST]
 	var balls := _side_balls()
 	if balls.is_empty():
 		var pts: Array = []

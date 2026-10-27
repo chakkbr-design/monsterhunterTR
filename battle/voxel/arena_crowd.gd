@@ -41,12 +41,14 @@ const CROWD_SHEETS := [
 	"npc_worker",
 	"npc_youngster",
 ]
-## Sprite fan size: CharSprite pixels scaled down (a 32 px frame is 1.6 m standing, ~1.15 m here),
-## sunk SINK m below the seat pan so the legs hide in the seat and the row in front.
-const SPRITE_SCALE := 0.72
-const SINK := 0.42
-## Share of the seats taken.
+## Sprite fan size: CharSprite pixels scaled up (a 32 px frame is 1.6 m standing, ~1.84 m here; Caio,
+## 2026-10-27: 0.72 was too small), sunk SINK m below the seat pan so the head and the upper body
+## (~1.5 m) show over the row in front and the legs hide in the seat (0.55 showed little more than heads).
+const SPRITE_SCALE := 1.15
+const SINK := 0.3
+## Share of the seats taken (the bigger pixel-art fans need room: fewer of them).
 const FILL := 0.84
+const SPRITE_FILL := 0.38
 ## Length of a Mexican wave (crowd.gdshader wave_secs).
 const WAVE_SECS := 14.0
 const SHIRTS := [
@@ -263,15 +265,15 @@ static func _box(st: SurfaceTool, a: Vector3, b: Vector3, region: int, arm: int)
 ## MultiMeshInstance3D with a fan on the taken seats of `seats` ([Vector3 local, float yaw], in the
 ## section's frame), `xf` = the section's world transform (for the hashes and the team mix).
 static func section(seats: Array, xf: Transform3D, salt := 0) -> MultiMeshInstance3D:
+	var sprites := uses_sprites()
 	var taken: Array = []
 	for s in seats:
 		var w: Vector3 = xf * (s[0] as Vector3)
 		var h := VoxelGrid.hash01(
 			roundi(w.x * 4.0), roundi(w.y * 4.0), roundi(w.z * 4.0), 41 + salt
 		)
-		if h < FILL:
+		if h < (SPRITE_FILL if sprites else FILL):
 			taken.append([s, w])
-	var sprites := uses_sprites()
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = not sprites
