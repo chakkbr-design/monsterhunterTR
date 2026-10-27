@@ -658,9 +658,8 @@ func _mon_line(m: Mon) -> String:
 ## Next battle of a series behind the loading screen: the old arena goes away and the new one is
 ## built while the ball keeps spinning (the stadium stays up). Not for the headless battery.
 func _next_with_loading() -> void:
-	var fast: bool = (
-		cfg.get("extra_opts", {}) is Dictionary and bool(cfg.extra_opts.get("fast_sim", false))
-	)
+	var eo = cfg.get("extra_opts", {})
+	var fast: bool = eo is Dictionary and bool(eo.get("fast_sim", false))
 	if fast or not is_inside_tree():
 		start_fight()
 		return
