@@ -15,8 +15,8 @@ const BOUNCE := 0.25
 const OPEN := 0.5
 const GROW := 0.45
 const HOVER := 1.1
-## Bola maior na quadra de 48 m (legível de longe pela câmera de ação).
-const BALL_SCALE := 2.2
+## Bola maior na quadra de 48 m (legível de longe pela câmera de ação; 2,2 ficou grande demais).
+const BALL_SCALE := 1.5
 const TRAIL_EVERY := 0.025
 const RED := Color(1.0, 0.22, 0.18)
 const DUST := Color(0.82, 0.74, 0.6, 0.75)
