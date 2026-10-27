@@ -603,8 +603,8 @@ func orb(p: Node3D, type: String, s: float, t: int) -> void:
 func _die_with(n: Node3D, p: Node3D) -> void:
 	if n == null:
 		return
-	var wp := weakref(p)
-	var prev := _scope
+	var wp: WeakRef = weakref(p)
+	var prev: Array = _scope
 	scope([n])
 	repeat(
 		0.03,

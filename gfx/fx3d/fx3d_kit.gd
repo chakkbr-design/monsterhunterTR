@@ -85,7 +85,7 @@ func tick_events(dt: float) -> void:
 		return
 	var evs := _events
 	_events = []
-	var prev := _scope
+	var prev: Array = _scope
 	for e in evs:
 		e.t -= dt
 		if e.t > 0.0:
@@ -311,7 +311,7 @@ func emitter(
 	if fol != null:
 		p.follow = fol
 		p.carry = float(o.get("carry", 0.0))
-	var deps := _scope
+	var deps: Array = _scope
 	p.spawn = func(pp: Fx3DParticles) -> void:
 		var q: Vector3 = at
 		if where.is_valid():
