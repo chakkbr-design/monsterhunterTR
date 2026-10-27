@@ -144,7 +144,8 @@ func _once_per_round() -> void:
 	a.end_turn.run()
 	check(e._flash_t > 0.0 and e._flash_col != BattleFighter.FLASH_COL, "clarão de cor no sprite")
 	if a.hud and a.hud.has_method("warn_text"):
-		check(a.hud.warn_text().contains("End of round"), 'linha "End of round" no HUD')
+		# HUD quieto (BattleHUD.quiet): a linha de fim de rodada não aparece.
+		check(not a.hud.warn_text().contains("End of round"), 'sem "End of round" no HUD')
 	a.free()
 
 

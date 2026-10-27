@@ -156,7 +156,7 @@ func _pinch() -> void:
 	var sw := _arena(
 		[_mon("slowpoke", "regenerator"), Mon.create("pidgey", 10)],
 		[Mon.create("rattata", 10)],
-		{"seed": 7, "battle_size": 1}
+		{"seed": 7, "battle_size": 1, "damage_pace": 1.0}
 	)
 	_fight(sw)
 	sw.enemy.controller = "none"

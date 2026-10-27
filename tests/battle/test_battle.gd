@@ -348,13 +348,23 @@ func _items() -> void:
 	_run(a, 3.1)
 	var al: BattleFighter = a.ally
 	al.apply_status("poison")
-	check(a.use_item("antidote", al.mon), "antídoto no aliado (mon escolhido da party)")
+	check(
+		a.use_item("antidote", al.mon),
+		(
+			"antídoto no aliado (mon escolhido da party) [st %s/%s, cd %.1f, %s, log %s]"
+			% [al.status, al.mon.status, a.item_cd, a.state, a.log_lines.slice(-3)]
+		)
+	)
 	check(al.status == "" and al.mon.status == "", "status do aliado curado e ressincronizado")
 	_run(a, 3.1)
 	check(not a.use_item("potion", party[2]), "poção não funciona em desmaiado")
+	var rv: bool = a.use_item("revive", party[2])
 	check(
-		a.use_item("revive", party[2]) and party[2].hp == party[2].max_hp / 2,
-		"revive no desmaiado da party"
+		rv and party[2].hp == party[2].max_hp / 2,
+		(
+			"revive no desmaiado da party [%s, %d/%d, cd %.1f, log %s]"
+			% [rv, party[2].hp, party[2].max_hp, a.item_cd, a.log_lines.slice(-3)]
+		)
 	)
 	check(not g.bag.has("revive"), "revive consumido")
 	_done(a)
@@ -544,7 +554,10 @@ func _two_vs_one(i: int) -> void:
 		)
 	)
 	check(outcome in ["win", "lose"], "2x1 IA termina (%s)" % m[0])
-	check(party[1].pp < party[1].pp_base or party[0].pp < party[0].pp_base, "PP persistido nos Mon")
+	check(
+		party[1].pp == party[1].pp_base and party[0].pp == party[0].pp_base,
+		"energia não gasta o PP dos Mon"
+	)
 	if outcome == "win":
 		var alive: Array = party.filter(func(x): return not x.is_fainted())
 		var gained: Array = []

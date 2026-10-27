@@ -180,13 +180,13 @@ func _sand() -> void:
 		"Sand Rush/Force e tipo Terra não sofrem a areia"
 	)
 	a.free()
-	var b := _still(_mon("sandshrew", "sand_veil"), Mon.create("pidgey", 20))
+	var b := _still(_mon("sandshrew", "sand_veil"), Mon.create("pidgey", 20), {"damage_pace": 1.0})
 	b.abilities.set_weather("sand", 30.0)
 	_run(b, 1.0)
 	check(b.player.evasion_t > 0.0 and b.player.evasion >= 0.2, "Sand Veil: esquiva na areia")
 	b.free()
 	# areia machuca quem não é imune
-	var c := _still(Mon.create("pidgey", 20), _mon("paras", "dry_skin"))
+	var c := _still(Mon.create("pidgey", 20), _mon("paras", "dry_skin"), {"damage_pace": 1.0})
 	c.abilities.set_weather("sand", 30.0)
 	var pid: BattleFighter = c.player
 	var h2 := pid.hp
@@ -204,7 +204,7 @@ func _sand() -> void:
 	check(mid >= h3 - maxi(1, int(pid.max_hp / 16.0)), "areia: no máx. um corte por rodada")
 	c.free()
 	# neve (Gen 9) não tira HP
-	var d := _still(Mon.create("pidgey", 20), Mon.create("rattata", 20))
+	var d := _still(Mon.create("pidgey", 20), Mon.create("rattata", 20), {"damage_pace": 1.0})
 	d.abilities.set_weather("snow", 30.0)
 	var h4: int = d.player.hp
 	d.abilities.on_round_end()
@@ -213,7 +213,7 @@ func _sand() -> void:
 
 
 func _rain_sun() -> void:
-	var a := _still(_mon("squirtle", "rain_dish"), _mon("paras", "dry_skin"))
+	var a := _still(_mon("squirtle", "rain_dish"), _mon("paras", "dry_skin"), {"damage_pace": 1.0})
 	var ab: BattleAbilities = a.abilities
 	a.player.hp = int(a.player.max_hp / 2.0)
 	a.enemy.hp = int(a.enemy.max_hp / 2.0)
@@ -243,7 +243,7 @@ func _rain_sun() -> void:
 	ab.on_round_end()
 	check(a.enemy.hp < e0, "Dry Skin perde HP no sol no fim da rodada")
 	a.free()
-	var b := _still(_mon("charmander", "solar_power"), Mon.create("pidgey", 20))
+	var b := _still(_mon("charmander", "solar_power"), Mon.create("pidgey", 20), {"damage_pace": 1.0})
 	var ab2: BattleAbilities = b.abilities
 	var ember := Dex.move("ember")
 	var tackle := Dex.move("tackle")
@@ -266,7 +266,7 @@ func _rain_sun() -> void:
 
 ## Fim de rodada: Poison Heal, Natural Cure, Shed Skin; Damp na explosão.
 func _round_status() -> void:
-	var a := _still(_lent("grimer", "poison_heal"), Mon.create("pidgey", 20))
+	var a := _still(_lent("grimer", "poison_heal"), Mon.create("pidgey", 20), {"damage_pace": 1.0})
 	var g: BattleFighter = a.player
 	g.hp = int(g.max_hp / 2.0)
 	g.status = ""
@@ -278,7 +278,7 @@ func _round_status() -> void:
 	a.abilities.on_round_end()
 	check(g.hp == h + maxi(1, int(g.max_hp / 8.0)), "Poison Heal: +1/8 no fim da rodada")
 	a.free()
-	var b := _still(_mon("staryu", "natural_cure"), Mon.create("pidgey", 20))
+	var b := _still(_mon("staryu", "natural_cure"), Mon.create("pidgey", 20), {"damage_pace": 1.0})
 	b.player.apply_status("burn", b.enemy)
 	check(b.player.status == "burn", "queimou")
 	b.abilities.on_round_end()
