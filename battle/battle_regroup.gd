@@ -23,6 +23,8 @@ const ARRIVE_SECS := 4.5
 ## Nem em linha reta chega mais perto por GIVE_UP_SECS s (empurrado por um sólido ou pelo
 ## vizinho): fica onde está e conta como chegado, para a luta não esperar o teto.
 const GIVE_UP_SECS := 2.5
+## Depois disto todos andam em linha reta (o desvio do relevo pode dar voltas sem chegar nunca).
+const STRAIGHT_SECS := 3.0
 
 ## A arena (sem tipo: os campos dela são lidos direto).
 var arena
@@ -177,6 +179,8 @@ func _report() -> void:
 					"fly": snappedf(f.fly_h, 0.01),
 					"hidden": f.hidden,
 					"motion": f.motion,
+					"best": snappedf(float(_best.get(f.get_instance_id(), [-1.0])[0]), 0.01),
+					"slide": arena.terrain != null and arena.terrain.sliding(f),
 				}
 				far.append(row)
 	arena.telemetry.note(
@@ -195,7 +199,7 @@ func _walk(f: BattleFighter, dt: float) -> void:
 	if dist < float(b[0]) - NEAR_GAIN:
 		b = [dist, t]
 		_best[k] = b
-	var straight := t - float(b[1]) > STUCK_SECS
+	var straight := t - float(b[1]) > STUCK_SECS or t > STRAIGHT_SECS
 	var want := Vector3.ZERO
 	if dist > 0.05:
 		want = to / dist
