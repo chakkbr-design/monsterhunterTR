@@ -1535,7 +1535,8 @@ func status_look(f: BattleFighter, status: String) -> Fx3DStatus:
 	var hh := height(f)
 	h.position = Vector3(0, hh * (1.05 if status in ["sleep", "confusion"] else 0.55), 0)
 	_add(h)
-	var at := func(k: float) -> Variant: return null if h.ended() else center(f, k)
+	var at := func(k: float) -> Variant:
+		return null if not is_instance_valid(h) or h.ended() else center(f, k)
 	var big := 3600.0
 	match status:
 		"burn":
@@ -1591,7 +1592,7 @@ func status_look(f: BattleFighter, status: String) -> Fx3DStatus:
 				0.7,
 				big,
 				func(_i: int) -> bool:
-					if h.ended():
+					if not is_instance_valid(h) or h.ended():
 						return false
 					if randf() < 0.6:
 						var c := center(f, randf_range(0.3, 0.8))
@@ -1641,7 +1642,7 @@ func status_look(f: BattleFighter, status: String) -> Fx3DStatus:
 			)
 		"confusion":
 			var spin := func() -> Variant:
-				if h.ended():
+				if not is_instance_valid(h) or h.ended():
 					return null
 				var a := h.age * 4.0 + randf_range(-0.2, 0.2)
 				var r := hh * 0.3
