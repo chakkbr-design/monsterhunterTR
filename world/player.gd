@@ -84,6 +84,7 @@ var _bump_cd := 0.0
 var _settle := false  ## off the tile centre: glide back when free to move
 var _place_snap := false  ## inside something or far off: snap to the nearest free tile
 var _last_written := Vector3.INF  ## where the grid tick left the body (anything else moved it)
+var _tweened := false  ## the grid tick saw a tween move the locked body
 var _held: Array[String] = []  ## held move actions, the last pressed last
 var _script: Array[Vector2i] = []  ## grid_walk tiles still to walk
 var _script_active := false
@@ -543,6 +544,13 @@ func _leave_grid() -> void:
 func _grid_tick(delta: float) -> void:
 	var active := can_act()
 	var frozen := Game.is_busy() or _world_blocks()
+	# A tween (a battle walking the body off the court) moved it since the last tick: the sheet walks.
+	var moved_by := global_position - _last_written
+	_tweened = (
+		not active
+		and _last_written.is_finite()
+		and Vector2(moved_by.x, moved_by.z).length() > 0.3 * delta
+	)
 	if not global_position.is_equal_approx(_last_written):
 		_moved_outside()
 	_phys_prev = global_position
@@ -1041,7 +1049,7 @@ func _animate() -> void:
 		sprite.moving = true
 		sprite.step_col = 1 + _parity
 		return
-	sprite.moving = _stepping or _bumping
+	sprite.moving = _stepping or _bumping or _tweened
 	if _stepping:
 		sprite.step_col = (1 + _parity) if _t < 0.5 else 0
 		sprite.speed = _step_speed

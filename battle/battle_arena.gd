@@ -342,6 +342,7 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	_build()
 	if hud:
 		hud.quiet = quiet_callouts()
+	BattleWalkOut.run(self, o)  # no mundo: jogador e treinador saem da quadra
 	_setup_stands()
 	terrain.setup()
 	field.setup()
