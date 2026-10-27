@@ -31,6 +31,7 @@ static func _ensure() -> void:
 	var m = _load_json("res://data/moves.json")
 	if m is Dictionary:
 		for mv in m.get("moves", []):
+			_tune(mv)
 			_moves[mv.id] = mv
 			_move_order.append(mv.id)
 	var t = _load_json("res://data/types.json")
@@ -47,6 +48,33 @@ static func _ensure() -> void:
 	var tr = _load_json("res://data/trainers.json")
 	_trainers = tr if tr is Dictionary else {}
 	_trainers.erase("_doc")
+
+
+## Ajustes do tempo real por entrega (bateria de 2026-10-27, sugestões que o Caio acatou), aplicados
+## por cima do moves.json para sobreviver ao pipeline que o regera:
+## - área ao redor (aoe_self): raio x AOE_SELF_RADIUS (quase não erravam);
+## - Terra que anda pelo chão (GROUND_REACH): raio x GROUND_RADIUS (Terra estava abaixo dos outros tipos);
+## - cai no alvo (aoe_target): aviso no chão (windup) x AOE_TARGET_WINDUP (o alvo saía da marca);
+## - raio carregado de 120+ (beam): carga BEAM_WINDUP_CUT s mais curta (mín. BEAM_WINDUP_MIN).
+const AOE_SELF_RADIUS := 0.85
+const GROUND_REACH := ["earthquake", "bulldoze", "earth_power"]
+const GROUND_RADIUS := 1.1
+const AOE_TARGET_WINDUP := 0.75
+const BEAM_WINDUP_CUT := 0.3
+const BEAM_WINDUP_MIN := 0.2
+const BEAM_STRONG_BP := 120.0
+
+
+static func _tune(mv: Dictionary) -> void:
+	var kind := String(mv.get("kind", ""))
+	if kind == "aoe_self" and mv.has("radius"):
+		mv["radius"] = snappedf(float(mv.radius) * AOE_SELF_RADIUS, 0.01)
+	if GROUND_REACH.has(String(mv.get("id", ""))) and mv.has("radius"):
+		mv["radius"] = snappedf(float(mv.radius) * GROUND_RADIUS, 0.01)
+	if kind == "aoe_target" and mv.has("windup"):
+		mv["windup"] = snappedf(float(mv.windup) * AOE_TARGET_WINDUP, 0.01)
+	if kind == "beam" and mv.has("windup") and float(mv.get("power", 0)) >= BEAM_STRONG_BP:
+		mv["windup"] = maxf(float(mv.windup) - BEAM_WINDUP_CUT, BEAM_WINDUP_MIN)
 
 
 ## Nome canônico da espécie como está no species.json ("" se não existir).

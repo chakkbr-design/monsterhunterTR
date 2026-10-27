@@ -95,6 +95,7 @@ static func default_config() -> Dictionary:
 		"scenario": "",
 		"time_of_day": "dia",
 		"p1_control": "ai",
+		"random_legends": false,
 	}
 
 
@@ -313,27 +314,61 @@ static func block_pause_menu(tree: SceneTree, on: bool) -> void:
 
 ## Times sorteados só com evoluções finais: espécies sem evolução para outra espécie do jogo
 ## (as que não evoluem também entram; Golbat e Onix contam como finais, Crobat e Steelix não existem).
-static func random_pool() -> Array:
+## legends = false tira lendários, míticos e Ultra Beasts (LEGEND_DEX).
+static func random_pool(legends := true) -> Array:
 	var out: Array = []
 	for sp in Dex.all_species():
 		var into := String(Dex.species(sp).get("evolution", {}).get("into", ""))
+		if not legends and is_legend(sp):
+			continue
 		if into == "" or Dex.species(into).is_empty():
 			out.append(sp)
 	out.sort()  # mesma ordem sempre: a semente refaz os mesmos times
 	return out
 
 
+## Lendários, míticos e Ultra Beasts pelo número da Pokédex (Caio, 2026-10-27: a bateria mostrou
+## Lunala, Zacian e Eternatus dominando o sorteio; os times aleatórios os deixam de fora por padrão).
+const LEGEND_DEX := [
+	[144, 146],
+	[150, 151],
+	[243, 245],
+	[249, 251],
+	[377, 386],
+	[480, 494],
+	[638, 649],
+	[716, 721],
+	[772, 773],
+	[785, 809],
+	[888, 898],
+	[905, 905],
+	[1001, 1004],
+	[1007, 1008],
+	[1014, 1017],
+	[1024, 1025],
+]
+
+
+static func is_legend(sp: String) -> bool:
+	var n := int(Dex.species(sp).get("dex_no", 0))
+	for r in LEGEND_DEX:
+		if n >= int(r[0]) and n <= int(r[1]):
+			return true
+	return false
+
+
 ## Sorteia os Pokémon dos dois times (o nome, o item e o nível da IA de cada lado ficam).
+## cfg.random_legends (padrão falso) deixa lendários no sorteio.
 static func randomize_sides(cfg: Dictionary, rng: RandomNumberGenerator) -> void:
 	for s in SIDES:
-		cfg.sides[s]["mons"] = random_mons(rng)
+		cfg.sides[s]["mons"] = random_mons(rng, bool(cfg.get("random_legends", false)))
 
 
 ## PARTY_MAX espécies diferentes de random_pool() (evoluções finais), cada uma com habilidade
 ## (normal ou oculta) e golpes sorteados (random_moves). Equilibrado por tipo: sorteia primeiro um tipo (uniforme
 ## entre os que têm espécie livre) e depois uma espécie dele; dupla tipagem conta nos dois tipos.
-static func random_mons(rng: RandomNumberGenerator) -> Array:
-	var pool := random_pool()
+static func random_mons(rng: RandomNumberGenerator, legends := true) -> Array:
+	var pool := random_pool(legends)
 	var out: Array = []
 	for k in mini(PARTY_MAX, pool.size()):
 		var sp := pick_by_type(pool, rng)
@@ -383,6 +418,9 @@ const RANDOM_HEAL := [
 
 ## Golpes de dano que só funcionam em condição rara (dormindo, depois de comer, terreno...) ou que
 ## derrubam o próprio usuário: o sorteio não escolhe.
+## Golpes Normais que quase todo Pokémon aprende por TM e rendem pouco sem STAB, status ou Terastal
+## (bateria de 2026-10-27): só entram no sorteio de quem é do tipo Normal (ou no completar do fim).
+const RANDOM_NORMAL_ONLY := ["facade", "tera_blast", "take_down", "double_edge"]
 const RANDOM_SKIP := [
 	"snore",
 	"dream_eater",
@@ -466,6 +504,7 @@ static func _weighted(ids: Array, weights: Array, rng: RandomNumberGenerator) ->
 ##    máximo um golpe de status, só os que valem (status de verdade, +2, vários atributos ou cura).
 static func random_moves(sp: String, rng: RandomNumberGenerator) -> Array:
 	var cat := preferred_category(sp)
+	var sp_types: Array = Dex.species(sp).get("types", [])
 	var dmg: Array = []
 	var status: Array = []
 	for e in learnable_moves(sp):
@@ -474,7 +513,11 @@ static func random_moves(sp: String, rng: RandomNumberGenerator) -> Array:
 		if c == "status":
 			if _status_worth(mv):
 				status.append(String(e.id))
-		elif float(mv.get("power", 0)) > 0 and not RANDOM_SKIP.has(String(e.id)):
+		elif (
+			float(mv.get("power", 0)) > 0
+			and not RANDOM_SKIP.has(String(e.id))
+			and not (RANDOM_NORMAL_ONLY.has(String(e.id)) and not "normal" in sp_types)
+		):
 			dmg.append(String(e.id))
 	var good := func(id: String) -> bool: return cat == "" or Dex.move(id).get("category") == cat
 	var picks: Array = []

@@ -45,6 +45,7 @@ var _start_btn: Button
 var _speed: OptionButton
 var _seed: SpinBox
 var _turbo: CheckBox
+var _legends: CheckBox
 var _battle: OptionButton
 var _p1: OptionButton
 var _scenario: OptionButton
@@ -288,6 +289,12 @@ func set_speed(v: float) -> void:
 
 func set_seed(v: int) -> void:
 	cfg["seed"] = maxi(v, -1)
+	_refresh_all()
+
+
+## Times aleatórios com ou sem lendários (Cfg.LEGEND_DEX).
+func set_random_legends(on: bool) -> void:
+	cfg["random_legends"] = on
 	_refresh_all()
 
 
@@ -964,6 +971,12 @@ func _build_top() -> Control:
 	_turbo.button_down.connect(_commit_edits)
 	_turbo.toggled.connect(_on_turbo)
 	r2.add_child(_turbo)
+	_legends = CheckBox.new()
+	_legends.text = "Legendaries"
+	_legends.focus_mode = Control.FOCUS_NONE
+	_legends.tooltip_text = "Random teams can roll legendary, mythical and Ultra Beast Pokémon"
+	_legends.toggled.connect(_on_legends)
+	r2.add_child(_legends)
 	r2.add_child(_small("Limit (s)"))
 	_limit = _spin(0, 3600, 5.0, 72)
 	_limit.tooltip_text = "Maximum game time; past it the fight ends without a winner (0 = none)"
@@ -1272,6 +1285,7 @@ func _refresh_all() -> void:
 	_seed.value = int(cfg.get("seed", -1))
 	_limit.value = int(cfg.get("time_limit", 0))
 	_turbo.set_pressed_no_signal(bool(cfg.get("turbo", false)))
+	_legends.set_pressed_no_signal(bool(cfg.get("random_legends", false)))
 	_battle.select(0 if int(cfg.get("battle_size", 2)) == 1 else 1)
 	_p1.select(1 if String(cfg.get("p1_control", "ai")) == "manual" else 0)
 	_scenario.select(maxi(Cfg.SCENARIOS.find(Cfg.scenario(cfg)) + 1, 0))
@@ -1454,6 +1468,11 @@ func _on_think(v: float, i: int) -> void:
 func _on_limit(v: float) -> void:
 	if not _syncing:
 		set_time_limit(int(v))
+
+
+func _on_legends(on: bool) -> void:
+	if not _syncing:
+		set_random_legends(on)
 
 
 func _on_turbo(on: bool) -> void:

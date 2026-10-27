@@ -24,6 +24,11 @@ const KNOCKBACK_SCALE := 0.5
 const KNOCK_DECAY := 30.0
 const HIT_RANGE := 1.2
 const DASH_REACH_FACTOR := 0.9
+## Investidas pesadas (poder DASH_TRACK_BP+) erravam metade (bateria de 2026-10-27): no primeiro
+## terço da investida a direção vira até DASH_TRACK_DEG graus/s para o alvo (só quando o sorteio de
+## acerto deu acerto).
+const DASH_TRACK_BP := 90.0
+const DASH_TRACK_DEG := 120.0
 const ARC_STEP_M := 0.5
 const ARC_STEP_TIME := 0.12
 const LUNGE_SPEED := 10.0
@@ -33,9 +38,9 @@ const STRUGGLE_CD := 1.0
 ## Status como no oficial (Gen 9): queimadura e veneno não acabam sozinhos; o dano de
 ## queimadura/veneno/Toxic é de fim de turno (BattleEndTurn), uma vez por rodada.
 ## Sono: contador 2..4 que desce a cada tentativa de agir e acorda no zero (1 a 3 turnos dormindo, como
-## o Showdown); Rest dorme 2 turnos (contador 3).
+## o Showdown); Rest dorme 1 turno (contador 2; era 2 turnos, bateria de 2026-10-27).
 const SLEEP_COUNTER := [2, 4]
-const REST_COUNTER := 3
+const REST_COUNTER := 2
 ## Confusão: contador 2..5 que desce a cada tentativa de agir; no zero sai da confusão e age.
 const CONFUSION_COUNTER := [2, 5]
 ## Congelado: 20% de descongelar a cada tentativa de agir (golpe de Fogo recebido também descongela).
@@ -160,6 +165,7 @@ var dash_move := {}
 var dash_miss: BattleFighter
 var dash_hit := false
 var dash_dodged := {}
+var dash_track_t := 0.0
 
 var lunge_t := 0.0
 var lunge_dir := Vector3.ZERO
@@ -627,9 +633,25 @@ func start_dash(mv: Dictionary, dir: Vector3, miss: BattleFighter) -> void:
 	dash_dir = dir
 	dash_speed = float(mv.get("speed", 12.0))
 	dash_t = float(mv.get("range", 3.0)) / dash_speed
+	dash_track_t = (
+		dash_t / 3.0 if float(mv.get("power", 0)) >= DASH_TRACK_BP and miss == null else 0.0
+	)
 	dash_hit = false
 	dash_dodged.clear()
 	facing = dir
+
+
+## Vira a investida para o alvo, no máximo DASH_TRACK_DEG graus/s.
+func _track_dash(dt: float) -> void:
+	if not is_instance_valid(opponent) or not opponent.active():
+		return
+	var to := flat_to(opponent)
+	if to.length() < 0.3:
+		return
+	var a := dash_dir.signed_angle_to(to.normalized(), Vector3.UP)
+	var lim := deg_to_rad(DASH_TRACK_DEG) * dt
+	dash_dir = dash_dir.rotated(Vector3.UP, clampf(a, -lim, lim)).normalized()
+	facing = dash_dir
 
 
 func start_arc_step(dir: Vector3) -> void:
@@ -1076,6 +1098,9 @@ func drive(dt: float, want: Vector3, speed: float) -> void:
 		return
 	if dash_t > 0.0:
 		dash_t -= dt
+		if dash_track_t > 0.0:
+			dash_track_t -= dt
+			_track_dash(dt)
 		velocity = dash_dir * dash_speed
 		_check_dash_hit()
 	elif lunge_t > 0.0:
