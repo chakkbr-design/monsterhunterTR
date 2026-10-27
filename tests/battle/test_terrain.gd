@@ -315,4 +315,5 @@ func _fights(n: int) -> void:
 			% [stats.fights, stats.ended, pct, stats.collapse]
 		)
 	)
-	check(pct > 2.0, "a IA usa o alto (%.0f%%)" % pct)
+	# 2026-10-26: morros viraram degraus que pedem pulo (10 de energia), então a IA sobe menos (2–4%).
+	check(pct > 1.0, "a IA usa o alto (%.0f%%)" % pct)
