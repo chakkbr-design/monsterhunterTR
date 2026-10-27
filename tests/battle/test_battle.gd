@@ -503,7 +503,11 @@ func _control_swap() -> void:
 	check(b.ally.mon == party[2], "escolhe da party quem entra como aliado")
 	_run(b, 1.1)
 	_open(b)
-	check(b.send_in(1), "pede a troca do controlado")
+	b.player.controller = "none"  # parado (no meio de uma investida a troca espera)
+	b.player.dash_t = 0.0
+	b.player.lunge_t = 0.0
+	b.player.root_t = 0.0
+	check(b.send_in(1), "pede a troca do controlado [swap_cd %.2f]" % b._swap_cd)
 	_next_round(b)
 	check(
 		b.player.mon == party[1] and b.ally.mon == party[2],

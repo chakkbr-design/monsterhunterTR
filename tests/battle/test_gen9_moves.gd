@@ -641,11 +641,22 @@ func _switch_moves() -> void:
 	check(int(q.stages.atk) == 2 and q.crit_stage == 1, "Baton Pass passa os estágios")
 	q.controller = "none"
 	_open(a)
+	var e_hp: int = a.enemy.hp
 	a.moves.hit(q, a.enemy, Dex.move("u_turn"), Vector3.FORWARD)
 	_run(a, 0.6)
 	check(
 		a.player != q and a.player.mon.species.to_lower() == "pikachu",
-		"U-turn volta para o reserva"
+		(
+			"U-turn volta para o reserva [q ativo %s, hp inimigo %d -> %d, trava %s, %s, log %s]"
+			% [
+				q.active(),
+				e_hp,
+				a.enemy.hp,
+				a.switch_locked(),
+				a.player.mon.species,
+				a.log_lines.slice(-4)
+			]
+		)
 	)
 	check(int(a.player.stages.atk) == 0, "U-turn não passa estágios")
 	a.player.controller = "none"
