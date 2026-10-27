@@ -212,7 +212,7 @@ func _swap() -> void:
 	var party := [Mon.create("charmander", 10), Mon.create("squirtle", 10)]
 	var a := _arena(party, [Mon.create("pidgey", 5)], {"seed": 5, "battle_size": 1})
 	_run(a, 1.3)
-	a.player.hp = 7
+	a.player.hp = 14
 	a.player.mon.hp = 7
 	var old: BattleFighter = a.player
 	_open(a)
@@ -338,8 +338,11 @@ func _items() -> void:
 	var hp0 := p.hp
 	check(a.use_item("potion"), "usa poção no controlado")
 	check(
-		p.hp == mini(hp0 + 20, p.max_hp) and p.mon.hp == p.hp,
-		"poção cura 20 e ressincroniza o lutador (%d -> %d)" % [hp0, p.hp]
+		(
+			p.hp == mini(BattleFighter.hp_from_mon(BattleFighter.hp_to_mon(hp0) + 20), p.max_hp)
+			and p.mon.hp == BattleFighter.hp_to_mon(p.hp)
+		),
+		"poção cura 20 (40 na vida em dobro) e ressincroniza o lutador (%d -> %d)" % [hp0, p.hp]
 	)
 	check(int(g.bag.get("potion", 0)) == 1, "poção sai da bolsa")
 	check(
@@ -453,11 +456,11 @@ func _ally_modes() -> void:
 	_run(b, 0.2)
 	check(g.bag.size() == 2, "SUPPORT não cura com HP >= 50%")
 	var low := 5
-	bp.hp = low
+	bp.hp = BattleFighter.hp_from_mon(low)
 	bp.mon.hp = low
 	_run(b, 0.1)
 	check(
-		bp.hp > low and bp.mon.hp == bp.hp,
+		bp.mon.hp > low and bp.mon.hp == BattleFighter.hp_to_mon(bp.hp),
 		"SUPPORT: aliado cura o controlado (%d -> %d)" % [low, bp.hp]
 	)
 	check(

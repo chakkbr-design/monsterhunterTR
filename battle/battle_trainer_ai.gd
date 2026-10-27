@@ -107,8 +107,8 @@ static func unit_of(x) -> Dictionary:
 		"def": float(m.stats.get("def", 1)),
 		"spd": float(m.stats.get("spd", 1)),
 		"spe": float(m.stats.get("spe", 1)) * (0.5 if m.status == "paralysis" else 1.0),
-		"hp": float(m.hp),
-		"max_hp": float(m.max_hp),
+		"hp": float(BattleFighter.hp_from_mon(m.hp)),
+		"max_hp": float(BattleFighter.hp_from_mon(m.max_hp)),
 		"moves": m.moves,
 		"burn": m.status == "burn",
 	}

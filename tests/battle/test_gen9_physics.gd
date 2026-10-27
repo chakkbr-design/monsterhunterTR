@@ -73,7 +73,7 @@ func _heal_all(a: Node) -> void:
 	for f in a.fighters:
 		f.max_hp = 9999
 		f.hp = f.max_hp
-		f.mon.hp = f.max_hp
+		f.mon.hp = BattleFighter.hp_to_mon(f.max_hp)
 		f.knock = Vector3.ZERO
 		f.launch_t = 0.0
 		f.stun_t = 0.0

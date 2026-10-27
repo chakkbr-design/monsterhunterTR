@@ -79,7 +79,7 @@ func _still(me := "charmander", foe := "rattata", lv := 40, opts := {}) -> Node:
 func _reset(f: BattleFighter) -> void:
 	f.set_meta("ability_override", "")
 	f.hp = f.max_hp
-	f.mon.hp = f.hp
+	f.mon.hp = BattleFighter.hp_to_mon(f.hp)
 	f.clear_status()
 	f.clear_seed()
 	f.confusion_t = 0.0

@@ -74,7 +74,8 @@ Na batalha: Espaço pula, 1–4 golpes, Q Poké Ball, E bolsa, Tab troca Pokémo
 - IA do original (distância, desvio, escolha pelo menor número de golpes até o KO). 2x1 com aliado nas selvagens (modos Ataque/Defesa/Suporte).
 - IA do treinador (`docs/IA_TREINADOR.md`): o treinador troca com matchup ruim, usa item que salva e escolhe quem entra.
 - Clima Gen 9 (sol, chuva, areia, neve) por golpe, habilidade ou pedra, com visual próprio: chuva com poças e relâmpago, neve acumulando no chão, feixes de sol e tempestade de areia (`battle/battle_weather_fx.gd`, regras em `docs/MECANICAS.md` §10). A chuva, a neve e o relâmpago usam as peças do clima do mundo (`gfx/weather/`) e cobrem o estádio.
-- Barra de vida pequena em cima da cabeça de cada Pokémon (`battle/battle_hp_bar.gd`): mesmo tamanho na tela com qualquer zoom, verde/amarela/vermelha, rastro claro depois do dano, some no desmaio.
+- **Vida em dobro** na batalha (treino e campanha): o lutador tem 2x o HP do Mon (`BattleFighter.HP_MULT`); o Mon guarda a mesma fração (`hp_to_mon`/`hp_from_mon`), então itens, party e PC seguem no HP normal.
+- Barra de vida em cima da cabeça de cada Pokémon (`battle/battle_hp_bar.gd`): 88 x 15 px na tela com qualquer zoom, borda preta grossa arredondada com sombra, verde/amarela/vermelha com brilho e marcas a cada 25%; no golpe pisca branco e treme, a parte perdida fica amarelada antes de descer; cura sobe por uma parte verde clara; vida baixa pulsa; some no desmaio.
 - Captura com a fórmula do original, itens na batalha, item do treinador, XP e EVs divididos, sprites PMD animados, efeitos de cada golpe, HUD do original.
 
 ### Modo de treinamento (para balancear)

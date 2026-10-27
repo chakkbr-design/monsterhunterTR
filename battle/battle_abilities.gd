@@ -1974,7 +1974,7 @@ func _switched_out(f: BattleFighter) -> void:
 			var m: Mon = f.mon
 			if m.hp > 0 and m.hp < m.max_hp:
 				m.hp = mini(m.max_hp, m.hp + f.paced(maxi(1, int(m.max_hp / 3.0))))
-				f.hp = m.hp
+				f.hp = BattleFighter.hp_from_mon(m.hp)
 				_fire(f, Color(0.5, 1.0, 0.6))
 
 

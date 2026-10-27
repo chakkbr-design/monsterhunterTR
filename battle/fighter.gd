@@ -104,6 +104,10 @@ var level := 1
 var stats := {}
 var stages := {}
 var crit_stage := 0
+## Vida em dobro na batalha (Caio, 2026-10-27): o lutador tem HP_MULT vezes o HP do Mon (treino e
+## campanha). O Mon guarda a mesma fração (hp_to_mon / hp_from_mon); itens e a party continuam no HP
+## normal do Mon.
+const HP_MULT := 2
 var hp := 1
 var max_hp := 1
 var pp_base := 100.0
@@ -239,8 +243,8 @@ func setup(m: Mon, s: int, ctrl: String) -> void:
 		stats[k] = m.stat(k)
 	for k in STAGE_KEYS:
 		stages[k] = 0
-	max_hp = m.max_hp
-	hp = clampi(m.hp, 0, max_hp)
+	max_hp = hp_from_mon(m.max_hp)
+	hp = clampi(hp_from_mon(m.hp), 0, max_hp)
 	pp_base = BattleEnergy.MAX
 	pp_max = BattleEnergy.MAX * BattleEnergy.START
 	jump_height = float(sp.get("jump_height_override", sp.get("jump_height", JUMP_HEIGHT_DEFAULT)))
@@ -418,6 +422,16 @@ func _place_status_fx() -> void:
 		return
 	var at := to_global(_status_fx_off)
 	_status_fx.global_position = at + PmdFx.toward_camera(at, vfx.cam())
+
+
+## HP do Mon -> HP do lutador (HP_MULT).
+static func hp_from_mon(n: int) -> int:
+	return n * HP_MULT
+
+
+## HP do lutador -> HP do Mon, para cima (vivo no lutador continua vivo no Mon).
+static func hp_to_mon(n: int) -> int:
+	return ceili(float(n) / HP_MULT)
 
 
 func alive() -> bool:
@@ -902,7 +916,7 @@ func heal(n: int) -> void:
 	if arena and arena.get("moves") and arena.moves.effects.heal_blocked(self):
 		return  # Psychic Noise
 	hp = mini(hp + n, max_hp)
-	mon.hp = hp
+	mon.hp = hp_to_mon(hp)
 	refresh_label()
 
 
@@ -945,7 +959,7 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 			impact_t = maxf(impact_t, imp)
 			src.impact_t = maxf(src.impact_t, imp)
 	hp = maxi(hp - amount, 0)
-	mon.hp = hp
+	mon.hp = hp_to_mon(hp)
 	var k := dir * knockback * KNOCKBACK_SCALE
 	if impact_t > 0.0:
 		impact_knock += k
@@ -961,7 +975,7 @@ func take_damage(amount: int, dir: Vector3, knockback := 4.0, opts := {}) -> flo
 	if hp == 0:
 		if immortal:
 			hp = max_hp
-			mon.hp = hp
+			mon.hp = hp_to_mon(hp)
 			popup("KO! (recharged)", Color(1, 0.4, 0.4))
 			refresh_label()
 			return imp
@@ -1337,7 +1351,7 @@ func refresh_species() -> void:
 
 ## Depois de um item aplicado ao Mon: copia HP e status persistente de volta para o lutador.
 func sync_after_item() -> void:
-	hp = clampi(mon.hp, 0, max_hp)
+	hp = clampi(hp_from_mon(mon.hp), 0, max_hp)
 	if mon.status == "" and status in Mon.PERSIST_STATUS:
 		clear_status()
 	refresh_label()
@@ -1348,7 +1362,7 @@ func write_back() -> void:
 	BattleTransform.revert(self)
 	if not alive() and mon.hp > 0:
 		return  # desmaiou em campo e foi revivido por item depois: não desfaz o Revive
-	mon.hp = hp
+	mon.hp = hp_to_mon(hp)
 	mon.status = "poison" if status == "toxic" else status if status in Mon.PERSIST_STATUS else ""
 	mon.battle_status = status if status in ["toxic", "freeze"] else ""
 	mon.par_left = par_t if status == "paralysis" else 0.0

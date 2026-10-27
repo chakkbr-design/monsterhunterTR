@@ -2194,7 +2194,7 @@ func use_item(id: String, m: Mon = null) -> bool:
 		text = "%s snapped out of confusion!" % m.display_name
 	else:
 		if f:
-			m.hp = f.hp
+			m.hp = BattleFighter.hp_to_mon(f.hp)
 		text = g.use_item(id, m)
 		if text == "":
 			say("It won't have any effect.", "item")
@@ -2208,7 +2208,12 @@ func use_item(id: String, m: Mon = null) -> bool:
 	preload("res://audio/cue.gd").sfx("heal")
 	if f:
 		if m.hp > before:
-			f.popup("+%d HP" % (m.hp - before), Color(0.55, 1.0, 0.6), 1.0, 0.5)
+			f.popup(
+				"+%d HP" % ((m.hp - before) * BattleFighter.HP_MULT),
+				Color(0.55, 1.0, 0.6),
+				1.0,
+				0.5
+			)
 		fx_disc(f.position, 0.9, Color(0.6, 1.0, 0.65), 0.5)
 	return true
 
@@ -2255,7 +2260,7 @@ func _support_heal() -> void:
 	if id == "":
 		return
 	var before := player.hp
-	player.mon.hp = player.hp
+	player.mon.hp = BattleFighter.hp_to_mon(player.hp)
 	var text: String = _game().use_item(id, player.mon)
 	if text == "":
 		return
@@ -2833,8 +2838,8 @@ func _sync_from_mon(f: BattleFighter) -> void:
 		if BattleTransform.is_transformed(f) and k != "hp":
 			continue  # Transform: os stats copiados valem até sair de campo
 		f.stats[k] = f.mon.stat(k)
-	f.max_hp = f.mon.max_hp
-	f.hp = clampi(f.mon.hp, 0, f.max_hp)
+	f.max_hp = BattleFighter.hp_from_mon(f.mon.max_hp)
+	f.hp = clampi(BattleFighter.hp_from_mon(f.mon.hp), 0, f.max_hp)
 	f.refresh_label()
 
 

@@ -482,7 +482,8 @@ func _shed_tail() -> void:
 	check(a.moves.use(p, "shed_tail"), "usa Shed Tail")
 	_run(a, 1.2)
 	check(
-		mon.hp <= hp_max - hp_max / 2 + 1, "Shed Tail custa metade do HP (%d/%d)" % [mon.hp, hp_max]
+		BattleFighter.hp_from_mon(mon.hp) <= hp_max - hp_max / 2 + 2,
+		"Shed Tail custa metade do HP (%d/%d)" % [mon.hp, hp_max]
 	)
 	var nf: BattleFighter = a.player
 	check(nf != null and nf.mon == third, "troca com o do banco")
