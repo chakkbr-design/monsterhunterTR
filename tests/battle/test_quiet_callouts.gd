@@ -10,15 +10,21 @@ const OK_KINDS := ["damage", "special", "move"]
 
 var _fails := 0
 var _count := 0
+var _ran := false
 
 
-func _initialize() -> void:
+## No _process: em _initialize a arena ainda não está na árvore e o HUD descarta os popups.
+func _process(_d: float) -> bool:
+	if _ran:
+		return true
+	_ran = true
 	_vgc_loud()
 	_filter()
 	_no_marks()
 	_fight()
 	print("quiet_callouts: %d checks, %d falhas" % [_count, _fails])
 	quit(1 if _fails else 0)
+	return true
 
 
 func check(ok: bool, what: String) -> void:

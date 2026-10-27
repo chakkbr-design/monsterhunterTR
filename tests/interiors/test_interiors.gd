@@ -127,7 +127,14 @@ func _start_in_bedroom() -> void:
 		is_equal_approx(rig.distance, w.INDOOR_DISTANCE),
 		"indoor camera distance (%.1f)" % rig.distance
 	)
-	check(w.builders.is_empty(), "no outdoor zone built while starting indoors")
+	# The loading screen preloads the outdoor zone behind the room's door, and only that one.
+	check(
+		w.builders.keys().all(func(z): return z == w.active_zone),
+		(
+			"only the room's outdoor zone (%s) preloaded while indoors (%s)"
+			% [w.active_zone, w.builders.keys()]
+		)
+	)
 
 
 func _rooms() -> void:

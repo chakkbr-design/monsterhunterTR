@@ -67,9 +67,9 @@ func _run() -> void:
 	check(game.pending_learns.size() == 2, "fila tem 2")
 	game.learn_requested.emit()
 	check(learn.is_open() and learn.state == "talk", "LearnMove abriu nas falas")
-	check("tentando aprender" in learn.message, "fala 1: " + learn.message)
+	check("trying to learn" in learn.message, "fala 1: " + learn.message)
 	send(KEY_E)
-	check("mais de quatro golpes" in learn.message, "fala 2: " + learn.message)
+	check("more than four moves" in learn.message, "fala 2: " + learn.message)
 	send(KEY_E)
 	check(learn.state == "ask" and learn.question == "delete", "pergunta apagar um golpe")
 	send(KEY_E)  # SIM
@@ -77,13 +77,13 @@ func _run() -> void:
 	send(KEY_S)  # cursor 1
 	send(KEY_E)  # esquece o golpe 1
 	check(m.moves[1] == nw[0] and learn.state == "talk", "trocou golpe 1 pelo primeiro")
-	check("Puf" in learn.message, "1, 2 e... Puf!: " + learn.message)
+	check("Poof" in learn.message, "1, 2 e... Puf!: " + learn.message)
 	send(KEY_E)
-	check("esqueceu" in learn.message, "esqueceu: " + learn.message)
+	check("forgot" in learn.message, "esqueceu: " + learn.message)
 	send(KEY_E)
-	check(learn.message == "E…", "E…")
+	check(learn.message == "And...", "E…")
 	send(KEY_E)
-	check("aprendeu" in learn.message, "aprendeu: " + learn.message)
+	check("learned" in learn.message, "aprendeu: " + learn.message)
 	send(KEY_ENTER)  # próximo da fila
 	check(learn.is_open() and learn.state == "talk", "segundo da fila")
 	learn_to_pick()
@@ -156,10 +156,10 @@ func _run() -> void:
 	send(KEY_UP, 3)
 	check(menu._toss_qty == 2, "quantidade limitada ao que tem (%d)" % menu._toss_qty)
 	send(KEY_E)
-	check(menu.screen == "ask" and "Jogar fora 2" in menu._ask_text, "pergunta: " + menu._ask_text)
+	check(menu.screen == "ask" and "Throw away 2" in menu._ask_text, "pergunta: " + menu._ask_text)
 	send(KEY_E)  # SIM
 	check(not game.bag.has("great_ball") and menu.screen == "bag", "jogou fora 2 Great Ball")
-	check("Jogou fora 2" in menu._bag_note, "nota do descarte: " + menu._bag_note)
+	check("Threw away 2" in menu._bag_note, "nota do descarte: " + menu._bag_note)
 	send(KEY_A)  # Remédios
 
 	# 4. MT com 4 golpes cai na LearnMove; o menu ignora teclas enquanto ela está aberta.
@@ -230,7 +230,7 @@ func _run() -> void:
 	pl.global_position = Vector3(1, 2, 3)
 	send(KEY_S, 4)  # Salvar (Pokémon, Bolsa, Piquenique, Cartão, Salvar...)
 	send(KEY_E)
-	check(menu.screen == "msg" and menu.message == "Jogo salvo.", "salvou")
+	check(menu.screen == "msg" and menu.message == "Game saved.", "salvou")
 	var d: Dictionary = game.load_game()
 	check(d.get("pos", []) == [1.0, 2.0, 3.0], "posição no save: %s" % [d.get("pos")])
 	send(KEY_E)
@@ -329,7 +329,7 @@ func _run() -> void:
 	check(menu.screen == "", "Esc fecha")
 
 	# 9. Resumo: linhas do original e mood.
-	check(menu.mood_text(70) == "Contente" and menu.mood_text(10) == "Desconfiado", "humor")
+	check(menu.mood_text(70) == "Content" and menu.mood_text(10) == "Wary", "humor")
 	check(menu.met_text(f) == "—" or "em" in menu.met_text(f), "encontro")
 	# 9b. Repel e Escape Rope pela Bolsa (contrato: Game.use_field_item, RouteWorld.escape_rope).
 	game.bag = {"repel": 1, "escape_rope": 1}
@@ -364,8 +364,8 @@ func _run() -> void:
 		Hud.PartyOrbs.pp_state(5.0, 95.0, [10.0, 20.0]) == 2, "PP abaixo do golpe mais barato: 'zZ'"
 	)
 	check(Hud.PartyOrbs.pp_state(0.0, 95.0, []) == 2, "PP zero: 'zZ'")
-	check(Hud.clock_format(0, 540.0) == "SEG 9:00", "relógio SEG 9:00")
-	check(Hud.clock_format(8, 1439.0) == "TER 23:59", "relógio TER 23:59")
+	check(Hud.clock_format(0, 540.0) == "MON 9:00", "relógio MON 9:00")
+	check(Hud.clock_format(8, 1439.0) == "TUE 23:59", "relógio TUE 23:59")
 	var hud = Hud.new()
 	root.add_child(hud)
 	hud.show_saving()

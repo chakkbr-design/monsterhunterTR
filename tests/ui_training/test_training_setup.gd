@@ -249,7 +249,7 @@ func _run() -> void:
 	scr._slot_btns.clear.pressed.emit()
 	check(Cfg.load_teams()[2].is_empty(), "apagar com confirmação")
 	scr.load_team(0, 2)
-	check(scr._status.text.contains("vazio"), "slot vazio não carrega")
+	check(scr._status.text.contains("empty"), "slot vazio não carrega")
 	scr.close_picker()
 
 	# --- Time vazio não começa ---

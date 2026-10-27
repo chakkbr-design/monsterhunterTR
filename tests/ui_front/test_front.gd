@@ -208,32 +208,32 @@ func _run() -> void:
 	check(t.player_name == "Ana", "Enter depois de digitar confirma (cursor pula para OK)")
 	check(t.state == "talk", "fala sobre o rival")
 	check(await enter_until(t, "rival"), "chega no nome do rival")
-	# Teclado na tela: A, direita, b (minúscula automática), direita x3 até OK.
+	# Teclado na tela: A, direita, b (minúscula automática); 3x baixo até Space, Suggest, OK.
 	await key(KEY_ENTER)
 	await key(KEY_RIGHT)
 	await key(KEY_ENTER)
 	check(t._entry.value == "Ab", "teclado na tela digita Ab (valor: %s)" % t._entry.value)
-	for i in 4:
+	for i in 3:
 		await key(KEY_DOWN)
 	check(t._entry.current_key() == "Space", "bottom row: Space (%s)" % t._entry.current_key())
 	await key(KEY_RIGHT)
 	await key(KEY_ENTER)
 	check(
-		t._entry.value == "Gael", "Sugerir preenche o primeiro nome sugerido (%s)" % t._entry.value
+		t._entry.value == "Gary", "Sugerir preenche o primeiro nome sugerido (%s)" % t._entry.value
 	)
 	await key(KEY_RIGHT)
 	await key(KEY_RIGHT)
 	check(t._entry.current_key() == "OK", "cursor em OK")
 	await key(KEY_ENTER)
 	check(t.state == "confirm", "tela de confirmação")
-	check(t.rival_name == "Gael", "rival = Gael")
+	check(t.rival_name == "Gary", "rival = Gary")
 	await key(KEY_ENTER)
 	check(t.state == "talk", "fala final")
 	check(await enter_until(t, "leaving"), "fala final termina e sai")
 	await wait_scene()
 	check(scene_to == "res://world/route_world.tscn", "trocou para a RouteWorld (%s)" % scene_to)
 	check(
-		game.player_name == "Ana" and game.rival_name == "Gael" and game.player_gender == "female",
+		game.player_name == "Ana" and game.rival_name == "Gary" and game.player_gender == "female",
 		(
 			"Game com nomes e gênero (%s, %s, %s)"
 			% [game.player_name, game.rival_name, game.player_gender]
@@ -332,7 +332,7 @@ func _run() -> void:
 		"resumo do save: %s" % s
 	)
 	check(
-		s.get("time") == "0:02" and s.get("count") == 1 and s.get("location") == "CIDADE DE PALLET",
+		s.get("time") == "0:02" and s.get("count") == 1 and s.get("location") == "PALLET TOWN",
 		"cartão com TEMPO, POKéMON e LOCAL: %s" % s
 	)
 	check(t._card.visible, "cartão do save visível")
