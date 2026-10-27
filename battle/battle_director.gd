@@ -133,6 +133,16 @@ func time_scale() -> float:
 	return 1.0
 
 
+## Fim da luta (estado "ending", sem tick): o zoom do último nocaute ainda acaba no tempo dele, senão a
+## câmera lenta de 0,2x seguraria a espera do resultado inteira.
+func cool(dt: float) -> void:
+	_ko_hit = maxf(_ko_hit - dt, 0.0)
+	if shot in ["ko", "big"]:
+		shot_t -= dt
+		if shot_t <= 0.0:
+			shot = ""
+
+
 ## Troca em andamento: ninguém age (a arena só roda os eventos e a bola).
 func holding() -> bool:
 	if _held >= HOLD_MAX:

@@ -1529,6 +1529,8 @@ func step(dt: float) -> void:
 		"capture":
 			_capture_step(dt)
 		"ending":
+			if director:
+				director.cool(dt)
 			if _state_t >= _end_delay:
 				if not _begin_results():
 					_finish()
