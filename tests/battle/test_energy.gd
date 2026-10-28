@@ -210,5 +210,5 @@ func _campaign() -> void:
 		var f: BattleFighter = a.player
 		check(f.pp_base == BattleEnergy.MAX, "%s: barra de energia" % kind)
 		check(is_equal_approx(a.damage_pace, BattleEnergy.DAMAGE_PACE), "%s: dano 0,6x" % kind)
-		check(a.get("regroup") != null, "%s: reagrupar do modo de energia" % kind)
+		check(a.get("regroup") == null, "%s: sem reagrupar (apagado em 2026-10-27)" % kind)
 		a.queue_free()

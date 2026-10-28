@@ -110,7 +110,7 @@ func _one(sd: int) -> Dictionary:
 	root.add_child(tb)
 	await process_frame
 	# Vigia de travas: quadros seguidos em que a luta está em "fight" mas o relógio da luta não anda
-	# (reagrupar, troca, abertura). Cada trava de 3 s+ vira o evento "hold" na telemetria.
+	# (troca, abertura). Cada trava de 3 s+ vira o evento "hold" na telemetria.
 	var held := 0
 	var last_clock := -1.0
 	for i in 60 * 60 * 30:

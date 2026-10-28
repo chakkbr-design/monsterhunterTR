@@ -242,8 +242,6 @@ func _run() -> void:
 	var shots := {}
 	var slow := 0
 	var hold_frames := 0
-	var hold_moved := 0
-	var prev := {}
 	var band := {}
 	var fade := {}
 	var raised := true
@@ -261,16 +259,8 @@ func _run() -> void:
 			dists.append(d._dist)
 		if ar.cine_scale() < 0.99:
 			slow += 1
-		var now := {}
-		for f in ar.fighters:
-			if is_instance_valid(f) and f.active():
-				now[f] = [f.pp_max, f.position]
 		if d.holding():
 			hold_frames += 1
-			for f in now:
-				if prev.has(f) and (absf(now[f][0] - prev[f][0]) > 0.001):
-					hold_moved += 1
-		prev = now
 	check(tb._result_box.visible, "a luta terminou (%s)" % tb.result.get("outcome"))
 	dists.sort()
 	var med: float = dists[dists.size() / 2] if not dists.is_empty() else 99.0
@@ -281,8 +271,11 @@ func _run() -> void:
 	check(not shots.has("finish"), "sem zoom pela previsão de dano antes do golpe")
 	check(int(shots.get("big", 0)) > 0, "destaque de golpe grande (%d)" % int(shots.get("big", 0)))
 	check(slow > 0, "câmera lenta em %d quadros" % slow)
-	check(hold_frames > 0, "troca segurou a luta por %d quadros" % hold_frames)
-	check(hold_moved == 0, "ninguém gasta nem ganha energia na troca (%d)" % hold_moved)
+	check(hold_frames == 0, "troca não segura a luta (%d quadros)" % hold_frames)
+	check(
+		not shots.has("switch") and not shots.has("send"),
+		"troca sem corte de câmera no treinador ou na bola"
+	)
 	print("cenas: ", shots)
 	_check_band(band, "dupla, campo")
 	_check_fade(fade, "dupla, campo")

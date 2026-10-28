@@ -848,17 +848,9 @@ func _fly_spot(f: BattleFighter, goal: Vector3) -> Vector3:
 func steer(f: BattleFighter, want: Vector3) -> Vector3:
 	if not on or f.motion != "" or want.length() < 0.05:
 		return want
-	# Reagrupar depois do nocaute (BattleRegroup._walk, luta parada): volta andando ao ponto de
-	# entrada contornando, sem salto nem voo (o movimento do salto não anda com a luta parada).
-	var regroup: bool = str(arena.get("energy_pause")) == "regroup"
-	if not regroup and (f.ai == null or f.controller != "ai" or not f.can_act()):
+	if f.ai == null or f.controller != "ai" or not f.can_act():
 		return want
-	var goal := Vector3.INF
-	if regroup:
-		var st: Vector3 = f.get_meta("start_at", f.position)
-		goal = f.pos2(st)
-	else:
-		goal = _goal(f, want)
+	var goal := _goal(f, want)
 	var id := f.get_instance_id()
 	if goal == Vector3.INF:
 		_nav.erase(id)
@@ -879,8 +871,8 @@ func steer(f: BattleFighter, want: Vector3) -> Vector3:
 		or _clock - float(nv.t) > PATH_AGE
 		or (goal - Vector3(nv.goal)).length() > PATH_MOVE
 	)
-	if fresh or regroup != bool(nv.get("walk", false)):
-		var res := _astar(f, p, goal, not regroup)
+	if fresh:
+		var res := _astar(f, p, goal)
 		nv = {
 			"goal": goal,
 			"t": _clock,
@@ -888,11 +880,10 @@ func steer(f: BattleFighter, want: Vector3) -> Vector3:
 			"i": 0,
 			"wait0": -1.0,
 			"fails": int(nv.get("fails", 0)),
-			"walk": regroup
 		}
 		_nav[id] = nv
 		var detour: bool = float(res.cost) > float(res.straight) * FLY_DETOUR + 6.0
-		if not regroup and fly_ready(f) and (not res.reached or int(res.jumps) >= 2 or detour):
+		if fly_ready(f) and (not res.reached or int(res.jumps) >= 2 or detour):
 			var spot := _fly_spot(f, goal)
 			if spot != Vector3.INF and fly(f, spot):
 				_nav.erase(id)
