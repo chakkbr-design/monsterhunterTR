@@ -5,7 +5,8 @@ Uso: python3 tools/battery_anomalies.py DIR [DIR...] [--json saida.json]
 
 Procura:
 - luta que acabou no limite de tempo (timeout);
-- reagrupar que estourou o teto (BattleRegroup.MAX_SECS) ou terminou com alguém longe do ponto de entrada;
+- reagrupar que estourou o teto ou terminou longe do ponto de entrada (só telemetria antiga: o reagrupar
+  saiu do jogo em 2026-10-27);
 - trava ("hold"): a luta parada em "fight" sem o relógio andar (vigia do battery.gd);
 - Pokémon parado: em luta, sem descanso nem atordoado, andando menos de STUCK_M em STUCK_S segundos;
 - posição fora da quadra ou NaN;

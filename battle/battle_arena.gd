@@ -136,13 +136,11 @@ var clean_hud := false
 ## Câmera de ação do treino no modo de energia (opts.action_cam, BattleDirector): enquadra a ação,
 ## câmera lenta no golpe que nocauteia e todo mundo parado na troca.
 var director: BattleDirector = null
-## Pausa da luta no modo de energia: "" = lutando; "regroup" = alguém desmaiou e todos voltam ao ponto
-## de entrada (BattleRegroup; a luta volta sozinha); outro valor (ex.: "opening", a abertura do
+## Pausa da luta no modo de energia: "" = lutando; outro valor (ex.: "opening", a abertura do
 ## treino) = parado até alguém limpar. Na pausa ninguém anda nem age, os timers (energia, cooldowns,
 ## status) não correm e os eventos de golpe ficam congelados; só os eventos da arena (recolher,
 ## mandar o substituto) e a bola seguem. fight_paused() lê.
 var energy_pause := ""
-var regroup: BattleRegroup = null
 ## IA do treinador por lado (BattleTrainerAI, opcional): round_start() no começo da rodada e
 ## pick_replacement(slot) -> índice de bench_of(side) (-1 = a arena escolhe).
 var trainer_ai := {}
@@ -216,11 +214,18 @@ var _cam: Camera3D
 var _prev_cam: Camera3D
 var _yaw := 0.0
 var _swap_cd := 0.0
-## Modo de energia (Caio, 2026-10-27): troca voluntária (Tab, IA de treinador, U-turn/Volt Switch/
+## Modo de energia (Caio, 2026-10-27; 5 s viraram 15 s): troca voluntária (Tab, IA de treinador, U-turn/Volt Switch/
 ## Baton Pass, Emergency Exit) só depois de SWITCH_OPEN s de luta, e cada troca trava as trocas dos
 ## dois lados por SWITCH_LOCK s (um treinador por vez). Substituto de quem desmaiou não conta.
-const SWITCH_OPEN := 5.0
-const SWITCH_LOCK := 5.0
+const SWITCH_OPEN := 15.0
+const SWITCH_LOCK := 15.0
+## Onde entra quem vem na troca ou no lugar de quem desmaiou (_entry_at): distância até o adversário
+## (m), folga da parede e do parceiro, e quantas direções em volta do adversário são testadas.
+const ENTRY_MIN := 3.0
+const ENTRY_MAX := 9.0
+const ENTRY_WALL := 2.0
+const ENTRY_MATE := 2.5
+const ENTRY_DIRS := 16
 var fight_clock := 0.0  ## segundos de luta de verdade (sem abertura, pausa nem troca)
 var switch_lock := 0.0
 var _ball_fetched := false  ## Ball Fetch já buscou a bola desta luta
@@ -298,7 +303,6 @@ func start(player_party: Array, enemy_list: Array, o: Dictionary) -> void:
 	abilities = BattleAbilities.new(self)
 	turns = BattleTurns.new(self)
 	end_turn = BattleEndTurn.new(self)
-	regroup = BattleRegroup.new(self)
 	if bool(o.get("action_cam", false)) and not bool(o.get("fast_sim", false)):
 		director = BattleDirector.new(self)
 	if String(o.get("telemetry", "")) != "":
@@ -788,7 +792,6 @@ func _spawn(m: Mon, side: int, ctrl: String, at: Vector3) -> BattleFighter:
 	add_child(f)
 	f.setup(m, side, ctrl)
 	f.position = at
-	f.set_meta("start_at", Vector3(at.x, 0.0, at.z))  # ponto de volta do reagrupar (BattleRegroup)
 	f.facing = axis if side == 0 else -axis
 	f.fainted.connect(_on_fainted)
 	fighters.append(f)
@@ -849,13 +852,18 @@ func _lateral() -> Vector3:
 	return axis.cross(Vector3.UP).normalized()
 
 
-func _send_enemy(i: int, slot := 0) -> void:
+## to = onde a bola cai (a troca já escolheu); INF = o lugar do lado ou, na luta, _entry_at.
+func _send_enemy(i: int, slot := 0, to := Vector3.INF) -> void:
 	enemy_index = maxi(enemy_index, i)
 	var at := enemy_spot
-	if doubles:
+	if to != Vector3.INF:
+		at = to
+	elif doubles:
 		at = enemy_spot + _lateral() * DOUBLES_GAP * (0.5 if slot == 1 else -0.5)
 		if fixed:
 			at = _nearest_free(at)
+	if state == "fight" and to == Vector3.INF:
+		at = _entry_at(1, enemies[i], at)
 	var f := _spawn(enemies[i], 1, "ai", at)
 	if slot == 1:
 		enemy2 = f
@@ -1458,8 +1466,7 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 		return false
 	_note_switch()
 	var side := out.side
-	var at := out.position
-	at.y = 0.0
+	var at := _respawn_at(out)
 	say("Come back, %s!" % out.mon.display_name, "trainer" if side == 1 else "info")
 	if telemetry:
 		telemetry.note("switch", {"who": telemetry.uid(out), "to": m.species})
@@ -1467,6 +1474,7 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 	var slot := 1 if out == enemy2 else 0
 	var aimed: Array = fighters.filter(func(g): return is_instance_valid(g) and g.opponent == out)
 	_recall(out)
+	at = _entry_at(side, m, at)
 	var nf: BattleFighter
 	if side == 0:
 		var i := party.find(m)
@@ -1478,11 +1486,10 @@ func _do_switch(out: BattleFighter, m: Mon) -> bool:
 			nf = player
 	else:
 		_enemy_reserved.erase(m)
-		_send_enemy(enemies.find(m), slot)
+		_send_enemy(enemies.find(m), slot, at)
 		nf = enemy2 if slot == 1 else enemy
 	if is_instance_valid(nf):
 		nf.position = at
-		nf.set_meta("start_at", out.get_meta("start_at", at))  # entra no lugar de quem saiu
 		for g in aimed:
 			if is_instance_valid(g) and g.active():
 				g.opponent = nf
@@ -1689,12 +1696,7 @@ func _fight_step(dt: float) -> void:
 	if state != "fight":
 		return
 	if energy_pause != "":
-		# Reagrupar depois do nocaute (BattleRegroup) ou pausa de fora (abertura): ninguém age.
-		if energy_pause == "regroup" and regroup:
-			regroup.step(dt)
-		return
-	if director and director.holding():
-		return  # troca: todos param até o antigo sair e o novo cair
+		return  # pausa de fora (abertura): ninguém age
 	_swap_cd = maxf(_swap_cd - dt, 0.0)
 	fight_clock += dt
 	switch_lock = maxf(switch_lock - dt, 0.0)
@@ -1707,7 +1709,7 @@ func _fight_step(dt: float) -> void:
 	moves.effects.tick(dt)
 	turns.tick(dt)
 	for f in fighters:
-		if f.on_field and energy_pause == "":  # um desmaio aqui para os outros já (reagrupar)
+		if f.on_field and energy_pause == "":
 			f.tick(dt)
 	for f in fighters.duplicate():
 		if not f.on_field or state != "fight":
@@ -2597,8 +2599,6 @@ func _on_fainted(f: BattleFighter) -> void:
 		_enemy_fainted(f)
 	else:
 		_player_fainted(f)
-	if regroup and state == "fight":
-		regroup.begin()  # modo de energia: todos voltam ao ponto de entrada até os lugares encherem
 
 
 func _enemy_fainted(f: BattleFighter) -> void:
@@ -2909,15 +2909,68 @@ func _player_fainted(f: BattleFighter) -> void:
 			if state != "fight":
 				return
 			var k := _replacement(0, 0, party.find(m_next))
-			_send_player(k if not party[k].is_fainted() else party.find(m_next), at)
+			if party[k].is_fainted():
+				k = party.find(m_next)
+			_send_player(k, _entry_at(0, party[k], at))
 	)
 
 
-## Onde entra o substituto de `f`: o ponto de entrada de f (todos se reagrupam nele, BattleRegroup).
+## Onde caiu `f` (o ponto de reserva do substituto dele, _entry_at).
 func _respawn_at(f: BattleFighter) -> Vector3:
-	var at: Vector3 = BattleRegroup.start_of(f)
+	var at := f.position
 	at.y = 0.0
 	return at
+
+
+## Onde o treinador do lado manda `m`, que entra na luta (troca ou substituto; Caio, 2026-10-27:
+## ninguém volta mais ao ponto de entrada). Pontos em volta do adversário mais perto de `fallback`,
+## na distância que o perfil de `m` prefere (BattleProfile band, entre ENTRY_MIN e ENTRY_MAX m),
+## puxando para o lado do treinador; nunca colado na parede, num objeto ou na lava, nem em cima de
+## outro adversário ou do parceiro. Sem adversário em campo: `fallback`.
+func _entry_at(side: int, m: Mon, fallback: Vector3) -> Vector3:
+	fallback.y = 0.0
+	var foes: Array = []
+	var mates: Array = []
+	for o in fighters:
+		if is_instance_valid(o) and o.active():
+			(mates if o.side == side else foes).append(o)
+	if foes.is_empty():
+		return fallback
+	var prof := BattleProfile.params(BattleProfile.pick(m, m.moves.slice(0, 4)))
+	var band: Vector2 = prof.get("band", Vector2(1.8, 3.0))
+	var want := clampf((band.x + band.y) * 0.5, ENTRY_MIN, ENTRY_MAX)
+	var foe: BattleFighter = foes[0]
+	for o in foes:
+		if _flat_d(o.position, fallback) < _flat_d(foe.position, fallback):
+			foe = o
+	var home := trainer_spot(side)
+	var inner := rect.grow(-ENTRY_WALL)
+	var best := fallback
+	var best_s := -INF
+	for i in ENTRY_DIRS + 1:
+		var q := fallback
+		if i < ENTRY_DIRS:
+			var a := TAU * i / ENTRY_DIRS
+			q = foe.position * Vector3(1, 0, 1) + Vector3(cos(a), 0.0, sin(a)) * want
+		if not inner.has_point(Vector2(q.x, q.z)) or _solid_at(q):
+			continue
+		var s := 0.0
+		for o in foes:
+			var d := _flat_d(o.position, q)
+			s -= absf(d - want) if o == foe else maxf(want - d, 0.0) * 0.6
+		for o in mates:
+			s -= maxf(ENTRY_MATE - _flat_d(o.position, q), 0.0) * 1.5
+		s -= Vector2(q.x - home.x, q.z - home.z).length() * 0.05
+		if terrain and terrain.biomes and not terrain.biomes.lava_at(q, 0.5).is_empty():
+			s -= 3.0
+		if s > best_s:
+			best_s = s
+			best = q
+	return best
+
+
+func _flat_d(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 ## Evento da própria arena (recolher, mandar o substituto, comando): segue na pausa. Lambda com self
@@ -2927,7 +2980,7 @@ func _own_event(e: Dictionary) -> bool:
 	return o == self or (o != null and o == get_script())
 
 
-## Luta parada no modo de energia (reagrupar depois do nocaute ou pausa de fora, energy_pause).
+## Luta parada no modo de energia (pausa de fora, energy_pause).
 func fight_paused() -> bool:
 	return energy_pause != ""
 
@@ -2967,10 +3020,11 @@ func _doubles_refill(f: BattleFighter) -> bool:
 				player.controller = _player_ctrl()
 				ally = null
 				p_ok = true
+			var to := _entry_at(0, party[k], at)
 			if p_ok or (as_ally and is_instance_valid(player) and player.active()):
-				_send_ally(k, at)
+				_send_ally(k, to)
 			else:
-				_send_player(k, at)
+				_send_player(k, to)
 	)
 	_bind()
 	return true

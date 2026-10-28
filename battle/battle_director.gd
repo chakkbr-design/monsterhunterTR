@@ -8,11 +8,11 @@ extends RefCounted
 ##   a câmera fecha no desmaiado em câmera lenta (KO_SCALE por KO_SECS). Não há mais o zoom antes
 ##   do golpe pela previsão de dano (Caio, 2026-10-26: o alvo desviava e o zoom vinha mesmo assim);
 ## - golpe grande (poder >= BIG_BP): enquadra quem usou e o alvo, câmera um pouco lenta (BIG_SCALE);
-## - troca (recolher ou soltar): todo mundo para (holding) até o antigo sair e o novo cair, com a
-##   câmera no treinador e no ponto da bola;
-## - soltar (shot "send", toda bola com a câmera de ação, BallShow): close no treinador enquanto
-##   ele prepara o arremesso, a câmera segue a bola até o ponto onde cai e fecha no Pokémon que
-##   saiu por MON_BEAT s; depois volta a enquadrar todos;
+## - troca e substituto durante a luta (Caio, 2026-10-27): sem cena nenhuma. O treinador recolhe e
+##   joga a bola, a câmera segue enquadrando todos e a luta não para;
+## - soltar na abertura do treino (shot "send", BallShow): close no treinador enquanto ele prepara o
+##   arremesso, a câmera segue a bola até o ponto onde cai e fecha no Pokémon que saiu por MON_BEAT
+##   s (holding segura a abertura); depois volta a enquadrar todos;
 ## - cena fixa (set_cine, a abertura do treino): enquadra os pontos dados (o telão, a arena inteira).
 ## Os tempos das cenas são em segundos de luta (dt já escalado), para casarem com o desmaio e a bola.
 
@@ -48,7 +48,7 @@ const EASE_SHOT := 5.0
 ## o zoom em câmera lenta (KO_SCALE) por KO_SECS (a arena some com o corpo em FAINT_CLEAR = 1 s).
 const KO_HIT := 0.06
 const KO_HIT_SCALE := 0.2
-const KO_SCALE := 0.5
+const KO_SCALE := 0.75  # Caio, 2026-10-27: 0,5x deixava os closes lentos demais
 const KO_SECS := 1.1
 const KO_MARGIN := 0.9
 const KO_DIST := 4.5
@@ -136,7 +136,7 @@ func time_scale() -> float:
 
 
 ## Fim da luta (estado "ending", sem tick): o zoom do último nocaute ainda acaba no tempo dele, senão a
-## câmera lenta de 0,2x seguraria a espera do resultado inteira.
+## câmera lenta seguraria a espera do resultado inteira.
 func cool(dt: float) -> void:
 	_ko_hit = maxf(_ko_hit - dt, 0.0)
 	if shot in ["ko", "big"]:
@@ -145,9 +145,9 @@ func cool(dt: float) -> void:
 			shot = ""
 
 
-## Troca em andamento: ninguém age (a arena só roda os eventos e a bola).
+## Bola da abertura em andamento: ninguém age. Na luta a troca não segura nada.
 func holding() -> bool:
-	if _held >= HOLD_MAX:
+	if _held >= HOLD_MAX or _in_fight():
 		return false
 	var balls: Array = arena.get("_balls")
 	return _hold_t > 0.0 or not balls.is_empty() or _await_send
@@ -171,11 +171,16 @@ func tick(dt: float) -> void:
 		if shot_t <= 0.0:
 			shot = ""
 			var side := _ball_side()
-			if side >= 0:
+			if side >= 0 and not _in_fight():
 				shot = "send"  # o zoom do desmaio acabou com uma bola no ar: segue a bola
 				_switch_side = side
 	if _await_send and not _waiting_replacement():
 		_await_send = false
+
+
+## Luta de verdade (não a abertura): troca e substituto não mexem na câmera.
+func _in_fight() -> bool:
+	return String(arena.get("state")) in ["fight", "ending"]
 
 
 func _ok(f) -> bool:
@@ -214,12 +219,16 @@ func on_faint(f: BattleFighter) -> void:
 
 
 func on_recall(f: BattleFighter) -> void:
+	if _in_fight():
+		return
 	_hold_t = maxf(_hold_t, RECALL_HOLD)
 	_await_send = _waiting_replacement()
 	_start_switch(f.side, f.position)
 
 
 func on_send(side: int, at: Vector3) -> void:
+	if _in_fight():
+		return
 	if shot != "send" or side != _switch_side:
 		_spot.clear()
 	_start_switch(side, at)
@@ -229,6 +238,8 @@ func on_send(side: int, at: Vector3) -> void:
 
 ## A bola abriu; f = quem saiu dela (o zoom de MON_BEAT s nele).
 func on_ball_open(f: BattleFighter = null) -> void:
+	if _in_fight():
+		return
 	_hold_t = maxf(_hold_t, MON_BEAT if f else OPEN_HOLD)
 	_await_send = _waiting_replacement()
 	if f and not _spot.has(f):
